@@ -1,0 +1,29 @@
+{
+  "systemName": "RED SINDICAL DIGITAL CORE",
+  "union": {
+    "shortName": "UADAV",
+    "fullName": "UNIÓN ARGENTINA DE ARTISTAS DE VARIEDADES",
+    "personeria": "210",
+    "resolution": "0699/86",
+    "country": "Argentina"
+  },
+  "branding": {
+    "primary": "#003366",
+    "secondary": "#0066CC",
+    "accent": "#33CCFF",
+    "background": "#F5F9FF",
+    "text": "#111827"
+  },
+  "authorities": {
+    "secretaryGeneral": "Eduardo Rodríguez"
+  },
+  "features": {
+    "affiliates": true,
+    "credentials": true,
+    "inspectors": true,
+    "companies": true,
+    "billing": true,
+    "cms": true,
+    "streaming": false
+  }
+}
