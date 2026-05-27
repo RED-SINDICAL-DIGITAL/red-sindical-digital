@@ -1,22 +1,27 @@
 name: Crear Estructura
 on: workflow_dispatch
 
+# Esto le dice a la organización que use explícitamente el permiso web que acabas de activar
 permissions:
-  contents: write  # Add this to allow writing to the repository
+  contents: write
 
 jobs:
   crear-carpetas:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Generar carpetas y archivos temporales
         run: |
-          mkdir -p apps/{public-site,core-system,admin-console} packages/{ui,database,auth,qr,printing,chatbot,validation,offline-sync} configs/{uadav,uadav-santafe} assets/{logos,videos,branding}
+          mkdir -p apps/{public-site,core-system,admin-console} packages/{ui,database,auth,qr,printing,chatbot,validation,offline-sync} configs/{uadav,uadav-santafe} assets/{logos,videos,branding} docs
           find . -type d -not -path '*/.*' -exec touch {}/.gitkeep \;
+
       - name: Subir cambios a GitHub
         run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@://github.com"
           git add .
-          git commit -m "Estructura de directorios generada automáticamente"
-          git push
+          git diff-index --quiet HEAD || git commit -m "Estructura de directorios generada automáticamente"
+          git push origin HEAD:${{ github.ref_name }}
