@@ -1,20 +1,25 @@
 name: Crear Estructura
-on: workflow_dispatch # Permite ejecutarlo manualmente con un botón
+on: workflow_dispatch
 
 jobs:
   crear-carpetas:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Actualizado a v5 para evitar la advertencia de Node 20
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: true
+
       - name: Generar carpetas y archivos temporales
         run: |
           mkdir -p apps/{public-site,core-system,admin-console} packages/{ui,database,auth,qr,printing,chatbot,validation,offline-sync} configs/{uadav,uadav-santafe} assets/{logos,videos,branding} docs
-          # Git necesita archivos para rastrear las carpetas, creamos un .gitkeep en cada una
           find . -type d -not -path '*/.*' -exec touch {}/.gitkeep \;
+
       - name: Subir cambios a GitHub
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
           git add .
-          git commit -m "Estructura de directorios generada automáticamente"
-          git push
+          # Solo hace commit si realmente hay cambios nuevos
+          git diff-index --quiet HEAD || git commit -m "Estructura de directorios generada automáticamente"
+          git push origin HEAD
