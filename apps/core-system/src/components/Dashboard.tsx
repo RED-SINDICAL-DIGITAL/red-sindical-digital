@@ -1,4 +1,0 @@
-Afiliados activos
-Empresas regularizadas
-Inspectores habilitados
-Credenciales emitidas
