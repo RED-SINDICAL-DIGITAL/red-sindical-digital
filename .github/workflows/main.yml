@@ -1,31 +1,22 @@
 name: Crear Estructura
 on: workflow_dispatch
 
-# PASO CLAVE: Forzamos de forma nativa el permiso de escritura del repositorio
 permissions:
-  contents: write
+  contents: write  # Add this to allow writing to the repository
 
 jobs:
   crear-carpetas:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-        with:
-          # Usamos el token nativo del proceso con sus nuevos permisos explícitos
-          token: ${{ secrets.GITHUB_TOKEN }}
-
+      - uses: actions/checkout@v4
       - name: Generar carpetas y archivos temporales
         run: |
-          mkdir -p apps/{public-site,core-system,admin-console} packages/{ui,database,auth,qr,printing,chatbot,validation,offline-sync} configs/{uadav,uadav-santafe} assets/{logos,videos,branding} docs
+          mkdir -p apps/{public-site,core-system,admin-console} packages/{ui,database,auth,qr,printing,chatbot,validation,offline-sync} configs/{uadav,uadav-santafe} assets/{logos,videos,branding}
           find . -type d -not -path '*/.*' -exec touch {}/.gitkeep \;
-
       - name: Subir cambios a GitHub
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
           git add .
-          
-          # Evita fallos si no hay cambios reales
-          git diff-index --quiet HEAD || git commit -m "Estructura de directorios generada automáticamente"
-          
-          git push origin HEAD:${{ github.ref_name }}
+          git commit -m "Estructura de directorios generada automáticamente"
+          git push
