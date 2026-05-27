@@ -1,7 +1,7 @@
 name: Crear Estructura
 on: workflow_dispatch
 
-# Esto le dice a la organización que use explícitamente el permiso web que acabas de activar
+# Forza los permisos de escritura nativos en el repositorio
 permissions:
   contents: write
 
@@ -23,5 +23,9 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@://github.com"
           git add .
+          
+          # Realiza el commit solo si detecta los nuevos archivos .gitkeep
           git diff-index --quiet HEAD || git commit -m "Estructura de directorios generada automáticamente"
-          git push origin HEAD:${{ github.ref_name }}
+          
+          # Sube los cambios forzando la sincronización para evitar el rechazo de historial
+          git push --force origin HEAD:${{ github.ref_name }}
