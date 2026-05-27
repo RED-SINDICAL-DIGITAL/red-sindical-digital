@@ -1,5 +1,3 @@
-Estructura:
-
 logo arriba
 navegación vertical
 iconos
