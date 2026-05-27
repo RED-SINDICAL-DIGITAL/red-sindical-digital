@@ -5,10 +5,9 @@ jobs:
   crear-carpetas:
     runs-on: ubuntu-latest
     steps:
-      # Actualizado a v5 para evitar la advertencia de Node 20
       - uses: actions/checkout@v5
         with:
-          persist-credentials: true
+          token: ${{ secrets.MI_TOKEN_SECRETO }}
 
       - name: Generar carpetas y archivos temporales
         run: |
@@ -17,9 +16,12 @@ jobs:
 
       - name: Subir cambios a GitHub
         run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
+          git config --global user.name "BeatDigitalAdmin"
+          git config --global user.email "admin@beatdigital.com"
           git add .
-          # Solo hace commit si realmente hay cambios nuevos
           git diff-index --quiet HEAD || git commit -m "Estructura de directorios generada automáticamente"
+          
+          # LÍNEA CRÍTICA: Elimina la credencial oculta predeterminada para liberar tu token
+          git config --local --unset-all "http.https://github.com/.extraheader"
+          
           git push origin HEAD
