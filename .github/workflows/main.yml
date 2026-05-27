@@ -5,23 +5,15 @@ jobs:
   crear-carpetas:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.MI_TOKEN_SECRETO }}
-
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Generar carpetas y archivos temporales
         run: |
-          mkdir -p apps/{public-site,core-system,admin-console} packages/{ui,database,auth,qr,printing,chatbot,validation,offline-sync} configs/{uadav,uadav-santafe} assets/{logos,videos,branding} docs
+          mkdir -p apps/{public-site,core-system,admin-console} packages/{ui,database,auth,qr,printing,chatbot,validation,offline-sync} configs/{uadav,uadav-santafe} assets/{logos,videos,branding}
           find . -type d -not -path '*/.*' -exec touch {}/.gitkeep \;
-
       - name: Subir cambios a GitHub
         run: |
-          git config --global user.name "BeatDigitalAdmin"
-          git config --global user.email "admin@beatdigital.com"
-          git add .
-          git diff-index --quiet HEAD || git commit -m "Estructura de directorios generada automáticamente"
-          
-          # LÍNEA CRÍTICA: Elimina la credencial oculta predeterminada para liberar tu token
-          git config --local --unset-all "http.https://github.com/.extraheader"
-          
-          git push origin HEAD
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git push
