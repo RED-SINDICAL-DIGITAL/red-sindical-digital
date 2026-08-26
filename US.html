@@ -46,55 +46,68 @@
       z-index: 30;
       box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
     }
+    
+    @keyframes barPulse {
+      0%, 100% { height: 6px; }
+      50% { height: 18px; }
+    }
+    .equalizer-bar {
+      animation: barPulse 0.8s infinite ease-in-out;
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-uadav-accent selection:text-black">
+<body class="min-h-screen flex flex-col justify-between selection:bg-uadav-accent selection:text-black pb-24">
 
   <header class="sticky top-0 z-40 bg-uadav-dark/90 backdrop-blur-xl border-b border-uadav-border">
-    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-6">
+    <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
       
-      <div tabindex="0" onclick="resetearVista()" class="tv-focusable flex items-center gap-3 cursor-pointer transition-all">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-uadav-accent to-blue-600 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-uadav-accent/30">
+      <!-- LOGO -->
+      <div tabindex="0" onclick="resetearVista()" class="tv-focusable flex items-center gap-2 sm:gap-3 cursor-pointer transition-all flex-shrink-0">
+        <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-uadav-accent to-blue-600 flex items-center justify-center text-slate-950 font-black text-lg sm:text-2xl shadow-lg shadow-uadav-accent/30">
           U
         </div>
-        <div>
-          <span class="font-black text-xl sm:text-2xl tracking-tighter text-white block leading-none">UADAV<span class="text-uadav-accent">STREAM</span></span>
-          <span class="text-[10px] tracking-widest text-slate-400 uppercase font-semibold">Plataforma Global</span>
+        <div class="hidden xs:block">
+          <span class="font-black text-lg sm:text-2xl tracking-tighter text-white block leading-none">UADAV<span class="text-uadav-accent">STREAM</span></span>
+          <span class="text-[9px] sm:text-[10px] tracking-widest text-slate-400 uppercase font-semibold hidden md:block">Plataforma Global</span>
         </div>
       </div>
 
-      <!-- BUSCADOR -->
-      <div class="flex-1 max-w-2xl mx-2 hidden sm:block relative">
+      <!-- BUSCADOR MÓVIL Y DESKTOP -->
+      <div class="flex-1 max-w-2xl mx-1 sm:mx-2 relative">
         <div class="relative group">
-          <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-uadav-accent transition-colors"></i>
-          <input type="text" id="searchInput" onkeydown="if(event.key === 'Enter') ejecutarBusqueda()" placeholder="Buscar canciones exactas, artistas o conciertos..." 
-            tabindex="0" class="tv-focusable w-full pl-12 pr-28 py-3 bg-[#0a0a0c] border border-uadav-border rounded-full text-sm text-slate-100 placeholder-slate-500 focus:border-uadav-accent focus:bg-slate-900 transition-all">
-          <button onclick="ejecutarBusqueda()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-uadav-accent text-slate-950 text-xs font-bold px-4 py-2 rounded-full hover:bg-uadav-accentHover">
-            Buscar
+          <i class="fa-solid fa-magnifying-glass absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-uadav-accent transition-colors text-xs sm:text-sm"></i>
+          <input type="text" id="searchInput" onkeydown="if(event.key === 'Enter') ejecutarBusqueda()" placeholder="Buscar artista, canción o show..." 
+            tabindex="0" class="tv-focusable w-full pl-8 sm:pl-12 pr-12 sm:pr-28 py-2 sm:py-3 bg-[#0a0a0c] border border-uadav-border rounded-full text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:border-uadav-accent focus:bg-slate-900 transition-all">
+          <button onclick="ejecutarBusqueda()" class="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-uadav-accent text-slate-950 text-[10px] sm:text-xs font-bold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full hover:bg-uadav-accentHover">
+            <span class="hidden sm:inline">Buscar</span>
+            <i class="fa-solid fa-magnifying-glass sm:hidden"></i>
           </button>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <div id="countryBadge" class="hidden md:flex items-center gap-2 bg-slate-900 border border-uadav-border px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300">
+      <!-- BOTONES DE ACCIÓN HEADER -->
+      <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        <div id="countryBadge" class="hidden lg:flex items-center gap-2 bg-slate-900 border border-uadav-border px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300">
           <i class="fa-solid fa-earth-americas text-uadav-accent"></i>
           <span id="countryBadgeText">Detectando IP...</span>
         </div>
-        <button tabindex="0" onclick="reproducirVideo('-479TZi-EAs', 'UADAV Radio 24/7', 'En Vivo', 'Señal oficial ininterrumpida')" 
-          class="tv-focusable flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider">
-          <div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div> Live
+        <button tabindex="0" onclick="reproducirVideo('jfKfPfyJRdk', 'UADAV Lofi 24/7', 'En Vivo', 'Señal oficial ininterrumpida')" 
+          class="tv-focusable flex items-center gap-1.5 sm:gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+          <div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div> <span class="hidden xs:inline">Live TV</span>
         </button>
       </div>
     </div>
 
+    <!-- NAVEGACIÓN DE CATEGORÍAS -->
     <nav class="border-t border-uadav-border bg-[#050505]">
-      <div class="max-w-[1400px] mx-auto px-4 flex items-center gap-2 overflow-x-auto py-3 no-scrollbar text-xs font-semibold">
-        <button tabindex="0" onclick="filtrarCategoria('todas', this)" class="tv-focusable cat-btn bg-uadav-accent text-slate-950 px-5 py-2 rounded-full whitespace-nowrap transition-all">Inicio</button>
-        <button tabindex="0" onclick="filtrarCategoria('Shorts', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-5 py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-bolt text-uadav-accent mr-1"></i> Shorts</button>
-        <button tabindex="0" onclick="filtrarCategoria('Trending', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-5 py-2 rounded-full whitespace-nowrap transition-all">Tendencias por País</button>
-        <button tabindex="0" onclick="filtrarCategoria('Cartelera', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-5 py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-ticket text-uadav-accent mr-1"></i> Cartelera</button>
-        <button tabindex="0" onclick="filtrarCategoria('Conciertos', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-5 py-2 rounded-full whitespace-nowrap transition-all">Conciertos</button>
-        <button tabindex="0" onclick="filtrarCategoria('Teatro', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-5 py-2 rounded-full whitespace-nowrap transition-all">Teatro & Shows</button>
+      <div class="max-w-[1400px] mx-auto px-4 flex items-center gap-2 overflow-x-auto py-2.5 sm:py-3 no-scrollbar text-xs font-semibold">
+        <button tabindex="0" onclick="filtrarCategoria('todas', this)" class="tv-focusable cat-btn bg-uadav-accent text-slate-950 px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all">Inicio</button>
+        <button tabindex="0" onclick="filtrarCategoria('Radios', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-radio text-uadav-accent mr-1"></i> Radios en Vivo</button>
+        <button tabindex="0" onclick="filtrarCategoria('Artistas', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-user-ninja text-uadav-accent mr-1"></i> Artistas</button>
+        <button tabindex="0" onclick="filtrarCategoria('Shorts', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-bolt text-uadav-accent mr-1"></i> Shorts</button>
+        <button tabindex="0" onclick="filtrarCategoria('Trending', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all">Tendencias por País</button>
+        <button tabindex="0" onclick="filtrarCategoria('Cartelera', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-ticket text-uadav-accent mr-1"></i> Cartelera</button>
+        <button tabindex="0" onclick="filtrarCategoria('Conciertos', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all">Conciertos</button>
       </div>
     </nav>
   </header>
@@ -104,111 +117,230 @@
     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600')] bg-cover bg-center opacity-30 filter blur-[2px]"></div>
     <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#050505] via-[#050505]/90 to-transparent"></div>
     
-    <div class="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-12 md:py-20 flex flex-col items-start justify-center">
-      <span class="inline-flex items-center gap-2 bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase mb-4 tracking-widest">
+    <div class="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-10 md:py-20 flex flex-col items-start justify-center">
+      <span class="inline-flex items-center gap-2 bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase mb-4 tracking-widest">
         <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Al Aire 24/7
       </span>
-      <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-4 tracking-tight">
-        Señal Oficial <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-uadav-accent to-purple-500">UADAVSTREAM</span> TV
+      <h1 class="text-3xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-3 sm:mb-4 tracking-tight">
+        Señal Oficial <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-uadav-accent to-purple-500">UADAVSTREAM</span> Lofi
       </h1>
-      <p class="text-slate-400 text-sm sm:text-base max-w-xl mb-8 font-light">
-        Sintoniza nuestra transmisión continua de contenidos multimedia más destacados del momento.
+      <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 sm:mb-8 font-light">
+        Sintoniza nuestra transmisión continua de música relajante, radio online en directo y los contenidos más vistos.
       </p>
 
-      <div class="flex flex-wrap gap-4">
-        <button tabindex="0" onclick="reproducirVideo('-479TZi-EAs', 'UADAV Radio 24/7', 'Live', 'Transmisión ininterrumpida.')" 
-          class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-8 py-3.5 rounded-full font-bold text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all">
-          <i class="fa-solid fa-play"></i> Sintonizar en Vivo
+      <div class="flex flex-wrap gap-3 sm:gap-4">
+        <button tabindex="0" onclick="sintonizarRadio('Beat Digital Radio', 'https://stream.zeno.fm/9s7nnwmknkhvv', 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&q=80', 'Rosario, Argentina')" 
+          class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all">
+          <i class="fa-solid fa-radio"></i> Escuchar Beat Digital Radio
+        </button>
+        <button tabindex="0" onclick="reproducirVideo('jfKfPfyJRdk', 'UADAV Lofi 24/7', 'Live', 'Transmisión ininterrumpida.')" 
+          class="tv-focusable bg-slate-900 border border-uadav-border hover:bg-slate-800 text-white px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 transition-all">
+          <i class="fa-solid fa-play"></i> Ver Streaming TV
         </button>
       </div>
     </div>
   </section>
 
-  <main id="mainContainer" class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-10 space-y-14">
+  <main id="mainContainer" class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-12 sm:space-y-16">
 
-    <!-- SECCIÓN DINÁMICA POR IP DEL PAÍS (CARGA RÁPIDA + CARÁTULAS HD REALES) -->
-    <section>
-      <div class="flex items-center justify-between mb-5">
+    <!-- SECCIÓN RADIOS DIFUSORAS (CON BEAT DIGITAL RADIO) -->
+    <section id="radiosSection">
+      <div class="flex items-center justify-between mb-4 sm:mb-6">
         <div>
-          <h2 id="countryLabel" class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+          <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-radio text-uadav-accent"></i> Radios Difusoras en Vivo
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400">Emisoras en directo con metadatos y audio HD continuo</p>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        
+        <!-- CARD BEAT DIGITAL RADIO (PRINCIPAL) -->
+        <div tabindex="0" onclick="sintonizarRadio('Beat Digital Radio', 'https://stream.zeno.fm/9s7nnwmknkhvv', 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=500&q=80', 'Rosario / Argentina')" 
+          class="tv-focusable relative md:col-span-2 bg-gradient-to-r from-slate-900 via-uadav-card to-[#14141d] border-2 border-uadav-accent/60 hover:border-uadav-accent rounded-3xl p-5 sm:p-6 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col justify-between">
+          <div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md">
+            <i class="fa-solid fa-star mr-1"></i> Emisora Oficial
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+            <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 border border-uadav-accent/30">
+              <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=500&q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="Beat Digital Radio">
+              <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <i class="fa-solid fa-radio text-3xl text-uadav-accent group-hover:scale-110 transition-transform"></i>
+              </div>
+            </div>
+
+            <div class="flex-1">
+              <span class="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span> AIR STREAM HQ
+              </span>
+              <h3 class="text-xl sm:text-3xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">BEAT DIGITAL RADIO</h3>
+              <p class="text-xs sm:text-sm text-slate-300 mt-1">Transmisión oficial de música electrónica, hits urbanos y programación digital 24/7 desde Rosario, Argentina.</p>
+              <div class="flex items-center gap-4 mt-3 text-xs text-slate-400 font-medium">
+                <span><i class="fa-solid fa-signal text-uadav-accent mr-1"></i> 320 kbps AAC</span>
+                <span><i class="fa-solid fa-location-dot text-uadav-accent mr-1"></i> Rosario, AR</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-uadav-border/60 flex items-center justify-between">
+            <div class="text-xs text-slate-400">
+              <span class="text-slate-500 block text-[10px] uppercase font-bold">Estado de Señal</span>
+              <span class="text-uadav-accent font-semibold flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> Online - Servidor Directo</span>
+            </div>
+            <button class="bg-uadav-accent group-hover:bg-white text-slate-950 font-black text-xs px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg transition-all">
+              <i class="fa-solid fa-play"></i> Sintonizar Ahora
+            </button>
+          </div>
+        </div>
+
+        <!-- EMISORA SECUNDARIA 1 -->
+        <div tabindex="0" onclick="sintonizarRadio('UADAV Electronic Underground', 'https://stream.zeno.fm/f3wvbb757h4tv', 'https://images.unsplash.com/photo-1571266028243-e4733b0f0bb1?w=400&q=80', 'Buenos Aires / Global')" 
+          class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-3xl p-5 cursor-pointer group shadow-lg transition-all flex flex-col justify-between">
+          <div>
+            <div class="flex items-center gap-4 mb-3">
+              <img src="https://images.unsplash.com/photo-1571266028243-e4733b0f0bb1?w=400&q=80" class="w-16 h-16 rounded-xl object-cover border border-uadav-border" alt="Radio Club">
+              <div>
+                <span class="text-[9px] text-uadav-accent font-black tracking-widest uppercase">Deep & House</span>
+                <h4 class="text-lg font-black text-white group-hover:text-uadav-accent transition-colors">UADAV Beats</h4>
+                <p class="text-xs text-slate-400">Sesiones exclusivas 24h</p>
+              </div>
+            </div>
+          </div>
+          <button class="w-full mt-4 bg-slate-900 border border-uadav-border group-hover:border-uadav-accent text-white font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-2 transition-all">
+            <i class="fa-solid fa-play text-uadav-accent"></i> Reproducir Radio
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECCIÓN ARTISTAS MÁS ESCUCHADOS & SUS CANCIONES DESTACADAS -->
+    <section id="artistasSection">
+      <div class="flex items-center justify-between mb-4 sm:mb-6">
+        <div>
+          <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-fire-flame-curved text-uadav-accent"></i> Artistas Más Escuchados
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400">Toca un artista para escuchar sus producciones y canciones top</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4" id="artistasGrid">
+        <!-- Generado dinámicamente por JS -->
+      </div>
+    </section>
+
+    <!-- SECCIÓN DINÁMICA POR IP DEL PAÍS -->
+    <section>
+      <div class="flex items-center justify-between mb-4 sm:mb-5">
+        <div>
+          <h2 id="countryLabel" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
             <i class="fa-solid fa-fire text-red-500"></i> Lo más visto en tu país
           </h2>
-          <p class="text-sm text-slate-400">Tendencias musicales en tiempo real con carátulas de alta definición</p>
+          <p class="text-xs sm:text-sm text-slate-400">Tendencias musicales en tiempo real con carátulas HD</p>
         </div>
       </div>
       <div id="ipTrendingRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]">
-        <div class="py-10 text-slate-500 text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando tendencias...</div>
+        <div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando tendencias...</div>
+      </div>
+    </section>
+
+    <!-- SHORTS MUSICALES (FORMATO EXCLUSIVO 9:16) -->
+    <section>
+      <div class="flex items-center justify-between mb-4 sm:mb-5">
+        <div>
+          <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts Musicales (Exclusivo Vertical 9:16)
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400">Formato vertical de alta velocidad (menos de 60s)</p>
+        </div>
+      </div>
+      <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[300px]">
+        <div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Filtrando formato Shorts...</div>
       </div>
     </section>
 
     <!-- CARTELERA DE SHOWS -->
     <section>
-      <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center justify-between mb-4 sm:mb-5">
         <div>
-          <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+          <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
             <i class="fa-solid fa-ticket text-uadav-accent"></i> Cartelera de Eventos
           </h2>
-          <p class="text-sm text-slate-400">Próximos shows destacados</p>
+          <p class="text-xs sm:text-sm text-slate-400">Próximos shows destacados</p>
         </div>
       </div>
       <div id="carteleraRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
     </section>
 
-    <!-- SHORTS MUSICALES (FORMATO EXCLUSIVO 9:16 - MÁX 60 SEG) -->
-    <section>
-      <div class="flex items-center justify-between mb-5">
-        <div>
-          <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts Musicales (Exclusivo Vertical 9:16)
-          </h2>
-          <p class="text-sm text-slate-400">Videos estrictamente en formato vertical de menos de 60 segundos</p>
-        </div>
-      </div>
-      <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[300px]">
-        <div class="py-10 text-slate-500 text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Filtrando formato Shorts...</div>
-      </div>
-    </section>
-
     <!-- CONCIERTOS COMPLETOS -->
     <section>
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+      <div class="flex items-center justify-between mb-4 sm:mb-5">
+        <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
           <i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos en Vivo
         </h2>
       </div>
       <div id="conciertosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]">
-        <div class="py-10 text-slate-500 text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando conciertos...</div>
-      </div>
-    </section>
-    
-    <!-- SHOWS TEATRALES -->
-    <section>
-      <div class="flex items-center justify-between mb-5">
-        <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-          <i class="fa-solid fa-masks-theater text-uadav-accent"></i> Shows Teatrales & Obras
-        </h2>
-      </div>
-      <div id="teatroRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]">
-        <div class="py-10 text-slate-500 text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Obteniendo funciones...</div>
+        <div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando conciertos...</div>
       </div>
     </section>
 
   </main>
 
   <!-- SECCIÓN DE RESULTADOS DE BÚSQUEDA -->
-  <section id="gridViewSection" class="hidden max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-10 min-h-[50vh]">
-    <div class="flex items-center justify-between mb-8 border-b border-uadav-border pb-4">
-      <h2 id="gridTitle" class="text-2xl sm:text-3xl font-black text-white">Resultados</h2>
-      <button onclick="resetearVista()" class="text-sm font-bold text-uadav-accent hover:text-white transition-colors bg-[#0f0f13] px-4 py-2 rounded-full border border-uadav-border">
-        <i class="fa-solid fa-arrow-left mr-1"></i> Volver al Inicio
+  <section id="gridViewSection" class="hidden max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 min-h-[50vh]">
+    <div class="flex items-center justify-between mb-6 sm:mb-8 border-b border-uadav-border pb-4">
+      <h2 id="gridTitle" class="text-xl sm:text-3xl font-black text-white">Resultados</h2>
+      <button onclick="resetearVista()" class="text-xs sm:text-sm font-bold text-uadav-accent hover:text-white transition-colors bg-[#0f0f13] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-uadav-border">
+        <i class="fa-solid fa-arrow-left mr-1"></i> Volver
       </button>
     </div>
-    <div id="gridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"></div>
+    <div id="gridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6"></div>
   </section>
 
-  <footer class="bg-[#050505] border-t border-uadav-border py-12 text-sm text-slate-500">
-    <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-      <div class="flex items-center gap-2 text-white font-black text-xl">
+  <!-- REPRODUCTOR FLOTANTE EN VIVO PARA RADIO ONLINE -->
+  <div id="floatingRadioPlayer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0d]/95 border-t-2 border-uadav-accent backdrop-blur-xl px-4 py-3 shadow-2xl transform translate-y-full transition-transform duration-300">
+    <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
+      
+      <div class="flex items-center gap-3 overflow-hidden">
+        <img id="radioPlayerImg" src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=200&q=80" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover border border-uadav-accent/40" alt="Radio Live">
+        <div class="overflow-hidden">
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+            <span id="radioPlayerTag" class="text-[9px] font-black uppercase text-uadav-accent tracking-widest">EN VIVO EN LA WEBAPP</span>
+          </div>
+          <h4 id="radioPlayerTitle" class="text-xs sm:text-sm font-black text-white truncate">Beat Digital Radio</h4>
+          <p id="radioPlayerLocation" class="text-[10px] sm:text-xs text-slate-400 truncate">Sintonizando señal streaming HD...</p>
+        </div>
+      </div>
+
+      <!-- ANIMACIÓN DE ECUALIZADOR -->
+      <div id="radioEqualizer" class="hidden sm:flex items-center gap-1 h-5 px-2">
+        <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.1s"></span>
+        <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.4s"></span>
+        <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.2s"></span>
+        <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.5s"></span>
+      </div>
+
+      <!-- CONTROLES -->
+      <div class="flex items-center gap-3 flex-shrink-0">
+        <button tabindex="0" onclick="togglePlayRadio()" id="radioPlayBtn" class="tv-focusable w-10 h-10 sm:w-11 sm:h-11 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-black text-base shadow-lg hover:scale-105 transition-all">
+          <i class="fa-solid fa-pause"></i>
+        </button>
+        <button tabindex="0" onclick="cerrarRadio()" class="tv-focusable text-slate-400 hover:text-white text-base p-2">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+    <!-- ELEMENTO DE AUDIO NATIVO PARA RADIO -->
+    <audio id="audioStream" src="" preload="none"></audio>
+  </div>
+
+  <footer class="bg-[#050505] border-t border-uadav-border py-8 sm:py-12 text-xs sm:text-sm text-slate-500">
+    <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
+      <div class="flex items-center gap-2 text-white font-black text-lg sm:text-xl">
         UADAV<span class="text-uadav-accent">STREAM</span>
       </div>
       <div class="text-center md:text-right">
@@ -218,12 +350,12 @@
     </div>
   </footer>
 
-  <!-- REPRODUCTOR MODAL -->
+  <!-- REPRODUCTOR MODAL VIDEO -->
   <div id="videoModal" onclick="cerrarModalBackdrop(event)" class="fixed inset-0 z-50 bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-2 sm:p-4">
-    <div class="bg-[#0a0a0c] border border-uadav-border w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[95vh]" onclick="event.stopPropagation()">
+    <div class="bg-[#0a0a0c] border border-uadav-border w-full max-w-5xl rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[95vh]" onclick="event.stopPropagation()">
       
-      <button tabindex="0" onclick="cerrarModal()" class="tv-focusable absolute top-4 right-4 z-20 w-10 h-10 bg-slate-900/80 hover:bg-uadav-accent hover:text-black text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all">
-        <i class="fa-solid fa-xmark text-lg"></i>
+      <button tabindex="0" onclick="cerrarModal()" class="tv-focusable absolute top-3 right-3 sm:top-4 sm:right-4 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-slate-900/80 hover:bg-uadav-accent hover:text-black text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all">
+        <i class="fa-solid fa-xmark text-sm sm:text-lg"></i>
       </button>
 
       <div class="relative w-full aspect-video bg-black">
@@ -234,10 +366,10 @@
         </iframe>
       </div>
 
-      <div class="p-6">
-        <span id="modalCategoria" class="inline-block bg-uadav-accent/10 text-uadav-accent border border-uadav-accent/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3">Categoría</span>
-        <h3 id="modalTitulo" class="text-xl sm:text-2xl font-black text-white mb-2 leading-tight">Título</h3>
-        <p id="modalDescripcion" class="text-slate-400 text-sm line-clamp-2">Descripción del contenido...</p>
+      <div class="p-4 sm:p-6">
+        <span id="modalCategoria" class="inline-block bg-uadav-accent/10 text-uadav-accent border border-uadav-accent/20 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-2 sm:mb-3">Categoría</span>
+        <h3 id="modalTitulo" class="text-lg sm:text-2xl font-black text-white mb-2 leading-tight">Título</h3>
+        <p id="modalDescripcion" class="text-slate-400 text-xs sm:text-sm line-clamp-2">Descripción del contenido...</p>
       </div>
     </div>
   </div>
@@ -253,6 +385,15 @@
       'https://iv.melmac.space'
     ];
 
+    const artistasMasEscuchados = [
+      { nombre: "Bizarrap", foto: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80", genero: "Productor / Urban", query: "Bizarrap Music Sessions" },
+      { nombre: "Duki", foto: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&q=80", genero: "Trap / Hip-Hop", query: "Duki canciones mas escuchadas" },
+      { nombre: "Maria Becerra", foto: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=300&q=80", genero: "Pop / Urban", query: "Maria Becerra hits" },
+      { nombre: "Milo J", foto: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80", genero: "Urban Rap", query: "Milo J lo mejor" },
+      { nombre: "Trueno", foto: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&q=80", genero: "Hip Hop / Rap", query: "Trueno en vivo" },
+      { nombre: "Fito Páez", foto: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=300&q=80", genero: "Rock Nacional", query: "Fito Paez lo mejor" }
+    ];
+
     const carteleraArgentina = [
       { fecha: "PRÓXIMAMENTE", artista: "WOS", lugar: "Estadio Racing Club", tipo: "Música Urbana" },
       { fecha: "EN AGENDA", artista: "Babasónicos", lugar: "Anfiteatro Municipal", tipo: "Rock Nacional" },
@@ -260,10 +401,74 @@
       { fecha: "DESTACADO", artista: "Fuerza Bruta", lugar: "Complejo Metropolitano", tipo: "Show Sensorial" }
     ];
 
-    // Carga directa desde la CDN oficial de YouTube (Velocidad instantánea en ms)
     function obtenerCaratulaUltraRapida(id) {
       if (!id) return FALLBACK_THUMB;
       return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+    }
+
+    // CONTROL DEL REPRODUCTOR DE RADIO
+    let isRadioPlaying = false;
+    const audioStream = document.getElementById('audioStream');
+
+    function sintonizarRadio(nombre, streamUrl, caratula, ubicacion) {
+      // Si se estaba reproduciendo un video, pausarlo
+      cerrarModal();
+
+      document.getElementById('radioPlayerTitle').innerText = nombre;
+      document.getElementById('radioPlayerLocation').innerText = ubicacion || 'Emisión digital HD';
+      document.getElementById('radioPlayerImg').src = caratula;
+      
+      audioStream.src = streamUrl;
+      audioStream.play();
+      isRadioPlaying = true;
+
+      document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
+      document.getElementById('radioEqualizer').classList.remove('hidden');
+      document.getElementById('floatingRadioPlayer').classList.remove('translate-y-full');
+    }
+
+    function togglePlayRadio() {
+      if (isRadioPlaying) {
+        audioStream.pause();
+        isRadioPlaying = false;
+        document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>';
+        document.getElementById('radioEqualizer').classList.add('hidden');
+      } else {
+        audioStream.play();
+        isRadioPlaying = true;
+        document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
+        document.getElementById('radioEqualizer').classList.remove('hidden');
+      }
+    }
+
+    function cerrarRadio() {
+      audioStream.pause();
+      audioStream.src = '';
+      isRadioPlaying = false;
+      document.getElementById('floatingRadioPlayer').classList.add('translate-y-full');
+    }
+
+    // CARGAR SECCIÓN ARTISTAS
+    function cargarArtistasUI() {
+      const container = document.getElementById('artistasGrid');
+      container.innerHTML = '';
+      artistasMasEscuchados.forEach(a => {
+        container.innerHTML += `
+          <div tabindex="0" onclick="buscarArtista('${a.query}', '${a.nombre}')" 
+            class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl p-3 text-center cursor-pointer group transition-all">
+            <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden mb-3 border-2 border-uadav-border group-hover:border-uadav-accent transition-colors shadow-lg">
+              <img src="${a.foto}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="${a.nombre}">
+            </div>
+            <h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors truncate">${a.nombre}</h4>
+            <span class="text-[9px] sm:text-[10px] text-slate-400 block mt-0.5">${a.genero}</span>
+          </div>
+        `;
+      });
+    }
+
+    function buscarArtista(query, nombre) {
+      document.getElementById('searchInput').value = query;
+      ejecutarBusqueda();
     }
 
     async function consultarRedInvidious(endpoint) {
@@ -284,7 +489,6 @@
       return null;
     }
 
-    // 1. TENDENCIAS POR IP CON CARÁTULAS HD Y NULA LATENCIA
     async function cargarTendenciasPorIP() {
       let countryCode = 'AR';
       let countryName = 'Argentina';
@@ -336,7 +540,6 @@
       }
     }
 
-    // 2. SECCIÓN SHORTS ESTRICTA (FILTRO MATEMÁTICO DURACIÓN <= 60 SEGUNDOS Y FORMATO 9:16)
     async function cargarShortsExclusivos() {
       const rail = document.getElementById('shortsRail');
       const cacheKey = 'uadav_cache_shorts_strict_v2';
@@ -347,10 +550,8 @@
       if (cachedData) {
         items = JSON.parse(cachedData);
       } else {
-        // Búsqueda orientada a Shorts
         const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent('#shorts music viral')}&type=video`);
         if (data && Array.isArray(data)) {
-          // Filtro estricto: solo toma videos que duren 60 segundos o menos
           items = data
             .filter(item => item.lengthSeconds && item.lengthSeconds <= 60)
             .slice(0, 10)
@@ -378,7 +579,6 @@
       }
     }
 
-    // 3. OTRAS SECCIONES DINÁMICAS (Conciertos y Teatro)
     async function cargarSeccionDinamica(containerId, cacheKey, searchQuery, categoriaLabel) {
       const rail = document.getElementById(containerId);
       const cachedData = localStorage.getItem(cacheKey);
@@ -391,7 +591,7 @@
         const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent(searchQuery)}&type=video`);
         if (data && Array.isArray(data)) {
           items = data
-            .filter(item => !item.lengthSeconds || item.lengthSeconds > 90) // Excluye shorts de conciertos/teatro
+            .filter(item => !item.lengthSeconds || item.lengthSeconds > 90)
             .slice(0, 10)
             .map(item => ({
               id: item.videoId,
@@ -414,7 +614,6 @@
       }
     }
 
-    // BUSCADOR GENERAL
     async function ejecutarBusqueda() {
       const q = document.getElementById('searchInput').value.trim();
       if (!q) { resetearVista(); return; }
@@ -470,7 +669,7 @@
 
     function crearCard(item) {
       const card = document.createElement('div');
-      card.className = "tv-focusable min-w-[260px] max-w-[280px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0 flex flex-col justify-between";
+      card.className = "tv-focusable min-w-[220px] sm:min-w-[260px] max-w-[280px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0 flex flex-col justify-between";
       card.setAttribute('tabindex', '0');
 
       const videoId = item.id || 'jfKfPfyJRdk';
@@ -483,26 +682,25 @@
           <div class="relative aspect-video bg-black overflow-hidden">
             <img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-110 group-hover:opacity-60 transition-all duration-300">
             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <div class="w-12 h-12 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-bold shadow-[0_0_20px_rgba(0,229,255,0.5)] scale-75 group-hover:scale-100 transition-transform">
-                <i class="fa-solid fa-play ml-1"></i>
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-bold shadow-[0_0_20px_rgba(0,229,255,0.5)] scale-75 group-hover:scale-100 transition-transform">
+                <i class="fa-solid fa-play ml-0.5 text-xs sm:text-base"></i>
               </div>
             </div>
-            <span class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-2 py-1 rounded font-bold">${item.duracion || 'HD'}</span>
+            <span class="absolute bottom-2 right-2 bg-black/80 text-white text-[9px] sm:text-[10px] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded font-bold">${item.duracion || 'HD'}</span>
           </div>
-          <div class="p-4">
-            <span class="text-[9px] text-uadav-accent font-black tracking-widest uppercase block mb-2">${item.categoria}</span>
-            <h3 class="font-bold text-sm text-white group-hover:text-uadav-accent transition-colors line-clamp-2">${item.titulo}</h3>
-            <p class="text-xs text-slate-500 mt-1 line-clamp-1">${item.descripcion}</p>
+          <div class="p-3 sm:p-4">
+            <span class="text-[8px] sm:text-[9px] text-uadav-accent font-black tracking-widest uppercase block mb-1 sm:mb-2">${item.categoria}</span>
+            <h3 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors line-clamp-2">${item.titulo}</h3>
+            <p class="text-[11px] sm:text-xs text-slate-500 mt-1 line-clamp-1">${item.descripcion}</p>
           </div>
         </div>
       `;
       return card;
     }
 
-    // TARJETA DE SHORT 100% VERTICAL (FORMATO 9:16)
     function crearShortCard(item) {
       const card = document.createElement('div');
-      card.className = "tv-focusable min-w-[170px] max-w-[190px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0";
+      card.className = "tv-focusable min-w-[140px] sm:min-w-[170px] max-w-[190px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0";
       card.setAttribute('tabindex', '0');
 
       const videoId = item.id || 'jfKfPfyJRdk';
@@ -515,14 +713,14 @@
           <img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
           <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
           
-          <div class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-1 rounded-full flex items-center gap-1 shadow-lg tracking-wider">
+          <div class="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-600 text-white text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full flex items-center gap-1 shadow-lg tracking-wider">
             <i class="fa-solid fa-bolt"></i> SHORT
           </div>
           
-          <span class="absolute top-3 right-3 bg-black/70 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">${item.duracion}</span>
+          <span class="absolute top-2 right-2 sm:top-3 sm:right-3 bg-black/70 text-white text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-full font-bold">${item.duracion}</span>
 
-          <div class="absolute bottom-3 left-3 right-3">
-            <h4 class="font-bold text-xs text-white line-clamp-2 leading-snug drop-shadow-md">${item.titulo}</h4>
+          <div class="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3">
+            <h4 class="font-bold text-[11px] sm:text-xs text-white line-clamp-2 leading-snug drop-shadow-md">${item.titulo}</h4>
           </div>
         </div>
       `;
@@ -530,25 +728,24 @@
     }
 
     function cargarHome() {
-      // Cartelera estática
+      // Cargar cartelera
       const cartRail = document.getElementById('carteleraRail');
       cartRail.innerHTML = '';
       carteleraArgentina.forEach(c => {
         cartRail.innerHTML += `
-          <div tabindex="0" class="tv-focusable min-w-[240px] bg-[#0a0a0c] border border-uadav-border p-5 rounded-2xl flex-shrink-0 hover:border-uadav-accent transition-colors group">
-            <span class="text-xs font-black text-uadav-accent block mb-2 tracking-widest">${c.fecha}</span>
-            <h4 class="text-lg font-black text-white mb-1 group-hover:text-uadav-accent transition-colors">${c.artista}</h4>
-            <p class="text-sm text-slate-400 mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${c.lugar}</p>
-            <span class="inline-block bg-slate-900 text-slate-300 text-[10px] px-2 py-1 rounded-full mt-2 border border-slate-800">${c.tipo}</span>
+          <div tabindex="0" class="tv-focusable min-w-[200px] sm:min-w-[240px] bg-[#0a0a0c] border border-uadav-border p-4 sm:p-5 rounded-2xl flex-shrink-0 hover:border-uadav-accent transition-colors group">
+            <span class="text-[10px] sm:text-xs font-black text-uadav-accent block mb-1 sm:mb-2 tracking-widest">${c.fecha}</span>
+            <h4 class="text-base sm:text-lg font-black text-white mb-1 group-hover:text-uadav-accent transition-colors">${c.artista}</h4>
+            <p class="text-xs sm:text-sm text-slate-400 mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${c.lugar}</p>
+            <span class="inline-block bg-slate-900 text-slate-300 text-[9px] sm:text-[10px] px-2 py-0.5 sm:py-1 rounded-full mt-2 border border-slate-800">${c.tipo}</span>
           </div>
         `;
       });
 
-      // Carga paralela para velocidad máxima
+      cargarArtistasUI();
       cargarTendenciasPorIP();
       cargarShortsExclusivos();
       cargarSeccionDinamica('conciertosRail', 'uadav_cache_conciertos_v2', 'concierto completo en vivo hd', 'Conciertos');
-      cargarSeccionDinamica('teatroRail', 'uadav_cache_teatro_v2', 'obra de teatro completa', 'Teatro');
     }
 
     function filtrarCategoria(cat, btn) {
@@ -563,11 +760,22 @@
 
       if (cat === 'todas') { resetearVista(); return; }
 
+      if (cat === 'Radios') {
+        resetearVista();
+        document.getElementById('radiosSection').scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+
+      if (cat === 'Artistas') {
+        resetearVista();
+        document.getElementById('artistasSection').scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+
       const busquedasPorCategoria = {
         'Shorts': '#shorts musica viral',
         'Trending': 'musica en tendencia',
         'Conciertos': 'concierto completo live',
-        'Teatro': 'obra de teatro completa',
         'Cartelera': 'eventos musica en vivo'
       };
 
@@ -583,6 +791,9 @@
     }
 
     function reproducirVideo(id, titulo, categoria, descripcion) {
+      // Si la radio está sonando, pausarla para no encimar audios
+      if (isRadioPlaying) togglePlayRadio();
+
       document.getElementById('iframePlayer').src = construirEmbedUrl(id);
       document.getElementById('modalTitulo').innerText = titulo;
       document.getElementById('modalCategoria').innerText = categoria;
