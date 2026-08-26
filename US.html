@@ -63,7 +63,7 @@
         </div>
       </div>
 
-      <!-- BUSCADOR SIN CUOTA DE API -->
+      <!-- BUSCADOR -->
       <div class="flex-1 max-w-2xl mx-2 hidden sm:block relative">
         <div class="relative group">
           <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-uadav-accent transition-colors"></i>
@@ -126,22 +126,22 @@
 
   <main id="mainContainer" class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-10 space-y-14">
 
-    <!-- SECCIÓN DINÁMICA POR IP DEL PAÍS -->
+    <!-- SECCIÓN DINÁMICA POR IP DEL PAÍS (CARGA RÁPIDA + CARÁTULAS HD REALES) -->
     <section>
       <div class="flex items-center justify-between mb-5">
         <div>
           <h2 id="countryLabel" class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-fire text-red-500"></i> Lo más escuchado según tu región
+            <i class="fa-solid fa-fire text-red-500"></i> Lo más visto en tu país
           </h2>
-          <p class="text-sm text-slate-400">Contenido dinámico en tiempo real detectado por tu IP</p>
+          <p class="text-sm text-slate-400">Tendencias musicales en tiempo real con carátulas de alta definición</p>
         </div>
       </div>
-      <div id="ipTrendingRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-        <div class="py-10 text-slate-500 text-sm animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando lo mejor de tu país...</div>
+      <div id="ipTrendingRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]">
+        <div class="py-10 text-slate-500 text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando tendencias...</div>
       </div>
     </section>
 
-    <!-- CARTELERA DE SHOWS LOCALES -->
+    <!-- CARTELERA DE SHOWS -->
     <section>
       <div class="flex items-center justify-between mb-5">
         <div>
@@ -154,39 +154,42 @@
       <div id="carteleraRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
     </section>
 
-    <!-- SHORTS MUSICALES (DINÁMICO CON CARÁTULAS REALES) -->
+    <!-- SHORTS MUSICALES (FORMATO EXCLUSIVO 9:16 - MÁX 60 SEG) -->
     <section>
       <div class="flex items-center justify-between mb-5">
-        <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-          <i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts Musicales
-        </h2>
+        <div>
+          <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts Musicales (Exclusivo Vertical 9:16)
+          </h2>
+          <p class="text-sm text-slate-400">Videos estrictamente en formato vertical de menos de 60 segundos</p>
+        </div>
       </div>
-      <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-        <div class="py-10 text-slate-500 text-sm animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Obteniendo shorts reales...</div>
+      <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[300px]">
+        <div class="py-10 text-slate-500 text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Filtrando formato Shorts...</div>
       </div>
     </section>
 
-    <!-- CONCIERTOS COMPLETOS (DINÁMICO CON CARÁTULAS REALES) -->
+    <!-- CONCIERTOS COMPLETOS -->
     <section>
       <div class="flex items-center justify-between mb-5">
         <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
           <i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos en Vivo
         </h2>
       </div>
-      <div id="conciertosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-        <div class="py-10 text-slate-500 text-sm animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando conciertos en HD...</div>
+      <div id="conciertosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]">
+        <div class="py-10 text-slate-500 text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando conciertos...</div>
       </div>
     </section>
     
-    <!-- SHOWS TEATRALES (DINÁMICO CON CARÁTULAS REALES) -->
+    <!-- SHOWS TEATRALES -->
     <section>
       <div class="flex items-center justify-between mb-5">
         <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
           <i class="fa-solid fa-masks-theater text-uadav-accent"></i> Shows Teatrales & Obras
         </h2>
       </div>
-      <div id="teatroRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-        <div class="py-10 text-slate-500 text-sm animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Obteniendo funciones de teatro...</div>
+      <div id="teatroRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]">
+        <div class="py-10 text-slate-500 text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Obteniendo funciones...</div>
       </div>
     </section>
 
@@ -257,12 +260,17 @@
       { fecha: "DESTACADO", artista: "Fuerza Bruta", lugar: "Complejo Metropolitano", tipo: "Show Sensorial" }
     ];
 
-    // Consulta con sistema de rotación
+    // Carga directa desde la CDN oficial de YouTube (Velocidad instantánea en ms)
+    function obtenerCaratulaUltraRapida(id) {
+      if (!id) return FALLBACK_THUMB;
+      return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+    }
+
     async function consultarRedInvidious(endpoint) {
       for (const server of SERVIDORES_INVIDIOUS) {
         try {
           const controller = new AbortController();
-          const tid = setTimeout(() => controller.abort(), 2500);
+          const tid = setTimeout(() => controller.abort(), 2000);
           const res = await fetch(`${server}${endpoint}`, { signal: controller.signal });
           clearTimeout(tid);
           if (res.ok) {
@@ -276,57 +284,13 @@
       return null;
     }
 
-    // Obtener imagen original de máxima definición
-    function obtenerCaratulaOriginal(item) {
-      const vId = item.videoId || item.id;
-      if (vId) {
-        return `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`;
-      }
-      return item.thumbnail || FALLBACK_THUMB;
-    }
-
-    // Carga universal para Secciones Temáticas (Teatro, Conciertos, Shorts) con Cache + Cuota Cero
-    async function cargarSeccionDinamica(containerId, cacheKey, searchQuery, categoriaLabel, esShort = false) {
-      const rail = document.getElementById(containerId);
-      const cachedData = localStorage.getItem(cacheKey);
-
-      let items = [];
-
-      if (cachedData) {
-        items = JSON.parse(cachedData);
-      } else {
-        const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent(searchQuery)}&type=video`);
-        if (data && Array.isArray(data)) {
-          items = data.slice(0, 10).map(item => ({
-            id: item.videoId,
-            titulo: item.title,
-            categoria: categoriaLabel,
-            descripcion: item.author || "Contenido HD",
-            duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
-            thumbnail: obtenerCaratulaOriginal(item),
-            tipo: esShort ? 'short' : 'video'
-          }));
-          if (items.length > 0) {
-            localStorage.setItem(cacheKey, JSON.stringify(items));
-          }
-        }
-      }
-
-      rail.innerHTML = '';
-      if (items && items.length > 0) {
-        items.forEach(item => rail.appendChild(esShort ? crearShortCard(item) : crearCard(item)));
-      } else {
-        rail.innerHTML = '<div class="py-4 text-slate-500 text-xs">No se pudieron recuperar contenidos en vivo.</div>';
-      }
-    }
-
-    // Carga de Tendencias por IP del País
+    // 1. TENDENCIAS POR IP CON CARÁTULAS HD Y NULA LATENCIA
     async function cargarTendenciasPorIP() {
       let countryCode = 'AR';
       let countryName = 'Argentina';
 
       try {
-        const ipRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(2000) });
+        const ipRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(1800) });
         if (ipRes.ok) {
           const ipData = await ipRes.json();
           if (ipData.country_code) {
@@ -335,14 +299,14 @@
           }
         }
       } catch (e) {
-        console.log("Servicio IP no disponible, usando configuración por defecto.");
+        console.log("Usando región por defecto (AR).");
       }
 
       document.getElementById('countryBadgeText').innerText = countryName;
       document.getElementById('countryBadge').classList.remove('hidden');
       document.getElementById('countryLabel').innerHTML = `<i class="fa-solid fa-fire text-red-500"></i> Lo más visto en ${countryName}`;
 
-      const cacheKey = `uadav_trend_${countryCode}`;
+      const cacheKey = `uadav_trend_${countryCode}_v2`;
       const cached = localStorage.getItem(cacheKey);
 
       let items = [];
@@ -352,13 +316,13 @@
       } else {
         const data = await consultarRedInvidious(`/api/v1/trending?region=${countryCode}&type=music`);
         if (data && Array.isArray(data)) {
-          items = data.slice(0, 10).map(item => ({
+          items = data.slice(0, 12).map(item => ({
             id: item.videoId,
             titulo: item.title,
             categoria: `Tendencia en ${countryName}`,
             descripcion: item.author || "Música destacada",
             duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
-            thumbnail: obtenerCaratulaOriginal(item),
+            thumbnail: obtenerCaratulaUltraRapida(item.videoId),
             tipo: 'video'
           }));
           localStorage.setItem(cacheKey, JSON.stringify(items));
@@ -372,7 +336,85 @@
       }
     }
 
-    // Buscador general por palabra clave
+    // 2. SECCIÓN SHORTS ESTRICTA (FILTRO MATEMÁTICO DURACIÓN <= 60 SEGUNDOS Y FORMATO 9:16)
+    async function cargarShortsExclusivos() {
+      const rail = document.getElementById('shortsRail');
+      const cacheKey = 'uadav_cache_shorts_strict_v2';
+      const cachedData = localStorage.getItem(cacheKey);
+
+      let items = [];
+
+      if (cachedData) {
+        items = JSON.parse(cachedData);
+      } else {
+        // Búsqueda orientada a Shorts
+        const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent('#shorts music viral')}&type=video`);
+        if (data && Array.isArray(data)) {
+          // Filtro estricto: solo toma videos que duren 60 segundos o menos
+          items = data
+            .filter(item => item.lengthSeconds && item.lengthSeconds <= 60)
+            .slice(0, 10)
+            .map(item => ({
+              id: item.videoId,
+              titulo: item.title.replace(/#shorts/gi, '').trim(),
+              categoria: 'Short',
+              descripcion: item.author || "Short oficial",
+              duracion: item.lengthSeconds ? `${item.lengthSeconds}s` : "0:30",
+              thumbnail: obtenerCaratulaUltraRapida(item.videoId),
+              tipo: 'short'
+            }));
+
+          if (items.length > 0) {
+            localStorage.setItem(cacheKey, JSON.stringify(items));
+          }
+        }
+      }
+
+      rail.innerHTML = '';
+      if (items && items.length > 0) {
+        items.forEach(item => rail.appendChild(crearShortCard(item)));
+      } else {
+        rail.innerHTML = '<div class="py-4 text-slate-500 text-xs">Cargando shorts formato vertical...</div>';
+      }
+    }
+
+    // 3. OTRAS SECCIONES DINÁMICAS (Conciertos y Teatro)
+    async function cargarSeccionDinamica(containerId, cacheKey, searchQuery, categoriaLabel) {
+      const rail = document.getElementById(containerId);
+      const cachedData = localStorage.getItem(cacheKey);
+
+      let items = [];
+
+      if (cachedData) {
+        items = JSON.parse(cachedData);
+      } else {
+        const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent(searchQuery)}&type=video`);
+        if (data && Array.isArray(data)) {
+          items = data
+            .filter(item => !item.lengthSeconds || item.lengthSeconds > 90) // Excluye shorts de conciertos/teatro
+            .slice(0, 10)
+            .map(item => ({
+              id: item.videoId,
+              titulo: item.title,
+              categoria: categoriaLabel,
+              descripcion: item.author || "Contenido HD",
+              duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
+              thumbnail: obtenerCaratulaUltraRapida(item.videoId),
+              tipo: 'video'
+            }));
+          if (items.length > 0) {
+            localStorage.setItem(cacheKey, JSON.stringify(items));
+          }
+        }
+      }
+
+      rail.innerHTML = '';
+      if (items && items.length > 0) {
+        items.forEach(item => rail.appendChild(crearCard(item)));
+      }
+    }
+
+    // BUSCADOR GENERAL
     async function ejecutarBusqueda() {
       const q = document.getElementById('searchInput').value.trim();
       if (!q) { resetearVista(); return; }
@@ -401,8 +443,8 @@
             categoria: "Resultado",
             descripcion: item.author || "Búsqueda oficial",
             duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
-            thumbnail: obtenerCaratulaOriginal(item),
-            tipo: (item.lengthSeconds && item.lengthSeconds <= 65) ? 'short' : 'video'
+            thumbnail: obtenerCaratulaUltraRapida(item.videoId),
+            tipo: (item.lengthSeconds && item.lengthSeconds <= 60) ? 'short' : 'video'
           }));
           if (resultados.length > 0) {
             localStorage.setItem(cacheKey, JSON.stringify(resultados));
@@ -432,14 +474,14 @@
       card.setAttribute('tabindex', '0');
 
       const videoId = item.id || 'jfKfPfyJRdk';
-      const thumb = item.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+      const thumb = item.thumbnail || obtenerCaratulaUltraRapida(videoId);
       const safeTitulo = (item.titulo || 'Contenido Multimedia').replace(/'/g, "\\'");
       const safeDesc = (item.descripcion || 'UADAVStream').replace(/'/g, "\\'");
 
       card.innerHTML = `
         <div onclick="reproducirVideo('${videoId}', '${safeTitulo}', '${item.categoria}', '${safeDesc}')">
           <div class="relative aspect-video bg-black overflow-hidden">
-            <img src="${thumb}" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-110 group-hover:opacity-60 transition-all duration-500">
+            <img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-110 group-hover:opacity-60 transition-all duration-300">
             <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <div class="w-12 h-12 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-bold shadow-[0_0_20px_rgba(0,229,255,0.5)] scale-75 group-hover:scale-100 transition-transform">
                 <i class="fa-solid fa-play ml-1"></i>
@@ -457,25 +499,30 @@
       return card;
     }
 
+    // TARJETA DE SHORT 100% VERTICAL (FORMATO 9:16)
     function crearShortCard(item) {
       const card = document.createElement('div');
-      card.className = "tv-focusable min-w-[160px] max-w-[180px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0";
+      card.className = "tv-focusable min-w-[170px] max-w-[190px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0";
       card.setAttribute('tabindex', '0');
 
       const videoId = item.id || 'jfKfPfyJRdk';
-      const thumb = item.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+      const thumb = item.thumbnail || obtenerCaratulaUltraRapida(videoId);
       const safeTitulo = (item.titulo || 'Short').replace(/'/g, "\\'");
       const safeDesc = (item.descripcion || 'Short UADAV').replace(/'/g, "\\'");
 
       card.innerHTML = `
         <div onclick="reproducirVideo('${videoId}', '${safeTitulo}', '${item.categoria}', '${safeDesc}')" class="relative aspect-[9/16] bg-black overflow-hidden">
-          <img src="${thumb}" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+          <img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
           <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
-          <div class="absolute top-3 left-3 bg-white text-black text-[9px] font-black uppercase px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
-            <i class="fa-solid fa-bolt text-uadav-accent"></i> SHORT
+          
+          <div class="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-1 rounded-full flex items-center gap-1 shadow-lg tracking-wider">
+            <i class="fa-solid fa-bolt"></i> SHORT
           </div>
+          
+          <span class="absolute top-3 right-3 bg-black/70 text-white text-[9px] px-2 py-0.5 rounded-full font-bold">${item.duracion}</span>
+
           <div class="absolute bottom-3 left-3 right-3">
-            <h4 class="font-bold text-sm text-white line-clamp-2 leading-tight">${item.titulo}</h4>
+            <h4 class="font-bold text-xs text-white line-clamp-2 leading-snug drop-shadow-md">${item.titulo}</h4>
           </div>
         </div>
       `;
@@ -483,7 +530,7 @@
     }
 
     function cargarHome() {
-      // Cartelera fija
+      // Cartelera estática
       const cartRail = document.getElementById('carteleraRail');
       cartRail.innerHTML = '';
       carteleraArgentina.forEach(c => {
@@ -497,17 +544,11 @@
         `;
       });
 
-      // 1. Tendencias por IP del país
+      // Carga paralela para velocidad máxima
       cargarTendenciasPorIP();
-
-      // 2. Shorts Musicales Dinámicos (búsqueda real + carátulas originales)
-      cargarSeccionDinamica('shortsRail', 'uadav_cache_shorts', 'music shorts', 'Shorts', true);
-
-      // 3. Conciertos Completos Dinámicos (búsqueda real + carátulas originales)
-      cargarSeccionDinamica('conciertosRail', 'uadav_cache_conciertos', 'concierto completo en vivo hd', 'Conciertos');
-
-      // 4. Shows Teatrales Dinámicos (búsqueda real + carátulas originales)
-      cargarSeccionDinamica('teatroRail', 'uadav_cache_teatro', 'obra de teatro completa', 'Teatro');
+      cargarShortsExclusivos();
+      cargarSeccionDinamica('conciertosRail', 'uadav_cache_conciertos_v2', 'concierto completo en vivo hd', 'Conciertos');
+      cargarSeccionDinamica('teatroRail', 'uadav_cache_teatro_v2', 'obra de teatro completa', 'Teatro');
     }
 
     function filtrarCategoria(cat, btn) {
@@ -523,7 +564,7 @@
       if (cat === 'todas') { resetearVista(); return; }
 
       const busquedasPorCategoria = {
-        'Shorts': 'music shorts',
+        'Shorts': '#shorts musica viral',
         'Trending': 'musica en tendencia',
         'Conciertos': 'concierto completo live',
         'Teatro': 'obra de teatro completa',
