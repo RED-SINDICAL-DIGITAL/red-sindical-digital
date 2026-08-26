@@ -46,13 +46,6 @@
       z-index: 30;
       box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
     }
-
-    .top10-number {
-      font-weight: 900;
-      color: #050505;
-      -webkit-text-stroke: 2px #00e5ff;
-      text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
-    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-uadav-accent selection:text-black">
@@ -144,11 +137,11 @@
         </div>
       </div>
       <div id="ipTrendingRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-        <div class="py-10 text-slate-500 text-sm animate-pulse">Cargando lo mejor de tu país...</div>
+        <div class="py-10 text-slate-500 text-sm animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando lo mejor de tu país...</div>
       </div>
     </section>
 
-    <!-- CARTELERA DE SHOWS -->
+    <!-- CARTELERA DE SHOWS LOCALES -->
     <section>
       <div class="flex items-center justify-between mb-5">
         <div>
@@ -161,26 +154,40 @@
       <div id="carteleraRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
     </section>
 
-    <!-- SHORTS -->
+    <!-- SHORTS MUSICALES (DINÁMICO CON CARÁTULAS REALES) -->
     <section>
       <div class="flex items-center justify-between mb-5">
         <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
-          <i class="fa-solid fa-mobile-screen text-uadav-accent"></i> Shorts Musicales
+          <i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts Musicales
         </h2>
       </div>
-      <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
+      <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+        <div class="py-10 text-slate-500 text-sm animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Obteniendo shorts reales...</div>
+      </div>
     </section>
 
-    <!-- CONCIERTOS COMPLETOS -->
+    <!-- CONCIERTOS COMPLETOS (DINÁMICO CON CARÁTULAS REALES) -->
     <section>
-      <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider mb-5">Conciertos Completos</h2>
-      <div id="conciertosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos en Vivo
+        </h2>
+      </div>
+      <div id="conciertosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+        <div class="py-10 text-slate-500 text-sm animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando conciertos en HD...</div>
+      </div>
     </section>
     
-    <!-- SHOWS TEATRALES -->
+    <!-- SHOWS TEATRALES (DINÁMICO CON CARÁTULAS REALES) -->
     <section>
-      <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider mb-5">Shows Teatrales</h2>
-      <div id="teatroRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-xl sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-masks-theater text-uadav-accent"></i> Shows Teatrales & Obras
+        </h2>
+      </div>
+      <div id="teatroRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+        <div class="py-10 text-slate-500 text-sm animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Obteniendo funciones de teatro...</div>
+      </div>
     </section>
 
   </main>
@@ -235,7 +242,6 @@
   <script>
     const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80';
 
-    // Lista de nodos distribuidos Invidious (Fallback de alta disponibilidad)
     const SERVIDORES_INVIDIOUS = [
       'https://invidious.nerdvpn.de',
       'https://invidious.drgns.space',
@@ -251,16 +257,7 @@
       { fecha: "DESTACADO", artista: "Fuerza Bruta", lugar: "Complejo Metropolitano", tipo: "Show Sensorial" }
     ];
 
-    let catalog = [
-      { id: "jfKfPfyJRdk", titulo: "Lofi Girl - Chill Beats Live Stream", categoria: "Trending", descripcion: "Música en vivo 24/7 sin interrupciones.", duracion: "LIVE", tipo: "video" },
-      { id: "4xDzrJKXOOY", titulo: "Synthwave Radio - Chill Beats to Relax", categoria: "Trending", descripcion: "Música electrónica retro nocturna.", duracion: "LIVE", tipo: "video" },
-      { id: "5qap5aO4i9A", titulo: "Solo de Guitarra En Vivo", categoria: "Shorts", descripcion: "Highlights de concierto.", duracion: "0:45", tipo: "short" },
-      { id: "TURbeEI-2Ag", titulo: "Concierto Orquesta Filarmónica", categoria: "Conciertos", descripcion: "Presentación sinfónica en HD.", duracion: "1h 45m", tipo: "video" },
-      { id: "DWcJFNfaw9c", titulo: "Beats & Relax Short Clip", categoria: "Shorts", descripcion: "Estudio de producción.", duracion: "0:30", tipo: "short" },
-      { id: "TURbeEI-2Ag", titulo: "Sinfonía N° 9 - Escena Teatral", categoria: "Teatro", descripcion: "Obra y ensamble orquestal.", duracion: "1h 20m", tipo: "video" }
-    ];
-
-    // Motor de consulta rotativo ultra veloz
+    // Consulta con sistema de rotación
     async function consultarRedInvidious(endpoint) {
       for (const server of SERVIDORES_INVIDIOUS) {
         try {
@@ -273,13 +270,57 @@
             if (data && (Array.isArray(data) ? data.length > 0 : true)) return data;
           }
         } catch (e) {
-          continue; // Salta al siguiente servidor de la lista si falla
+          continue;
         }
       }
       return null;
     }
 
-    // 1. Detección de IP y Carga de Lo Mejor por País (Cuota Cero + Cache)
+    // Obtener imagen original de máxima definición
+    function obtenerCaratulaOriginal(item) {
+      const vId = item.videoId || item.id;
+      if (vId) {
+        return `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`;
+      }
+      return item.thumbnail || FALLBACK_THUMB;
+    }
+
+    // Carga universal para Secciones Temáticas (Teatro, Conciertos, Shorts) con Cache + Cuota Cero
+    async function cargarSeccionDinamica(containerId, cacheKey, searchQuery, categoriaLabel, esShort = false) {
+      const rail = document.getElementById(containerId);
+      const cachedData = localStorage.getItem(cacheKey);
+
+      let items = [];
+
+      if (cachedData) {
+        items = JSON.parse(cachedData);
+      } else {
+        const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent(searchQuery)}&type=video`);
+        if (data && Array.isArray(data)) {
+          items = data.slice(0, 10).map(item => ({
+            id: item.videoId,
+            titulo: item.title,
+            categoria: categoriaLabel,
+            descripcion: item.author || "Contenido HD",
+            duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
+            thumbnail: obtenerCaratulaOriginal(item),
+            tipo: esShort ? 'short' : 'video'
+          }));
+          if (items.length > 0) {
+            localStorage.setItem(cacheKey, JSON.stringify(items));
+          }
+        }
+      }
+
+      rail.innerHTML = '';
+      if (items && items.length > 0) {
+        items.forEach(item => rail.appendChild(esShort ? crearShortCard(item) : crearCard(item)));
+      } else {
+        rail.innerHTML = '<div class="py-4 text-slate-500 text-xs">No se pudieron recuperar contenidos en vivo.</div>';
+      }
+    }
+
+    // Carga de Tendencias por IP del País
     async function cargarTendenciasPorIP() {
       let countryCode = 'AR';
       let countryName = 'Argentina';
@@ -294,7 +335,7 @@
           }
         }
       } catch (e) {
-        console.log("No se pudo obtener la IP exacta, usando región por defecto.");
+        console.log("Servicio IP no disponible, usando configuración por defecto.");
       }
 
       document.getElementById('countryBadgeText').innerText = countryName;
@@ -315,27 +356,23 @@
             id: item.videoId,
             titulo: item.title,
             categoria: `Tendencia en ${countryName}`,
-            descripcion: item.author || "Música en tendencia",
+            descripcion: item.author || "Música destacada",
             duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
-            thumbnail: item.videoThumbnails?.find(t => t.quality === 'medium')?.url || `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`,
+            thumbnail: obtenerCaratulaOriginal(item),
             tipo: 'video'
           }));
           localStorage.setItem(cacheKey, JSON.stringify(items));
         }
       }
 
-      // Renderizar el riel de tendencias por país
       const rail = document.getElementById('ipTrendingRail');
       rail.innerHTML = '';
-
       if (items && items.length > 0) {
         items.forEach(item => rail.appendChild(crearCard(item)));
-      } else {
-        catalog.filter(i => i.categoria === 'Trending').forEach(item => rail.appendChild(crearCard(item)));
       }
     }
 
-    // 2. Búsqueda Exacta con Cache Local y 0 Cuota (e.g. Bad de Michael Jackson)
+    // Buscador general por palabra clave
     async function ejecutarBusqueda() {
       const q = document.getElementById('searchInput').value.trim();
       if (!q) { resetearVista(); return; }
@@ -364,7 +401,7 @@
             categoria: "Resultado",
             descripcion: item.author || "Búsqueda oficial",
             duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
-            thumbnail: item.videoThumbnails?.find(t => t.quality === 'medium')?.url || `https://img.youtube.com/vi/${item.videoId}/mqdefault.jpg`,
+            thumbnail: obtenerCaratulaOriginal(item),
             tipo: (item.lengthSeconds && item.lengthSeconds <= 65) ? 'short' : 'video'
           }));
           if (resultados.length > 0) {
@@ -395,7 +432,7 @@
       card.setAttribute('tabindex', '0');
 
       const videoId = item.id || 'jfKfPfyJRdk';
-      const thumb = item.thumbnail || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+      const thumb = item.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
       const safeTitulo = (item.titulo || 'Contenido Multimedia').replace(/'/g, "\\'");
       const safeDesc = (item.descripcion || 'UADAVStream').replace(/'/g, "\\'");
 
@@ -426,7 +463,7 @@
       card.setAttribute('tabindex', '0');
 
       const videoId = item.id || 'jfKfPfyJRdk';
-      const thumb = item.thumbnail || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+      const thumb = item.thumbnail || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
       const safeTitulo = (item.titulo || 'Short').replace(/'/g, "\\'");
       const safeDesc = (item.descripcion || 'Short UADAV').replace(/'/g, "\\'");
 
@@ -446,7 +483,7 @@
     }
 
     function cargarHome() {
-      // Cartelera
+      // Cartelera fija
       const cartRail = document.getElementById('carteleraRail');
       cartRail.innerHTML = '';
       carteleraArgentina.forEach(c => {
@@ -460,21 +497,17 @@
         `;
       });
 
-      // Secciones estáticas
-      const sRail = document.getElementById('shortsRail');
-      sRail.innerHTML = '';
-      catalog.filter(i => i.tipo === 'short').forEach(i => sRail.appendChild(crearShortCard(i)));
-
-      const cRail = document.getElementById('conciertosRail');
-      cRail.innerHTML = '';
-      catalog.filter(i => i.categoria === 'Conciertos').forEach(i => cRail.appendChild(crearCard(i)));
-
-      const teRail = document.getElementById('teatroRail');
-      teRail.innerHTML = '';
-      catalog.filter(i => i.categoria === 'Teatro').forEach(i => teRail.appendChild(crearCard(i)));
-
-      // Cargar contenido dinámico por IP
+      // 1. Tendencias por IP del país
       cargarTendenciasPorIP();
+
+      // 2. Shorts Musicales Dinámicos (búsqueda real + carátulas originales)
+      cargarSeccionDinamica('shortsRail', 'uadav_cache_shorts', 'music shorts', 'Shorts', true);
+
+      // 3. Conciertos Completos Dinámicos (búsqueda real + carátulas originales)
+      cargarSeccionDinamica('conciertosRail', 'uadav_cache_conciertos', 'concierto completo en vivo hd', 'Conciertos');
+
+      // 4. Shows Teatrales Dinámicos (búsqueda real + carátulas originales)
+      cargarSeccionDinamica('teatroRail', 'uadav_cache_teatro', 'obra de teatro completa', 'Teatro');
     }
 
     function filtrarCategoria(cat, btn) {
@@ -489,20 +522,17 @@
 
       if (cat === 'todas') { resetearVista(); return; }
 
-      document.getElementById('mainContainer').classList.add('hidden');
-      const gridView = document.getElementById('gridViewSection');
-      const gridContainer = document.getElementById('gridContainer');
-      gridView.classList.remove('hidden');
+      const busquedasPorCategoria = {
+        'Shorts': 'music shorts',
+        'Trending': 'musica en tendencia',
+        'Conciertos': 'concierto completo live',
+        'Teatro': 'obra de teatro completa',
+        'Cartelera': 'eventos musica en vivo'
+      };
 
-      document.getElementById('gridTitle').innerText = `Categoría: ${cat}`;
-      gridContainer.innerHTML = '';
-
-      let lista = catalog.filter(v => v.categoria.toLowerCase() === cat.toLowerCase());
-      if (lista.length === 0) lista = catalog;
-
-      lista.forEach(item => {
-        gridContainer.appendChild(item.tipo === 'short' ? crearShortCard(item) : crearCard(item));
-      });
+      const queryTarget = busquedasPorCategoria[cat] || cat;
+      document.getElementById('searchInput').value = queryTarget;
+      ejecutarBusqueda();
     }
 
     function resetearVista() {
