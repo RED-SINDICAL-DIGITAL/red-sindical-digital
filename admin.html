@@ -30,21 +30,18 @@
     </div>
 
     <div id="panelContent" class="hidden space-y-8">
-      
-      <!-- Gestor de Secciones -->
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Secciones</h2>
         <div id="seccionesList" class="space-y-2"></div>
       </div>
 
-      <!-- Gestor de Artistas -->
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Artistas</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div><label>Nombre</label><input id="artNombre" placeholder="Ej: Circo Servian"></div>
           <div><label>Rubro</label><input id="artRubro" placeholder="Ej: Circo / Magia / Música"></div>
           <div><label>Foto de Perfil (URL)</label><input id="artFoto" placeholder="https://..."></div>
-          <div><label>Foto de Portada / Banner (URL)</label><input id="artPortada" placeholder="https://... (Imagen horizontal)"></div>
+          <div><label>Foto de Portada / Banner (URL)</label><input id="artPortada" placeholder="https://..."></div>
           <div class="md:col-span-2"><label>Bio</label><textarea id="artBio" placeholder="Descripción del artista"></textarea></div>
           <div><label>Tiene YouTube?</label>
             <select id="artTieneYT" class="bg-[#0a0a0c] border border-uadav-border rounded p-2 w-full">
@@ -52,88 +49,62 @@
               <option value="false">No (Subir link directo)</option>
             </select>
           </div>
-          <div><label>ID Canal YouTube (opcional)</label><input id="artLink" placeholder="Ej: UCM7Il4ZSI6aFVp1UJtJNXRA"></div>
+          <div><label>ID Canal YouTube (opcional - se extrae solo)</label><input id="artLink" placeholder="Ej: UCM7Il4ZSI6aFVp1UJtJNXRA (o pegar la URL)"></div>
           <div><label>Contacto</label><input id="artContacto" placeholder="WhatsApp o Email"></div>
-          <div class="md:col-span-2"><label>Videos Manuales (Un link o ID por línea. Puede ser YouTube, MP4, Drive, Dropbox)</label><textarea id="artVideos" rows="4" placeholder="https://www.youtube.com/watch?v=XXXX&#10;https://drive.google.com/file/d/XXXX/preview"></textarea></div>
+          <div class="md:col-span-2"><label>Videos Manuales (Un link o ID por línea)</label><textarea id="artVideos" rows="4" placeholder="https://www.youtube.com/watch?v=XXXX&#10;https://drive.google.com/file/d/XXXX/preview"></textarea></div>
         </div>
-        <button onclick="guardarArtista()" id="btnGuardarArtista" class="btn btn-save mb-4">Agregar Artista a la Base de Datos</button>
+        <button onclick="guardarArtista()" id="btnGuardarArtista" class="btn btn-save mb-4">Agregar Artista</button>
         <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar Edición</button>
-        
         <div id="artistasList"></div>
       </div>
 
       <div class="fixed bottom-4 right-4">
         <button onclick="guardarTodo()" class="btn btn-save text-base shadow-2xl px-6 py-4">GUARDAR CAMBIOS EN LA NUBE</button>
       </div>
-
     </div>
   </div>
 
   <script>
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
-    let ADMIN_KEY = '';
-    let seccionesData = [];
-    let artistasData = [];
-    let editandoId = null;
+    let ADMIN_KEY = '', seccionesData = [], artistasData = [], editandoId = null;
 
     function conectar() {
       ADMIN_KEY = document.getElementById('adminKeyInput').value;
       if (!ADMIN_KEY) return alert("Poné la clave secreta");
       fetch(API_URL + 'secciones').then(r => r.json()).then(data => {
         document.getElementById('panelContent').classList.remove('hidden');
-        seccionesData = data;
-        renderSecciones();
+        seccionesData = data; renderSecciones();
         fetch(API_URL + 'artistas_uadav').then(r => r.json()).then(renderArtistas);
-      }).catch(err => alert("Error al conectar: " + err));
+      }).catch(err => alert("Error: " + err));
     }
 
     function renderSecciones() {
-      const list = document.getElementById('seccionesList');
-      list.innerHTML = '';
+      const list = document.getElementById('seccionesList'); list.innerHTML = '';
       seccionesData.forEach((sec, index) => {
-        list.innerHTML += `
-          <div class="item-box">
-            <div class="flex justify-between items-center mb-2">
-              <span class="font-bold text-sm">${sec.nombre}</span>
-              <div class="flex items-center gap-2">
-                <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-                  <input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa
-                </label>
-              </div>
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-              <div><label>Modo</label>
-                <select onchange="seccionesData[${index}].modo = this.value">
-                  <option value="auto" ${sec.modo === 'auto' ? 'selected' : ''}>Auto</option>
-                  <option value="manual" ${sec.modo === 'manual' ? 'selected' : ''}>Manual</option>
-                </select>
-              </div>
-              <div><label>Query (Si es Auto)</label><input value="${sec.query || ''}" oninput="seccionesData[${index}].query = this.value"></div>
-              <div><label>IDs Manuales (Si es Manual)</label><input value="${(sec.ids_manuales || []).join(',')}" oninput="seccionesData[${index}].ids_manuales = this.value.split(',').map(i => i.trim()).filter(i => i)"></div>
-            </div>
-          </div>`;
+        list.innerHTML += `<div class="item-box">
+          <div class="flex justify-between items-center mb-2"><span class="font-bold text-sm">${sec.nombre}</span><label class="flex items-center gap-2 text-xs text-slate-400"><input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa</label></div>
+          <div class="grid grid-cols-3 gap-2">
+            <div><label>Modo</label><select onchange="seccionesData[${index}].modo = this.value"><option value="auto" ${sec.modo === 'auto' ? 'selected' : ''}>Auto</option><option value="manual" ${sec.modo === 'manual' ? 'selected' : ''}>Manual</option></select></div>
+            <div><label>Query (Auto)</label><input value="${sec.query || ''}" oninput="seccionesData[${index}].query = this.value"></div>
+            <div><label>IDs Manuales</label><input value="${(sec.ids_manuales || []).join(',')}" oninput="seccionesData[${index}].ids_manuales = this.value.split(',').map(i => i.trim()).filter(i => i)"></div>
+          </div>
+        </div>`;
       });
     }
 
     function editarArtista(id) {
-      const artista = artistasData.find(a => a.id === id);
-      if (!artista) return;
-
+      const a = artistasData.find(x => x.id === id); if (!a) return;
       editandoId = id;
-      document.getElementById('artNombre').value = artista.nombre;
-      document.getElementById('artRubro').value = artista.rubro || '';
-      document.getElementById('artFoto').value = artista.foto || '';
-      document.getElementById('artPortada').value = artista.portada || '';
-      document.getElementById('artBio').value = artista.bio || '';
-      document.getElementById('artTieneYT').value = artista.tiene_youtube ? 'true' : 'false';
-      document.getElementById('artLink').value = artista.youtube_channel_id || '';
-      document.getElementById('artContacto').value = artista.contacto || '';
-
-      const videosManuales = artista.videos_manuales || [];
-      document.getElementById('artVideos').value = videosManuales.map(v => v.url).join('\n');
-
+      document.getElementById('artNombre').value = a.nombre;
+      document.getElementById('artRubro').value = a.rubro || '';
+      document.getElementById('artFoto').value = a.foto || '';
+      document.getElementById('artPortada').value = a.portada || '';
+      document.getElementById('artBio').value = a.bio || '';
+      document.getElementById('artTieneYT').value = a.tiene_youtube ? 'true' : 'false';
+      document.getElementById('artLink').value = a.youtube_channel_id || '';
+      document.getElementById('artContacto').value = a.contacto || '';
+      document.getElementById('artVideos').value = (a.videos_manuales || []).map(v => v.url).join('\n');
       document.getElementById('btnGuardarArtista').innerText = "Actualizar Artista";
-      document.getElementById('btnGuardarArtista').classList.remove('bg-uadav-accent');
       document.getElementById('btnGuardarArtista').classList.add('bg-blue-500');
       document.getElementById('btnCancelarEdicion').classList.remove('hidden');
       window.scrollTo({ top: 300, behavior: 'smooth' });
@@ -141,18 +112,9 @@
 
     function cancelarEdicion() {
       editandoId = null;
-      document.getElementById('artNombre').value = '';
-      document.getElementById('artRubro').value = '';
-      document.getElementById('artFoto').value = '';
-      document.getElementById('artPortada').value = '';
-      document.getElementById('artBio').value = '';
+      ['artNombre','artRubro','artFoto','artPortada','artBio','artLink','artContacto','artVideos'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('artTieneYT').value = 'true';
-      document.getElementById('artLink').value = '';
-      document.getElementById('artContacto').value = '';
-      document.getElementById('artVideos').value = '';
-
-      document.getElementById('btnGuardarArtista').innerText = "Agregar Artista a la Base de Datos";
-      document.getElementById('btnGuardarArtista').classList.add('bg-uadav-accent');
+      document.getElementById('btnGuardarArtista').innerText = "Agregar Artista";
       document.getElementById('btnGuardarArtista').classList.remove('bg-blue-500');
       document.getElementById('btnCancelarEdicion').classList.add('hidden');
     }
@@ -160,77 +122,49 @@
     function guardarArtista() {
       const videosRaw = document.getElementById('artVideos').value.trim();
       const videos = videosRaw ? videosRaw.split('\n').map(line => {
-        const trimmed = line.trim();
-        if (!trimmed) return null;
+        let trimmed = line.trim(); if (!trimmed) return null;
         if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
-          const id = trimmed.split('v=')[1] || trimmed.split('/').pop();
+          let id = trimmed.split('v=')[1] || trimmed.split('/').pop(); if(id.includes('&')) id = id.split('&')[0];
           return { tipo: 'youtube', url: id };
-        } else {
-          return { tipo: 'mp4', url: trimmed };
-        }
+        } else return { tipo: 'mp4', url: trimmed };
       }).filter(v => v) : [];
 
-      const nombre = document.getElementById('artNombre').value;
-      if (!nombre) return alert("Poné el nombre del artista");
+      let channelIdInput = document.getElementById('artLink').value.trim();
+      // Extraer solo el ID del canal si pegó URL
+      if (channelIdInput.includes('channel_id=')) channelIdInput = channelIdInput.split('channel_id=')[1].split('&')[0];
+
+      const dataArtista = {
+        id: editandoId || 'art-' + Date.now(),
+        nombre: document.getElementById('artNombre').value,
+        rubro: document.getElementById('artRubro').value,
+        foto: document.getElementById('artFoto').value,
+        portada: document.getElementById('artPortada').value,
+        bio: document.getElementById('artBio').value,
+        tiene_youtube: document.getElementById('artTieneYT').value === 'true',
+        youtube_channel_id: channelIdInput,
+        videos_manuales: videos,
+        contacto: document.getElementById('artContacto').value
+      };
+      if (!dataArtista.nombre) return alert("Poné el nombre");
 
       if (editandoId) {
         const index = artistasData.findIndex(a => a.id === editandoId);
-        if (index !== -1) {
-          artistasData[index] = {
-            ...artistasData[index],
-            nombre: nombre,
-            rubro: document.getElementById('artRubro').value,
-            foto: document.getElementById('artFoto').value,
-            portada: document.getElementById('artPortada').value,
-            bio: document.getElementById('artBio').value,
-            tiene_youtube: document.getElementById('artTieneYT').value === 'true',
-            youtube_channel_id: document.getElementById('artLink').value,
-            videos_manuales: videos,
-            contacto: document.getElementById('artContacto').value
-          };
-        }
+        if (index !== -1) artistasData[index] = dataArtista;
         cancelarEdicion();
-        alert("Artista actualizado. Ahora hacé click en GUARDAR CAMBIOS.");
-      } else {
-        const nuevoArt = {
-          id: 'art-' + Date.now(),
-          nombre: nombre,
-          rubro: document.getElementById('artRubro').value,
-          foto: document.getElementById('artFoto').value,
-          portada: document.getElementById('artPortada').value,
-          bio: document.getElementById('artBio').value,
-          tiene_youtube: document.getElementById('artTieneYT').value === 'true',
-          youtube_channel_id: document.getElementById('artLink').value,
-          videos_manuales: videos,
-          contacto: document.getElementById('artContacto').value
-        };
-        artistasData.push(nuevoArt);
-        alert("Artista agregado. Ahora hacé click en GUARDAR CAMBIOS.");
-      }
-
+      } else artistasData.push(dataArtista);
+      
       renderArtistas(artistasData);
+      alert("Listo. Ahora hacé click en GUARDAR CAMBIOS.");
     }
 
     function renderArtistas(data) {
       artistasData = data || [];
-      const list = document.getElementById('artistasList');
-      list.innerHTML = '';
-      artistasData.forEach(a => {
-        list.innerHTML += `<div class="item-box flex justify-between items-center">
-          <div>
-            <h4 class="font-bold text-white">${a.nombre}</h4>
-            <p class="text-xs text-slate-400">${a.rubro || 'Sin rubro'} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'} (${(a.videos_manuales||[]).length} videos)</p>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button>
-            <button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button>
-          </div>
-        </div>`;
-      });
+      const list = document.getElementById('artistasList'); list.innerHTML = '';
+      artistasData.forEach(a => list.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold">${a.nombre}</h4><p class="text-xs text-slate-400">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'} (${(a.videos_manuales||[]).length} videos)</p></div><div class="flex gap-2"><button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button></div></div>`);
     }
 
     function eliminarArtista(id) {
-      if(!confirm("Seguro que querés eliminar este artista?")) return;
+      if (!confirm("¿Eliminar?")) return;
       if (editandoId === id) cancelarEdicion();
       artistasData = artistasData.filter(a => a.id !== id);
       renderArtistas(artistasData);
@@ -238,8 +172,8 @@
 
     function guardarTodo() {
       if (!ADMIN_KEY) return alert("Conectate primero");
-      fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) }).then(() => console.log('Secciones guardadas'));
-      fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) }).then(() => alert("✅ Todos los cambios fueron guardados en la nube exitosamente."));
+      fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) });
+      fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) }).then(() => alert("✅ Guardado en la nube"));
     }
   </script>
 </body>
