@@ -88,12 +88,6 @@
 
       <!-- BOTONES DE ACCIÓN HEADER -->
       <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-        <!-- Contador de visitas visible -->
-        <div id="visitasBadge" class="hidden lg:flex items-center gap-1.5 bg-slate-900 border border-uadav-border px-3 py-1.5 rounded-full text-[10px] font-bold text-slate-300">
-          <i class="fa-solid fa-eye text-uadav-accent"></i>
-          <span id="visitasContador">12.5K</span>
-        </div>
-
         <div id="countryBadge" class="hidden lg:flex items-center gap-2 bg-slate-900 border border-uadav-border px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300">
           <i class="fa-solid fa-earth-americas text-uadav-accent"></i>
           <span id="countryBadgeText">Detectando IP...</span>
@@ -105,19 +99,18 @@
       </div>
     </div>
 
-    <!-- NAVEGACIÓN DE CATEGORÍAS -->
+    <!-- NAVEGACIÓN DE CATEGORÍAS (INCLUYE TEATROS Y CIRCOS) -->
     <nav class="border-t border-uadav-border bg-[#050505]">
       <div class="max-w-[1400px] mx-auto px-4 flex items-center gap-2 overflow-x-auto py-2.5 sm:py-3 no-scrollbar text-xs font-semibold">
         <button tabindex="0" onclick="filtrarCategoria('todas', this)" class="tv-focusable cat-btn bg-uadav-accent text-slate-950 px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all">Inicio</button>
         <button tabindex="0" onclick="filtrarCategoria('Radios', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-radio text-uadav-accent mr-1"></i> Radios en Vivo</button>
         <button tabindex="0" onclick="filtrarCategoria('Artistas', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-user-ninja text-uadav-accent mr-1"></i> Artistas</button>
         <button tabindex="0" onclick="filtrarCategoria('Teatros', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-masks-theater text-uadav-accent mr-1"></i> Teatros</button>
+        <button tabindex="0" onclick="filtrarCategoria('Circos', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-tent text-uadav-accent mr-1"></i> Circos</button>
         <button tabindex="0" onclick="filtrarCategoria('Shorts', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-bolt text-uadav-accent mr-1"></i> Shorts</button>
         <button tabindex="0" onclick="filtrarCategoria('Trending', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all">Tendencias por País</button>
         <button tabindex="0" onclick="filtrarCategoria('Cartelera', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-ticket text-uadav-accent mr-1"></i> Cartelera</button>
         <button tabindex="0" onclick="filtrarCategoria('Conciertos', this)" class="tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all">Conciertos</button>
-        <!-- Botón de Circos (oculto por defecto hasta activarlo en panel) -->
-        <button id="btnCircos" tabindex="0" onclick="filtrarCategoria('Circos', this)" class="hidden tv-focusable cat-btn bg-[#0f0f13] border border-uadav-border text-slate-300 hover:text-uadav-accent px-4 sm:px-5 py-1.5 sm:py-2 rounded-full whitespace-nowrap transition-all"><i class="fa-solid fa-solid fa-tent text-uadav-accent mr-1"></i> Circos</button>
       </div>
     </nav>
   </header>
@@ -163,9 +156,8 @@
           <p class="text-xs sm:text-sm text-slate-400">Emisoras en directo con metadatos y audio HD continuo</p>
         </div>
       </div>
-      
-      <div id="radiosContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-        <!-- Generado dinámicamente desde Cloudflare -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6" id="radiosGrid">
+        <!-- Generado dinámicamente -->
       </div>
     </section>
 
@@ -179,7 +171,6 @@
           <p class="text-xs sm:text-sm text-slate-400">Toca un artista para escuchar sus producciones y canciones top</p>
         </div>
       </div>
-
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4" id="artistasGrid">
         <!-- Generado dinámicamente -->
       </div>
@@ -200,8 +191,23 @@
       </div>
     </section>
 
+    <!-- SECCIÓN CIRCOS (OCULTA POR DEFECTO, SE ACTIVA DESDE PANEL) -->
+    <section id="circosSection" class="hidden">
+      <div class="flex items-center justify-between mb-4 sm:mb-5">
+        <div>
+          <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-tent text-uadav-accent"></i> Circos & Varieté
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400">Espectáculos circenses, magia y acrobacia en vivo</p>
+        </div>
+      </div>
+      <div id="circosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]">
+        <div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando espectáculos circenses...</div>
+      </div>
+    </section>
+
     <!-- SECCIÓN TENDENCIAS POR IP DEL PAÍS -->
-    <section id="trendingSection">
+    <section>
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <div>
           <h2 id="countryLabel" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
@@ -216,7 +222,7 @@
     </section>
 
     <!-- SHORTS MUSICALES & TEATRALES (VERTICAL 9:16) -->
-    <section id="shortsSection">
+    <section>
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <div>
           <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
@@ -244,7 +250,7 @@
     </section>
 
     <!-- CONCIERTOS COMPLETOS -->
-    <section id="conciertosSection">
+    <section>
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2">
           <i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos en Vivo
@@ -268,7 +274,7 @@
     <div id="gridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6"></div>
   </section>
 
-  <!-- REPRODUCTOR FLOTANTE PARA AUDIO EN VIVO -->
+  <!-- REPRODUCTOR FLOTANTE PARA AUDIO EN VIVO (BEAT DIGITAL RADIO) -->
   <div id="floatingRadioPlayer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0d]/95 border-t-2 border-uadav-accent backdrop-blur-xl px-4 py-3 shadow-2xl transform translate-y-full transition-transform duration-300">
     <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
       
@@ -284,6 +290,7 @@
         </div>
       </div>
 
+      <!-- ANIMACIÓN DE ECUALIZADOR -->
       <div id="radioEqualizer" class="hidden sm:flex items-center gap-1 h-5 px-2">
         <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.1s"></span>
         <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.4s"></span>
@@ -291,6 +298,7 @@
         <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.5s"></span>
       </div>
 
+      <!-- CONTROLES -->
       <div class="flex items-center gap-3 flex-shrink-0">
         <button tabindex="0" onclick="togglePlayRadio()" id="radioPlayBtn" class="tv-focusable w-10 h-10 sm:w-11 sm:h-11 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-black text-base shadow-lg hover:scale-105 transition-all">
           <i class="fa-solid fa-pause"></i>
@@ -300,6 +308,7 @@
         </button>
       </div>
     </div>
+    <!-- AUDIO NATIVO -->
     <audio id="audioStream" src="" preload="none"></audio>
   </div>
 
@@ -339,11 +348,36 @@
     </div>
   </div>
 
+  <!-- MODAL FICHA NATIVA ARTISTA UADAV -->
+  <div id="artistModal" onclick="cerrarModalArtistaBackdrop(event)" class="fixed inset-0 z-50 bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-4">
+    <div class="bg-[#0f0f13] border border-uadav-border w-full max-w-xl rounded-3xl p-6 relative shadow-2xl" onclick="event.stopPropagation()">
+      <button onclick="cerrarModalArtista()" class="absolute top-4 right-4 w-9 h-9 bg-slate-900 text-slate-400 hover:text-white rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="flex items-center gap-5 mb-5">
+        <img id="artModalFoto" src="" class="w-20 h-20 rounded-2xl object-cover border-2 border-uadav-accent shadow-lg">
+        <div>
+          <span class="text-[10px] text-uadav-accent font-black tracking-widest uppercase block">Artista Registrado</span>
+          <h3 id="artModalNombre" class="text-2xl font-black text-white"></h3>
+          <p id="artModalGenero" class="text-xs text-slate-400 mt-0.5"></p>
+        </div>
+      </div>
+      <div id="artModalBio" class="text-xs text-slate-300 leading-relaxed mb-6 border-t border-uadav-border pt-4">Cargando biografía...</div>
+      <div class="flex gap-3">
+        <button id="artModalActionBtn" class="flex-1 bg-uadav-accent text-slate-950 font-black text-xs py-3 rounded-xl">
+          <i class="fa-solid fa-magnifying-glass"></i> Buscar Obras
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ==========================================
-    // CONFIGURACIÓN DE LA API
+    // UADAVSTREAM WEBAPP - CONECTADA A CLOUDFLARE KV
+    // Desarrollado por Beat Digital Medios
     // ==========================================
-    const API_URL = 'https://uadav-api.uadavstream.workers.dev/';
+
+    const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
     const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80';
 
     const SERVIDORES_INVIDIOUS = [
@@ -354,20 +388,74 @@
       'https://iv.melmac.space'
     ];
 
-    // ==========================================
-    // ESTADO GLOBAL (Se llena dinámicamente)
-    // ==========================================
-    let seccionesConfig = [];
+    // --- DATOS DE RESPALDO (Por si Cloudflare no responde) ---
+    const artistasFallback = [
+      { nombre: "Bizarrap", foto: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80", genero: "Productor / Urban", query: "Bizarrap Music Sessions" },
+      { nombre: "Duki", foto: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&q=80", genero: "Trap / Hip-Hop", query: "Duki canciones mas escuchadas" },
+      { nombre: "Maria Becerra", foto: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=300&q=80", genero: "Pop / Urban", query: "Maria Becerra hits" },
+      { nombre: "Milo J", foto: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=300&q=80", genero: "Urban Rap", query: "Milo J lo mejor" },
+      { nombre: "Trueno", foto: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=300&q=80", genero: "Hip Hop / Rap", query: "Trueno en vivo" },
+      { nombre: "Fito Páez", foto: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=300&q=80", genero: "Rock Nacional", query: "Fito Paez lo mejor" }
+    ];
+
+    const carteleraFallback = [
+      { fecha: "EN SALA", artista: "El Método Grönholm", lugar: "Teatro Plaza", tipo: "Teatro / Comedia" },
+      { fecha: "PRÓXIMAMENTE", artista: "WOS", lugar: "Estadio Racing Club", tipo: "Música Urbana" },
+      { fecha: "EN AGENDA", artista: "Babasónicos", lugar: "Anfiteatro Municipal", tipo: "Rock Nacional" },
+      { fecha: "TEMPORADA", artista: "Les Luthiers / Antología", lugar: "Teatro Broadway", tipo: "Humor Teatral" }
+    ];
+
+    const radiosFallback = [
+      { id: "beat-digital", nombre: "BEAT DIGITAL RADIO", descripcion: "Transmisión oficial de música electrónica y programación 24/7", stream_url: "https://stream.zeno.fm/9s7nnwmknkhvv", logo: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=500&q=80", bitrate: "320 kbps AAC", ubicacion: "Rosario, AR", es_oficial: true, activa: true },
+      { id: "uadav-beats", nombre: "UADAV Beats", descripcion: "Sesiones exclusivas de Deep & House", stream_url: "https://stream.zeno.fm/f3wvbb757h4tv", logo: "https://images.unsplash.com/photo-1571266028243-e4733b0f0bb1?w=400&q=80", bitrate: "192 kbps", ubicacion: "Global", es_oficial: false, activa: true }
+    ];
+
+    const seccionesFallback = [
+      {id: "radios", nombre: "Radios en Vivo", activa: true},
+      {id: "artistas", nombre: "Artistas Más Escuchados", activa: true},
+      {id: "teatros", nombre: "Teatros", activa: true},
+      {id: "trending", nombre: "Lo más visto en tu país", activa: true},
+      {id: "shorts", nombre: "Shorts 9:16", activa: true},
+      {id: "cartelera", nombre: "Cartelera de Eventos", activa: true},
+      {id: "conciertos", nombre: "Conciertos", activa: true},
+      {id: "circos", nombre: "Circos & Varieté", activa: false},
+      {id: "musica_urbana", nombre: "Música Urbana", activa: false}
+    ];
+
+    // --- ESTADO GLOBAL DE LA WEBAPP ---
+    let seccionesActivas = [];
     let artistasData = [];
     let radiosData = [];
-    let contadoresData = { visitas_totales: 0, descargas_app: 0 };
+    let carteleraData = [];
+
+    // --- FUNCIONES DE OBTENCIÓN DE DATOS ---
+    async function obtenerDatos(seccion) {
+      try {
+        const res = await fetch(API_URL + seccion);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0)) {
+            return data;
+          }
+        }
+      } catch (e) {
+        console.log("Error obteniendo " + seccion + ", usando fallback.");
+      }
+      
+      // Fallback
+      if (seccion === 'secciones') return seccionesFallback;
+      if (seccion === 'artistas_uadav') return artistasFallback;
+      if (seccion === 'radios') return radiosFallback;
+      if (seccion === 'eventos_cartelera') return carteleraFallback;
+      return [];
+    }
 
     function obtenerCaratulaUltraRapida(id) {
       if (!id) return FALLBACK_THUMB;
       return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
     }
 
-    // RADIO CONTROLS
+    // --- RADIO CONTROLS ---
     let isRadioPlaying = false;
     const audioStream = document.getElementById('audioStream');
 
@@ -405,89 +493,67 @@
       document.getElementById('floatingRadioPlayer').classList.add('translate-y-full');
     }
 
-    // ==========================================
-    // CARGA DE DATOS DESDE CLOUDFLARE KV
-    // ==========================================
-    
-    // 1. Cargar Configuración General
-    async function cargarConfig() {
-      const res = await fetch(API_URL + 'config');
-      return await res.json();
-    }
-
-    // 2. Cargar Secciones (para activar/desactivar)
-    async function cargarSecciones() {
-      const res = await fetch(API_URL + 'secciones');
-      return await res.json();
-    }
-
-    // 3. Cargar Artistas y Radios
-    async function cargarDatosDinamicos() {
-      // Cargar artistas
-      try {
-        const resArt = await fetch(API_URL + 'artistas_uadav');
-        artistasData = await resArt.json();
-      } catch(e) { artistasData = []; }
-
-      // Cargar Radios
-      try {
-        const resRad = await fetch(API_URL + 'radios');
-        radiosData = await resRad.json();
-      } catch(e) { radiosData = []; }
-
-      // Cargar Contadores
-      try {
-        const resCont = await fetch(API_URL + 'contadores');
-        contadoresData = await resCont.json();
-      } catch(e) { contadoresData = { visitas_totales: 0, descargas_app: 0 }; }
-
-      // Renderizar todo lo que ya tenemos
-      renderRadios();
-      renderArtistas();
-      renderContadores();
-      cargarTendenciasPorIP();
-      cargarShortsExclusivos();
-      cargarSeccionDinamica('teatrosRail', 'uadav_cache_teatros_v3', 'obra de teatro completa en vivo comedia argentina', 'Teatro');
-      cargarSeccionDinamica('conciertosRail', 'uadav_cache_conciertos_v3', 'concierto completo en vivo hd', 'Conciertos');
-    }
-
-    // Renderizar Radios dinámicamente
-    function renderRadios() {
-      const container = document.getElementById('radiosContainer');
+    // --- RENDERIZADO DE DATOS ---
+    function renderArtistasUI() {
+      const container = document.getElementById('artistasGrid');
       container.innerHTML = '';
       
-      if (radiosData.length === 0) {
-        container.innerHTML = '<div class="text-slate-500 text-sm">No hay radios cargadas en el panel.</div>';
-        return;
-      }
+      // Filtrar solo los que tengan "es_destacado" o todos si no está definido
+      const artistasMostrar = artistasData.length > 0 ? artistasData : artistasFallback;
 
-      radiosData.forEach(radio => {
-        if (!radio.activa) return; // Ocultar si no está activa
-
-        const esOficial = radio.es_oficial ? `
-          <div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md">
-            <i class="fa-solid fa-star mr-1"></i> Emisora Oficial
-          </div>` : '';
-
-        const spanClass = radio.es_oficial ? 'md:col-span-2 bg-gradient-to-r from-slate-900 via-uadav-card to-[#14141d] border-2 border-uadav-accent/60' : 'bg-uadav-card border border-uadav-border';
+      artistasMostrar.forEach(a => {
+        const nombre = a.nombre || "Artista";
+        const foto = a.foto || FALLBACK_THUMB;
+        const genero = a.rubro || a.genero || "Artista UADAV";
+        const query = a.query || a.nombre || nombre;
 
         container.innerHTML += `
-          <div tabindex="0" onclick="sintonizarRadio('${radio.nombre}', '${radio.stream_url}', '${radio.logo}', '${radio.ubicacion}')" 
-            class="tv-focusable relative ${spanClass} hover:border-uadav-accent rounded-3xl p-5 sm:p-6 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col justify-between">
-            ${esOficial}
+          <div tabindex="0" onclick="buscarArtista('${query}', '${nombre}')" 
+            class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl p-3 text-center cursor-pointer group transition-all">
+            <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden mb-3 border-2 border-uadav-border group-hover:border-uadav-accent transition-colors shadow-lg">
+              <img src="${foto}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="${nombre}">
+            </div>
+            <h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors truncate">${nombre}</h4>
+            <span class="text-[9px] sm:text-[10px] text-slate-400 block mt-0.5">${genero}</span>
+          </div>
+        `;
+      });
+    }
+
+    function renderRadiosUI() {
+      const container = document.getElementById('radiosGrid');
+      if (!container) return;
+      
+      // Usar las radios de Cloudflare o fallback
+      const radiosMostrar = radiosData.length > 0 ? radiosData : radiosFallback;
+
+      container.innerHTML = '';
+      
+      // Renderizar Beat Digital (Principal) si existe
+      const principal = radiosMostrar.find(r => r.es_oficial);
+      if (principal) {
+        container.innerHTML += `
+          <div tabindex="0" onclick="sintonizarRadio('${principal.nombre}', '${principal.stream_url}', '${principal.logo}', '${principal.ubicacion}')" 
+            class="tv-focusable relative md:col-span-2 bg-gradient-to-r from-slate-900 via-uadav-card to-[#14141d] border-2 border-uadav-accent/60 hover:border-uadav-accent rounded-3xl p-5 sm:p-6 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col justify-between">
+            <div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md">
+              <i class="fa-solid fa-star mr-1"></i> Emisora Oficial
+            </div>
             <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
               <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 border border-uadav-accent/30">
-                <img src="${radio.logo}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="${radio.nombre}">
+                <img src="${principal.logo}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="${principal.nombre}">
                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <i class="fa-solid fa-radio text-3xl text-uadav-accent group-hover:scale-110 transition-transform"></i>
                 </div>
               </div>
               <div class="flex-1">
-                <h3 class="text-xl sm:text-3xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">${radio.nombre}</h3>
-                <p class="text-xs sm:text-sm text-slate-300 mt-1">${radio.descripcion}</p>
+                <span class="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span> AIR STREAM HQ
+                </span>
+                <h3 class="text-xl sm:text-3xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">${principal.nombre}</h3>
+                <p class="text-xs sm:text-sm text-slate-300 mt-1">${principal.descripcion}</p>
                 <div class="flex items-center gap-4 mt-3 text-xs text-slate-400 font-medium">
-                  <span><i class="fa-solid fa-signal text-uadav-accent mr-1"></i> ${radio.bitrate}</span>
-                  <span><i class="fa-solid fa-location-dot text-uadav-accent mr-1"></i> ${radio.ubicacion}</span>
+                  <span><i class="fa-solid fa-signal text-uadav-accent mr-1"></i> ${principal.bitrate}</span>
+                  <span><i class="fa-solid fa-location-dot text-uadav-accent mr-1"></i> ${principal.ubicacion}</span>
                 </div>
               </div>
             </div>
@@ -502,43 +568,89 @@
             </div>
           </div>
         `;
-      });
-    }
-
-    // Renderizar Artistas dinámicamente
-    function renderArtistas() {
-      const container = document.getElementById('artistasGrid');
-      container.innerHTML = '';
-
-      if (artistasData.length === 0) {
-        container.innerHTML = '<div class="text-slate-500 text-sm">No hay artistas cargados en el panel.</div>';
-        return;
       }
 
-      artistasData.forEach(a => {
+      // Renderizar las demás radios
+      radiosMostrar.filter(r => !r.es_oficial).forEach(radio => {
         container.innerHTML += `
-          <div tabindex="0" onclick="buscarArtista('${a.nombre}', '${a.tiene_youtube ? 'Canal de ' + a.nombre : 'Obras de ' + a.nombre}')" 
-            class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl p-3 text-center cursor-pointer group transition-all">
-            <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden mb-3 border-2 border-uadav-border group-hover:border-uadav-accent transition-colors shadow-lg">
-              <img src="${a.foto}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="${a.nombre}">
+          <div tabindex="0" onclick="sintonizarRadio('${radio.nombre}', '${radio.stream_url}', '${radio.logo}', '${radio.ubicacion}')" 
+            class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-3xl p-5 cursor-pointer group shadow-lg transition-all flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-4 mb-3">
+                <img src="${radio.logo}" class="w-16 h-16 rounded-xl object-cover border border-uadav-border" alt="${radio.nombre}">
+                <div>
+                  <span class="text-[9px] text-uadav-accent font-black tracking-widest uppercase">Radio</span>
+                  <h4 class="text-lg font-black text-white group-hover:text-uadav-accent transition-colors">${radio.nombre}</h4>
+                  <p class="text-xs text-slate-400">${radio.descripcion}</p>
+                </div>
+              </div>
             </div>
-            <h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors truncate">${a.nombre}</h4>
-            <span class="text-[9px] sm:text-[10px] text-slate-400 block mt-0.5">${a.rubro}</span>
+            <button class="w-full mt-4 bg-slate-900 border border-uadav-border group-hover:border-uadav-accent text-white font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-2 transition-all">
+              <i class="fa-solid fa-play text-uadav-accent"></i> Reproducir Radio
+            </button>
           </div>
         `;
       });
     }
 
-    // Renderizar Contador de Visitas
-    function renderContadores() {
-      const visitas = contadoresData.visitas_totales || 0;
-      const formato = visitas >= 1000 ? (visitas / 1000).toFixed(1) + 'K' : visitas;
-      document.getElementById('visitasContador').innerText = formato;
+    function renderCarteleraUI() {
+      const cartRail = document.getElementById('carteleraRail');
+      cartRail.innerHTML = '';
+      const carteleraMostrar = carteleraData.length > 0 ? carteleraData : carteleraFallback;
+
+      carteleraMostrar.forEach(c => {
+        cartRail.innerHTML += `
+          <div tabindex="0" class="tv-focusable min-w-[200px] sm:min-w-[240px] bg-[#0a0a0c] border border-uadav-border p-4 sm:p-5 rounded-2xl flex-shrink-0 hover:border-uadav-accent transition-colors group">
+            <span class="text-[10px] sm:text-xs font-black text-uadav-accent block mb-1 sm:mb-2 tracking-widest">${c.fecha || c.estado_badge}</span>
+            <h4 class="text-base sm:text-lg font-black text-white mb-1 group-hover:text-uadav-accent transition-colors">${c.artista || c.titulo}</h4>
+            <p class="text-xs sm:text-sm text-slate-400 mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${c.lugar}</p>
+            <span class="inline-block bg-slate-900 text-slate-300 text-[9px] sm:text-[10px] px-2 py-0.5 sm:py-1 rounded-full mt-2 border border-slate-800">${c.tipo || c.categoria}</span>
+          </div>
+        `;
+      });
     }
 
-    // ==========================================
-    // MOTOR ANTI-CUOTA Y BÚSQUEDA (Sin cambios)
-    // ==========================================
+    function filtrarCategoriasVisibles() {
+      // Ocultar/mostrar secciones según el estado de Cloudflare
+      seccionesActivas.forEach(sec => {
+        const section = document.getElementById(sec.id + 'Section') || document.getElementById(sec.id);
+        if (section) {
+          if (sec.activa) {
+            section.classList.remove('hidden');
+          } else {
+            section.classList.add('hidden');
+          }
+        }
+      });
+    }
+
+    // --- CARGA INICIAL ---
+    async function cargarHome() {
+      // 1. Obtener Secciones
+      seccionesActivas = await obtenerDatos('secciones');
+      filtrarCategoriasVisibles();
+
+      // 2. Obtener Artistas
+      artistasData = await obtenerDatos('artistas_uadav');
+      renderArtistasUI();
+
+      // 3. Obtener Radios
+      radiosData = await obtenerDatos('radios');
+      renderRadiosUI();
+
+      // 4. Obtener Cartelera
+      carteleraData = await obtenerDatos('eventos_cartelera');
+      renderCarteleraUI();
+
+      // 5. Cargar Secciones Dinámicas (Teatros, Shorts, Conciertos, Tendencias)
+      cargarSeccionDinamica('teatrosRail', 'uadav_cache_teatros_v3', 'obra de teatro completa en vivo comedia argentina', 'Teatro');
+      cargarSeccionDinamica('circosRail', 'uadav_cache_circos_v3', 'circo espectaculo variedad', 'Circos');
+      cargarTendenciasPorIP();
+      cargarShortsExclusivos();
+      cargarSeccionDinamica('conciertosRail', 'uadav_cache_conciertos_v3', 'concierto completo en vivo hd', 'Conciertos');
+    }
+
+    // --- FUNCIONES DE BÚSQUEDA Y RENDERIZADO (Iguales a antes) ---
     async function consultarRedInvidious(endpoint) {
       for (const server of SERVIDORES_INVIDIOUS) {
         try {
@@ -567,9 +679,10 @@
             countryName = ipData.country_name || countryCode;
           }
         }
-      } catch (e) { console.log("Usando región AR por defecto."); }
+      } catch (e) {}
 
       document.getElementById('countryBadgeText').innerText = countryName;
+      document.getElementById('countryBadge').classList.remove('hidden');
       document.getElementById('countryLabel').innerHTML = `<i class="fa-solid fa-fire text-red-500"></i> Lo más visto en ${countryName}`;
 
       const cacheKey = `uadav_trend_${countryCode}_v3`;
@@ -583,8 +696,7 @@
         if (data && Array.isArray(data)) {
           items = data.slice(0, 12).map(item => ({
             id: item.videoId, titulo: item.title, categoria: `Tendencia en ${countryName}`,
-            descripcion: item.author || "Destacado",
-            duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
+            descripcion: item.author || "Destacado", duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
             thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'video'
           }));
           localStorage.setItem(cacheKey, JSON.stringify(items));
@@ -607,14 +719,11 @@
       } else {
         const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent('#shorts teatro musica viral')}&type=video`);
         if (data && Array.isArray(data)) {
-          items = data.filter(item => item.lengthSeconds && item.lengthSeconds <= 60)
-            .slice(0, 10)
-            .map(item => ({
-              id: item.videoId, titulo: item.title.replace(/#shorts/gi, '').trim(), categoria: 'Short',
-              descripcion: item.author || "Short oficial",
-              duracion: item.lengthSeconds ? `${item.lengthSeconds}s` : "0:30",
-              thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'short'
-            }));
+          items = data.filter(item => item.lengthSeconds && item.lengthSeconds <= 60).slice(0, 10).map(item => ({
+            id: item.videoId, titulo: item.title.replace(/#shorts/gi, '').trim(), categoria: 'Short',
+            descripcion: item.author || "Short oficial", duracion: item.lengthSeconds ? `${item.lengthSeconds}s` : "0:30",
+            thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'short'
+          }));
           if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items));
         }
       }
@@ -633,13 +742,11 @@
       } else {
         const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent(searchQuery)}&type=video`);
         if (data && Array.isArray(data)) {
-          items = data.filter(item => !item.lengthSeconds || item.lengthSeconds > 90).slice(0, 10)
-            .map(item => ({
-              id: item.videoId, titulo: item.title, categoria: categoriaLabel,
-              descripcion: item.author || "Contenido HD",
-              duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
-              thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'video'
-            }));
+          items = data.filter(item => !item.lengthSeconds || item.lengthSeconds > 90).slice(0, 10).map(item => ({
+            id: item.videoId, titulo: item.title, categoria: categoriaLabel,
+            descripcion: item.author || "Contenido HD", duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
+            thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'video'
+          }));
           if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items));
         }
       }
@@ -672,8 +779,7 @@
         if (data && Array.isArray(data)) {
           resultados = data.slice(0, 15).map(item => ({
             id: item.videoId, titulo: item.title, categoria: "Resultado",
-            descripcion: item.author || "Búsqueda oficial",
-            duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
+            descripcion: item.author || "Búsqueda oficial", duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
             thumbnail: obtenerCaratulaUltraRapida(item.videoId),
             tipo: (item.lengthSeconds && item.lengthSeconds <= 60) ? 'short' : 'video'
           }));
@@ -691,9 +797,6 @@
       }
     }
 
-    // ==========================================
-    // RENDERIZACIÓN DE TARJETAS (Sin cambios)
-    // ==========================================
     function construirEmbedUrl(id) {
       return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1`;
     }
@@ -755,40 +858,11 @@
       return card;
     }
 
-    // ==========================================
-    // LOGICA DE CARGA Y FILTRADO
-    // ==========================================
-    
-    // Función principal al cargar la página
-    async function cargarHome() {
-      // 1. Cargar configuraciones y secciones
-      try {
-        const config = await cargarConfig();
-        const secciones = await cargarSecciones();
-        
-        seccionesConfig = secciones;
-
-        // Activar o desactivar botón de Circos en el menú
-        const circosSec = secciones.find(s => s.id === 'circos');
-        if (circosSec && circosSec.activa) {
-          document.getElementById('btnCircos').classList.remove('hidden');
-        }
-
-        // Ocultar secciones desactivadas en el main
-        secciones.forEach(sec => {
-          const sectionEl = document.getElementById(sec.id + 'Section');
-          if (sectionEl && !sec.activa) {
-            sectionEl.classList.add('hidden');
-          }
-        });
-
-      } catch(e) { console.log("Error cargando config de secciones:", e); }
-
-      // 2. Cargar datos dinámicos (Artistas, Radios, Contadores) y lanzar búsquedas
-      await cargarDatosDinamicos();
+    function buscarArtista(query, nombre) {
+      document.getElementById('searchInput').value = query;
+      ejecutarBusqueda();
     }
 
-    // Función para filtrar categorías desde el menú
     function filtrarCategoria(cat, btn) {
       if (btn) {
         document.querySelectorAll('.cat-btn').forEach(b => {
@@ -801,21 +875,25 @@
 
       if (cat === 'todas') { resetearVista(); return; }
 
-      if (cat === 'Radios') { resetearVista(); document.getElementById('radiosSection').scrollIntoView({ behavior: 'smooth' }); return; }
-      if (cat === 'Artistas') { resetearVista(); document.getElementById('artistasSection').scrollIntoView({ behavior: 'smooth' }); return; }
-      if (cat === 'Teatros') { resetearVista(); document.getElementById('teatrosSection').scrollIntoView({ behavior: 'smooth' }); return; }
-      if (cat === 'Circos') { 
-        resetearVista(); 
-        // Búsqueda específica para circos
-        document.getElementById('searchInput').value = 'circo espectaculo variedad en vivo'; 
-        ejecutarBusqueda(); 
-        return; 
+      const scrollTargets = {
+        'Radios': 'radiosSection',
+        'Artistas': 'artistasSection',
+        'Teatros': 'teatrosSection',
+        'Circos': 'circosSection',
+        'Cartelera': 'carteleraSection'
+      };
+
+      if (scrollTargets[cat]) {
+        resetearVista();
+        document.getElementById(scrollTargets[cat]).scrollIntoView({ behavior: 'smooth' });
+        return;
       }
 
       const busquedasPorCategoria = {
         'Shorts': '#shorts musica teatro viral',
         'Trending': 'obras teatro espectaculos tendencia',
         'Conciertos': 'concierto completo live',
+        'Circos': 'circo espectaculo variedad',
         'Cartelera': 'obras de teatro cartelera eventos'
       };
 
@@ -830,9 +908,6 @@
       document.getElementById('searchInput').value = '';
     }
 
-    // ==========================================
-    // REPRODUCTOR Y MODALES
-    // ==========================================
     function reproducirVideo(id, titulo, categoria, descripcion) {
       if (isRadioPlaying) togglePlayRadio();
       document.getElementById('iframePlayer').src = construirEmbedUrl(id);
@@ -852,8 +927,6 @@
     }
 
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
-    
-    // Iniciar
     window.onload = () => cargarHome();
   </script>
 </body>
