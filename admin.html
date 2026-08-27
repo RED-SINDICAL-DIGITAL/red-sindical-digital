@@ -49,9 +49,9 @@
               <option value="false">No (Subir link directo)</option>
             </select>
           </div>
-          <div><label>ID Canal YouTube (opcional - se extrae solo)</label><input id="artLink" placeholder="Ej: UCM7Il4ZSI6aFVp1UJtJNXRA (o pegar la URL)"></div>
+          <div><label>ID Canal YouTube (pegar URL o ID - se limpia solo)</label><input id="artLink" placeholder="https://www.youtube.com/@uromusic96"></div>
           <div><label>Contacto</label><input id="artContacto" placeholder="WhatsApp o Email"></div>
-          <div class="md:col-span-2"><label>Videos Manuales (Un link o ID por línea)</label><textarea id="artVideos" rows="4" placeholder="https://www.youtube.com/watch?v=XXXX&#10;ID_DE_11_CARACTERES&#10;https://drive.google.com/file/d/XXXX/preview"></textarea></div>
+          <div class="md:col-span-2"><label>Videos Manuales (Un link o ID por línea. Ej: ID de YouTube o link de Drive)</label><textarea id="artVideos" rows="4" placeholder="https://www.youtube.com/watch?v=XXXX&#10;ID_DE_11_CARACTERES&#10;https://drive.google.com/file/d/XXXX/preview"></textarea></div>
         </div>
         <button onclick="guardarArtista()" id="btnGuardarArtista" class="btn btn-save mb-4">Agregar Artista</button>
         <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar Edición</button>
@@ -119,28 +119,30 @@
       document.getElementById('btnCancelarEdicion').classList.add('hidden');
     }
 
-    // CORREGIDO: Detecta IDs de YouTube (11 caracteres), URLs de YouTube, y Links Directos
+    // CORREGIDO: Limpieza total del ID de canal y detección de videos de YouTube
     function guardarArtista() {
       const videosRaw = document.getElementById('artVideos').value.trim();
       const videos = videosRaw ? videosRaw.split('\n').map(line => {
         let trimmed = line.trim(); if (!trimmed) return null;
-
-        // 1. Detectar ID de YouTube (exactamente 11 caracteres)
-        if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
-          return { tipo: 'youtube', url: trimmed };
-        }
-        // 2. Detectar URL de YouTube
+        // Detectar ID directo (11 caracteres)
+        if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return { tipo: 'youtube', url: trimmed };
+        // Detectar URL de YouTube
         if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
-          let id = trimmed.split('v=')[1] || trimmed.split('/').pop(); 
-          if(id.includes('&')) id = id.split('&')[0];
+          let id = trimmed.split('v=')[1] || trimmed.split('/').pop(); if(id.includes('&')) id = id.split('&')[0];
           return { tipo: 'youtube', url: id };
         }
-        // 3. Link Directo (MP4, Drive, etc.)
+        // Link Directo
         return { tipo: 'mp4', url: trimmed };
       }).filter(v => v) : [];
 
+      // LIMPIEZA AUTOMÁTICA DEL ID DEL CANAL
       let channelIdInput = document.getElementById('artLink').value.trim();
       if (channelIdInput.includes('channel_id=')) channelIdInput = channelIdInput.split('channel_id=')[1].split('&')[0];
+      else if (channelIdInput.includes('/channel/')) channelIdInput = channelIdInput.split('/channel/')[1].split('/')[0];
+      else if (channelIdInput.includes('/@')) channelIdInput = channelIdInput.split('/@')[1].split('/')[0];
+      else if (channelIdInput.includes('youtube.com')) channelIdInput = channelIdInput.split('/').pop().split('?')[0];
+
+      if (!channelIdInput.startsWith('UC')) channelIdInput = '';
 
       const dataArtista = {
         id: editandoId || 'art-' + Date.now(),
