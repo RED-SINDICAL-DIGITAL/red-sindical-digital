@@ -15,6 +15,7 @@
     .btn { padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
     .btn-save { background: #00e5ff; color: #050505; }
     .btn-del { background: #dc2626; color: white; }
+    .btn-edit { background: #3b82f6; color: white; }
     .item-box { background: #0f0f13; border: 1px solid #1f1f26; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
   </style>
 </head>
@@ -32,13 +33,13 @@
       
       <!-- Gestor de Secciones -->
       <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Secciones (Modo Auto / Manual)</h2>
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Secciones</h2>
         <div id="seccionesList" class="space-y-2"></div>
       </div>
 
       <!-- Gestor de Artistas -->
       <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Artistas (Con/Sin YouTube)</h2>
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Artistas</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div><label>Nombre</label><input id="artNombre" placeholder="Ej: Circo Servian"></div>
           <div><label>Rubro</label><input id="artRubro" placeholder="Ej: Circo / Magia / Música"></div>
@@ -54,7 +55,9 @@
           <div><label>Contacto</label><input id="artContacto" placeholder="WhatsApp o Email"></div>
           <div class="md:col-span-2"><label>Videos Manuales (Un link o ID por línea. Puede ser YouTube, MP4, Drive, Dropbox)</label><textarea id="artVideos" rows="4" placeholder="https://www.youtube.com/watch?v=XXXX&#10;https://drive.google.com/file/d/XXXX/preview"></textarea></div>
         </div>
-        <button onclick="guardarArtista()" class="btn btn-save mb-4">Agregar Artista a la Base de Datos</button>
+        <button onclick="guardarArtista()" id="btnGuardarArtista" class="btn btn-save mb-4">Agregar Artista a la Base de Datos</button>
+        <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar Edición</button>
+        
         <div id="artistasList"></div>
       </div>
 
@@ -71,6 +74,7 @@
     let ADMIN_KEY = '';
     let seccionesData = [];
     let artistasData = [];
+    let editandoId = null; // Variable para controlar si estamos editando
 
     function conectar() {
       ADMIN_KEY = document.getElementById('adminKeyInput').value;
@@ -111,18 +115,55 @@
       });
     }
 
-    function renderArtistas(data) {
-      artistasData = data || [];
-      const list = document.getElementById('artistasList');
-      list.innerHTML = '';
-      artistasData.forEach(a => {
-        list.innerHTML += `<div class="item-box flex justify-between items-center">
-          <div><h4 class="font-bold text-white">${a.nombre}</h4><p class="text-xs text-slate-400">${a.rubro} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'} (${(a.videos_manuales||[]).length} videos)</p></div>
-          <button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button>
-        </div>`;
-      });
+    // Función para rellenar el formulario al hacer clic en "Editar"
+    function editarArtista(id) {
+      const artista = artistasData.find(a => a.id === id);
+      if (!artista) return;
+
+      editandoId = id;
+      document.getElementById('artNombre').value = artista.nombre;
+      document.getElementById('artRubro').value = artista.rubro || '';
+      document.getElementById('artFoto').value = artista.foto || '';
+      document.getElementById('artBio').value = artista.bio || '';
+      document.getElementById('artTieneYT').value = artista.tiene_youtube ? 'true' : 'false';
+      document.getElementById('artLink').value = artista.youtube_channel_id || '';
+      document.getElementById('artContacto').value = artista.contacto || '';
+
+      // Unir los videos manuales en líneas para el textarea
+      const videosManuales = artista.videos_manuales || [];
+      document.getElementById('artVideos').value = videosManuales.map(v => v.url).join('\n');
+
+      // Cambiar los botones
+      document.getElementById('btnGuardarArtista').innerText = "Actualizar Artista";
+      document.getElementById('btnGuardarArtista').classList.remove('bg-uadav-accent');
+      document.getElementById('btnGuardarArtista').classList.add('bg-blue-500');
+      
+      document.getElementById('btnCancelarEdicion').classList.remove('hidden');
+      
+      // Scroll hacia arriba para que vea el formulario
+      window.scrollTo({ top: 300, behavior: 'smooth' });
     }
 
+    // Función para salir del modo edición sin guardar
+    function cancelarEdicion() {
+      editandoId = null;
+      document.getElementById('artNombre').value = '';
+      document.getElementById('artRubro').value = '';
+      document.getElementById('artFoto').value = '';
+      document.getElementById('artBio').value = '';
+      document.getElementById('artTieneYT').value = 'true';
+      document.getElementById('artLink').value = '';
+      document.getElementById('artContacto').value = '';
+      document.getElementById('artVideos').value = '';
+
+      document.getElementById('btnGuardarArtista').innerText = "Agregar Artista a la Base de Datos";
+      document.getElementById('btnGuardarArtista').classList.add('bg-uadav-accent');
+      document.getElementById('btnGuardarArtista').classList.remove('bg-blue-500');
+      
+      document.getElementById('btnCancelarEdicion').classList.add('hidden');
+    }
+
+    // Función para guardar (Ahora detecta si es Nuevo o Edición)
     function guardarArtista() {
       const videosRaw = document.getElementById('artVideos').value.trim();
       const videos = videosRaw ? videosRaw.split('\n').map(line => {
@@ -136,25 +177,70 @@
         }
       }).filter(v => v) : [];
 
-      const nuevoArt = {
-        id: 'art-' + Date.now(),
-        nombre: document.getElementById('artNombre').value,
-        rubro: document.getElementById('artRubro').value,
-        foto: document.getElementById('artFoto').value,
-        bio: document.getElementById('artBio').value,
-        tiene_youtube: document.getElementById('artTieneYT').value === 'true',
-        youtube_channel_id: document.getElementById('artLink').value,
-        videos_manuales: videos,
-        contacto: document.getElementById('artContacto').value
-      };
-      if (!nuevoArt.nombre) return alert("Poné el nombre del artista");
-      artistasData.push(nuevoArt);
+      const nombre = document.getElementById('artNombre').value;
+      if (!nombre) return alert("Poné el nombre del artista");
+
+      // Si estamos editando, reemplazamos en la misma posición
+      if (editandoId) {
+        const index = artistasData.findIndex(a => a.id === editandoId);
+        if (index !== -1) {
+          artistasData[index] = {
+            ...artistasData[index], // Mantener el ID y otros datos
+            nombre: nombre,
+            rubro: document.getElementById('artRubro').value,
+            foto: document.getElementById('artFoto').value,
+            bio: document.getElementById('artBio').value,
+            tiene_youtube: document.getElementById('artTieneYT').value === 'true',
+            youtube_channel_id: document.getElementById('artLink').value,
+            videos_manuales: videos,
+            contacto: document.getElementById('artContacto').value
+          };
+        }
+        cancelarEdicion(); // Volver al modo creación
+        alert("Artista actualizado. Ahora hacé click en GUARDAR CAMBIOS.");
+      } else {
+        // Si es nuevo, lo agregamos
+        const nuevoArt = {
+          id: 'art-' + Date.now(),
+          nombre: nombre,
+          rubro: document.getElementById('artRubro').value,
+          foto: document.getElementById('artFoto').value,
+          bio: document.getElementById('artBio').value,
+          tiene_youtube: document.getElementById('artTieneYT').value === 'true',
+          youtube_channel_id: document.getElementById('artLink').value,
+          videos_manuales: videos,
+          contacto: document.getElementById('artContacto').value
+        };
+        artistasData.push(nuevoArt);
+        alert("Artista agregado. Ahora hacé click en GUARDAR CAMBIOS.");
+      }
+
       renderArtistas(artistasData);
-      alert("Artista agregado. Ahora hacé click en GUARDAR CAMBIOS.");
+    }
+
+    function renderArtistas(data) {
+      artistasData = data || [];
+      const list = document.getElementById('artistasList');
+      list.innerHTML = '';
+      artistasData.forEach(a => {
+        list.innerHTML += `<div class="item-box flex justify-between items-center">
+          <div>
+            <h4 class="font-bold text-white">${a.nombre}</h4>
+            <p class="text-xs text-slate-400">${a.rubro || 'Sin rubro'} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'} (${(a.videos_manuales||[]).length} videos)</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button>
+            <button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button>
+          </div>
+        </div>`;
+      });
     }
 
     function eliminarArtista(id) {
       if(!confirm("Seguro que querés eliminar este artista?")) return;
+      // Si estoy eliminando el que estoy editando, cancelo la edición
+      if (editandoId === id) cancelarEdicion();
+      
       artistasData = artistasData.filter(a => a.id !== id);
       renderArtistas(artistasData);
     }
