@@ -52,7 +52,7 @@
               <option value="false">No (Subir link directo)</option>
             </select>
           </div>
-          <div><label>ID Canal YouTube o Link Directo</label><input id="artLink" placeholder="ID del canal o link de Drive/Dropbox"></div>
+          <div><label>ID Canal YouTube (opcional)</label><input id="artLink" placeholder="Ej: UCM7Il4ZSI6aFVp1UJtJNXRA"></div>
           <div><label>Contacto</label><input id="artContacto" placeholder="WhatsApp o Email"></div>
           <div class="md:col-span-2"><label>Videos Manuales (Un link o ID por línea. Puede ser YouTube, MP4, Drive, Dropbox)</label><textarea id="artVideos" rows="4" placeholder="https://www.youtube.com/watch?v=XXXX&#10;https://drive.google.com/file/d/XXXX/preview"></textarea></div>
         </div>
@@ -62,7 +62,6 @@
         <div id="artistasList"></div>
       </div>
 
-      <!-- Botón para guardar todo -->
       <div class="fixed bottom-4 right-4">
         <button onclick="guardarTodo()" class="btn btn-save text-base shadow-2xl px-6 py-4">GUARDAR CAMBIOS EN LA NUBE</button>
       </div>
@@ -136,7 +135,6 @@
       document.getElementById('btnGuardarArtista').innerText = "Actualizar Artista";
       document.getElementById('btnGuardarArtista').classList.remove('bg-uadav-accent');
       document.getElementById('btnGuardarArtista').classList.add('bg-blue-500');
-      
       document.getElementById('btnCancelarEdicion').classList.remove('hidden');
       window.scrollTo({ top: 300, behavior: 'smooth' });
     }
@@ -156,7 +154,6 @@
       document.getElementById('btnGuardarArtista').innerText = "Agregar Artista a la Base de Datos";
       document.getElementById('btnGuardarArtista').classList.add('bg-uadav-accent');
       document.getElementById('btnGuardarArtista').classList.remove('bg-blue-500');
-      
       document.getElementById('btnCancelarEdicion').classList.add('hidden');
     }
 
