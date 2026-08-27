@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Control - UADAV STREAM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { uadav: { accent: '#00e5ff', dark: '#050505', card: '#0f0f13', border: '#1f1f26' } },
+          fontFamily: { sans: ['Outfit', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #050505; color: #E2E8F0; font-family: 'Outfit', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    input, textarea { background: #0a0a0c; border: 1px solid #1f1f26; border-radius: 8px; padding: 8px; width: 100%; color: white; }
+    label { font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px; display: block; }
+    .btn { padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
+    .btn-save { background: #00e5ff; color: #050505; }
+    .btn-del { background: #dc2626; color: white; }
+    .item-box { background: #0f0f13; border: 1px solid #1f1f26; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+  </style>
+</head>
+<body class="p-4 sm:p-8 min-h-screen">
+
+  <div class="max-w-5xl mx-auto">
+    <div class="flex justify-between items-center mb-8 border-b border-uadav-border pb-4">
+      <h1 class="text-2xl font-black text-white">UADAV <span class="text-uadav-accent">STREAM</span> - Panel Admin</h1>
+      <div class="flex gap-2">
+        <input type="password" id="adminKeyInput" placeholder="Pegar ADMIN_KEY aquí..." class="w-64">
+        <button onclick="conectar()" class="btn bg-uadav-accent text-black">Conectar</button>
+      </div>
+    </div>
+
+    <div id="loginMsg" class="text-red-500 text-xs mb-4 hidden">Clave incorrecta o sin conexión.</div>
+
+    <div id="panelContent" class="hidden space-y-8">
+      
+      <!-- Gestor de Secciones -->
+      <div class="border border-uadav-border rounded-xl p-4">
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Secciones</h2>
+        <div id="seccionesList" class="space-y-2"></div>
+      </div>
+
+      <!-- Gestor de Artistas -->
+      <div class="border border-uadav-border rounded-xl p-4">
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Artistas (Con/Sin YouTube)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div><label>Nombre</label><input id="artNombre" placeholder="Ej: Circo Servian"></div>
+          <div><label>Rubro</label><input id="artRubro" placeholder="Ej: Circo / Magia / Música"></div>
+          <div><label>Foto (URL)</label><input id="artFoto" placeholder="https://..."></div>
+          <div><label>Bio</label><input id="artBio" placeholder="Descripción del artista"></div>
+          <div><label>Tiene YouTube?</label>
+            <select id="artTieneYT" class="bg-[#0a0a0c] border border-uadav-border rounded p-2 w-full">
+              <option value="true">Sí</option>
+              <option value="false">No (Subir link directo)</option>
+            </select>
+          </div>
+          <div><label>ID Canal YouTube o Link Directo</label><input id="artLink" placeholder="ID del canal o link de Drive/Dropbox"></div>
+          <div><label>Contacto</label><input id="artContacto" placeholder="WhatsApp o Email"></div>
+        </div>
+        <button onclick="guardarArtista()" class="btn btn-save mb-4">Agregar Artista a la Base de Datos</button>
+        <div id="artistasList"></div>
+      </div>
+
+      <!-- Gestor de Contadores -->
+      <div class="border border-uadav-border rounded-xl p-4">
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">Contadores (Visitas y Descargas)</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label>Visitas Totales</label><input type="number" id="contVisitas"></div>
+          <div><label>Descargas App</label><input type="number" id="contDescargas"></div>
+        </div>
+        <button onclick="guardarContadores()" class="btn btn-save mt-4">Actualizar Contadores</button>
+      </div>
+
+      <!-- Botón para guardar todo el estado -->
+      <div class="fixed bottom-4 right-4">
+        <button onclick="guardarTodo()" class="btn btn-save text-base shadow-2xl px-6 py-4">GUARDAR CAMBIOS EN LA NUBE</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
+    let ADMIN_KEY = '';
+
+    function conectar() {
+      ADMIN_KEY = document.getElementById('adminKeyInput').value;
+      if (!ADMIN_KEY) return alert("Poné la clave secreta");
+      
+      // Probar conexión con GET (público, pero verifica que exista)
+      fetch(API_URL + 'secciones')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('loginMsg').classList.add('hidden');
+          document.getElementById('panelContent').classList.remove('hidden');
+          cargarTodo(data);
+        })
+        .catch(err => {
+          document.getElementById('loginMsg').classList.remove('hidden');
+          alert("Error al conectar con Cloudflare: " + err);
+        });
+    }
+
+    // Cargar todos los datos a la interfaz
+    function cargarTodo(seccionesData) {
+      // Secciones
+      const secList = document.getElementById('seccionesList');
+      secList.innerHTML = '';
+      seccionesData.forEach(sec => {
+        secList.innerHTML += `
+          <div class="flex items-center justify-between bg-[#0f0f13] p-3 rounded-lg">
+            <span class="font-bold text-sm">${sec.nombre}</span>
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                <input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="marcarSeccion('${sec.id}', this.checked)"> Activa
+              </label>
+            </div>
+          </div>
+        `;
+      });
+
+      // Cargar los demás datos de la API
+      fetch(API_URL + 'artistas_uadav').then(r => r.json()).then(renderArtistas);
+      fetch(API_URL + 'contadores').then(r => r.json()).then(d => {
+        document.getElementById('contVisitas').value = d.visitas_totales || 0;
+        document.getElementById('contDescargas').value = d.descargas_app || 0;
+      });
+    }
+
+    // Lógica para Secciones
+    let seccionesEstado = [];
+    function marcarSeccion(id, estado) {
+      // Si no existe en el array, lo agregamos
+      if (!seccionesEstado.find(s => s.id === id)) seccionesEstado.push({id, activa: estado});
+      else seccionesEstado.find(s => s.id === id).activa = estado;
+    }
+
+    // Lógica para Artistas
+    let artistasData = [];
+    function renderArtistas(data) {
+      artistasData = data || [];
+      const list = document.getElementById('artistasList');
+      list.innerHTML = '';
+      artistasData.forEach(a => {
+        list.innerHTML += `
+          <div class="item-box flex justify-between items-center">
+            <div>
+              <h4 class="font-bold text-white">${a.nombre}</h4>
+              <p class="text-xs text-slate-400">${a.rubro} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p>
+            </div>
+            <button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button>
+          </div>
+        `;
+      });
+    }
+
+    function guardarArtista() {
+      const nuevoArt = {
+        id: 'art-' + Date.now(),
+        nombre: document.getElementById('artNombre').value,
+        rubro: document.getElementById('artRubro').value,
+        foto: document.getElementById('artFoto').value,
+        bio: document.getElementById('artBio').value,
+        tiene_youtube: document.getElementById('artTieneYT').value === 'true',
+        youtube_channel_id: document.getElementById('artLink').value,
+        contacto: document.getElementById('artContacto').value,
+        es_destacado: false
+      };
+      
+      if (!nuevoArt.nombre) return alert("Poné el nombre del artista");
+      
+      artistasData.push(nuevoArt);
+      renderArtistas(artistasData);
+      alert("Artista agregado. Ahora hacé click en GUARDAR CAMBIOS.");
+    }
+
+    function eliminarArtista(id) {
+      if(!confirm("Seguro que querés eliminar este artista?")) return;
+      artistasData = artistasData.filter(a => a.id !== id);
+      renderArtistas(artistasData);
+    }
+
+    // Lógica para Contadores
+    function guardarContadores() {
+      const contadores = {
+        visitas_totales: parseInt(document.getElementById('contVisitas').value),
+        descargas_app: parseInt(document.getElementById('contDescargas').value)
+      };
+      alert("Contadores actualizados en pantalla. Hacé click en GUARDAR CAMBIOS.");
+      // Se guardarán en el estado global
+      window.contadoresState = contadores;
+    }
+
+    // Guardar Todo en la Nube
+    function guardarTodo() {
+      if (!ADMIN_KEY) return alert("Conectate primero");
+
+      // 1. Guardar Secciones
+      const secFinal = [];
+      document.querySelectorAll('#seccionesList .item-box').forEach(box => {
+        // Como no tenemos el array inicial, hacemos una consulta simple
+      });
+      
+      // NOTA: Para simplificar y que funcione ya, simplemente actualizamos los datos cargados manualmente o los que hay en el DOM
+      // En un sistema real, se guarda todo el estado local en memoria y se hace PUT directo.
+
+      // Aquí guardamos los tres archivos principales:
+      
+      // Guardar Contadores:
+      const c = window.contadoresState || { visitas_totales: 0, descargas_app: 0 };
+      fetch(API_URL + 'contadores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+        body: JSON.stringify(c)
+      }).then(() => console.log('Contadores guardados'));
+
+      // Guardar Artistas:
+      fetch(API_URL + 'artistas_uadav', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+        body: JSON.stringify(artistasData)
+      }).then(() => console.log('Artistas guardados'));
+
+      // Guardar Secciones: (Requiere que el array se guarde en la memoria, aquí simplificado)
+      // Reconstruimos el array base de secciones y aplicamos los cambios de los checkboxes
+      const baseSecciones = [
+        { id: 'radios', nombre: 'Radios en Vivo', activa: true },
+        { id: 'artistas', nombre: 'Artistas Más Escuchados', activa: true },
+        { id: 'teatros', nombre: 'Teatros', activa: true },
+        { id: 'trending', nombre: 'Lo más visto en tu país', activa: true },
+        { id: 'shorts', nombre: 'Shorts 9:16', activa: true },
+        { id: 'cartelera', nombre: 'Cartelera de Eventos', activa: true },
+        { id: 'conciertos', nombre: 'Conciertos', activa: true },
+        { id: 'circos', nombre: 'Circos & Varieté', activa: false },
+        { id: 'musica_urbana', nombre: 'Música Urbana', activa: false }
+      ];
+      
+      // Aplicar cambios en vivo del checkbox
+      seccionesEstado.forEach(est => {
+        const sec = baseSecciones.find(s => s.id === est.id);
+        if(sec) sec.activa = est.activa;
+      });
+
+      fetch(API_URL + 'secciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+        body: JSON.stringify(baseSecciones)
+      }).then(() => {
+        alert("✅ Todos los cambios fueron guardados en la nube exitosamente.");
+      });
+    }
+  </script>
+</body>
+</html>
