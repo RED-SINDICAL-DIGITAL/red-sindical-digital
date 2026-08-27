@@ -438,7 +438,7 @@
       artistasData = await obtenerDatos('artistas_uadav'); renderArtistasUI();
       radiosData = await obtenerDatos('radios'); renderRadiosUI();
       carteleraData = await obtenerDatos('cartelera_shows'); renderCarteleraUI();
-      cargarSeccionDinamica('teatrosRail', 'teatros'); cargarSeccionDinamica('circosRail', 'circos'); cargarTendenciasPorIP(); cargarShortsExclusivos(); cargarSeccionDinamica('conciertosRail', 'conciertos');
+      cargarSeccionDinamica('teatrosRail', 'teatros'); cargarSeccionDinamica('circosRail', 'circos'); cargarSeccionDinamica('ipTrendingRail', 'trending');cargarShortsExclusivos(); cargarSeccionDinamica('conciertosRail', 'conciertos');
     }
 
     window.onload = () => cargarHome();
