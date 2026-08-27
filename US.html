@@ -84,7 +84,7 @@
     <section><div class="flex items-center justify-between mb-4 sm:mb-5"><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos</h2></div><div id="conciertosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div></section>
   </main>
 
-  <!-- SECCIÓN DE RESULTADOS DE BÚSQUEDA (Con ID verificados para evitar el error de consola) -->
+  <!-- SECCIÓN DE RESULTADOS DE BÚSQUEDA -->
   <section id="gridViewSection" class="hidden max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 min-h-[50vh]">
     <div class="flex items-center justify-between mb-6 sm:mb-8 border-b border-uadav-border pb-4">
       <h2 id="gridTitle" class="text-xl sm:text-3xl font-black text-white">Resultados</h2>
@@ -109,7 +109,7 @@
     </div>
   </div>
 
-  <!-- MODAL PERFIL ARTISTA (YOUTUBE MUSIC) -->
+  <!-- MODAL PERFIL ARTISTA -->
   <div id="artistModal" onclick="cerrarModalArtistaBackdrop(event)" class="fixed inset-0 z-50 bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-4">
     <div class="bg-[#0f0f13] border border-uadav-border w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar" onclick="event.stopPropagation()">
       <div class="relative h-48 md:h-64 w-full bg-gradient-to-br from-slate-800 via-slate-900 to-black overflow-hidden">
@@ -164,6 +164,13 @@
 
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [];
 
+    // ===== NUEVA FUNCIÓN PARA EVITAR ERROR 404 EN MINIATURAS =====
+    function obtenerCaratulaUltraRapida(id) {
+      // Si el ID no tiene exactamente 11 caracteres, es un canal o un ID inválido. Usamos la imagen fallback.
+      if (!id || id.length !== 11) return FALLBACK_THUMB;
+      return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+    }
+
     async function obtenerDatos(seccion) {
       try {
         const res = await fetch(API_URL + seccion);
@@ -175,7 +182,12 @@
       return [];
     }
 
-    function obtenerCaratulaUltraRapida(id) { if (!id) return FALLBACK_THUMB; return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`; }
+    // ===== LIMPIAR CACHÉ VIEJA (para evitar "bad" con imágenes rotas) =====
+    // Esta línea se ejecuta al cargar la página. Si detecta una versión anterior, borra el localStorage.
+    if (localStorage.getItem('uadav_cache_version') !== 'v2') {
+      localStorage.clear();
+      localStorage.setItem('uadav_cache_version', 'v2');
+    }
 
     let isRadioPlaying = false;
     const audioStream = document.getElementById('audioStream');
@@ -229,8 +241,8 @@
 
     async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'), cacheKey = 'uadav_cache_shorts_strict_v3', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) { items = JSON.parse(cachedData); } else { const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent('#shorts teatro musica viral')}&type=video`); if (data && Array.isArray(data)) { items = data.filter(item => item.lengthSeconds && item.lengthSeconds <= 60).slice(0, 10).map(item => ({ id: item.videoId, titulo: item.title.replace(/#shorts/gi, '').trim(), categoria: 'Short', descripcion: item.author || "Short oficial", duracion: item.lengthSeconds ? `${item.lengthSeconds}s` : "0:30", thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'short' })); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) items.forEach(item => rail.appendChild(crearShortCard(item))); }
 
-    // FUNCIÓN ABRIR PERFIL (CON MINIATURAS)
-    function abrirPerfilArtista(id) {
+    // ===== NUEVA LÓGICA PARA ARTISTAS: SOPORTA CANAL DE YOUTUBE =====
+    async function abrirPerfilArtista(id) {
       const artista = artistasData.find(a => a.id === id);
       if (!artista) return;
 
@@ -246,13 +258,38 @@
       const contVideos = document.getElementById('artModalListaVideos');
       contVideos.innerHTML = '';
 
+      let videos = [];
+
+      // 1. Videos manuales cargados desde el panel
       if (artista.videos_manuales && artista.videos_manuales.length > 0) {
+        videos = videos.concat(artista.videos_manuales);
+      }
+
+      // 2. Si el artista tiene canal de YouTube, buscar automáticamente sus últimos videos
+      if (artista.tiene_youtube && artista.youtube_channel_id) {
+        const data = await consultarRedInvidious(`/api/v1/channels/${artista.youtube_channel_id}/videos?sort_by=newest`);
+        if (data && Array.isArray(data)) {
+          const videosCanal = data.slice(0, 5).map(v => ({
+            tipo: 'youtube',
+            url: v.videoId,
+            titulo: v.title,
+            duracion: v.lengthSeconds
+          }));
+          videos = videos.concat(videosCanal);
+        }
+      }
+
+      // Renderizar videos como tarjetas con miniaturas
+      if (videos.length > 0) {
         let gridHTML = '<div class="grid grid-cols-2 md:grid-cols-3 gap-4">';
-        artista.videos_manuales.forEach((v, index) => {
+        videos.forEach((v, index) => {
           let thumb = FALLBACK_THUMB;
-          if (v.tipo === 'youtube') thumb = obtenerCaratulaUltraRapida(v.url);
+          if (v.tipo === 'youtube' && v.url && v.url.length === 11) thumb = obtenerCaratulaUltraRapida(v.url);
+          let tituloVideo = `Video ${index + 1}`;
+          if (v.titulo) tituloVideo = v.titulo;
+          
           gridHTML += `
-            <div onclick="reproducirVideoPersonalizado('${v.url}', '${v.tipo}', '${artista.nombre}', 'Video ${index+1}')" class="bg-slate-900 border border-uadav-border hover:border-uadav-accent rounded-xl overflow-hidden cursor-pointer group transition-all">
+            <div onclick="reproducirVideoPersonalizado('${v.url}', '${v.tipo}', '${artista.nombre}', '${tituloVideo.replace(/'/g, "\\'")}')" class="bg-slate-900 border border-uadav-border hover:border-uadav-accent rounded-xl overflow-hidden cursor-pointer group transition-all">
               <div class="relative aspect-video">
                 <img src="${thumb}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';">
                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -260,7 +297,7 @@
                 </div>
               </div>
               <div class="p-3">
-                <h5 class="font-bold text-xs text-white truncate">Video ${index + 1}</h5>
+                <h5 class="font-bold text-xs text-white truncate">${tituloVideo}</h5>
                 <p class="text-[10px] text-slate-400 uppercase">${v.tipo === 'youtube' ? 'YouTube' : 'Directo'}</p>
               </div>
             </div>`;
@@ -281,35 +318,25 @@
       else { cerrarModal(); const iframe = document.getElementById('iframePlayer'), html5 = document.getElementById('html5Player'); iframe.classList.add('hidden'); html5.classList.remove('hidden'); html5.src = url; html5.play(); document.getElementById('modalTitulo').innerText = titulo; document.getElementById('modalDescripcion').innerText = desc; document.getElementById('videoModal').classList.remove('hidden'); }
     }
 
-    // CERRAR MODAL SIN VOLVER AL INICIO (SOLO VIDEO)
     function cerrarModal() {
-      const iframe = document.getElementById('iframePlayer');
-      const html5 = document.getElementById('html5Player');
-      iframe.src = 'about:blank'; // Reset limpio, sin scroll
-      html5.src = ''; html5.pause();
+      const iframe = document.getElementById('iframePlayer'); const html5 = document.getElementById('html5Player');
+      iframe.src = 'about:blank'; html5.src = ''; html5.pause();
       document.getElementById('videoModal').classList.add('hidden');
     }
 
     function cerrarModalArtista() { document.getElementById('artistModal').classList.add('hidden'); }
     function cerrarModalArtistaBackdrop(e) { if (e.target.id === 'artistModal') cerrarModalArtista(); }
 
-    // BÚSQUEDA CON VALIDACIÓN PARA EVITAR ERRORES DE NULL
     async function ejecutarBusqueda() {
       const q = document.getElementById('searchInput').value.trim();
       if (!q) { resetearVista(); return; }
-
       const mainContainer = document.getElementById('mainContainer');
       const gridView = document.getElementById('gridViewSection');
       const gridContainer = document.getElementById('gridContainer');
-      
-      // Validación para que no rompa si el DOM no está listo
       if (!mainContainer || !gridView || !gridContainer) return;
 
       const cacheKey = `uadav_search_${q.toLowerCase().replace(/\s+/g, '_')}`, cached = localStorage.getItem(cacheKey);
-      
-      mainContainer.classList.add('hidden');
-      gridView.classList.remove('hidden');
-      
+      mainContainer.classList.add('hidden'); gridView.classList.remove('hidden');
       document.getElementById('gridTitle').innerHTML = `Buscando <span class="text-uadav-accent">"${q}"</span>...`;
       gridContainer.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-bold"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-uadav-accent mb-4 block"></i>Buscando...</div>';
 
@@ -331,7 +358,6 @@
 
       document.getElementById('gridTitle').innerHTML = `Resultados para <span class="text-uadav-accent">"${q}"</span>`;
       gridContainer.innerHTML = '';
-
       if (resultados && resultados.length > 0) {
         resultados.forEach(item => gridContainer.appendChild(item.tipo === 'short' ? crearShortCard(item) : crearCard(item)));
       } else {
@@ -366,7 +392,6 @@
       document.getElementById('modalTitulo').innerText = titulo; document.getElementById('modalCategoria').innerText = categoria; document.getElementById('modalDescripcion').innerText = descripcion; document.getElementById('videoModal').classList.remove('hidden');
     }
 
-    // Cerrar modal de video sin recargar ni volver al inicio
     function cerrarModalBackdrop(e) { if (e.target.id === 'videoModal') cerrarModal(); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cerrarModal(); cerrarModalArtista(); } });
 
