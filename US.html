@@ -4,35 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UADAVSTREAM - Entretenimiento, Teatros & Música Global</title>
-  
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            uadav: {
-              accent: '#00e5ff',
-              accentHover: '#00b8cc',
-              dark: '#050505',
-              card: '#0f0f13',
-              border: '#1f1f26'
-            }
-          },
-          fontFamily: {
-            sans: ['Outfit', 'sans-serif']
-          }
-        }
-      }
-    }
+    tailwind.config = { theme: { extend: { colors: { uadav: { accent: '#00e5ff', accentHover: '#00b8cc', dark: '#050505', card: '#0f0f13', border: '#1f1f26' } }, fontFamily: { sans: ['Outfit', 'sans-serif'] } } } }
   </script>
-
   <style>
     body { background-color: #050505; color: #E2E8F0; font-family: 'Outfit', sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -45,32 +24,23 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-uadav-accent selection:text-black pb-24">
 
-  <!-- HEADER (Sin cambios) -->
+  <!-- HEADER -->
   <header class="sticky top-0 z-40 bg-uadav-dark/90 backdrop-blur-xl border-b border-uadav-border">
     <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
       <div tabindex="0" onclick="resetearVista()" class="tv-focusable flex items-center gap-2 sm:gap-3 cursor-pointer transition-all flex-shrink-0">
         <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-uadav-accent to-blue-600 flex items-center justify-center text-slate-950 font-black text-lg sm:text-2xl shadow-lg shadow-uadav-accent/30">U</div>
-        <div class="hidden xs:block">
-          <span class="font-black text-lg sm:text-2xl tracking-tighter text-white block leading-none">UADAV<span class="text-uadav-accent">STREAM</span></span>
-          <span class="text-[9px] sm:text-[10px] tracking-widest text-slate-400 uppercase font-semibold hidden md:block">Plataforma Global</span>
-        </div>
+        <div class="hidden xs:block"><span class="font-black text-lg sm:text-2xl tracking-tighter text-white block leading-none">UADAV<span class="text-uadav-accent">STREAM</span></span><span class="text-[9px] sm:text-[10px] tracking-widest text-slate-400 uppercase font-semibold hidden md:block">Plataforma Global</span></div>
       </div>
       <div class="flex-1 max-w-2xl mx-1 sm:mx-2 relative">
         <div class="relative group">
           <i class="fa-solid fa-magnifying-glass absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-uadav-accent transition-colors text-xs sm:text-sm"></i>
           <input type="text" id="searchInput" onkeydown="if(event.key === 'Enter') ejecutarBusqueda()" placeholder="Buscar obra, artista, canción..." tabindex="0" class="tv-focusable w-full pl-8 sm:pl-12 pr-12 sm:pr-28 py-2 sm:py-3 bg-[#0a0a0c] border border-uadav-border rounded-full text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:border-uadav-accent focus:bg-slate-900 transition-all">
-          <button onclick="ejecutarBusqueda()" class="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-uadav-accent text-slate-950 text-[10px] sm:text-xs font-bold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full hover:bg-uadav-accentHover">
-            <span class="hidden sm:inline">Buscar</span><i class="fa-solid fa-magnifying-glass sm:hidden"></i>
-          </button>
+          <button onclick="ejecutarBusqueda()" class="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-uadav-accent text-slate-950 text-[10px] sm:text-xs font-bold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full hover:bg-uadav-accentHover"><span class="hidden sm:inline">Buscar</span><i class="fa-solid fa-magnifying-glass sm:hidden"></i></button>
         </div>
       </div>
       <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-        <div id="countryBadge" class="hidden lg:flex items-center gap-2 bg-slate-900 border border-uadav-border px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300">
-          <i class="fa-solid fa-earth-americas text-uadav-accent"></i><span id="countryBadgeText">Detectando IP...</span>
-        </div>
-        <button tabindex="0" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión ininterrumpida HD 24/7')" class="tv-focusable flex items-center gap-1.5 sm:gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider">
-          <div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div> <span class="hidden xs:inline">Live TV</span>
-        </button>
+        <div id="countryBadge" class="hidden lg:flex items-center gap-2 bg-slate-900 border border-uadav-border px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300"><i class="fa-solid fa-earth-americas text-uadav-accent"></i><span id="countryBadgeText">Detectando IP...</span></div>
+        <button tabindex="0" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión ininterrumpida HD 24/7')" class="tv-focusable flex items-center gap-1.5 sm:gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider"><div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div> <span class="hidden xs:inline">Live TV</span></button>
       </div>
     </div>
     <nav class="border-t border-uadav-border bg-[#050505]">
@@ -104,23 +74,31 @@
   </section>
 
   <main id="mainContainer" class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-12 sm:space-y-16">
-    <!-- SECCIONES (Radios, Artistas, Teatros, etc) -->
-    <section id="radiosSection"><div class="flex items-center justify-between mb-4 sm:mb-6"><div><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-radio text-uadav-accent"></i> Radios Difusoras en Vivo</h2><p class="text-xs sm:text-sm text-slate-400">Emisoras en directo con metadatos y audio HD continuo</p></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6" id="radiosGrid"></div></section>
-    <section id="artistasSection"><div class="flex items-center justify-between mb-4 sm:mb-6"><div><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire-flame-curved text-uadav-accent"></i> Artistas Más Escuchados</h2><p class="text-xs sm:text-sm text-slate-400">Toca un artista para ver su ficha</p></div></div><div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4" id="artistasGrid"></div></section>
-    <section id="teatrosSection"><div class="flex items-center justify-between mb-4 sm:mb-5"><div><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-masks-theater text-uadav-accent"></i> Teatros & Espectáculos</h2><p class="text-xs sm:text-sm text-slate-400">Obras teatrales y performances</p></div></div><div id="teatrosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div></section>
-    <section id="circosSection" class="hidden"><div class="flex items-center justify-between mb-4 sm:mb-5"><div><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tent text-uadav-accent"></i> Circos & Varieté</h2><p class="text-xs sm:text-sm text-slate-400">Espectáculos circenses y magia</p></div></div><div id="circosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div></section>
+    <section id="radiosSection"><div class="flex items-center justify-between mb-4 sm:mb-6"><div><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-radio text-uadav-accent"></i> Radios Difusoras en Vivo</h2></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6" id="radiosGrid"></div></section>
+    <section id="artistasSection"><div class="flex items-center justify-between mb-4 sm:mb-6"><div><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire-flame-curved text-uadav-accent"></i> Artistas Más Escuchados</h2></div></div><div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4" id="artistasGrid"></div></section>
+    <section id="teatrosSection"><div class="flex items-center justify-between mb-4 sm:mb-5"><div><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-masks-theater text-uadav-accent"></i> Teatros & Espectáculos</h2></div></div><div id="teatrosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div></section>
+    <section id="circosSection" class="hidden"><div class="flex items-center justify-between mb-4 sm:mb-5"><div><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tent text-uadav-accent"></i> Circos & Varieté</h2></div></div><div id="circosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div></section>
     <section><div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="countryLabel" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire text-red-500"></i> Lo más visto en tu país</h2></div><div id="ipTrendingRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div></section>
     <section><div class="flex items-center justify-between mb-4 sm:mb-5"><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts (9:16)</h2></div><div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[300px]"></div></section>
     <section id="carteleraSection"><div class="flex items-center justify-between mb-4 sm:mb-5"><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-ticket text-uadav-accent"></i> Cartelera de Eventos</h2></div><div id="carteleraRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div></section>
     <section><div class="flex items-center justify-between mb-4 sm:mb-5"><h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos</h2></div><div id="conciertosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div></section>
   </main>
 
+  <!-- SECCIÓN DE RESULTADOS DE BÚSQUEDA (Con ID verificados para evitar el error de consola) -->
+  <section id="gridViewSection" class="hidden max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 min-h-[50vh]">
+    <div class="flex items-center justify-between mb-6 sm:mb-8 border-b border-uadav-border pb-4">
+      <h2 id="gridTitle" class="text-xl sm:text-3xl font-black text-white">Resultados</h2>
+      <button onclick="resetearVista()" class="text-xs sm:text-sm font-bold text-uadav-accent hover:text-white transition-colors bg-[#0f0f13] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-uadav-border"><i class="fa-solid fa-arrow-left mr-1"></i> Volver</button>
+    </div>
+    <div id="gridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6"></div>
+  </section>
+
   <!-- MODAL VIDEO -->
   <div id="videoModal" onclick="cerrarModalBackdrop(event)" class="fixed inset-0 z-50 bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-2 sm:p-4">
     <div class="bg-[#0a0a0c] border border-uadav-border w-full max-w-5xl rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[95vh]" onclick="event.stopPropagation()">
       <button tabindex="0" onclick="cerrarModal()" class="tv-focusable absolute top-3 right-3 sm:top-4 sm:right-4 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-slate-900/80 hover:bg-uadav-accent hover:text-black text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all"><i class="fa-solid fa-xmark text-sm sm:text-lg"></i></button>
       <div class="relative w-full aspect-video bg-black">
-        <iframe id="iframePlayer" class="w-full h-full" src="" title="Reproductor" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe id="iframePlayer" class="w-full h-full" src="about:blank" title="Reproductor" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         <video id="html5Player" class="w-full h-full hidden" controls autoplay></video>
       </div>
       <div class="p-4 sm:p-6">
@@ -131,17 +109,13 @@
     </div>
   </div>
 
-  <!-- NUEVO MODAL PERFIL ARTISTA (ESTILO YOUTUBE MUSIC) -->
+  <!-- MODAL PERFIL ARTISTA (YOUTUBE MUSIC) -->
   <div id="artistModal" onclick="cerrarModalArtistaBackdrop(event)" class="fixed inset-0 z-50 bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-4">
     <div class="bg-[#0f0f13] border border-uadav-border w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar" onclick="event.stopPropagation()">
-      
-      <!-- CABECERA ESTILO YOUTUBE MUSIC -->
       <div class="relative h-48 md:h-64 w-full bg-gradient-to-br from-slate-800 via-slate-900 to-black overflow-hidden">
-        <img id="artModalBanner" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&q=80" class="w-full h-full object-cover opacity-50">
+        <img id="artModalBanner" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&q=80" class="w-full h-full object-cover opacity-60">
         <div class="absolute inset-0 bg-gradient-to-t from-[#0f0f13] via-transparent to-transparent"></div>
       </div>
-
-      <!-- AVATAR Y TÍTULO -->
       <div class="relative px-6 pb-6 -mt-16 md:-mt-20">
         <div class="flex flex-col md:flex-row items-end gap-4">
           <img id="artModalFoto" src="" class="w-28 h-28 md:w-40 md:h-40 rounded-full object-cover border-4 border-[#0f0f13] shadow-2xl z-10">
@@ -151,24 +125,16 @@
             <p id="artModalGenero" class="text-xs md:text-sm text-slate-400 mt-2"></p>
           </div>
         </div>
-        
-        <!-- BIO Y BOTONES -->
         <div id="artModalBio" class="mt-6 text-xs md:text-sm text-slate-300 leading-relaxed max-w-2xl border-t border-uadav-border pt-4"></div>
-        
         <div class="mt-4 flex flex-wrap gap-3">
           <button id="artModalActionBtn" class="bg-uadav-accent text-slate-950 font-black text-xs px-5 py-3 rounded-full"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar en YouTube</button>
           <button id="artModalContactBtn" class="hidden bg-slate-900 border border-uadav-border hover:border-uadav-accent text-white font-bold text-xs px-5 py-3 rounded-full"><i class="fa-brands fa-whatsapp text-green-500 mr-1"></i> Contratar / Contactar</button>
         </div>
       </div>
-
-      <!-- SECCIÓN DE VIDEOS (CANALES / CANCIONES) -->
       <div class="px-6 pb-8">
         <h4 class="text-sm font-black text-white mb-4 uppercase tracking-wider text-uadav-accent">Canciones y Videos</h4>
-        <div id="artModalListaVideos" class="space-y-2">
-          <!-- Aquí se listan los videos cargados desde el panel -->
-        </div>
+        <div id="artModalListaVideos" class="space-y-2"></div>
       </div>
-
       <button onclick="cerrarModalArtista()" class="absolute top-4 right-4 w-10 h-10 bg-black/80 text-white hover:bg-uadav-accent hover:text-black rounded-full flex items-center justify-center backdrop-blur-md z-30"><i class="fa-solid fa-xmark"></i></button>
     </div>
   </div>
@@ -196,10 +162,7 @@
     const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80';
     const SERVIDORES_INVIDIOUS = ['https://invidious.nerdvpn.de', 'https://invidious.drgns.space', 'https://inv.tux.pizza', 'https://invidious.flokinet.to', 'https://iv.melmac.space'];
 
-    let seccionesActivas = [];
-    let artistasData = [];
-    let radiosData = [];
-    let carteleraData = [];
+    let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [];
 
     async function obtenerDatos(seccion) {
       try {
@@ -208,11 +171,7 @@
           const data = await res.json();
           if (data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0)) return data;
         }
-      } catch (e) { console.log("Error obteniendo " + seccion + ", usando fallback."); }
-      if (seccion === 'secciones') return [{id:"radios",nombre:"Radios",activa:true,modo:"auto"},{id:"artistas",nombre:"Artistas",activa:true,modo:"auto"},{id:"teatros",nombre:"Teatros",activa:true,modo:"auto"},{id:"circos",nombre:"Circos",activa:false,modo:"manual"},{id:"trending",nombre:"Tendencias",activa:true,modo:"auto"},{id:"shorts",nombre:"Shorts",activa:true,modo:"auto"},{id:"cartelera",nombre:"Cartelera",activa:true,modo:"auto"},{id:"conciertos",nombre:"Conciertos",activa:true,modo:"auto"}];
-      if (seccion === 'artistas_uadav') return [];
-      if (seccion === 'radios') return [];
-      if (seccion === 'eventos_cartelera') return [];
+      } catch (e) {}
       return [];
     }
 
@@ -220,33 +179,21 @@
 
     let isRadioPlaying = false;
     const audioStream = document.getElementById('audioStream');
-    function sintonizarRadio(nombre, streamUrl, caratula, ubicacion) {
-      cerrarModal();
-      document.getElementById('radioPlayerTitle').innerText = nombre;
-      document.getElementById('radioPlayerLocation').innerText = ubicacion || 'Emisión digital HD';
-      document.getElementById('radioPlayerImg').src = caratula;
-      audioStream.src = streamUrl; audioStream.play(); isRadioPlaying = true;
-      document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
-      document.getElementById('radioEqualizer').classList.remove('hidden');
-      document.getElementById('floatingRadioPlayer').classList.remove('translate-y-full');
-    }
-    function togglePlayRadio() {
-      if (isRadioPlaying) { audioStream.pause(); isRadioPlaying = false; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>'; document.getElementById('radioEqualizer').classList.add('hidden'); }
-      else { audioStream.play(); isRadioPlaying = true; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; document.getElementById('radioEqualizer').classList.remove('hidden'); }
-    }
+    function sintonizarRadio(nombre, streamUrl, caratula, ubicacion) { cerrarModal(); document.getElementById('radioPlayerTitle').innerText = nombre; document.getElementById('radioPlayerLocation').innerText = ubicacion || 'HD'; document.getElementById('radioPlayerImg').src = caratula; audioStream.src = streamUrl; audioStream.play(); isRadioPlaying = true; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; document.getElementById('radioEqualizer').classList.remove('hidden'); document.getElementById('floatingRadioPlayer').classList.remove('translate-y-full'); }
+    function togglePlayRadio() { if (isRadioPlaying) { audioStream.pause(); isRadioPlaying = false; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>'; document.getElementById('radioEqualizer').classList.add('hidden'); } else { audioStream.play(); isRadioPlaying = true; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; document.getElementById('radioEqualizer').classList.remove('hidden'); } }
     function cerrarRadio() { audioStream.pause(); audioStream.src = ''; isRadioPlaying = false; document.getElementById('floatingRadioPlayer').classList.add('translate-y-full'); }
 
     function renderArtistasUI() {
       const container = document.getElementById('artistasGrid'); container.innerHTML = '';
       artistasData.forEach(a => {
-        const nombre = a.nombre || "Artista"; const foto = a.foto || FALLBACK_THUMB; const rubro = a.rubro || "Artista UADAV";
+        const nombre = a.nombre || "Artista", foto = a.foto || FALLBACK_THUMB, rubro = a.rubro || "Artista UADAV";
         container.innerHTML += `<div tabindex="0" onclick="abrirPerfilArtista('${a.id}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl p-3 text-center cursor-pointer group transition-all"><div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden mb-3 border-2 border-uadav-border group-hover:border-uadav-accent transition-colors shadow-lg"><img src="${foto}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="${nombre}"></div><h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors truncate">${nombre}</h4><span class="text-[9px] sm:text-[10px] text-slate-400 block mt-0.5">${rubro}</span></div>`;
       });
     }
 
     function renderRadiosUI() {
       const container = document.getElementById('radiosGrid'); container.innerHTML = '';
-      const radiosMostrar = radiosData; const principal = radiosMostrar.find(r => r.es_oficial);
+      const radiosMostrar = radiosData, principal = radiosMostrar.find(r => r.es_oficial);
       if (principal) {
         container.innerHTML += `<div tabindex="0" onclick="sintonizarRadio('${principal.nombre}', '${principal.stream_url}', '${principal.logo}', '${principal.ubicacion}')" class="tv-focusable relative md:col-span-2 bg-gradient-to-r from-slate-900 via-uadav-card to-[#14141d] border-2 border-uadav-accent/60 hover:border-uadav-accent rounded-3xl p-5 sm:p-6 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col justify-between"><div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-star mr-1"></i> Emisora Oficial</div><div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6"><div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 border border-uadav-accent/30"><img src="${principal.logo}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i class="fa-solid fa-radio text-3xl text-uadav-accent"></i></div></div><div class="flex-1"><span class="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2"><span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span> AIR STREAM HQ</span><h3 class="text-xl sm:text-3xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">${principal.nombre}</h3><p class="text-xs sm:text-sm text-slate-300 mt-1">${principal.descripcion}</p><div class="flex items-center gap-4 mt-3 text-xs text-slate-400 font-medium"><span><i class="fa-solid fa-signal text-uadav-accent mr-1"></i> ${principal.bitrate}</span><span><i class="fa-solid fa-location-dot text-uadav-accent mr-1"></i> ${principal.ubicacion}</span></div></div></div><div class="mt-6 pt-4 border-t border-uadav-border/60 flex items-center justify-between"><div class="text-xs text-slate-400"><span class="text-slate-500 block text-[10px] uppercase font-bold">Estado de Señal</span><span class="text-uadav-accent font-semibold flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> Online</span></div><button class="bg-uadav-accent group-hover:bg-white text-slate-950 font-black text-xs px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg transition-all"><i class="fa-solid fa-play"></i> Sintonizar</button></div></div>`;
       }
@@ -260,16 +207,14 @@
       carteleraData.forEach(c => { cartRail.innerHTML += `<div tabindex="0" class="tv-focusable min-w-[200px] sm:min-w-[240px] bg-[#0a0a0c] border border-uadav-border p-4 sm:p-5 rounded-2xl flex-shrink-0 hover:border-uadav-accent transition-colors group"><span class="text-[10px] sm:text-xs font-black text-uadav-accent block mb-1 sm:mb-2 tracking-widest">${c.fecha || c.estado_badge}</span><h4 class="text-base sm:text-lg font-black text-white mb-1">${c.artista || c.titulo}</h4><p class="text-xs sm:text-sm text-slate-400 mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${c.lugar}</p><span class="inline-block bg-slate-900 text-slate-300 text-[9px] sm:text-[10px] px-2 py-0.5 sm:py-1 rounded-full mt-2 border border-slate-800">${c.tipo || c.categoria}</span></div>`; });
     }
 
-    function filtrarCategoriasVisibles() {
-      seccionesActivas.forEach(sec => { const section = document.getElementById(sec.id + 'Section') || document.getElementById(sec.id); if (section) { if (sec.activa) section.classList.remove('hidden'); else section.classList.add('hidden'); } });
-    }
+    function filtrarCategoriasVisibles() { seccionesActivas.forEach(sec => { const section = document.getElementById(sec.id + 'Section') || document.getElementById(sec.id); if (section) { if (sec.activa) section.classList.remove('hidden'); else section.classList.add('hidden'); } }); }
 
     async function cargarSeccionDinamica(containerId, secId) {
-      const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!sec) return;
+      const rail = document.getElementById(containerId), sec = seccionesActivas.find(s => s.id === secId); if (!sec) return;
       let items = [];
       if (sec.modo === 'manual' && sec.ids_manuales && sec.ids_manuales.length > 0) { items = sec.ids_manuales.map(id => ({ id: id, titulo: "Contenido Curado", categoria: sec.nombre, descripcion: "Curaduría manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); }
       else {
-        const query = sec.query || sec.nombre; const cacheKey = `uadav_cache_${secId}_v3`; const cachedData = localStorage.getItem(cacheKey);
+        const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v3`, cachedData = localStorage.getItem(cacheKey);
         if (cachedData) { items = JSON.parse(cachedData); } else {
           const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent(query)}&type=video`);
           if (data && Array.isArray(data)) { items = data.filter(item => !item.lengthSeconds || item.lengthSeconds > 90).slice(0, 10).map(item => ({ id: item.videoId, titulo: item.title, categoria: sec.nombre, descripcion: item.author || "Contenido HD", duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD", thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'video' })); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); }
@@ -278,158 +223,154 @@
       rail.innerHTML = ''; if (items && items.length > 0) items.forEach(item => rail.appendChild(crearCard(item)));
     }
 
-    async function consultarRedInvidious(endpoint) {
-      for (const server of SERVIDORES_INVIDIOUS) {
-        try { const controller = new AbortController(); const tid = setTimeout(() => controller.abort(), 2000); const res = await fetch(`${server}${endpoint}`, { signal: controller.signal }); clearTimeout(tid); if (res.ok) { const data = await res.json(); if (data && (Array.isArray(data) ? data.length > 0 : true)) return data; } } catch (e) { continue; }
-      } return null;
-    }
+    async function consultarRedInvidious(endpoint) { for (const server of SERVIDORES_INVIDIOUS) { try { const controller = new AbortController(); const tid = setTimeout(() => controller.abort(), 2000); const res = await fetch(`${server}${endpoint}`, { signal: controller.signal }); clearTimeout(tid); if (res.ok) { const data = await res.json(); if (data && (Array.isArray(data) ? data.length > 0 : true)) return data; } } catch (e) { continue; } } return null; }
 
-    async function cargarTendenciasPorIP() {
-      let countryCode = 'AR'; let countryName = 'Argentina';
-      try { const ipRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(1800) }); if (ipRes.ok) { const ipData = await ipRes.json(); if (ipData.country_code) { countryCode = ipData.country_code; countryName = ipData.country_name || countryCode; } } } catch (e) {}
-      document.getElementById('countryLabel').innerHTML = `<i class="fa-solid fa-fire text-red-500"></i> Lo más visto en ${countryName}`;
-      const cacheKey = `uadav_trend_${countryCode}_v3`; const cached = localStorage.getItem(cacheKey); let items = [];
-      if (cached) { items = JSON.parse(cached); } else {
-        const data = await consultarRedInvidious(`/api/v1/trending?region=${countryCode}&type=music`);
-        if (data && Array.isArray(data)) { items = data.slice(0, 12).map(item => ({ id: item.videoId, titulo: item.title, categoria: `Tendencia en ${countryName}`, descripcion: item.author || "Destacado", duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD", thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'video' })); localStorage.setItem(cacheKey, JSON.stringify(items)); }
-      }
-      const rail = document.getElementById('ipTrendingRail'); rail.innerHTML = ''; if (items && items.length > 0) items.forEach(item => rail.appendChild(crearCard(item)));
-    }
+    async function cargarTendenciasPorIP() { let countryCode = 'AR', countryName = 'Argentina'; try { const ipRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(1800) }); if (ipRes.ok) { const ipData = await ipRes.json(); if (ipData.country_code) { countryCode = ipData.country_code; countryName = ipData.country_name || countryCode; } } } catch (e) {} document.getElementById('countryLabel').innerHTML = `<i class="fa-solid fa-fire text-red-500"></i> Lo más visto en ${countryName}`; const cacheKey = `uadav_trend_${countryCode}_v3`, cached = localStorage.getItem(cacheKey); let items = []; if (cached) { items = JSON.parse(cached); } else { const data = await consultarRedInvidious(`/api/v1/trending?region=${countryCode}&type=music`); if (data && Array.isArray(data)) { items = data.slice(0, 12).map(item => ({ id: item.videoId, titulo: item.title, categoria: `Tendencia en ${countryName}`, descripcion: item.author || "Destacado", duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD", thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'video' })); localStorage.setItem(cacheKey, JSON.stringify(items)); } } const rail = document.getElementById('ipTrendingRail'); rail.innerHTML = ''; if (items && items.length > 0) items.forEach(item => rail.appendChild(crearCard(item))); }
 
-    async function cargarShortsExclusivos() {
-      const rail = document.getElementById('shortsRail'); const cacheKey = 'uadav_cache_shorts_strict_v3'; const cachedData = localStorage.getItem(cacheKey); let items = [];
-      if (cachedData) { items = JSON.parse(cachedData); } else {
-        const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent('#shorts teatro musica viral')}&type=video`);
-        if (data && Array.isArray(data)) { items = data.filter(item => item.lengthSeconds && item.lengthSeconds <= 60).slice(0, 10).map(item => ({ id: item.videoId, titulo: item.title.replace(/#shorts/gi, '').trim(), categoria: 'Short', descripcion: item.author || "Short oficial", duracion: item.lengthSeconds ? `${item.lengthSeconds}s` : "0:30", thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'short' })); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); }
-      }
-      rail.innerHTML = ''; if (items && items.length > 0) items.forEach(item => rail.appendChild(crearShortCard(item)));
-    }
+    async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'), cacheKey = 'uadav_cache_shorts_strict_v3', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) { items = JSON.parse(cachedData); } else { const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent('#shorts teatro musica viral')}&type=video`); if (data && Array.isArray(data)) { items = data.filter(item => item.lengthSeconds && item.lengthSeconds <= 60).slice(0, 10).map(item => ({ id: item.videoId, titulo: item.title.replace(/#shorts/gi, '').trim(), categoria: 'Short', descripcion: item.author || "Short oficial", duracion: item.lengthSeconds ? `${item.lengthSeconds}s` : "0:30", thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: 'short' })); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) items.forEach(item => rail.appendChild(crearShortCard(item))); }
 
-    // NUEVA FUNCIÓN PARA ABRIR LA FICHA ESTILO YOUTUBE MUSIC
+    // FUNCIÓN ABRIR PERFIL (CON MINIATURAS)
     function abrirPerfilArtista(id) {
       const artista = artistasData.find(a => a.id === id);
       if (!artista) return;
 
-      // Llenar cabecera
-      document.getElementById('artModalBanner').src = artista.foto || FALLBACK_THUMB;
+      document.getElementById('artModalBanner').src = artista.portada || artista.foto || FALLBACK_THUMB;
       document.getElementById('artModalFoto').src = artista.foto || FALLBACK_THUMB;
       document.getElementById('artModalNombre').innerText = artista.nombre;
       document.getElementById('artModalGenero').innerText = artista.rubro || "Artista UADAV";
       document.getElementById('artModalBio').innerText = artista.bio || "Sin biografía cargada.";
 
-      // Botón de contacto (si tiene WhatsApp)
       const btnContacto = document.getElementById('artModalContactBtn');
-      if (artista.contacto) {
-        btnContacto.classList.remove('hidden');
-        btnContacto.onclick = () => {
-          let numero = artista.contacto.replace(/\D/g, '');
-          window.open(`https://wa.me/${numero}`, '_blank');
-        };
-      } else {
-        btnContacto.classList.add('hidden');
-      }
+      if (artista.contacto) { btnContacto.classList.remove('hidden'); btnContacto.onclick = () => { window.open(`https://wa.me/${artista.contacto.replace(/\D/g, '')}`, '_blank'); }; } else { btnContacto.classList.add('hidden'); }
 
-      // Lista de videos
       const contVideos = document.getElementById('artModalListaVideos');
       contVideos.innerHTML = '';
 
       if (artista.videos_manuales && artista.videos_manuales.length > 0) {
+        let gridHTML = '<div class="grid grid-cols-2 md:grid-cols-3 gap-4">';
         artista.videos_manuales.forEach((v, index) => {
-          contVideos.innerHTML += `<button onclick="reproducirVideoPersonalizado('${v.url}', '${v.tipo}', '${artista.nombre}', 'Video ${index+1}')" class="w-full flex items-center gap-4 text-left bg-slate-900 border border-uadav-border hover:border-uadav-accent p-3 rounded-xl text-xs font-bold text-white mb-2 transition-all">
-            <div class="w-12 h-12 bg-uadav-accent text-slate-950 rounded-lg flex items-center justify-center"><i class="fa-solid fa-play"></i></div>
-            <div><h5 class="font-black text-sm">${v.tipo === 'youtube' ? 'Video de YouTube' : 'Video Directo'}</h5><p class="text-slate-400">Clip ${index + 1}</p></div>
-          </button>`;
+          let thumb = FALLBACK_THUMB;
+          if (v.tipo === 'youtube') thumb = obtenerCaratulaUltraRapida(v.url);
+          gridHTML += `
+            <div onclick="reproducirVideoPersonalizado('${v.url}', '${v.tipo}', '${artista.nombre}', 'Video ${index+1}')" class="bg-slate-900 border border-uadav-border hover:border-uadav-accent rounded-xl overflow-hidden cursor-pointer group transition-all">
+              <div class="relative aspect-video">
+                <img src="${thumb}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';">
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                  <i class="fa-solid fa-play text-3xl text-white drop-shadow-lg"></i>
+                </div>
+              </div>
+              <div class="p-3">
+                <h5 class="font-bold text-xs text-white truncate">Video ${index + 1}</h5>
+                <p class="text-[10px] text-slate-400 uppercase">${v.tipo === 'youtube' ? 'YouTube' : 'Directo'}</p>
+              </div>
+            </div>`;
         });
+        gridHTML += '</div>';
+        contVideos.innerHTML = gridHTML;
       } else {
         contVideos.innerHTML = '<p class="text-xs text-slate-500">No hay videos cargados en el panel para este artista.</p>';
       }
 
-      // Botón de búsqueda en YouTube
-      document.getElementById('artModalActionBtn').onclick = () => {
-        cerrarModalArtista();
-        document.getElementById('searchInput').value = artista.nombre;
-        ejecutarBusqueda();
-      };
-
+      document.getElementById('artModalActionBtn').onclick = () => { cerrarModalArtista(); document.getElementById('searchInput').value = artista.nombre; ejecutarBusqueda(); };
       document.getElementById('artistModal').classList.remove('hidden');
     }
 
     function reproducirVideoPersonalizado(url, tipo, titulo, desc) {
       cerrarModalArtista();
       if (tipo === 'youtube') { reproducirVideo(url, titulo, "Personalizado", desc); }
-      else {
-        cerrarModal();
-        const iframe = document.getElementById('iframePlayer'); const html5 = document.getElementById('html5Player');
-        iframe.classList.add('hidden'); html5.classList.remove('hidden');
-        html5.src = url; html5.play();
-        document.getElementById('modalTitulo').innerText = titulo;
-        document.getElementById('modalDescripcion').innerText = desc;
-        document.getElementById('videoModal').classList.remove('hidden');
-      }
+      else { cerrarModal(); const iframe = document.getElementById('iframePlayer'), html5 = document.getElementById('html5Player'); iframe.classList.add('hidden'); html5.classList.remove('hidden'); html5.src = url; html5.play(); document.getElementById('modalTitulo').innerText = titulo; document.getElementById('modalDescripcion').innerText = desc; document.getElementById('videoModal').classList.remove('hidden'); }
+    }
+
+    // CERRAR MODAL SIN VOLVER AL INICIO (SOLO VIDEO)
+    function cerrarModal() {
+      const iframe = document.getElementById('iframePlayer');
+      const html5 = document.getElementById('html5Player');
+      iframe.src = 'about:blank'; // Reset limpio, sin scroll
+      html5.src = ''; html5.pause();
+      document.getElementById('videoModal').classList.add('hidden');
     }
 
     function cerrarModalArtista() { document.getElementById('artistModal').classList.add('hidden'); }
     function cerrarModalArtistaBackdrop(e) { if (e.target.id === 'artistModal') cerrarModalArtista(); }
 
+    // BÚSQUEDA CON VALIDACIÓN PARA EVITAR ERRORES DE NULL
     async function ejecutarBusqueda() {
-      const q = document.getElementById('searchInput').value.trim(); if (!q) { resetearVista(); return; }
-      const cacheKey = `uadav_search_${q.toLowerCase().replace(/\s+/g, '_')}`; const cached = localStorage.getItem(cacheKey);
-      document.getElementById('mainContainer').classList.add('hidden'); const gridView = document.getElementById('gridViewSection'); const gridContainer = document.getElementById('gridContainer'); gridView.classList.remove('hidden');
-      document.getElementById('gridTitle').innerHTML = `Buscando <span class="text-uadav-accent">"${q}"</span>...`; gridContainer.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-bold"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-uadav-accent mb-4 block"></i>Buscando...</div>';
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) { resetearVista(); return; }
+
+      const mainContainer = document.getElementById('mainContainer');
+      const gridView = document.getElementById('gridViewSection');
+      const gridContainer = document.getElementById('gridContainer');
+      
+      // Validación para que no rompa si el DOM no está listo
+      if (!mainContainer || !gridView || !gridContainer) return;
+
+      const cacheKey = `uadav_search_${q.toLowerCase().replace(/\s+/g, '_')}`, cached = localStorage.getItem(cacheKey);
+      
+      mainContainer.classList.add('hidden');
+      gridView.classList.remove('hidden');
+      
+      document.getElementById('gridTitle').innerHTML = `Buscando <span class="text-uadav-accent">"${q}"</span>...`;
+      gridContainer.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-bold"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-uadav-accent mb-4 block"></i>Buscando...</div>';
+
       let resultados = [];
-      if (cached) { resultados = JSON.parse(cached); } else {
+      if (cached) { resultados = JSON.parse(cached); }
+      else {
         const data = await consultarRedInvidious(`/api/v1/search?q=${encodeURIComponent(q)}&type=video`);
-        if (data && Array.isArray(data)) { resultados = data.slice(0, 15).map(item => ({ id: item.videoId, titulo: item.title, categoria: "Resultado", descripcion: item.author || "Búsqueda oficial", duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD", thumbnail: obtenerCaratulaUltraRapida(item.videoId), tipo: (item.lengthSeconds && item.lengthSeconds <= 60) ? 'short' : 'video' })); if (resultados.length > 0) localStorage.setItem(cacheKey, JSON.stringify(resultados)); }
+        if (data && Array.isArray(data)) {
+          resultados = data.slice(0, 15).map(item => ({
+            id: item.videoId, titulo: item.title, categoria: "Resultado",
+            descripcion: item.author || "Búsqueda oficial",
+            duracion: item.lengthSeconds ? new Date(item.lengthSeconds * 1000).toISOString().substring(14, 19) : "HD",
+            thumbnail: obtenerCaratulaUltraRapida(item.videoId),
+            tipo: (item.lengthSeconds && item.lengthSeconds <= 60) ? 'short' : 'video'
+          }));
+          if (resultados.length > 0) localStorage.setItem(cacheKey, JSON.stringify(resultados));
+        }
       }
-      document.getElementById('gridTitle').innerHTML = `Resultados para <span class="text-uadav-accent">"${q}"</span>`; gridContainer.innerHTML = '';
-      if (resultados && resultados.length > 0) { resultados.forEach(item => gridContainer.appendChild(item.tipo === 'short' ? crearShortCard(item) : crearCard(item))); } else { gridContainer.innerHTML = '<div class="col-span-full py-12 text-center text-slate-400">No se encontraron resultados.</div>'; }
+
+      document.getElementById('gridTitle').innerHTML = `Resultados para <span class="text-uadav-accent">"${q}"</span>`;
+      gridContainer.innerHTML = '';
+
+      if (resultados && resultados.length > 0) {
+        resultados.forEach(item => gridContainer.appendChild(item.tipo === 'short' ? crearShortCard(item) : crearCard(item)));
+      } else {
+        gridContainer.innerHTML = '<div class="col-span-full py-12 text-center text-slate-400">No se encontraron resultados.</div>';
+      }
     }
 
     function construirEmbedUrl(id) { return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1`; }
 
     function crearCard(item) {
       const card = document.createElement('div'); card.className = "tv-focusable min-w-[220px] sm:min-w-[260px] max-w-[280px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0 flex flex-col justify-between"; card.setAttribute('tabindex', '0');
-      const videoId = item.id || '-479TZi-EAs'; const thumb = item.thumbnail || obtenerCaratulaUltraRapida(videoId); const safeTitulo = (item.titulo || 'Contenido').replace(/'/g, "\\'"); const safeDesc = (item.descripcion || 'UADAV').replace(/'/g, "\\'");
+      const videoId = item.id || '-479TZi-EAs', thumb = item.thumbnail || obtenerCaratulaUltraRapida(videoId), safeTitulo = (item.titulo || 'Contenido').replace(/'/g, "\\'"), safeDesc = (item.descripcion || 'UADAV').replace(/'/g, "\\'");
       card.innerHTML = `<div onclick="reproducirVideo('${videoId}', '${safeTitulo}', '${item.categoria}', '${safeDesc}')"><div class="relative aspect-video bg-black overflow-hidden"><img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-110 group-hover:opacity-60 transition-all duration-300"><div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><div class="w-10 h-10 sm:w-12 sm:h-12 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-bold shadow-[0_0_20px_rgba(0,229,255,0.5)] scale-75 group-hover:scale-100 transition-transform"><i class="fa-solid fa-play ml-0.5 text-xs sm:text-base"></i></div></div><span class="absolute bottom-2 right-2 bg-black/80 text-white text-[9px] sm:text-[10px] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded font-bold">${item.duracion || 'HD'}</span></div><div class="p-3 sm:p-4"><span class="text-[8px] sm:text-[9px] text-uadav-accent font-black tracking-widest uppercase block mb-1 sm:mb-2">${item.categoria}</span><h3 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors line-clamp-2">${item.titulo}</h3><p class="text-[11px] sm:text-xs text-slate-500 mt-1 line-clamp-1">${item.descripcion}</p></div></div>`;
       return card;
     }
 
     function crearShortCard(item) {
       const card = document.createElement('div'); card.className = "tv-focusable min-w-[140px] sm:min-w-[170px] max-w-[190px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0"; card.setAttribute('tabindex', '0');
-      const videoId = item.id || '-479TZi-EAs'; const thumb = item.thumbnail || obtenerCaratulaUltraRapida(videoId); const safeTitulo = (item.titulo || 'Short').replace(/'/g, "\\'"); const safeDesc = (item.descripcion || 'Short').replace(/'/g, "\\'");
+      const videoId = item.id || '-479TZi-EAs', thumb = item.thumbnail || obtenerCaratulaUltraRapida(videoId), safeTitulo = (item.titulo || 'Short').replace(/'/g, "\\'"), safeDesc = (item.descripcion || 'Short').replace(/'/g, "\\'");
       card.innerHTML = `<div onclick="reproducirVideo('${videoId}', '${safeTitulo}', '${item.categoria}', '${safeDesc}')" class="relative aspect-[9/16] bg-black overflow-hidden"><img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"><div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div><div class="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-600 text-white text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full flex items-center gap-1 shadow-lg tracking-wider"><i class="fa-solid fa-bolt"></i> SHORT</div><span class="absolute top-2 right-2 sm:top-3 sm:right-3 bg-black/70 text-white text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-full font-bold">${item.duracion}</span><div class="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3"><h4 class="font-bold text-[11px] sm:text-xs text-white line-clamp-2 leading-snug drop-shadow-md">${item.titulo}</h4></div></div>`;
       return card;
     }
 
-    function filtrarCategoria(cat, btn) {
-      if (btn) { document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('bg-uadav-accent', 'text-slate-950'); b.classList.add('bg-[#0f0f13]', 'text-slate-300'); }); btn.classList.remove('bg-[#0f0f13]', 'text-slate-300'); btn.classList.add('bg-uadav-accent', 'text-slate-950'); }
-      if (cat === 'todas') { resetearVista(); return; }
-      const scrollTargets = { 'Radios': 'radiosSection', 'Artistas': 'artistasSection', 'Teatros': 'teatrosSection', 'Circos': 'circosSection', 'Cartelera': 'carteleraSection' };
-      if (scrollTargets[cat]) { resetearVista(); document.getElementById(scrollTargets[cat]).scrollIntoView({ behavior: 'smooth' }); return; }
-      const busquedasPorCategoria = { 'Shorts': '#shorts musica teatro viral', 'Trending': 'obras teatro espectaculos tendencia', 'Conciertos': 'concierto completo live' };
-      const queryTarget = busquedasPorCategoria[cat] || cat; document.getElementById('searchInput').value = queryTarget; ejecutarBusqueda();
-    }
+    function filtrarCategoria(cat, btn) { if (btn) { document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('bg-uadav-accent', 'text-slate-950'); b.classList.add('bg-[#0f0f13]', 'text-slate-300'); }); btn.classList.remove('bg-[#0f0f13]', 'text-slate-300'); btn.classList.add('bg-uadav-accent', 'text-slate-950'); } if (cat === 'todas') { resetearVista(); return; } const scrollTargets = { 'Radios': 'radiosSection', 'Artistas': 'artistasSection', 'Teatros': 'teatrosSection', 'Circos': 'circosSection', 'Cartelera': 'carteleraSection' }; if (scrollTargets[cat]) { resetearVista(); document.getElementById(scrollTargets[cat]).scrollIntoView({ behavior: 'smooth' }); return; } const busquedasPorCategoria = { 'Shorts': '#shorts musica teatro viral', 'Trending': 'obras teatro espectaculos tendencia', 'Conciertos': 'concierto completo live' }; const queryTarget = busquedasPorCategoria[cat] || cat; document.getElementById('searchInput').value = queryTarget; ejecutarBusqueda(); }
 
     function resetearVista() { document.getElementById('mainContainer').classList.remove('hidden'); document.getElementById('gridViewSection').classList.add('hidden'); document.getElementById('searchInput').value = ''; }
 
     function reproducirVideo(id, titulo, categoria, descripcion) {
       if (isRadioPlaying) togglePlayRadio();
-      const iframe = document.getElementById('iframePlayer'); const html5 = document.getElementById('html5Player');
+      const iframe = document.getElementById('iframePlayer'), html5 = document.getElementById('html5Player');
       html5.classList.add('hidden'); iframe.classList.remove('hidden'); iframe.src = construirEmbedUrl(id);
       document.getElementById('modalTitulo').innerText = titulo; document.getElementById('modalCategoria').innerText = categoria; document.getElementById('modalDescripcion').innerText = descripcion; document.getElementById('videoModal').classList.remove('hidden');
     }
 
-    function cerrarModal() { const iframe = document.getElementById('iframePlayer'); const html5 = document.getElementById('html5Player'); iframe.src = ''; html5.src = ''; html5.pause(); document.getElementById('videoModal').classList.add('hidden'); }
+    // Cerrar modal de video sin recargar ni volver al inicio
     function cerrarModalBackdrop(e) { if (e.target.id === 'videoModal') cerrarModal(); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cerrarModal(); cerrarModalArtista(); } });
 
-    async function cargarHome() {
-      seccionesActivas = await obtenerDatos('secciones'); filtrarCategoriasVisibles();
-      artistasData = await obtenerDatos('artistas_uadav'); renderArtistasUI();
-      radiosData = await obtenerDatos('radios'); renderRadiosUI();
-      carteleraData = await obtenerDatos('eventos_cartelera'); renderCarteleraUI();
-      cargarSeccionDinamica('teatrosRail', 'teatros'); cargarSeccionDinamica('circosRail', 'circos'); cargarTendenciasPorIP(); cargarShortsExclusivos(); cargarSeccionDinamica('conciertosRail', 'conciertos');
-    }
+    async function cargarHome() { seccionesActivas = await obtenerDatos('secciones'); filtrarCategoriasVisibles(); artistasData = await obtenerDatos('artistas_uadav'); renderArtistasUI(); radiosData = await obtenerDatos('radios'); renderRadiosUI(); carteleraData = await obtenerDatos('eventos_cartelera'); renderCarteleraUI(); cargarSeccionDinamica('teatrosRail', 'teatros'); cargarSeccionDinamica('circosRail', 'circos'); cargarTendenciasPorIP(); cargarShortsExclusivos(); cargarSeccionDinamica('conciertosRail', 'conciertos'); }
 
     window.onload = () => cargarHome();
   </script>
