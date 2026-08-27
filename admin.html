@@ -43,8 +43,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div><label>Nombre</label><input id="artNombre" placeholder="Ej: Circo Servian"></div>
           <div><label>Rubro</label><input id="artRubro" placeholder="Ej: Circo / Magia / Música"></div>
-          <div><label>Foto (URL)</label><input id="artFoto" placeholder="https://..."></div>
-          <div><label>Bio</label><textarea id="artBio" placeholder="Descripción del artista"></textarea></div>
+          <div><label>Foto de Perfil (URL)</label><input id="artFoto" placeholder="https://..."></div>
+          <div><label>Foto de Portada / Banner (URL)</label><input id="artPortada" placeholder="https://... (Imagen horizontal)"></div>
+          <div class="md:col-span-2"><label>Bio</label><textarea id="artBio" placeholder="Descripción del artista"></textarea></div>
           <div><label>Tiene YouTube?</label>
             <select id="artTieneYT" class="bg-[#0a0a0c] border border-uadav-border rounded p-2 w-full">
               <option value="true">Sí</option>
@@ -74,7 +75,7 @@
     let ADMIN_KEY = '';
     let seccionesData = [];
     let artistasData = [];
-    let editandoId = null; // Variable para controlar si estamos editando
+    let editandoId = null;
 
     function conectar() {
       ADMIN_KEY = document.getElementById('adminKeyInput').value;
@@ -115,7 +116,6 @@
       });
     }
 
-    // Función para rellenar el formulario al hacer clic en "Editar"
     function editarArtista(id) {
       const artista = artistasData.find(a => a.id === id);
       if (!artista) return;
@@ -124,32 +124,29 @@
       document.getElementById('artNombre').value = artista.nombre;
       document.getElementById('artRubro').value = artista.rubro || '';
       document.getElementById('artFoto').value = artista.foto || '';
+      document.getElementById('artPortada').value = artista.portada || '';
       document.getElementById('artBio').value = artista.bio || '';
       document.getElementById('artTieneYT').value = artista.tiene_youtube ? 'true' : 'false';
       document.getElementById('artLink').value = artista.youtube_channel_id || '';
       document.getElementById('artContacto').value = artista.contacto || '';
 
-      // Unir los videos manuales en líneas para el textarea
       const videosManuales = artista.videos_manuales || [];
       document.getElementById('artVideos').value = videosManuales.map(v => v.url).join('\n');
 
-      // Cambiar los botones
       document.getElementById('btnGuardarArtista').innerText = "Actualizar Artista";
       document.getElementById('btnGuardarArtista').classList.remove('bg-uadav-accent');
       document.getElementById('btnGuardarArtista').classList.add('bg-blue-500');
       
       document.getElementById('btnCancelarEdicion').classList.remove('hidden');
-      
-      // Scroll hacia arriba para que vea el formulario
       window.scrollTo({ top: 300, behavior: 'smooth' });
     }
 
-    // Función para salir del modo edición sin guardar
     function cancelarEdicion() {
       editandoId = null;
       document.getElementById('artNombre').value = '';
       document.getElementById('artRubro').value = '';
       document.getElementById('artFoto').value = '';
+      document.getElementById('artPortada').value = '';
       document.getElementById('artBio').value = '';
       document.getElementById('artTieneYT').value = 'true';
       document.getElementById('artLink').value = '';
@@ -163,7 +160,6 @@
       document.getElementById('btnCancelarEdicion').classList.add('hidden');
     }
 
-    // Función para guardar (Ahora detecta si es Nuevo o Edición)
     function guardarArtista() {
       const videosRaw = document.getElementById('artVideos').value.trim();
       const videos = videosRaw ? videosRaw.split('\n').map(line => {
@@ -180,15 +176,15 @@
       const nombre = document.getElementById('artNombre').value;
       if (!nombre) return alert("Poné el nombre del artista");
 
-      // Si estamos editando, reemplazamos en la misma posición
       if (editandoId) {
         const index = artistasData.findIndex(a => a.id === editandoId);
         if (index !== -1) {
           artistasData[index] = {
-            ...artistasData[index], // Mantener el ID y otros datos
+            ...artistasData[index],
             nombre: nombre,
             rubro: document.getElementById('artRubro').value,
             foto: document.getElementById('artFoto').value,
+            portada: document.getElementById('artPortada').value,
             bio: document.getElementById('artBio').value,
             tiene_youtube: document.getElementById('artTieneYT').value === 'true',
             youtube_channel_id: document.getElementById('artLink').value,
@@ -196,15 +192,15 @@
             contacto: document.getElementById('artContacto').value
           };
         }
-        cancelarEdicion(); // Volver al modo creación
+        cancelarEdicion();
         alert("Artista actualizado. Ahora hacé click en GUARDAR CAMBIOS.");
       } else {
-        // Si es nuevo, lo agregamos
         const nuevoArt = {
           id: 'art-' + Date.now(),
           nombre: nombre,
           rubro: document.getElementById('artRubro').value,
           foto: document.getElementById('artFoto').value,
+          portada: document.getElementById('artPortada').value,
           bio: document.getElementById('artBio').value,
           tiene_youtube: document.getElementById('artTieneYT').value === 'true',
           youtube_channel_id: document.getElementById('artLink').value,
@@ -238,9 +234,7 @@
 
     function eliminarArtista(id) {
       if(!confirm("Seguro que querés eliminar este artista?")) return;
-      // Si estoy eliminando el que estoy editando, cancelo la edición
       if (editandoId === id) cancelarEdicion();
-      
       artistasData = artistasData.filter(a => a.id !== id);
       renderArtistas(artistasData);
     }
