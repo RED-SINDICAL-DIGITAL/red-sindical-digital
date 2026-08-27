@@ -130,7 +130,6 @@
       }).filter(v => v) : [];
 
       let channelIdInput = document.getElementById('artLink').value.trim();
-      // Extraer solo el ID del canal si pegó URL
       if (channelIdInput.includes('channel_id=')) channelIdInput = channelIdInput.split('channel_id=')[1].split('&')[0];
 
       const dataArtista = {
