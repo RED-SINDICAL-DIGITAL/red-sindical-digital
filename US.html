@@ -60,7 +60,6 @@
         <button tabindex="0" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión ininterrumpida HD 24/7')" class="tv-focusable flex items-center gap-1.5 sm:gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider"><div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div> <span class="hidden xs:inline">Live TV</span></button>
       </div>
     </div>
-
     <nav class="border-t border-uadav-border bg-[#050505]">
       <div id="navbar" class="max-w-[1400px] mx-auto px-4 flex items-center gap-3 overflow-x-auto py-3.5 no-scrollbar text-sm font-black">
       </div>
@@ -239,7 +238,7 @@
     let queue = [], currentIndex = -1;
     let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR", hero_titulo: "SEÑAL OFICIAL", hero_subtitulo: "UADAVSTREAM TV", hero_boton_texto: "Ver SEÑAL OFICIAL", hero_boton_url: "-479TZi-EAs" };
 
-    if (localStorage.getItem('uadav_cache_version') !== 'v23') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v23'); }
+    if (localStorage.getItem('uadav_cache_version') !== 'v24') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v24'); }
 
     function renderNavbar() {
       const nav = document.getElementById('navbar'); nav.innerHTML = '';
@@ -249,7 +248,7 @@
 
     function renderQueue() { const list = document.getElementById('queueList'); list.innerHTML = ''; queue.forEach((item, index) => { list.innerHTML += `<div onclick="loadFromQueue(${index})" class="flex items-center gap-2 p-2 bg-slate-900 rounded-lg cursor-pointer hover:bg-slate-800 ${index === currentIndex ? 'border border-uadav-accent' : ''}"><i class="fa-solid fa-music text-uadav-accent text-xs"></i><span class="text-xs text-white truncate">${item.titulo}</span></div>`; }); }
     function toggleQueue() { document.getElementById('queueBar').classList.toggle('hidden'); }
-    window.nextVideo = function() { if (currentIndex < queue.length - 1) { loadFromQueue(currentIndex + 1); } else { alert("No hay más videos en la cola"); } };
+    window.nextVideo = function() { if (currentIndex < queue.length - 1) { loadFromQueue(currentIndex + 1); } };
     window.prevVideo = function() { if (currentIndex > 0) { loadFromQueue(currentIndex - 1); } };
     function loadFromQueue(index) { currentIndex = index; const item = queue[index]; if (!item) return; if (item.tipo === 'youtube') reproducirVideo(item.url, item.titulo, item.categoria, item.descripcion); else reproducirVideoPersonalizado(item.url, item.tipo, item.titulo, item.descripcion); }
     function addToQueue() { const newItem = { id: document.getElementById('modalTitulo').innerText, titulo: document.getElementById('modalTitulo').innerText, categoria: document.getElementById('modalCategoria').innerText, descripcion: document.getElementById('modalDescripcion').innerText, url: document.getElementById('iframePlayer').src.split('/embed/')[1] || document.getElementById('html5Player').src, tipo: document.getElementById('html5Player').classList.contains('hidden') ? 'youtube' : 'mp4' }; if (newItem.id) { queue.push(newItem); renderQueue(); document.getElementById('queueBar').classList.remove('hidden'); } }
@@ -261,12 +260,10 @@
       const selector = document.getElementById('countrySelectorHeader'); if (configGlobal.pais_trending && configGlobal.pais_trending !== 'Auto' && configGlobal.pais_trending !== '') selector.value = configGlobal.pais_trending; else selector.value = 'AR';
       if (configGlobal.mostrar_ip) { document.getElementById('countryBadge').classList.remove('hidden'); }
       document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
-      
       document.getElementById('heroTitulo').innerText = configGlobal.hero_titulo || "SEÑAL OFICIAL";
       document.getElementById('heroSub').innerText = configGlobal.hero_subtitulo || "UADAVSTREAM TV";
       document.getElementById('heroBtnTexto').innerText = configGlobal.hero_boton_texto || "Ver SEÑAL OFICIAL";
       document.getElementById('heroBtn').onclick = () => reproducirVideo(configGlobal.hero_boton_url || '-479TZi-EAs', configGlobal.hero_titulo || "Señal Oficial", "En Vivo", "Transmisión oficial");
-      
       try { const resV = await fetch(API_URL + 'visits'); if (resV.ok) { const data = await resV.json(); document.getElementById('visitCounter').innerText = data.visitas_totales; } await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
     }
 
@@ -274,7 +271,6 @@
     async function obtenerVideos(query) { try { const res = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(query)}`); if (res.ok) return await res.json(); } catch (e) {} return []; }
     function obtenerCaratulaUltraRapida(id) { if (!id || id.length !== 11) return FALLBACK_THUMB; return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`; }
 
-    // === SEÑALES ===
     function renderSenalesUI() {
       const container = document.getElementById('senalesGrid'); if(!container) return;
       container.innerHTML = '';
@@ -298,12 +294,9 @@
 
     function reproducirSenalUniversal(id) {
       const senal = senalesData.find(s => s.id === id); if (!senal) return;
-      if (isRadioPlaying) togglePlayRadio();
-      document.getElementById('artistModal').classList.add('hidden');
-      
+      if (isRadioPlaying) togglePlayRadio(); document.getElementById('artistModal').classList.add('hidden');
       const iframe = document.getElementById('iframePlayer'); const html5 = document.getElementById('html5Player');
       const url = senal.url || ''; let tipo = senal.tipo;
-
       if (!tipo || tipo === 'auto') {
         if (url.includes('youtube.com') || url.includes('youtu.be') || /^[a-zA-Z0-9_-]{11}$/.test(url)) tipo = 'youtube';
         else if (url.includes('twitch.tv')) tipo = 'twitch';
@@ -313,7 +306,6 @@
         else if (url.includes('zeno.fm') || url.includes('.mp3') || url.includes('.aac')) tipo = 'audio';
         else tipo = 'youtube';
       }
-
       if (tipo === 'youtube') {
         let videoId = url;
         if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
@@ -338,21 +330,16 @@
         iframe.classList.add('hidden'); html5.classList.remove('hidden');
         html5.src = url; html5.play();
       }
-
       document.getElementById('modalTitulo').innerText = senal.nombre;
       document.getElementById('modalCategoria').innerText = senal.tipo === 'audio' ? 'Radio en Vivo' : 'Transmisión en Vivo';
       document.getElementById('modalDescripcion').innerText = senal.descripcion || 'Señal oficial en vivo';
       document.getElementById('videoModal').classList.remove('hidden');
     }
 
-    // === RENDERIZADO DE RADIOS (ARREGLADO) ===
     function renderRadiosUI() {
       const container = document.getElementById('radiosGrid'); if(!container) return;
       container.innerHTML = '';
-      
-      const radiosMostrar = radiosData || []; // Seguridad si está vacío
-      const principal = radiosMostrar.find(r => r.es_oficial);
-      
+      const radiosMostrar = radiosData, principal = radiosMostrar.find(r => r.es_oficial);
       if (principal) {
         container.innerHTML += `<div tabindex="0" onclick="sintonizarRadio('${principal.nombre}', '${principal.stream_url}', '${principal.logo}', '${principal.ubicacion}')" class="tv-focusable relative md:col-span-2 bg-gradient-to-r from-slate-900 via-uadav-card to-[#14141d] border-2 border-uadav-accent/60 hover:border-uadav-accent rounded-3xl p-5 sm:p-6 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col justify-between"><div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-star mr-1"></i> Emisora Oficial</div><div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6"><div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 border border-uadav-accent/30"><img src="${principal.logo}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i class="fa-solid fa-radio text-3xl text-uadav-accent"></i></div></div><div class="flex-1"><span class="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2"><span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span> AIR STREAM HQ</span><h3 class="text-xl sm:text-3xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">${principal.nombre}</h3><p class="text-xs sm:text-sm text-slate-300 mt-1">${principal.descripcion}</p><div class="flex items-center gap-4 mt-3 text-xs text-slate-400 font-medium"><span><i class="fa-solid fa-signal text-uadav-accent mr-1"></i> ${principal.bitrate}</span><span><i class="fa-solid fa-location-dot text-uadav-accent mr-1"></i> ${principal.ubicacion}</span></div></div></div><div class="mt-3 flex items-center gap-2 bg-[#0a0a0c] border border-uadav-border rounded-xl px-3 py-2"><i class="fa-solid fa-music text-uadav-accent animate-pulse"></i><span class="text-xs font-bold text-white truncate">${principal.tema_actual || 'Cargando tema...'} - ${principal.artista_actual || 'Radio'}</span></div><div class="mt-4 pt-4 border-t border-uadav-border/60 flex items-center justify-between"><div class="text-xs text-slate-400"><span class="text-slate-500 block text-[10px] uppercase font-bold">Estado de Señal</span><span class="text-uadav-accent font-semibold flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> Online</span></div><button class="bg-uadav-accent group-hover:bg-white text-slate-950 font-black text-xs px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg transition-all"><i class="fa-solid fa-play"></i> Sintonizar</button></div></div>`;
       }
@@ -365,9 +352,9 @@
 
     function renderCarteleraUI() { const cartRail = document.getElementById('carteleraRail'); if(!cartRail) return; cartRail.innerHTML = ''; carteleraData.forEach(c => { cartRail.innerHTML += `<div tabindex="0" class="tv-focusable min-w-[200px] sm:min-w-[240px] bg-[#0a0a0c] border border-uadav-border p-4 sm:p-5 rounded-2xl flex-shrink-0 hover:border-uadav-accent transition-colors group"><span class="text-[10px] sm:text-xs font-black text-uadav-accent block mb-1 sm:mb-2 tracking-widest">${c.fecha || c.estado_badge}</span><h4 class="text-base sm:text-lg font-black text-white mb-1">${c.artista || c.titulo}</h4><p class="text-xs sm:text-sm text-slate-400 mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${c.lugar}</p><span class="inline-block bg-slate-900 text-slate-300 text-[9px] sm:text-[10px] px-2 py-0.5 sm:py-1 rounded-full mt-2 border border-slate-800">${c.tipo || c.categoria}</span></div>`; }); }
 
-    async function cargarSeccionDinamica(containerId, secId) { const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!rail || !sec) return; let items = []; if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); else { const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v23`, cachedData = localStorage.getItem(cacheKey); if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
+    async function cargarSeccionDinamica(containerId, secId) { const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!rail || !sec) return; let items = []; if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); else { const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v24`, cachedData = localStorage.getItem(cacheKey); if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
 
-    async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'); if (!rail) return; const cacheKey = 'uadav_cache_shorts_strict_v23', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos('#shorts'); if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearShortCard(item))); } }
+    async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'); if (!rail) return; const cacheKey = 'uadav_cache_shorts_strict_v24', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos('#shorts'); if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearShortCard(item))); } }
 
     async function ejecutarBusqueda() { const q = document.getElementById('searchInput').value.trim(); if (!q) { resetearVista(); return; } const mainContainer = document.getElementById('mainContainer'), gridView = document.getElementById('gridViewSection'), gridContainer = document.getElementById('gridContainer'); if (!mainContainer || !gridView || !gridContainer) return; const cacheKey = `uadav_search_${q.toLowerCase().replace(/\s+/g, '_')}`, cached = localStorage.getItem(cacheKey); mainContainer.classList.add('hidden'); gridView.classList.remove('hidden'); document.getElementById('gridTitle').innerHTML = `Buscando <span class="text-uadav-accent">"${q}"</span>...`; gridContainer.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-bold"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-uadav-accent mb-4 block"></i>Buscando...</div>'; let resultados = []; if (cached) { resultados = JSON.parse(cached); } else { const data = await obtenerVideos(q); if (data && Array.isArray(data)) { resultados = data.slice(0, 15); if (resultados.length > 0) localStorage.setItem(cacheKey, JSON.stringify(resultados)); } } document.getElementById('gridTitle').innerHTML = `Resultados para <span class="text-uadav-accent">"${q}"</span>`; gridContainer.innerHTML = ''; if (resultados && resultados.length > 0) { queue = []; resultados.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; resultados.forEach(item => gridContainer.appendChild(item.tipo === 'short' ? crearShortCard(item) : crearCard(item))); } else { gridContainer.innerHTML = '<div class="col-span-full py-12 text-center text-slate-400">No se encontraron resultados.</div>'; } }
 
@@ -411,7 +398,7 @@
     async function obtenerVideosDeCanal(channelIdInput) { let channelId = channelIdInput || ''; if (channelId.includes('channel_id=')) channelId = channelId.split('channel_id=')[1].split('&')[0]; else if (channelId.includes('/channel/')) channelId = channelId.split('/channel/')[1].split('/')[0]; else if (channelId.includes('/@')) channelId = channelId.split('/@')[1].split('/')[0]; if (!channelId.startsWith('UC') || channelId.length < 24) return []; try { const res = await fetch(`${API_URL}channel_videos?channel_id=${channelId}`); if (res.ok) return await res.json(); } catch (e) {} return []; }
     function normalizarVideo(v) { let url = v.url || '', tipo = v.tipo || 'mp4'; if (url.startsWith('UC') && url.length > 20) return null; if (tipo === 'mp4') { if (/^[a-zA-Z0-9_-]{11}$/.test(url)) tipo = 'youtube'; else if (url.includes('youtube.com') || url.includes('youtu.be')) { let id = url.split('v=')[1] || url.split('/').pop(); if (id.includes('&')) id = id.split('&')[0]; url = id; tipo = 'youtube'; } } return { url: url, tipo: tipo, titulo: v.titulo || '' }; }
 
-    async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v23`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
+    async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v24`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
 
     let isRadioPlaying = false; const audioStream = document.getElementById('audioStream');
     function sintonizarRadio(nombre, streamUrl, caratula, ubicacion) { cerrarModal(); document.getElementById('radioPlayerTitle').innerText = nombre; document.getElementById('radioPlayerLocation').innerText = ubicacion || 'HD'; document.getElementById('radioPlayerImg').src = caratula; audioStream.src = streamUrl; audioStream.play(); isRadioPlaying = true; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; document.getElementById('radioEqualizer').classList.remove('hidden'); document.getElementById('floatingRadioPlayer').classList.remove('translate-y-full'); }
