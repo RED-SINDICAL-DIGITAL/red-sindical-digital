@@ -27,87 +27,32 @@
     #countrySelectorHeader:hover { border-color: #00e5ff; }
     #countrySelectorHeader option { background-color: #0f0f13; color: #ffffff; }
 
-    /* NUEVOS ESTILOS PARA RADIOS */
-    .radio-hero {
-      background: linear-gradient(135deg, rgba(0,229,255,0.15) 0%, rgba(0,0,0,0.9) 50%, rgba(0,229,255,0.05) 100%);
-      box-shadow: 0 20px 60px rgba(0,229,255,0.2);
+    /* ESTILO DEL SLIDER DE VOLUMEN */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: #334155;
+      border-radius: 5px;
+      outline: none;
     }
-    .radio-hero-cover {
-      box-shadow: 0 0 40px rgba(0,229,255,0.5);
-    }
-    .radio-mini {
-      transition: all 0.3s;
-    }
-    .radio-mini.active {
-      border-color: #00e5ff;
-      box-shadow: 0 0 20px rgba(0,229,255,0.3);
-      background: rgba(0,229,255,0.05);
-    }
-    .radio-mini .play-btn {
-      transition: all 0.3s;
-    }
-    .radio-mini.active .play-btn {
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
       background: #00e5ff;
-      color: #050505;
-    }
-    .radio-eq-live {
-      display: inline-flex;
-      align-items: flex-end;
-      gap: 2px;
-      height: 12px;
-    }
-    .radio-eq-live span {
-      width: 3px;
-      background: #00e5ff;
-      border-radius: 2px;
-      animation: barPulse 0.8s infinite ease-in-out;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #050505;
     }
 
-    /* MODO VINILO */
-    .vinyl-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: radial-gradient(circle, #111 0%, #000 60%, #222 100%);
-      box-shadow: inset 0 0 20px rgba(255,255,255,0.1), 0 0 40px rgba(0,229,255,0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
-    .vinyl-container::before {
-      content: '';
-      position: absolute;
-      width: 90%;
-      height: 90%;
-      border-radius: 50%;
-      background: repeating-radial-gradient(circle, transparent 0px, transparent 4px, rgba(255,255,255,0.03) 5px);
-    }
-    .vinyl-container img {
-      width: 70%;
-      height: 70%;
-      object-fit: cover;
-      border-radius: 50%;
-      z-index: 2;
-      border: 2px solid rgba(255,255,255,0.2);
-    }
-    .vinyl-container .vinyl-center {
-      position: absolute;
-      width: 14%;
-      height: 14%;
-      background: #fff;
-      border-radius: 50%;
-      z-index: 3;
-      border: 1px solid #ccc;
-    }
-    .vinyl-spinning {
-      animation: spinVinyl 4s linear infinite;
-    }
-    @keyframes spinVinyl {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
+    .radio-hero { background: linear-gradient(135deg, rgba(0,229,255,0.15) 0%, rgba(0,0,0,0.9) 50%, rgba(0,229,255,0.05) 100%); box-shadow: 0 20px 60px rgba(0,229,255,0.2); }
+    .radio-hero-cover { box-shadow: 0 0 40px rgba(0,229,255,0.5); }
+    .radio-mini { transition: all 0.3s; }
+    .radio-mini.active { border-color: #00e5ff; box-shadow: 0 0 20px rgba(0,229,255,0.3); background: rgba(0,229,255,0.05); }
+    .radio-mini .play-btn { transition: all 0.3s; }
+    .radio-mini.active .play-btn { background: #00e5ff; color: #050505; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-uadav-accent selection:text-black pb-24">
@@ -173,7 +118,7 @@
       <div id="senalesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"></div>
     </section>
 
-    <!-- SECCIÓN RADIOS REDISEÑADA -->
+    <!-- RADIOS -->
     <section id="radiosSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-radio text-uadav-accent"></i> Radios Difusoras en Vivo</h2>
@@ -300,11 +245,31 @@
     </div>
   </div>
 
+  <!-- RADIO FLOTANTE CON CONTROL DE VOLUMEN -->
   <div id="floatingRadioPlayer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0d]/95 border-t-2 border-uadav-accent backdrop-blur-xl px-4 py-3 shadow-2xl transform translate-y-full transition-transform duration-300">
     <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3 overflow-hidden"><img id="radioPlayerImg" src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=200&q=80" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover border border-uadav-accent/40"><div class="overflow-hidden"><div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping"></span><span id="radioPlayerTag" class="text-[9px] font-black uppercase text-uadav-accent tracking-widest">EN VIVO</span></div><h4 id="radioPlayerTitle" class="text-xs sm:text-sm font-black text-white truncate">Beat Digital Radio</h4><p id="radioPlayerLocation" class="text-[10px] sm:text-xs text-slate-400 truncate">Señal HD</p></div></div>
-      <div id="radioEqualizer" class="hidden sm:flex items-center gap-1 h-5 px-2"><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.1s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.4s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.2s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.5s"></span></div>
+      <div class="flex items-center gap-3 overflow-hidden">
+        <img id="radioPlayerImg" src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=200&q=80" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover border border-uadav-accent/40">
+        <div class="overflow-hidden">
+          <div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping"></span><span id="radioPlayerTag" class="text-[9px] font-black uppercase text-uadav-accent tracking-widest">EN VIVO</span></div>
+          <h4 id="radioPlayerTitle" class="text-xs sm:text-sm font-black text-white truncate">Beat Digital Radio</h4>
+          <p id="radioPlayerLocation" class="text-[10px] sm:text-xs text-slate-400 truncate">Señal HD</p>
+        </div>
+      </div>
+      <div id="radioEqualizer" class="hidden sm:flex items-center gap-1 h-5 px-2">
+        <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.1s"></span>
+        <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.4s"></span>
+        <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.2s"></span>
+        <span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.5s"></span>
+      </div>
       <div class="flex items-center gap-3 flex-shrink-0">
+        <!-- CONTROL DE VOLUMEN -->
+        <div class="hidden md:flex items-center gap-2">
+          <i class="fa-solid fa-volume-low text-slate-400 text-xs"></i>
+          <input type="range" id="volumeSlider" min="0" max="100" value="80" class="w-20">
+          <i class="fa-solid fa-volume-high text-slate-400 text-xs"></i>
+        </div>
+
         <button tabindex="0" onclick="togglePlayRadio()" id="radioPlayBtn" class="tv-focusable w-10 h-10 sm:w-11 sm:h-11 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-black text-base shadow-lg hover:scale-105 transition-all"><i class="fa-solid fa-pause"></i></button>
         <button tabindex="0" onclick="cerrarRadio()" class="tv-focusable text-slate-400 hover:text-white text-base p-2"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -422,30 +387,23 @@
       document.getElementById('videoModal').classList.remove('hidden');
     }
 
-    // === RADIOS (NUEVO DISEÑO CON VINILO) ===
+    // === RADIOS (HERO Y MINI CARDS) ===
     function renderRadiosUI() {
       const container = document.getElementById('radiosGrid'); if(!container) return;
       container.innerHTML = '';
       const radiosMostrar = radiosData;
       const principal = radiosMostrar.find(r => r.es_oficial);
       
-      // 1. Hero card para principal con MODO VINILO
       if (principal) {
         container.innerHTML += `
           <div id="radio-card-${principal.id}" class="tv-focusable relative md:col-span-3 radio-hero rounded-3xl p-6 sm:p-8 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col md:flex-row items-center gap-6 md:gap-10" onclick="sintonizarRadio('${principal.nombre}', '${principal.stream_url}', '${principal.logo}', '${principal.ubicacion}')">
-            <div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-star mr-1"></i> Emisora Oficial</div>
-            
-            <!-- MODO VINILO -->
-            <div class="relative w-48 h-48 sm:w-56 sm:h-56 flex-shrink-0">
-              <div class="vinyl-container">
-                <img src="${principal.logo}" class="vinyl-img transition-transform" id="vinyl-img-${principal.id}" alt="${principal.nombre}">
-                <div class="vinyl-center"></div>
-              </div>
-              <div class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-star mr-1"></i> EMISORA OFICIAL</div>
+            <div class="relative w-32 h-32 sm:w-48 sm:h-48 flex-shrink-0">
+              <img src="${principal.logo}" class="w-full h-full rounded-2xl object-cover radio-hero-cover transition-transform group-hover:scale-105" alt="${principal.nombre}">
+              <div class="absolute inset-0 bg-black/30 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <div class="w-16 h-16 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-black text-2xl shadow-lg"><i class="fa-solid fa-play ml-1"></i></div>
               </div>
             </div>
-            
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-2">
                 <span class="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
@@ -455,7 +413,6 @@
               </div>
               <h3 class="text-2xl sm:text-4xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight mb-2">${principal.nombre}</h3>
               <p class="text-xs sm:text-sm text-slate-300 mb-4">${principal.descripcion || 'Transmisión oficial'}</p>
-              
               <div class="flex items-center gap-3 bg-[#0a0a0c]/80 border border-uadav-border/50 rounded-xl p-3 backdrop-blur-md">
                 <i class="fa-solid fa-music text-uadav-accent animate-pulse"></i>
                 <div class="overflow-hidden">
@@ -464,7 +421,6 @@
                 </div>
               </div>
             </div>
-            
             <div class="flex flex-col items-center gap-3">
               <button class="bg-uadav-accent group-hover:bg-white text-slate-950 font-black text-sm px-8 py-3 rounded-full flex items-center gap-2 shadow-lg transition-all">
                 <i class="fa-solid fa-play"></i> Sintonizar
@@ -480,7 +436,6 @@
         `;
       }
       
-      // 2. Mini cards para secundarias
       radiosMostrar.filter(r => !r.es_oficial).forEach(radio => {
         container.innerHTML += `
           <div id="radio-card-${radio.id}" class="radio-mini tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl p-4 cursor-pointer group transition-all flex flex-col justify-between" onclick="sintonizarRadio('${radio.nombre}', '${radio.stream_url}', '${radio.logo}', '${radio.ubicacion}')">
@@ -497,7 +452,6 @@
                 <p class="text-[10px] text-slate-400 truncate">${radio.descripcion || ''}</p>
               </div>
             </div>
-            
             <div class="mt-3 flex items-center justify-between">
               <div class="flex items-center gap-2 bg-[#0a0a0c] border border-uadav-border rounded-lg px-2 py-1.5 min-w-0 flex-1">
                 <i class="fa-solid fa-music text-uadav-accent text-xs animate-pulse"></i>
@@ -517,17 +471,31 @@
       });
     }
 
-    // === RADIO PLAYER CON METADATOS EN VIVO Y CONTROL DE VINILO ===
+    // === RADIO PLAYER CON METADATOS Y VOLUMEN ===
     let isRadioPlaying = false;
     const audioStream = document.getElementById('audioStream');
+    const volumeSlider = document.getElementById('volumeSlider');
+
+    // Cargar volumen guardado
+    const savedVol = localStorage.getItem('uadav_volume');
+    if (savedVol !== null) {
+        audioStream.volume = parseFloat(savedVol);
+        volumeSlider.value = savedVol * 100;
+    }
+
+    // Evento de cambio de volumen
+    volumeSlider.addEventListener('input', (e) => {
+        const vol = parseFloat(e.target.value) / 100;
+        audioStream.volume = vol;
+        localStorage.setItem('uadav_volume', vol);
+    });
 
     window.handleDeezerRadioCover = function(data) {
       if (data && data.data && data.data.length > 0) {
         document.getElementById('radioPlayerImg').src = data.data[0].album.cover_big;
-        // Actualizar carátula en la tarjeta principal y el vinilo
         const activeId = activeRadioId;
         if (activeId) {
-          const heroImg = document.getElementById(`vinyl-img-${activeId}`);
+          const heroImg = document.querySelector(`#radio-card-${activeId} img`);
           if (heroImg) heroImg.src = data.data[0].album.cover_big;
         }
       }
@@ -559,12 +527,8 @@
         document.getElementById('floatingRadioPlayer').classList.remove('translate-y-full');
 
         activeRadioId = radiosData.find(r => r.nombre === nombre)?.id || null;
-        // Quitar resaltado de todas las tarjetas y detener vinilos
         document.querySelectorAll('.radio-mini').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.radio-eq-live').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.vinyl-img').forEach(img => img.classList.remove('vinyl-spinning'));
-        
-        // Resaltar la tarjeta activa y mostrar ecualizador / girar vinilo
         if (activeRadioId) {
           const card = document.getElementById(`radio-card-${activeRadioId}`);
           if (card) {
@@ -573,12 +537,10 @@
             if (eq) eq.style.display = 'flex';
             const heroEq = document.getElementById(`radio-eq-${activeRadioId}`);
             if (heroEq) heroEq.style.display = 'flex';
-            const vinylImg = document.getElementById(`vinyl-img-${activeRadioId}`);
-            if (vinylImg) vinylImg.classList.add('vinyl-spinning');
           }
         }
 
-        // METADATOS EN VIVO (ZENO)
+        // METADATOS (ZENO)
         if (streamUrl.includes('zeno.fm')) {
             const streamId = streamUrl.split('/').pop();
             const metadataUrl = `https://api.zeno.fm/mounts/metadata/subscribe/${streamId}`;
@@ -624,16 +586,12 @@
               if (card) card.classList.remove('active');
               const eq = document.getElementById(`radio-eq-${activeRadioId}`);
               if (eq) eq.style.display = 'none';
-              const vinylImg = document.getElementById(`vinyl-img-${activeRadioId}`);
-              if (vinylImg) vinylImg.classList.remove('vinyl-spinning');
             }
         } else { 
             audioStream.play(); 
             isRadioPlaying = true; 
             document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; 
             document.getElementById('radioEqualizer').classList.remove('hidden'); 
-            const vinylImg = document.getElementById(`vinyl-img-${activeRadioId}`);
-            if (vinylImg) vinylImg.classList.add('vinyl-spinning');
         } 
     }
     
@@ -648,8 +606,6 @@
           if (card) card.classList.remove('active');
           const eq = document.getElementById(`radio-eq-${activeRadioId}`);
           if (eq) eq.style.display = 'none';
-          const vinylImg = document.getElementById(`vinyl-img-${activeRadioId}`);
-          if (vinylImg) vinylImg.classList.remove('vinyl-spinning');
         }
     }
 
