@@ -2,7 +2,7 @@
 <html lang="es" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>UADAVSTREAM - Entretenimiento, Teatros & Música Global</title>
   <meta name="description" content="UADAVSTREAM es la plataforma oficial del sindicato de artistas. Señales en vivo, radios, teatros, circos y la mejor música online.">
   <meta property="og:type" content="website" />
@@ -14,6 +14,10 @@
   <meta name="twitter:title" content="UADAVSTREAM - Entretenimiento, Teatros & Música Global" />
   <meta name="twitter:description" content="Sintoniza nuestra transmisión oficial continua de teatro, música y radio online." />
   <meta name="twitter:image" content="https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj" />
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -84,6 +88,8 @@
     <nav class="border-t border-uadav-border bg-[#050505]">
       <div id="navbar" class="max-w-[1400px] mx-auto px-4 flex items-center gap-3 overflow-x-auto py-3.5 no-scrollbar text-sm font-black"></div>
     </nav>
+    <!-- Banner Top -->
+    <div id="bannerTopContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
   </header>
 
   <section class="relative bg-uadav-dark border-b border-uadav-border overflow-hidden">
@@ -109,6 +115,8 @@
       <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="radiosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-radio text-uadav-accent"></i> Radios Difusoras en Vivo</h2></div>
       <div id="radiosGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"></div>
     </section>
+    <!-- Banner In-Feed -->
+    <div id="bannerInfeedContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
     <section id="artistasSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="artistasTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire-flame-curved text-uadav-accent"></i> Artistas Más Escuchados</h2></div>
       <div id="artistasGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4"></div>
@@ -171,6 +179,8 @@
     <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
       <div class="flex items-center gap-2 text-white font-black text-lg sm:text-xl">UADAV<span class="text-uadav-accent">STREAM</span></div>
       <div class="text-center md:text-right space-y-2">
+        <!-- Banner Footer -->
+        <div id="bannerFooterContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
         <p id="footerLegal" class="max-w-md text-slate-400">UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.</p>
         <p class="flex items-center justify-center md:justify-end gap-2"><i class="fa-solid fa-eye text-uadav-accent"></i> <span id="visitCounter" class="font-bold text-white">0</span> Visitas</p>
         <p class="text-uadav-accent font-bold"><i class="fa-brands fa-whatsapp"></i> +54 341 3 602 783</p>
@@ -199,7 +209,7 @@
 
   <div id="floatingRadioPlayer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0d]/95 border-t-2 border-uadav-accent backdrop-blur-xl px-4 py-3 shadow-2xl transform translate-y-full transition-transform duration-300">
     <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3 overflow-hidden"><img id="radioPlayerImg" src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=200&q=80" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover border border-uadav-accent/40"><div class="overflow-hidden"><div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping"></span><span id="radioPlayerTag" class="text-[9px] font-black uppercase text-uadav-accent tracking-widest">EN VIVO</span></div><h4 id="radioPlayerTitle" class="text-xs sm:text-sm font-black text-white truncate">Beat Digital Radio</h4><p id="radioPlayerLocation" class="text-[10px] sm:text-xs text-slate-400 truncate">Señal HD</p></div></div>
+      <div class="flex items-center gap-3 overflow-hidden"><img id="radioPlayerImg" src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=200&q=80" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover border border-uadav-accent/40"><div class="overflow-hidden"><div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping"></span><span id="radioPlayerTag" class="text-[9px] font-black uppercase text-uadav-accent tracking-widest">EN VIVO</span></div><h4 id="radioPlayerTitle" class="text-xs sm:text-sm font-black text-white truncate">UADAV Radio</h4><p id="radioPlayerLocation" class="text-[10px] sm:text-xs text-slate-400 truncate">Señal HD</p></div></div>
       <div id="radioEqualizer" class="hidden sm:flex items-center gap-1 h-5 px-2"><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.1s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.4s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.2s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.5s"></span></div>
       <div class="flex items-center gap-3 flex-shrink-0">
         <div class="hidden md:flex items-center gap-2"><i class="fa-solid fa-volume-low text-slate-400 text-xs"></i><input type="range" id="volumeSlider" min="0" max="100" value="80" class="w-20"><i class="fa-solid fa-volume-high text-slate-400 text-xs"></i></div>
@@ -210,8 +220,15 @@
     <audio id="audioStream" src="" preload="none"></audio>
   </div>
 
+  <!-- Botón flotante para instalar PWA -->
+  <div id="installBanner" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-uadav-accent text-black px-4 py-2 rounded-full shadow-lg font-bold text-sm hidden">
+    📲 Instalar App
+    <button onclick="instalarApp()" class="ml-2 bg-black text-white px-3 py-1 rounded-full text-xs">Instalar</button>
+    <button onclick="document.getElementById('installBanner').classList.add('hidden')" class="ml-1 text-black/70">✕</button>
+  </div>
+
   <script>
-    const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/'; // <-- URL de UADAVSTREAM
+    const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
     const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80';
     
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [], senalesData = [];
@@ -219,55 +236,107 @@
     let activeRadioId = null;
     let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR", hero_titulo: "SEÑAL OFICIAL", hero_subtitulo: "UADAVSTREAM TV", hero_boton_texto: "Ver SEÑAL OFICIAL", hero_boton_url: "-479TZi-EAs" };
     let zenoEventSource = null;
+    let deferredPrompt;
 
     if (localStorage.getItem('uadav_cache_version') !== 'v32us') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v32us'); }
 
     // ===== APARIENCIA DINÁMICA =====
     async function aplicarApariencia() {
-      try {
-        const res = await fetch(API_URL + 'apariencia');
-        if (res.ok) {
-          const data = await res.json();
-          if (data && Object.keys(data).length > 0) {
-            const style = document.createElement('style');
-            style.innerHTML = `
-              :root {
-                --uadav-accent: ${data.color_acento || '#00e5ff'};
-                --uadav-dark: ${data.color_fondo || '#050505'};
-                --uadav-card: ${data.color_tarjetas || '#0f0f13'};
-              }
-              .bg-uadav-dark { background-color: var(--uadav-dark) !important; }
-              .bg-uadav-card { background-color: var(--uadav-card) !important; }
-              .border-uadav-border { border-color: var(--uadav-dark) !important; }
-              .bg-uadav-accent { background-color: var(--uadav-accent) !important; }
-              .text-uadav-accent { color: var(--uadav-accent) !important; }
-              .border-uadav-accent { border-color: var(--uadav-accent) !important; }
-              .hover\\:bg-uadav-accent:hover { background-color: var(--uadav-accent) !important; }
-              .hover\\:text-uadav-accent:hover { color: var(--uadav-accent) !important; }
-              .hover\\:border-uadav-accent:hover { border-color: var(--uadav-accent) !important; }
-              .focus\\:border-uadav-accent:focus { border-color: var(--uadav-accent) !important; }
-              .from-uadav-accent { --tw-gradient-from: var(--uadav-accent) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 0, 0, 0)) !important; }
-              .shadow-uadav-accent { --tw-shadow-color: var(--uadav-accent) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
-            `;
-            document.head.appendChild(style);
+      const defaults = {
+        color_acento: '#00e5ff',
+        color_fondo: '#050505',
+        color_tarjetas: '#0f0f13'
+      };
+      let data = { ...defaults };
 
-            // Cambiar Logo y Título
-            if (data.logo_url) {
-              const logoContainer = document.getElementById('logoContainer');
-              logoContainer.outerHTML = `<div id="logoContainer" class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 border border-uadav-border shadow-lg"><img src="${data.logo_url}" class="w-full h-full object-cover" alt="Logo"></div>`;
-            }
-            if (data.titulo_sitio) {
-              document.getElementById('siteTitle').innerHTML = data.titulo_sitio;
-            }
-            if (data.eslogan) {
-              document.getElementById('siteSlogan').innerText = data.eslogan;
-            }
+      try {
+        const res = await fetch(API_URL + 'apariencia?_=' + Date.now());
+        if (res.ok) {
+          const json = await res.json();
+          if (json && Object.keys(json).length > 0) {
+            data = { ...defaults, ...json };
+            console.log('✅ Apariencia cargada:', data);
           }
         }
-      } catch (e) { console.log("Error cargando apariencia", e); }
+      } catch (e) {
+        console.warn('⚠️ Error al cargar apariencia:', e.message);
+      }
+
+      document.querySelectorAll('style[data-apariencia]').forEach(el => el.remove());
+      const style = document.createElement('style');
+      style.setAttribute('data-apariencia', 'true');
+      style.innerHTML = `
+        :root {
+          --uadav-accent: ${data.color_acento};
+          --uadav-dark: ${data.color_fondo};
+          --uadav-card: ${data.color_tarjetas};
+        }
+        .bg-uadav-dark { background-color: var(--uadav-dark) !important; }
+        .bg-uadav-card { background-color: var(--uadav-card) !important; }
+        .border-uadav-border { border-color: var(--uadav-dark) !important; }
+        .bg-uadav-accent { background-color: var(--uadav-accent) !important; }
+        .text-uadav-accent { color: var(--uadav-accent) !important; }
+        .border-uadav-accent { border-color: var(--uadav-accent) !important; }
+        .hover\\:bg-uadav-accent:hover { background-color: var(--uadav-accent) !important; }
+        .hover\\:text-uadav-accent:hover { color: var(--uadav-accent) !important; }
+        .hover\\:border-uadav-accent:hover { border-color: var(--uadav-accent) !important; }
+        .focus\\:border-uadav-accent:focus { border-color: var(--uadav-accent) !important; }
+        .from-uadav-accent { --tw-gradient-from: var(--uadav-accent) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 0, 0, 0)) !important; }
+        .shadow-uadav-accent { --tw-shadow-color: var(--uadav-accent) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+      `;
+      document.head.appendChild(style);
     }
 
-    // FUNCIONES DE TÍTULOS Y VISIBILIDAD
+    // ===== BANNERS =====
+    async function cargarBanners() {
+      try {
+        const res = await fetch(API_URL + 'banners?_=' + Date.now());
+        if (res.ok) {
+          const data = await res.json();
+          if (data.top && data.top.activo && data.top.html) {
+            document.getElementById('bannerTopContainer').innerHTML = data.top.html;
+          } else {
+            document.getElementById('bannerTopContainer').innerHTML = '';
+          }
+          if (data.infeed && data.infeed.activo && data.infeed.html) {
+            document.getElementById('bannerInfeedContainer').innerHTML = data.infeed.html;
+          } else {
+            document.getElementById('bannerInfeedContainer').innerHTML = '';
+          }
+          if (data.footer && data.footer.activo && data.footer.html) {
+            document.getElementById('bannerFooterContainer').innerHTML = data.footer.html;
+          } else {
+            document.getElementById('bannerFooterContainer').innerHTML = '';
+          }
+        }
+      } catch (e) {
+        console.log('Banners no disponibles');
+      }
+    }
+
+    // ===== PWA =====
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(() => console.log('Service Worker registrado'))
+        .catch(err => console.log('Error SW:', err));
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBanner').classList.remove('hidden');
+    });
+
+    function instalarApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      } else {
+        alert('Para instalar, abrí el menú del navegador y seleccioná "Agregar a pantalla de inicio".');
+      }
+    }
+
+    // ===== RESTO DE FUNCIONES (sin cambios) =====
     function aplicarTitulosDinamicos() {
       seccionesActivas.forEach(sec => {
         const titleMap = { 'radios': 'radiosTitle', 'senales': 'senalesTitle', 'artistas': 'artistasTitle', 'teatros': 'teatrosTitle', 'circos': 'circosTitle', 'trending': 'trendingTitle', 'shorts': 'shortsTitle', 'cartelera': 'carteleraTitle', 'conciertos': 'conciertosTitle' };
@@ -550,7 +619,8 @@
 
     async function cargarHome() {
       await cargarConfigYVisitas();
-      await aplicarApariencia(); // Nueva función para pintar la web
+      await aplicarApariencia();
+      await cargarBanners();
       seccionesActivas = await obtenerDatos('secciones'); 
       
       aplicarVisibilidadSecciones();
