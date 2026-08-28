@@ -67,7 +67,7 @@
     </nav>
   </header>
 
-  <!-- HERO (EDITABLE DESDE PANEL) -->
+  <!-- HERO -->
   <section class="relative bg-uadav-dark border-b border-uadav-border overflow-hidden">
     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600')] bg-cover bg-center opacity-30 filter blur-[2px]"></div>
     <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#050505] via-[#050505]/90 to-transparent"></div>
@@ -247,7 +247,6 @@
       seccionesActivas.forEach(sec => { if (!sec.activa) return; const btn = document.createElement('button'); const icon = sec.icono || 'fa-circle'; btn.innerHTML = `<i class="fa-solid ${icon} mr-2"></i> ${sec.nombre}`; btn.className = "tv-focusable cat-btn bg-[#0f0f13] border-2 border-uadav-border text-slate-300 hover:text-uadav-accent hover:border-uadav-accent px-6 py-3 rounded-full whitespace-nowrap transition-all text-sm font-black uppercase tracking-wider"; btn.onclick = () => filtrarCategoria(sec.id, btn); nav.appendChild(btn); });
     }
 
-    // === FLECHAS ARREGLADAS ===
     function renderQueue() { const list = document.getElementById('queueList'); list.innerHTML = ''; queue.forEach((item, index) => { list.innerHTML += `<div onclick="loadFromQueue(${index})" class="flex items-center gap-2 p-2 bg-slate-900 rounded-lg cursor-pointer hover:bg-slate-800 ${index === currentIndex ? 'border border-uadav-accent' : ''}"><i class="fa-solid fa-music text-uadav-accent text-xs"></i><span class="text-xs text-white truncate">${item.titulo}</span></div>`; }); }
     function toggleQueue() { document.getElementById('queueBar').classList.toggle('hidden'); }
     window.nextVideo = function() { if (currentIndex < queue.length - 1) { loadFromQueue(currentIndex + 1); } else { alert("No hay más videos en la cola"); } };
@@ -263,7 +262,6 @@
       if (configGlobal.mostrar_ip) { document.getElementById('countryBadge').classList.remove('hidden'); }
       document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
       
-      // Cargar HERO
       document.getElementById('heroTitulo').innerText = configGlobal.hero_titulo || "SEÑAL OFICIAL";
       document.getElementById('heroSub').innerText = configGlobal.hero_subtitulo || "UADAVSTREAM TV";
       document.getElementById('heroBtnTexto').innerText = configGlobal.hero_boton_texto || "Ver SEÑAL OFICIAL";
@@ -347,11 +345,14 @@
       document.getElementById('videoModal').classList.remove('hidden');
     }
 
-    // === RENDERIZADO DE RADIOS ===
+    // === RENDERIZADO DE RADIOS (ARREGLADO) ===
     function renderRadiosUI() {
       const container = document.getElementById('radiosGrid'); if(!container) return;
       container.innerHTML = '';
-      const radiosMostrar = radiosData, principal = radiosMostrar.find(r => r.es_oficial);
+      
+      const radiosMostrar = radiosData || []; // Seguridad si está vacío
+      const principal = radiosMostrar.find(r => r.es_oficial);
+      
       if (principal) {
         container.innerHTML += `<div tabindex="0" onclick="sintonizarRadio('${principal.nombre}', '${principal.stream_url}', '${principal.logo}', '${principal.ubicacion}')" class="tv-focusable relative md:col-span-2 bg-gradient-to-r from-slate-900 via-uadav-card to-[#14141d] border-2 border-uadav-accent/60 hover:border-uadav-accent rounded-3xl p-5 sm:p-6 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col justify-between"><div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-star mr-1"></i> Emisora Oficial</div><div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6"><div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 border border-uadav-accent/30"><img src="${principal.logo}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i class="fa-solid fa-radio text-3xl text-uadav-accent"></i></div></div><div class="flex-1"><span class="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2"><span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span> AIR STREAM HQ</span><h3 class="text-xl sm:text-3xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">${principal.nombre}</h3><p class="text-xs sm:text-sm text-slate-300 mt-1">${principal.descripcion}</p><div class="flex items-center gap-4 mt-3 text-xs text-slate-400 font-medium"><span><i class="fa-solid fa-signal text-uadav-accent mr-1"></i> ${principal.bitrate}</span><span><i class="fa-solid fa-location-dot text-uadav-accent mr-1"></i> ${principal.ubicacion}</span></div></div></div><div class="mt-3 flex items-center gap-2 bg-[#0a0a0c] border border-uadav-border rounded-xl px-3 py-2"><i class="fa-solid fa-music text-uadav-accent animate-pulse"></i><span class="text-xs font-bold text-white truncate">${principal.tema_actual || 'Cargando tema...'} - ${principal.artista_actual || 'Radio'}</span></div><div class="mt-4 pt-4 border-t border-uadav-border/60 flex items-center justify-between"><div class="text-xs text-slate-400"><span class="text-slate-500 block text-[10px] uppercase font-bold">Estado de Señal</span><span class="text-uadav-accent font-semibold flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> Online</span></div><button class="bg-uadav-accent group-hover:bg-white text-slate-950 font-black text-xs px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg transition-all"><i class="fa-solid fa-play"></i> Sintonizar</button></div></div>`;
       }
