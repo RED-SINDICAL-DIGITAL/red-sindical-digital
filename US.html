@@ -61,33 +61,30 @@
       </div>
     </div>
 
-    <!-- NAVEGACIÓN DINÁMICA -->
     <nav class="border-t border-uadav-border bg-[#050505]">
       <div id="navbar" class="max-w-[1400px] mx-auto px-4 flex items-center gap-3 overflow-x-auto py-3.5 no-scrollbar text-sm font-black">
-        <!-- Generado dinámicamente -->
       </div>
     </nav>
   </header>
 
-  <!-- HERO -->
+  <!-- HERO (EDITABLE DESDE PANEL) -->
   <section class="relative bg-uadav-dark border-b border-uadav-border overflow-hidden">
     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600')] bg-cover bg-center opacity-30 filter blur-[2px]"></div>
     <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#050505] via-[#050505]/90 to-transparent"></div>
     <div class="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-10 md:py-20 flex flex-col items-start justify-center">
       <span class="inline-flex items-center gap-2 bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase mb-4 tracking-widest"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Al Aire 24/7</span>
-      <h1 class="text-3xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-3 sm:mb-4 tracking-tight" id="heroTitulo">SEÑAL OFICIAL <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-uadav-accent to-purple-500" id="heroSubtitulo">UADAVSTREAM TV</span></h1>
-      <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 sm:mb-8 font-light" id="heroTexto">Sintoniza nuestra transmisión oficial continua de teatro, música y radio online.</p>
+      <h1 id="heroTitulo" class="text-3xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-3 sm:mb-4 tracking-tight">SEÑAL OFICIAL</h1>
+      <span id="heroSub" class="text-transparent bg-clip-text bg-gradient-to-r from-uadav-accent to-purple-500 text-3xl sm:text-5xl lg:text-7xl font-black leading-[1.1] mb-4 tracking-tight">UADAVSTREAM TV</span>
+      <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 sm:mb-8 font-light">Sintoniza nuestra transmisión oficial continua de teatro, música y radio online.</p>
       <div class="flex flex-wrap gap-3 sm:gap-4">
-        <button id="boton1" tabindex="0" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión oficial 24/7')" class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all"><i class="fa-solid fa-play"></i> Ver SEÑAL OFICIAL</button>
-        <button id="boton2" tabindex="0" onclick="sintonizarRadio('Beat Digital Radio', 'https://stream.zeno.fm/9s7nnwmknkhvv', 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&q=80', 'Rosario, Argentina')" class="tv-focusable bg-slate-900 border border-uadav-border hover:bg-slate-800 text-white px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 transition-all"><i class="fa-solid fa-radio text-uadav-accent"></i> Escuchar Beat Digital Radio</button>
+        <button tabindex="0" id="heroBtn" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión oficial 24/7')" class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all"><i class="fa-solid fa-play"></i> <span id="heroBtnTexto">Ver SEÑAL OFICIAL</span></button>
       </div>
     </div>
   </section>
 
-  <!-- CONTENIDO PRINCIPAL -->
   <main id="mainContainer" class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-12 sm:space-y-16">
 
-    <!-- SECCIÓN SEÑALES OFICIALES -->
+    <!-- SEÑALES OFICIALES -->
     <section id="senalesSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tower-broadcast text-uadav-accent"></i> Señales Oficiales en Vivo</h2>
@@ -95,7 +92,7 @@
       <div id="senalesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"></div>
     </section>
 
-    <!-- SECCIÓN RADIOS -->
+    <!-- RADIOS -->
     <section id="radiosSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-radio text-uadav-accent"></i> Radios Difusoras en Vivo</h2>
@@ -103,7 +100,7 @@
       <div id="radiosGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"></div>
     </section>
 
-    <!-- SECCIÓN ARTISTAS -->
+    <!-- ARTISTAS -->
     <section id="artistasSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire-flame-curved text-uadav-accent"></i> Artistas Más Escuchados</h2>
@@ -111,7 +108,7 @@
       <div id="artistasGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4"></div>
     </section>
 
-    <!-- SECCIÓN TEATROS -->
+    <!-- TEATROS -->
     <section id="teatrosSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-masks-theater text-uadav-accent"></i> Teatros & Espectáculos</h2>
@@ -119,7 +116,7 @@
       <div id="teatrosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
     </section>
 
-    <!-- SECCIÓN CIRCOS -->
+    <!-- CIRCOS -->
     <section id="circosSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tent text-uadav-accent"></i> Circos & Varieté</h2>
@@ -127,7 +124,7 @@
       <div id="circosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
     </section>
 
-    <!-- SECCIÓN TENDENCIAS -->
+    <!-- TENDENCIAS -->
     <section id="trendingSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 id="countryLabel" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire text-red-500"></i> Lo más visto</h2>
@@ -135,7 +132,7 @@
       <div id="ipTrendingRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
     </section>
 
-    <!-- SECCIÓN SHORTS -->
+    <!-- SHORTS -->
     <section id="shortsSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts (9:16)</h2>
@@ -143,7 +140,7 @@
       <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[300px]"></div>
     </section>
 
-    <!-- SECCIÓN CARTELERA -->
+    <!-- CARTELERA -->
     <section id="carteleraSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-ticket text-uadav-accent"></i> Cartelera de Eventos</h2>
@@ -151,7 +148,7 @@
       <div id="carteleraRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
     </section>
 
-    <!-- SECCIÓN CONCIERTOS -->
+    <!-- CONCIERTOS -->
     <section id="conciertosSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos</h2>
@@ -161,13 +158,11 @@
 
   </main>
 
-  <!-- RESULTADOS BÚSQUEDA -->
   <section id="gridViewSection" class="hidden max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 min-h-[50vh]">
     <div class="flex items-center justify-between mb-6 sm:mb-8 border-b border-uadav-border pb-4"><h2 id="gridTitle" class="text-xl sm:text-3xl font-black text-white">Resultados</h2><button onclick="resetearVista()" class="text-xs sm:text-sm font-bold text-uadav-accent hover:text-white transition-colors bg-[#0f0f13] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-uadav-border"><i class="fa-solid fa-arrow-left mr-1"></i> Volver</button></div>
     <div id="gridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6"></div>
   </section>
 
-  <!-- MODAL VIDEO -->
   <div id="videoModal" onclick="cerrarModalBackdrop(event)" class="fixed inset-0 z-[60] bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-2 sm:p-4">
     <div class="bg-[#0a0a0c] border border-uadav-border w-full max-w-5xl rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[95vh]" onclick="event.stopPropagation()">
       <button tabindex="0" onclick="cerrarModal()" class="tv-focusable absolute top-3 right-3 sm:top-4 sm:right-4 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-slate-900/80 hover:bg-uadav-accent hover:text-black text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all"><i class="fa-solid fa-xmark text-sm sm:text-lg"></i></button>
@@ -189,13 +184,11 @@
     </div>
   </div>
 
-  <!-- COLA -->
   <div id="queueBar" class="hidden fixed bottom-16 md:bottom-4 right-4 z-40 bg-[#0a0a0d]/95 border border-uadav-border rounded-xl p-3 w-64 sm:w-80 shadow-2xl backdrop-blur-xl">
     <div class="flex justify-between items-center mb-2"><h4 class="text-xs font-black text-uadav-accent uppercase">Cola de Reproducción</h4><button onclick="toggleQueue()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
     <div id="queueList" class="space-y-1 max-h-40 overflow-y-auto no-scrollbar"></div>
   </div>
 
-  <!-- FOOTER -->
   <footer class="bg-[#050505] border-t border-uadav-border py-8 text-xs sm:text-sm text-slate-500">
     <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
       <div class="flex items-center gap-2 text-white font-black text-lg sm:text-xl">UADAV<span class="text-uadav-accent">STREAM</span></div>
@@ -207,7 +200,6 @@
     </div>
   </footer>
 
-  <!-- MODAL ARTISTA -->
   <div id="artistModal" onclick="cerrarModalArtistaBackdrop(event)" class="fixed inset-0 z-50 bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-4">
     <div class="bg-[#0f0f13] border border-uadav-border w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar" onclick="event.stopPropagation()">
       <div class="relative h-48 md:h-64 w-full bg-gradient-to-br from-slate-800 via-slate-900 to-black overflow-hidden"><img id="artModalBanner" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&q=80" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 bg-gradient-to-t from-[#0f0f13] via-transparent to-transparent"></div></div>
@@ -227,7 +219,6 @@
     </div>
   </div>
 
-  <!-- RADIO FLOTANTE -->
   <div id="floatingRadioPlayer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0d]/95 border-t-2 border-uadav-accent backdrop-blur-xl px-4 py-3 shadow-2xl transform translate-y-full transition-transform duration-300">
     <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
       <div class="flex items-center gap-3 overflow-hidden"><img id="radioPlayerImg" src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=200&q=80" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover border border-uadav-accent/40"><div class="overflow-hidden"><div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping"></span><span id="radioPlayerTag" class="text-[9px] font-black uppercase text-uadav-accent tracking-widest">EN VIVO</span></div><h4 id="radioPlayerTitle" class="text-xs sm:text-sm font-black text-white truncate">Beat Digital Radio</h4><p id="radioPlayerLocation" class="text-[10px] sm:text-xs text-slate-400 truncate">Señal HD</p></div></div>
@@ -246,91 +237,69 @@
     
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [], senalesData = [];
     let queue = [], currentIndex = -1;
-    let currentSectionItems = [];
-    let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR" };
-    
-    // Elementos del hero
-    let heroTitulo, heroSubtitulo, heroTexto, boton1, boton2;
+    let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR", hero_titulo: "SEÑAL OFICIAL", hero_subtitulo: "UADAVSTREAM TV", hero_boton_texto: "Ver SEÑAL OFICIAL", hero_boton_url: "-479TZi-EAs" };
 
     if (localStorage.getItem('uadav_cache_version') !== 'v23') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v23'); }
 
-    // === NAVBAR DINÁMICO ===
     function renderNavbar() {
       const nav = document.getElementById('navbar'); nav.innerHTML = '';
       const inicioBtn = document.createElement('button'); inicioBtn.innerHTML = 'Inicio'; inicioBtn.className = "tv-focusable cat-btn bg-uadav-accent text-slate-950 px-6 py-3 rounded-full whitespace-nowrap transition-all text-sm font-black uppercase tracking-wider shadow-md"; inicioBtn.onclick = () => filtrarCategoria('todas', inicioBtn); nav.appendChild(inicioBtn);
       seccionesActivas.forEach(sec => { if (!sec.activa) return; const btn = document.createElement('button'); const icon = sec.icono || 'fa-circle'; btn.innerHTML = `<i class="fa-solid ${icon} mr-2"></i> ${sec.nombre}`; btn.className = "tv-focusable cat-btn bg-[#0f0f13] border-2 border-uadav-border text-slate-300 hover:text-uadav-accent hover:border-uadav-accent px-6 py-3 rounded-full whitespace-nowrap transition-all text-sm font-black uppercase tracking-wider"; btn.onclick = () => filtrarCategoria(sec.id, btn); nav.appendChild(btn); });
     }
 
-    // === FUNCIONES DE COLA ===
+    // === FLECHAS ARREGLADAS ===
     function renderQueue() { const list = document.getElementById('queueList'); list.innerHTML = ''; queue.forEach((item, index) => { list.innerHTML += `<div onclick="loadFromQueue(${index})" class="flex items-center gap-2 p-2 bg-slate-900 rounded-lg cursor-pointer hover:bg-slate-800 ${index === currentIndex ? 'border border-uadav-accent' : ''}"><i class="fa-solid fa-music text-uadav-accent text-xs"></i><span class="text-xs text-white truncate">${item.titulo}</span></div>`; }); }
     function toggleQueue() { document.getElementById('queueBar').classList.toggle('hidden'); }
-    window.nextVideo = function() { if (queue.length === 0) return; if (currentIndex < queue.length - 1) loadFromQueue(currentIndex + 1); };
-    window.prevVideo = function() { if (queue.length === 0) return; if (currentIndex > 0) loadFromQueue(currentIndex - 1); };
+    window.nextVideo = function() { if (currentIndex < queue.length - 1) { loadFromQueue(currentIndex + 1); } else { alert("No hay más videos en la cola"); } };
+    window.prevVideo = function() { if (currentIndex > 0) { loadFromQueue(currentIndex - 1); } };
     function loadFromQueue(index) { currentIndex = index; const item = queue[index]; if (!item) return; if (item.tipo === 'youtube') reproducirVideo(item.url, item.titulo, item.categoria, item.descripcion); else reproducirVideoPersonalizado(item.url, item.tipo, item.titulo, item.descripcion); }
     function addToQueue() { const newItem = { id: document.getElementById('modalTitulo').innerText, titulo: document.getElementById('modalTitulo').innerText, categoria: document.getElementById('modalCategoria').innerText, descripcion: document.getElementById('modalDescripcion').innerText, url: document.getElementById('iframePlayer').src.split('/embed/')[1] || document.getElementById('html5Player').src, tipo: document.getElementById('html5Player').classList.contains('hidden') ? 'youtube' : 'mp4' }; if (newItem.id) { queue.push(newItem); renderQueue(); document.getElementById('queueBar').classList.remove('hidden'); } }
 
-    // === ARRASTRE ===
     function initCarouselDrag() { document.querySelectorAll('.overflow-x-auto').forEach(container => { let isDown = false, startX, scrollLeft; container.style.cursor = 'grab'; container.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - container.offsetLeft; scrollLeft = container.scrollLeft; }); container.addEventListener('mouseleave', () => { isDown = false; container.style.cursor = 'grab'; }); container.addEventListener('mouseup', () => { isDown = false; container.style.cursor = 'grab'; }); container.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - container.offsetLeft; const walk = (x - startX) * 2; container.scrollLeft = scrollLeft - walk; }); container.addEventListener('wheel', (e) => { if (e.shiftKey) { e.preventDefault(); container.scrollLeft += e.deltaY; } }, { passive: false }); container.setAttribute('tabindex', '0'); container.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { e.preventDefault(); container.scrollLeft += 50; } if (e.key === 'ArrowLeft') { e.preventDefault(); container.scrollLeft -= 50; } }); }); }
 
-    // === CONFIG Y VISITAS ===
     async function cargarConfigYVisitas() {
       try { const res = await fetch(API_URL + 'config'); if (res.ok) configGlobal = await res.json(); } catch(e) {}
-      
-      // Configuración Hero
-      heroTitulo = document.getElementById('heroTitulo');
-      heroSubtitulo = document.getElementById('heroSubtitulo');
-      heroTexto = document.getElementById('heroTexto');
-      boton1 = document.getElementById('boton1');
-      boton2 = document.getElementById('boton2');
-
-      if (configGlobal.hero_titulo) heroTitulo.innerHTML = configGlobal.hero_titulo;
-      if (configGlobal.hero_subtitulo) heroSubtitulo.innerText = configGlobal.hero_subtitulo;
-      if (configGlobal.hero_texto) heroTexto.innerText = configGlobal.hero_texto;
-      if (configGlobal.boton_1_texto) boton1.innerHTML = `<i class="fa-solid fa-play"></i> ${configGlobal.boton_1_texto}`;
-      if (configGlobal.boton_1_url) boton1.onclick = () => reproducirSenalUniversal('uadavstream-tv'); // Reutilizando la señal principal
-      if (configGlobal.boton_2_texto) { boton2.innerHTML = `<i class="fa-solid fa-radio text-uadav-accent"></i> ${configGlobal.boton_2_texto}`; if (configGlobal.boton_2_url) boton2.onclick = () => sintonizarRadio('Beat Digital Radio', configGlobal.boton_2_url, 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&q=80', 'Rosario, Argentina'); } else { boton2.classList.add('hidden'); }
-
       const selector = document.getElementById('countrySelectorHeader'); if (configGlobal.pais_trending && configGlobal.pais_trending !== 'Auto' && configGlobal.pais_trending !== '') selector.value = configGlobal.pais_trending; else selector.value = 'AR';
       if (configGlobal.mostrar_ip) { document.getElementById('countryBadge').classList.remove('hidden'); }
       document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
+      
+      // Cargar HERO
+      document.getElementById('heroTitulo').innerText = configGlobal.hero_titulo || "SEÑAL OFICIAL";
+      document.getElementById('heroSub').innerText = configGlobal.hero_subtitulo || "UADAVSTREAM TV";
+      document.getElementById('heroBtnTexto').innerText = configGlobal.hero_boton_texto || "Ver SEÑAL OFICIAL";
+      document.getElementById('heroBtn').onclick = () => reproducirVideo(configGlobal.hero_boton_url || '-479TZi-EAs', configGlobal.hero_titulo || "Señal Oficial", "En Vivo", "Transmisión oficial");
+      
       try { const resV = await fetch(API_URL + 'visits'); if (resV.ok) { const data = await resV.json(); document.getElementById('visitCounter').innerText = data.visitas_totales; } await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
     }
 
-    // === DATOS ===
     async function obtenerDatos(seccion) { try { const res = await fetch(API_URL + seccion); if (res.ok) { const data = await res.json(); if (data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0)) return data; } } catch (e) {} return []; }
     async function obtenerVideos(query) { try { const res = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(query)}`); if (res.ok) return await res.json(); } catch (e) {} return []; }
     function obtenerCaratulaUltraRapida(id) { if (!id || id.length !== 11) return FALLBACK_THUMB; return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`; }
 
-    // === MOTOR UNIVERSAL DE SEÑALES ===
+    // === SEÑALES ===
     function renderSenalesUI() {
       const container = document.getElementById('senalesGrid'); if(!container) return;
       container.innerHTML = '';
-      
       if (!senalesData || senalesData.length === 0) { container.innerHTML = '<div class="col-span-full text-center text-slate-400 text-xs py-10">No hay señales cargadas.</div>'; return; }
-
       senalesData.forEach(senal => {
         const tipoIcon = senal.tipo === 'audio' ? 'fa-headphones' : 'fa-video';
-        container.innerHTML += `
-          <div tabindex="0" onclick="reproducirSenalUniversal('${senal.id}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-3xl p-5 cursor-pointer group shadow-lg transition-all flex flex-col justify-between overflow-hidden relative">
-            <div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] px-3 py-1 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-signal mr-1"></i> EN VIVO</div>
-            <div class="flex items-center gap-4 mb-4">
-              <img src="${senal.logo || FALLBACK_THUMB}" class="w-16 h-16 rounded-xl object-cover border border-uadav-border" alt="${senal.nombre}">
-              <div>
-                <span class="text-[9px] text-uadav-accent font-black tracking-widest uppercase block mb-1"><i class="fa-solid ${tipoIcon} mr-1"></i> ${senal.tipo === 'audio' ? 'Radio' : 'Streaming'}</span>
-                <h4 class="text-lg font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">${senal.nombre}</h4>
-                <p class="text-xs text-slate-400">${senal.descripcion || ''}</p>
-              </div>
+        container.innerHTML += `<div tabindex="0" onclick="reproducirSenalUniversal('${senal.id}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-3xl p-5 cursor-pointer group shadow-lg transition-all flex flex-col justify-between overflow-hidden relative">
+          <div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] px-3 py-1 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-signal mr-1"></i> EN VIVO</div>
+          <div class="flex items-center gap-4 mb-4">
+            <img src="${senal.logo || FALLBACK_THUMB}" class="w-16 h-16 rounded-xl object-cover border border-uadav-border" alt="${senal.nombre}">
+            <div>
+              <span class="text-[9px] text-uadav-accent font-black tracking-widest uppercase block mb-1"><i class="fa-solid ${tipoIcon} mr-1"></i> ${senal.tipo === 'audio' ? 'Radio' : 'Streaming'}</span>
+              <h4 class="text-lg font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">${senal.nombre}</h4>
+              <p class="text-xs text-slate-400">${senal.descripcion || ''}</p>
             </div>
-            ${senal.tema_actual ? `<div class="mt-3 flex items-center gap-2 bg-[#0a0a0c] border border-uadav-border rounded-lg px-2 py-1.5"><i class="fa-solid fa-music text-uadav-accent text-xs animate-pulse"></i><span class="text-[10px] font-bold text-white truncate">${senal.tema_actual} - ${senal.artista_actual || 'Radio'}</span></div>` : ''}
-            <button class="w-full mt-4 bg-slate-900 border border-uadav-border group-hover:border-uadav-accent text-white font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-2 transition-all"><i class="fa-solid fa-play text-uadav-accent"></i> Ver / Escuchar</button>
           </div>
-        `;
+          <button class="w-full mt-4 bg-slate-900 border border-uadav-border group-hover:border-uadav-accent text-white font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-2 transition-all"><i class="fa-solid fa-play text-uadav-accent"></i> Ver / Escuchar</button>
+        </div>`;
       });
     }
 
     function reproducirSenalUniversal(id) {
-      const senal = senalesData.find(s => s.id === id);
-      if (!senal) return;
+      const senal = senalesData.find(s => s.id === id); if (!senal) return;
       if (isRadioPlaying) togglePlayRadio();
       document.getElementById('artistModal').classList.add('hidden');
       
@@ -350,32 +319,27 @@
       if (tipo === 'youtube') {
         let videoId = url;
         if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
+        else if (url.includes('/@')) { alert('Para canales de YouTube, cargá el link del video o del stream en vivo.'); return; }
         html5.classList.add('hidden'); iframe.classList.remove('hidden');
         iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1`;
-      } 
-      else if (tipo === 'twitch') {
+      } else if (tipo === 'twitch') {
         html5.classList.add('hidden'); iframe.classList.remove('hidden');
         const twitchChannel = url.split('/').pop();
         const currentDomain = window.location.hostname;
         iframe.src = `https://player.twitch.tv/?channel=${twitchChannel}&parent=${currentDomain}`;
-      }
-      else if (tipo === 'kick') {
+      } else if (tipo === 'kick') {
         html5.classList.add('hidden'); iframe.classList.remove('hidden');
         const kickChannel = url.split('/').pop();
         iframe.src = `https://player.kick.com/${kickChannel}`;
-      }
-      else if (tipo === 'okru') {
+      } else if (tipo === 'okru') {
         html5.classList.add('hidden'); iframe.classList.remove('hidden');
         const okIdMatch = url.match(/video\/[^/]+\/(\d+)/);
-        if (okIdMatch) iframe.src = `https://ok.ru/videoembed/${okIdMatch[1]}`; else iframe.src = url;
+        if (okIdMatch) iframe.src = `https://ok.ru/videoembed/${okIdMatch[1]}`;
+        else iframe.src = url;
+      } else if (tipo === 'hls' || tipo === 'audio') {
+        iframe.classList.add('hidden'); html5.classList.remove('hidden');
+        html5.src = url; html5.play();
       }
-      else if (tipo === 'hls') {
-        iframe.classList.add('hidden'); html5.classList.remove('hidden'); html5.src = url; html5.play();
-      }
-      else if (tipo === 'audio') {
-        sintonizarRadio(senal.nombre, url, senal.logo, senal.descripcion || 'Señal de audio'); return;
-      }
-      else { html5.classList.add('hidden'); iframe.classList.remove('hidden'); iframe.src = url; }
 
       document.getElementById('modalTitulo').innerText = senal.nombre;
       document.getElementById('modalCategoria').innerText = senal.tipo === 'audio' ? 'Radio en Vivo' : 'Transmisión en Vivo';
@@ -383,7 +347,7 @@
       document.getElementById('videoModal').classList.remove('hidden');
     }
 
-    // === RENDERIZADO DE RADIOS (CORREGIDO) ===
+    // === RENDERIZADO DE RADIOS ===
     function renderRadiosUI() {
       const container = document.getElementById('radiosGrid'); if(!container) return;
       container.innerHTML = '';
@@ -396,39 +360,28 @@
       });
     }
 
-    // === RENDERIZADO ARTISTAS ===
     function renderArtistasUI() { const container = document.getElementById('artistasGrid'); if(!container) return; container.innerHTML = ''; artistasData.forEach(a => { const nombre = a.nombre || "Artista", foto = a.foto || FALLBACK_THUMB, rubro = a.rubro || "Artista UADAV"; container.innerHTML += `<div tabindex="0" onclick="abrirPerfilArtista('${a.id}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl p-3 text-center cursor-pointer group transition-all"><div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden mb-3 border-2 border-uadav-border group-hover:border-uadav-accent transition-colors shadow-lg"><img src="${foto}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="${nombre}"></div><h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors truncate">${nombre}</h4><span class="text-[9px] sm:text-[10px] text-slate-400 block mt-0.5">${rubro}</span></div>`; }); }
 
-    // === RENDERIZADO CARTELERA ===
     function renderCarteleraUI() { const cartRail = document.getElementById('carteleraRail'); if(!cartRail) return; cartRail.innerHTML = ''; carteleraData.forEach(c => { cartRail.innerHTML += `<div tabindex="0" class="tv-focusable min-w-[200px] sm:min-w-[240px] bg-[#0a0a0c] border border-uadav-border p-4 sm:p-5 rounded-2xl flex-shrink-0 hover:border-uadav-accent transition-colors group"><span class="text-[10px] sm:text-xs font-black text-uadav-accent block mb-1 sm:mb-2 tracking-widest">${c.fecha || c.estado_badge}</span><h4 class="text-base sm:text-lg font-black text-white mb-1">${c.artista || c.titulo}</h4><p class="text-xs sm:text-sm text-slate-400 mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${c.lugar}</p><span class="inline-block bg-slate-900 text-slate-300 text-[9px] sm:text-[10px] px-2 py-0.5 sm:py-1 rounded-full mt-2 border border-slate-800">${c.tipo || c.categoria}</span></div>`; }); }
 
-    // === SECCIONES DINÁMICAS ===
-    async function cargarSeccionDinamica(containerId, secId) { const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!rail || !sec) return; let items = []; if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); else { const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v23`, cachedData = localStorage.getItem(cacheKey); if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } } rail.innerHTML = ''; if (items && items.length > 0) { currentSectionItems = items; items.forEach(item => rail.appendChild(crearCard(item))); } }
+    async function cargarSeccionDinamica(containerId, secId) { const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!rail || !sec) return; let items = []; if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); else { const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v23`, cachedData = localStorage.getItem(cacheKey); if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
 
-    // === SHORTS EXCLUSIVOS (9:16) ===
-    async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'); if (!rail) return; const cacheKey = 'uadav_cache_shorts_strict_v23', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos('#shorts'); if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { currentSectionItems = items; items.forEach(item => rail.appendChild(crearShortCard(item))); } }
+    async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'); if (!rail) return; const cacheKey = 'uadav_cache_shorts_strict_v23', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos('#shorts'); if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearShortCard(item))); } }
 
-    // === BÚSQUEDA ===
-    async function ejecutarBusqueda() { const q = document.getElementById('searchInput').value.trim(); if (!q) { resetearVista(); return; } const mainContainer = document.getElementById('mainContainer'), gridView = document.getElementById('gridViewSection'), gridContainer = document.getElementById('gridContainer'); if (!mainContainer || !gridView || !gridContainer) return; const cacheKey = `uadav_search_${q.toLowerCase().replace(/\s+/g, '_')}`, cached = localStorage.getItem(cacheKey); mainContainer.classList.add('hidden'); gridView.classList.remove('hidden'); document.getElementById('gridTitle').innerHTML = `Buscando <span class="text-uadav-accent">"${q}"</span>...`; gridContainer.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-bold"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-uadav-accent mb-4 block"></i>Buscando...</div>'; let resultados = []; if (cached) { resultados = JSON.parse(cached); } else { const data = await obtenerVideos(q); if (data && Array.isArray(data)) { resultados = data.slice(0, 15); if (resultados.length > 0) localStorage.setItem(cacheKey, JSON.stringify(resultados)); } } document.getElementById('gridTitle').innerHTML = `Resultados para <span class="text-uadav-accent">"${q}"</span>`; gridContainer.innerHTML = ''; if (resultados && resultados.length > 0) { resultados.forEach(item => gridContainer.appendChild(item.tipo === 'short' ? crearShortCard(item) : crearCard(item))); } else { gridContainer.innerHTML = '<div class="col-span-full py-12 text-center text-slate-400">No se encontraron resultados.</div>'; } }
+    async function ejecutarBusqueda() { const q = document.getElementById('searchInput').value.trim(); if (!q) { resetearVista(); return; } const mainContainer = document.getElementById('mainContainer'), gridView = document.getElementById('gridViewSection'), gridContainer = document.getElementById('gridContainer'); if (!mainContainer || !gridView || !gridContainer) return; const cacheKey = `uadav_search_${q.toLowerCase().replace(/\s+/g, '_')}`, cached = localStorage.getItem(cacheKey); mainContainer.classList.add('hidden'); gridView.classList.remove('hidden'); document.getElementById('gridTitle').innerHTML = `Buscando <span class="text-uadav-accent">"${q}"</span>...`; gridContainer.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-bold"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-uadav-accent mb-4 block"></i>Buscando...</div>'; let resultados = []; if (cached) { resultados = JSON.parse(cached); } else { const data = await obtenerVideos(q); if (data && Array.isArray(data)) { resultados = data.slice(0, 15); if (resultados.length > 0) localStorage.setItem(cacheKey, JSON.stringify(resultados)); } } document.getElementById('gridTitle').innerHTML = `Resultados para <span class="text-uadav-accent">"${q}"</span>`; gridContainer.innerHTML = ''; if (resultados && resultados.length > 0) { queue = []; resultados.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; resultados.forEach(item => gridContainer.appendChild(item.tipo === 'short' ? crearShortCard(item) : crearCard(item))); } else { gridContainer.innerHTML = '<div class="col-span-full py-12 text-center text-slate-400">No se encontraron resultados.</div>'; } }
 
-    // === CARDS ===
     function crearCard(item) { const card = document.createElement('div'); card.className = "tv-focusable min-w-[220px] sm:min-w-[260px] max-w-[280px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0 flex flex-col justify-between"; card.setAttribute('tabindex', '0'); const videoId = item.id || '-479TZi-EAs', thumb = item.thumbnail || obtenerCaratulaUltraRapida(videoId), safeTitulo = (item.titulo || 'Contenido').replace(/'/g, "\\'"), safeDesc = (item.descripcion || 'UADAV').replace(/'/g, "\\'"); card.innerHTML = `<div onclick="reproducirVideo('${videoId}', '${safeTitulo}', '${item.categoria}', '${safeDesc}')"><div class="relative aspect-video bg-black overflow-hidden"><img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-110 group-hover:opacity-60 transition-all duration-300"><div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><div class="w-10 h-10 sm:w-12 sm:h-12 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-bold shadow-[0_0_20px_rgba(0,229,255,0.5)] scale-75 group-hover:scale-100 transition-transform"><i class="fa-solid fa-play ml-0.5 text-xs sm:text-base"></i></div></div><span class="absolute bottom-2 right-2 bg-black/80 text-white text-[9px] sm:text-[10px] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded font-bold">${item.duracion || 'HD'}</span></div><div class="p-3 sm:p-4"><span class="text-[8px] sm:text-[9px] text-uadav-accent font-black tracking-widest uppercase block mb-1 sm:mb-2">${item.categoria}</span><h3 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors line-clamp-2">${item.titulo}</h3><p class="text-[11px] sm:text-xs text-slate-500 mt-1 line-clamp-1">${item.descripcion}</p></div></div>`; return card; }
     function crearShortCard(item) { const card = document.createElement('div'); card.className = "tv-focusable min-w-[140px] sm:min-w-[170px] max-w-[190px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0"; card.setAttribute('tabindex', '0'); const videoId = item.id || '-479TZi-EAs', thumb = item.thumbnail || obtenerCaratulaUltraRapida(videoId), safeTitulo = (item.titulo || 'Short').replace(/'/g, "\\'"), safeDesc = (item.descripcion || 'Short').replace(/'/g, "\\'"); card.innerHTML = `<div onclick="reproducirVideo('${videoId}', '${safeTitulo}', '${item.categoria}', '${safeDesc}')" class="relative aspect-[9/16] bg-black overflow-hidden"><img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"><div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div><div class="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-600 text-white text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full flex items-center gap-1 shadow-lg tracking-wider"><i class="fa-solid fa-bolt"></i> SHORT</div><span class="absolute top-2 right-2 sm:top-3 sm:right-3 bg-black/70 text-white text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-full font-bold">${item.duracion}</span><div class="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3"><h4 class="font-bold text-[11px] sm:text-xs text-white line-clamp-2 leading-snug drop-shadow-md">${item.titulo}</h4></div></div>`; return card; }
 
-    // === FILTROS ===
-    function filtrarCategoria(cat, btn) { if (btn) { document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('bg-uadav-accent', 'text-slate-950'); b.classList.add('bg-[#0f0f13]', 'text-slate-300', 'border-2', 'border-uadav-border'); }); btn.classList.remove('bg-[#0f0f13]', 'text-slate-300', 'border-2', 'border-uadav-border'); btn.classList.add('bg-uadav-accent', 'text-slate-950'); } if (cat === 'todas') { resetearVista(); return; } const scrollTargets = { 'senales': 'senalesSection', 'radios': 'radiosSection', 'artistas': 'artistasSection', 'teatros': 'teatrosSection', 'circos': 'circosSection', 'trending': 'trendingSection', 'shorts': 'shortsSection', 'cartelera': 'carteleraSection', 'conciertos': 'conciertosSection' }; if (scrollTargets[cat]) { resetearVista(); document.getElementById(scrollTargets[cat]).scrollIntoView({ behavior: 'smooth' }); return; } const queryTarget = cat; document.getElementById('searchInput').value = queryTarget; ejecutarBusqueda(); }
+    function filtrarCategoria(cat, btn) { if (btn) { document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('bg-uadav-accent', 'text-slate-950'); b.classList.add('bg-[#0f0f13]', 'text-slate-300', 'border-2', 'border-uadav-border'); }); btn.classList.remove('bg-[#0f0f13]', 'text-slate-300', 'border-2', 'border-uadav-border'); btn.classList.add('bg-uadav-accent', 'text-slate-950'); } if (cat === 'todas') { resetearVista(); return; } const scrollTargets = { 'radios': 'radiosSection', 'senales': 'senalesSection', 'artistas': 'artistasSection', 'teatros': 'teatrosSection', 'circos': 'circosSection', 'trending': 'trendingSection', 'shorts': 'shortsSection', 'cartelera': 'carteleraSection', 'conciertos': 'conciertosSection' }; if (scrollTargets[cat]) { resetearVista(); document.getElementById(scrollTargets[cat]).scrollIntoView({ behavior: 'smooth' }); return; } const queryTarget = cat; document.getElementById('searchInput').value = queryTarget; ejecutarBusqueda(); }
 
     function resetearVista() { document.getElementById('mainContainer').classList.remove('hidden'); document.getElementById('gridViewSection').classList.add('hidden'); document.getElementById('searchInput').value = ''; }
 
-    // === REPRODUCCIÓN (CORREGIDO) ===
     function reproducirVideoPersonalizado(url, tipo, titulo, desc) {
-      if (isRadioPlaying) togglePlayRadio();
-      document.getElementById('artistModal').classList.add('hidden');
-
+      if (isRadioPlaying) togglePlayRadio(); document.getElementById('artistModal').classList.add('hidden');
       let itemIndex = queue.findIndex(item => item.url === url || item.id === url);
       if (itemIndex === -1) { queue.push({ url: url, tipo: tipo, titulo: titulo, categoria: 'Personalizado', descripcion: desc }); itemIndex = queue.length - 1; }
       currentIndex = itemIndex; renderQueue();
-
       if (tipo === 'youtube' || (tipo === 'mp4' && /^[a-zA-Z0-9_-]{11}$/.test(url)) || url.includes('youtube.com') || url.includes('youtu.be')) {
         if (url.includes('youtube.com') || url.includes('youtu.be')) { let id = url.split('v=')[1] || url.split('/').pop(); if (id.includes('&')) id = id.split('&')[0]; url = id; }
         reproducirVideo(url, titulo, "Personalizado", desc);
@@ -440,14 +393,10 @@
     }
 
     function reproducirVideo(id, titulo, categoria, descripcion) {
-      if (isRadioPlaying) togglePlayRadio();
-      document.getElementById('artistModal').classList.add('hidden');
-
+      if (isRadioPlaying) togglePlayRadio(); document.getElementById('artistModal').classList.add('hidden');
       let itemIndex = queue.findIndex(item => item.url === id || item.id === id);
-      if (itemIndex === -1 && currentSectionItems.length > 0) { queue = currentSectionItems.map(item => ({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); itemIndex = queue.findIndex(item => item.url === id || item.id === id); }
       if (itemIndex === -1) { queue.push({ url: id, tipo: 'youtube', titulo: titulo, categoria: categoria, descripcion: descripcion }); itemIndex = queue.length - 1; }
       currentIndex = itemIndex; renderQueue();
-
       const iframe = document.getElementById('iframePlayer'), html5 = document.getElementById('html5Player');
       html5.classList.add('hidden'); iframe.classList.remove('hidden'); iframe.src = construirEmbedUrl(id);
       document.getElementById('modalTitulo').innerText = titulo; document.getElementById('modalCategoria').innerText = categoria; document.getElementById('modalDescripcion').innerText = descripcion; document.getElementById('videoModal').classList.remove('hidden');
@@ -455,18 +404,14 @@
 
     function construirEmbedUrl(id) { return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1`; }
     function cerrarModal() { const iframe = document.getElementById('iframePlayer'), html5 = document.getElementById('html5Player'); iframe.src = 'about:blank'; html5.src = ''; html5.pause(); document.getElementById('videoModal').classList.add('hidden'); }
-
     document.getElementById('html5Player').addEventListener('ended', function() { nextVideo(); });
 
-    // === ARTISTA ===
     async function abrirPerfilArtista(id) { const artista = artistasData.find(a => a.id === id); if (!artista) return; document.getElementById('artModalBanner').src = artista.portada || artista.foto || FALLBACK_THUMB; document.getElementById('artModalFoto').src = artista.foto || FALLBACK_THUMB; document.getElementById('artModalNombre').innerText = artista.nombre; document.getElementById('artModalGenero').innerText = artista.rubro || "Artista UADAV"; document.getElementById('artModalBio').innerText = artista.bio || "Sin biografía cargada."; const btnContacto = document.getElementById('artModalContactBtn'); if (artista.contacto) { btnContacto.classList.remove('hidden'); btnContacto.onclick = () => { window.open(`https://wa.me/${artista.contacto.replace(/\D/g, '')}`, '_blank'); }; } else { btnContacto.classList.add('hidden'); } document.getElementById('artistModal').classList.remove('hidden'); const contVideos = document.getElementById('artModalListaVideos'); contVideos.innerHTML = '<p class="text-xs text-slate-500">Cargando videos...</p>'; let videos = []; if (artista.tiene_youtube && artista.youtube_channel_id) { const videosCanal = await obtenerVideosDeCanal(artista.youtube_channel_id); const videosCanalMapeados = (videosCanal || []).map(v => ({ url: v.id, tipo: 'youtube', titulo: v.titulo || 'Video del canal' })); videos = videos.concat(videosCanalMapeados); } if (artista.videos_manuales && artista.videos_manuales.length > 0) { const manuales = artista.videos_manuales.map(normalizarVideo).filter(v => v !== null); videos = videos.concat(manuales); } if (videos.length > 0) { queue = videos.map(v => ({ url: v.url, tipo: v.tipo, titulo: v.titulo, categoria: 'Artista', descripcion: artista.nombre })); currentIndex = -1; renderQueue(); let gridHTML = '<div class="grid grid-cols-2 md:grid-cols-3 gap-4">'; videos.forEach((v, index) => { let thumb = FALLBACK_THUMB; if (v.tipo === 'youtube' && v.url && v.url.length === 11) thumb = obtenerCaratulaUltraRapida(v.url); let tituloVideo = v.titulo || `Video ${index + 1}`; gridHTML += `<div onclick="reproducirVideoPersonalizado('${v.url}', '${v.tipo}', '${artista.nombre}', '${tituloVideo.replace(/'/g, "\\'")}')" class="bg-slate-900 border border-uadav-border hover:border-uadav-accent rounded-xl overflow-hidden cursor-pointer group transition-all"><div class="relative aspect-video"><img src="${thumb}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';"><div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><i class="fa-solid fa-play text-3xl text-white drop-shadow-lg"></i></div></div><div class="p-3"><h5 class="font-bold text-xs text-white truncate">${tituloVideo}</h5><p class="text-[10px] text-slate-400 uppercase">${v.tipo === 'youtube' ? 'YouTube' : 'Directo'}</p></div></div>`; }); gridHTML += '</div>'; contVideos.innerHTML = gridHTML; } else { contVideos.innerHTML = '<p class="text-xs text-slate-500">No hay videos cargados en el panel para este artista.</p>'; } document.getElementById('artModalActionBtn').onclick = () => { cerrarModalArtista(); document.getElementById('searchInput').value = artista.nombre; ejecutarBusqueda(); }; }
     async function obtenerVideosDeCanal(channelIdInput) { let channelId = channelIdInput || ''; if (channelId.includes('channel_id=')) channelId = channelId.split('channel_id=')[1].split('&')[0]; else if (channelId.includes('/channel/')) channelId = channelId.split('/channel/')[1].split('/')[0]; else if (channelId.includes('/@')) channelId = channelId.split('/@')[1].split('/')[0]; if (!channelId.startsWith('UC') || channelId.length < 24) return []; try { const res = await fetch(`${API_URL}channel_videos?channel_id=${channelId}`); if (res.ok) return await res.json(); } catch (e) {} return []; }
     function normalizarVideo(v) { let url = v.url || '', tipo = v.tipo || 'mp4'; if (url.startsWith('UC') && url.length > 20) return null; if (tipo === 'mp4') { if (/^[a-zA-Z0-9_-]{11}$/.test(url)) tipo = 'youtube'; else if (url.includes('youtube.com') || url.includes('youtu.be')) { let id = url.split('v=')[1] || url.split('/').pop(); if (id.includes('&')) id = id.split('&')[0]; url = id; tipo = 'youtube'; } } return { url: url, tipo: tipo, titulo: v.titulo || '' }; }
 
-    // === TENDENCIAS ===
-    async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v23`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { currentSectionItems = items; items.forEach(item => rail.appendChild(crearCard(item))); } else rail.innerHTML = '<div class="py-10 text-center text-slate-400 text-xs">No se encontraron resultados.</div>'; }
+    async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v23`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
 
-    // === INICIALIZACIÓN ===
     let isRadioPlaying = false; const audioStream = document.getElementById('audioStream');
     function sintonizarRadio(nombre, streamUrl, caratula, ubicacion) { cerrarModal(); document.getElementById('radioPlayerTitle').innerText = nombre; document.getElementById('radioPlayerLocation').innerText = ubicacion || 'HD'; document.getElementById('radioPlayerImg').src = caratula; audioStream.src = streamUrl; audioStream.play(); isRadioPlaying = true; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; document.getElementById('radioEqualizer').classList.remove('hidden'); document.getElementById('floatingRadioPlayer').classList.remove('translate-y-full'); }
     function togglePlayRadio() { if (isRadioPlaying) { audioStream.pause(); isRadioPlaying = false; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>'; document.getElementById('radioEqualizer').classList.add('hidden'); } else { audioStream.play(); isRadioPlaying = true; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; document.getElementById('radioEqualizer').classList.remove('hidden'); } }
@@ -480,11 +425,8 @@
       await cargarConfigYVisitas();
       seccionesActivas = await obtenerDatos('secciones'); 
       renderNavbar();
-
-      // Cargar Señales Oficiales
-      senalesData = await obtenerDatos('senales_oficiales'); renderSenalesUI();
       
-      // Cargar el resto
+      senalesData = await obtenerDatos('senales_oficiales'); renderSenalesUI();
       artistasData = await obtenerDatos('artistas_uadav'); renderArtistasUI();
       radiosData = await obtenerDatos('radios'); renderRadiosUI();
       carteleraData = await obtenerDatos('cartelera_shows'); renderCarteleraUI();
