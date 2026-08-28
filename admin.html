@@ -60,7 +60,8 @@
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Configuración General</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <div><label>Mostrar País (IP)</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
+           <div><label>País para Tendencias (Auto o código, ej: AR, MX, US)</label><input id="configPais" placeholder="Auto"></div>
+           <div><label>Mostrar País (IP) en Header</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
            <div><label>Contador Base (editable)</label><input type="number" id="configVisitas" placeholder="0"></div>
            <div class="md:col-span-2"><label>Texto Legal (Footer)</label><textarea id="configLegal" rows="3">UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.</textarea></div>
         </div>
@@ -91,21 +92,21 @@
     }
 
     function renderConfig(data) {
+      document.getElementById('configPais').value = data.pais_trending || 'Auto';
       document.getElementById('configShowCountry').value = data.mostrar_ip ? 'true' : 'false';
       document.getElementById('configLegal').value = data.texto_legal || '';
     }
 
     function guardarConfig() {
       const config = {
+        pais_trending: document.getElementById('configPais').value.trim() || 'Auto',
         mostrar_ip: document.getElementById('configShowCountry').value === 'true',
         texto_legal: document.getElementById('configLegal').value
       };
-      // Usar POST para config
       fetch(API_URL + 'config', {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
         body: JSON.stringify(config)
       }).then(() => {
-        // Guardar el contador editado
         const contadores = { visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0, descargas_app: 0 };
         return fetch(API_URL + 'contadores', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
@@ -128,7 +129,7 @@
       });
     }
 
-    function editarArtista(id) { /* Igual que antes */ 
+    function editarArtista(id) {
       const a = artistasData.find(x => x.id === id); if (!a) return;
       editandoId = id;
       document.getElementById('artNombre').value = a.nombre;
@@ -145,7 +146,7 @@
       window.scrollTo({ top: 300, behavior: 'smooth' });
     }
 
-    function cancelarEdicion() { /* Igual que antes */
+    function cancelarEdicion() {
       editandoId = null;
       ['artNombre','artRubro','artFoto','artPortada','artBio','artLink','artContacto','artVideos'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('artTieneYT').value = 'true';
@@ -195,7 +196,7 @@
 
     function guardarTodo() {
       if (!ADMIN_KEY) return alert("Conectate primero");
-      guardarConfig(); // Guarda config y contadores
+      guardarConfig();
       fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) });
       fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) }).then(() => alert("✅ Todo guardado en la nube"));
     }
