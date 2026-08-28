@@ -52,8 +52,11 @@
   <header class="sticky top-0 z-40 bg-uadav-dark/90 backdrop-blur-xl border-b border-uadav-border">
     <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
       <div tabindex="0" onclick="resetearVista()" class="tv-focusable flex items-center gap-2 sm:gap-3 cursor-pointer transition-all flex-shrink-0">
-        <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-uadav-accent to-blue-600 flex items-center justify-center text-slate-950 font-black text-lg sm:text-2xl shadow-lg shadow-uadav-accent/30">U</div>
-        <div class="hidden xs:block"><span class="font-black text-lg sm:text-2xl tracking-tighter text-white block leading-none">UADAV<span class="text-uadav-accent">STREAM</span></span><span class="text-[9px] sm:text-[10px] tracking-widest text-slate-400 uppercase font-semibold hidden md:block">Plataforma Global</span></div>
+        <div id="logoContainer" class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-uadav-accent to-blue-600 flex items-center justify-center text-slate-950 font-black text-lg sm:text-2xl shadow-lg shadow-uadav-accent/30">U</div>
+        <div class="hidden xs:block">
+          <span id="siteTitle" class="font-black text-lg sm:text-2xl tracking-tighter text-white block leading-none">UADAV<span class="text-uadav-accent">STREAM</span></span>
+          <span id="siteSlogan" class="text-[9px] sm:text-[10px] tracking-widest text-slate-400 uppercase font-semibold hidden md:block">Plataforma Global</span>
+        </div>
       </div>
       <div class="flex-1 max-w-2xl mx-1 sm:mx-2 relative">
         <div class="relative group">
@@ -208,7 +211,7 @@
   </div>
 
   <script>
-    const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
+    const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/'; // <-- URL de UADAVSTREAM
     const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80';
     
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [], senalesData = [];
@@ -217,8 +220,54 @@
     let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR", hero_titulo: "SEÑAL OFICIAL", hero_subtitulo: "UADAVSTREAM TV", hero_boton_texto: "Ver SEÑAL OFICIAL", hero_boton_url: "-479TZi-EAs" };
     let zenoEventSource = null;
 
-    if (localStorage.getItem('uadav_cache_version') !== 'v31us') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v31us'); }
+    if (localStorage.getItem('uadav_cache_version') !== 'v32us') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v32us'); }
 
+    // ===== APARIENCIA DINÁMICA =====
+    async function aplicarApariencia() {
+      try {
+        const res = await fetch(API_URL + 'apariencia');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Object.keys(data).length > 0) {
+            const style = document.createElement('style');
+            style.innerHTML = `
+              :root {
+                --uadav-accent: ${data.color_acento || '#00e5ff'};
+                --uadav-dark: ${data.color_fondo || '#050505'};
+                --uadav-card: ${data.color_tarjetas || '#0f0f13'};
+              }
+              .bg-uadav-dark { background-color: var(--uadav-dark) !important; }
+              .bg-uadav-card { background-color: var(--uadav-card) !important; }
+              .border-uadav-border { border-color: var(--uadav-dark) !important; }
+              .bg-uadav-accent { background-color: var(--uadav-accent) !important; }
+              .text-uadav-accent { color: var(--uadav-accent) !important; }
+              .border-uadav-accent { border-color: var(--uadav-accent) !important; }
+              .hover\\:bg-uadav-accent:hover { background-color: var(--uadav-accent) !important; }
+              .hover\\:text-uadav-accent:hover { color: var(--uadav-accent) !important; }
+              .hover\\:border-uadav-accent:hover { border-color: var(--uadav-accent) !important; }
+              .focus\\:border-uadav-accent:focus { border-color: var(--uadav-accent) !important; }
+              .from-uadav-accent { --tw-gradient-from: var(--uadav-accent) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 0, 0, 0)) !important; }
+              .shadow-uadav-accent { --tw-shadow-color: var(--uadav-accent) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+            `;
+            document.head.appendChild(style);
+
+            // Cambiar Logo y Título
+            if (data.logo_url) {
+              const logoContainer = document.getElementById('logoContainer');
+              logoContainer.outerHTML = `<div id="logoContainer" class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 border border-uadav-border shadow-lg"><img src="${data.logo_url}" class="w-full h-full object-cover" alt="Logo"></div>`;
+            }
+            if (data.titulo_sitio) {
+              document.getElementById('siteTitle').innerHTML = data.titulo_sitio;
+            }
+            if (data.eslogan) {
+              document.getElementById('siteSlogan').innerText = data.eslogan;
+            }
+          }
+        }
+      } catch (e) { console.log("Error cargando apariencia", e); }
+    }
+
+    // FUNCIONES DE TÍTULOS Y VISIBILIDAD
     function aplicarTitulosDinamicos() {
       seccionesActivas.forEach(sec => {
         const titleMap = { 'radios': 'radiosTitle', 'senales': 'senalesTitle', 'artistas': 'artistasTitle', 'teatros': 'teatrosTitle', 'circos': 'circosTitle', 'trending': 'trendingTitle', 'shorts': 'shortsTitle', 'cartelera': 'carteleraTitle', 'conciertos': 'conciertosTitle' };
@@ -446,9 +495,9 @@
 
     function renderCarteleraUI() { const cartRail = document.getElementById('carteleraRail'); if(!cartRail) return; cartRail.innerHTML = ''; carteleraData.forEach(c => { cartRail.innerHTML += `<div tabindex="0" class="tv-focusable min-w-[200px] sm:min-w-[240px] bg-[#0a0a0c] border border-uadav-border p-4 sm:p-5 rounded-2xl flex-shrink-0 hover:border-uadav-accent transition-colors group"><span class="text-[10px] sm:text-xs font-black text-uadav-accent block mb-1 sm:mb-2 tracking-widest">${c.fecha || c.estado_badge}</span><h4 class="text-base sm:text-lg font-black text-white mb-1">${c.artista || c.titulo}</h4><p class="text-xs sm:text-sm text-slate-400 mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${c.lugar}</p><span class="inline-block bg-slate-900 text-slate-300 text-[9px] sm:text-[10px] px-2 py-0.5 sm:py-1 rounded-full mt-2 border border-slate-800">${c.tipo || c.categoria}</span></div>`; }); }
 
-    async function cargarSeccionDinamica(containerId, secId) { const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!rail || !sec) return; let items = []; if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); else { const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v31us`, cachedData = localStorage.getItem(cacheKey); if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
+    async function cargarSeccionDinamica(containerId, secId) { const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!rail || !sec) return; let items = []; if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); else { const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v32us`, cachedData = localStorage.getItem(cacheKey); if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
 
-    async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'); if (!rail) return; const cacheKey = 'uadav_cache_shorts_strict_v31us', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos('#shorts'); if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearShortCard(item))); } }
+    async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'); if (!rail) return; const cacheKey = 'uadav_cache_shorts_strict_v32us', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos('#shorts'); if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearShortCard(item))); } }
 
     async function ejecutarBusqueda() { const q = document.getElementById('searchInput').value.trim(); if (!q) { resetearVista(); return; } const mainContainer = document.getElementById('mainContainer'), gridView = document.getElementById('gridViewSection'), gridContainer = document.getElementById('gridContainer'); if (!mainContainer || !gridView || !gridContainer) return; const cacheKey = `uadav_search_${q.toLowerCase().replace(/\s+/g, '_')}`, cached = localStorage.getItem(cacheKey); mainContainer.classList.add('hidden'); gridView.classList.remove('hidden'); document.getElementById('gridTitle').innerHTML = `Buscando <span class="text-uadav-accent">"${q}"</span>...`; gridContainer.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-bold"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-uadav-accent mb-4 block"></i>Buscando...</div>'; let resultados = []; if (cached) { resultados = JSON.parse(cached); } else { const data = await obtenerVideos(q); if (data && Array.isArray(data)) { resultados = data.slice(0, 15); if (resultados.length > 0) localStorage.setItem(cacheKey, JSON.stringify(resultados)); } } document.getElementById('gridTitle').innerHTML = `Resultados para <span class="text-uadav-accent">"${q}"</span>`; gridContainer.innerHTML = ''; if (resultados && resultados.length > 0) { queue = []; resultados.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; resultados.forEach(item => gridContainer.appendChild(item.tipo === 'short' ? crearShortCard(item) : crearCard(item))); } else { gridContainer.innerHTML = '<div class="col-span-full py-12 text-center text-slate-400">No se encontraron resultados.</div>'; } }
 
@@ -492,7 +541,7 @@
     async function obtenerVideosDeCanal(channelIdInput) { let channelId = channelIdInput || ''; if (channelId.includes('channel_id=')) channelId = channelId.split('channel_id=')[1].split('&')[0]; else if (channelId.includes('/channel/')) channelId = channelId.split('/channel/')[1].split('/')[0]; else if (channelId.includes('/@')) channelId = channelId.split('/@')[1].split('/')[0]; if (!channelId.startsWith('UC') || channelId.length < 24) return []; try { const res = await fetch(`${API_URL}channel_videos?channel_id=${channelId}`); if (res.ok) return await res.json(); } catch (e) {} return []; }
     function normalizarVideo(v) { let url = v.url || '', tipo = v.tipo || 'mp4'; if (url.startsWith('UC') && url.length > 20) return null; if (tipo === 'mp4') { if (/^[a-zA-Z0-9_-]{11}$/.test(url)) tipo = 'youtube'; else if (url.includes('youtube.com') || url.includes('youtu.be')) { let id = url.split('v=')[1] || url.split('/').pop(); if (id.includes('&')) id = id.split('&')[0]; url = id; tipo = 'youtube'; } } return { url: url, tipo: tipo, titulo: v.titulo || '' }; }
 
-    async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v31us`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
+    async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v32us`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
 
     function cerrarModalArtista() { document.getElementById('artistModal').classList.add('hidden'); }
     function cerrarModalArtistaBackdrop(e) { if (e.target.id === 'artistModal') cerrarModalArtista(); }
@@ -501,6 +550,7 @@
 
     async function cargarHome() {
       await cargarConfigYVisitas();
+      await aplicarApariencia(); // Nueva función para pintar la web
       seccionesActivas = await obtenerDatos('secciones'); 
       
       aplicarVisibilidadSecciones();
