@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Control - UADAV STREAM</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { uadav: { accent: '#00e5ff', dark: '#050505', card: '#0f0f13', border: '#1f1f26' } }, fontFamily: { sans: ['Outfit', 'sans-serif'] } } } }
+  </script>
   <style>
     body { background-color: #050505; color: #E2E8F0; font-family: 'Outfit', sans-serif; }
     input, textarea, select { background: #0a0a0c; border: 1px solid #1f1f26; border-radius: 8px; padding: 8px; width: 100%; color: white; margin-bottom: 8px; }
@@ -14,10 +17,14 @@
     .btn-del { background: #dc2626; color: white; }
     .btn-edit { background: #3b82f6; color: white; }
     .item-box { background: #0f0f13; border: 1px solid #1f1f26; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+    .tab-btn { padding: 10px 20px; border-radius: 8px 8px 0 0; font-weight: 800; text-transform: uppercase; cursor: pointer; background: #1f1f26; color: #94a3b8; }
+    .tab-btn.active { background: #0f0f13; color: #00e5ff; border-bottom: 3px solid #00e5ff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
   </style>
 </head>
 <body class="p-4 sm:p-8 min-h-screen">
-  <div class="max-w-5xl mx-auto">
+  <div class="max-w-6xl mx-auto">
     <div class="flex justify-between items-center mb-8 border-b border-uadav-border pb-4">
       <h1 class="text-2xl font-black text-white">UADAV <span class="text-uadav-accent">STREAM</span> - Panel Admin</h1>
       <div class="flex gap-2">
@@ -26,79 +33,108 @@
       </div>
     </div>
 
-    <div id="panelContent" class="hidden space-y-8">
+    <div id="panelContent" class="hidden">
       
-      <!-- Gestor de Secciones -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Secciones</h2>
-        <div id="seccionesList" class="space-y-2"></div>
+      <!-- TABS -->
+      <div class="flex gap-2 mb-6 border-b border-uadav-border">
+        <button class="tab-btn active" onclick="switchTab('config')">Configuración</button>
+        <button class="tab-btn" onclick="switchTab('senales')">Señales Live</button>
+        <button class="tab-btn" onclick="switchTab('radios')">Radios</button>
+        <button class="tab-btn" onclick="switchTab('artistas')">Artistas</button>
+        <button class="tab-btn" onclick="switchTab('secciones')">Secciones</button>
       </div>
 
-      <!-- Gestor de Señales Oficiales -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Señales Oficiales</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div><label>Nombre</label><input id="senalNombre" placeholder="UADAVSTREAM TV"></div>
-          <div><label>Tipo (youtube, twitch, kick, audio, hls)</label><input id="senalTipo" placeholder="youtube"></div>
-          <div><label>Logo (URL)</label><input id="senalLogo" placeholder="https://..."></div>
-          <div><label>URL del Stream o Canal</label><input id="senalUrl" placeholder="https://www.youtube.com/watch?v=..."></div>
-          <div><label>Descripción</label><input id="senalDesc" placeholder="Transmisión oficial 24/7"></div>
-          <div><label>¿Es Principal?</label><select id="senalPrincipal"><option value="true">Sí</option><option value="false">No</option></select></div>
+      <!-- TAB CONFIG -->
+      <div id="tab-config" class="tab-content active space-y-8">
+        <div class="border border-uadav-border rounded-xl p-4">
+          <h2 class="text-xl font-black mb-4 text-uadav-accent">Hero (Portada Principal)</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label>Título</label><input id="cfgHeroTitulo" placeholder="SEÑAL OFICIAL"></div>
+            <div><label>Subtítulo</label><input id="cfgHeroSub" placeholder="UADAVSTREAM TV"></div>
+            <div><label>Botón Principal</label><input id="cfgHeroBtn1" placeholder="Ver SEÑAL OFICIAL"></div>
+            <div><label>Botón Secundario</label><input id="cfgHeroBtn2" placeholder="Escuchar Beat Digital Radio"></div>
+            <div><label>ID Señal Principal (YouTube)</label><input id="cfgSenalId" placeholder="-479TZi-EAs"></div>
+            <div><label>País para Tendencias (Auto o AR, MX)</label><input id="cfgPais" placeholder="Auto"></div>
+            <div><label>Mostrar País (IP)</label><select id="cfgShowCountry"><option value="false">No</option><option value="true">Sí</option></select></div>
+            <div class="md:col-span-2"><label>Texto Legal (Footer)</label><textarea id="cfgLegal" rows="3">UADAV STREAM es un desarrollo de Beat Digital Medios.</textarea></div>
+          </div>
+          <button onclick="guardarConfig()" class="btn btn-save mt-4">Guardar Configuración</button>
         </div>
-        <button onclick="guardarSenal()" class="btn btn-save mb-4">Agregar/Actualizar Señal</button>
-        <div id="senalesList"></div>
       </div>
 
-      <!-- Gestor de Radios -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Radios</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div><label>Nombre</label><input id="radioNombre" placeholder="Beat Digital Radio"></div>
-          <div><label>URL del Stream</label><input id="radioStream" placeholder="https://stream.zeno.fm/..."></div>
-          <div><label>Logo (URL)</label><input id="radioLogo" placeholder="https://..."></div>
-          <div><label>Ubicación</label><input id="radioUbicacion" placeholder="Rosario, AR"></div>
-          <div><label>Bitrate</label><input id="radioBitrate" placeholder="320 kbps AAC"></div>
-          <div><label>Descripción</label><input id="radioDesc" placeholder="Música electrónica 24/7"></div>
-          
-          <!-- Campos de Metadatos -->
-          <div><label>Tema Actual</label><input id="radioTema" placeholder="Midnight City"></div>
-          <div><label>Artista Actual</label><input id="radioArtista" placeholder="M83"></div>
-          
-          <div><label>¿Es Oficial?</label><select id="radioOficial"><option value="true">Sí</option><option value="false">No</option></select></div>
+      <!-- TAB SEÑALES -->
+      <div id="tab-senales" class="tab-content space-y-8">
+        <div class="border border-uadav-border rounded-xl p-4">
+          <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Señales Live Streaming</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><label>Nombre</label><input id="senalNombre" placeholder="SEÑAL OFICIAL UADAVSTREAM TV"></div>
+            <div><label>Tipo</label><select id="senalTipo"><option value="youtube">YouTube</option><option value="twitch">Twitch</option><option value="kick">Kick</option><option value="okru">OK.ru</option><option value="hls">RTMP/HLS</option><option value="audio">Radio/Audio</option></select></div>
+            <div><label>URL o ID</label><input id="senalUrl" placeholder="ID de video o URL del canal"></div>
+            <div><label>Logo / Carátula</label><input id="senalLogo" placeholder="https://..."></div>
+            <div><label>Descripción</label><input id="senalDesc" placeholder="Transmisión oficial 24/7"></div>
+            <div><label>¿Es la Señal Principal?</label><select id="senalPrincipal"><option value="false">No</option><option value="true">Sí</option></select></div>
+          </div>
+          <button onclick="guardarSenal()" id="btnGuardarSenal" class="btn btn-save mb-4">Agregar Señal</button>
+          <button onclick="cancelarEdicionSenal()" id="btnCancelarSenal" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar Edición</button>
+          <div id="senalesList"></div>
         </div>
-        <button onclick="guardarRadio()" class="btn btn-save mb-4">Agregar/Actualizar Radio</button>
-        <div id="radiosList"></div>
       </div>
 
-      <!-- Gestor de Artistas -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Artistas</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div><label>Nombre</label><input id="artNombre" placeholder="Ej: Circo Servian"></div>
-          <div><label>Rubro</label><input id="artRubro" placeholder="Ej: Circo / Magia / Música"></div>
-          <div><label>Foto Perfil</label><input id="artFoto" placeholder="https://..."></div>
-          <div><label>Foto Banner</label><input id="artPortada" placeholder="https://..."></div>
-          <div class="md:col-span-2"><label>Bio</label><textarea id="artBio" placeholder="Descripción"></textarea></div>
-          <div><label>Tiene YouTube?</label><select id="artTieneYT"><option value="true">Sí</option><option value="false">No</option></select></div>
-          <div><label>ID Canal YouTube</label><input id="artLink" placeholder="UC..."></div>
-          <div><label>Contacto</label><input id="artContacto" placeholder="WhatsApp"></div>
-          <div class="md:col-span-2"><label>Videos Manuales</label><textarea id="artVideos" rows="3" placeholder="ID_11_CARACTERES"></textarea></div>
+      <!-- TAB RADIOS -->
+      <div id="tab-radios" class="tab-content space-y-8">
+        <div class="border border-uadav-border rounded-xl p-4">
+          <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Radios (Metadatos Dinámicos)</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><label>Nombre</label><input id="radioNombre" placeholder="Beat Digital Radio"></div>
+            <div><label>URL Stream</label><input id="radioStream" placeholder="https://stream.zeno.fm/..."></div>
+            <div><label>Logo</label><input id="radioLogo" placeholder="https://..."></div>
+            <div><label>Ubicación</label><input id="radioUbicacion" placeholder="Rosario, AR"></div>
+            <div><label>Bitrate</label><input id="radioBitrate" placeholder="320 kbps AAC"></div>
+            <div><label>Tema Actual</label><input id="radioTema" placeholder="Ultra Remix"></div>
+            <div><label>Artista Actual</label><input id="radioArtista" placeholder="Duki"></div>
+            <div><label>¿Emisora Oficial?</label><select id="radioOficial"><option value="true">Sí</option><option value="false">No</option></select></div>
+            <div class="md:col-span-2"><label>Descripción</label><input id="radioDesc" placeholder="Música electrónica 24/7"></div>
+          </div>
+          <button onclick="guardarRadio()" id="btnGuardarRadio" class="btn btn-save mb-4">Agregar Radio</button>
+          <button onclick="cancelarEdicionRadio()" id="btnCancelarRadio" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar Edición</button>
+          <div id="radiosList"></div>
         </div>
-        <button onclick="guardarArtista()" id="btnGuardarArtista" class="btn btn-save mb-4">Agregar Artista</button>
-        <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar Edición</button>
-        <div id="artistasList"></div>
       </div>
 
-      <!-- Configuración General -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Configuración General</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <div><label>País Tendencias</label><input id="configPais" placeholder="Auto"></div>
-           <div><label>Mostrar País (IP)</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
-           <div><label>Contador Base</label><input type="number" id="configVisitas" placeholder="0"></div>
-           <div class="md:col-span-2"><label>Texto Legal</label><textarea id="configLegal" rows="3">UADAV STREAM es un desarrollo de Beat Digital Medios.</textarea></div>
+      <!-- TAB ARTISTAS -->
+      <div id="tab-artistas" class="tab-content space-y-8">
+        <div class="border border-uadav-border rounded-xl p-4">
+          <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Artistas</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><label>Nombre</label><input id="artNombre" placeholder="Ej: Circo Servian"></div>
+            <div><label>Rubro</label><input id="artRubro" placeholder="Ej: Circo"></div>
+            <div><label>Foto</label><input id="artFoto" placeholder="https://..."></div>
+            <div><label>Portada</label><input id="artPortada" placeholder="https://..."></div>
+            <div class="md:col-span-2"><label>Bio</label><textarea id="artBio"></textarea></div>
+            <div><label>¿Tiene YouTube?</label><select id="artTieneYT"><option value="true">Sí</option><option value="false">No</option></select></div>
+            <div><label>ID Canal</label><input id="artLink" placeholder="UC..."></div>
+            <div><label>Contacto</label><input id="artContacto" placeholder="WhatsApp"></div>
+            <div class="md:col-span-2"><label>Videos Manuales (IDs o URLs de video, uno por línea)</label><textarea id="artVideos" rows="3"></textarea></div>
+          </div>
+          <button onclick="guardarArtista()" id="btnGuardarArtista" class="btn btn-save mb-4">Agregar Artista</button>
+          <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar Edición</button>
+          <div id="artistasList"></div>
         </div>
-        <button onclick="guardarConfig()" class="btn btn-save mt-4">Guardar Configuración</button>
+      </div>
+
+      <!-- TAB SECCIONES -->
+      <div id="tab-secciones" class="tab-content space-y-8">
+        <div class="border border-uadav-border rounded-xl p-4">
+          <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Secciones</h2>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div><label>ID</label><input id="nuevoSecId" placeholder="humor"></div>
+            <div><label>Nombre</label><input id="nuevoSecNombre" placeholder="Humoristas"></div>
+            <div><label>Icono</label><input id="nuevoSecIcono" placeholder="fa-face-laugh"></div>
+            <div><label>Query</label><input id="nuevoSecQuery" placeholder="humoristas en vivo"></div>
+          </div>
+          <button onclick="agregarNuevaSeccion()" class="btn btn-save mb-4">+ Agregar Sección</button>
+          <div id="seccionesList" class="space-y-2"></div>
+        </div>
       </div>
 
       <div class="fixed bottom-4 right-4">
@@ -109,131 +145,100 @@
 
   <script>
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
-    let ADMIN_KEY = '', seccionesData = [], artistasData = [], radiosData = [], senalesData = [], editandoId = null, editandoRadioId = null, editandoSenalId = null;
+    let ADMIN_KEY = '';
+    let configGlobal = {};
+    let senalesData = [], radiosData = [], artistasData = [], seccionesData = [];
+    let editandoSenalId = null, editandoRadioId = null, editandoArtistaId = null;
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
 
     function conectar() {
       ADMIN_KEY = document.getElementById('adminKeyInput').value;
       if (!ADMIN_KEY) return alert("Poné la clave");
-      fetch(API_URL + 'secciones').then(r => r.json()).then(data => {
+      
+      Promise.all([
+        fetch(API_URL + 'config').then(r => r.json()),
+        fetch(API_URL + 'senales').then(r => r.json()),
+        fetch(API_URL + 'radios').then(r => r.json()),
+        fetch(API_URL + 'artistas_uadav').then(r => r.json()),
+        fetch(API_URL + 'secciones').then(r => r.json())
+      ]).then(([cfg, senales, radios, artistas, secciones]) => {
         document.getElementById('panelContent').classList.remove('hidden');
-        seccionesData = data;
-        renderSecciones();
-        fetch(API_URL + 'artistas_uadav').then(r => r.json()).then(renderArtistas);
-        fetch(API_URL + 'radios').then(r => r.json()).then(renderRadios);
-        fetch(API_URL + 'senales_oficiales').then(r => r.json()).then(renderSenales);
-        fetch(API_URL + 'config').then(r => r.json()).then(renderConfig);
-        fetch(API_URL + 'contadores').then(r => r.json()).then(c => { document.getElementById('configVisitas').value = c.visitas_totales || 0; });
-      }).catch(err => alert("Error al cargar: " + err));
+        configGlobal = cfg || {}; senalesData = senales || []; radiosData = radios || []; artistasData = artistas || []; seccionesData = secciones || [];
+        
+        // Llenar campos de Config
+        document.getElementById('cfgHeroTitulo').value = configGlobal.hero_titulo || '';
+        document.getElementById('cfgHeroSub').value = configGlobal.hero_subtitulo || '';
+        document.getElementById('cfgHeroBtn1').value = configGlobal.hero_boton_primario || '';
+        document.getElementById('cfgHeroBtn2').value = configGlobal.hero_boton_secundario || '';
+        document.getElementById('cfgSenalId').value = configGlobal.senal_principal_id || '';
+        document.getElementById('cfgPais').value = configGlobal.pais_trending || 'Auto';
+        document.getElementById('cfgShowCountry').value = configGlobal.mostrar_ip ? 'true' : 'false';
+        document.getElementById('cfgLegal').value = configGlobal.texto_legal || '';
+        
+        renderSenales(); renderRadios(); renderArtistas(); renderSecciones();
+      }).catch(err => alert("Error: " + err));
     }
 
-    // === SEÑALES ===
-    function renderSenales(data) {
-      senalesData = data || [];
+    // --- CONFIG ---
+    function guardarConfig() {
+      const config = {
+        hero_titulo: document.getElementById('cfgHeroTitulo').value,
+        hero_subtitulo: document.getElementById('cfgHeroSub').value,
+        hero_boton_primario: document.getElementById('cfgHeroBtn1').value,
+        hero_boton_secundario: document.getElementById('cfgHeroBtn2').value,
+        senal_principal_id: document.getElementById('cfgSenalId').value,
+        pais_trending: document.getElementById('cfgPais').value,
+        mostrar_ip: document.getElementById('cfgShowCountry').value === 'true',
+        texto_legal: document.getElementById('cfgLegal').value
+      };
+      fetch(API_URL + 'config', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(config) })
+      .then(() => alert("Configuración guardada"));
+    }
+
+    // --- SEÑALES ---
+    function renderSenales() {
       const list = document.getElementById('senalesList'); list.innerHTML = '';
       senalesData.forEach(s => {
-        list.innerHTML += `<div class="item-box flex justify-between items-center">
-          <div><h4 class="font-bold">${s.nombre}</h4><p class="text-xs text-slate-400">${s.tipo} - ${s.url || ''}</p></div>
-          <div class="flex gap-2"><button onclick="editarSenal('${s.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarSenal('${s.id}')" class="btn btn-del">Eliminar</button></div>
-        </div>`;
+        list.innerHTML += `<div class="item-box flex justify-between items-center"><div><h4 class="font-bold">${s.nombre}</h4><p class="text-xs text-slate-400">${s.tipo} - ${s.es_principal ? 'Principal' : 'Secundaria'}</p></div><div class="flex gap-2"><button onclick="editarSenal('${s.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarSenal('${s.id}')" class="btn btn-del">Eliminar</button></div></div>`;
       });
     }
-    function editarSenal(id) {
-      const s = senalesData.find(x => x.id === id); if (!s) return;
-      editandoSenalId = id;
-      document.getElementById('senalNombre').value = s.nombre;
-      document.getElementById('senalTipo').value = s.tipo || 'youtube';
-      document.getElementById('senalLogo').value = s.logo || '';
-      document.getElementById('senalUrl').value = s.url || '';
-      document.getElementById('senalDesc').value = s.descripcion || '';
-      document.getElementById('senalPrincipal').value = s.es_principal ? 'true' : 'false';
-    }
-    function eliminarSenal(id) {
-      if (!confirm("¿Eliminar señal?")) return;
-      senalesData = senalesData.filter(s => s.id !== id);
-      renderSenales(senalesData);
-    }
-    function guardarSenal() {
-      const id = editandoSenalId || 'senal-' + Date.now();
-      const nueva = { id: id, nombre: document.getElementById('senalNombre').value, tipo: document.getElementById('senalTipo').value || 'youtube', logo: document.getElementById('senalLogo').value, url: document.getElementById('senalUrl').value, descripcion: document.getElementById('senalDesc').value, es_principal: document.getElementById('senalPrincipal').value === 'true' };
-      const index = senalesData.findIndex(s => s.id === id);
-      if (index !== -1) senalesData[index] = nueva; else senalesData.push(nueva);
-      editandoSenalId = null;
-      renderSenales(senalesData);
-      alert("Señal guardada. Click en GUARDAR CAMBIOS.");
-    }
+    function editarSenal(id) { const s = senalesData.find(x => x.id === id); if (!s) return; editandoSenalId = id; document.getElementById('senalNombre').value = s.nombre; document.getElementById('senalTipo').value = s.tipo; document.getElementById('senalUrl').value = s.url; document.getElementById('senalLogo').value = s.logo || ''; document.getElementById('senalDesc').value = s.descripcion || ''; document.getElementById('senalPrincipal').value = s.es_principal ? 'true' : 'false'; document.getElementById('btnGuardarSenal').innerText = "Actualizar Señal"; document.getElementById('btnGuardarSenal').classList.add('bg-blue-500'); document.getElementById('btnCancelarSenal').classList.remove('hidden'); }
+    function cancelarEdicionSenal() { editandoSenalId = null; document.getElementById('senalNombre').value = ''; document.getElementById('senalTipo').value = 'youtube'; document.getElementById('senalUrl').value = ''; document.getElementById('senalLogo').value = ''; document.getElementById('senalDesc').value = ''; document.getElementById('senalPrincipal').value = 'false'; document.getElementById('btnGuardarSenal').innerText = "Agregar Señal"; document.getElementById('btnGuardarSenal').classList.remove('bg-blue-500'); document.getElementById('btnCancelarSenal').classList.add('hidden'); }
+    function guardarSenal() { const id = editandoSenalId || 'senal-' + Date.now(); const nueva = { id, nombre: document.getElementById('senalNombre').value, tipo: document.getElementById('senalTipo').value, url: document.getElementById('senalUrl').value, logo: document.getElementById('senalLogo').value, descripcion: document.getElementById('senalDesc').value, es_principal: document.getElementById('senalPrincipal').value === 'true' }; const idx = senalesData.findIndex(s => s.id === id); if (idx !== -1) senalesData[idx] = nueva; else senalesData.push(nueva); cancelarEdicionSenal(); renderSenales(); alert("Señal guardada. Click en GUARDAR CAMBIOS."); }
+    function eliminarSenal(id) { if (!confirm("¿Eliminar señal?")) return; senalesData = senalesData.filter(s => s.id !== id); renderSenales(); }
 
-    // === RADIOS ===
-    function renderRadios(data) {
-      radiosData = data || [];
-      const list = document.getElementById('radiosList'); list.innerHTML = '';
-      radiosData.forEach(r => {
-        list.innerHTML += `<div class="item-box flex justify-between items-center">
-          <div><h4 class="font-bold">${r.nombre}</h4><p class="text-xs text-slate-400">${r.descripcion || ''} - ${r.tema_actual || 'Sin tema'}</p></div>
-          <div class="flex gap-2"><button onclick="editarRadio('${r.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarRadio('${r.id}')" class="btn btn-del">Eliminar</button></div>
-        </div>`;
-      });
-    }
-    function editarRadio(id) {
-      const r = radiosData.find(x => x.id === id); if (!r) return;
-      editandoRadioId = id;
-      document.getElementById('radioNombre').value = r.nombre;
-      document.getElementById('radioStream').value = r.stream_url;
-      document.getElementById('radioLogo').value = r.logo;
-      document.getElementById('radioUbicacion').value = r.ubicacion || '';
-      document.getElementById('radioBitrate').value = r.bitrate || '';
-      document.getElementById('radioDesc').value = r.descripcion || '';
-      document.getElementById('radioTema').value = r.tema_actual || '';
-      document.getElementById('radioArtista').value = r.artista_actual || '';
-      document.getElementById('radioOficial').value = r.es_oficial ? 'true' : 'false';
-    }
-    function eliminarRadio(id) {
-      if (!confirm("¿Eliminar radio?")) return;
-      radiosData = radiosData.filter(r => r.id !== id);
-      renderRadios(radiosData);
-    }
-    function guardarRadio() {
-      const id = editandoRadioId || 'radio-' + Date.now();
-      const nueva = { id: id, nombre: document.getElementById('radioNombre').value, stream_url: document.getElementById('radioStream').value, logo: document.getElementById('radioLogo').value, ubicacion: document.getElementById('radioUbicacion').value, bitrate: document.getElementById('radioBitrate').value, descripcion: document.getElementById('radioDesc').value, tema_actual: document.getElementById('radioTema').value, artista_actual: document.getElementById('radioArtista').value, es_oficial: document.getElementById('radioOficial').value === 'true' };
-      const index = radiosData.findIndex(r => r.id === id);
-      if (index !== -1) radiosData[index] = nueva; else radiosData.push(nueva);
-      editandoRadioId = null;
-      renderRadios(radiosData);
-      alert("Radio guardada. Click en GUARDAR CAMBIOS.");
-    }
+    // --- RADIOS ---
+    function renderRadios() { const list = document.getElementById('radiosList'); list.innerHTML = ''; radiosData.forEach(r => { list.innerHTML += `<div class="item-box flex justify-between items-center"><div><h4 class="font-bold">${r.nombre}</h4><p class="text-xs text-slate-400">${r.tema_actual || 'Sin tema'} - ${r.artista_actual || ''}</p></div><div class="flex gap-2"><button onclick="editarRadio('${r.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarRadio('${r.id}')" class="btn btn-del">Eliminar</button></div></div>`; }); }
+    function editarRadio(id) { const r = radiosData.find(x => x.id === id); if (!r) return; editandoRadioId = id; document.getElementById('radioNombre').value = r.nombre; document.getElementById('radioStream').value = r.stream_url; document.getElementById('radioLogo').value = r.logo || ''; document.getElementById('radioUbicacion').value = r.ubicacion || ''; document.getElementById('radioBitrate').value = r.bitrate || ''; document.getElementById('radioTema').value = r.tema_actual || ''; document.getElementById('radioArtista').value = r.artista_actual || ''; document.getElementById('radioOficial').value = r.es_oficial ? 'true' : 'false'; document.getElementById('radioDesc').value = r.descripcion || ''; document.getElementById('btnGuardarRadio').innerText = "Actualizar Radio"; document.getElementById('btnGuardarRadio').classList.add('bg-blue-500'); document.getElementById('btnCancelarRadio').classList.remove('hidden'); }
+    function cancelarEdicionRadio() { editandoRadioId = null; document.getElementById('radioNombre').value = ''; document.getElementById('radioStream').value = ''; document.getElementById('radioLogo').value = ''; document.getElementById('radioUbicacion').value = ''; document.getElementById('radioBitrate').value = ''; document.getElementById('radioTema').value = ''; document.getElementById('radioArtista').value = ''; document.getElementById('radioOficial').value = 'true'; document.getElementById('radioDesc').value = ''; document.getElementById('btnGuardarRadio').innerText = "Agregar Radio"; document.getElementById('btnGuardarRadio').classList.remove('bg-blue-500'); document.getElementById('btnCancelarRadio').classList.add('hidden'); }
+    function guardarRadio() { const id = editandoRadioId || 'radio-' + Date.now(); const nueva = { id, nombre: document.getElementById('radioNombre').value, stream_url: document.getElementById('radioStream').value, logo: document.getElementById('radioLogo').value, ubicacion: document.getElementById('radioUbicacion').value, bitrate: document.getElementById('radioBitrate').value, tema_actual: document.getElementById('radioTema').value, artista_actual: document.getElementById('radioArtista').value, es_oficial: document.getElementById('radioOficial').value === 'true', descripcion: document.getElementById('radioDesc').value }; const idx = radiosData.findIndex(r => r.id === id); if (idx !== -1) radiosData[idx] = nueva; else radiosData.push(nueva); cancelarEdicionRadio(); renderRadios(); alert("Radio guardada. Click en GUARDAR CAMBIOS."); }
+    function eliminarRadio(id) { if (!confirm("¿Eliminar radio?")) return; radiosData = radiosData.filter(r => r.id !== id); renderRadios(); }
 
-    // === SECCIONES ===
-    function renderSecciones() {
-      const list = document.getElementById('seccionesList'); list.innerHTML = '';
-      seccionesData.forEach((sec, index) => {
-        list.innerHTML += `<div class="item-box">
-          <div class="flex justify-between items-center mb-2"><span class="font-bold">${sec.nombre}</span><label><input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa</label></div>
-          <div class="grid grid-cols-3 gap-2">
-            <div><label>Modo</label><select onchange="seccionesData[${index}].modo = this.value"><option value="auto" ${sec.modo === 'auto' ? 'selected' : ''}>Auto</option><option value="manual" ${sec.modo === 'manual' ? 'selected' : ''}>Manual</option></select></div>
-            <div><label>Query</label><input value="${sec.query || ''}" oninput="seccionesData[${index}].query = this.value"></div>
-            <div><label>IDs</label><input value="${(sec.ids_manuales || []).join(',')}" oninput="seccionesData[${index}].ids_manuales = this.value.split(',').map(i => i.trim()).filter(i => i)"></div>
-          </div>
-        </div>`;
-      });
-    }
+    // --- ARTISTAS ---
+    function renderArtistas() { const list = document.getElementById('artistasList'); list.innerHTML = ''; artistasData.forEach(a => { list.innerHTML += `<div class="item-box flex justify-between items-center"><div><h4 class="font-bold">${a.nombre}</h4><p class="text-xs text-slate-400">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p></div><div class="flex gap-2"><button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button></div></div>`; }); }
+    function editarArtista(id) { const a = artistasData.find(x => x.id === id); if (!a) return; editandoArtistaId = id; document.getElementById('artNombre').value = a.nombre; document.getElementById('artRubro').value = a.rubro || ''; document.getElementById('artFoto').value = a.foto || ''; document.getElementById('artPortada').value = a.portada || ''; document.getElementById('artBio').value = a.bio || ''; document.getElementById('artTieneYT').value = a.tiene_youtube ? 'true' : 'false'; document.getElementById('artLink').value = a.youtube_channel_id || ''; document.getElementById('artContacto').value = a.contacto || ''; document.getElementById('artVideos').value = (a.videos_manuales || []).map(v => v.url).join('\n'); document.getElementById('btnGuardarArtista').innerText = "Actualizar"; document.getElementById('btnGuardarArtista').classList.add('bg-blue-500'); document.getElementById('btnCancelarEdicion').classList.remove('hidden'); }
+    function cancelarEdicion() { editandoArtistaId = null; document.getElementById('artNombre').value = ''; document.getElementById('artRubro').value = ''; document.getElementById('artFoto').value = ''; document.getElementById('artPortada').value = ''; document.getElementById('artBio').value = ''; document.getElementById('artTieneYT').value = 'true'; document.getElementById('artLink').value = ''; document.getElementById('artContacto').value = ''; document.getElementById('artVideos').value = ''; document.getElementById('btnGuardarArtista').innerText = "Agregar Artista"; document.getElementById('btnGuardarArtista').classList.remove('bg-blue-500'); document.getElementById('btnCancelarEdicion').classList.add('hidden'); }
+    function guardarArtista() { const videosRaw = document.getElementById('artVideos').value.trim(); const videos = videosRaw ? videosRaw.split('\n').map(line => { let trimmed = line.trim(); if (!trimmed) return null; if (trimmed.startsWith('UC') && trimmed.length > 20) return null; if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return { tipo: 'youtube', url: trimmed }; if (trimmed.includes('youtube.com')) { let id = trimmed.split('v=')[1] || trimmed.split('/').pop(); if(id.includes('&')) id = id.split('&')[0]; if (id && id.length === 11) return { tipo: 'youtube', url: id }; } return { tipo: 'mp4', url: trimmed }; }).filter(v => v) : []; let channelIdInput = document.getElementById('artLink').value.trim(); if (channelIdInput.includes('channel_id=')) channelIdInput = channelIdInput.split('channel_id=')[1].split('&')[0]; else if (channelIdInput.includes('/channel/')) channelIdInput = channelIdInput.split('/channel/')[1].split('/')[0]; else if (channelIdInput.includes('/@')) channelIdInput = channelIdInput.split('/@')[1].split('/')[0]; if (!channelIdInput.startsWith('UC')) channelIdInput = ''; const dataArtista = { id: editandoArtistaId || 'art-' + Date.now(), nombre: document.getElementById('artNombre').value, rubro: document.getElementById('artRubro').value, foto: document.getElementById('artFoto').value, portada: document.getElementById('artPortada').value, bio: document.getElementById('artBio').value, tiene_youtube: document.getElementById('artTieneYT').value === 'true', youtube_channel_id: channelIdInput, videos_manuales: videos, contacto: document.getElementById('artContacto').value }; if (!dataArtista.nombre) return alert("Poné el nombre"); if (editandoArtistaId) { const idx = artistasData.findIndex(a => a.id === editandoArtistaId); if (idx !== -1) artistasData[idx] = dataArtista; cancelarEdicion(); } else artistasData.push(dataArtista); renderArtistas(); alert("Artista guardado. Click en GUARDAR CAMBIOS."); }
+    function eliminarArtista(id) { if (!confirm("¿Eliminar?")) return; artistasData = artistasData.filter(a => a.id !== id); renderArtistas(); }
 
-    // === ARTISTAS ===
-    function editarArtista(id) { const a = artistasData.find(x => x.id === id); if (!a) return; editandoId = id; document.getElementById('artNombre').value = a.nombre; document.getElementById('artRubro').value = a.rubro || ''; document.getElementById('artFoto').value = a.foto || ''; document.getElementById('artPortada').value = a.portada || ''; document.getElementById('artBio').value = a.bio || ''; document.getElementById('artTieneYT').value = a.tiene_youtube ? 'true' : 'false'; document.getElementById('artLink').value = a.youtube_channel_id || ''; document.getElementById('artContacto').value = a.contacto || ''; document.getElementById('artVideos').value = (a.videos_manuales || []).map(v => v.url).join('\n'); document.getElementById('btnGuardarArtista').innerText = "Actualizar"; document.getElementById('btnGuardarArtista').classList.add('bg-blue-500'); document.getElementById('btnCancelarEdicion').classList.remove('hidden'); }
-    function cancelarEdicion() { editandoId = null; document.getElementById('btnGuardarArtista').innerText = "Agregar Artista"; document.getElementById('btnGuardarArtista').classList.remove('bg-blue-500'); document.getElementById('btnCancelarEdicion').classList.add('hidden'); document.getElementById('artNombre').value = ''; document.getElementById('artRubro').value = ''; document.getElementById('artFoto').value = ''; document.getElementById('artPortada').value = ''; document.getElementById('artBio').value = ''; document.getElementById('artLink').value = ''; document.getElementById('artContacto').value = ''; document.getElementById('artVideos').value = ''; document.getElementById('artTieneYT').value = 'true'; }
-    function guardarArtista() { const videosRaw = document.getElementById('artVideos').value.trim(); const videos = videosRaw ? videosRaw.split('\n').map(line => { let trimmed = line.trim(); if (!trimmed) return null; if (trimmed.startsWith('UC') && trimmed.length > 20) return null; if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return { tipo: 'youtube', url: trimmed }; if (trimmed.includes('youtube.com')) { let id = trimmed.split('v=')[1] || trimmed.split('/').pop(); if(id.includes('&')) id = id.split('&')[0]; if (id && id.length === 11) return { tipo: 'youtube', url: id }; } return { tipo: 'mp4', url: trimmed }; }).filter(v => v) : []; let channelIdInput = document.getElementById('artLink').value.trim(); if (channelIdInput.includes('channel_id=')) channelIdInput = channelIdInput.split('channel_id=')[1].split('&')[0]; else if (channelIdInput.includes('/channel/')) channelIdInput = channelIdInput.split('/channel/')[1].split('/')[0]; else if (channelIdInput.includes('/@')) channelIdInput = channelIdInput.split('/@')[1].split('/')[0]; if (!channelIdInput.startsWith('UC')) channelIdInput = ''; const dataArtista = { id: editandoId || 'art-' + Date.now(), nombre: document.getElementById('artNombre').value, rubro: document.getElementById('artRubro').value, foto: document.getElementById('artFoto').value, portada: document.getElementById('artPortada').value, bio: document.getElementById('artBio').value, tiene_youtube: document.getElementById('artTieneYT').value === 'true', youtube_channel_id: channelIdInput, videos_manuales: videos, contacto: document.getElementById('artContacto').value }; if (!dataArtista.nombre) return alert("Poné el nombre"); if (editandoId) { const index = artistasData.findIndex(a => a.id === editandoId); if (index !== -1) artistasData[index] = dataArtista; cancelarEdicion(); } else artistasData.push(dataArtista); renderArtistas(artistasData); alert("Listo. Click en GUARDAR CAMBIOS."); }
-    function renderArtistas(data) { artistasData = data || []; const list = document.getElementById('artistasList'); list.innerHTML = ''; artistasData.forEach(a => list.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold">${a.nombre}</h4><p class="text-xs">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p></div><div class="flex gap-2"><button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button></div></div>`); }
-    function eliminarArtista(id) { if (!confirm("¿Eliminar?")) return; if (editandoId === id) cancelarEdicion(); artistasData = artistasData.filter(a => a.id !== id); renderArtistas(artistasData); }
+    // --- SECCIONES ---
+    function agregarNuevaSeccion() { const id = document.getElementById('nuevoSecId').value.trim(); const nombre = document.getElementById('nuevoSecNombre').value.trim(); const icono = document.getElementById('nuevoSecIcono').value.trim() || 'fa-circle'; const query = document.getElementById('nuevoSecQuery').value.trim(); if (!id || !nombre) return alert("Poné el ID y el Nombre"); if (seccionesData.find(s => s.id === id)) return alert("Ya existe"); seccionesData.push({ id, nombre, icono, activa: true, modo: 'auto', query, ids_manuales: [] }); renderSecciones(); document.getElementById('nuevoSecId').value = ''; document.getElementById('nuevoSecNombre').value = ''; document.getElementById('nuevoSecIcono').value = ''; document.getElementById('nuevoSecQuery').value = ''; }
+    function renderSecciones() { const list = document.getElementById('seccionesList'); list.innerHTML = ''; seccionesData.forEach((sec, index) => { list.innerHTML += `<div class="item-box"><div class="flex justify-between items-center mb-2"><span class="font-bold"><i class="fa-solid ${sec.icono || 'fa-circle'} text-uadav-accent mr-2"></i>${sec.nombre}</span><label><input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa</label></div><div class="grid grid-cols-3 gap-2"><div><label>Modo</label><select onchange="seccionesData[${index}].modo = this.value"><option value="auto" ${sec.modo === 'auto' ? 'selected' : ''}>Auto</option><option value="manual" ${sec.modo === 'manual' ? 'selected' : ''}>Manual</option></select></div><div><label>Query</label><input value="${sec.query || ''}" oninput="seccionesData[${index}].query = this.value"></div><div><label>IDs</label><input value="${(sec.ids_manuales || []).join(',')}" oninput="seccionesData[${index}].ids_manuales = this.value.split(',').map(i => i.trim()).filter(i => i)"></div></div></div>`; }); }
 
-    // === CONFIG ===
-    function renderConfig(data) { document.getElementById('configPais').value = data.pais_trending || 'Auto'; document.getElementById('configShowCountry').value = data.mostrar_ip ? 'true' : 'false'; document.getElementById('configLegal').value = data.texto_legal || ''; }
-    function guardarConfig() { const config = { pais_trending: document.getElementById('configPais').value.trim() || 'Auto', mostrar_ip: document.getElementById('configShowCountry').value === 'true', texto_legal: document.getElementById('configLegal').value }; fetch(API_URL + 'config', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(config) }).then(() => { const contadores = { visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0, descargas_app: 0 }; return fetch(API_URL + 'contadores', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(contadores) }); }).then(() => alert("Configuración guardada")); }
-
+    // --- GUARDAR TODO ---
     function guardarTodo() {
       if (!ADMIN_KEY) return alert("Conectate primero");
       guardarConfig();
-      fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) });
+      fetch(API_URL + 'senales', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(senalesData) });
       fetch(API_URL + 'radios', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(radiosData) });
-      fetch(API_URL + 'senales_oficiales', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(senalesData) });
-      fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) }).then(() => alert("✅ Todo guardado en la nube"));
+      fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) });
+      fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) }).then(() => alert("✅ Todo guardado en la nube"));
     }
   </script>
 </body>
