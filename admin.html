@@ -17,6 +17,8 @@
     .btn-del { background: #dc2626; color: white; }
     .btn-edit { background: #3b82f6; color: white; }
     .item-box { background: #0f0f13; border: 1px solid #1f1f26; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+    .btn-move { background: #334155; color: white; padding: 4px 10px; font-size: 14px; }
+    .btn-move:disabled { opacity: 0.3; cursor: not-allowed; }
   </style>
 </head>
 <body class="p-4 sm:p-8 min-h-screen">
@@ -46,33 +48,30 @@
         <div id="aparienciaStatus" class="text-xs text-slate-400 mt-2"></div>
       </div>
 
-      <!-- GESTOR DE BANNERS (PUBLICIDAD) -->
+      <!-- GESTOR DE BANNERS -->
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">📢 Espacios Publicitarios</h2>
-        <p class="text-xs text-slate-400 mb-4">Pegá el código HTML que te dieron (Google AdSense, iframe, imagen con link, etc.). El banner se mostrará si está activo.</p>
+        <p class="text-xs text-slate-400 mb-4">Pegá el código HTML del anuncio (Google AdSense, iframe, imagen con link, etc.).</p>
         <div id="bannersContainer">
-          <!-- Top -->
           <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
             <h3 class="font-bold text-white text-sm mb-2">Banner Superior (debajo del menú)</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div><label>Activo</label><select id="bannerTopActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
-              <div class="md:col-span-2"><label>Código HTML del anuncio</label><textarea id="bannerTopHTML" rows="3" placeholder="&lt;!-- Pegá aquí el código del banner --&gt;"></textarea></div>
+              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerTopHTML" rows="3" placeholder="&lt;!-- Código del banner --&gt;"></textarea></div>
             </div>
           </div>
-          <!-- In-Feed -->
           <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
-            <h3 class="font-bold text-white text-sm mb-2">Banner Entre Secciones (entre Radios y Artistas)</h3>
+            <h3 class="font-bold text-white text-sm mb-2">Banner Entre Secciones</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div><label>Activo</label><select id="bannerInfeedActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
-              <div class="md:col-span-2"><label>Código HTML del anuncio</label><textarea id="bannerInfeedHTML" rows="3" placeholder="&lt;!-- Pegá aquí el código del banner --&gt;"></textarea></div>
+              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerInfeedHTML" rows="3" placeholder="&lt;!-- Código del banner --&gt;"></textarea></div>
             </div>
           </div>
-          <!-- Footer -->
           <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
-            <h3 class="font-bold text-white text-sm mb-2">Banner Pie de Página (antes del footer legal)</h3>
+            <h3 class="font-bold text-white text-sm mb-2">Banner Pie de Página</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div><label>Activo</label><select id="bannerFooterActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
-              <div class="md:col-span-2"><label>Código HTML del anuncio</label><textarea id="bannerFooterHTML" rows="3" placeholder="&lt;!-- Pegá aquí el código del banner --&gt;"></textarea></div>
+              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerFooterHTML" rows="3" placeholder="&lt;!-- Código del banner --&gt;"></textarea></div>
             </div>
           </div>
         </div>
@@ -80,29 +79,30 @@
         <div id="bannersStatus" class="text-xs text-slate-400 mt-2"></div>
       </div>
 
-      <!-- GESTOR DE SECCIONES -->
+      <!-- GESTOR DE SECCIONES (con orden) -->
       <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Secciones</h2>
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">📋 Gestor de Secciones</h2>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <div><label>ID</label><input id="nuevoSecId" placeholder="humor"></div>
+          <div><label>ID (sin espacios)</label><input id="nuevoSecId" placeholder="humor"></div>
           <div><label>Nombre</label><input id="nuevoSecNombre" placeholder="Humoristas"></div>
-          <div><label>Icono</label><input id="nuevoSecIcono" placeholder="fa-face-laugh"></div>
+          <div><label>Icono (FontAwesome)</label><input id="nuevoSecIcono" placeholder="fa-face-laugh"></div>
           <div><label>Query</label><input id="nuevoSecQuery" placeholder="humoristas en vivo"></div>
         </div>
         <button onclick="agregarNuevaSeccion()" class="btn btn-save mb-4">+ Agregar Sección</button>
         <div id="seccionesList" class="space-y-2"></div>
+        <p class="text-xs text-slate-400 mt-2">Usá los botones ⬆️⬇️ para reordenar. Luego guardá cambios.</p>
       </div>
 
       <!-- GESTOR DE SEÑALES -->
       <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Señales (Live Streams)</h2>
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">📡 Señales (Live Streams)</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div><label>Nombre</label><input id="senalNombre" placeholder="Señal UADAV TV"></div>
-          <div><label>URL del Stream</label><input id="senalUrl" placeholder="https://..."></div>
-          <div><label>Logo / Imagen</label><input id="senalLogo" placeholder="https://..."></div>
-          <div><label>Tipo (auto, youtube, twitch, kick)</label><input id="senalTipo" placeholder="auto"></div>
+          <div><label>URL</label><input id="senalUrl" placeholder="https://..."></div>
+          <div><label>Logo</label><input id="senalLogo" placeholder="https://..."></div>
+          <div><label>Tipo</label><input id="senalTipo" placeholder="auto"></div>
           <div><label>Descripción</label><input id="senalDesc" placeholder="Transmisión oficial"></div>
-          <div><label>¿Es Principal?</label><select id="senalPrincipal"><option value="true">Sí</option><option value="false">No</option></select></div>
+          <div><label>¿Principal?</label><select id="senalPrincipal"><option value="true">Sí</option><option value="false">No</option></select></div>
         </div>
         <button onclick="guardarSenal()" class="btn btn-save mb-4">Agregar/Actualizar Señal</button>
         <div id="senalesList"></div>
@@ -110,7 +110,7 @@
 
       <!-- GESTOR DE RADIOS -->
       <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Radios</h2>
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">🎙️ Radios</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div><label>Nombre</label><input id="radioNombre" placeholder="UADAV Radio"></div>
           <div><label>URL Stream</label><input id="radioStream" placeholder="https://stream.zeno.fm/..."></div>
@@ -119,7 +119,7 @@
           <div><label>Descripción</label><input id="radioDesc" placeholder="Música 24/7"></div>
           <div><label>Tema Actual</label><input id="radioTema" placeholder="Midnight City"></div>
           <div><label>Artista Actual</label><input id="radioArtista" placeholder="M83"></div>
-          <div><label>¿Mostrar como Emisora Oficial (Hero)?</label><select id="radioOficial"><option value="true">Sí (Hero grande)</option><option value="false">No (Mini card)</option></select></div>
+          <div><label>¿Oficial (Hero)?</label><select id="radioOficial"><option value="true">Sí</option><option value="false">No</option></select></div>
         </div>
         <button onclick="guardarRadio()" class="btn btn-save mb-4">Agregar/Actualizar Radio</button>
         <div id="radiosList"></div>
@@ -127,7 +127,7 @@
 
       <!-- GESTOR DE ARTISTAS -->
       <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Artistas</h2>
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">🎤 Artistas</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div><label>Nombre</label><input id="artNombre" placeholder="URO"></div>
           <div><label>Rubro</label><input id="artRubro" placeholder="Música"></div>
@@ -144,9 +144,9 @@
         <div id="artistasList" class="text-sm"></div>
       </div>
 
-      <!-- CONFIGURACIÓN GENERAL Y HERO -->
+      <!-- CONFIGURACIÓN -->
       <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Configuración General y Hero</h2>
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">⚙️ Configuración General</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
            <div><label>País Tendencias</label><input id="configPais" placeholder="Auto"></div>
            <div><label>Mostrar País (IP)</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
@@ -161,7 +161,7 @@
       </div>
 
       <div class="fixed bottom-4 right-4">
-        <button onclick="guardarTodo()" class="btn btn-save text-base shadow-2xl px-6 py-4">GUARDAR CAMBIOS EN LA NUBE</button>
+        <button onclick="guardarTodo()" class="btn btn-save text-base shadow-2xl px-6 py-4">💾 GUARDAR CAMBIOS EN LA NUBE</button>
       </div>
     </div>
   </div>
@@ -190,7 +190,6 @@
         fetch(API_URL + 'banners').then(r => r.json()).catch(() => ({}))
       ]).then(([sec, sen, rad, art, conf, cont, apariencia, banners]) => {
         document.getElementById('panelContent').classList.remove('hidden');
-        
         seccionesData = Array.isArray(sec) ? sec : [];
         renderSecciones();
         senalesData = Array.isArray(sen) ? sen : [];
@@ -203,7 +202,6 @@
         renderApariencia(apariencia);
         renderBanners(banners);
         document.getElementById('configVisitas').value = cont.visitas_totales || 0;
-        
         isDataLoadedSuccessfully = true;
         document.getElementById('aparienciaStatus').innerHTML = '✅ Datos cargados correctamente';
       }).catch(err => {
@@ -232,31 +230,21 @@
         color_fondo: document.getElementById('marcaColorFondo').value,
         color_tarjetas: document.getElementById('marcaColorTarjetas').value
       };
-
       const statusEl = document.getElementById('aparienciaStatus');
       statusEl.innerHTML = '⏳ Guardando...';
-
       fetch(API_URL + 'apariencia', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + ADMIN_KEY
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
         body: JSON.stringify(apariencia)
       })
-      .then(res => {
-        if (!res.ok) throw new Error('Error HTTP: ' + res.status);
-        return res.json();
-      })
-      .then(data => {
-        console.log('✅ Apariencia guardada:', data);
-        statusEl.innerHTML = '✅ Apariencia guardada correctamente. Ahora hacé click en "GUARDAR CAMBIOS EN LA NUBE" para persistir.';
-        alert('Apariencia guardada correctamente. Ahora hacé click en "GUARDAR CAMBIOS EN LA NUBE" para persistir.');
+      .then(res => res.json())
+      .then(() => {
+        statusEl.innerHTML = '✅ Apariencia guardada. Click en GUARDAR TODO.';
+        alert('Apariencia guardada.');
       })
       .catch(err => {
-        console.error('❌ Error al guardar apariencia:', err);
         statusEl.innerHTML = '❌ Error: ' + err.message;
-        alert('Error al guardar. Revisá la consola y asegurate de que el Worker permita CORS.');
+        console.error(err);
       });
     }
 
@@ -273,18 +261,9 @@
 
     function guardarBanners() {
       const banners = {
-        top: {
-          activo: document.getElementById('bannerTopActivo').value === 'true',
-          html: document.getElementById('bannerTopHTML').value
-        },
-        infeed: {
-          activo: document.getElementById('bannerInfeedActivo').value === 'true',
-          html: document.getElementById('bannerInfeedHTML').value
-        },
-        footer: {
-          activo: document.getElementById('bannerFooterActivo').value === 'true',
-          html: document.getElementById('bannerFooterHTML').value
-        }
+        top: { activo: document.getElementById('bannerTopActivo').value === 'true', html: document.getElementById('bannerTopHTML').value },
+        infeed: { activo: document.getElementById('bannerInfeedActivo').value === 'true', html: document.getElementById('bannerInfeedHTML').value },
+        footer: { activo: document.getElementById('bannerFooterActivo').value === 'true', html: document.getElementById('bannerFooterHTML').value }
       };
       const statusEl = document.getElementById('bannersStatus');
       statusEl.innerHTML = '⏳ Guardando...';
@@ -295,7 +274,7 @@
       })
       .then(res => res.json())
       .then(() => {
-        statusEl.innerHTML = '✅ Banners guardados correctamente. Click en GUARDAR TODO.';
+        statusEl.innerHTML = '✅ Banners guardados. Click en GUARDAR TODO.';
         alert('Banners guardados.');
       })
       .catch(err => {
@@ -304,13 +283,21 @@
       });
     }
 
-    // ===== SECCIONES (igual que antes) =====
+    // ===== SECCIONES (CON ORDEN Y ELIMINAR) =====
     function renderSecciones() {
       const list = document.getElementById('seccionesList');
       list.innerHTML = '';
       seccionesData.forEach((sec, index) => {
         list.innerHTML += `
-          <div class="item-box">
+          <div class="item-box" data-index="${index}">
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex items-center gap-2 flex-1">
+                <button onclick="moverSeccion(${index}, -1)" class="btn btn-move" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+                <button onclick="moverSeccion(${index}, 1)" class="btn btn-move" ${index === seccionesData.length - 1 ? 'disabled' : ''}>⬇️</button>
+                <span class="text-xs text-slate-400">#${index + 1}</span>
+              </div>
+              <button onclick="eliminarSeccion(${index})" class="btn btn-del text-xs">Eliminar</button>
+            </div>
             <div class="flex justify-between items-center mb-2">
               <label class="text-[11px] text-slate-400 uppercase font-bold w-full">Nombre Visible</label>
               <input type="text" class="font-bold text-white w-full" value="${sec.nombre}" oninput="seccionesData[${index}].nombre = this.value">
@@ -334,15 +321,39 @@
       });
     }
 
+    function moverSeccion(index, direccion) {
+      const nuevoIndex = index + direccion;
+      if (nuevoIndex < 0 || nuevoIndex >= seccionesData.length) return;
+      const temp = seccionesData[index];
+      seccionesData[index] = seccionesData[nuevoIndex];
+      seccionesData[nuevoIndex] = temp;
+      renderSecciones();
+    }
+
+    function eliminarSeccion(index) {
+      if (!confirm(`¿Eliminar la sección "${seccionesData[index].nombre}"?`)) return;
+      seccionesData.splice(index, 1);
+      renderSecciones();
+    }
+
     function agregarNuevaSeccion() {
-      const id = document.getElementById('nuevoSecId').value.trim();
+      const id = document.getElementById('nuevoSecId').value.trim().replace(/\s+/g, '_');
       const nombre = document.getElementById('nuevoSecNombre').value.trim();
       const icono = document.getElementById('nuevoSecIcono').value.trim() || 'fa-circle';
       const query = document.getElementById('nuevoSecQuery').value.trim();
       if (!id || !nombre) return alert("Poné el ID y el Nombre");
-      if (seccionesData.find(s => s.id === id)) return alert("Ya existe");
-      seccionesData.push({ id, nombre, icono, activa: true, modo: 'auto', query, ids_manuales: [] });
+      if (seccionesData.find(s => s.id === id)) return alert("Ya existe una sección con ese ID");
+      seccionesData.push({ 
+        id, 
+        nombre, 
+        icono, 
+        activa: true, 
+        modo: 'auto', 
+        query: query || nombre, 
+        ids_manuales: [] 
+      });
       renderSecciones();
+      // Limpiar campos
       document.getElementById('nuevoSecId').value = '';
       document.getElementById('nuevoSecNombre').value = '';
       document.getElementById('nuevoSecIcono').value = '';
@@ -387,8 +398,7 @@
     function guardarSenal() {
       const id = editandoSenalId || 'senal-' + Date.now();
       const nuevaSenal = {
-        id: id,
-        nombre: document.getElementById('senalNombre').value,
+        id, nombre: document.getElementById('senalNombre').value,
         url: document.getElementById('senalUrl').value,
         logo: document.getElementById('senalLogo').value,
         tipo: document.getElementById('senalTipo').value || 'auto',
@@ -447,8 +457,7 @@
     function guardarRadio() {
       const id = editandoRadioId || 'radio-' + Date.now();
       const nuevaRadio = {
-        id: id,
-        nombre: document.getElementById('radioNombre').value,
+        id, nombre: document.getElementById('radioNombre').value,
         stream_url: document.getElementById('radioStream').value,
         logo: document.getElementById('radioLogo').value,
         ubicacion: document.getElementById('radioUbicacion').value,
@@ -476,10 +485,7 @@
       artistasData.forEach(a => {
         list.innerHTML += `
           <div class="item-box flex justify-between">
-            <div>
-              <h4 class="font-bold">${a.nombre}</h4>
-              <p class="text-xs text-slate-400">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p>
-            </div>
+            <div><h4 class="font-bold">${a.nombre}</h4><p class="text-xs text-slate-400">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p></div>
             <div class="flex gap-2">
               <button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button>
               <button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button>
@@ -556,7 +562,6 @@
         videos_manuales: videos,
         contacto: document.getElementById('artContacto').value
       };
-
       if (!dataArtista.nombre) return alert("Poné el nombre");
       if (editandoId) {
         const index = artistasData.findIndex(a => a.id === editandoId);
@@ -566,7 +571,7 @@
         artistasData.push(dataArtista);
       }
       renderArtistas();
-      alert("Listo. Ahora click en GUARDAR CAMBIOS.");
+      alert("Listo. Click en GUARDAR CAMBIOS.");
     }
 
     function eliminarArtista(id) {
@@ -614,39 +619,29 @@
         });
       })
       .then(() => alert("Configuración guardada"))
-      .catch(err => alert("Error al guardar configuración: " + err.message));
+      .catch(err => alert("Error: " + err.message));
     }
 
     // ===== GUARDAR TODO =====
     function guardarTodo() {
       if (!ADMIN_KEY) return alert("Conectate primero");
       if (!isDataLoadedSuccessfully) {
-        alert("⚠️ Error: Los datos no se cargaron correctamente. NO se guardarán cambios para evitar borrar tu información.");
+        alert("⚠️ Datos no cargados. No se guardarán cambios.");
         return;
       }
-
       guardarApariencia();
       guardarBanners();
-
-      const promises = [
+      Promise.all([
         fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) }),
         fetch(API_URL + 'senales_oficiales', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(senalesData) }),
         fetch(API_URL + 'radios', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(radiosData) }),
         fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) })
-      ];
-
-      Promise.all(promises)
-        .then(() => {
-          alert('✅ Todo guardado en la nube');
-          document.getElementById('aparienciaStatus').innerHTML = '✅ Todo guardado exitosamente';
-        })
-        .catch(err => {
-          alert('❌ Error al guardar: ' + err.message);
-          console.error(err);
-        });
+      ])
+      .then(() => alert('✅ Todo guardado en la nube'))
+      .catch(err => alert('❌ Error: ' + err.message));
     }
 
-    console.log('Panel de administración UADAVSTREAM listo.');
+    console.log('Panel UADAVSTREAM listo.');
   </script>
 </body>
 </html>
