@@ -154,12 +154,11 @@
 
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [];
 
-    if (localStorage.getItem('uadav_cache_version') !== 'v7') {
+    if (localStorage.getItem('uadav_cache_version') !== 'v8') {
       localStorage.clear();
-      localStorage.setItem('uadav_cache_version', 'v7');
+      localStorage.setItem('uadav_cache_version', 'v8');
     }
 
-    // NUEVA FUNCIÓN UNIFICADA: Usa el Worker como Proxy (CERO CORS)
     async function obtenerVideos(query) {
       try {
         const res = await fetch(`${API_URL}videos/search?q=${encodeURIComponent(query)}`);
@@ -242,13 +241,12 @@
 
     function filtrarCategoriasVisibles() { seccionesActivas.forEach(sec => { const section = document.getElementById(sec.id + 'Section'); if (section) { if (sec.activa) section.classList.remove('hidden'); else section.classList.add('hidden'); } }); }
 
-    // CARGAR SECCIONES DINÁMICAS (AHORA SIN ERROR DE CORS)
     async function cargarSeccionDinamica(containerId, secId) {
       const rail = document.getElementById(containerId), sec = seccionesActivas.find(s => s.id === secId); if (!sec) return;
       let items = [];
       if (sec.modo === 'manual' && sec.ids_manuales && sec.ids_manuales.length > 0) { items = sec.ids_manuales.map(id => ({ id: id, titulo: "Contenido Curado", categoria: sec.nombre, descripcion: "Curaduría manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); }
       else {
-        const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v7`, cachedData = localStorage.getItem(cacheKey);
+        const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v8`, cachedData = localStorage.getItem(cacheKey);
         if (cachedData) { items = JSON.parse(cachedData); } else {
           const data = await obtenerVideos(query);
           if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); }
@@ -258,7 +256,7 @@
     }
 
     async function cargarShortsExclusivos() {
-      const rail = document.getElementById('shortsRail'), cacheKey = 'uadav_cache_shorts_strict_v7', cachedData = localStorage.getItem(cacheKey); let items = [];
+      const rail = document.getElementById('shortsRail'), cacheKey = 'uadav_cache_shorts_strict_v8', cachedData = localStorage.getItem(cacheKey); let items = [];
       if (cachedData) { items = JSON.parse(cachedData); } else {
         const data = await obtenerVideos('#shorts teatro musica viral');
         if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); }
@@ -312,7 +310,6 @@
     function cerrarModalArtista() { document.getElementById('artistModal').classList.add('hidden'); }
     function cerrarModalArtistaBackdrop(e) { if (e.target.id === 'artistModal') cerrarModalArtista(); }
 
-    // BÚSQUEDA GENERAL (AHORA SIN CORS)
     async function ejecutarBusqueda() {
       const q = document.getElementById('searchInput').value.trim();
       if (!q) { resetearVista(); return; }
@@ -363,14 +360,13 @@
     function cerrarModalBackdrop(e) { if (e.target.id === 'videoModal') cerrarModal(); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cerrarModal(); cerrarModalArtista(); } });
 
-    // CARGA INICIAL: REEMPLAZADO cargarTendenciasPorIP por cargarSeccionDinamica para respetar el Panel
     async function cargarHome() {
       seccionesActivas = await obtenerDatos('secciones'); filtrarCategoriasVisibles();
       artistasData = await obtenerDatos('artistas_uadav'); renderArtistasUI();
       radiosData = await obtenerDatos('radios'); renderRadiosUI();
       carteleraData = await obtenerDatos('cartelera_shows'); renderCarteleraUI();
       cargarSeccionDinamica('teatrosRail', 'teatros'); cargarSeccionDinamica('circosRail', 'circos');
-      cargarSeccionDinamica('ipTrendingRail', 'trending'); // Cambiado para que use el Panel
+      cargarSeccionDinamica('ipTrendingRail', 'trending');
       cargarShortsExclusivos(); cargarSeccionDinamica('conciertosRail', 'conciertos');
     }
 
