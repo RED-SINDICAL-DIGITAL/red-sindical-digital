@@ -154,14 +154,15 @@
 
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [];
 
-    if (localStorage.getItem('uadav_cache_version') !== 'v8') {
+    if (localStorage.getItem('uadav_cache_version') !== 'v9') {
       localStorage.clear();
-      localStorage.setItem('uadav_cache_version', 'v8');
+      localStorage.setItem('uadav_cache_version', 'v9');
     }
 
+    // NUEVA FUNCIÓN: Usa la API oficial de YouTube mediante tu Worker (Cuota Cero)
     async function obtenerVideos(query) {
       try {
-        const res = await fetch(`${API_URL}videos/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(query)}`);
         if (res.ok) return await res.json();
       } catch (e) { console.log("Error en búsqueda", e); }
       return [];
@@ -246,7 +247,7 @@
       let items = [];
       if (sec.modo === 'manual' && sec.ids_manuales && sec.ids_manuales.length > 0) { items = sec.ids_manuales.map(id => ({ id: id, titulo: "Contenido Curado", categoria: sec.nombre, descripcion: "Curaduría manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); }
       else {
-        const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v8`, cachedData = localStorage.getItem(cacheKey);
+        const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v9`, cachedData = localStorage.getItem(cacheKey);
         if (cachedData) { items = JSON.parse(cachedData); } else {
           const data = await obtenerVideos(query);
           if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); }
@@ -256,7 +257,7 @@
     }
 
     async function cargarShortsExclusivos() {
-      const rail = document.getElementById('shortsRail'), cacheKey = 'uadav_cache_shorts_strict_v8', cachedData = localStorage.getItem(cacheKey); let items = [];
+      const rail = document.getElementById('shortsRail'), cacheKey = 'uadav_cache_shorts_strict_v9', cachedData = localStorage.getItem(cacheKey); let items = [];
       if (cachedData) { items = JSON.parse(cachedData); } else {
         const data = await obtenerVideos('#shorts teatro musica viral');
         if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); }
