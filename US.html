@@ -84,10 +84,10 @@
     </div>
   </section>
 
-  <!-- CONTENIDO PRINCIPAL (SECCIONES ESTÁTICAS) -->
+  <!-- CONTENIDO PRINCIPAL -->
   <main id="mainContainer" class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-12 sm:space-y-16">
 
-    <!-- SECCIÓN RADIOS (ID: radiosSection / radiosGrid) -->
+    <!-- SECCIÓN RADIOS -->
     <section id="radiosSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-radio text-uadav-accent"></i> Radios Difusoras en Vivo</h2>
@@ -95,7 +95,7 @@
       <div id="radiosGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"></div>
     </section>
 
-    <!-- SECCIÓN ARTISTAS (ID: artistasSection / artistasGrid) -->
+    <!-- SECCIÓN ARTISTAS -->
     <section id="artistasSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire-flame-curved text-uadav-accent"></i> Artistas Más Escuchados</h2>
@@ -103,7 +103,7 @@
       <div id="artistasGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4"></div>
     </section>
 
-    <!-- SECCIÓN TEATROS (ID: teatrosSection / teatrosRail) -->
+    <!-- SECCIÓN TEATROS -->
     <section id="teatrosSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-masks-theater text-uadav-accent"></i> Teatros & Espectáculos</h2>
@@ -111,7 +111,7 @@
       <div id="teatrosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
     </section>
 
-    <!-- SECCIÓN CIRCOS (ID: circosSection / circosRail) -->
+    <!-- SECCIÓN CIRCOS -->
     <section id="circosSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tent text-uadav-accent"></i> Circos & Varieté</h2>
@@ -119,7 +119,7 @@
       <div id="circosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
     </section>
 
-    <!-- SECCIÓN TENDENCIAS (ID: trendingSection / ipTrendingRail) -->
+    <!-- SECCIÓN TENDENCIAS -->
     <section id="trendingSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 id="countryLabel" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire text-red-500"></i> Lo más visto</h2>
@@ -127,7 +127,7 @@
       <div id="ipTrendingRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
     </section>
 
-    <!-- SECCIÓN SHORTS (ID: shortsSection / shortsRail) -->
+    <!-- SECCIÓN SHORTS -->
     <section id="shortsSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts (9:16)</h2>
@@ -135,7 +135,7 @@
       <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[300px]"></div>
     </section>
 
-    <!-- SECCIÓN CARTELERA (ID: carteleraSection / carteleraRail) -->
+    <!-- SECCIÓN CARTELERA -->
     <section id="carteleraSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-ticket text-uadav-accent"></i> Cartelera de Eventos</h2>
@@ -143,7 +143,7 @@
       <div id="carteleraRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
     </section>
 
-    <!-- SECCIÓN CONCIERTOS (ID: conciertosSection / conciertosRail) -->
+    <!-- SECCIÓN CONCIERTOS -->
     <section id="conciertosSection" class="space-y-4">
       <div class="flex items-center justify-between mb-4 sm:mb-5">
         <h2 class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos</h2>
@@ -238,31 +238,17 @@
     
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [];
     let queue = [], currentIndex = -1;
-    let currentSectionItems = []; // <--- PARA QUE LAS FLECHAS FUNCIONEN EN TODA LA SECCIÓN
+    let currentSectionItems = [];
     let lastContext = 'home';
     let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR" };
 
-    if (localStorage.getItem('uadav_cache_version') !== 'v19') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v19'); }
+    if (localStorage.getItem('uadav_cache_version') !== 'v20') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v20'); }
 
     // === NAVBAR DINÁMICO ===
     function renderNavbar() {
-      const nav = document.getElementById('navbar');
-      nav.innerHTML = '';
-      const inicioBtn = document.createElement('button');
-      inicioBtn.innerHTML = 'Inicio';
-      inicioBtn.className = "tv-focusable cat-btn bg-uadav-accent text-slate-950 px-6 py-3 rounded-full whitespace-nowrap transition-all text-sm font-black uppercase tracking-wider shadow-md";
-      inicioBtn.onclick = () => filtrarCategoria('todas', inicioBtn);
-      nav.appendChild(inicioBtn);
-
-      seccionesActivas.forEach(sec => {
-        if (!sec.activa) return;
-        const btn = document.createElement('button');
-        const icon = sec.icono || 'fa-circle';
-        btn.innerHTML = `<i class="fa-solid ${icon} mr-2"></i> ${sec.nombre}`;
-        btn.className = "tv-focusable cat-btn bg-[#0f0f13] border-2 border-uadav-border text-slate-300 hover:text-uadav-accent hover:border-uadav-accent px-6 py-3 rounded-full whitespace-nowrap transition-all text-sm font-black uppercase tracking-wider";
-        btn.onclick = () => filtrarCategoria(sec.id, btn);
-        nav.appendChild(btn);
-      });
+      const nav = document.getElementById('navbar'); nav.innerHTML = '';
+      const inicioBtn = document.createElement('button'); inicioBtn.innerHTML = 'Inicio'; inicioBtn.className = "tv-focusable cat-btn bg-uadav-accent text-slate-950 px-6 py-3 rounded-full whitespace-nowrap transition-all text-sm font-black uppercase tracking-wider shadow-md"; inicioBtn.onclick = () => filtrarCategoria('todas', inicioBtn); nav.appendChild(inicioBtn);
+      seccionesActivas.forEach(sec => { if (!sec.activa) return; const btn = document.createElement('button'); const icon = sec.icono || 'fa-circle'; btn.innerHTML = `<i class="fa-solid ${icon} mr-2"></i> ${sec.nombre}`; btn.className = "tv-focusable cat-btn bg-[#0f0f13] border-2 border-uadav-border text-slate-300 hover:text-uadav-accent hover:border-uadav-accent px-6 py-3 rounded-full whitespace-nowrap transition-all text-sm font-black uppercase tracking-wider"; btn.onclick = () => filtrarCategoria(sec.id, btn); nav.appendChild(btn); });
     }
 
     // === FUNCIONES DE COLA ===
@@ -274,98 +260,52 @@
     function addToQueue() { const newItem = { id: document.getElementById('modalTitulo').innerText, titulo: document.getElementById('modalTitulo').innerText, categoria: document.getElementById('modalCategoria').innerText, descripcion: document.getElementById('modalDescripcion').innerText, url: document.getElementById('iframePlayer').src.split('/embed/')[1] || document.getElementById('html5Player').src, tipo: document.getElementById('html5Player').classList.contains('hidden') ? 'youtube' : 'mp4' }; if (newItem.id) { queue.push(newItem); renderQueue(); document.getElementById('queueBar').classList.remove('hidden'); } }
 
     // === ARRASTRE ===
-    function initCarouselDrag() {
-      document.querySelectorAll('.overflow-x-auto').forEach(container => {
-        let isDown = false, startX, scrollLeft;
-        container.style.cursor = 'grab';
-        container.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - container.offsetLeft; scrollLeft = container.scrollLeft; });
-        container.addEventListener('mouseleave', () => { isDown = false; container.style.cursor = 'grab'; });
-        container.addEventListener('mouseup', () => { isDown = false; container.style.cursor = 'grab'; });
-        container.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - container.offsetLeft; const walk = (x - startX) * 2; container.scrollLeft = scrollLeft - walk; });
-        container.addEventListener('wheel', (e) => { if (e.shiftKey) { e.preventDefault(); container.scrollLeft += e.deltaY; } }, { passive: false });
-        container.setAttribute('tabindex', '0');
-        container.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { e.preventDefault(); container.scrollLeft += 50; } if (e.key === 'ArrowLeft') { e.preventDefault(); container.scrollLeft -= 50; } });
-      });
-    }
+    function initCarouselDrag() { document.querySelectorAll('.overflow-x-auto').forEach(container => { let isDown = false, startX, scrollLeft; container.style.cursor = 'grab'; container.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - container.offsetLeft; scrollLeft = container.scrollLeft; }); container.addEventListener('mouseleave', () => { isDown = false; container.style.cursor = 'grab'; }); container.addEventListener('mouseup', () => { isDown = false; container.style.cursor = 'grab'; }); container.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - container.offsetLeft; const walk = (x - startX) * 2; container.scrollLeft = scrollLeft - walk; }); container.addEventListener('wheel', (e) => { if (e.shiftKey) { e.preventDefault(); container.scrollLeft += e.deltaY; } }, { passive: false }); container.setAttribute('tabindex', '0'); container.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { e.preventDefault(); container.scrollLeft += 50; } if (e.key === 'ArrowLeft') { e.preventDefault(); container.scrollLeft -= 50; } }); }); }
 
     // === CONFIG Y VISITAS ===
     async function cargarConfigYVisitas() {
       try { const res = await fetch(API_URL + 'config'); if (res.ok) configGlobal = await res.json(); } catch(e) {}
-      const selector = document.getElementById('countrySelectorHeader');
-      if (configGlobal.pais_trending && configGlobal.pais_trending !== 'Auto' && configGlobal.pais_trending !== '') selector.value = configGlobal.pais_trending;
-      else selector.value = 'AR';
+      const selector = document.getElementById('countrySelectorHeader'); if (configGlobal.pais_trending && configGlobal.pais_trending !== 'Auto' && configGlobal.pais_trending !== '') selector.value = configGlobal.pais_trending; else selector.value = 'AR';
       if (configGlobal.mostrar_ip) { document.getElementById('countryBadge').classList.remove('hidden'); }
       document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
       try { const resV = await fetch(API_URL + 'visits'); if (resV.ok) { const data = await resV.json(); document.getElementById('visitCounter').innerText = data.visitas_totales; } await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
     }
 
-    // === SECCIONES Y DATOS ===
+    // === DATOS ===
     async function obtenerDatos(seccion) { try { const res = await fetch(API_URL + seccion); if (res.ok) { const data = await res.json(); if (data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0)) return data; } } catch (e) {} return []; }
     async function obtenerVideos(query) { try { const res = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(query)}`); if (res.ok) return await res.json(); } catch (e) {} return []; }
     function obtenerCaratulaUltraRapida(id) { if (!id || id.length !== 11) return FALLBACK_THUMB; return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`; }
 
-    // === RENDERIZADO ===
-    function renderArtistasUI() { const container = document.getElementById('artistasGrid'); if(!container) return; container.innerHTML = ''; artistasData.forEach(a => { const nombre = a.nombre || "Artista", foto = a.foto || FALLBACK_THUMB, rubro = a.rubro || "Artista UADAV"; container.innerHTML += `<div tabindex="0" onclick="abrirPerfilArtista('${a.id}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl p-3 text-center cursor-pointer group transition-all"><div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden mb-3 border-2 border-uadav-border group-hover:border-uadav-accent transition-colors shadow-lg"><img src="${foto}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="${nombre}"></div><h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors truncate">${nombre}</h4><span class="text-[9px] sm:text-[10px] text-slate-400 block mt-0.5">${rubro}</span></div>`; }); }
-
+    // === RENDERIZADO DE RADIOS (CON METADATOS) ===
     function renderRadiosUI() {
       const container = document.getElementById('radiosGrid'); if(!container) return;
       container.innerHTML = '';
       const radiosMostrar = radiosData, principal = radiosMostrar.find(r => r.es_oficial);
-      if (principal) { container.innerHTML += `<div tabindex="0" onclick="sintonizarRadio('${principal.nombre}', '${principal.stream_url}', '${principal.logo}', '${principal.ubicacion}')" class="tv-focusable relative md:col-span-2 bg-gradient-to-r from-slate-900 via-uadav-card to-[#14141d] border-2 border-uadav-accent/60 hover:border-uadav-accent rounded-3xl p-5 sm:p-6 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col justify-between"><div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-star mr-1"></i> Emisora Oficial</div><div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6"><div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 border border-uadav-accent/30"><img src="${principal.logo}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i class="fa-solid fa-radio text-3xl text-uadav-accent"></i></div></div><div class="flex-1"><span class="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2"><span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span> AIR STREAM HQ</span><h3 class="text-xl sm:text-3xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">${principal.nombre}</h3><p class="text-xs sm:text-sm text-slate-300 mt-1">${principal.descripcion}</p><div class="flex items-center gap-4 mt-3 text-xs text-slate-400 font-medium"><span><i class="fa-solid fa-signal text-uadav-accent mr-1"></i> ${principal.bitrate}</span><span><i class="fa-solid fa-location-dot text-uadav-accent mr-1"></i> ${principal.ubicacion}</span></div></div></div><div class="mt-6 pt-4 border-t border-uadav-border/60 flex items-center justify-between"><div class="text-xs text-slate-400"><span class="text-slate-500 block text-[10px] uppercase font-bold">Estado de Señal</span><span class="text-uadav-accent font-semibold flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> Online</span></div><button class="bg-uadav-accent group-hover:bg-white text-slate-950 font-black text-xs px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg transition-all"><i class="fa-solid fa-play"></i> Sintonizar</button></div></div>`; }
-      radiosMostrar.filter(r => !r.es_oficial).forEach(radio => { container.innerHTML += `<div tabindex="0" onclick="sintonizarRadio('${radio.nombre}', '${radio.stream_url}', '${radio.logo}', '${radio.ubicacion}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-3xl p-5 cursor-pointer group shadow-lg transition-all flex flex-col justify-between"><div class="flex items-center gap-4 mb-3"><img src="${radio.logo}" class="w-16 h-16 rounded-xl object-cover border border-uadav-border"><div><span class="text-[9px] text-uadav-accent font-black tracking-widest uppercase">Radio</span><h4 class="text-lg font-black text-white">${radio.nombre}</h4><p class="text-xs text-slate-400">${radio.descripcion}</p></div></div><button class="w-full mt-4 bg-slate-900 border border-uadav-border group-hover:border-uadav-accent text-white font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-2"><i class="fa-solid fa-play text-uadav-accent"></i> Reproducir</button></div>`; });
+      if (principal) {
+        container.innerHTML += `<div tabindex="0" onclick="sintonizarRadio('${principal.nombre}', '${principal.stream_url}', '${principal.logo}', '${principal.ubicacion}')" class="tv-focusable relative md:col-span-2 bg-gradient-to-r from-slate-900 via-uadav-card to-[#14141d] border-2 border-uadav-accent/60 hover:border-uadav-accent rounded-3xl p-5 sm:p-6 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col justify-between"><div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-star mr-1"></i> Emisora Oficial</div><div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6"><div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 border border-uadav-accent/30"><img src="${principal.logo}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black/40 flex items-center justify-center"><i class="fa-solid fa-radio text-3xl text-uadav-accent"></i></div></div><div class="flex-1"><span class="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2"><span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span> AIR STREAM HQ</span><h3 class="text-xl sm:text-3xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">${principal.nombre}</h3><p class="text-xs sm:text-sm text-slate-300 mt-1">${principal.descripcion}</p><div class="flex items-center gap-4 mt-3 text-xs text-slate-400 font-medium"><span><i class="fa-solid fa-signal text-uadav-accent mr-1"></i> ${principal.bitrate}</span><span><i class="fa-solid fa-location-dot text-uadav-accent mr-1"></i> ${principal.ubicacion}</span></div></div></div><div class="mt-3 flex items-center gap-2 bg-[#0a0a0c] border border-uadav-border rounded-xl px-3 py-2"><i class="fa-solid fa-music text-uadav-accent animate-pulse"></i><span class="text-xs font-bold text-white truncate">${principal.tema_actual || 'Cargando tema...'} - ${principal.artista_actual || 'Radio'}</span></div><div class="mt-4 pt-4 border-t border-uadav-border/60 flex items-center justify-between"><div class="text-xs text-slate-400"><span class="text-slate-500 block text-[10px] uppercase font-bold">Estado de Señal</span><span class="text-uadav-accent font-semibold flex items-center gap-1.5"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> Online</span></div><button class="bg-uadav-accent group-hover:bg-white text-slate-950 font-black text-xs px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg transition-all"><i class="fa-solid fa-play"></i> Sintonizar</button></div></div>`;
+      }
+      radiosMostrar.filter(r => !r.es_oficial).forEach(radio => {
+        container.innerHTML += `<div tabindex="0" onclick="sintonizarRadio('${radio.nombre}', '${radio.stream_url}', '${radio.logo}', '${radio.ubicacion}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-3xl p-5 cursor-pointer group shadow-lg transition-all flex flex-col justify-between"><div class="flex items-center gap-4 mb-3"><img src="${radio.logo}" class="w-16 h-16 rounded-xl object-cover border border-uadav-border"><div><span class="text-[9px] text-uadav-accent font-black tracking-widest uppercase">Radio</span><h4 class="text-lg font-black text-white">${radio.nombre}</h4><p class="text-xs text-slate-400">${radio.descripcion}</p></div></div><div class="mt-2 flex items-center gap-2 bg-[#0a0a0c] border border-uadav-border rounded-lg px-2 py-1.5"><i class="fa-solid fa-music text-uadav-accent text-xs animate-pulse"></i><span class="text-[10px] font-bold text-white truncate">${radio.tema_actual || 'Sin tema'} - ${radio.artista_actual || 'Radio'}</span></div><button class="w-full mt-3 bg-slate-900 border border-uadav-border group-hover:border-uadav-accent text-white font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-2"><i class="fa-solid fa-play text-uadav-accent"></i> Reproducir</button></div>`;
+      });
     }
 
+    // === RENDERIZADO ARTISTAS ===
+    function renderArtistasUI() { const container = document.getElementById('artistasGrid'); if(!container) return; container.innerHTML = ''; artistasData.forEach(a => { const nombre = a.nombre || "Artista", foto = a.foto || FALLBACK_THUMB, rubro = a.rubro || "Artista UADAV"; container.innerHTML += `<div tabindex="0" onclick="abrirPerfilArtista('${a.id}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl p-3 text-center cursor-pointer group transition-all"><div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden mb-3 border-2 border-uadav-border group-hover:border-uadav-accent transition-colors shadow-lg"><img src="${foto}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="${nombre}"></div><h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors truncate">${nombre}</h4><span class="text-[9px] sm:text-[10px] text-slate-400 block mt-0.5">${rubro}</span></div>`; }); }
+
+    // === RENDERIZADO CARTELERA ===
     function renderCarteleraUI() { const cartRail = document.getElementById('carteleraRail'); if(!cartRail) return; cartRail.innerHTML = ''; carteleraData.forEach(c => { cartRail.innerHTML += `<div tabindex="0" class="tv-focusable min-w-[200px] sm:min-w-[240px] bg-[#0a0a0c] border border-uadav-border p-4 sm:p-5 rounded-2xl flex-shrink-0 hover:border-uadav-accent transition-colors group"><span class="text-[10px] sm:text-xs font-black text-uadav-accent block mb-1 sm:mb-2 tracking-widest">${c.fecha || c.estado_badge}</span><h4 class="text-base sm:text-lg font-black text-white mb-1">${c.artista || c.titulo}</h4><p class="text-xs sm:text-sm text-slate-400 mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${c.lugar}</p><span class="inline-block bg-slate-900 text-slate-300 text-[9px] sm:text-[10px] px-2 py-0.5 sm:py-1 rounded-full mt-2 border border-slate-800">${c.tipo || c.categoria}</span></div>`; }); }
 
-    // === CARGAR SECCIÓN DINÁMICA (AHORA GUARDA EN COLA PARA FLECHAS) ===
-    async function cargarSeccionDinamica(containerId, secId) {
-      const rail = document.getElementById(containerId);
-      const sec = seccionesActivas.find(s => s.id === secId);
-      if (!rail || !sec) return;
-      
-      let items = [];
-      if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' }));
-      else {
-        const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v19`, cachedData = localStorage.getItem(cacheKey);
-        if (cachedData) items = JSON.parse(cachedData);
-        else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } }
-      }
-      rail.innerHTML = '';
-      if (items && items.length > 0) {
-        currentSectionItems = items; // GUARDAR SECCIÓN ACTUAL
-        items.forEach(item => rail.appendChild(crearCard(item)));
-      }
-    }
+    // === SECCIONES DINÁMICAS ===
+    async function cargarSeccionDinamica(containerId, secId) { const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!rail || !sec) return; let items = []; if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); else { const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v20`, cachedData = localStorage.getItem(cacheKey); if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } } rail.innerHTML = ''; if (items && items.length > 0) { currentSectionItems = items; items.forEach(item => rail.appendChild(crearCard(item))); } }
 
-    // === SHORTS EXCLUSIVOS (CORREGIDO PARA VOLVER AL FORMATO 9:16) ===
-    async function cargarShortsExclusivos() {
-      const rail = document.getElementById('shortsRail');
-      if (!rail) return;
-      const cacheKey = 'uadav_cache_shorts_strict_v19', cachedData = localStorage.getItem(cacheKey);
-      let items = [];
-      if (cachedData) { items = JSON.parse(cachedData); }
-      else {
-        const data = await obtenerVideos('#shorts');
-        if (data && Array.isArray(data)) {
-          items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10);
-          if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items));
-        }
-      }
-      rail.innerHTML = '';
-      if (items && items.length > 0) {
-        currentSectionItems = items;
-        items.forEach(item => rail.appendChild(crearShortCard(item)));
-      } else {
-        rail.innerHTML = '<div class="py-10 text-center text-slate-400 text-xs">No se encontraron shorts.</div>';
-      }
-    }
+    // === SHORTS EXCLUSIVOS (9:16) ===
+    async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'); if (!rail) return; const cacheKey = 'uadav_cache_shorts_strict_v20', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos('#shorts'); if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { currentSectionItems = items; items.forEach(item => rail.appendChild(crearShortCard(item))); } }
 
-    // === BUSCAR ===
+    // === BÚSQUEDA ===
     async function ejecutarBusqueda() { const q = document.getElementById('searchInput').value.trim(); if (!q) { resetearVista(); return; } const mainContainer = document.getElementById('mainContainer'), gridView = document.getElementById('gridViewSection'), gridContainer = document.getElementById('gridContainer'); if (!mainContainer || !gridView || !gridContainer) return; const cacheKey = `uadav_search_${q.toLowerCase().replace(/\s+/g, '_')}`, cached = localStorage.getItem(cacheKey); mainContainer.classList.add('hidden'); gridView.classList.remove('hidden'); document.getElementById('gridTitle').innerHTML = `Buscando <span class="text-uadav-accent">"${q}"</span>...`; gridContainer.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-bold"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-uadav-accent mb-4 block"></i>Buscando...</div>'; let resultados = []; if (cached) { resultados = JSON.parse(cached); } else { const data = await obtenerVideos(q); if (data && Array.isArray(data)) { resultados = data.slice(0, 15); if (resultados.length > 0) localStorage.setItem(cacheKey, JSON.stringify(resultados)); } } document.getElementById('gridTitle').innerHTML = `Resultados para <span class="text-uadav-accent">"${q}"</span>`; gridContainer.innerHTML = ''; if (resultados && resultados.length > 0) { resultados.forEach(item => gridContainer.appendChild(item.tipo === 'short' ? crearShortCard(item) : crearCard(item))); } else { gridContainer.innerHTML = '<div class="col-span-full py-12 text-center text-slate-400">No se encontraron resultados.</div>'; } }
 
     // === CARDS ===
     function crearCard(item) { const card = document.createElement('div'); card.className = "tv-focusable min-w-[220px] sm:min-w-[260px] max-w-[280px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0 flex flex-col justify-between"; card.setAttribute('tabindex', '0'); const videoId = item.id || '-479TZi-EAs', thumb = item.thumbnail || obtenerCaratulaUltraRapida(videoId), safeTitulo = (item.titulo || 'Contenido').replace(/'/g, "\\'"), safeDesc = (item.descripcion || 'UADAV').replace(/'/g, "\\'"); card.innerHTML = `<div onclick="reproducirVideo('${videoId}', '${safeTitulo}', '${item.categoria}', '${safeDesc}')"><div class="relative aspect-video bg-black overflow-hidden"><img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-110 group-hover:opacity-60 transition-all duration-300"><div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><div class="w-10 h-10 sm:w-12 sm:h-12 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-bold shadow-[0_0_20px_rgba(0,229,255,0.5)] scale-75 group-hover:scale-100 transition-transform"><i class="fa-solid fa-play ml-0.5 text-xs sm:text-base"></i></div></div><span class="absolute bottom-2 right-2 bg-black/80 text-white text-[9px] sm:text-[10px] px-1.5 py-0.5 sm:px-2 sm:py-1 rounded font-bold">${item.duracion || 'HD'}</span></div><div class="p-3 sm:p-4"><span class="text-[8px] sm:text-[9px] text-uadav-accent font-black tracking-widest uppercase block mb-1 sm:mb-2">${item.categoria}</span><h3 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors line-clamp-2">${item.titulo}</h3><p class="text-[11px] sm:text-xs text-slate-500 mt-1 line-clamp-1">${item.descripcion}</p></div></div>`; return card; }
-
     function crearShortCard(item) { const card = document.createElement('div'); card.className = "tv-focusable min-w-[140px] sm:min-w-[170px] max-w-[190px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0"; card.setAttribute('tabindex', '0'); const videoId = item.id || '-479TZi-EAs', thumb = item.thumbnail || obtenerCaratulaUltraRapida(videoId), safeTitulo = (item.titulo || 'Short').replace(/'/g, "\\'"), safeDesc = (item.descripcion || 'Short').replace(/'/g, "\\'"); card.innerHTML = `<div onclick="reproducirVideo('${videoId}', '${safeTitulo}', '${item.categoria}', '${safeDesc}')" class="relative aspect-[9/16] bg-black overflow-hidden"><img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"><div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div><div class="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-600 text-white text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full flex items-center gap-1 shadow-lg tracking-wider"><i class="fa-solid fa-bolt"></i> SHORT</div><span class="absolute top-2 right-2 sm:top-3 sm:right-3 bg-black/70 text-white text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-full font-bold">${item.duracion}</span><div class="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3"><h4 class="font-bold text-[11px] sm:text-xs text-white line-clamp-2 leading-snug drop-shadow-md">${item.titulo}</h4></div></div>`; return card; }
 
     // === FILTROS ===
@@ -373,37 +313,16 @@
 
     function resetearVista() { document.getElementById('mainContainer').classList.remove('hidden'); document.getElementById('gridViewSection').classList.add('hidden'); document.getElementById('searchInput').value = ''; }
 
-    // === REPRODUCCIÓN (SIN API DE YOUTUBE PARA EVITAR ERRORES POSTMESSAGE) ===
-    function reproducirVideo(id, titulo, categoria, descripcion) {
-      // Buscar en la cola actual. Si no está, cargar TODA la sección actual
-      let itemIndex = queue.findIndex(item => item.url === id || item.id === id);
-      if (itemIndex === -1 && currentSectionItems.length > 0) {
-        queue = currentSectionItems.map(item => ({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion }));
-        itemIndex = queue.findIndex(item => item.url === id || item.id === id);
-      }
-      if (itemIndex === -1) {
-        queue.push({ url: id, tipo: 'youtube', titulo: titulo, categoria: categoria, descripcion: descripcion });
-        itemIndex = queue.length - 1;
-      }
-      currentIndex = itemIndex;
-      renderQueue();
-
-      if (isRadioPlaying) togglePlayRadio();
-      const iframe = document.getElementById('iframePlayer'), html5 = document.getElementById('html5Player');
-      html5.classList.add('hidden'); iframe.classList.remove('hidden');
-      iframe.src = construirEmbedUrl(id); // REPRODUCCIÓN SIMPLE Y ESTABLE
-      document.getElementById('modalTitulo').innerText = titulo; document.getElementById('modalCategoria').innerText = categoria; document.getElementById('modalDescripcion').innerText = descripcion; document.getElementById('videoModal').classList.remove('hidden');
-    }
-
+    // === REPRODUCCIÓN (CORREGIDO: PAUSA RADIO) ===
     function reproducirVideoPersonalizado(url, tipo, titulo, desc) {
-      let itemIndex = queue.findIndex(item => item.url === url || item.id === url);
-      if (itemIndex === -1) {
-        queue.push({ url: url, tipo: tipo, titulo: titulo, categoria: 'Personalizado', descripcion: desc });
-        itemIndex = queue.length - 1;
-      }
-      currentIndex = itemIndex;
-      renderQueue();
+      // ¡IMPORTANTE! Pausar la radio antes de reproducir
+      if (isRadioPlaying) togglePlayRadio();
 
+      let itemIndex = queue.findIndex(item => item.url === url || item.id === url);
+      if (itemIndex === -1) { queue.push({ url: url, tipo: tipo, titulo: titulo, categoria: 'Personalizado', descripcion: desc }); itemIndex = queue.length - 1; }
+      currentIndex = itemIndex; renderQueue();
+
+      cerrarModalArtista(); lastContext = 'home';
       if (tipo === 'youtube' || (tipo === 'mp4' && /^[a-zA-Z0-9_-]{11}$/.test(url)) || url.includes('youtube.com') || url.includes('youtu.be')) {
         if (url.includes('youtube.com') || url.includes('youtu.be')) { let id = url.split('v=')[1] || url.split('/').pop(); if (id.includes('&')) id = id.split('&')[0]; url = id; }
         reproducirVideo(url, titulo, "Personalizado", desc);
@@ -414,11 +333,24 @@
       }
     }
 
-    function construirEmbedUrl(id) { return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1`; }
+    function reproducirVideo(id, titulo, categoria, descripcion) {
+      // ¡IMPORTANTE! Pausar la radio antes de reproducir
+      if (isRadioPlaying) togglePlayRadio();
 
+      let itemIndex = queue.findIndex(item => item.url === id || item.id === id);
+      if (itemIndex === -1 && currentSectionItems.length > 0) { queue = currentSectionItems.map(item => ({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); itemIndex = queue.findIndex(item => item.url === id || item.id === id); }
+      if (itemIndex === -1) { queue.push({ url: id, tipo: 'youtube', titulo: titulo, categoria: categoria, descripcion: descripcion }); itemIndex = queue.length - 1; }
+      currentIndex = itemIndex; renderQueue();
+
+      const iframe = document.getElementById('iframePlayer'), html5 = document.getElementById('html5Player');
+      html5.classList.add('hidden'); iframe.classList.remove('hidden'); iframe.src = construirEmbedUrl(id);
+      document.getElementById('modalTitulo').innerText = titulo; document.getElementById('modalCategoria').innerText = categoria; document.getElementById('modalDescripcion').innerText = descripcion; document.getElementById('videoModal').classList.remove('hidden');
+    }
+
+    function construirEmbedUrl(id) { return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1`; }
     function cerrarModal() { const iframe = document.getElementById('iframePlayer'), html5 = document.getElementById('html5Player'); iframe.src = 'about:blank'; html5.src = ''; html5.pause(); document.getElementById('videoModal').classList.add('hidden'); if (lastContext === 'artist') { document.getElementById('artistModal').classList.remove('hidden'); lastContext = 'home'; } }
 
-    // AUTO AVANCE PARA MP4
+    // AUTO AVANCE MP4
     document.getElementById('html5Player').addEventListener('ended', function() { nextVideo(); });
 
     // === ARTISTA ===
@@ -427,7 +359,7 @@
     function normalizarVideo(v) { let url = v.url || '', tipo = v.tipo || 'mp4'; if (url.startsWith('UC') && url.length > 20) return null; if (tipo === 'mp4') { if (/^[a-zA-Z0-9_-]{11}$/.test(url)) tipo = 'youtube'; else if (url.includes('youtube.com') || url.includes('youtu.be')) { let id = url.split('v=')[1] || url.split('/').pop(); if (id.includes('&')) id = id.split('&')[0]; url = id; tipo = 'youtube'; } } return { url: url, tipo: tipo, titulo: v.titulo || '' }; }
 
     // === TENDENCIAS ===
-    async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v19`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { currentSectionItems = items; items.forEach(item => rail.appendChild(crearCard(item))); } else rail.innerHTML = '<div class="py-10 text-center text-slate-400 text-xs">No se encontraron resultados.</div>'; }
+    async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v20`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { currentSectionItems = items; items.forEach(item => rail.appendChild(crearCard(item))); } else rail.innerHTML = '<div class="py-10 text-center text-slate-400 text-xs">No se encontraron resultados.</div>'; }
 
     // === INICIALIZACIÓN ===
     let isRadioPlaying = false; const audioStream = document.getElementById('audioStream');
@@ -447,10 +379,7 @@
       radiosData = await obtenerDatos('radios'); renderRadiosUI();
       carteleraData = await obtenerDatos('cartelera_shows'); renderCarteleraUI();
       cargarTendenciasPorPais(document.getElementById('countrySelectorHeader').value);
-      
-      // CORRECCIÓN: Se cargan los Shorts con su función exclusiva (9:16)
       cargarShortsExclusivos();
-      
       cargarSeccionDinamica('teatrosRail', 'teatros');
       cargarSeccionDinamica('circosRail', 'circos');
       cargarSeccionDinamica('conciertosRail', 'conciertos');
