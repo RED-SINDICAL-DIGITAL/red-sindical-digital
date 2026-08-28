@@ -31,20 +31,38 @@
 
     <div id="panelContent" class="hidden space-y-8">
       
-      <!-- Gestor de Secciones (Nuevo) -->
+      <!-- Gestor de Secciones -->
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Secciones</h2>
-        
-        <!-- Formulario para crear nueva sección -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <div><label>ID (sin espacios, ej: humor)</label><input id="nuevoSecId" placeholder="humor"></div>
-          <div><label>Nombre Visible</label><input id="nuevoSecNombre" placeholder="Humoristas"></div>
-          <div><label>Icono (FontAwesome, ej: fa-face-laugh)</label><input id="nuevoSecIcono" placeholder="fa-face-laugh"></div>
-          <div><label>Query (si es Auto)</label><input id="nuevoSecQuery" placeholder="humoristas en vivo"></div>
+          <div><label>ID</label><input id="nuevoSecId" placeholder="humor"></div>
+          <div><label>Nombre</label><input id="nuevoSecNombre" placeholder="Humoristas"></div>
+          <div><label>Icono</label><input id="nuevoSecIcono" placeholder="fa-face-laugh"></div>
+          <div><label>Query</label><input id="nuevoSecQuery" placeholder="humoristas en vivo"></div>
         </div>
-        <button onclick="agregarNuevaSeccion()" class="btn btn-save mb-4">+ Agregar Nueva Sección</button>
-        
+        <button onclick="agregarNuevaSeccion()" class="btn btn-save mb-4">+ Agregar Sección</button>
         <div id="seccionesList" class="space-y-2"></div>
+      </div>
+
+      <!-- Gestor de Radios (NUEVO CON METADATOS) -->
+      <div class="border border-uadav-border rounded-xl p-4">
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Radios</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div><label>Nombre</label><input id="radioNombre" placeholder="Beat Digital Radio"></div>
+          <div><label>URL del Stream</label><input id="radioStream" placeholder="https://stream.zeno.fm/..."></div>
+          <div><label>Logo / Carátula</label><input id="radioLogo" placeholder="https://..."></div>
+          <div><label>Ubicación</label><input id="radioUbicacion" placeholder="Rosario, AR"></div>
+          <div><label>Bitrate</label><input id="radioBitrate" placeholder="320 kbps AAC"></div>
+          <div><label>Descripción</label><input id="radioDesc" placeholder="Música electrónica 24/7"></div>
+          
+          <!-- NUEVOS CAMPOS DE METADATOS -->
+          <div><label>Tema Actual</label><input id="radioTema" placeholder="Ultra Remix"></div>
+          <div><label>Artista Actual</label><input id="radioArtista" placeholder="Duki"></div>
+          
+          <div><label>¿Emisora Oficial?</label><select id="radioOficial"><option value="true">Sí</option><option value="false">No</option></select></div>
+        </div>
+        <button onclick="guardarRadio()" class="btn btn-save mb-4">Agregar/Actualizar Radio</button>
+        <div id="radiosList"></div>
       </div>
 
       <!-- Gestor de Artistas -->
@@ -70,15 +88,14 @@
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Configuración General</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <div><label>País para Tendencias (Auto o código, ej: AR, MX)</label><input id="configPais" placeholder="Auto"></div>
-           <div><label>Mostrar País (IP) en Header</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
-           <div><label>Contador Base (editable)</label><input type="number" id="configVisitas" placeholder="0"></div>
-           <div class="md:col-span-2"><label>Texto Legal (Footer)</label><textarea id="configLegal" rows="3">UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.</textarea></div>
+           <div><label>País Tendencias (Auto o AR, MX)</label><input id="configPais" placeholder="Auto"></div>
+           <div><label>Mostrar País (IP)</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
+           <div><label>Contador Base</label><input type="number" id="configVisitas" placeholder="0"></div>
+           <div class="md:col-span-2"><label>Texto Legal</label><textarea id="configLegal" rows="3">UADAV STREAM es un desarrollo de Beat Digital Medios.</textarea></div>
         </div>
         <button onclick="guardarConfig()" class="btn btn-save mt-4">Guardar Configuración</button>
       </div>
 
-      <!-- Guardar Todo -->
       <div class="fixed bottom-4 right-4">
         <button onclick="guardarTodo()" class="btn btn-save text-base shadow-2xl px-6 py-4">GUARDAR CAMBIOS EN LA NUBE</button>
       </div>
@@ -87,7 +104,7 @@
 
   <script>
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
-    let ADMIN_KEY = '', seccionesData = [], artistasData = [], editandoId = null;
+    let ADMIN_KEY = '', seccionesData = [], artistasData = [], radiosData = [], editandoRadioId = null, editandoId = null;
 
     function conectar() {
       ADMIN_KEY = document.getElementById('adminKeyInput').value;
@@ -95,68 +112,81 @@
       fetch(API_URL + 'secciones').then(r => r.json()).then(data => {
         document.getElementById('panelContent').classList.remove('hidden');
         seccionesData = data; renderSecciones();
+        fetch(API_URL + 'radios').then(r => r.json()).then(renderRadios);
         fetch(API_URL + 'artistas_uadav').then(r => r.json()).then(renderArtistas);
         fetch(API_URL + 'config').then(r => r.json()).then(renderConfig);
         fetch(API_URL + 'contadores').then(r => r.json()).then(c => { document.getElementById('configVisitas').value = c.visitas_totales || 0; });
       }).catch(err => alert("Error: " + err));
     }
 
-    function renderConfig(data) {
-      document.getElementById('configPais').value = data.pais_trending || 'Auto';
-      document.getElementById('configShowCountry').value = data.mostrar_ip ? 'true' : 'false';
-      document.getElementById('configLegal').value = data.texto_legal || '';
+    // === RADIOS ===
+    function renderRadios(data) {
+      radiosData = data || [];
+      const list = document.getElementById('radiosList'); list.innerHTML = '';
+      radiosData.forEach(r => {
+        list.innerHTML += `<div class="item-box flex justify-between items-center"><div><h4 class="font-bold">${r.nombre}</h4><p class="text-xs text-slate-400">${r.descripcion || ''} - ${r.tema_actual || 'Sin tema'}</p></div><div class="flex gap-2"><button onclick="editarRadio('${r.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarRadio('${r.id}')" class="btn btn-del">Eliminar</button></div></div>`;
+      });
     }
 
-    function guardarConfig() {
-      const config = {
-        pais_trending: document.getElementById('configPais').value.trim() || 'Auto',
-        mostrar_ip: document.getElementById('configShowCountry').value === 'true',
-        texto_legal: document.getElementById('configLegal').value
+    function editarRadio(id) {
+      const r = radiosData.find(x => x.id === id); if (!r) return;
+      editandoRadioId = id;
+      document.getElementById('radioNombre').value = r.nombre;
+      document.getElementById('radioStream').value = r.stream_url;
+      document.getElementById('radioLogo').value = r.logo;
+      document.getElementById('radioUbicacion').value = r.ubicacion || '';
+      document.getElementById('radioBitrate').value = r.bitrate || '';
+      document.getElementById('radioDesc').value = r.descripcion || '';
+      document.getElementById('radioTema').value = r.tema_actual || '';
+      document.getElementById('radioArtista').value = r.artista_actual || '';
+      document.getElementById('radioOficial').value = r.es_oficial ? 'true' : 'false';
+    }
+
+    function eliminarRadio(id) {
+      if (!confirm("¿Eliminar radio?")) return;
+      radiosData = radiosData.filter(r => r.id !== id);
+      renderRadios(radiosData);
+    }
+
+    function guardarRadio() {
+      const id = editandoRadioId || 'radio-' + Date.now();
+      const nuevaRadio = {
+        id: id, nombre: document.getElementById('radioNombre').value,
+        stream_url: document.getElementById('radioStream').value,
+        logo: document.getElementById('radioLogo').value,
+        ubicacion: document.getElementById('radioUbicacion').value,
+        bitrate: document.getElementById('radioBitrate').value,
+        descripcion: document.getElementById('radioDesc').value,
+        tema_actual: document.getElementById('radioTema').value,
+        artista_actual: document.getElementById('radioArtista').value,
+        es_oficial: document.getElementById('radioOficial').value === 'true'
       };
-      fetch(API_URL + 'config', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(config) })
-      .then(() => {
-        const contadores = { visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0, descargas_app: 0 };
-        return fetch(API_URL + 'contadores', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(contadores) });
-      }).then(() => alert("Configuración guardada"));
+      const index = radiosData.findIndex(r => r.id === id);
+      if (index !== -1) radiosData[index] = nuevaRadio;
+      else radiosData.push(nuevaRadio);
+      editandoRadioId = null;
+      renderRadios(radiosData);
+      alert("Radio guardada. Click en GUARDAR CAMBIOS.");
     }
 
-    // NUEVA FUNCIÓN PARA AGREGAR SECCIÓN DINÁMICA
+    // === SECCIONES ===
     function agregarNuevaSeccion() {
       const id = document.getElementById('nuevoSecId').value.trim();
       const nombre = document.getElementById('nuevoSecNombre').value.trim();
       const icono = document.getElementById('nuevoSecIcono').value.trim() || 'fa-circle';
       const query = document.getElementById('nuevoSecQuery').value.trim();
-
       if (!id || !nombre) return alert("Poné el ID y el Nombre");
-
-      // Chequear que no exista
-      if (seccionesData.find(s => s.id === id)) return alert("Ya existe una sección con ese ID");
-
-      seccionesData.push({
-        id: id,
-        nombre: nombre,
-        icono: icono,
-        activa: true,
-        modo: 'auto',
-        query: query,
-        ids_manuales: []
-      });
-
+      if (seccionesData.find(s => s.id === id)) return alert("Ya existe");
+      seccionesData.push({ id, nombre, icono, activa: true, modo: 'auto', query, ids_manuales: [] });
       renderSecciones();
-      document.getElementById('nuevoSecId').value = '';
-      document.getElementById('nuevoSecNombre').value = '';
-      document.getElementById('nuevoSecIcono').value = '';
-      document.getElementById('nuevoSecQuery').value = '';
+      document.getElementById('nuevoSecId').value = ''; document.getElementById('nuevoSecNombre').value = ''; document.getElementById('nuevoSecIcono').value = ''; document.getElementById('nuevoSecQuery').value = '';
     }
 
     function renderSecciones() {
       const list = document.getElementById('seccionesList'); list.innerHTML = '';
       seccionesData.forEach((sec, index) => {
         list.innerHTML += `<div class="item-box">
-          <div class="flex justify-between items-center mb-2">
-            <span class="font-bold text-sm text-white"><i class="fa-solid ${sec.icono || 'fa-circle'} text-uadav-accent mr-2"></i>${sec.nombre}</span>
-            <label class="flex items-center gap-2 text-xs text-slate-400"><input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa</label>
-          </div>
+          <div class="flex justify-between items-center mb-2"><span class="font-bold"><i class="fa-solid ${sec.icono || 'fa-circle'} text-uadav-accent mr-2"></i>${sec.nombre}</span><label><input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa</label></div>
           <div class="grid grid-cols-3 gap-2">
             <div><label>Modo</label><select onchange="seccionesData[${index}].modo = this.value"><option value="auto" ${sec.modo === 'auto' ? 'selected' : ''}>Auto</option><option value="manual" ${sec.modo === 'manual' ? 'selected' : ''}>Manual</option></select></div>
             <div><label>Query</label><input value="${sec.query || ''}" oninput="seccionesData[${index}].query = this.value"></div>
@@ -166,75 +196,22 @@
       });
     }
 
-    function editarArtista(id) {
-      const a = artistasData.find(x => x.id === id); if (!a) return;
-      editandoId = id;
-      document.getElementById('artNombre').value = a.nombre;
-      document.getElementById('artRubro').value = a.rubro || '';
-      document.getElementById('artFoto').value = a.foto || '';
-      document.getElementById('artPortada').value = a.portada || '';
-      document.getElementById('artBio').value = a.bio || '';
-      document.getElementById('artTieneYT').value = a.tiene_youtube ? 'true' : 'false';
-      document.getElementById('artLink').value = a.youtube_channel_id || '';
-      document.getElementById('artContacto').value = a.contacto || '';
-      document.getElementById('artVideos').value = (a.videos_manuales || []).map(v => v.url).join('\n');
-      document.getElementById('btnGuardarArtista').innerText = "Actualizar Artista"; document.getElementById('btnGuardarArtista').classList.add('bg-blue-500');
-      document.getElementById('btnCancelarEdicion').classList.remove('hidden');
-      window.scrollTo({ top: 300, behavior: 'smooth' });
-    }
-
-    function cancelarEdicion() {
-      editandoId = null;
-      ['artNombre','artRubro','artFoto','artPortada','artBio','artLink','artContacto','artVideos'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('artTieneYT').value = 'true';
-      document.getElementById('btnGuardarArtista').innerText = "Agregar Artista"; document.getElementById('btnGuardarArtista').classList.remove('bg-blue-500');
-      document.getElementById('btnCancelarEdicion').classList.add('hidden');
-    }
-
-    function guardarArtista() {
-      const videosRaw = document.getElementById('artVideos').value.trim();
-      const videos = videosRaw ? videosRaw.split('\n').map(line => {
-        let trimmed = line.trim(); if (!trimmed) return null;
-        if (trimmed.startsWith('UC') && trimmed.length > 20) return null;
-        if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return { tipo: 'youtube', url: trimmed };
-        if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) { let id = trimmed.split('v=')[1] || trimmed.split('/').pop(); if(id.includes('&')) id = id.split('&')[0]; if (id && id.length === 11) return { tipo: 'youtube', url: id }; }
-        return { tipo: 'mp4', url: trimmed };
-      }).filter(v => v) : [];
-
-      let channelIdInput = document.getElementById('artLink').value.trim();
-      if (channelIdInput.includes('channel_id=')) channelIdInput = channelIdInput.split('channel_id=')[1].split('&')[0];
-      else if (channelIdInput.includes('/channel/')) channelIdInput = channelIdInput.split('/channel/')[1].split('/')[0];
-      else if (channelIdInput.includes('/@')) channelIdInput = channelIdInput.split('/@')[1].split('/')[0];
-      else if (channelIdInput.includes('youtube.com')) channelIdInput = channelIdInput.split('/').pop().split('?')[0];
-      if (!channelIdInput.startsWith('UC')) channelIdInput = '';
-
-      const dataArtista = {
-        id: editandoId || 'art-' + Date.now(), nombre: document.getElementById('artNombre').value,
-        rubro: document.getElementById('artRubro').value, foto: document.getElementById('artFoto').value,
-        portada: document.getElementById('artPortada').value, bio: document.getElementById('artBio').value,
-        tiene_youtube: document.getElementById('artTieneYT').value === 'true',
-        youtube_channel_id: channelIdInput, videos_manuales: videos,
-        contacto: document.getElementById('artContacto').value
-      };
-      if (!dataArtista.nombre) return alert("Poné el nombre");
-      if (editandoId) { const index = artistasData.findIndex(a => a.id === editandoId); if (index !== -1) artistasData[index] = dataArtista; cancelarEdicion(); }
-      else artistasData.push(dataArtista);
-      
-      renderArtistas(artistasData); alert("Listo. Ahora click en GUARDAR CAMBIOS.");
-    }
-
-    function renderArtistas(data) {
-      artistasData = data || [];
-      const list = document.getElementById('artistasList'); list.innerHTML = '';
-      artistasData.forEach(a => list.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold">${a.nombre}</h4><p class="text-xs text-slate-400">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'} (${(a.videos_manuales||[]).length} videos)</p></div><div class="flex gap-2"><button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button></div></div>`);
-    }
-
+    // === ARTISTAS ===
+    function editarArtista(id) { const a = artistasData.find(x => x.id === id); if (!a) return; editandoId = id; document.getElementById('artNombre').value = a.nombre; document.getElementById('artRubro').value = a.rubro || ''; document.getElementById('artFoto').value = a.foto || ''; document.getElementById('artPortada').value = a.portada || ''; document.getElementById('artBio').value = a.bio || ''; document.getElementById('artTieneYT').value = a.tiene_youtube ? 'true' : 'false'; document.getElementById('artLink').value = a.youtube_channel_id || ''; document.getElementById('artContacto').value = a.contacto || ''; document.getElementById('artVideos').value = (a.videos_manuales || []).map(v => v.url).join('\n'); document.getElementById('btnGuardarArtista').innerText = "Actualizar"; document.getElementById('btnGuardarArtista').classList.add('bg-blue-500'); document.getElementById('btnCancelarEdicion').classList.remove('hidden'); }
+    function cancelarEdicion() { editandoId = null; document.getElementById('btnGuardarArtista').innerText = "Agregar Artista"; document.getElementById('btnGuardarArtista').classList.remove('bg-blue-500'); document.getElementById('btnCancelarEdicion').classList.add('hidden'); document.getElementById('artNombre').value = ''; document.getElementById('artRubro').value = ''; document.getElementById('artFoto').value = ''; document.getElementById('artPortada').value = ''; document.getElementById('artBio').value = ''; document.getElementById('artLink').value = ''; document.getElementById('artContacto').value = ''; document.getElementById('artVideos').value = ''; document.getElementById('artTieneYT').value = 'true'; }
+    function guardarArtista() { const videosRaw = document.getElementById('artVideos').value.trim(); const videos = videosRaw ? videosRaw.split('\n').map(line => { let trimmed = line.trim(); if (!trimmed) return null; if (trimmed.startsWith('UC') && trimmed.length > 20) return null; if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return { tipo: 'youtube', url: trimmed }; if (trimmed.includes('youtube.com')) { let id = trimmed.split('v=')[1] || trimmed.split('/').pop(); if(id.includes('&')) id = id.split('&')[0]; if (id && id.length === 11) return { tipo: 'youtube', url: id }; } return { tipo: 'mp4', url: trimmed }; }).filter(v => v) : []; let channelIdInput = document.getElementById('artLink').value.trim(); if (channelIdInput.includes('channel_id=')) channelIdInput = channelIdInput.split('channel_id=')[1].split('&')[0]; else if (channelIdInput.includes('/channel/')) channelIdInput = channelIdInput.split('/channel/')[1].split('/')[0]; else if (channelIdInput.includes('/@')) channelIdInput = channelIdInput.split('/@')[1].split('/')[0]; if (!channelIdInput.startsWith('UC')) channelIdInput = ''; const dataArtista = { id: editandoId || 'art-' + Date.now(), nombre: document.getElementById('artNombre').value, rubro: document.getElementById('artRubro').value, foto: document.getElementById('artFoto').value, portada: document.getElementById('artPortada').value, bio: document.getElementById('artBio').value, tiene_youtube: document.getElementById('artTieneYT').value === 'true', youtube_channel_id: channelIdInput, videos_manuales: videos, contacto: document.getElementById('artContacto').value }; if (!dataArtista.nombre) return alert("Poné el nombre"); if (editandoId) { const index = artistasData.findIndex(a => a.id === editandoId); if (index !== -1) artistasData[index] = dataArtista; cancelarEdicion(); } else artistasData.push(dataArtista); renderArtistas(artistasData); alert("Listo. Ahora click en GUARDAR CAMBIOS."); }
+    function renderArtistas(data) { artistasData = data || []; const list = document.getElementById('artistasList'); list.innerHTML = ''; artistasData.forEach(a => list.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold">${a.nombre}</h4><p class="text-xs">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p></div><div class="flex gap-2"><button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button></div></div>`); }
     function eliminarArtista(id) { if (!confirm("¿Eliminar?")) return; if (editandoId === id) cancelarEdicion(); artistasData = artistasData.filter(a => a.id !== id); renderArtistas(artistasData); }
+
+    // === CONFIG ===
+    function renderConfig(data) { document.getElementById('configPais').value = data.pais_trending || 'Auto'; document.getElementById('configShowCountry').value = data.mostrar_ip ? 'true' : 'false'; document.getElementById('configLegal').value = data.texto_legal || ''; }
+    function guardarConfig() { const config = { pais_trending: document.getElementById('configPais').value.trim() || 'Auto', mostrar_ip: document.getElementById('configShowCountry').value === 'true', texto_legal: document.getElementById('configLegal').value }; fetch(API_URL + 'config', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(config) }).then(() => { const contadores = { visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0, descargas_app: 0 }; return fetch(API_URL + 'contadores', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(contadores) }); }).then(() => alert("Configuración guardada")); }
 
     function guardarTodo() {
       if (!ADMIN_KEY) return alert("Conectate primero");
       guardarConfig();
       fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) });
+      fetch(API_URL + 'radios', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(radiosData) });
       fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) }).then(() => alert("✅ Todo guardado en la nube"));
     }
   </script>
