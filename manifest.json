@@ -1,0 +1,20 @@
+{
+  "name": "UADAVSTREAM - Entretenimiento, Teatros & Música Global",
+  "short_name": "UADAVSTREAM",
+  "start_url": "/US.html",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#00e5ff",
+  "icons": [
+    {
+      "src": "https://tu-dominio.com/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://tu-dominio.com/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
