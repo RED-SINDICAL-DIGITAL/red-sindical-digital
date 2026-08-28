@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Control - UADAV STREAM</title>
+  <title>Panel de Control - BEATPLAY / UADAVSTREAM</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = { theme: { extend: { colors: { uadav: { accent: '#00e5ff', dark: '#050505', card: '#0f0f13', border: '#1f1f26' } }, fontFamily: { sans: ['Outfit', 'sans-serif'] } } } }
@@ -22,7 +22,7 @@
 <body class="p-4 sm:p-8 min-h-screen">
   <div class="max-w-5xl mx-auto">
     <div class="flex justify-between items-center mb-8 border-b border-uadav-border pb-4">
-      <h1 class="text-2xl font-black text-white">UADAV <span class="text-uadav-accent">STREAM</span> - Panel Admin</h1>
+      <h1 class="text-2xl font-black text-white">UADAV <span class="text-uadav-accent">STREAM</span> / BEAT <span class="text-uadav-accent">PLAY</span> - Panel Admin</h1>
       <div class="flex gap-2">
         <input type="password" id="adminKeyInput" placeholder="Pegar ADMIN_KEY aquí..." class="w-64">
         <button onclick="conectar()" class="btn bg-uadav-accent text-black">Conectar</button>
@@ -30,6 +30,34 @@
     </div>
 
     <div id="panelContent" class="hidden space-y-8">
+
+      <!-- ===== NUEVA SECCIÓN: APARIENCIA Y BRANDING ===== -->
+      <div class="border border-uadav-border rounded-xl p-4">
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">🎨 Apariencia y Branding</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label>Logo (URL)</label>
+            <input id="brandLogo" placeholder="https://...">
+          </div>
+          <div>
+            <label>Color Principal (Neón)</label>
+            <input type="color" id="brandColor" value="#00e5ff" class="h-12 p-1 cursor-pointer">
+          </div>
+          <div>
+            <label>Nombre / Título</label>
+            <input id="brandTitulo" placeholder="UADAVSTREAM">
+          </div>
+          <div>
+            <label>Eslogan / Subtítulo</label>
+            <input id="brandEslogan" placeholder="Plataforma Global">
+          </div>
+          <div class="md:col-span-2">
+            <label>Texto del Botón Principal</label>
+            <input id="brandBoton" placeholder="Ver SEÑAL OFICIAL">
+          </div>
+        </div>
+        <button onclick="guardarBranding()" class="btn btn-save mt-4 mb-4">Guardar Apariencia y Color</button>
+      </div>
 
       <!-- Gestor de Secciones -->
       <div class="border border-uadav-border rounded-xl p-4">
@@ -95,7 +123,7 @@
         <div id="artistasList" class="text-sm"></div>
       </div>
 
-      <!-- Configuración General y Hero -->
+      <!-- Configuración General -->
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Configuración General y Hero</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -249,7 +277,7 @@
       alert("Radio guardada. Click en GUARDAR CAMBIOS.");
     }
 
-    // === SECCIONES (CON CAMPO NOMBRE EDITABLE) ===
+    // === SECCIONES ===
     function agregarNuevaSeccion() {
       const id = document.getElementById('nuevoSecId').value.trim();
       const nombre = document.getElementById('nuevoSecNombre').value.trim();
@@ -378,7 +406,7 @@
       renderArtistas();
     }
 
-    // === CONFIG ===
+    // === APARIENCIA Y BRANDING ===
     function renderConfig(data) {
       document.getElementById('configPais').value = data.pais_trending || 'Auto';
       document.getElementById('configShowCountry').value = data.mostrar_ip ? 'true' : 'false';
@@ -387,6 +415,43 @@
       document.getElementById('heroSub').value = data.hero_subtitulo || 'UADAVSTREAM TV';
       document.getElementById('heroBtnTexto').value = data.hero_boton_texto || 'Ver SEÑAL OFICIAL';
       document.getElementById('heroBtnUrl').value = data.hero_boton_url || '-479TZi-EAs';
+
+      // Cargar branding
+      document.getElementById('brandLogo').value = data.brand_logo || '';
+      document.getElementById('brandColor').value = data.brand_color || '#00e5ff';
+      document.getElementById('brandTitulo').value = data.brand_titulo || 'UADAV';
+      document.getElementById('brandEslogan').value = data.brand_eslogan || 'STREAM';
+      document.getElementById('brandBoton').value = data.hero_boton_texto || 'Ver SEÑAL OFICIAL';
+    }
+
+    function guardarBranding() {
+      const logo = document.getElementById('brandLogo').value;
+      const color = document.getElementById('brandColor').value;
+      const titulo = document.getElementById('brandTitulo').value;
+      const eslogan = document.getElementById('brandEslogan').value;
+      
+      // Obtener config actual para combinar
+      const config = {
+        pais_trending: document.getElementById('configPais').value.trim() || 'Auto',
+        mostrar_ip: document.getElementById('configShowCountry').value === 'true',
+        texto_legal: document.getElementById('configLegal').value,
+        hero_titulo: document.getElementById('heroTitulo').value,
+        hero_subtitulo: document.getElementById('heroSub').value,
+        hero_boton_texto: document.getElementById('heroBtnTexto').value,
+        hero_boton_url: document.getElementById('heroBtnUrl').value,
+        brand_logo: logo,
+        brand_color: color,
+        brand_titulo: titulo,
+        brand_eslogan: eslogan
+      };
+
+      fetch(API_URL + 'config', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, 
+        body: JSON.stringify(config)
+      }).then(() => {
+        alert("Branding guardado con éxito. Se actualizará al recargar la web.");
+      });
     }
 
     function guardarConfig() {
@@ -397,13 +462,20 @@
         hero_titulo: document.getElementById('heroTitulo').value,
         hero_subtitulo: document.getElementById('heroSub').value,
         hero_boton_texto: document.getElementById('heroBtnTexto').value,
-        hero_boton_url: document.getElementById('heroBtnUrl').value
+        hero_boton_url: document.getElementById('heroBtnUrl').value,
+        brand_logo: document.getElementById('brandLogo').value,
+        brand_color: document.getElementById('brandColor').value,
+        brand_titulo: document.getElementById('brandTitulo').value,
+        brand_eslogan: document.getElementById('brandEslogan').value
       };
-      fetch(API_URL + 'config', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(config) })
-      .then(() => {
+      fetch(API_URL + 'config', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, 
+        body: JSON.stringify(config)
+      }).then(() => {
         const contadores = { visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0, descargas_app: 0 };
         return fetch(API_URL + 'contadores', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(contadores) });
-      }).then(() => alert("Configuración guardada"));
+      }).then(() => alert("Configuración general guardada"));
     }
 
     // === GUARDAR TODO (CON PROTECCIÓN CONTRA BORRADO ACCIDENTAL) ===
