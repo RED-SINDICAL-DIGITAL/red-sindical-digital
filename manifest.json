@@ -1,7 +1,7 @@
 {
   "name": "UADAVSTREAM - Entretenimiento, Teatros & Música Global",
   "short_name": "UADAVSTREAM",
-  "start_url": "/US.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#050505",
   "theme_color": "#00e5ff",
