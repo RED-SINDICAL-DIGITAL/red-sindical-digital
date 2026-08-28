@@ -2,7 +2,7 @@ self.addEventListener('install', e => {
   e.waitUntil(
     caches.open('uadavstream-v1').then(cache => {
       return cache.addAll([
-        '/US.html',
+        '/index.html',
         '/manifest.json'
       ]);
     })
