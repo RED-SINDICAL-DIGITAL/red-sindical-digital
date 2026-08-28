@@ -154,12 +154,11 @@
 
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [];
 
-    if (localStorage.getItem('uadav_cache_version') !== 'v9') {
+    if (localStorage.getItem('uadav_cache_version') !== 'v10') {
       localStorage.clear();
-      localStorage.setItem('uadav_cache_version', 'v9');
+      localStorage.setItem('uadav_cache_version', 'v10');
     }
 
-    // NUEVA FUNCIÓN: Usa la API oficial de YouTube mediante tu Worker (Cuota Cero)
     async function obtenerVideos(query) {
       try {
         const res = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(query)}`);
@@ -168,8 +167,10 @@
       return [];
     }
 
+    // BLOQUEO DE ID DE CANAL EN VIDEOS MANUALES
     function normalizarVideo(v) {
       let url = v.url || '', tipo = v.tipo || 'mp4';
+      if (url.startsWith('UC') && url.length > 20) return null;
       if (tipo === 'mp4') {
         if (/^[a-zA-Z0-9_-]{11}$/.test(url)) tipo = 'youtube';
         else if (url.includes('youtube.com') || url.includes('youtu.be')) {
@@ -247,7 +248,7 @@
       let items = [];
       if (sec.modo === 'manual' && sec.ids_manuales && sec.ids_manuales.length > 0) { items = sec.ids_manuales.map(id => ({ id: id, titulo: "Contenido Curado", categoria: sec.nombre, descripcion: "Curaduría manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); }
       else {
-        const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v9`, cachedData = localStorage.getItem(cacheKey);
+        const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v10`, cachedData = localStorage.getItem(cacheKey);
         if (cachedData) { items = JSON.parse(cachedData); } else {
           const data = await obtenerVideos(query);
           if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); }
@@ -257,7 +258,7 @@
     }
 
     async function cargarShortsExclusivos() {
-      const rail = document.getElementById('shortsRail'), cacheKey = 'uadav_cache_shorts_strict_v9', cachedData = localStorage.getItem(cacheKey); let items = [];
+      const rail = document.getElementById('shortsRail'), cacheKey = 'uadav_cache_shorts_strict_v10', cachedData = localStorage.getItem(cacheKey); let items = [];
       if (cachedData) { items = JSON.parse(cachedData); } else {
         const data = await obtenerVideos('#shorts teatro musica viral');
         if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); }
@@ -265,6 +266,7 @@
       rail.innerHTML = ''; if (items && items.length > 0) items.forEach(item => rail.appendChild(crearShortCard(item)));
     }
 
+    // LÓGICA OPTIMIZADA DE PERFIL: PRIMERO EL CANAL, DESPUES LOS MANUALES
     async function abrirPerfilArtista(id) {
       const artista = artistasData.find(a => a.id === id); if (!artista) return;
       document.getElementById('artModalBanner').src = artista.portada || artista.foto || FALLBACK_THUMB;
@@ -272,16 +274,27 @@
       document.getElementById('artModalNombre').innerText = artista.nombre;
       document.getElementById('artModalGenero').innerText = artista.rubro || "Artista UADAV";
       document.getElementById('artModalBio').innerText = artista.bio || "Sin biografía cargada.";
+      
       const btnContacto = document.getElementById('artModalContactBtn');
       if (artista.contacto) { btnContacto.classList.remove('hidden'); btnContacto.onclick = () => { window.open(`https://wa.me/${artista.contacto.replace(/\D/g, '')}`, '_blank'); }; } else { btnContacto.classList.add('hidden'); }
+      
       document.getElementById('artistModal').classList.remove('hidden');
       const contVideos = document.getElementById('artModalListaVideos'); contVideos.innerHTML = '<p class="text-xs text-slate-500">Cargando videos...</p>';
+
       let videos = [];
-      if (artista.videos_manuales && artista.videos_manuales.length > 0) { videos = artista.videos_manuales.map(normalizarVideo); }
+      
+      // 1. Prioridad absoluta: Canal de YouTube
       if (artista.tiene_youtube && artista.youtube_channel_id) {
         const videosCanal = await obtenerVideosDeCanal(artista.youtube_channel_id);
         videos = videos.concat(videosCanal);
       }
+      
+      // 2. Videos manuales (opcionales, filtrados por normalizarVideo)
+      if (artista.videos_manuales && artista.videos_manuales.length > 0) {
+        const manuales = artista.videos_manuales.map(normalizarVideo).filter(v => v !== null);
+        videos = videos.concat(manuales);
+      }
+
       if (videos.length > 0) {
         let gridHTML = '<div class="grid grid-cols-2 md:grid-cols-3 gap-4">';
         videos.forEach((v, index) => {
@@ -292,6 +305,7 @@
         });
         gridHTML += '</div>'; contVideos.innerHTML = gridHTML;
       } else { contVideos.innerHTML = '<p class="text-xs text-slate-500">No hay videos cargados en el panel para este artista.</p>'; }
+      
       document.getElementById('artModalActionBtn').onclick = () => { cerrarModalArtista(); document.getElementById('searchInput').value = artista.nombre; ejecutarBusqueda(); };
     }
 
