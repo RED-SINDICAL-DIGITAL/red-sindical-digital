@@ -30,7 +30,7 @@
     </div>
 
     <div id="panelContent" class="hidden space-y-8">
-      
+
       <!-- Gestor de Secciones -->
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Secciones</h2>
@@ -120,7 +120,7 @@
   <script>
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
     let ADMIN_KEY = '', seccionesData = [], artistasData = [], radiosData = [], senalesData = [], editandoRadioId = null, editandoSenalId = null, editandoId = null;
-    let isDataLoadedSuccessfully = false; // CLAVE PARA EVITAR BORRADO ACCIDENTAL
+    let isDataLoadedSuccessfully = false;
 
     function conectar() {
       ADMIN_KEY = document.getElementById('adminKeyInput').value;
@@ -157,7 +157,7 @@
         
       }).catch(err => {
         isDataLoadedSuccessfully = false;
-        alert("⚠️ Error al conectar con la base de datos. Revisá que los JSON en Cloudflare estén bien formateados. El botón de guardar está bloqueado para no borrar tus datos.");
+        alert("⚠️ Error al conectar con la base de datos. El botón de guardar está bloqueado para no borrar tus datos.");
       });
     }
 
@@ -249,7 +249,7 @@
       alert("Radio guardada. Click en GUARDAR CAMBIOS.");
     }
 
-    // === SECCIONES ===
+    // === SECCIONES (CON CAMPO NOMBRE EDITABLE) ===
     function agregarNuevaSeccion() {
       const id = document.getElementById('nuevoSecId').value.trim();
       const nombre = document.getElementById('nuevoSecNombre').value.trim();
@@ -266,7 +266,14 @@
       const list = document.getElementById('seccionesList'); list.innerHTML = '';
       seccionesData.forEach((sec, index) => {
         list.innerHTML += `<div class="item-box">
-          <div class="flex justify-between items-center mb-2"><span class="font-bold"><i class="fa-solid ${sec.icono || 'fa-circle'} text-uadav-accent mr-2"></i>${sec.nombre}</span><label><input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa</label></div>
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-[11px] text-slate-400 uppercase font-bold w-full">Nombre Visible</label>
+            <input type="text" class="font-bold text-white w-full" value="${sec.nombre}" oninput="seccionesData[${index}].nombre = this.value">
+          </div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-bold text-sm"><i class="fa-solid ${sec.icono || 'fa-circle'} text-uadav-accent mr-2"></i></span>
+            <label class="flex items-center gap-2 text-xs text-slate-400"><input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa</label>
+          </div>
           <div class="grid grid-cols-3 gap-2">
             <div><label>Modo</label><select onchange="seccionesData[${index}].modo = this.value"><option value="auto" ${sec.modo === 'auto' ? 'selected' : ''}>Auto</option><option value="manual" ${sec.modo === 'manual' ? 'selected' : ''}>Manual</option></select></div>
             <div><label>Query</label><input value="${sec.query || ''}" oninput="seccionesData[${index}].query = this.value"></div>
@@ -276,12 +283,12 @@
       });
     }
 
-    // === ARTISTAS (CORREGIDO Y VISIBLE) ===
+    // === ARTISTAS ===
     function renderArtistas() {
       const list = document.getElementById('artistasList');
       list.innerHTML = '';
       if (artistasData.length === 0) {
-        list.innerHTML = '<div class="text-slate-400 text-xs p-2">No hay artistas cargados. Pegá el JSON en Cloudflare o cargá uno manualmente.</div>';
+        list.innerHTML = '<div class="text-slate-400 text-xs p-2">No hay artistas cargados.</div>';
         return;
       }
       artistasData.forEach(a => {
@@ -403,7 +410,6 @@
     function guardarTodo() {
       if (!ADMIN_KEY) return alert("Conectate primero");
       
-      // Si los datos no se cargaron correctamente, NO guardar nada
       if (!isDataLoadedSuccessfully) {
         alert("⚠️ Error: Los datos no se cargaron correctamente. NO se guardarán cambios para evitar borrar tu información.");
         return;
