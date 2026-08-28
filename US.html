@@ -154,9 +154,9 @@
 
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [];
 
-    if (localStorage.getItem('uadav_cache_version') !== 'v10') {
+    if (localStorage.getItem('uadav_cache_version') !== 'v11') {
       localStorage.clear();
-      localStorage.setItem('uadav_cache_version', 'v10');
+      localStorage.setItem('uadav_cache_version', 'v11');
     }
 
     async function obtenerVideos(query) {
@@ -167,7 +167,6 @@
       return [];
     }
 
-    // BLOQUEO DE ID DE CANAL EN VIDEOS MANUALES
     function normalizarVideo(v) {
       let url = v.url || '', tipo = v.tipo || 'mp4';
       if (url.startsWith('UC') && url.length > 20) return null;
@@ -248,7 +247,7 @@
       let items = [];
       if (sec.modo === 'manual' && sec.ids_manuales && sec.ids_manuales.length > 0) { items = sec.ids_manuales.map(id => ({ id: id, titulo: "Contenido Curado", categoria: sec.nombre, descripcion: "Curaduría manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); }
       else {
-        const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v10`, cachedData = localStorage.getItem(cacheKey);
+        const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v11`, cachedData = localStorage.getItem(cacheKey);
         if (cachedData) { items = JSON.parse(cachedData); } else {
           const data = await obtenerVideos(query);
           if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); }
@@ -258,7 +257,7 @@
     }
 
     async function cargarShortsExclusivos() {
-      const rail = document.getElementById('shortsRail'), cacheKey = 'uadav_cache_shorts_strict_v10', cachedData = localStorage.getItem(cacheKey); let items = [];
+      const rail = document.getElementById('shortsRail'), cacheKey = 'uadav_cache_shorts_strict_v11', cachedData = localStorage.getItem(cacheKey); let items = [];
       if (cachedData) { items = JSON.parse(cachedData); } else {
         const data = await obtenerVideos('#shorts teatro musica viral');
         if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); }
@@ -286,7 +285,15 @@
       // 1. Prioridad absoluta: Canal de YouTube
       if (artista.tiene_youtube && artista.youtube_channel_id) {
         const videosCanal = await obtenerVideosDeCanal(artista.youtube_channel_id);
-        videos = videos.concat(videosCanal);
+        
+        // 🔥 CORRECCIÓN DEFINITIVA: Mapear los videos del canal al formato que espera el sistema
+        const videosCanalMapeados = (videosCanal || []).map(v => ({
+          url: v.id,
+          tipo: 'youtube',
+          titulo: v.titulo || 'Video del canal'
+        }));
+        
+        videos = videos.concat(videosCanalMapeados);
       }
       
       // 2. Videos manuales (opcionales, filtrados por normalizarVideo)
