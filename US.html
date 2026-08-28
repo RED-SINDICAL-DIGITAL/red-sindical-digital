@@ -62,6 +62,52 @@
       border-radius: 2px;
       animation: barPulse 0.8s infinite ease-in-out;
     }
+
+    /* MODO VINILO */
+    .vinyl-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle, #111 0%, #000 60%, #222 100%);
+      box-shadow: inset 0 0 20px rgba(255,255,255,0.1), 0 0 40px rgba(0,229,255,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .vinyl-container::before {
+      content: '';
+      position: absolute;
+      width: 90%;
+      height: 90%;
+      border-radius: 50%;
+      background: repeating-radial-gradient(circle, transparent 0px, transparent 4px, rgba(255,255,255,0.03) 5px);
+    }
+    .vinyl-container img {
+      width: 70%;
+      height: 70%;
+      object-fit: cover;
+      border-radius: 50%;
+      z-index: 2;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+    .vinyl-container .vinyl-center {
+      position: absolute;
+      width: 14%;
+      height: 14%;
+      background: #fff;
+      border-radius: 50%;
+      z-index: 3;
+      border: 1px solid #ccc;
+    }
+    .vinyl-spinning {
+      animation: spinVinyl 4s linear infinite;
+    }
+    @keyframes spinVinyl {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-uadav-accent selection:text-black pb-24">
@@ -276,7 +322,7 @@
     let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR", hero_titulo: "SEÑAL OFICIAL", hero_subtitulo: "UADAVSTREAM TV", hero_boton_texto: "Ver SEÑAL OFICIAL", hero_boton_url: "-479TZi-EAs" };
     let zenoEventSource = null;
 
-    if (localStorage.getItem('uadav_cache_version') !== 'v26') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v26'); }
+    if (localStorage.getItem('uadav_cache_version') !== 'v27') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v27'); }
 
     function renderNavbar() {
       const nav = document.getElementById('navbar'); nav.innerHTML = '';
@@ -376,23 +422,26 @@
       document.getElementById('videoModal').classList.remove('hidden');
     }
 
-    // === RADIOS (NUEVO DISEÑO) ===
+    // === RADIOS (NUEVO DISEÑO CON VINILO) ===
     function renderRadiosUI() {
       const container = document.getElementById('radiosGrid'); if(!container) return;
       container.innerHTML = '';
       const radiosMostrar = radiosData;
       const principal = radiosMostrar.find(r => r.es_oficial);
       
-      // 1. Hero card para principal
+      // 1. Hero card para principal con MODO VINILO
       if (principal) {
         container.innerHTML += `
           <div id="radio-card-${principal.id}" class="tv-focusable relative md:col-span-3 radio-hero rounded-3xl p-6 sm:p-8 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col md:flex-row items-center gap-6 md:gap-10" onclick="sintonizarRadio('${principal.nombre}', '${principal.stream_url}', '${principal.logo}', '${principal.ubicacion}')">
-            <!-- Efecto de iluminación -->
             <div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-star mr-1"></i> Emisora Oficial</div>
             
-            <div class="relative w-32 h-32 sm:w-48 sm:h-48 flex-shrink-0">
-              <img src="${principal.logo}" class="w-full h-full rounded-2xl object-cover radio-hero-cover transition-transform group-hover:scale-105" alt="${principal.nombre}">
-              <div class="absolute inset-0 bg-black/30 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <!-- MODO VINILO -->
+            <div class="relative w-48 h-48 sm:w-56 sm:h-56 flex-shrink-0">
+              <div class="vinyl-container">
+                <img src="${principal.logo}" class="vinyl-img transition-transform" id="vinyl-img-${principal.id}" alt="${principal.nombre}">
+                <div class="vinyl-center"></div>
+              </div>
+              <div class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <div class="w-16 h-16 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-black text-2xl shadow-lg"><i class="fa-solid fa-play ml-1"></i></div>
               </div>
             </div>
@@ -407,7 +456,6 @@
               <h3 class="text-2xl sm:text-4xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight mb-2">${principal.nombre}</h3>
               <p class="text-xs sm:text-sm text-slate-300 mb-4">${principal.descripcion || 'Transmisión oficial'}</p>
               
-              <!-- Metadatos en vivo -->
               <div class="flex items-center gap-3 bg-[#0a0a0c]/80 border border-uadav-border/50 rounded-xl p-3 backdrop-blur-md">
                 <i class="fa-solid fa-music text-uadav-accent animate-pulse"></i>
                 <div class="overflow-hidden">
@@ -469,37 +517,34 @@
       });
     }
 
-    // === RADIO PLAYER CON METADATOS EN VIVO EN LA TARJETA ===
+    // === RADIO PLAYER CON METADATOS EN VIVO Y CONTROL DE VINILO ===
     let isRadioPlaying = false;
     const audioStream = document.getElementById('audioStream');
 
     window.handleDeezerRadioCover = function(data) {
       if (data && data.data && data.data.length > 0) {
         document.getElementById('radioPlayerImg').src = data.data[0].album.cover_big;
-        // Actualizar carátula en la tarjeta principal si está activa
+        // Actualizar carátula en la tarjeta principal y el vinilo
         const activeId = activeRadioId;
         if (activeId) {
-          const heroImg = document.querySelector(`#radio-card-${activeId} img`);
+          const heroImg = document.getElementById(`vinyl-img-${activeId}`);
           if (heroImg) heroImg.src = data.data[0].album.cover_big;
         }
       }
     };
 
     function updateRadioCardMetadata(radioId, song, artist) {
-      // Actualizar tarjeta principal
       const heroSong = document.getElementById('radio-main-song');
       const heroArtist = document.getElementById('radio-main-artist');
       if (heroSong && heroArtist && activeRadioId === radioId) {
         heroSong.innerText = song;
         heroArtist.innerText = artist || 'Artista';
       }
-      // Actualizar mini card
       const miniSong = document.getElementById(`radio-mini-song-${radioId}`);
       if (miniSong) miniSong.innerText = `${song} - ${artist}`;
     }
 
     function sintonizarRadio(nombre, streamUrl, caratula, ubicacion) {
-        // Pausar audio anterior si estaba sonando
         if (isRadioPlaying) audioStream.pause();
         
         cerrarModal(); 
@@ -513,21 +558,23 @@
         document.getElementById('radioEqualizer').classList.remove('hidden'); 
         document.getElementById('floatingRadioPlayer').classList.remove('translate-y-full');
 
-        // Establecer tarjeta activa
         activeRadioId = radiosData.find(r => r.nombre === nombre)?.id || null;
-        // Quitar resaltado de todas las tarjetas
+        // Quitar resaltado de todas las tarjetas y detener vinilos
         document.querySelectorAll('.radio-mini').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.radio-eq-live').forEach(el => el.style.display = 'none');
-        // Resaltar la tarjeta activa y mostrar ecualizador
+        document.querySelectorAll('.vinyl-img').forEach(img => img.classList.remove('vinyl-spinning'));
+        
+        // Resaltar la tarjeta activa y mostrar ecualizador / girar vinilo
         if (activeRadioId) {
           const card = document.getElementById(`radio-card-${activeRadioId}`);
           if (card) {
             card.classList.add('active');
             const eq = document.getElementById(`radio-eq-${activeRadioId}`);
             if (eq) eq.style.display = 'flex';
-            // Si es la principal, mostrar ecualizador en hero
             const heroEq = document.getElementById(`radio-eq-${activeRadioId}`);
             if (heroEq) heroEq.style.display = 'flex';
+            const vinylImg = document.getElementById(`vinyl-img-${activeRadioId}`);
+            if (vinylImg) vinylImg.classList.add('vinyl-spinning');
           }
         }
 
@@ -545,14 +592,11 @@
                     if (song.includes(' - ')) {
                         [artist, song] = song.split(' - ');
                     }
-                    // Actualizar barra flotante
                     document.getElementById('radioPlayerTitle').innerText = song.trim();
                     document.getElementById('radioPlayerLocation').innerText = artist.trim() || ubicacion;
                     
-                    // Actualizar tarjeta activa
                     if (activeRadioId) updateRadioCardMetadata(activeRadioId, song.trim(), artist.trim());
                     
-                    // Buscar carátula en Deezer
                     const script = document.createElement('script');
                     script.src = `https://api.deezer.com/search?q=${encodeURIComponent(artist + ' ' + song)}&output=jsonp&callback=handleDeezerRadioCover`;
                     document.body.appendChild(script);
@@ -575,18 +619,21 @@
             document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>'; 
             document.getElementById('radioEqualizer').classList.add('hidden'); 
             if (zenoEventSource) zenoEventSource.close();
-            // Ocultar ecualizadores y desactivar tarjetas
             if (activeRadioId) {
               const card = document.getElementById(`radio-card-${activeRadioId}`);
               if (card) card.classList.remove('active');
               const eq = document.getElementById(`radio-eq-${activeRadioId}`);
               if (eq) eq.style.display = 'none';
+              const vinylImg = document.getElementById(`vinyl-img-${activeRadioId}`);
+              if (vinylImg) vinylImg.classList.remove('vinyl-spinning');
             }
         } else { 
             audioStream.play(); 
             isRadioPlaying = true; 
             document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; 
             document.getElementById('radioEqualizer').classList.remove('hidden'); 
+            const vinylImg = document.getElementById(`vinyl-img-${activeRadioId}`);
+            if (vinylImg) vinylImg.classList.add('vinyl-spinning');
         } 
     }
     
@@ -596,12 +643,13 @@
         isRadioPlaying = false; 
         if (zenoEventSource) zenoEventSource.close();
         document.getElementById('floatingRadioPlayer').classList.add('translate-y-full'); 
-        // Quitar resaltado
         if (activeRadioId) {
           const card = document.getElementById(`radio-card-${activeRadioId}`);
           if (card) card.classList.remove('active');
           const eq = document.getElementById(`radio-eq-${activeRadioId}`);
           if (eq) eq.style.display = 'none';
+          const vinylImg = document.getElementById(`vinyl-img-${activeRadioId}`);
+          if (vinylImg) vinylImg.classList.remove('vinyl-spinning');
         }
     }
 
@@ -610,9 +658,9 @@
 
     function renderCarteleraUI() { const cartRail = document.getElementById('carteleraRail'); if(!cartRail) return; cartRail.innerHTML = ''; carteleraData.forEach(c => { cartRail.innerHTML += `<div tabindex="0" class="tv-focusable min-w-[200px] sm:min-w-[240px] bg-[#0a0a0c] border border-uadav-border p-4 sm:p-5 rounded-2xl flex-shrink-0 hover:border-uadav-accent transition-colors group"><span class="text-[10px] sm:text-xs font-black text-uadav-accent block mb-1 sm:mb-2 tracking-widest">${c.fecha || c.estado_badge}</span><h4 class="text-base sm:text-lg font-black text-white mb-1">${c.artista || c.titulo}</h4><p class="text-xs sm:text-sm text-slate-400 mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${c.lugar}</p><span class="inline-block bg-slate-900 text-slate-300 text-[9px] sm:text-[10px] px-2 py-0.5 sm:py-1 rounded-full mt-2 border border-slate-800">${c.tipo || c.categoria}</span></div>`; }); }
 
-    async function cargarSeccionDinamica(containerId, secId) { const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!rail || !sec) return; let items = []; if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); else { const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v26`, cachedData = localStorage.getItem(cacheKey); if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
+    async function cargarSeccionDinamica(containerId, secId) { const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!rail || !sec) return; let items = []; if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); else { const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v27`, cachedData = localStorage.getItem(cacheKey); if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
 
-    async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'); if (!rail) return; const cacheKey = 'uadav_cache_shorts_strict_v26', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos('#shorts'); if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearShortCard(item))); } }
+    async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'); if (!rail) return; const cacheKey = 'uadav_cache_shorts_strict_v27', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos('#shorts'); if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearShortCard(item))); } }
 
     async function ejecutarBusqueda() { const q = document.getElementById('searchInput').value.trim(); if (!q) { resetearVista(); return; } const mainContainer = document.getElementById('mainContainer'), gridView = document.getElementById('gridViewSection'), gridContainer = document.getElementById('gridContainer'); if (!mainContainer || !gridView || !gridContainer) return; const cacheKey = `uadav_search_${q.toLowerCase().replace(/\s+/g, '_')}`, cached = localStorage.getItem(cacheKey); mainContainer.classList.add('hidden'); gridView.classList.remove('hidden'); document.getElementById('gridTitle').innerHTML = `Buscando <span class="text-uadav-accent">"${q}"</span>...`; gridContainer.innerHTML = '<div class="col-span-full py-20 text-center text-slate-400 font-bold"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-uadav-accent mb-4 block"></i>Buscando...</div>'; let resultados = []; if (cached) { resultados = JSON.parse(cached); } else { const data = await obtenerVideos(q); if (data && Array.isArray(data)) { resultados = data.slice(0, 15); if (resultados.length > 0) localStorage.setItem(cacheKey, JSON.stringify(resultados)); } } document.getElementById('gridTitle').innerHTML = `Resultados para <span class="text-uadav-accent">"${q}"</span>`; gridContainer.innerHTML = ''; if (resultados && resultados.length > 0) { queue = []; resultados.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; resultados.forEach(item => gridContainer.appendChild(item.tipo === 'short' ? crearShortCard(item) : crearCard(item))); } else { gridContainer.innerHTML = '<div class="col-span-full py-12 text-center text-slate-400">No se encontraron resultados.</div>'; } }
 
@@ -656,7 +704,7 @@
     async function obtenerVideosDeCanal(channelIdInput) { let channelId = channelIdInput || ''; if (channelId.includes('channel_id=')) channelId = channelId.split('channel_id=')[1].split('&')[0]; else if (channelId.includes('/channel/')) channelId = channelId.split('/channel/')[1].split('/')[0]; else if (channelId.includes('/@')) channelId = channelId.split('/@')[1].split('/')[0]; if (!channelId.startsWith('UC') || channelId.length < 24) return []; try { const res = await fetch(`${API_URL}channel_videos?channel_id=${channelId}`); if (res.ok) return await res.json(); } catch (e) {} return []; }
     function normalizarVideo(v) { let url = v.url || '', tipo = v.tipo || 'mp4'; if (url.startsWith('UC') && url.length > 20) return null; if (tipo === 'mp4') { if (/^[a-zA-Z0-9_-]{11}$/.test(url)) tipo = 'youtube'; else if (url.includes('youtube.com') || url.includes('youtu.be')) { let id = url.split('v=')[1] || url.split('/').pop(); if (id.includes('&')) id = id.split('&')[0]; url = id; tipo = 'youtube'; } } return { url: url, tipo: tipo, titulo: v.titulo || '' }; }
 
-    async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v26`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
+    async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v27`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
 
     function cerrarModalArtista() { document.getElementById('artistModal').classList.add('hidden'); }
     function cerrarModalArtistaBackdrop(e) { if (e.target.id === 'artistModal') cerrarModalArtista(); }
