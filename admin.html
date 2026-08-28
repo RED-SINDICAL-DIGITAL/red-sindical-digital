@@ -31,13 +31,23 @@
 
     <div id="panelContent" class="hidden space-y-8">
       
-      <!-- Secciones -->
+      <!-- Gestor de Secciones (Nuevo) -->
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Secciones</h2>
+        
+        <!-- Formulario para crear nueva sección -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div><label>ID (sin espacios, ej: humor)</label><input id="nuevoSecId" placeholder="humor"></div>
+          <div><label>Nombre Visible</label><input id="nuevoSecNombre" placeholder="Humoristas"></div>
+          <div><label>Icono (FontAwesome, ej: fa-face-laugh)</label><input id="nuevoSecIcono" placeholder="fa-face-laugh"></div>
+          <div><label>Query (si es Auto)</label><input id="nuevoSecQuery" placeholder="humoristas en vivo"></div>
+        </div>
+        <button onclick="agregarNuevaSeccion()" class="btn btn-save mb-4">+ Agregar Nueva Sección</button>
+        
         <div id="seccionesList" class="space-y-2"></div>
       </div>
 
-      <!-- Artistas -->
+      <!-- Gestor de Artistas -->
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Artistas</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -60,7 +70,7 @@
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Configuración General</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <div><label>País para Tendencias (Auto o código, ej: AR, MX, US)</label><input id="configPais" placeholder="Auto"></div>
+           <div><label>País para Tendencias (Auto o código, ej: AR, MX)</label><input id="configPais" placeholder="Auto"></div>
            <div><label>Mostrar País (IP) en Header</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
            <div><label>Contador Base (editable)</label><input type="number" id="configVisitas" placeholder="0"></div>
            <div class="md:col-span-2"><label>Texto Legal (Footer)</label><textarea id="configLegal" rows="3">UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.</textarea></div>
@@ -103,23 +113,50 @@
         mostrar_ip: document.getElementById('configShowCountry').value === 'true',
         texto_legal: document.getElementById('configLegal').value
       };
-      fetch(API_URL + 'config', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(config)
-      }).then(() => {
+      fetch(API_URL + 'config', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(config) })
+      .then(() => {
         const contadores = { visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0, descargas_app: 0 };
-        return fetch(API_URL + 'contadores', {
-          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-          body: JSON.stringify(contadores)
-        });
+        return fetch(API_URL + 'contadores', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(contadores) });
       }).then(() => alert("Configuración guardada"));
+    }
+
+    // NUEVA FUNCIÓN PARA AGREGAR SECCIÓN DINÁMICA
+    function agregarNuevaSeccion() {
+      const id = document.getElementById('nuevoSecId').value.trim();
+      const nombre = document.getElementById('nuevoSecNombre').value.trim();
+      const icono = document.getElementById('nuevoSecIcono').value.trim() || 'fa-circle';
+      const query = document.getElementById('nuevoSecQuery').value.trim();
+
+      if (!id || !nombre) return alert("Poné el ID y el Nombre");
+
+      // Chequear que no exista
+      if (seccionesData.find(s => s.id === id)) return alert("Ya existe una sección con ese ID");
+
+      seccionesData.push({
+        id: id,
+        nombre: nombre,
+        icono: icono,
+        activa: true,
+        modo: 'auto',
+        query: query,
+        ids_manuales: []
+      });
+
+      renderSecciones();
+      document.getElementById('nuevoSecId').value = '';
+      document.getElementById('nuevoSecNombre').value = '';
+      document.getElementById('nuevoSecIcono').value = '';
+      document.getElementById('nuevoSecQuery').value = '';
     }
 
     function renderSecciones() {
       const list = document.getElementById('seccionesList'); list.innerHTML = '';
       seccionesData.forEach((sec, index) => {
         list.innerHTML += `<div class="item-box">
-          <div class="flex justify-between items-center mb-2"><span class="font-bold text-sm">${sec.nombre}</span><label class="flex items-center gap-2 text-xs text-slate-400"><input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa</label></div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-bold text-sm text-white"><i class="fa-solid ${sec.icono || 'fa-circle'} text-uadav-accent mr-2"></i>${sec.nombre}</span>
+            <label class="flex items-center gap-2 text-xs text-slate-400"><input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa</label>
+          </div>
           <div class="grid grid-cols-3 gap-2">
             <div><label>Modo</label><select onchange="seccionesData[${index}].modo = this.value"><option value="auto" ${sec.modo === 'auto' ? 'selected' : ''}>Auto</option><option value="manual" ${sec.modo === 'manual' ? 'selected' : ''}>Manual</option></select></div>
             <div><label>Query</label><input value="${sec.query || ''}" oninput="seccionesData[${index}].query = this.value"></div>
