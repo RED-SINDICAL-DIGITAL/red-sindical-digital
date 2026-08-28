@@ -17,6 +17,7 @@
     .btn-del { background: #dc2626; color: white; }
     .btn-edit { background: #3b82f6; color: white; }
     .item-box { background: #0f0f13; border: 1px solid #1f1f26; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+    .error-msg { color: #dc2626; font-size: 12px; margin-bottom: 10px; }
   </style>
 </head>
 <body class="p-4 sm:p-8 min-h-screen">
@@ -44,14 +45,14 @@
         <div id="seccionesList" class="space-y-2"></div>
       </div>
 
-      <!-- Gestor de Señales (Live Streams) -->
+      <!-- Gestor de Señales -->
       <div class="border border-uadav-border rounded-xl p-4">
         <h2 class="text-xl font-black mb-4 text-uadav-accent">Gestor de Señales (Live Streams)</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div><label>Nombre</label><input id="senalNombre" placeholder="Señal UADAV TV"></div>
           <div><label>URL del Stream</label><input id="senalUrl" placeholder="https://..."></div>
           <div><label>Logo / Imagen</label><input id="senalLogo" placeholder="https://..."></div>
-          <div><label>Tipo (youtube, twitch, kick, hls)</label><input id="senalTipo" placeholder="auto"></div>
+          <div><label>Tipo (auto, youtube, twitch, kick)</label><input id="senalTipo" placeholder="auto"></div>
           <div><label>Descripción</label><input id="senalDesc" placeholder="Transmisión oficial"></div>
           <div><label>¿Es Principal?</label><select id="senalPrincipal"><option value="true">Sí</option><option value="false">No</option></select></div>
         </div>
@@ -95,24 +96,16 @@
         <div id="artistasList"></div>
       </div>
 
-      <!-- Configuración del Hero -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Configuración del Hero (Banner)</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label>Título Grande</label><input id="heroTitulo" placeholder="SEÑAL OFICIAL"></div>
-          <div><label>Subtítulo (Color Neón)</label><input id="heroSub" placeholder="UADAVSTREAM TV"></div>
-          <div><label>Texto del Botón</label><input id="heroBtnTexto" placeholder="Ver SEÑAL OFICIAL"></div>
-          <div><label>ID del Video del Botón</label><input id="heroBtnUrl" placeholder="-479TZi-EAs"></div>
-        </div>
-        <button onclick="guardarConfig()" class="btn btn-save mt-4">Guardar Hero y Configuración</button>
-      </div>
-
       <!-- Configuración General -->
       <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">Configuración General</h2>
+        <h2 class="text-xl font-black mb-4 text-uadav-accent">Configuración General y Hero</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
            <div><label>País Tendencias</label><input id="configPais" placeholder="Auto"></div>
            <div><label>Mostrar País (IP)</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
+           <div><label>Título Hero</label><input id="heroTitulo" placeholder="SEÑAL OFICIAL"></div>
+           <div><label>Subtítulo Hero</label><input id="heroSub" placeholder="UADAVSTREAM TV"></div>
+           <div><label>Texto Botón Hero</label><input id="heroBtnTexto" placeholder="Ver SEÑAL OFICIAL"></div>
+           <div><label>ID Video del Botón</label><input id="heroBtnUrl" placeholder="-479TZi-EAs"></div>
            <div><label>Contador Base</label><input type="number" id="configVisitas" placeholder="0"></div>
            <div class="md:col-span-2"><label>Texto Legal</label><textarea id="configLegal" rows="2">UADAV STREAM es un desarrollo de Beat Digital Medios.</textarea></div>
         </div>
@@ -127,22 +120,13 @@
 
   <script>
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
-    let ADMIN_KEY = '';
-    
-    // Variables globales para almacenar los datos
-    let seccionesData = [];
-    let senalesData = [];
-    let radiosData = [];
-    let artistasData = [];
-    let editandoRadioId = null;
-    let editandoSenalId = null;
-    let editandoId = null;
+    let ADMIN_KEY = '', seccionesData = [], artistasData = [], radiosData = [], senalesData = [], editandoRadioId = null, editandoSenalId = null, editandoId = null;
 
     function conectar() {
       ADMIN_KEY = document.getElementById('adminKeyInput').value;
       if (!ADMIN_KEY) return alert("Poné la clave");
       
-      // Cargar todos los datos en paralelo
+      // Petición de datos segura con manejo de errores de JSON
       Promise.all([
         fetch(API_URL + 'secciones').then(r => r.json()).catch(() => []),
         fetch(API_URL + 'senales_oficiales').then(r => r.json()).catch(() => []),
@@ -151,23 +135,25 @@
         fetch(API_URL + 'config').then(r => r.json()).catch(() => ({})),
         fetch(API_URL + 'contadores').then(r => r.json()).catch(() => ({}))
       ]).then(([sec, sen, rad, art, conf, cont]) => {
-        // Asignar datos a las variables globales
-        seccionesData = Array.isArray(sec) ? sec : [];
-        senalesData = Array.isArray(sen) ? sen : [];
-        radiosData = Array.isArray(rad) ? rad : [];
-        artistasData = Array.isArray(art) ? art : [];
-
-        // Renderizar todo
         document.getElementById('panelContent').classList.remove('hidden');
+        
+        seccionesData = Array.isArray(sec) ? sec : [];
         renderSecciones();
+        
+        senalesData = Array.isArray(sen) ? sen : [];
         renderSenales();
+        
+        radiosData = Array.isArray(rad) ? rad : [];
         renderRadios();
+        
+        artistasData = Array.isArray(art) ? art : [];
         renderArtistas();
+        
         renderConfig(conf);
         document.getElementById('configVisitas').value = cont.visitas_totales || 0;
         
       }).catch(err => {
-        alert("Error al conectar con la base de datos. Revisá el JSON en Cloudflare.");
+        alert("Error al conectar con la base de datos. Revisá el JSON en Cloudflare. " + err.message);
       });
     }
 
@@ -267,6 +253,7 @@
       renderSecciones();
       document.getElementById('nuevoSecId').value = ''; document.getElementById('nuevoSecNombre').value = ''; document.getElementById('nuevoSecIcono').value = ''; document.getElementById('nuevoSecQuery').value = '';
     }
+
     function renderSecciones() {
       const list = document.getElementById('seccionesList'); list.innerHTML = '';
       seccionesData.forEach((sec, index) => {
@@ -303,15 +290,7 @@
       document.getElementById('btnGuardarArtista').innerText = "Agregar Artista";
       document.getElementById('btnGuardarArtista').classList.remove('bg-blue-500');
       document.getElementById('btnCancelarEdicion').classList.add('hidden');
-      document.getElementById('artNombre').value = '';
-      document.getElementById('artRubro').value = '';
-      document.getElementById('artFoto').value = '';
-      document.getElementById('artPortada').value = '';
-      document.getElementById('artBio').value = '';
-      document.getElementById('artLink').value = '';
-      document.getElementById('artContacto').value = '';
-      document.getElementById('artVideos').value = '';
-      document.getElementById('artTieneYT').value = 'true';
+      document.getElementById('artNombre').value = ''; document.getElementById('artRubro').value = ''; document.getElementById('artFoto').value = ''; document.getElementById('artPortada').value = ''; document.getElementById('artBio').value = ''; document.getElementById('artLink').value = ''; document.getElementById('artContacto').value = ''; document.getElementById('artVideos').value = ''; document.getElementById('artTieneYT').value = 'true';
     }
     function guardarArtista() {
       const videosRaw = document.getElementById('artVideos').value.trim();
@@ -319,20 +298,14 @@
         let trimmed = line.trim(); if (!trimmed) return null;
         if (trimmed.startsWith('UC') && trimmed.length > 20) return null;
         if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return { tipo: 'youtube', url: trimmed };
-        if (trimmed.includes('youtube.com')) {
-          let id = trimmed.split('v=')[1] || trimmed.split('/').pop();
-          if(id.includes('&')) id = id.split('&')[0];
-          if (id && id.length === 11) return { tipo: 'youtube', url: id };
-        }
+        if (trimmed.includes('youtube.com')) { let id = trimmed.split('v=')[1] || trimmed.split('/').pop(); if(id.includes('&')) id = id.split('&')[0]; if (id && id.length === 11) return { tipo: 'youtube', url: id }; }
         return { tipo: 'mp4', url: trimmed };
       }).filter(v => v) : [];
-
       let channelIdInput = document.getElementById('artLink').value.trim();
       if (channelIdInput.includes('channel_id=')) channelIdInput = channelIdInput.split('channel_id=')[1].split('&')[0];
       else if (channelIdInput.includes('/channel/')) channelIdInput = channelIdInput.split('/channel/')[1].split('/')[0];
       else if (channelIdInput.includes('/@')) channelIdInput = channelIdInput.split('/@')[1].split('/')[0];
       if (!channelIdInput.startsWith('UC')) channelIdInput = '';
-
       const dataArtista = {
         id: editandoId || 'art-' + Date.now(),
         nombre: document.getElementById('artNombre').value,
@@ -346,24 +319,36 @@
         contacto: document.getElementById('artContacto').value
       };
       if (!dataArtista.nombre) return alert("Poné el nombre");
-      if (editandoId) {
-        const index = artistasData.findIndex(a => a.id === editandoId);
-        if (index !== -1) artistasData[index] = dataArtista;
-        cancelarEdicion();
-      } else artistasData.push(dataArtista);
-      renderArtistas(artistasData);
+      if (editandoId) { const index = artistasData.findIndex(a => a.id === editandoId); if (index !== -1) artistasData[index] = dataArtista; cancelarEdicion(); }
+      else artistasData.push(dataArtista);
+      renderArtistas();
       alert("Listo. Ahora click en GUARDAR CAMBIOS.");
     }
-    function renderArtistas(data) {
-      artistasData = data || [];
-      const list = document.getElementById('artistasList'); list.innerHTML = '';
-      artistasData.forEach(a => list.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold">${a.nombre}</h4><p class="text-xs">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p></div><div class="flex gap-2"><button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button></div></div>`);
+    function renderArtistas() {
+      const list = document.getElementById('artistasList');
+      list.innerHTML = '';
+      if (artistasData.length === 0) {
+        list.innerHTML = '<div class="text-slate-400 text-xs">No hay artistas cargados.</div>';
+        return;
+      }
+      artistasData.forEach(a => {
+        list.innerHTML += `<div class="item-box flex justify-between">
+          <div>
+            <h4 class="font-bold">${a.nombre}</h4>
+            <p class="text-xs text-slate-400">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button>
+            <button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button>
+          </div>
+        </div>`;
+      });
     }
     function eliminarArtista(id) {
       if (!confirm("¿Eliminar?")) return;
       if (editandoId === id) cancelarEdicion();
       artistasData = artistasData.filter(a => a.id !== id);
-      renderArtistas(artistasData);
+      renderArtistas();
     }
 
     // === CONFIG ===
@@ -387,17 +372,12 @@
         hero_boton_url: document.getElementById('heroBtnUrl').value
       };
       fetch(API_URL + 'config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
         body: JSON.stringify(config)
       }).then(() => {
-        const contadores = {
-          visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0,
-          descargas_app: 0
-        };
+        const contadores = { visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0, descargas_app: 0 };
         return fetch(API_URL + 'contadores', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
           body: JSON.stringify(contadores)
         });
       }).then(() => alert("Configuración guardada"));
@@ -406,31 +386,10 @@
     function guardarTodo() {
       if (!ADMIN_KEY) return alert("Conectate primero");
       guardarConfig();
-      
-      // Guardar todos los arrays en la nube
-      fetch(API_URL + 'secciones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(seccionesData)
-      });
-      
-      fetch(API_URL + 'senales_oficiales', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(senalesData)
-      });
-      
-      fetch(API_URL + 'radios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(radiosData)
-      });
-      
-      fetch(API_URL + 'artistas_uadav', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(artistasData)
-      }).then(() => alert("✅ Todo guardado en la nube"));
+      fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) });
+      fetch(API_URL + 'senales_oficiales', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(senalesData) });
+      fetch(API_URL + 'radios', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(radiosData) });
+      fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) }).then(() => alert("✅ Todo guardado en la nube"));
     }
   </script>
 </body>
