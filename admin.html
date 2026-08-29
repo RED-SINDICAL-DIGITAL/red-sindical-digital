@@ -664,4 +664,60 @@
       const config = {
         pais_trending: document.getElementById('configPais').value.trim() || 'Auto',
         mostrar_ip: document.getElementById('configShowCountry').value === 'true',
-        texto_legal: document.getElementById('configLegal').
+        texto_legal: document.getElementById('configLegal').value,
+        hero_titulo: document.getElementById('heroTitulo').value,
+        hero_subtitulo: document.getElementById('heroSub').value,
+        hero_boton_texto: document.getElementById('heroBtnTexto').value,
+        hero_boton_url: document.getElementById('heroBtnUrl').value
+      };
+      fetch(API_URL + 'config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+        body: JSON.stringify(config)
+      })
+      .then(() => {
+        const contadores = {
+          visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0,
+          descargas_app: 0
+        };
+        return fetch(API_URL + 'contadores', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+          body: JSON.stringify(contadores)
+        });
+      })
+      .then(() => mostrarStatus('aparienciaStatus', '✅ Configuración guardada', 'success'))
+      .catch(err => mostrarStatus('aparienciaStatus', '❌ Error: ' + err.message, 'error'));
+    }
+
+    // ============================================================
+    // GUARDAR TODO
+    // ============================================================
+    function guardarTodo() {
+      if (!ADMIN_KEY) return alert("Conectate primero");
+      if (!isDataLoadedSuccessfully) {
+        alert("⚠️ Datos no cargados. No se guardarán cambios.");
+        return;
+      }
+      guardarApariencia();
+      guardarBanners();
+      guardarEstadoSitio();
+      Promise.all([
+        fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) }),
+        fetch(API_URL + 'senales_oficiales', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(senalesData) }),
+        fetch(API_URL + 'radios', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(radiosData) }),
+        fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) })
+      ])
+      .then(() => alert('✅ Todo guardado en la nube'))
+      .catch(err => alert('❌ Error: ' + err.message));
+    }
+
+    // ============================================================
+    // INICIO
+    // ============================================================
+    window.onload = function() {
+      cargarSesion();
+    };
+  </script>
+</body>
+</html>
