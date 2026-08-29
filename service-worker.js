@@ -1,26 +1,21 @@
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open('beatplay-v1').then(cache => {
-      // Solo cachear archivos locales, NO externos
+    caches.open('uadavstream-v1').then(cache => {
       return cache.addAll([
-        '/beatplay/',
-        '/beatplay/index.html',
-        '/beatplay/manifest.json'
-      ]);
+        '/',
+        '/index.html',
+        '/manifest.json'
+      ]).catch(err => console.warn('Error al cachear:', err));
     })
   );
 });
 
 self.addEventListener('fetch', e => {
-  // Si la petición es a un dominio externo, no la cacheamos
-  const url = new URL(e.request.url);
-  if (url.origin !== location.origin) {
-    // Dejamos que el navegador maneje la petición normalmente
-    e.respondWith(fetch(e.request));
-    return;
-  }
-  // Para recursos locales, usamos caché
   e.respondWith(
-    caches.match(e.request).then(response => response || fetch(e.request))
+    caches.match(e.request).then(response => {
+      return response || fetch(e.request).catch(() => {
+        return new Response('', { status: 404 });
+      });
+    })
   );
 });
