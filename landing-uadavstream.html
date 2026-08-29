@@ -259,52 +259,91 @@
       });
     }
 
+    // ============================================================
+    // CARGAR DESTACADOS (MEJORADO)
+    // ============================================================
     async function cargarDestacados() {
       const grid = document.getElementById('resultsGrid');
       grid.innerHTML = '<div class="col-span-full text-center py-12 opacity-60"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Cargando...</div>';
       allVideos = [];
 
-      // 1. Si hay IDs destacados en la config, usarlos
-      if (config.videos_destacados_ids && config.videos_destacados_ids.length > 0) {
-        for (const id of config.videos_destacados_ids) {
-          allVideos.push({
-            id: id,
-            titulo: 'Destacado',
-            descripcion: 'Contenido especial',
-            categoria: 'Destacado',
-            duracion: 'HD',
-            thumbnail: obtenerCaratula(id)
-          });
+      // Asegurar que config esté cargada
+      if (!config || Object.keys(config).length === 0) {
+        await cargarConfig();
+      }
+
+      const modo = config.modo_destacados || 'secciones';
+      const limite = config.limite_destacados || 12;
+      let videosTemp = [];
+
+      // 1. Modo IDs
+      if (modo === 'ids' || modo === 'mixto') {
+        if (config.videos_destacados_ids && config.videos_destacados_ids.length > 0) {
+          for (const id of config.videos_destacados_ids) {
+            videosTemp.push({
+              id: id,
+              titulo: 'Destacado',
+              descripcion: 'Contenido especial',
+              categoria: 'Destacado',
+              duracion: 'HD',
+              thumbnail: obtenerCaratula(id)
+            });
+          }
         }
-      } else {
-        // Si no hay IDs, usar secciones activas
+      }
+
+      // 2. Modo Palabras clave
+      if (modo === 'palabras' || modo === 'mixto') {
+        const palabras = config.palabras_clave_destacados ? config.palabras_clave_destacados.split(',').map(p => p.trim()).filter(p => p) : [];
+        for (const palabra of palabras) {
+          try {
+            const data = await obtenerVideos(palabra);
+            if (data && Array.isArray(data)) {
+              const items = data.slice(0, 4).map(v => ({
+                ...v,
+                categoria: palabra
+              }));
+              videosTemp = videosTemp.concat(items);
+            }
+          } catch (e) {}
+        }
+      }
+
+      // 3. Modo Secciones activas (fallback)
+      if (modo === 'secciones' || modo === 'mixto') {
         const secciones = await fetch(API_URL + 'secciones?_=' + Date.now()).then(r => r.json()).catch(() => []);
         const activas = secciones.filter(s => s.activa === true);
         for (const sec of activas.slice(0, 3)) {
           const query = sec.query || sec.nombre;
           const data = await obtenerVideos(query);
           if (data && Array.isArray(data)) {
-            const items = data.slice(0, 6).map(v => ({ ...v, categoria: sec.nombre }));
-            allVideos = allVideos.concat(items);
+            const items = data.slice(0, 4).map(v => ({ ...v, categoria: sec.nombre }));
+            videosTemp = videosTemp.concat(items);
           }
         }
       }
 
       // Eliminar duplicados
       const seen = new Set();
-      allVideos = allVideos.filter(v => {
+      allVideos = videosTemp.filter(v => {
         if (seen.has(v.id)) return false;
         seen.add(v.id);
         return true;
       });
 
+      // Limitar cantidad
+      if (allVideos.length > limite) allVideos = allVideos.slice(0, limite);
+
       if (allVideos.length === 0) {
-        grid.innerHTML = '<div class="col-span-full text-center py-12 opacity-60">No hay contenido destacado.</div>';
+        grid.innerHTML = '<div class="col-span-full text-center py-12 opacity-60">No hay contenido destacado. Configurá el modo en el admin.</div>';
         return;
       }
       renderizarVideos(allVideos, '🎭 Destacados');
     }
 
+    // ============================================================
+    // BÚSQUEDA Y RESET
+    // ============================================================
     async function ejecutarBusqueda() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) { resetearVista(); return; }
