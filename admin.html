@@ -28,6 +28,8 @@
     .status-msg { font-size: 12px; margin-top: 6px; padding: 6px; border-radius: 6px; }
     .status-msg.success { background: #064e3b; color: #6ee7b7; }
     .status-msg.error { background: #7f1d1d; color: #fca5a5; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="p-4 sm:p-8 min-h-screen">
@@ -116,6 +118,40 @@
           </div>
           <button onclick="guardarEstadoSitio()" class="btn btn-save mt-4">Guardar Estado</button>
           <div id="estadoStatus" class="status-msg mt-2"></div>
+        </div>
+      </details>
+
+      <!-- LANDING PAGE CONFIG (NUEVO) -->
+      <details>
+        <summary>🎨 Landing Page (configuración visual)</summary>
+        <div class="border border-uadav-border rounded-xl p-4 mt-3">
+          <p class="text-xs text-slate-400 mb-4">Personalizá la apariencia y el mensaje de la landing page. Los colores y textos se actualizan automáticamente.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label>Título Hero</label><input id="landingHeroTitulo" placeholder="El arte escénico al alcance de todos"></div>
+            <div><label>Subtítulo Hero</label><input id="landingHeroSubtitulo" placeholder="Descubrí obras de teatro, circos, humoristas y espectáculos..."></div>
+            <div><label>Mensaje de espera</label><input id="landingMensajeEspera" placeholder="Pronto podrás disfrutar de una experiencia única. Déjanos tu correo y te avisaremos."></div>
+            <div><label>Texto botón captador</label><input id="landingBotonTexto" placeholder="Enviar"></div>
+            <div><label>Imagen de fondo (URL)</label><input id="landingHeroImagen" placeholder="https://..."></div>
+            <div><label>Mostrar captador</label><select id="landingMostrarCaptador"><option value="true">Sí</option><option value="false">No</option></select></div>
+            <div><label>Color de fondo</label><input type="color" id="landingColorFondo" value="#050505"></div>
+            <div><label>Color acento</label><input type="color" id="landingColorAcento" value="#00e5ff"></div>
+            <div><label>Color tarjetas</label><input type="color" id="landingColorTarjetas" value="#0f0f13"></div>
+            <div><label>Color texto principal</label><input type="color" id="landingColorTextoPrincipal" value="#ffffff"></div>
+            <div><label>Color texto secundario</label><input type="color" id="landingColorTextoSecundario" value="#94a3b8"></div>
+            <div class="md:col-span-2"><label>Videos destacados (IDs separados por coma)</label><input id="landingVideosDestacados" placeholder="-479TZi-EAs,dQw4w9WgXcQ"></div>
+            <div class="md:col-span-2"><label>Texto del footer</label><input id="landingFooterTexto" placeholder="© 2025 UADAVSTREAM - Todos los derechos reservados."></div>
+            <div class="md:col-span-2"><label>Contacto del footer</label><input id="landingFooterContacto" placeholder="+54 341 3 602 783"></div>
+          </div>
+          <button onclick="guardarLandingConfig()" class="btn btn-save mt-4">Guardar configuración de Landing</button>
+          <div id="landingStatus" class="status-msg mt-2"></div>
+
+          <hr class="border-uadav-border my-4">
+          <h3 class="font-bold text-white text-sm mb-2">📋 Suscriptores</h3>
+          <div class="flex gap-3 flex-wrap">
+            <button onclick="verSuscriptores()" class="btn bg-blue-500 text-white">Ver suscriptores</button>
+            <button onclick="exportarSuscriptores()" class="btn bg-green-600 text-white">📥 Exportar CSV</button>
+          </div>
+          <div id="suscriptoresList" class="mt-3 text-xs text-slate-400 max-h-40 overflow-y-auto no-scrollbar"></div>
         </div>
       </details>
 
@@ -265,8 +301,9 @@
         fetch(API_URL + 'contadores').then(r => r.json()).catch(() => ({})),
         fetch(API_URL + 'apariencia').then(r => r.json()).catch(() => ({})),
         fetch(API_URL + 'banners').then(r => r.json()).catch(() => ({})),
-        fetch(API_URL + 'estado_sitio').then(r => r.json()).catch(() => ({}))
-      ]).then(([sec, sen, rad, art, conf, cont, apariencia, banners, estado]) => {
+        fetch(API_URL + 'estado_sitio').then(r => r.json()).catch(() => ({})),
+        fetch(API_URL + 'landing_config').then(r => r.json()).catch(() => ({}))
+      ]).then(([sec, sen, rad, art, conf, cont, apariencia, banners, estado, landing]) => {
         document.getElementById('panelContent').classList.remove('hidden');
         seccionesData = Array.isArray(sec) ? sec : [];
         renderSecciones();
@@ -280,6 +317,7 @@
         renderApariencia(apariencia);
         renderBanners(banners);
         renderEstadoSitio(estado);
+        renderLandingConfig(landing);
         document.getElementById('configVisitas').value = cont.visitas_totales || 0;
         isDataLoadedSuccessfully = true;
         mostrarStatus('aparienciaStatus', '✅ Datos cargados correctamente', 'success');
@@ -384,7 +422,84 @@
     }
 
     // ============================================================
-    // SECCIONES
+    // LANDING CONFIG (NUEVO)
+    // ============================================================
+    function renderLandingConfig(data) {
+      if (!data) data = {};
+      document.getElementById('landingHeroTitulo').value = data.hero_titulo || '';
+      document.getElementById('landingHeroSubtitulo').value = data.hero_subtitulo || '';
+      document.getElementById('landingMensajeEspera').value = data.mensaje_espera || 'Pronto podrás disfrutar de una experiencia única. Déjanos tu correo y te avisaremos.';
+      document.getElementById('landingBotonTexto').value = data.texto_boton_captador || 'Enviar';
+      document.getElementById('landingHeroImagen').value = data.hero_imagen || '';
+      document.getElementById('landingMostrarCaptador').value = data.mostrar_captador !== undefined ? (data.mostrar_captador ? 'true' : 'false') : 'true';
+      document.getElementById('landingColorFondo').value = data.color_fondo || '#050505';
+      document.getElementById('landingColorAcento').value = data.color_acento || '#00e5ff';
+      document.getElementById('landingColorTarjetas').value = data.color_tarjetas || '#0f0f13';
+      document.getElementById('landingColorTextoPrincipal').value = data.color_texto_principal || '#ffffff';
+      document.getElementById('landingColorTextoSecundario').value = data.color_texto_secundario || '#94a3b8';
+      document.getElementById('landingVideosDestacados').value = (data.videos_destacados_ids || []).join(',');
+      document.getElementById('landingFooterTexto').value = data.footer_texto || '';
+      document.getElementById('landingFooterContacto').value = data.footer_contacto || '';
+    }
+
+    function guardarLandingConfig() {
+      const config = {
+        hero_titulo: document.getElementById('landingHeroTitulo').value,
+        hero_subtitulo: document.getElementById('landingHeroSubtitulo').value,
+        mensaje_espera: document.getElementById('landingMensajeEspera').value,
+        texto_boton_captador: document.getElementById('landingBotonTexto').value,
+        hero_imagen: document.getElementById('landingHeroImagen').value,
+        mostrar_captador: document.getElementById('landingMostrarCaptador').value === 'true',
+        color_fondo: document.getElementById('landingColorFondo').value,
+        color_acento: document.getElementById('landingColorAcento').value,
+        color_tarjetas: document.getElementById('landingColorTarjetas').value,
+        color_texto_principal: document.getElementById('landingColorTextoPrincipal').value,
+        color_texto_secundario: document.getElementById('landingColorTextoSecundario').value,
+        videos_destacados_ids: document.getElementById('landingVideosDestacados').value.split(',').map(s => s.trim()).filter(s => s),
+        footer_texto: document.getElementById('landingFooterTexto').value,
+        footer_contacto: document.getElementById('landingFooterContacto').value
+      };
+      fetch(API_URL + 'landing_config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+        body: JSON.stringify(config)
+      })
+      .then(() => mostrarStatus('landingStatus', '✅ Configuración de landing guardada', 'success'))
+      .catch(err => mostrarStatus('landingStatus', '❌ Error: ' + err.message, 'error'));
+    }
+
+    // ===== SUSCRIPTORES =====
+    function verSuscriptores() {
+      const listEl = document.getElementById('suscriptoresList');
+      listEl.innerHTML = 'Cargando...';
+      fetch(API_URL + 'suscriptores', {
+        headers: { 'Authorization': 'Bearer ' + ADMIN_KEY }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.length === 0) {
+          listEl.innerHTML = 'No hay suscriptores aún.';
+          return;
+        }
+        let html = '<table class="w-full text-left text-xs"><tr><th class="px-2 py-1">Email</th><th class="px-2 py-1">Fecha</th></tr>';
+        data.forEach(s => {
+          html += `<tr><td class="px-2 py-1">${s.email}</td><td class="px-2 py-1">${s.fecha || ''}</td></tr>`;
+        });
+        html += '</table>';
+        listEl.innerHTML = html;
+      })
+      .catch(() => {
+        listEl.innerHTML = 'Error al cargar suscriptores.';
+      });
+    }
+
+    function exportarSuscriptores() {
+      const token = ADMIN_KEY;
+      window.open(API_URL + 'suscriptores/export?token=' + encodeURIComponent(token), '_blank');
+    }
+
+    // ============================================================
+    // SECCIONES (con orden y eliminación)
     // ============================================================
     function renderSecciones() {
       const list = document.getElementById('seccionesList');
@@ -502,7 +617,7 @@
     }
 
     // ============================================================
-    // RADIOS (sin tema actual)
+    // RADIOS
     // ============================================================
     function renderRadios() {
       const list = document.getElementById('radiosList');
@@ -702,6 +817,7 @@
       guardarApariencia();
       guardarBanners();
       guardarEstadoSitio();
+      guardarLandingConfig();
       Promise.all([
         fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) }),
         fetch(API_URL + 'senales_oficiales', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(senalesData) }),
