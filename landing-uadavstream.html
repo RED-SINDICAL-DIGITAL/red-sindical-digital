@@ -4,102 +4,106 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UADAVSTREAM – Teatro, Circo y Entretenimiento</title>
-  <meta name="description" content="Descubrí las mejores obras de teatro, circos, humoristas y espectáculos. UADAVSTREAM es la plataforma del sindicato de artistas.">
+  <meta name="description" content="UADAVSTREAM – Descubrí las mejores obras de teatro, circos, humoristas y espectáculos. Próximamente una experiencia única.">
   <meta property="og:type" content="website" />
   <meta property="og:title" content="UADAVSTREAM – Teatro, Circo y Entretenimiento" />
   <meta property="og:description" content="Descubrí las mejores obras de teatro, circos, humoristas y espectáculos." />
   <meta property="og:image" content="https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj" />
-  <meta property="og:url" content="https://uadavstream.com.ar/landing-uadavstream.html" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="UADAVSTREAM – Teatro, Circo y Entretenimiento" />
-  <meta name="twitter:description" content="Descubrí las mejores obras de teatro, circos, humoristas y espectáculos." />
-  <meta name="twitter:image" content="https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj" />
-  
   <link rel="manifest" href="/manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script>
-    tailwind.config = { theme: { extend: { colors: { uadav: { accent: '#00e5ff', accentHover: '#00b8cc', dark: '#050505', card: '#0f0f13', border: '#1f1f26' } }, fontFamily: { sans: ['Outfit', 'sans-serif'] } } } }
-  </script>
   <style>
-    body { background-color: #050505; color: #E2E8F0; font-family: 'Outfit', sans-serif; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .landing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
-    .video-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; background: #0f0f13; border-radius: 16px; overflow: hidden; border: 1px solid #1f1f26; }
-    .video-card:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(0,229,255,0.15); border-color: #00e5ff; }
+    /* Estilos base (se sobrescriben con variables CSS desde JS) */
+    body { font-family: 'Outfit', sans-serif; margin:0; padding:0; background: #050505; color: #ffffff; transition: background 0.3s; }
+    .hero { min-height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 20px; position: relative; background-size: cover; background-position: center; }
+    .hero::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 1; }
+    .hero * { position: relative; z-index: 2; }
+    .glass-card { background: rgba(15,15,19,0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 24px; transition: all 0.3s; }
+    .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+    .video-card { border-radius: 16px; overflow: hidden; background: #0f0f13; border: 1px solid #1f1f26; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+    .video-card:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(0,229,255,0.15); border-color: #00e5ff; }
     .video-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
     .video-card .info { padding: 12px; }
     .video-card .info h4 { font-weight: 700; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .video-card .info p { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.active { display: flex; }
-    .modal-content { background: #0f0f13; border-radius: 20px; max-width: 900px; width: 100%; overflow: hidden; border: 1px solid #1f1f26; position: relative; }
-    .modal-content iframe { width: 100%; aspect-ratio: 16/9; border: none; }
-    .modal-close { position: absolute; top: 12px; right: 16px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 20px; cursor: pointer; z-index: 10; transition: background 0.2s; }
-    .modal-close:hover { background: #00e5ff; color: #050505; }
     .search-bar { display: flex; gap: 10px; max-width: 600px; margin: 0 auto; }
-    .search-bar input { flex: 1; padding: 12px 18px; border-radius: 50px; border: 1px solid #1f1f26; background: #0a0a0c; color: white; font-size: 1rem; outline: none; }
+    .search-bar input { flex: 1; padding: 14px 20px; border-radius: 50px; border: 1px solid #1f1f26; background: #0a0a0c; color: white; font-size: 1rem; outline: none; transition: border 0.3s; }
     .search-bar input:focus { border-color: #00e5ff; }
-    .search-bar button { padding: 12px 28px; border-radius: 50px; background: #00e5ff; color: #050505; font-weight: 700; border: none; cursor: pointer; transition: background 0.2s; }
+    .search-bar button { padding: 14px 32px; border-radius: 50px; background: #00e5ff; color: #050505; font-weight: 700; border: none; cursor: pointer; transition: background 0.2s; }
     .search-bar button:hover { background: #00b8cc; }
-    .hero-uadav { background: linear-gradient(135deg, #0f0f13 0%, #1a1a2e 100%); border-bottom: 2px solid #00e5ff; }
-    .btn-app { background: #00e5ff; color: #050505; padding: 10px 24px; border-radius: 50px; font-weight: 700; text-decoration: none; transition: background 0.2s; display: inline-block; }
-    .btn-app:hover { background: #00b8cc; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+    .modal-overlay.active { display: flex; }
+    .modal-content { background: #0f0f13; border-radius: 24px; max-width: 900px; width: 100%; overflow: hidden; border: 1px solid #1f1f26; position: relative; }
+    .modal-content iframe { width: 100%; aspect-ratio: 16/9; border: none; }
+    .modal-close { position: absolute; top: 12px; right: 16px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 22px; cursor: pointer; z-index: 10; transition: 0.2s; }
+    .modal-close:hover { background: #00e5ff; color: #050505; }
     .footer { border-top: 1px solid #1f1f26; padding: 30px 20px; text-align: center; color: #94a3b8; font-size: 0.9rem; }
+    .btn-subscribe { background: #00e5ff; color: #050505; border: none; padding: 12px 32px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .btn-subscribe:hover { background: #00b8cc; transform: scale(1.02); }
+    .input-email { padding: 12px 20px; border-radius: 50px; border: 1px solid #1f1f26; background: #0a0a0c; color: white; font-size: 1rem; outline: none; flex: 1; min-width: 200px; }
+    .input-email:focus { border-color: #00e5ff; }
+    /* Variables CSS que se actualizan desde JS */
+    :root {
+      --bg-color: #050505;
+      --accent-color: #00e5ff;
+      --card-color: #0f0f13;
+      --text-primary: #ffffff;
+      --text-secondary: #94a3b8;
+    }
+    body { background: var(--bg-color); color: var(--text-primary); }
+    .video-card { background: var(--card-color); border-color: var(--bg-color); }
+    .video-card:hover { border-color: var(--accent-color); box-shadow: 0 10px 30px rgba(0,229,255,0.15); }
+    .search-bar input:focus { border-color: var(--accent-color); }
+    .search-bar button { background: var(--accent-color); color: var(--bg-color); }
+    .search-bar button:hover { filter: brightness(0.9); }
+    .btn-subscribe { background: var(--accent-color); color: var(--bg-color); }
+    .btn-subscribe:hover { filter: brightness(0.9); }
+    .hero { background-color: var(--bg-color); background-image: var(--hero-image, none); }
+    .modal-content { background: var(--card-color); border-color: var(--bg-color); }
+    .footer { border-color: var(--bg-color); color: var(--text-secondary); }
+    .glass-card { background: rgba(15,15,19,0.7); border-color: rgba(255,255,255,0.05); }
   </style>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header class="sticky top-0 z-50 bg-uadav-dark/90 backdrop-blur-xl border-b border-uadav-border">
-    <div class="max-w-[1400px] mx-auto px-4 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-uadav-accent to-blue-600 flex items-center justify-center text-slate-950 font-black text-xl">U</div>
-        <span class="font-black text-xl text-white">UADAV<span class="text-uadav-accent">STREAM</span></span>
-      </div>
-      <a href="/index.html" class="btn-app text-sm">🎭 Ir a la App</a>
-    </div>
-  </header>
-
   <!-- HERO -->
-  <section class="hero-uadav py-16 text-center">
-    <div class="max-w-4xl mx-auto px-4">
-      <h1 class="text-4xl sm:text-6xl font-black text-white leading-tight">El arte <span class="text-uadav-accent">escénico</span> al alcance de todos</h1>
-      <p class="text-slate-400 text-lg mt-4 max-w-2xl mx-auto">Descubrí obras de teatro, circos, humoristas y espectáculos de la mejor calidad.</p>
-      <div class="mt-8 flex justify-center gap-4 flex-wrap">
-        <a href="#buscador" class="bg-uadav-accent text-slate-950 px-8 py-3 rounded-full font-bold hover:bg-white transition">Explorar ahora</a>
-        <a href="/index.html" class="border border-uadav-border text-white px-8 py-3 rounded-full font-bold hover:border-uadav-accent transition">Ver App Completa</a>
+  <section class="hero" id="heroSection">
+    <div class="max-w-4xl mx-auto">
+      <div class="inline-block px-4 py-1 rounded-full border border-uadav-accent/30 text-uadav-accent text-xs font-bold uppercase tracking-widest mb-4">Próximamente</div>
+      <h1 id="heroTitulo" class="text-4xl sm:text-6xl font-black leading-tight">El arte escénico al alcance de todos</h1>
+      <p id="heroSubtitulo" class="text-lg sm:text-xl mt-4 max-w-2xl mx-auto opacity-80">Descubrí obras de teatro, circos, humoristas y espectáculos de la mejor calidad.</p>
+      <p id="mensajeEspera" class="mt-6 text-sm opacity-70">Pronto podrás disfrutar de una experiencia única. Déjanos tu correo y te avisaremos.</p>
+
+      <!-- Captador de correos -->
+      <div id="captadorContainer" class="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center">
+        <input type="email" id="emailInput" class="input-email" placeholder="Tu mejor email" required>
+        <button id="btnCaptador" class="btn-subscribe">Enviar</button>
+      </div>
+      <div id="mensajeCaptador" class="mt-3 text-sm text-green-400 hidden"></div>
+
+      <!-- Buscador (abajo del captador) -->
+      <div class="mt-12">
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="Buscar obra, artista, show..." onkeydown="if(event.key==='Enter') ejecutarBusqueda()">
+          <button onclick="ejecutarBusqueda()"><i class="fa-solid fa-magnifying-glass mr-2"></i> Buscar</button>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- BUSCADOR -->
-  <section id="buscador" class="py-12 bg-[#050505]">
-    <div class="max-w-4xl mx-auto px-4">
-      <h2 class="text-2xl font-black text-white text-center mb-6">Buscá tu obra, artista o show favorito</h2>
-      <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Ej: El romance del Romeo y Julieta, Circo du Soleil, Humor..." onkeydown="if(event.key==='Enter') ejecutarBusqueda()">
-        <button onclick="ejecutarBusqueda()"><i class="fa-solid fa-magnifying-glass mr-2"></i> Buscar</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- RESULTADOS / GALERÍA -->
-  <section class="py-12 bg-[#050505]">
-    <div class="max-w-[1400px] mx-auto px-4">
+  <!-- GALERÍA DE VIDEOS DESTACADOS / RESULTADOS -->
+  <section class="py-12 px-4" style="background: var(--bg-color);">
+    <div class="max-w-[1400px] mx-auto">
       <div class="flex justify-between items-center mb-6">
-        <h2 id="sectionTitle" class="text-2xl font-black text-white">🎭 Destacados</h2>
-        <button onclick="resetearVista()" class="text-uadav-accent text-sm font-bold hover:underline">Ver todos</button>
+        <h2 id="sectionTitle" class="text-2xl font-black">🎭 Destacados</h2>
+        <button onclick="resetearVista()" class="text-sm font-bold hover:underline" style="color: var(--accent-color);">Ver todos</button>
       </div>
-      <div id="resultsGrid" class="landing-grid">
-        <div class="col-span-full text-center text-slate-400 py-12">Cargando contenido...</div>
+      <div id="resultsGrid" class="video-grid">
+        <div class="col-span-full text-center py-12 opacity-60">Cargando contenido...</div>
       </div>
     </div>
   </section>
@@ -107,9 +111,9 @@
   <!-- FOOTER -->
   <footer class="footer">
     <div class="max-w-4xl mx-auto">
-      <p class="text-uadav-accent font-bold mb-2">UADAVSTREAM</p>
-      <p>© 2025 UADAVSTREAM – Sindicato de Artistas. Todos los derechos reservados.</p>
-      <p class="mt-2"><i class="fa-brands fa-whatsapp text-green-500 mr-1"></i> +54 341 3 602 783</p>
+      <p id="footerTexto" class="font-bold mb-2" style="color: var(--accent-color);">UADAVSTREAM</p>
+      <p id="footerContacto" style="color: var(--text-secondary);">© 2025 UADAVSTREAM - Todos los derechos reservados.</p>
+      <p class="mt-2" style="color: var(--text-secondary);"><i class="fa-brands fa-whatsapp" style="color: #25D366;"></i> <span id="footerContactoNum">+54 341 3 602 783</span></p>
     </div>
   </footer>
 
@@ -118,9 +122,9 @@
     <div class="modal-content" onclick="event.stopPropagation()">
       <button class="modal-close" onclick="cerrarModal()">✕</button>
       <iframe id="playerFrame" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-      <div class="p-4 bg-[#0a0a0c]">
-        <h3 id="modalTitle" class="text-white font-bold text-lg">Título</h3>
-        <p id="modalDesc" class="text-slate-400 text-sm">Descripción</p>
+      <div class="p-4">
+        <h3 id="modalTitle" class="font-bold text-lg">Título</h3>
+        <p id="modalDesc" class="opacity-70 text-sm">Descripción</p>
       </div>
     </div>
   </div>
@@ -132,37 +136,86 @@
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
     const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80';
     let allVideos = [];
-    let currentSearchResults = [];
+    let config = {};
 
     // ============================================================
-    // FUNCIONES AUXILIARES
+    // CARGAR CONFIGURACIÓN DE LANDING
     // ============================================================
-    function obtenerCaratula(id) {
-      if (!id || id.length !== 11) return FALLBACK_THUMB;
-      return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-    }
-
-    function formatearDuracion(seconds) {
-      if (!seconds) return 'HD';
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-    }
-
-    // ============================================================
-    // OBTENER DATOS DE LA API
-    // ============================================================
-    async function obtenerDatos(endpoint) {
+    async function cargarConfig() {
       try {
-        const res = await fetch(API_URL + endpoint + '?_=' + Date.now());
+        const res = await fetch(API_URL + 'landing_config?_=' + Date.now());
         if (res.ok) {
-          const data = await res.json();
-          return data;
+          config = await res.json();
+          aplicarConfig();
         }
-      } catch (e) {}
-      return [];
+      } catch (e) { console.warn('Error cargando config landing'); }
     }
 
+    function aplicarConfig() {
+      const c = config;
+      // Textos
+      document.getElementById('heroTitulo').textContent = c.hero_titulo || 'El arte escénico al alcance de todos';
+      document.getElementById('heroSubtitulo').textContent = c.hero_subtitulo || 'Descubrí obras de teatro, circos, humoristas y espectáculos de la mejor calidad.';
+      document.getElementById('mensajeEspera').textContent = c.mensaje_espera || 'Pronto podrás disfrutar de una experiencia única. Déjanos tu correo y te avisaremos.';
+      document.getElementById('btnCaptador').textContent = c.texto_boton_captador || 'Enviar';
+      document.getElementById('footerTexto').textContent = c.footer_texto || 'UADAVSTREAM';
+      document.getElementById('footerContacto').textContent = c.footer_contacto || '© 2025 UADAVSTREAM - Todos los derechos reservados.';
+      // Colors
+      document.documentElement.style.setProperty('--bg-color', c.color_fondo || '#050505');
+      document.documentElement.style.setProperty('--accent-color', c.color_acento || '#00e5ff');
+      document.documentElement.style.setProperty('--card-color', c.color_tarjetas || '#0f0f13');
+      document.documentElement.style.setProperty('--text-primary', c.color_texto_principal || '#ffffff');
+      document.documentElement.style.setProperty('--text-secondary', c.color_texto_secundario || '#94a3b8');
+      // Hero image
+      if (c.hero_imagen) {
+        document.getElementById('heroSection').style.setProperty('--hero-image', `url(${c.hero_imagen})`);
+        document.getElementById('heroSection').style.backgroundImage = `url(${c.hero_imagen})`;
+      }
+      // Mostrar/ocultar captador
+      if (c.mostrar_captador === false) {
+        document.getElementById('captadorContainer').style.display = 'none';
+      } else {
+        document.getElementById('captadorContainer').style.display = 'flex';
+      }
+    }
+
+    // ============================================================
+    // CAPTADOR DE CORREOS
+    // ============================================================
+    document.getElementById('btnCaptador').addEventListener('click', async function() {
+      const email = document.getElementById('emailInput').value.trim();
+      if (!email || !email.includes('@')) {
+        mostrarMensajeCaptador('Por favor, ingresá un email válido.', 'red');
+        return;
+      }
+      try {
+        const res = await fetch(API_URL + 'suscriptores', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        if (res.ok) {
+          mostrarMensajeCaptador('✅ ¡Gracias! Te avisaremos cuando estemos listos.', 'green');
+          document.getElementById('emailInput').value = '';
+        } else {
+          mostrarMensajeCaptador('❌ Error al guardar. Intentá de nuevo.', 'red');
+        }
+      } catch (e) {
+        mostrarMensajeCaptador('❌ Error de conexión. Intentá de nuevo.', 'red');
+      }
+    });
+
+    function mostrarMensajeCaptador(texto, color) {
+      const el = document.getElementById('mensajeCaptador');
+      el.textContent = texto;
+      el.style.color = color === 'green' ? '#4ade80' : '#f87171';
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 5000);
+    }
+
+    // ============================================================
+    // BÚSQUEDA Y VIDEOS
+    // ============================================================
     async function obtenerVideos(query) {
       try {
         const res = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(query)}&_=${Date.now()}`);
@@ -171,14 +224,16 @@
       return [];
     }
 
-    // ============================================================
-    // RENDERIZAR VIDEOS EN EL GRID
-    // ============================================================
+    function obtenerCaratula(id) {
+      if (!id || id.length !== 11) return FALLBACK_THUMB;
+      return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+    }
+
     function renderizarVideos(videos, tituloSeccion = 'Resultados') {
       const grid = document.getElementById('resultsGrid');
       const title = document.getElementById('sectionTitle');
       if (videos.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center text-slate-400 py-12">No se encontraron videos.</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-12 opacity-60">No se encontraron videos.</div>`;
         title.textContent = tituloSeccion;
         return;
       }
@@ -190,12 +245,11 @@
         const thumb = video.thumbnail || obtenerCaratula(video.id);
         const titulo = video.titulo || 'Sin título';
         const desc = video.descripcion || video.categoria || 'Contenido';
-        const duracion = video.duracion || '';
         card.innerHTML = `
           <img src="${thumb}" alt="${titulo}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">
           <div class="info">
             <h4>${titulo}</h4>
-            <p>${desc} ${duracion ? '· ' + duracion : ''}</p>
+            <p>${desc}</p>
           </div>
         `;
         card.addEventListener('click', () => {
@@ -205,74 +259,38 @@
       });
     }
 
-    // ============================================================
-    // CARGAR CONTENIDO DESTACADO (desde el KV)
-    // ============================================================
     async function cargarDestacados() {
       const grid = document.getElementById('resultsGrid');
-      grid.innerHTML = '<div class="col-span-full text-center text-slate-400 py-12"><i class="fa-solid fa-circle-notch fa-spin text-uadav-accent text-2xl mr-2"></i> Cargando...</div>';
+      grid.innerHTML = '<div class="col-span-full text-center py-12 opacity-60"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Cargando...</div>';
+      allVideos = [];
 
-      const secciones = await obtenerDatos('secciones');
-      const activas = secciones.filter(s => s.activa === true);
-      const artistas = await obtenerDatos('artistas_uadav');
-
-      let videosPromises = [];
-      // Mostrar secciones típicas de UADAV: teatros, circos, humor, etc.
-      const seccionesParaMostrar = activas.slice(0, 3);
-      seccionesParaMostrar.forEach(sec => {
-        if (sec.modo === 'manual' && sec.ids_manuales && sec.ids_manuales.length > 0) {
-          const items = sec.ids_manuales.map(id => ({
+      // 1. Si hay IDs destacados en la config, usarlos
+      if (config.videos_destacados_ids && config.videos_destacados_ids.length > 0) {
+        for (const id of config.videos_destacados_ids) {
+          allVideos.push({
             id: id,
-            titulo: `Curaduría: ${sec.nombre}`,
-            descripcion: sec.nombre,
-            categoria: sec.nombre,
+            titulo: 'Destacado',
+            descripcion: 'Contenido especial',
+            categoria: 'Destacado',
             duracion: 'HD',
             thumbnail: obtenerCaratula(id)
-          }));
-          allVideos = allVideos.concat(items);
-        } else {
-          const query = sec.query || sec.nombre;
-          videosPromises.push(
-            obtenerVideos(query).then(data => {
-              if (data && Array.isArray(data)) {
-                const items = data.slice(0, 6).map(v => ({
-                  ...v,
-                  categoria: sec.nombre
-                }));
-                allVideos = allVideos.concat(items);
-              }
-            })
-          );
+          });
         }
-      });
-
-      // Agregar videos de artistas destacados
-      if (artistas && artistas.length > 0) {
-        const artistasConCanal = artistas.filter(a => a.tiene_youtube && a.youtube_channel_id);
-        const algunosArtistas = artistasConCanal.slice(0, 3);
-        for (const artista of algunosArtistas) {
-          try {
-            const videosCanal = await fetch(`${API_URL}channel_videos?channel_id=${artista.youtube_channel_id}&_=${Date.now()}`);
-            if (videosCanal.ok) {
-              const data = await videosCanal.json();
-              if (data && Array.isArray(data)) {
-                const items = data.slice(0, 4).map(v => ({
-                  id: v.id,
-                  titulo: v.titulo || 'Video del artista',
-                  descripcion: artista.nombre,
-                  categoria: artista.rubro || 'Artista',
-                  duracion: 'HD',
-                  thumbnail: obtenerCaratula(v.id)
-                }));
-                allVideos = allVideos.concat(items);
-              }
-            }
-          } catch (e) {}
+      } else {
+        // Si no hay IDs, usar secciones activas
+        const secciones = await fetch(API_URL + 'secciones?_=' + Date.now()).then(r => r.json()).catch(() => []);
+        const activas = secciones.filter(s => s.activa === true);
+        for (const sec of activas.slice(0, 3)) {
+          const query = sec.query || sec.nombre;
+          const data = await obtenerVideos(query);
+          if (data && Array.isArray(data)) {
+            const items = data.slice(0, 6).map(v => ({ ...v, categoria: sec.nombre }));
+            allVideos = allVideos.concat(items);
+          }
         }
       }
 
-      await Promise.all(videosPromises);
-
+      // Eliminar duplicados
       const seen = new Set();
       allVideos = allVideos.filter(v => {
         if (seen.has(v.id)) return false;
@@ -280,40 +298,26 @@
         return true;
       });
 
-      if (allVideos.length > 20) allVideos = allVideos.slice(0, 20);
-
       if (allVideos.length === 0) {
-        grid.innerHTML = '<div class="col-span-full text-center text-slate-400 py-12">No hay contenido destacado disponible. Configurá secciones desde el admin.</div>';
+        grid.innerHTML = '<div class="col-span-full text-center py-12 opacity-60">No hay contenido destacado.</div>';
         return;
       }
-
       renderizarVideos(allVideos, '🎭 Destacados');
     }
 
-    // ============================================================
-    // BÚSQUEDA
-    // ============================================================
     async function ejecutarBusqueda() {
       const query = document.getElementById('searchInput').value.trim();
-      if (!query) {
-        resetearVista();
-        return;
-      }
+      if (!query) { resetearVista(); return; }
       const grid = document.getElementById('resultsGrid');
-      grid.innerHTML = '<div class="col-span-full text-center text-slate-400 py-12"><i class="fa-solid fa-circle-notch fa-spin text-uadav-accent text-2xl mr-2"></i> Buscando...</div>';
-
+      grid.innerHTML = '<div class="col-span-full text-center py-12 opacity-60"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Buscando...</div>';
       const resultados = await obtenerVideos(query);
-      if (resultados && Array.isArray(resultados) && resultados.length > 0) {
-        currentSearchResults = resultados;
+      if (resultados && resultados.length > 0) {
         renderizarVideos(resultados, `Resultados para "${query}"`);
       } else {
-        grid.innerHTML = `<div class="col-span-full text-center text-slate-400 py-12">No se encontraron resultados para "${query}".</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-12 opacity-60">No se encontraron resultados para "${query}".</div>`;
       }
     }
 
-    // ============================================================
-    // RESETEAR VISTA
-    // ============================================================
     function resetearVista() {
       document.getElementById('searchInput').value = '';
       if (allVideos.length > 0) {
@@ -329,11 +333,9 @@
     function reproducirVideo(id, titulo, desc) {
       const modal = document.getElementById('videoModal');
       const frame = document.getElementById('playerFrame');
-      const titleEl = document.getElementById('modalTitle');
-      const descEl = document.getElementById('modalDesc');
+      document.getElementById('modalTitle').textContent = titulo || 'Video';
+      document.getElementById('modalDesc').textContent = desc || '';
       frame.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`;
-      titleEl.textContent = titulo || 'Video';
-      descEl.textContent = desc || '';
       modal.classList.add('active');
       document.body.style.overflow = 'hidden';
     }
@@ -346,16 +348,14 @@
       frame.src = '';
       document.body.style.overflow = 'auto';
     }
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') cerrarModal(e);
-    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(e); });
 
     // ============================================================
-    // INICIALIZAR
+    // INICIO
     // ============================================================
-    window.onload = function() {
-      cargarDestacados();
+    window.onload = async function() {
+      await cargarConfig();
+      await cargarDestacados();
     };
   </script>
 </body>
