@@ -121,7 +121,7 @@
         </div>
       </details>
 
-      <!-- LANDING PAGE CONFIG (NUEVO) -->
+      <!-- LANDING PAGE CONFIG (con nuevos campos) -->
       <details>
         <summary>🎨 Landing Page (configuración visual)</summary>
         <div class="border border-uadav-border rounded-xl p-4 mt-3">
@@ -139,6 +139,20 @@
             <div><label>Color texto principal</label><input type="color" id="landingColorTextoPrincipal" value="#ffffff"></div>
             <div><label>Color texto secundario</label><input type="color" id="landingColorTextoSecundario" value="#94a3b8"></div>
             <div class="md:col-span-2"><label>Videos destacados (IDs separados por coma)</label><input id="landingVideosDestacados" placeholder="-479TZi-EAs,dQw4w9WgXcQ"></div>
+            <div><label>Modo de destacados</label>
+              <select id="landingModoDestacados">
+                <option value="ids">Manual (IDs)</option>
+                <option value="palabras">Palabras clave</option>
+                <option value="secciones">Secciones activas</option>
+                <option value="mixto">Mixto (IDs + Palabras + Secciones)</option>
+              </select>
+            </div>
+            <div><label>Palabras clave (separadas por coma)</label>
+              <input id="landingPalabrasClave" placeholder="teatro, circo, magia, humor">
+            </div>
+            <div><label>Límite de videos destacados</label>
+              <input type="number" id="landingLimiteDestacados" value="12" min="1" max="30">
+            </div>
             <div class="md:col-span-2"><label>Texto del footer</label><input id="landingFooterTexto" placeholder="© 2025 UADAVSTREAM - Todos los derechos reservados."></div>
             <div class="md:col-span-2"><label>Contacto del footer</label><input id="landingFooterContacto" placeholder="+54 341 3 602 783"></div>
           </div>
@@ -422,7 +436,7 @@
     }
 
     // ============================================================
-    // LANDING CONFIG (NUEVO)
+    // LANDING CONFIG (con nuevos campos)
     // ============================================================
     function renderLandingConfig(data) {
       if (!data) data = {};
@@ -438,6 +452,9 @@
       document.getElementById('landingColorTextoPrincipal').value = data.color_texto_principal || '#ffffff';
       document.getElementById('landingColorTextoSecundario').value = data.color_texto_secundario || '#94a3b8';
       document.getElementById('landingVideosDestacados').value = (data.videos_destacados_ids || []).join(',');
+      document.getElementById('landingModoDestacados').value = data.modo_destacados || 'secciones';
+      document.getElementById('landingPalabrasClave').value = data.palabras_clave_destacados || '';
+      document.getElementById('landingLimiteDestacados').value = data.limite_destacados || 12;
       document.getElementById('landingFooterTexto').value = data.footer_texto || '';
       document.getElementById('landingFooterContacto').value = data.footer_contacto || '';
     }
@@ -456,6 +473,9 @@
         color_texto_principal: document.getElementById('landingColorTextoPrincipal').value,
         color_texto_secundario: document.getElementById('landingColorTextoSecundario').value,
         videos_destacados_ids: document.getElementById('landingVideosDestacados').value.split(',').map(s => s.trim()).filter(s => s),
+        modo_destacados: document.getElementById('landingModoDestacados').value,
+        palabras_clave_destacados: document.getElementById('landingPalabrasClave').value,
+        limite_destacados: parseInt(document.getElementById('landingLimiteDestacados').value) || 12,
         footer_texto: document.getElementById('landingFooterTexto').value,
         footer_contacto: document.getElementById('landingFooterContacto').value
       };
