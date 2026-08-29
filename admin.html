@@ -12,153 +12,201 @@
     body { background-color: #050505; color: #E2E8F0; font-family: 'Outfit', sans-serif; }
     input, textarea, select { background: #0a0a0c; border: 1px solid #1f1f26; border-radius: 8px; padding: 8px; width: 100%; color: white; margin-bottom: 8px; }
     label { font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px; display: block; }
-    .btn { padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
+    .btn { padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s; }
     .btn-save { background: #00e5ff; color: #050505; }
+    .btn-save:hover { background: #00b8cc; }
     .btn-del { background: #dc2626; color: white; }
+    .btn-del:hover { background: #b91c1c; }
     .btn-edit { background: #3b82f6; color: white; }
-    .item-box { background: #0f0f13; border: 1px solid #1f1f26; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+    .btn-edit:hover { background: #2563eb; }
     .btn-move { background: #334155; color: white; padding: 4px 10px; font-size: 14px; }
     .btn-move:disabled { opacity: 0.3; cursor: not-allowed; }
+    .item-box { background: #0f0f13; border: 1px solid #1f1f26; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+    details { margin-bottom: 16px; border: 1px solid #1f1f26; border-radius: 12px; padding: 12px; background: #0a0a0c; }
+    summary { font-weight: 700; cursor: pointer; color: #00e5ff; font-size: 16px; }
+    summary:hover { color: #ffffff; }
+    .status-msg { font-size: 12px; margin-top: 6px; padding: 6px; border-radius: 6px; }
+    .status-msg.success { background: #064e3b; color: #6ee7b7; }
+    .status-msg.error { background: #7f1d1d; color: #fca5a5; }
   </style>
 </head>
 <body class="p-4 sm:p-8 min-h-screen">
   <div class="max-w-5xl mx-auto">
-    <div class="flex justify-between items-center mb-8 border-b border-uadav-border pb-4">
+    <div class="flex justify-between items-center mb-8 border-b border-uadav-border pb-4 flex-wrap gap-2">
       <h1 class="text-2xl font-black text-white">UADAV <span class="text-uadav-accent">STREAM</span> - Panel Admin</h1>
-      <div class="flex gap-2">
-        <input type="password" id="adminKeyInput" placeholder="Pegar ADMIN_KEY aquí..." class="w-64">
+      <div class="flex gap-2 flex-wrap">
+        <input type="password" id="adminKeyInput" placeholder="Pegar ADMIN_KEY aquí..." class="w-64" onkeydown="if(event.key === 'Enter') conectar()">
         <button onclick="conectar()" class="btn bg-uadav-accent text-black">Conectar</button>
+        <button onclick="desconectar()" class="btn bg-slate-600 text-white">Cerrar sesión</button>
       </div>
     </div>
 
-    <div id="panelContent" class="hidden space-y-8">
+    <div id="panelContent" class="hidden space-y-6">
 
-      <!-- APARIENCIA Y MARCA -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">🎨 Apariencia y Marca</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label>Logo (URL de imagen)</label><input id="marcaLogo" placeholder="https://..."></div>
-          <div><label>Título del Sitio</label><input id="marcaTitulo" placeholder="UADAVSTREAM"></div>
-          <div><label>Eslogan / Subtítulo</label><input id="marcaEslogan" placeholder="Plataforma Global"></div>
-          <div><label>Color Principal (Acento)</label><input type="color" id="marcaColorAcento" value="#00e5ff"></div>
-          <div><label>Color de Fondo</label><input type="color" id="marcaColorFondo" value="#050505"></div>
-          <div><label>Color de Tarjetas</label><input type="color" id="marcaColorTarjetas" value="#0f0f13"></div>
+      <!-- APARIENCIA -->
+      <details open>
+        <summary>🎨 Apariencia y Marca</summary>
+        <div class="border border-uadav-border rounded-xl p-4 mt-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label>Logo (URL)</label><input id="marcaLogo" placeholder="https://..."></div>
+            <div><label>Título del Sitio</label><input id="marcaTitulo" placeholder="UADAVSTREAM"></div>
+            <div><label>Eslogan</label><input id="marcaEslogan" placeholder="Plataforma Global"></div>
+            <div><label>Color Acento</label><input type="color" id="marcaColorAcento" value="#00e5ff"></div>
+            <div><label>Color Fondo</label><input type="color" id="marcaColorFondo" value="#050505"></div>
+            <div><label>Color Tarjetas</label><input type="color" id="marcaColorTarjetas" value="#0f0f13"></div>
+          </div>
+          <button onclick="guardarApariencia()" class="btn btn-save mt-4">Guardar Apariencia</button>
+          <div id="aparienciaStatus" class="status-msg mt-2"></div>
         </div>
-        <button onclick="guardarApariencia()" class="btn btn-save mt-4">Guardar Apariencia</button>
-        <div id="aparienciaStatus" class="text-xs text-slate-400 mt-2"></div>
-      </div>
+      </details>
 
-      <!-- GESTOR DE BANNERS -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">📢 Espacios Publicitarios</h2>
-        <p class="text-xs text-slate-400 mb-4">Pegá el código HTML del anuncio (Google AdSense, iframe, imagen con link, etc.).</p>
-        <div id="bannersContainer">
+      <!-- BANNERS -->
+      <details open>
+        <summary>📢 Espacios Publicitarios</summary>
+        <div class="border border-uadav-border rounded-xl p-4 mt-3">
+          <p class="text-xs text-slate-400 mb-4">Pegá el código HTML del anuncio (Google AdSense, iframe, imagen con link).</p>
           <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
-            <h3 class="font-bold text-white text-sm mb-2">Banner Superior (debajo del menú)</h3>
+            <h3 class="font-bold text-white text-sm mb-2">Banner Superior</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div><label>Activo</label><select id="bannerTopActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
-              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerTopHTML" rows="3" placeholder="&lt;!-- Código del banner --&gt;"></textarea></div>
+              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerTopHTML" rows="3" placeholder="&lt;!-- Código --&gt;"></textarea></div>
             </div>
           </div>
           <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
             <h3 class="font-bold text-white text-sm mb-2">Banner Entre Secciones</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div><label>Activo</label><select id="bannerInfeedActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
-              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerInfeedHTML" rows="3" placeholder="&lt;!-- Código del banner --&gt;"></textarea></div>
+              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerInfeedHTML" rows="3" placeholder="&lt;!-- Código --&gt;"></textarea></div>
             </div>
           </div>
           <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
             <h3 class="font-bold text-white text-sm mb-2">Banner Pie de Página</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div><label>Activo</label><select id="bannerFooterActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
-              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerFooterHTML" rows="3" placeholder="&lt;!-- Código del banner --&gt;"></textarea></div>
+              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerFooterHTML" rows="3" placeholder="&lt;!-- Código --&gt;"></textarea></div>
             </div>
           </div>
+          <button onclick="guardarBanners()" class="btn btn-save mt-2">Guardar Banners</button>
+          <div id="bannersStatus" class="status-msg mt-2"></div>
         </div>
-        <button onclick="guardarBanners()" class="btn btn-save mt-2">Guardar Banners</button>
-        <div id="bannersStatus" class="text-xs text-slate-400 mt-2"></div>
-      </div>
+      </details>
 
-      <!-- GESTOR DE SECCIONES (con orden) -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">📋 Gestor de Secciones</h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <div><label>ID (sin espacios)</label><input id="nuevoSecId" placeholder="humor"></div>
-          <div><label>Nombre</label><input id="nuevoSecNombre" placeholder="Humoristas"></div>
-          <div><label>Icono (FontAwesome)</label><input id="nuevoSecIcono" placeholder="fa-face-laugh"></div>
-          <div><label>Query</label><input id="nuevoSecQuery" placeholder="humoristas en vivo"></div>
+      <!-- ESTADO DEL SITIO -->
+      <details open>
+        <summary>🔧 Estado del Sitio</summary>
+        <div class="border border-uadav-border rounded-xl p-4 mt-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label>Modo</label>
+              <select id="estadoModo">
+                <option value="normal">Normal (web app completa)</option>
+                <option value="mantenimiento">Mantenimiento (página en construcción)</option>
+                <option value="landing">Landing (redirigir a otra URL)</option>
+              </select>
+            </div>
+            <div id="estadoLandingUrlGroup" style="display:none;">
+              <label>URL de Landing</label>
+              <input id="estadoLandingUrl" placeholder="https://...">
+            </div>
+            <div id="estadoMantenimientoGroup" style="display:none;">
+              <label>Título de mantenimiento</label>
+              <input id="estadoMantTitulo" placeholder="🔧 En construcción">
+              <label>Mensaje</label>
+              <textarea id="estadoMantMensaje" rows="2" placeholder="Estamos mejorando la plataforma. Vuelve pronto."></textarea>
+            </div>
+          </div>
+          <button onclick="guardarEstadoSitio()" class="btn btn-save mt-4">Guardar Estado</button>
+          <div id="estadoStatus" class="status-msg mt-2"></div>
         </div>
-        <button onclick="agregarNuevaSeccion()" class="btn btn-save mb-4">+ Agregar Sección</button>
-        <div id="seccionesList" class="space-y-2"></div>
-        <p class="text-xs text-slate-400 mt-2">Usá los botones ⬆️⬇️ para reordenar. Luego guardá cambios.</p>
-      </div>
+      </details>
 
-      <!-- GESTOR DE SEÑALES -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">📡 Señales (Live Streams)</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div><label>Nombre</label><input id="senalNombre" placeholder="Señal UADAV TV"></div>
-          <div><label>URL</label><input id="senalUrl" placeholder="https://..."></div>
-          <div><label>Logo</label><input id="senalLogo" placeholder="https://..."></div>
-          <div><label>Tipo</label><input id="senalTipo" placeholder="auto"></div>
-          <div><label>Descripción</label><input id="senalDesc" placeholder="Transmisión oficial"></div>
-          <div><label>¿Principal?</label><select id="senalPrincipal"><option value="true">Sí</option><option value="false">No</option></select></div>
+      <!-- SECCIONES -->
+      <details>
+        <summary>📋 Gestor de Secciones (orden y personalización)</summary>
+        <div class="border border-uadav-border rounded-xl p-4 mt-3">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div><label>ID (sin espacios)</label><input id="nuevoSecId" placeholder="humor" onkeydown="if(event.key === 'Enter') agregarNuevaSeccion()"></div>
+            <div><label>Nombre</label><input id="nuevoSecNombre" placeholder="Humoristas" onkeydown="if(event.key === 'Enter') agregarNuevaSeccion()"></div>
+            <div><label>Icono (FontAwesome)</label><input id="nuevoSecIcono" placeholder="fa-face-laugh" onkeydown="if(event.key === 'Enter') agregarNuevaSeccion()"></div>
+            <div><label>Query</label><input id="nuevoSecQuery" placeholder="humoristas en vivo" onkeydown="if(event.key === 'Enter') agregarNuevaSeccion()"></div>
+          </div>
+          <button onclick="agregarNuevaSeccion()" class="btn btn-save mb-4">+ Agregar Sección</button>
+          <div id="seccionesList" class="space-y-2"></div>
+          <p class="text-xs text-slate-400 mt-2">Usá los botones ⬆️⬇️ para reordenar. Luego guardá cambios.</p>
         </div>
-        <button onclick="guardarSenal()" class="btn btn-save mb-4">Agregar/Actualizar Señal</button>
-        <div id="senalesList"></div>
-      </div>
+      </details>
 
-      <!-- GESTOR DE RADIOS -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">🎙️ Radios</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div><label>Nombre</label><input id="radioNombre" placeholder="UADAV Radio"></div>
-          <div><label>URL Stream</label><input id="radioStream" placeholder="https://stream.zeno.fm/..."></div>
-          <div><label>Logo</label><input id="radioLogo" placeholder="https://..."></div>
-          <div><label>Ubicación</label><input id="radioUbicacion" placeholder="Argentina"></div>
-          <div><label>Descripción</label><input id="radioDesc" placeholder="Música 24/7"></div>
-          <div><label>Tema Actual</label><input id="radioTema" placeholder="Midnight City"></div>
-          <div><label>Artista Actual</label><input id="radioArtista" placeholder="M83"></div>
-          <div><label>¿Oficial (Hero)?</label><select id="radioOficial"><option value="true">Sí</option><option value="false">No</option></select></div>
+      <!-- SEÑALES -->
+      <details>
+        <summary>📡 Señales (Live Streams)</summary>
+        <div class="border border-uadav-border rounded-xl p-4 mt-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><label>Nombre</label><input id="senalNombre" placeholder="Señal UADAV TV" onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
+            <div><label>URL</label><input id="senalUrl" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
+            <div><label>Logo</label><input id="senalLogo" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
+            <div><label>Tipo</label><input id="senalTipo" placeholder="auto" onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
+            <div><label>Descripción</label><input id="senalDesc" placeholder="Transmisión oficial" onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
+            <div><label>¿Principal?</label><select id="senalPrincipal"><option value="true">Sí</option><option value="false">No</option></select></div>
+          </div>
+          <button onclick="guardarSenal()" class="btn btn-save mb-4">Agregar/Actualizar Señal</button>
+          <div id="senalesList"></div>
         </div>
-        <button onclick="guardarRadio()" class="btn btn-save mb-4">Agregar/Actualizar Radio</button>
-        <div id="radiosList"></div>
-      </div>
+      </details>
 
-      <!-- GESTOR DE ARTISTAS -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">🎤 Artistas</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div><label>Nombre</label><input id="artNombre" placeholder="URO"></div>
-          <div><label>Rubro</label><input id="artRubro" placeholder="Música"></div>
-          <div><label>Foto</label><input id="artFoto" placeholder="https://..."></div>
-          <div><label>Portada</label><input id="artPortada" placeholder="https://..."></div>
-          <div><label>Bio</label><textarea id="artBio"></textarea></div>
-          <div><label>Tiene YouTube</label><select id="artTieneYT"><option value="true">Sí</option><option value="false">No</option></select></div>
-          <div><label>ID Canal</label><input id="artLink" placeholder="UC..."></div>
-          <div><label>Contacto</label><input id="artContacto" placeholder="WhatsApp"></div>
-          <div class="md:col-span-2"><label>Videos Manuales (IDs)</label><textarea id="artVideos"></textarea></div>
+      <!-- RADIOS -->
+      <details>
+        <summary>🎙️ Radios</summary>
+        <div class="border border-uadav-border rounded-xl p-4 mt-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><label>Nombre</label><input id="radioNombre" placeholder="UADAV Radio" onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
+            <div><label>URL Stream</label><input id="radioStream" placeholder="https://stream.zeno.fm/..." onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
+            <div><label>Logo</label><input id="radioLogo" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
+            <div><label>Ubicación</label><input id="radioUbicacion" placeholder="Argentina" onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
+            <div><label>Descripción</label><input id="radioDesc" placeholder="Música 24/7" onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
+            <div><label>¿Oficial (Hero)?</label><select id="radioOficial"><option value="true">Sí</option><option value="false">No</option></select></div>
+          </div>
+          <button onclick="guardarRadio()" class="btn btn-save mb-4">Agregar/Actualizar Radio</button>
+          <div id="radiosList"></div>
         </div>
-        <button onclick="guardarArtista()" id="btnGuardarArtista" class="btn btn-save mb-4">Agregar Artista</button>
-        <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar</button>
-        <div id="artistasList" class="text-sm"></div>
-      </div>
+      </details>
+
+      <!-- ARTISTAS -->
+      <details>
+        <summary>🎤 Artistas</summary>
+        <div class="border border-uadav-border rounded-xl p-4 mt-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><label>Nombre</label><input id="artNombre" placeholder="URO" onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
+            <div><label>Rubro</label><input id="artRubro" placeholder="Música" onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
+            <div><label>Foto</label><input id="artFoto" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
+            <div><label>Portada</label><input id="artPortada" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
+            <div><label>Bio</label><textarea id="artBio"></textarea></div>
+            <div><label>Tiene YouTube</label><select id="artTieneYT"><option value="true">Sí</option><option value="false">No</option></select></div>
+            <div><label>ID Canal</label><input id="artLink" placeholder="UC..." onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
+            <div><label>Contacto</label><input id="artContacto" placeholder="WhatsApp" onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
+            <div class="md:col-span-2"><label>Videos Manuales (IDs)</label><textarea id="artVideos"></textarea></div>
+          </div>
+          <button onclick="guardarArtista()" id="btnGuardarArtista" class="btn btn-save mb-4">Agregar Artista</button>
+          <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar</button>
+          <div id="artistasList" class="text-sm"></div>
+        </div>
+      </details>
 
       <!-- CONFIGURACIÓN -->
-      <div class="border border-uadav-border rounded-xl p-4">
-        <h2 class="text-xl font-black mb-4 text-uadav-accent">⚙️ Configuración General</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-           <div><label>País Tendencias</label><input id="configPais" placeholder="Auto"></div>
-           <div><label>Mostrar País (IP)</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
-           <div><label>Título Hero</label><input id="heroTitulo" placeholder="SEÑAL OFICIAL"></div>
-           <div><label>Subtítulo Hero</label><input id="heroSub" placeholder="UADAVSTREAM TV"></div>
-           <div><label>Texto Botón Hero</label><input id="heroBtnTexto" placeholder="Ver SEÑAL OFICIAL"></div>
-           <div><label>ID Video del Botón</label><input id="heroBtnUrl" placeholder="-479TZi-EAs"></div>
-           <div><label>Contador Base</label><input type="number" id="configVisitas" placeholder="0"></div>
-           <div class="md:col-span-2"><label>Texto Legal</label><textarea id="configLegal" rows="2">UADAV STREAM es un desarrollo de Beat Digital Medios.</textarea></div>
+      <details>
+        <summary>⚙️ Configuración General</summary>
+        <div class="border border-uadav-border rounded-xl p-4 mt-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label>País Tendencias</label><input id="configPais" placeholder="Auto" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
+            <div><label>Mostrar País (IP)</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
+            <div><label>Título Hero</label><input id="heroTitulo" placeholder="SEÑAL OFICIAL" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
+            <div><label>Subtítulo Hero</label><input id="heroSub" placeholder="UADAVSTREAM TV" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
+            <div><label>Texto Botón Hero</label><input id="heroBtnTexto" placeholder="Ver SEÑAL OFICIAL" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
+            <div><label>ID Video del Botón</label><input id="heroBtnUrl" placeholder="-479TZi-EAs" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
+            <div><label>Contador Base</label><input type="number" id="configVisitas" placeholder="0" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
+            <div class="md:col-span-2"><label>Texto Legal</label><textarea id="configLegal" rows="2">UADAV STREAM es un desarrollo de Beat Digital Medios.</textarea></div>
+          </div>
+          <button onclick="guardarConfig()" class="btn btn-save mt-4">Guardar Configuración</button>
         </div>
-        <button onclick="guardarConfig()" class="btn btn-save mt-4">Guardar Configuración</button>
-      </div>
+      </details>
 
       <div class="fixed bottom-4 right-4">
         <button onclick="guardarTodo()" class="btn btn-save text-base shadow-2xl px-6 py-4">💾 GUARDAR CAMBIOS EN LA NUBE</button>
@@ -167,16 +215,45 @@
   </div>
 
   <script>
-    // ===== CONFIGURACIÓN DE LA API =====
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
-    
     let ADMIN_KEY = '', seccionesData = [], artistasData = [], radiosData = [], senalesData = [], editandoRadioId = null, editandoSenalId = null, editandoId = null;
     let isDataLoadedSuccessfully = false;
+
+    // ===== PERSISTENCIA =====
+    function cargarSesion() {
+      const saved = localStorage.getItem('uadavstream_admin_key');
+      if (saved) {
+        document.getElementById('adminKeyInput').value = saved;
+        ADMIN_KEY = saved;
+        conectar();
+      }
+    }
+
+    function guardarSesion(key) {
+      localStorage.setItem('uadavstream_admin_key', key);
+    }
+
+    function desconectar() {
+      localStorage.removeItem('uadavstream_admin_key');
+      ADMIN_KEY = '';
+      document.getElementById('panelContent').classList.add('hidden');
+      document.getElementById('adminKeyInput').value = '';
+      mostrarStatus('aparienciaStatus', 'Sesión cerrada.', 'error');
+    }
+
+    function mostrarStatus(id, mensaje, tipo) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = 'status-msg ' + (tipo === 'success' ? 'success' : 'error');
+      el.innerText = mensaje;
+      setTimeout(() => { el.className = 'status-msg'; el.innerText = ''; }, 5000);
+    }
 
     // ===== CONEXIÓN =====
     function conectar() {
       ADMIN_KEY = document.getElementById('adminKeyInput').value;
-      if (!ADMIN_KEY) return alert("Poné la clave");
+      if (!ADMIN_KEY) { mostrarStatus('aparienciaStatus', 'Poné la clave', 'error'); return; }
+      guardarSesion(ADMIN_KEY);
       isDataLoadedSuccessfully = false;
       
       Promise.all([
@@ -187,8 +264,9 @@
         fetch(API_URL + 'config').then(r => r.json()).catch(() => ({})),
         fetch(API_URL + 'contadores').then(r => r.json()).catch(() => ({})),
         fetch(API_URL + 'apariencia').then(r => r.json()).catch(() => ({})),
-        fetch(API_URL + 'banners').then(r => r.json()).catch(() => ({}))
-      ]).then(([sec, sen, rad, art, conf, cont, apariencia, banners]) => {
+        fetch(API_URL + 'banners').then(r => r.json()).catch(() => ({})),
+        fetch(API_URL + 'estado_sitio').then(r => r.json()).catch(() => ({}))
+      ]).then(([sec, sen, rad, art, conf, cont, apariencia, banners, estado]) => {
         document.getElementById('panelContent').classList.remove('hidden');
         seccionesData = Array.isArray(sec) ? sec : [];
         renderSecciones();
@@ -201,17 +279,20 @@
         renderConfig(conf);
         renderApariencia(apariencia);
         renderBanners(banners);
+        renderEstadoSitio(estado);
         document.getElementById('configVisitas').value = cont.visitas_totales || 0;
         isDataLoadedSuccessfully = true;
-        document.getElementById('aparienciaStatus').innerHTML = '✅ Datos cargados correctamente';
+        mostrarStatus('aparienciaStatus', '✅ Datos cargados correctamente', 'success');
       }).catch(err => {
         isDataLoadedSuccessfully = false;
-        document.getElementById('aparienciaStatus').innerHTML = '⚠️ Error al conectar. Revisá la consola.';
+        mostrarStatus('aparienciaStatus', '⚠️ Error al conectar. Revisá la consola.', 'error');
         console.error(err);
       });
     }
 
-    // ===== APARIENCIA =====
+    // ============================================================
+    // APARIENCIA
+    // ============================================================
     function renderApariencia(data) {
       document.getElementById('marcaLogo').value = data.logo_url || '';
       document.getElementById('marcaTitulo').value = data.titulo_sitio || '';
@@ -230,25 +311,53 @@
         color_fondo: document.getElementById('marcaColorFondo').value,
         color_tarjetas: document.getElementById('marcaColorTarjetas').value
       };
-      const statusEl = document.getElementById('aparienciaStatus');
-      statusEl.innerHTML = '⏳ Guardando...';
       fetch(API_URL + 'apariencia', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
         body: JSON.stringify(apariencia)
       })
-      .then(res => res.json())
-      .then(() => {
-        statusEl.innerHTML = '✅ Apariencia guardada. Click en GUARDAR TODO.';
-        alert('Apariencia guardada.');
-      })
-      .catch(err => {
-        statusEl.innerHTML = '❌ Error: ' + err.message;
-        console.error(err);
-      });
+      .then(() => mostrarStatus('aparienciaStatus', '✅ Apariencia guardada', 'success'))
+      .catch(err => mostrarStatus('aparienciaStatus', '❌ Error: ' + err.message, 'error'));
     }
 
-    // ===== BANNERS =====
+    // ============================================================
+    // ESTADO DEL SITIO
+    // ============================================================
+    function renderEstadoSitio(data) {
+      if (!data) data = { modo: 'normal', titulo: '', mensaje: '', landing_url: '' };
+      document.getElementById('estadoModo').value = data.modo || 'normal';
+      document.getElementById('estadoLandingUrl').value = data.landing_url || '';
+      document.getElementById('estadoMantTitulo').value = data.titulo || '🔧 En construcción';
+      document.getElementById('estadoMantMensaje').value = data.mensaje || 'Estamos mejorando la plataforma. Vuelve pronto.';
+      toggleEstadoCampos();
+    }
+
+    function toggleEstadoCampos() {
+      const modo = document.getElementById('estadoModo').value;
+      document.getElementById('estadoLandingUrlGroup').style.display = modo === 'landing' ? 'block' : 'none';
+      document.getElementById('estadoMantenimientoGroup').style.display = modo === 'mantenimiento' ? 'block' : 'none';
+    }
+    document.getElementById('estadoModo').addEventListener('change', toggleEstadoCampos);
+
+    function guardarEstadoSitio() {
+      const estado = {
+        modo: document.getElementById('estadoModo').value,
+        landing_url: document.getElementById('estadoLandingUrl').value.trim(),
+        titulo: document.getElementById('estadoMantTitulo').value.trim(),
+        mensaje: document.getElementById('estadoMantMensaje').value.trim()
+      };
+      fetch(API_URL + 'estado_sitio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+        body: JSON.stringify(estado)
+      })
+      .then(() => mostrarStatus('estadoStatus', '✅ Estado del sitio guardado', 'success'))
+      .catch(err => mostrarStatus('estadoStatus', '❌ Error: ' + err.message, 'error'));
+    }
+
+    // ============================================================
+    // BANNERS
+    // ============================================================
     function renderBanners(data) {
       if (!data) data = { top: { activo: true, html: '' }, infeed: { activo: true, html: '' }, footer: { activo: true, html: '' } };
       document.getElementById('bannerTopActivo').value = data.top?.activo ? 'true' : 'false';
@@ -265,25 +374,18 @@
         infeed: { activo: document.getElementById('bannerInfeedActivo').value === 'true', html: document.getElementById('bannerInfeedHTML').value },
         footer: { activo: document.getElementById('bannerFooterActivo').value === 'true', html: document.getElementById('bannerFooterHTML').value }
       };
-      const statusEl = document.getElementById('bannersStatus');
-      statusEl.innerHTML = '⏳ Guardando...';
       fetch(API_URL + 'banners', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
         body: JSON.stringify(banners)
       })
-      .then(res => res.json())
-      .then(() => {
-        statusEl.innerHTML = '✅ Banners guardados. Click en GUARDAR TODO.';
-        alert('Banners guardados.');
-      })
-      .catch(err => {
-        statusEl.innerHTML = '❌ Error: ' + err.message;
-        console.error(err);
-      });
+      .then(() => mostrarStatus('bannersStatus', '✅ Banners guardados', 'success'))
+      .catch(err => mostrarStatus('bannersStatus', '❌ Error: ' + err.message, 'error'));
     }
 
-    // ===== SECCIONES (CON ORDEN Y ELIMINAR) =====
+    // ============================================================
+    // SECCIONES
+    // ============================================================
     function renderSecciones() {
       const list = document.getElementById('seccionesList');
       list.innerHTML = '';
@@ -341,39 +443,25 @@
       const nombre = document.getElementById('nuevoSecNombre').value.trim();
       const icono = document.getElementById('nuevoSecIcono').value.trim() || 'fa-circle';
       const query = document.getElementById('nuevoSecQuery').value.trim();
-      if (!id || !nombre) return alert("Poné el ID y el Nombre");
-      if (seccionesData.find(s => s.id === id)) return alert("Ya existe una sección con ese ID");
-      seccionesData.push({ 
-        id, 
-        nombre, 
-        icono, 
-        activa: true, 
-        modo: 'auto', 
-        query: query || nombre, 
-        ids_manuales: [] 
-      });
+      if (!id || !nombre) { mostrarStatus('aparienciaStatus', 'Poné ID y Nombre', 'error'); return; }
+      if (seccionesData.find(s => s.id === id)) { mostrarStatus('aparienciaStatus', 'Ya existe ese ID', 'error'); return; }
+      seccionesData.push({ id, nombre, icono, activa: true, modo: 'auto', query: query || nombre, ids_manuales: [] });
       renderSecciones();
-      // Limpiar campos
       document.getElementById('nuevoSecId').value = '';
       document.getElementById('nuevoSecNombre').value = '';
       document.getElementById('nuevoSecIcono').value = '';
       document.getElementById('nuevoSecQuery').value = '';
+      mostrarStatus('aparienciaStatus', '✅ Sección agregada', 'success');
     }
 
-    // ===== SEÑALES =====
+    // ============================================================
+    // SEÑALES
+    // ============================================================
     function renderSenales() {
       const list = document.getElementById('senalesList');
       list.innerHTML = '';
       senalesData.forEach(s => {
-        list.innerHTML += `
-          <div class="item-box flex justify-between items-center">
-            <div><h4 class="font-bold">${s.nombre}</h4><p class="text-xs text-slate-400">${s.url}</p></div>
-            <div class="flex gap-2">
-              <button onclick="editarSenal('${s.id}')" class="btn btn-edit">Editar</button>
-              <button onclick="eliminarSenal('${s.id}')" class="btn btn-del">Eliminar</button>
-            </div>
-          </div>
-        `;
+        list.innerHTML += `<div class="item-box flex justify-between items-center"><div><h4 class="font-bold">${s.nombre}</h4><p class="text-xs text-slate-400">${s.url}</p></div><div class="flex gap-2"><button onclick="editarSenal('${s.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarSenal('${s.id}')" class="btn btn-del">Eliminar</button></div></div>`;
       });
     }
 
@@ -410,27 +498,18 @@
       else senalesData.push(nuevaSenal);
       editandoSenalId = null;
       renderSenales();
-      alert("Señal guardada. Click en GUARDAR CAMBIOS.");
+      mostrarStatus('bannersStatus', '✅ Señal guardada', 'success');
     }
 
-    // ===== RADIOS =====
+    // ============================================================
+    // RADIOS (sin tema actual)
+    // ============================================================
     function renderRadios() {
       const list = document.getElementById('radiosList');
       list.innerHTML = '';
-      if (radiosData.length === 0) {
-        list.innerHTML = '<div class="text-slate-400 text-xs">No hay radios cargadas.</div>';
-        return;
-      }
+      if (radiosData.length === 0) { list.innerHTML = '<div class="text-slate-400 text-xs">No hay radios cargadas.</div>'; return; }
       radiosData.forEach(r => {
-        list.innerHTML += `
-          <div class="item-box flex justify-between items-center">
-            <div><h4 class="font-bold">${r.nombre}</h4><p class="text-xs text-slate-400">${r.tema_actual || 'Sin tema'} - ${r.artista_actual || ''} (${r.es_oficial ? 'Hero' : 'Mini'})</p></div>
-            <div class="flex gap-2">
-              <button onclick="editarRadio('${r.id}')" class="btn btn-edit">Editar</button>
-              <button onclick="eliminarRadio('${r.id}')" class="btn btn-del">Eliminar</button>
-            </div>
-          </div>
-        `;
+        list.innerHTML += `<div class="item-box flex justify-between items-center"><div><h4 class="font-bold">${r.nombre}</h4><p class="text-xs text-slate-400">${r.descripcion || ''} (${r.es_oficial ? 'Hero' : 'Mini'})</p></div><div class="flex gap-2"><button onclick="editarRadio('${r.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarRadio('${r.id}')" class="btn btn-del">Eliminar</button></div></div>`;
       });
     }
 
@@ -443,8 +522,6 @@
       document.getElementById('radioLogo').value = r.logo;
       document.getElementById('radioUbicacion').value = r.ubicacion || '';
       document.getElementById('radioDesc').value = r.descripcion || '';
-      document.getElementById('radioTema').value = r.tema_actual || '';
-      document.getElementById('radioArtista').value = r.artista_actual || '';
       document.getElementById('radioOficial').value = r.es_oficial ? 'true' : 'false';
     }
 
@@ -462,8 +539,6 @@
         logo: document.getElementById('radioLogo').value,
         ubicacion: document.getElementById('radioUbicacion').value,
         descripcion: document.getElementById('radioDesc').value,
-        tema_actual: document.getElementById('radioTema').value,
-        artista_actual: document.getElementById('radioArtista').value,
         es_oficial: document.getElementById('radioOficial').value === 'true'
       };
       const index = radiosData.findIndex(r => r.id === id);
@@ -471,27 +546,18 @@
       else radiosData.push(nuevaRadio);
       editandoRadioId = null;
       renderRadios();
-      alert("Radio guardada. Click en GUARDAR CAMBIOS.");
+      mostrarStatus('bannersStatus', '✅ Radio guardada', 'success');
     }
 
-    // ===== ARTISTAS =====
+    // ============================================================
+    // ARTISTAS
+    // ============================================================
     function renderArtistas() {
       const list = document.getElementById('artistasList');
       list.innerHTML = '';
-      if (artistasData.length === 0) {
-        list.innerHTML = '<div class="text-slate-400 text-xs p-2">No hay artistas cargados.</div>';
-        return;
-      }
+      if (artistasData.length === 0) { list.innerHTML = '<div class="text-slate-400 text-xs p-2">No hay artistas cargados.</div>'; return; }
       artistasData.forEach(a => {
-        list.innerHTML += `
-          <div class="item-box flex justify-between">
-            <div><h4 class="font-bold">${a.nombre}</h4><p class="text-xs text-slate-400">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p></div>
-            <div class="flex gap-2">
-              <button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button>
-              <button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button>
-            </div>
-          </div>
-        `;
+        list.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold">${a.nombre}</h4><p class="text-xs text-slate-400">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p></div><div class="flex gap-2"><button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button></div></div>`;
       });
     }
 
@@ -562,7 +628,7 @@
         videos_manuales: videos,
         contacto: document.getElementById('artContacto').value
       };
-      if (!dataArtista.nombre) return alert("Poné el nombre");
+      if (!dataArtista.nombre) { mostrarStatus('aparienciaStatus', 'Poné el nombre del artista', 'error'); return; }
       if (editandoId) {
         const index = artistasData.findIndex(a => a.id === editandoId);
         if (index !== -1) artistasData[index] = dataArtista;
@@ -571,7 +637,7 @@
         artistasData.push(dataArtista);
       }
       renderArtistas();
-      alert("Listo. Click en GUARDAR CAMBIOS.");
+      mostrarStatus('aparienciaStatus', '✅ Artista guardado', 'success');
     }
 
     function eliminarArtista(id) {
@@ -581,7 +647,9 @@
       renderArtistas();
     }
 
-    // ===== CONFIGURACIÓN =====
+    // ============================================================
+    // CONFIGURACIÓN
+    // ============================================================
     function renderConfig(data) {
       document.getElementById('configPais').value = data.pais_trending || 'Auto';
       document.getElementById('configShowCountry').value = data.mostrar_ip ? 'true' : 'false';
@@ -596,52 +664,4 @@
       const config = {
         pais_trending: document.getElementById('configPais').value.trim() || 'Auto',
         mostrar_ip: document.getElementById('configShowCountry').value === 'true',
-        texto_legal: document.getElementById('configLegal').value,
-        hero_titulo: document.getElementById('heroTitulo').value,
-        hero_subtitulo: document.getElementById('heroSub').value,
-        hero_boton_texto: document.getElementById('heroBtnTexto').value,
-        hero_boton_url: document.getElementById('heroBtnUrl').value
-      };
-      fetch(API_URL + 'config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(config)
-      })
-      .then(() => {
-        const contadores = {
-          visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0,
-          descargas_app: 0
-        };
-        return fetch(API_URL + 'contadores', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-          body: JSON.stringify(contadores)
-        });
-      })
-      .then(() => alert("Configuración guardada"))
-      .catch(err => alert("Error: " + err.message));
-    }
-
-    // ===== GUARDAR TODO =====
-    function guardarTodo() {
-      if (!ADMIN_KEY) return alert("Conectate primero");
-      if (!isDataLoadedSuccessfully) {
-        alert("⚠️ Datos no cargados. No se guardarán cambios.");
-        return;
-      }
-      guardarApariencia();
-      guardarBanners();
-      Promise.all([
-        fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) }),
-        fetch(API_URL + 'senales_oficiales', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(senalesData) }),
-        fetch(API_URL + 'radios', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(radiosData) }),
-        fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) })
-      ])
-      .then(() => alert('✅ Todo guardado en la nube'))
-      .catch(err => alert('❌ Error: ' + err.message));
-    }
-
-    console.log('Panel UADAVSTREAM listo.');
-  </script>
-</body>
-</html>
+        texto_legal: document.getElementById('configLegal').
