@@ -1,18 +1,18 @@
 {
-  "name": "UADAVSTREAM - Entretenimiento, Teatros & Música Global",
-  "short_name": "UADAVSTREAM",
-  "start_url": "/index.html",
+  "name": "BEATPLAY - Música sin límites",
+  "short_name": "BEATPLAY",
+  "start_url": "/beatplay/",
   "display": "standalone",
   "background_color": "#050505",
   "theme_color": "#00e5ff",
   "icons": [
     {
-      "src": "https://tu-dominio.com/icon-192.png",
+      "src": "https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://tu-dominio.com/icon-512.png",
+      "src": "https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj",
       "sizes": "512x512",
       "type": "image/png"
     }
