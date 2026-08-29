@@ -9,14 +9,15 @@
   <meta property="og:title" content="UADAVSTREAM - Entretenimiento, Teatros & Música Global" />
   <meta property="og:description" content="Sintoniza nuestra transmisión oficial continua de teatro, música y radio online." />
   <meta property="og:image" content="https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj" />
-  <meta property="og:url" content="https://red-sindical-digital.github.io/red-sindical-digital/US.html" />
+  <meta property="og:url" content="https://uadavstream.com.ar/" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="UADAVSTREAM - Entretenimiento, Teatros & Música Global" />
   <meta name="twitter:description" content="Sintoniza nuestra transmisión oficial continua de teatro, música y radio online." />
   <meta name="twitter:image" content="https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj" />
-  <!-- PWA -->
+  
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -49,185 +50,244 @@
     .radio-mini.active { border-color: #00e5ff; box-shadow: 0 0 20px rgba(0,229,255,0.3); background: rgba(0,229,255,0.05); }
     .radio-mini .play-btn { transition: all 0.3s; }
     .radio-mini.active .play-btn { background: #00e5ff; color: #050505; }
+
+    /* OVERLAY DE MANTENIMIENTO */
+    #maintenance-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #050505; z-index: 9999;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: white; font-family: 'Outfit', sans-serif;
+      text-align: center; padding: 20px;
+    }
+    #maintenance-overlay h1 { font-size: 3rem; font-weight: 900; margin-bottom: 1rem; }
+    #maintenance-overlay p { font-size: 1.2rem; color: #a0aec0; max-width: 600px; }
+    #maintenance-overlay .loader { border: 6px solid #1f1f26; border-top: 6px solid #00e5ff; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 2rem auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-uadav-accent selection:text-black pb-24">
+<body>
 
-  <header class="sticky top-0 z-40 bg-uadav-dark/90 backdrop-blur-xl border-b border-uadav-border">
-    <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
-      <div tabindex="0" onclick="resetearVista()" class="tv-focusable flex items-center gap-2 sm:gap-3 cursor-pointer transition-all flex-shrink-0">
-        <div id="logoContainer" class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-uadav-accent to-blue-600 flex items-center justify-center text-slate-950 font-black text-lg sm:text-2xl shadow-lg shadow-uadav-accent/30">U</div>
-        <div class="hidden xs:block">
-          <span id="siteTitle" class="font-black text-lg sm:text-2xl tracking-tighter text-white block leading-none">UADAV<span class="text-uadav-accent">STREAM</span></span>
-          <span id="siteSlogan" class="text-[9px] sm:text-[10px] tracking-widest text-slate-400 uppercase font-semibold hidden md:block">Plataforma Global</span>
-        </div>
-      </div>
-      <div class="flex-1 max-w-2xl mx-1 sm:mx-2 relative">
-        <div class="relative group">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-uadav-accent transition-colors text-xs sm:text-sm"></i>
-          <input type="text" id="searchInput" onkeydown="if(event.key === 'Enter') ejecutarBusqueda()" placeholder="Buscar obra, artista, canción..." tabindex="0" class="tv-focusable w-full pl-8 sm:pl-12 pr-12 sm:pr-28 py-2 sm:py-3 bg-[#0a0a0c] border border-uadav-border rounded-full text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:border-uadav-accent focus:bg-slate-900 transition-all">
-          <button onclick="ejecutarBusqueda()" class="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-uadav-accent text-slate-950 text-[10px] sm:text-xs font-bold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full hover:bg-uadav-accentHover"><span class="hidden sm:inline">Buscar</span><i class="fa-solid fa-magnifying-glass sm:hidden"></i></button>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-        <div id="countryBadge" class="hidden lg:flex items-center gap-2 bg-slate-900 border border-uadav-border px-2 py-1.5 rounded-full text-xs font-semibold text-slate-300">
-          <i class="fa-solid fa-earth-americas text-uadav-accent"></i>
-          <select id="countrySelectorHeader" onchange="cargarTendenciasPorPais(this.value)">
-            <option value="AR">🇦🇷 Argentina</option>
-            <option value="Auto">🌎 Auto (IP)</option>
-            <option value="MX">🇲🇽 México</option>
-            <option value="US">🇺🇸 Estados Unidos</option>
-            <option value="ES">🇪🇸 España</option>
-            <option value="CO">🇨🇴 Colombia</option>
-            <option value="CL">🇨🇱 Chile</option>
-          </select>
-        </div>
-        <button tabindex="0" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión ininterrumpida HD 24/7')" class="tv-focusable flex items-center gap-1.5 sm:gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider"><div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div> <span class="hidden xs:inline">Live TV</span></button>
-      </div>
-    </div>
-    <nav class="border-t border-uadav-border bg-[#050505]">
-      <div id="navbar" class="max-w-[1400px] mx-auto px-4 flex items-center gap-3 overflow-x-auto py-3.5 no-scrollbar text-sm font-black"></div>
-    </nav>
-    <!-- Banner Top -->
-    <div id="bannerTopContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
-  </header>
-
-  <section class="relative bg-uadav-dark border-b border-uadav-border overflow-hidden">
-    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600')] bg-cover bg-center opacity-30 filter blur-[2px]"></div>
-    <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#050505] via-[#050505]/90 to-transparent"></div>
-    <div class="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-10 md:py-20 flex flex-col items-start justify-center">
-      <span class="inline-flex items-center gap-2 bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase mb-4 tracking-widest"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Al Aire 24/7</span>
-      <h1 id="heroTitulo" class="text-3xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-3 sm:mb-4 tracking-tight">SEÑAL OFICIAL</h1>
-      <span id="heroSub" class="text-transparent bg-clip-text bg-gradient-to-r from-uadav-accent to-purple-500 text-3xl sm:text-5xl lg:text-7xl font-black leading-[1.1] mb-4 tracking-tight">UADAVSTREAM TV</span>
-      <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 sm:mb-8 font-light">Sintoniza nuestra transmisión oficial continua de teatro, música y radio online.</p>
-      <div class="flex flex-wrap gap-3 sm:gap-4">
-        <button tabindex="0" id="heroBtn" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión oficial 24/7')" class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all"><i class="fa-solid fa-play"></i> <span id="heroBtnTexto">Ver SEÑAL OFICIAL</span></button>
-      </div>
-    </div>
-  </section>
-
-  <main id="mainContainer" class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-12 sm:space-y-16">
-    <section id="senalesSection" class="space-y-4">
-      <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="senalesTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tower-broadcast text-uadav-accent"></i> Señales Oficiales en Vivo</h2></div>
-      <div id="senalesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"></div>
-    </section>
-    <section id="radiosSection" class="space-y-4">
-      <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="radiosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-radio text-uadav-accent"></i> Radios Difusoras en Vivo</h2></div>
-      <div id="radiosGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"></div>
-    </section>
-    <!-- Banner In-Feed -->
-    <div id="bannerInfeedContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
-    <section id="artistasSection" class="space-y-4">
-      <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="artistasTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire-flame-curved text-uadav-accent"></i> Artistas Más Escuchados</h2></div>
-      <div id="artistasGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4"></div>
-    </section>
-    <section id="teatrosSection" class="space-y-4">
-      <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="teatrosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-masks-theater text-uadav-accent"></i> Teatros & Espectáculos</h2></div>
-      <div id="teatrosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
-    </section>
-    <section id="circosSection" class="space-y-4">
-      <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="circosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tent text-uadav-accent"></i> Circos & Varieté</h2></div>
-      <div id="circosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
-    </section>
-    <section id="trendingSection" class="space-y-4">
-      <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="trendingTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire text-red-500"></i> Lo más visto</h2></div>
-      <div id="ipTrendingRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
-    </section>
-    <section id="shortsSection" class="space-y-4">
-      <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="shortsTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts (9:16)</h2></div>
-      <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[300px]"></div>
-    </section>
-    <section id="carteleraSection" class="space-y-4">
-      <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="carteleraTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-ticket text-uadav-accent"></i> Cartelera de Eventos</h2></div>
-      <div id="carteleraRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
-    </section>
-    <section id="conciertosSection" class="space-y-4">
-      <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="conciertosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos</h2></div>
-      <div id="conciertosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
-    </section>
-  </main>
-
-  <section id="gridViewSection" class="hidden max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 min-h-[50vh]">
-    <div class="flex items-center justify-between mb-6 sm:mb-8 border-b border-uadav-border pb-4"><h2 id="gridTitle" class="text-xl sm:text-3xl font-black text-white">Resultados</h2><button onclick="resetearVista()" class="text-xs sm:text-sm font-bold text-uadav-accent hover:text-white transition-colors bg-[#0f0f13] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-uadav-border"><i class="fa-solid fa-arrow-left mr-1"></i> Volver</button></div>
-    <div id="gridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6"></div>
-  </section>
-
-  <div id="videoModal" onclick="cerrarModalBackdrop(event)" class="fixed inset-0 z-[60] bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-2 sm:p-4">
-    <div class="bg-[#0a0a0c] border border-uadav-border w-full max-w-5xl rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[95vh]" onclick="event.stopPropagation()">
-      <button tabindex="0" onclick="cerrarModal()" class="tv-focusable absolute top-3 right-3 sm:top-4 sm:right-4 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-slate-900/80 hover:bg-uadav-accent hover:text-black text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all"><i class="fa-solid fa-xmark text-sm sm:text-lg"></i></button>
-      <button tabindex="0" onclick="prevVideo()" class="tv-focusable absolute top-1/2 left-2 sm:left-4 -translate-y-1/2 z-20 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-uadav-accent hover:text-black"><i class="fa-solid fa-chevron-left"></i></button>
-      <button tabindex="0" onclick="nextVideo()" class="tv-focusable absolute top-1/2 right-2 sm:right-4 -translate-y-1/2 z-20 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-uadav-accent hover:text-black"><i class="fa-solid fa-chevron-right"></i></button>
-      <div class="relative w-full aspect-video bg-black swipe-area" id="swipeArea"><iframe id="iframePlayer" class="w-full h-full" src="about:blank" title="Reproductor" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><video id="html5Player" class="w-full h-full hidden" controls autoplay></video></div>
-      <div class="p-4 sm:p-6">
-        <span id="modalCategoria" class="inline-block bg-uadav-accent/10 text-uadav-accent border border-uadav-accent/20 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-2 sm:mb-3">Categoría</span>
-        <h3 id="modalTitulo" class="text-lg sm:text-2xl font-black text-white mb-2 leading-tight">Título</h3>
-        <p id="modalDescripcion" class="text-slate-400 text-xs sm:text-sm line-clamp-2">Descripción del contenido...</p>
-        <div class="mt-4 flex items-center gap-3">
-          <button tabindex="0" onclick="addToQueue()" class="tv-focusable bg-slate-900 border border-uadav-border hover:border-uadav-accent text-white text-xs px-4 py-2 rounded-full font-bold"><i class="fa-solid fa-list-ul mr-1"></i> Añadir a Cola</button>
-          <button tabindex="0" onclick="togglePlayRadio()" class="tv-focusable bg-slate-900 border border-uadav-border hover:border-uadav-accent text-white text-xs px-4 py-2 rounded-full font-bold"><i class="fa-solid fa-pause mr-1"></i> Pausar</button>
-        </div>
-      </div>
-    </div>
+  <!-- Overlay de mantenimiento -->
+  <div id="maintenance-overlay">
+    <div class="loader"></div>
+    <h1 id="maintenance-title">🔧 En construcción</h1>
+    <p id="maintenance-message">Estamos mejorando la plataforma. Vuelve pronto.</p>
   </div>
 
-  <div id="queueBar" class="hidden fixed bottom-16 md:bottom-4 right-4 z-40 bg-[#0a0a0d]/95 border border-uadav-border rounded-xl p-3 w-64 sm:w-80 shadow-2xl backdrop-blur-xl">
-    <div class="flex justify-between items-center mb-2"><h4 class="text-xs font-black text-uadav-accent uppercase">Cola de Reproducción</h4><button onclick="toggleQueue()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
-    <div id="queueList" class="space-y-1 max-h-40 overflow-y-auto no-scrollbar"></div>
-  </div>
+  <!-- Contenido principal -->
+  <div id="pageContent" style="display:none;">
 
-  <footer class="bg-[#050505] border-t border-uadav-border py-8 text-xs sm:text-sm text-slate-500">
-    <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-      <div class="flex items-center gap-2 text-white font-black text-lg sm:text-xl">UADAV<span class="text-uadav-accent">STREAM</span></div>
-      <div class="text-center md:text-right space-y-2">
-        <!-- Banner Footer -->
-        <div id="bannerFooterContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
-        <p id="footerLegal" class="max-w-md text-slate-400">UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.</p>
-        <p class="flex items-center justify-center md:justify-end gap-2"><i class="fa-solid fa-eye text-uadav-accent"></i> <span id="visitCounter" class="font-bold text-white">0</span> Visitas</p>
-        <p class="text-uadav-accent font-bold"><i class="fa-brands fa-whatsapp"></i> +54 341 3 602 783</p>
-      </div>
-    </div>
-  </footer>
-
-  <div id="artistModal" onclick="cerrarModalArtistaBackdrop(event)" class="fixed inset-0 z-50 bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-4">
-    <div class="bg-[#0f0f13] border border-uadav-border w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar" onclick="event.stopPropagation()">
-      <div class="relative h-48 md:h-64 w-full bg-gradient-to-br from-slate-800 via-slate-900 to-black overflow-hidden"><img id="artModalBanner" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&q=80" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 bg-gradient-to-t from-[#0f0f13] via-transparent to-transparent"></div></div>
-      <div class="relative px-6 pb-6 -mt-16 md:-mt-20">
-        <div class="flex flex-col md:flex-row items-end gap-4">
-          <img id="artModalFoto" src="" class="w-28 h-28 md:w-40 md:h-40 rounded-full object-cover border-4 border-[#0f0f13] shadow-2xl z-10">
-          <div class="flex-1 pb-2 text-center md:text-left"><span class="text-[10px] text-uadav-accent font-black tracking-widest uppercase block mb-1">Artista UADAV</span><h3 id="artModalNombre" class="text-3xl md:text-5xl font-black text-white leading-none drop-shadow-lg"></h3><p id="artModalGenero" class="text-xs md:text-sm text-slate-400 mt-2"></p></div>
+    <header class="sticky top-0 z-40 bg-uadav-dark/90 backdrop-blur-xl border-b border-uadav-border">
+      <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
+        <div tabindex="0" onclick="resetearVista()" class="tv-focusable flex items-center gap-2 sm:gap-3 cursor-pointer transition-all flex-shrink-0">
+          <div id="logoContainer" class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-uadav-accent to-blue-600 flex items-center justify-center text-slate-950 font-black text-lg sm:text-2xl shadow-lg shadow-uadav-accent/30">U</div>
+          <div class="hidden xs:block">
+            <span id="siteTitle" class="font-black text-lg sm:text-2xl tracking-tighter text-white block leading-none">UADAV<span class="text-uadav-accent">STREAM</span></span>
+            <span id="siteSlogan" class="text-[9px] sm:text-[10px] tracking-widest text-slate-400 uppercase font-semibold hidden md:block">Plataforma Global</span>
+          </div>
         </div>
-        <div id="artModalBio" class="mt-6 text-xs md:text-sm text-slate-300 leading-relaxed max-w-2xl border-t border-uadav-border pt-4"></div>
-        <div class="mt-4 flex flex-wrap gap-3">
-          <button id="artModalActionBtn" class="bg-uadav-accent text-slate-950 font-black text-xs px-5 py-3 rounded-full"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar en YouTube</button>
-          <button id="artModalContactBtn" class="hidden bg-slate-900 border border-uadav-border hover:border-uadav-accent text-white font-bold text-xs px-5 py-3 rounded-full"><i class="fa-brands fa-whatsapp text-green-500 mr-1"></i> Contratar / Contactar</button>
+        <div class="flex-1 max-w-2xl mx-1 sm:mx-2 relative">
+          <div class="relative group">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-uadav-accent transition-colors text-xs sm:text-sm"></i>
+            <input type="text" id="searchInput" onkeydown="if(event.key === 'Enter') ejecutarBusqueda()" placeholder="Buscar obra, artista, canción..." tabindex="0" class="tv-focusable w-full pl-8 sm:pl-12 pr-12 sm:pr-28 py-2 sm:py-3 bg-[#0a0a0c] border border-uadav-border rounded-full text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:border-uadav-accent focus:bg-slate-900 transition-all">
+            <button onclick="ejecutarBusqueda()" class="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 bg-uadav-accent text-slate-950 text-[10px] sm:text-xs font-bold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full hover:bg-uadav-accentHover"><span class="hidden sm:inline">Buscar</span><i class="fa-solid fa-magnifying-glass sm:hidden"></i></button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <div id="countryBadge" class="hidden lg:flex items-center gap-2 bg-slate-900 border border-uadav-border px-2 py-1.5 rounded-full text-xs font-semibold text-slate-300">
+            <i class="fa-solid fa-earth-americas text-uadav-accent"></i>
+            <select id="countrySelectorHeader" onchange="cargarTendenciasPorPais(this.value)">
+              <option value="AR">🇦🇷 Argentina</option>
+              <option value="Auto">🌎 Auto (IP)</option>
+              <option value="MX">🇲🇽 México</option>
+              <option value="US">🇺🇸 Estados Unidos</option>
+              <option value="ES">🇪🇸 España</option>
+              <option value="CO">🇨🇴 Colombia</option>
+              <option value="CL">🇨🇱 Chile</option>
+            </select>
+          </div>
+          <button tabindex="0" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión ininterrumpida HD 24/7')" class="tv-focusable flex items-center gap-1.5 sm:gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider"><div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div> <span class="hidden xs:inline">Live TV</span></button>
         </div>
       </div>
-      <div class="px-6 pb-8"><h4 class="text-sm font-black text-white mb-4 uppercase tracking-wider text-uadav-accent">Canciones y Videos</h4><div id="artModalListaVideos" class="space-y-2"></div></div>
-      <button onclick="cerrarModalArtista()" class="absolute top-4 right-4 w-10 h-10 bg-black/80 text-white hover:bg-uadav-accent hover:text-black rounded-full flex items-center justify-center backdrop-blur-md z-30"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-  </div>
+      <nav class="border-t border-uadav-border bg-[#050505]">
+        <div id="navbar" class="max-w-[1400px] mx-auto px-4 flex items-center gap-3 overflow-x-auto py-3.5 no-scrollbar text-sm font-black"></div>
+      </nav>
+      <div id="bannerTopContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
+    </header>
 
-  <div id="floatingRadioPlayer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0d]/95 border-t-2 border-uadav-accent backdrop-blur-xl px-4 py-3 shadow-2xl transform translate-y-full transition-transform duration-300">
-    <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3 overflow-hidden"><img id="radioPlayerImg" src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=200&q=80" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover border border-uadav-accent/40"><div class="overflow-hidden"><div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping"></span><span id="radioPlayerTag" class="text-[9px] font-black uppercase text-uadav-accent tracking-widest">EN VIVO</span></div><h4 id="radioPlayerTitle" class="text-xs sm:text-sm font-black text-white truncate">UADAV Radio</h4><p id="radioPlayerLocation" class="text-[10px] sm:text-xs text-slate-400 truncate">Señal HD</p></div></div>
-      <div id="radioEqualizer" class="hidden sm:flex items-center gap-1 h-5 px-2"><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.1s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.4s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.2s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.5s"></span></div>
-      <div class="flex items-center gap-3 flex-shrink-0">
-        <div class="hidden md:flex items-center gap-2"><i class="fa-solid fa-volume-low text-slate-400 text-xs"></i><input type="range" id="volumeSlider" min="0" max="100" value="80" class="w-20"><i class="fa-solid fa-volume-high text-slate-400 text-xs"></i></div>
-        <button tabindex="0" onclick="togglePlayRadio()" id="radioPlayBtn" class="tv-focusable w-10 h-10 sm:w-11 sm:h-11 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-black text-base shadow-lg hover:scale-105 transition-all"><i class="fa-solid fa-pause"></i></button>
-        <button tabindex="0" onclick="cerrarRadio()" class="tv-focusable text-slate-400 hover:text-white text-base p-2"><i class="fa-solid fa-xmark"></i></button>
+    <section class="relative bg-uadav-dark border-b border-uadav-border overflow-hidden">
+      <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600')] bg-cover bg-center opacity-30 filter blur-[2px]"></div>
+      <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#050505] via-[#050505]/90 to-transparent"></div>
+      <div class="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-10 md:py-20 flex flex-col items-start justify-center">
+        <span class="inline-flex items-center gap-2 bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase mb-4 tracking-widest"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Al Aire 24/7</span>
+        <h1 id="heroTitulo" class="text-3xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-3 sm:mb-4 tracking-tight">SEÑAL OFICIAL</h1>
+        <span id="heroSub" class="text-transparent bg-clip-text bg-gradient-to-r from-uadav-accent to-purple-500 text-3xl sm:text-5xl lg:text-7xl font-black leading-[1.1] mb-4 tracking-tight">UADAVSTREAM TV</span>
+        <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 sm:mb-8 font-light">Sintoniza nuestra transmisión oficial continua de teatro, música y radio online.</p>
+        <div class="flex flex-wrap gap-3 sm:gap-4">
+          <button tabindex="0" id="heroBtn" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión oficial 24/7')" class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(0,229,255,0.3)] transition-all"><i class="fa-solid fa-play"></i> <span id="heroBtnTexto">Ver SEÑAL OFICIAL</span></button>
+        </div>
+      </div>
+    </section>
+
+    <main id="mainContainer" class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-12 sm:space-y-16">
+      <section id="senalesSection" class="space-y-4">
+        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="senalesTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tower-broadcast text-uadav-accent"></i> Señales Oficiales en Vivo</h2></div>
+        <div id="senalesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"></div>
+      </section>
+      <section id="radiosSection" class="space-y-4">
+        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="radiosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-radio text-uadav-accent"></i> Radios Difusoras en Vivo</h2></div>
+        <div id="radiosGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"></div>
+      </section>
+      <div id="bannerInfeedContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
+      <section id="artistasSection" class="space-y-4">
+        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="artistasTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire-flame-curved text-uadav-accent"></i> Artistas Más Escuchados</h2></div>
+        <div id="artistasGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4"></div>
+      </section>
+      <section id="teatrosSection" class="space-y-4">
+        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="teatrosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-masks-theater text-uadav-accent"></i> Teatros & Espectáculos</h2></div>
+        <div id="teatrosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
+      </section>
+      <section id="circosSection" class="space-y-4">
+        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="circosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tent text-uadav-accent"></i> Circos & Varieté</h2></div>
+        <div id="circosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
+      </section>
+      <section id="trendingSection" class="space-y-4">
+        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="trendingTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fire text-red-500"></i> Lo más visto</h2></div>
+        <div id="ipTrendingRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
+      </section>
+      <section id="shortsSection" class="space-y-4">
+        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="shortsTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts (9:16)</h2></div>
+        <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[300px]"></div>
+      </section>
+      <section id="carteleraSection" class="space-y-4">
+        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="carteleraTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-ticket text-uadav-accent"></i> Cartelera de Eventos</h2></div>
+        <div id="carteleraRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
+      </section>
+      <section id="conciertosSection" class="space-y-4">
+        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="conciertosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos</h2></div>
+        <div id="conciertosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
+      </section>
+    </main>
+
+    <section id="gridViewSection" class="hidden max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 min-h-[50vh]">
+      <div class="flex items-center justify-between mb-6 sm:mb-8 border-b border-uadav-border pb-4"><h2 id="gridTitle" class="text-xl sm:text-3xl font-black text-white">Resultados</h2><button onclick="resetearVista()" class="text-xs sm:text-sm font-bold text-uadav-accent hover:text-white transition-colors bg-[#0f0f13] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-uadav-border"><i class="fa-solid fa-arrow-left mr-1"></i> Volver</button></div>
+      <div id="gridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6"></div>
+    </section>
+
+    <div id="videoModal" onclick="cerrarModalBackdrop(event)" class="fixed inset-0 z-[60] bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-2 sm:p-4">
+      <div class="bg-[#0a0a0c] border border-uadav-border w-full max-w-5xl rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative flex flex-col max-h-[95vh]" onclick="event.stopPropagation()">
+        <button tabindex="0" onclick="cerrarModal()" class="tv-focusable absolute top-3 right-3 sm:top-4 sm:right-4 z-20 w-8 h-8 sm:w-10 sm:h-10 bg-slate-900/80 hover:bg-uadav-accent hover:text-black text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all"><i class="fa-solid fa-xmark text-sm sm:text-lg"></i></button>
+        <button tabindex="0" onclick="prevVideo()" class="tv-focusable absolute top-1/2 left-2 sm:left-4 -translate-y-1/2 z-20 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-uadav-accent hover:text-black"><i class="fa-solid fa-chevron-left"></i></button>
+        <button tabindex="0" onclick="nextVideo()" class="tv-focusable absolute top-1/2 right-2 sm:right-4 -translate-y-1/2 z-20 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-uadav-accent hover:text-black"><i class="fa-solid fa-chevron-right"></i></button>
+        <div class="relative w-full aspect-video bg-black swipe-area" id="swipeArea"><iframe id="iframePlayer" class="w-full h-full" src="about:blank" title="Reproductor" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><video id="html5Player" class="w-full h-full hidden" controls autoplay></video></div>
+        <div class="p-4 sm:p-6">
+          <span id="modalCategoria" class="inline-block bg-uadav-accent/10 text-uadav-accent border border-uadav-accent/20 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest mb-2 sm:mb-3">Categoría</span>
+          <h3 id="modalTitulo" class="text-lg sm:text-2xl font-black text-white mb-2 leading-tight">Título</h3>
+          <p id="modalDescripcion" class="text-slate-400 text-xs sm:text-sm line-clamp-2">Descripción del contenido...</p>
+          <div class="mt-4 flex items-center gap-3">
+            <button tabindex="0" onclick="addToQueue()" class="tv-focusable bg-slate-900 border border-uadav-border hover:border-uadav-accent text-white text-xs px-4 py-2 rounded-full font-bold"><i class="fa-solid fa-list-ul mr-1"></i> Añadir a Cola</button>
+            <button tabindex="0" onclick="togglePlayRadio()" class="tv-focusable bg-slate-900 border border-uadav-border hover:border-uadav-accent text-white text-xs px-4 py-2 rounded-full font-bold"><i class="fa-solid fa-pause mr-1"></i> Pausar</button>
+          </div>
+        </div>
       </div>
     </div>
-    <audio id="audioStream" src="" preload="none"></audio>
-  </div>
 
-  <!-- Botón flotante para instalar PWA -->
-  <div id="installBanner" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-uadav-accent text-black px-4 py-2 rounded-full shadow-lg font-bold text-sm hidden">
-    📲 Instalar App
-    <button onclick="instalarApp()" class="ml-2 bg-black text-white px-3 py-1 rounded-full text-xs">Instalar</button>
-    <button onclick="document.getElementById('installBanner').classList.add('hidden')" class="ml-1 text-black/70">✕</button>
-  </div>
+    <div id="queueBar" class="hidden fixed bottom-16 md:bottom-4 right-4 z-40 bg-[#0a0a0d]/95 border border-uadav-border rounded-xl p-3 w-64 sm:w-80 shadow-2xl backdrop-blur-xl">
+      <div class="flex justify-between items-center mb-2"><h4 class="text-xs font-black text-uadav-accent uppercase">Cola de Reproducción</h4><button onclick="toggleQueue()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
+      <div id="queueList" class="space-y-1 max-h-40 overflow-y-auto no-scrollbar"></div>
+    </div>
+
+    <footer class="bg-[#050505] border-t border-uadav-border py-8 text-xs sm:text-sm text-slate-500">
+      <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-2 text-white font-black text-lg sm:text-xl">UADAV<span class="text-uadav-accent">STREAM</span></div>
+        <div class="text-center md:text-right space-y-2">
+          <div id="bannerFooterContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
+          <p id="footerLegal" class="max-w-md text-slate-400">UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.</p>
+          <p class="flex items-center justify-center md:justify-end gap-2"><i class="fa-solid fa-eye text-uadav-accent"></i> <span id="visitCounter" class="font-bold text-white">0</span> Visitas</p>
+          <p class="text-uadav-accent font-bold"><i class="fa-brands fa-whatsapp"></i> +54 341 3 602 783</p>
+        </div>
+      </div>
+    </footer>
+
+    <div id="artistModal" onclick="cerrarModalArtistaBackdrop(event)" class="fixed inset-0 z-50 bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-4">
+      <div class="bg-[#0f0f13] border border-uadav-border w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar" onclick="event.stopPropagation()">
+        <div class="relative h-48 md:h-64 w-full bg-gradient-to-br from-slate-800 via-slate-900 to-black overflow-hidden"><img id="artModalBanner" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&q=80" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 bg-gradient-to-t from-[#0f0f13] via-transparent to-transparent"></div></div>
+        <div class="relative px-6 pb-6 -mt-16 md:-mt-20">
+          <div class="flex flex-col md:flex-row items-end gap-4">
+            <img id="artModalFoto" src="" class="w-28 h-28 md:w-40 md:h-40 rounded-full object-cover border-4 border-[#0f0f13] shadow-2xl z-10">
+            <div class="flex-1 pb-2 text-center md:text-left"><span class="text-[10px] text-uadav-accent font-black tracking-widest uppercase block mb-1">Artista UADAV</span><h3 id="artModalNombre" class="text-3xl md:text-5xl font-black text-white leading-none drop-shadow-lg"></h3><p id="artModalGenero" class="text-xs md:text-sm text-slate-400 mt-2"></p></div>
+          </div>
+          <div id="artModalBio" class="mt-6 text-xs md:text-sm text-slate-300 leading-relaxed max-w-2xl border-t border-uadav-border pt-4"></div>
+          <div class="mt-4 flex flex-wrap gap-3">
+            <button id="artModalActionBtn" class="bg-uadav-accent text-slate-950 font-black text-xs px-5 py-3 rounded-full"><i class="fa-solid fa-magnifying-glass mr-1"></i> Buscar en YouTube</button>
+            <button id="artModalContactBtn" class="hidden bg-slate-900 border border-uadav-border hover:border-uadav-accent text-white font-bold text-xs px-5 py-3 rounded-full"><i class="fa-brands fa-whatsapp text-green-500 mr-1"></i> Contratar / Contactar</button>
+          </div>
+        </div>
+        <div class="px-6 pb-8"><h4 class="text-sm font-black text-white mb-4 uppercase tracking-wider text-uadav-accent">Canciones y Videos</h4><div id="artModalListaVideos" class="space-y-2"></div></div>
+        <button onclick="cerrarModalArtista()" class="absolute top-4 right-4 w-10 h-10 bg-black/80 text-white hover:bg-uadav-accent hover:text-black rounded-full flex items-center justify-center backdrop-blur-md z-30"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+
+    <div id="floatingRadioPlayer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0d]/95 border-t-2 border-uadav-accent backdrop-blur-xl px-4 py-3 shadow-2xl transform translate-y-full transition-transform duration-300">
+      <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3 overflow-hidden"><img id="radioPlayerImg" src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=200&q=80" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover border border-uadav-accent/40"><div class="overflow-hidden"><div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping"></span><span id="radioPlayerTag" class="text-[9px] font-black uppercase text-uadav-accent tracking-widest">EN VIVO</span></div><h4 id="radioPlayerTitle" class="text-xs sm:text-sm font-black text-white truncate">UADAV Radio</h4><p id="radioPlayerLocation" class="text-[10px] sm:text-xs text-slate-400 truncate">Señal HD</p></div></div>
+        <div id="radioEqualizer" class="hidden sm:flex items-center gap-1 h-5 px-2"><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.1s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.4s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.2s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.5s"></span></div>
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="hidden md:flex items-center gap-2"><i class="fa-solid fa-volume-low text-slate-400 text-xs"></i><input type="range" id="volumeSlider" min="0" max="100" value="80" class="w-20"><i class="fa-solid fa-volume-high text-slate-400 text-xs"></i></div>
+          <button tabindex="0" onclick="togglePlayRadio()" id="radioPlayBtn" class="tv-focusable w-10 h-10 sm:w-11 sm:h-11 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-black text-base shadow-lg hover:scale-105 transition-all"><i class="fa-solid fa-pause"></i></button>
+          <button tabindex="0" onclick="cerrarRadio()" class="tv-focusable text-slate-400 hover:text-white text-base p-2"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <audio id="audioStream" src="" preload="none"></audio>
+    </div>
+
+    <div id="installBanner" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-uadav-accent text-black px-4 py-2 rounded-full shadow-lg font-bold text-sm hidden">
+      📲 Instalar App
+      <button onclick="instalarApp()" class="ml-2 bg-black text-white px-3 py-1 rounded-full text-xs">Instalar</button>
+      <button onclick="document.getElementById('installBanner').classList.add('hidden')" class="ml-1 text-black/70">✕</button>
+    </div>
+
+  </div> <!-- Fin pageContent -->
 
   <script>
+    // ============================================================
+    // 1. VERIFICAR ESTADO DEL SITIO
+    // ============================================================
+    (async function() {
+      const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
+      const overlay = document.getElementById('maintenance-overlay');
+      const pageContent = document.getElementById('pageContent');
+
+      try {
+        const res = await fetch(API_URL + 'estado_sitio?_=' + Date.now());
+        if (res.ok) {
+          const estado = await res.json();
+          if (estado.modo === 'mantenimiento') {
+            document.getElementById('maintenance-title').innerText = estado.titulo || '🔧 En construcción';
+            document.getElementById('maintenance-message').innerText = estado.mensaje || 'Estamos mejorando la plataforma. Vuelve pronto.';
+            overlay.style.display = 'flex';
+            pageContent.style.display = 'none';
+            return;
+          } else if (estado.modo === 'landing' && estado.landing_url) {
+            window.location.href = estado.landing_url;
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('No se pudo verificar el estado del sitio, mostrando normal.');
+      }
+
+      overlay.style.display = 'none';
+      pageContent.style.display = 'block';
+      if (typeof cargarHome === 'function') {
+        cargarHome();
+      }
+    })();
+
+    // ============================================================
+    // 2. RESTO DE LA APP
+    // ============================================================
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
     const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80';
     
@@ -240,7 +300,7 @@
 
     if (localStorage.getItem('uadav_cache_version') !== 'v32us') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v32us'); }
 
-    // ===== APARIENCIA DINÁMICA =====
+    // ===== APARIENCIA =====
     async function aplicarApariencia() {
       const defaults = {
         color_acento: '#00e5ff',
@@ -248,7 +308,6 @@
         color_tarjetas: '#0f0f13'
       };
       let data = { ...defaults };
-
       try {
         const res = await fetch(API_URL + 'apariencia?_=' + Date.now());
         if (res.ok) {
@@ -261,7 +320,6 @@
       } catch (e) {
         console.warn('⚠️ Error al cargar apariencia:', e.message);
       }
-
       document.querySelectorAll('style[data-apariencia]').forEach(el => el.remove());
       const style = document.createElement('style');
       style.setAttribute('data-apariencia', 'true');
@@ -293,25 +351,11 @@
         const res = await fetch(API_URL + 'banners?_=' + Date.now());
         if (res.ok) {
           const data = await res.json();
-          if (data.top && data.top.activo && data.top.html) {
-            document.getElementById('bannerTopContainer').innerHTML = data.top.html;
-          } else {
-            document.getElementById('bannerTopContainer').innerHTML = '';
-          }
-          if (data.infeed && data.infeed.activo && data.infeed.html) {
-            document.getElementById('bannerInfeedContainer').innerHTML = data.infeed.html;
-          } else {
-            document.getElementById('bannerInfeedContainer').innerHTML = '';
-          }
-          if (data.footer && data.footer.activo && data.footer.html) {
-            document.getElementById('bannerFooterContainer').innerHTML = data.footer.html;
-          } else {
-            document.getElementById('bannerFooterContainer').innerHTML = '';
-          }
+          document.getElementById('bannerTopContainer').innerHTML = (data.top && data.top.activo && data.top.html) ? data.top.html : '';
+          document.getElementById('bannerInfeedContainer').innerHTML = (data.infeed && data.infeed.activo && data.infeed.html) ? data.infeed.html : '';
+          document.getElementById('bannerFooterContainer').innerHTML = (data.footer && data.footer.activo && data.footer.html) ? data.footer.html : '';
         }
-      } catch (e) {
-        console.log('Banners no disponibles');
-      }
+      } catch (e) { console.log('Banners no disponibles'); }
     }
 
     // ===== PWA =====
@@ -320,13 +364,11 @@
         .then(() => console.log('Service Worker registrado'))
         .catch(err => console.log('Error SW:', err));
     }
-
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
       document.getElementById('installBanner').classList.remove('hidden');
     });
-
     function instalarApp() {
       if (deferredPrompt) {
         deferredPrompt.prompt();
@@ -336,7 +378,7 @@
       }
     }
 
-    // ===== RESTO DE FUNCIONES (sin cambios) =====
+    // ===== FUNCIONES DE RENDERIZADO =====
     function aplicarTitulosDinamicos() {
       seccionesActivas.forEach(sec => {
         const titleMap = { 'radios': 'radiosTitle', 'senales': 'senalesTitle', 'artistas': 'artistasTitle', 'teatros': 'teatrosTitle', 'circos': 'circosTitle', 'trending': 'trendingTitle', 'shorts': 'shortsTitle', 'cartelera': 'carteleraTitle', 'conciertos': 'conciertosTitle' };
@@ -353,8 +395,7 @@
         const sectionId = sec.id + 'Section';
         const section = document.getElementById(sectionId);
         if (section) {
-          if (sec.activa) { section.classList.remove('hidden'); }
-          else { section.classList.add('hidden'); }
+          if (sec.activa) { section.classList.remove('hidden'); } else { section.classList.add('hidden'); }
         }
       });
     }
@@ -362,7 +403,15 @@
     function renderNavbar() {
       const nav = document.getElementById('navbar'); nav.innerHTML = '';
       const inicioBtn = document.createElement('button'); inicioBtn.innerHTML = 'Inicio'; inicioBtn.className = "tv-focusable cat-btn bg-uadav-accent text-slate-950 px-6 py-3 rounded-full whitespace-nowrap transition-all text-sm font-black uppercase tracking-wider shadow-md"; inicioBtn.onclick = () => filtrarCategoria('todas', inicioBtn); nav.appendChild(inicioBtn);
-      seccionesActivas.forEach(sec => { if (!sec.activa) return; const btn = document.createElement('button'); const icon = sec.icono || 'fa-circle'; btn.innerHTML = `<i class="fa-solid ${icon} mr-2"></i> ${sec.nombre}`; btn.className = "tv-focusable cat-btn bg-[#0f0f13] border-2 border-uadav-border text-slate-300 hover:text-uadav-accent hover:border-uadav-accent px-6 py-3 rounded-full whitespace-nowrap transition-all text-sm font-black uppercase tracking-wider"; btn.onclick = () => filtrarCategoria(sec.id, btn); nav.appendChild(btn); });
+      seccionesActivas.forEach(sec => {
+        if (!sec.activa) return;
+        const btn = document.createElement('button');
+        const icon = sec.icono || 'fa-circle';
+        btn.innerHTML = `<i class="fa-solid ${icon} mr-2"></i> ${sec.nombre}`;
+        btn.className = "tv-focusable cat-btn bg-[#0f0f13] border-2 border-uadav-border text-slate-300 hover:text-uadav-accent hover:border-uadav-accent px-6 py-3 rounded-full whitespace-nowrap transition-all text-sm font-black uppercase tracking-wider";
+        btn.onclick = () => filtrarCategoria(sec.id, btn);
+        nav.appendChild(btn);
+      });
     }
 
     function renderQueue() { const list = document.getElementById('queueList'); list.innerHTML = ''; queue.forEach((item, index) => { list.innerHTML += `<div onclick="loadFromQueue(${index})" class="flex items-center gap-2 p-2 bg-slate-900 rounded-lg cursor-pointer hover:bg-slate-800 ${index === currentIndex ? 'border border-uadav-accent' : ''}"><i class="fa-solid fa-music text-uadav-accent text-xs"></i><span class="text-xs text-white truncate">${item.titulo}</span></div>`; }); }
@@ -375,7 +424,7 @@
     function initCarouselDrag() { document.querySelectorAll('.overflow-x-auto').forEach(container => { let isDown = false, startX, scrollLeft; container.style.cursor = 'grab'; container.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - container.offsetLeft; scrollLeft = container.scrollLeft; }); container.addEventListener('mouseleave', () => { isDown = false; container.style.cursor = 'grab'; }); container.addEventListener('mouseup', () => { isDown = false; container.style.cursor = 'grab'; }); container.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - container.offsetLeft; const walk = (x - startX) * 2; container.scrollLeft = scrollLeft - walk; }); container.addEventListener('wheel', (e) => { if (e.shiftKey) { e.preventDefault(); container.scrollLeft += e.deltaY; } }, { passive: false }); container.setAttribute('tabindex', '0'); container.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { e.preventDefault(); container.scrollLeft += 50; } if (e.key === 'ArrowLeft') { e.preventDefault(); container.scrollLeft -= 50; } }); }); }
 
     async function cargarConfigYVisitas() {
-      try { const res = await fetch(API_URL + 'config'); if (res.ok) configGlobal = await res.json(); } catch(e) {}
+      try { const res = await fetch(API_URL + 'config?_=' + Date.now()); if (res.ok) configGlobal = await res.json(); } catch(e) {}
       const selector = document.getElementById('countrySelectorHeader'); if (configGlobal.pais_trending && configGlobal.pais_trending !== 'Auto' && configGlobal.pais_trending !== '') selector.value = configGlobal.pais_trending; else selector.value = 'AR';
       if (configGlobal.mostrar_ip) { document.getElementById('countryBadge').classList.remove('hidden'); }
       document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
@@ -383,13 +432,31 @@
       document.getElementById('heroSub').innerText = configGlobal.hero_subtitulo || "UADAVSTREAM TV";
       document.getElementById('heroBtnTexto').innerText = configGlobal.hero_boton_texto || "Ver SEÑAL OFICIAL";
       document.getElementById('heroBtn').onclick = () => reproducirVideo(configGlobal.hero_boton_url || '-479TZi-EAs', configGlobal.hero_titulo || "Señal Oficial", "En Vivo", "Transmisión oficial");
-      try { const resV = await fetch(API_URL + 'visits'); if (resV.ok) { const data = await resV.json(); document.getElementById('visitCounter').innerText = data.visitas_totales; } await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
+      try { const resV = await fetch(API_URL + 'visits?_=' + Date.now()); if (resV.ok) { const data = await resV.json(); document.getElementById('visitCounter').innerText = data.visitas_totales; } await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
     }
 
-    async function obtenerDatos(seccion) { try { const res = await fetch(API_URL + seccion); if (res.ok) { const data = await res.json(); if (data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0)) return data; } } catch (e) {} return []; }
-    async function obtenerVideos(query) { try { const res = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(query)}`); if (res.ok) return await res.json(); } catch (e) {} return []; }
+    async function obtenerDatos(seccion) { 
+      try { 
+        const res = await fetch(API_URL + seccion + '?_=' + Date.now()); 
+        if (res.ok) { 
+          const data = await res.json(); 
+          if (data && (Array.isArray(data) ? data.length > 0 : Object.keys(data).length > 0)) return data; 
+        } 
+      } catch (e) {} 
+      return []; 
+    }
+    
+    async function obtenerVideos(query) { 
+      try { 
+        const res = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(query)}&_=${Date.now()}`); 
+        if (res.ok) return await res.json(); 
+      } catch (e) {} 
+      return []; 
+    }
+    
     function obtenerCaratulaUltraRapida(id) { if (!id || id.length !== 11) return FALLBACK_THUMB; return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`; }
 
+    // ===== SEÑALES =====
     function renderSenalesUI() {
       const container = document.getElementById('senalesGrid'); if(!container) return; container.innerHTML = '';
       if (!senalesData || senalesData.length === 0) { container.innerHTML = '<div class="col-span-full text-center text-slate-400 text-xs py-10">No hay señales cargadas.</div>'; return; }
@@ -443,6 +510,7 @@
       document.getElementById('videoModal').classList.remove('hidden');
     }
 
+    // ===== RADIOS =====
     function renderRadiosUI() {
       const container = document.getElementById('radiosGrid'); if(!container) return; container.innerHTML = '';
       const radiosMostrar = radiosData; const principal = radiosMostrar.find(r => r.es_oficial);
@@ -560,11 +628,39 @@
         if (activeRadioId) { const card = document.getElementById(`radio-card-${activeRadioId}`); if (card) card.classList.remove('active'); const eq = document.getElementById(`radio-eq-${activeRadioId}`); if (eq) eq.style.display = 'none'; }
     }
 
+    // ===== ARTISTAS =====
     function renderArtistasUI() { const container = document.getElementById('artistasGrid'); if(!container) return; container.innerHTML = ''; artistasData.forEach(a => { const nombre = a.nombre || "Artista", foto = a.foto || FALLBACK_THUMB, rubro = a.rubro || "Artista UADAV"; container.innerHTML += `<div tabindex="0" onclick="abrirPerfilArtista('${a.id}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl p-3 text-center cursor-pointer group transition-all"><div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-full overflow-hidden mb-3 border-2 border-uadav-border group-hover:border-uadav-accent transition-colors shadow-lg"><img src="${foto}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="${nombre}"></div><h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-uadav-accent transition-colors truncate">${nombre}</h4><span class="text-[9px] sm:text-[10px] text-slate-400 block mt-0.5">${rubro}</span></div>`; }); }
 
     function renderCarteleraUI() { const cartRail = document.getElementById('carteleraRail'); if(!cartRail) return; cartRail.innerHTML = ''; carteleraData.forEach(c => { cartRail.innerHTML += `<div tabindex="0" class="tv-focusable min-w-[200px] sm:min-w-[240px] bg-[#0a0a0c] border border-uadav-border p-4 sm:p-5 rounded-2xl flex-shrink-0 hover:border-uadav-accent transition-colors group"><span class="text-[10px] sm:text-xs font-black text-uadav-accent block mb-1 sm:mb-2 tracking-widest">${c.fecha || c.estado_badge}</span><h4 class="text-base sm:text-lg font-black text-white mb-1">${c.artista || c.titulo}</h4><p class="text-xs sm:text-sm text-slate-400 mb-1"><i class="fa-solid fa-location-dot mr-1"></i> ${c.lugar}</p><span class="inline-block bg-slate-900 text-slate-300 text-[9px] sm:text-[10px] px-2 py-0.5 sm:py-1 rounded-full mt-2 border border-slate-800">${c.tipo || c.categoria}</span></div>`; }); }
 
-    async function cargarSeccionDinamica(containerId, secId) { const rail = document.getElementById(containerId); const sec = seccionesActivas.find(s => s.id === secId); if (!rail || !sec) return; let items = []; if (sec.modo === 'manual' && sec.ids_manuales) items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' })); else { const query = sec.query || sec.nombre, cacheKey = `uadav_cache_${secId}_v32us`, cachedData = localStorage.getItem(cacheKey); if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
+    async function cargarSeccionDinamica(containerId, secId) { 
+      const rail = document.getElementById(containerId); 
+      const sec = seccionesActivas.find(s => s.id === secId); 
+      if (!rail || !sec) return; 
+      let items = []; 
+      if (sec.modo === 'manual' && sec.ids_manuales) {
+        items = sec.ids_manuales.map(id => ({ id: id, titulo: "Curaduría", categoria: sec.nombre, descripcion: "Manual", duracion: "HD", thumbnail: obtenerCaratulaUltraRapida(id), tipo: 'video' }));
+      } else { 
+        const query = sec.query || sec.nombre;
+        const cacheKey = `uadav_cache_${secId}_v32us`;
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) items = JSON.parse(cachedData);
+        else { 
+          const data = await obtenerVideos(query); 
+          if (data && Array.isArray(data)) { 
+            items = data.slice(0, 10); 
+            if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); 
+          } 
+        } 
+      } 
+      rail.innerHTML = ''; 
+      if (items && items.length > 0) { 
+        queue = []; 
+        items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); 
+        currentIndex = -1; 
+        items.forEach(item => rail.appendChild(crearCard(item))); 
+      } 
+    }
 
     async function cargarShortsExclusivos() { const rail = document.getElementById('shortsRail'); if (!rail) return; const cacheKey = 'uadav_cache_shorts_strict_v32us', cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos('#shorts'); if (data && Array.isArray(data)) { items = data.filter(item => item.tipo === 'short' || (item.duracion && parseInt(item.duracion) <= 60)).slice(0, 10); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearShortCard(item))); } }
 
@@ -607,7 +703,7 @@
     document.getElementById('html5Player').addEventListener('ended', function() { nextVideo(); });
 
     async function abrirPerfilArtista(id) { const artista = artistasData.find(a => a.id === id); if (!artista) return; document.getElementById('artModalBanner').src = artista.portada || artista.foto || FALLBACK_THUMB; document.getElementById('artModalFoto').src = artista.foto || FALLBACK_THUMB; document.getElementById('artModalNombre').innerText = artista.nombre; document.getElementById('artModalGenero').innerText = artista.rubro || "Artista UADAV"; document.getElementById('artModalBio').innerText = artista.bio || "Sin biografía cargada."; const btnContacto = document.getElementById('artModalContactBtn'); if (artista.contacto) { btnContacto.classList.remove('hidden'); btnContacto.onclick = () => { window.open(`https://wa.me/${artista.contacto.replace(/\D/g, '')}`, '_blank'); }; } else { btnContacto.classList.add('hidden'); } document.getElementById('artistModal').classList.remove('hidden'); const contVideos = document.getElementById('artModalListaVideos'); contVideos.innerHTML = '<p class="text-xs text-slate-500">Cargando videos...</p>'; let videos = []; if (artista.tiene_youtube && artista.youtube_channel_id) { const videosCanal = await obtenerVideosDeCanal(artista.youtube_channel_id); const videosCanalMapeados = (videosCanal || []).map(v => ({ url: v.id, tipo: 'youtube', titulo: v.titulo || 'Video del canal' })); videos = videos.concat(videosCanalMapeados); } if (artista.videos_manuales && artista.videos_manuales.length > 0) { const manuales = artista.videos_manuales.map(normalizarVideo).filter(v => v !== null); videos = videos.concat(manuales); } if (videos.length > 0) { queue = videos.map(v => ({ url: v.url, tipo: v.tipo, titulo: v.titulo, categoria: 'Artista', descripcion: artista.nombre })); currentIndex = -1; renderQueue(); let gridHTML = '<div class="grid grid-cols-2 md:grid-cols-3 gap-4">'; videos.forEach((v, index) => { let thumb = FALLBACK_THUMB; if (v.tipo === 'youtube' && v.url && v.url.length === 11) thumb = obtenerCaratulaUltraRapida(v.url); let tituloVideo = v.titulo || `Video ${index + 1}`; gridHTML += `<div onclick="reproducirVideoPersonalizado('${v.url}', '${v.tipo}', '${artista.nombre}', '${tituloVideo.replace(/'/g, "\\'")}')" class="bg-slate-900 border border-uadav-border hover:border-uadav-accent rounded-xl overflow-hidden cursor-pointer group transition-all"><div class="relative aspect-video"><img src="${thumb}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';"><div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><i class="fa-solid fa-play text-3xl text-white drop-shadow-lg"></i></div></div><div class="p-3"><h5 class="font-bold text-xs text-white truncate">${tituloVideo}</h5><p class="text-[10px] text-slate-400 uppercase">${v.tipo === 'youtube' ? 'YouTube' : 'Directo'}</p></div></div>`; }); gridHTML += '</div>'; contVideos.innerHTML = gridHTML; } else { contVideos.innerHTML = '<p class="text-xs text-slate-500">No hay videos cargados en el panel para este artista.</p>'; } document.getElementById('artModalActionBtn').onclick = () => { cerrarModalArtista(); document.getElementById('searchInput').value = artista.nombre; ejecutarBusqueda(); }; }
-    async function obtenerVideosDeCanal(channelIdInput) { let channelId = channelIdInput || ''; if (channelId.includes('channel_id=')) channelId = channelId.split('channel_id=')[1].split('&')[0]; else if (channelId.includes('/channel/')) channelId = channelId.split('/channel/')[1].split('/')[0]; else if (channelId.includes('/@')) channelId = channelId.split('/@')[1].split('/')[0]; if (!channelId.startsWith('UC') || channelId.length < 24) return []; try { const res = await fetch(`${API_URL}channel_videos?channel_id=${channelId}`); if (res.ok) return await res.json(); } catch (e) {} return []; }
+    async function obtenerVideosDeCanal(channelIdInput) { let channelId = channelIdInput || ''; if (channelId.includes('channel_id=')) channelId = channelId.split('channel_id=')[1].split('&')[0]; else if (channelId.includes('/channel/')) channelId = channelId.split('/channel/')[1].split('/')[0]; else if (channelId.includes('/@')) channelId = channelId.split('/@')[1].split('/')[0]; if (!channelId.startsWith('UC') || channelId.length < 24) return []; try { const res = await fetch(`${API_URL}channel_videos?channel_id=${channelId}&_=${Date.now()}`); if (res.ok) return await res.json(); } catch (e) {} return []; }
     function normalizarVideo(v) { let url = v.url || '', tipo = v.tipo || 'mp4'; if (url.startsWith('UC') && url.length > 20) return null; if (tipo === 'mp4') { if (/^[a-zA-Z0-9_-]{11}$/.test(url)) tipo = 'youtube'; else if (url.includes('youtube.com') || url.includes('youtu.be')) { let id = url.split('v=')[1] || url.split('/').pop(); if (id.includes('&')) id = id.split('&')[0]; url = id; tipo = 'youtube'; } } return { url: url, tipo: tipo, titulo: v.titulo || '' }; }
 
     async function cargarTendenciasPorPais(pais) { const rail = document.getElementById('ipTrendingRail'); if(!rail) return; rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>'; let query = 'top hits'; const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia', 'CL': 'Chile' }; if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais); else { try { const ipRes = await fetch('https://ipapi.co/json/'); const ipData = await ipRes.json(); if (ipData.country_name) query = 'top hits ' + ipData.country_name; } catch(e) { query = 'top hits Argentina'; } } const cacheKey = `trending_pais_${pais || 'auto'}_v32us`; const cachedData = localStorage.getItem(cacheKey); let items = []; if (cachedData) items = JSON.parse(cachedData); else { const data = await obtenerVideos(query); if (data && Array.isArray(data)) { items = data.slice(0, 12); if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items)); } } rail.innerHTML = ''; if (items && items.length > 0) { queue = []; items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria, descripcion: item.descripcion })); currentIndex = -1; items.forEach(item => rail.appendChild(crearCard(item))); } }
@@ -622,11 +718,9 @@
       await aplicarApariencia();
       await cargarBanners();
       seccionesActivas = await obtenerDatos('secciones'); 
-      
       aplicarVisibilidadSecciones();
       aplicarTitulosDinamicos();
       renderNavbar();
-      
       senalesData = await obtenerDatos('senales_oficiales'); renderSenalesUI();
       artistasData = await obtenerDatos('artistas_uadav'); renderArtistasUI();
       radiosData = await obtenerDatos('radios'); renderRadiosUI();
@@ -638,8 +732,6 @@
       cargarSeccionDinamica('conciertosRail', 'conciertos');
       initCarouselDrag();
     }
-
-    window.onload = () => cargarHome();
   </script>
 </body>
 </html>
