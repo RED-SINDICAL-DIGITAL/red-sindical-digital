@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UADAVSTREAM - La Pantalla del Artista de Variedades</title>
+    <!-- Tailwind CSS desde CDN para no usar espacio en servidor -->
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        body { background-color: #0c0c0c; color: #f3f4f6; }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="flex justify-between items-center p-6 border-b border-gray-800">
+        <div class="text-xl font-bold tracking-wider text-blue-500">UADAV<span class="text-white">STREAM</span></div>
+        <div class="hidden md:flex space-x-6 text-sm text-gray-400">
+            <a href="#" class="hover:text-white">Inicio</a>
+            <a href="#" class="hover:text-white">73 Actividades</a>
+            <a href="#" class="hover:text-white">Beat Digital Radio</a>
+        </div>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded">Acceso Afiliados</button>
+    </nav>
+
+    <!-- HERO SECTION + BUSCADOR -->
+    <header class="max-w-4xl mx-auto text-center my-20 px-4">
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+            La pantalla oficial de la cultura y el trabajo en Santa Fe
+        </h1>
+        <p class="text-gray-400 text-lg mb-8 max-w-2xl mx-auto">
+            Impulsado por Beat Digital para la Secretaría de Prensa de UADAV. Difusión masiva regulada bajo el CCT 340/75.
+        </p>
+        
+        <!-- El Buscador conectado a tu API de YouTube -->
+        <div class="flex max-w-xl mx-auto bg-gray-900 border border-gray-800 rounded-lg p-2">
+            <input type="text" id="query" placeholder="Buscar DJs, circos, obras de teatro..." class="w-full bg-transparent p-3 text-white focus:outline-none">
+            <button onclick="buscarEnApp()" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-md font-medium">Buscar</button>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR DE RESULTADOS EN TIEMPO REAL -->
+    <main class="max-w-6xl mx-auto px-4 mb-20">
+        <div id="resultados" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Acá inyectará DeepSeek las tarjetas de video con el estado gremial al vuelo -->
+        </div>
+    </main>
+
+    <!-- FOOTER LEGAL -->
+    <footer class="border-t border-gray-900 p-8 text-center text-xs text-gray-600 bg-black">
+        <p class="mb-2">Desarrollo e Infraestructura Tecnológica por <strong>Beat Digital Medios</strong>. Todos los derechos reservados 2026.</p>
+        <p class="max-w-3xl mx-auto">Esta plataforma funciona como un indexador en tiempo real mediante la API de YouTube. Toda visualización e interacción se rige estrictamente por las facultades de fiscalización laboral autónoma otorgadas por el Convenio Colectivo de Trabajo N° 340/75 de UADAV Seccional Provincia de Santa Fe.</p>
+    </footer>
+
+    <script>
+        // Esta función la va a rellenar DeepSeek para conectarse a tu Worker
+        function buscarEnApp() {
+            const buscar = document.getElementById('query').value;
+            console.log("Buscando en tu Cloudflare Worker a:", buscar);
+        }
+    </script>
+</body>
+</html>
