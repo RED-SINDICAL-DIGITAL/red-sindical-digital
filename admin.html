@@ -3,841 +3,398 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Control - UADAVSTREAM</title>
+  <title>Panel Ultra UADAVSTREAM</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { theme: { extend: { colors: { uadav: { accent: '#00e5ff', dark: '#050505', card: '#0f0f13', border: '#1f1f26' } }, fontFamily: { sans: ['Outfit', 'sans-serif'] } } } }
-  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { background-color: #050505; color: #E2E8F0; font-family: 'Outfit', sans-serif; }
-    input, textarea, select { background: #0a0a0c; border: 1px solid #1f1f26; border-radius: 8px; padding: 8px; width: 100%; color: white; margin-bottom: 8px; }
-    label { font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px; display: block; }
-    .btn { padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+    body { background: #050505; color: #E2E8F0; font-family: 'Outfit', sans-serif; }
+    input, textarea, select { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px; width: 100%; color: white; margin-bottom: 10px; }
+    label { font-size: 11px; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; display: block; font-weight: 700; }
+    .btn { padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; border: none; }
     .btn-save { background: #00e5ff; color: #050505; }
-    .btn-save:hover { background: #00b8cc; }
-    .btn-del { background: #dc2626; color: white; }
-    .btn-del:hover { background: #b91c1c; }
+    .btn-del { background: #ef4444; color: white; }
     .btn-edit { background: #3b82f6; color: white; }
-    .btn-edit:hover { background: #2563eb; }
-    .btn-move { background: #334155; color: white; padding: 4px 10px; font-size: 14px; }
-    .btn-move:disabled { opacity: 0.3; cursor: not-allowed; }
-    .item-box { background: #0f0f13; border: 1px solid #1f1f26; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
-    details { margin-bottom: 16px; border: 1px solid #1f1f26; border-radius: 12px; padding: 12px; background: #0a0a0c; }
-    summary { font-weight: 700; cursor: pointer; color: #00e5ff; font-size: 16px; }
-    summary:hover { color: #ffffff; }
-    .status-msg { font-size: 12px; margin-top: 6px; padding: 6px; border-radius: 6px; }
-    .status-msg.success { background: #064e3b; color: #6ee7b7; }
-    .status-msg.error { background: #7f1d1d; color: #fca5a5; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .btn-move { background: #334155; color: white; }
+    .item-box { background: #1e293b; border: 1px solid #334155; padding: 16px; border-radius: 12px; margin-bottom: 12px; }
+    .content-video-box { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    details { margin-bottom: 20px; border: 1px solid #334155; border-radius: 16px; background: #1e293b; padding: 10px; }
+    summary { font-weight: 800; cursor: pointer; color: #00e5ff; font-size: 18px; padding: 10px; display: flex; align-items: center; gap: 10px; }
+    .pro-header { background: #0f172a; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 50; padding: 10px; border-radius: 16px; margin-bottom: 10px; }
   </style>
 </head>
 <body class="p-4 sm:p-8 min-h-screen">
-  <div class="max-w-5xl mx-auto">
-    <div class="flex justify-between items-center mb-8 border-b border-uadav-border pb-4 flex-wrap gap-2">
-      <h1 class="text-2xl font-black text-white">UADAV <span class="text-uadav-accent">STREAM</span> - Panel Admin</h1>
-      <div class="flex gap-2 flex-wrap">
-        <input type="password" id="adminKeyInput" placeholder="Pegar ADMIN_KEY aquí..." class="w-64" onkeydown="if(event.key === 'Enter') conectar()">
-        <button onclick="conectar()" class="btn bg-uadav-accent text-black">Conectar</button>
-        <button onclick="desconectar()" class="btn bg-slate-600 text-white">Cerrar sesión</button>
+  <div class="max-w-6xl mx-auto">
+    <div class="pro-header flex justify-between items-center mb-8">
+      <h1 class="text-2xl font-black text-white">UADAV <span class="text-[#00e5ff]">STREAM</span> <span class="text-sm bg-slate-800 px-2 py-1 rounded-full">Panel Ultra</span></h1>
+      <div class="flex gap-2">
+        <input type="password" id="adminKeyInput" placeholder="Clave Admin" class="w-64" onkeydown="if(event.key === 'Enter') conectar()">
+        <button onclick="conectar()" class="btn btn-save"><i class="fa-solid fa-unlock"></i> Conectar</button>
+        <button onclick="desconectar()" id="btnLogout" class="btn btn-del hidden"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
       </div>
     </div>
 
     <div id="panelContent" class="hidden space-y-6">
-
-      <!-- APARIENCIA -->
       <details open>
-        <summary>🎨 Apariencia y Marca</summary>
-        <div class="border border-uadav-border rounded-xl p-4 mt-3">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label>Logo (URL)</label><input id="marcaLogo" placeholder="https://..."></div>
-            <div><label>Título del Sitio</label><input id="marcaTitulo" placeholder="UADAVSTREAM"></div>
-            <div><label>Eslogan</label><input id="marcaEslogan" placeholder="Plataforma Global"></div>
-            <div><label>Color Acento</label><input type="color" id="marcaColorAcento" value="#00e5ff"></div>
-            <div><label>Color Fondo</label><input type="color" id="marcaColorFondo" value="#050505"></div>
-            <div><label>Color Tarjetas</label><input type="color" id="marcaColorTarjetas" value="#0f0f13"></div>
+        <summary><i class="fa-solid fa-layer-group text-2xl"></i> Secciones Dinámicas y Contenido</summary>
+        <div class="p-4">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 p-4 bg-slate-900/50 rounded-xl">
+            <div><label>ID (sin espacios)</label><input id="nuevoSecId" placeholder="infantiles"></div>
+            <div><label>Nombre</label><input id="nuevoSecNombre" placeholder="Infantiles"></div>
+            <div><label>Ícono</label><input id="nuevoSecIcono" placeholder="fa-child"></div>
+            <div><label>Tipo</label><select id="nuevoSecTipo"><option value="videos">Videos</option><option value="perfiles">Perfiles</option><option value="eventos">Eventos</option></select></div>
+            <div><label>Query Auto</label><input id="nuevoSecQuery" placeholder="obras infantiles"></div>
+            <div class="md:col-span-5"><button onclick="agregarNuevaSeccion()" class="btn btn-save">+ Agregar Sección</button></div>
           </div>
-          <button onclick="guardarApariencia()" class="btn btn-save mt-4">Guardar Apariencia</button>
-          <div id="aparienciaStatus" class="status-msg mt-2"></div>
-        </div>
-      </details>
-
-      <!-- BANNERS -->
-      <details open>
-        <summary>📢 Espacios Publicitarios</summary>
-        <div class="border border-uadav-border rounded-xl p-4 mt-3">
-          <p class="text-xs text-slate-400 mb-4">Pegá el código HTML del anuncio (Google AdSense, iframe, imagen con link).</p>
-          <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
-            <h3 class="font-bold text-white text-sm mb-2">Banner Superior</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div><label>Activo</label><select id="bannerTopActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
-              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerTopHTML" rows="3" placeholder="&lt;!-- Código --&gt;"></textarea></div>
-            </div>
-          </div>
-          <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
-            <h3 class="font-bold text-white text-sm mb-2">Banner Entre Secciones</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div><label>Activo</label><select id="bannerInfeedActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
-              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerInfeedHTML" rows="3" placeholder="&lt;!-- Código --&gt;"></textarea></div>
-            </div>
-          </div>
-          <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
-            <h3 class="font-bold text-white text-sm mb-2">Banner Pie de Página</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div><label>Activo</label><select id="bannerFooterActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
-              <div class="md:col-span-2"><label>Código HTML</label><textarea id="bannerFooterHTML" rows="3" placeholder="&lt;!-- Código --&gt;"></textarea></div>
-            </div>
-          </div>
-          <button onclick="guardarBanners()" class="btn btn-save mt-2">Guardar Banners</button>
-          <div id="bannersStatus" class="status-msg mt-2"></div>
-        </div>
-      </details>
-
-      <!-- ESTADO DEL SITIO -->
-      <details open>
-        <summary>🔧 Estado del Sitio</summary>
-        <div class="border border-uadav-border rounded-xl p-4 mt-3">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label>Modo</label>
-              <select id="estadoModo">
-                <option value="normal">Normal (web app completa)</option>
-                <option value="mantenimiento">Mantenimiento (página en construcción)</option>
-                <option value="landing">Landing (redirigir a otra URL)</option>
-              </select>
-            </div>
-            <div id="estadoLandingUrlGroup" style="display:none;">
-              <label>URL de Landing</label>
-              <input id="estadoLandingUrl" placeholder="https://...">
-            </div>
-            <div id="estadoMantenimientoGroup" style="display:none;">
-              <label>Título de mantenimiento</label>
-              <input id="estadoMantTitulo" placeholder="🔧 En construcción">
-              <label>Mensaje</label>
-              <textarea id="estadoMantMensaje" rows="2" placeholder="Estamos mejorando la plataforma. Vuelve pronto."></textarea>
-            </div>
-          </div>
-          <button onclick="guardarEstadoSitio()" class="btn btn-save mt-4">Guardar Estado</button>
-          <div id="estadoStatus" class="status-msg mt-2"></div>
-        </div>
-      </details>
-
-      <!-- LANDING PAGE CONFIG -->
-      <details>
-        <summary>🎨 Landing Page (configuración visual)</summary>
-        <div class="border border-uadav-border rounded-xl p-4 mt-3">
-          <p class="text-xs text-slate-400 mb-4">Personalizá la apariencia y el mensaje de la landing page. Los colores y textos se actualizan automáticamente.</p>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label>Título Hero</label><input id="landingHeroTitulo" placeholder="El arte escénico al alcance de todos"></div>
-            <div><label>Subtítulo Hero</label><input id="landingHeroSubtitulo" placeholder="Descubrí obras de teatro, circos, humoristas y espectáculos..."></div>
-            <div><label>Mensaje de espera</label><input id="landingMensajeEspera" placeholder="Pronto podrás disfrutar de una experiencia única. Déjanos tu correo y te avisaremos."></div>
-            <div><label>Texto botón captador</label><input id="landingBotonTexto" placeholder="Enviar"></div>
-            <div><label>Imagen de fondo (URL)</label><input id="landingHeroImagen" placeholder="https://..."></div>
-            <div><label>Mostrar captador</label><select id="landingMostrarCaptador"><option value="true">Sí</option><option value="false">No</option></select></div>
-            <div><label>Color de fondo</label><input type="color" id="landingColorFondo" value="#050505"></div>
-            <div><label>Color acento</label><input type="color" id="landingColorAcento" value="#00e5ff"></div>
-            <div><label>Color tarjetas</label><input type="color" id="landingColorTarjetas" value="#0f0f13"></div>
-            <div><label>Color texto principal</label><input type="color" id="landingColorTextoPrincipal" value="#ffffff"></div>
-            <div><label>Color texto secundario</label><input type="color" id="landingColorTextoSecundario" value="#94a3b8"></div>
-            <div class="md:col-span-2"><label>Videos destacados (IDs separados por coma)</label><input id="landingVideosDestacados" placeholder="-479TZi-EAs,dQw4w9WgXcQ"></div>
-            <div><label>Modo de destacados</label>
-              <select id="landingModoDestacados">
-                <option value="ids">Manual (IDs)</option>
-                <option value="palabras">Palabras clave</option>
-                <option value="secciones">Secciones activas</option>
-                <option value="mixto">Mixto (IDs + Palabras + Secciones)</option>
-              </select>
-            </div>
-            <div><label>Palabras clave (separadas por coma)</label>
-              <input id="landingPalabrasClave" placeholder="teatro, circo, magia, humor">
-            </div>
-            <div><label>Límite de videos destacados</label>
-              <input type="number" id="landingLimiteDestacados" value="12" min="1" max="30">
-            </div>
-            <div class="md:col-span-2"><label>Texto del footer</label><input id="landingFooterTexto" placeholder="© 2025 UADAVSTREAM - Todos los derechos reservados."></div>
-            <div class="md:col-span-2"><label>Contacto del footer</label><input id="landingFooterContacto" placeholder="+54 341 3 602 783"></div>
-          </div>
-          <button onclick="guardarLandingConfig()" class="btn btn-save mt-4">Guardar configuración de Landing</button>
-          <div id="landingStatus" class="status-msg mt-2"></div>
-
-          <hr class="border-uadav-border my-4">
-          <h3 class="font-bold text-white text-sm mb-2">📋 Suscriptores</h3>
-          <div class="flex gap-3 flex-wrap">
-            <button onclick="verSuscriptores()" class="btn bg-blue-500 text-white">Ver suscriptores</button>
-            <button onclick="exportarSuscriptores()" class="btn bg-green-600 text-white">📥 Exportar CSV</button>
-          </div>
-          <div id="suscriptoresList" class="mt-3 text-xs text-slate-400 max-h-40 overflow-y-auto no-scrollbar"></div>
-        </div>
-      </details>
-
-      <!-- SECCIONES -->
-      <details>
-        <summary>📋 Gestor de Secciones (orden y personalización)</summary>
-        <div class="border border-uadav-border rounded-xl p-4 mt-3">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div><label>ID (sin espacios)</label><input id="nuevoSecId" placeholder="humor" onkeydown="if(event.key === 'Enter') agregarNuevaSeccion()"></div>
-            <div><label>Nombre</label><input id="nuevoSecNombre" placeholder="Humoristas" onkeydown="if(event.key === 'Enter') agregarNuevaSeccion()"></div>
-            <div><label>Icono (FontAwesome)</label><input id="nuevoSecIcono" placeholder="fa-face-laugh" onkeydown="if(event.key === 'Enter') agregarNuevaSeccion()"></div>
-            <div><label>Query</label><input id="nuevoSecQuery" placeholder="humoristas en vivo" onkeydown="if(event.key === 'Enter') agregarNuevaSeccion()"></div>
-          </div>
-          <button onclick="agregarNuevaSeccion()" class="btn btn-save mb-4">+ Agregar Sección</button>
           <div id="seccionesList" class="space-y-2"></div>
-          <p class="text-xs text-slate-400 mt-2">Usá los botones ⬆️⬇️ para reordenar. Luego guardá cambios.</p>
-        </div>
-      </details>
+          <hr class="border-slate-700 my-6">
+          
+          <div class="font-bold text-white mb-4 text-lg">🎬 Agregar / Editar Contenido</div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-slate-900/50 rounded-xl">
+            <div class="md:col-span-2"><label>Seleccionar Sección</label><select id="selectSeccionManual" onchange="actualizarFormularioYLista()"></select></div>
+            <div id="divTipoContenido"><label>Tipo de Video</label><select id="tipoContenido" onchange="toggleCamposDinamicos()"><option value="youtube">YouTube</option><option value="mp4">MP4 / URL</option><option value="m3u8">M3U8</option><option value="twitch">Twitch</option><option value="kick">Kick</option></select></div>
+            
+            <!-- Perfiles -->
+            <div id="camposArtista" class="hidden md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label>Nombre</label><input id="artNombre" placeholder="URO"></div>
+              <div><label>Rubro</label><input id="artRubro" placeholder="Música"></div>
+              <div><label>Foto URL</label><input id="artFoto" placeholder="https://..."></div>
+              <div><label>Bio</label><textarea id="artBio"></textarea></div>
+              <div><label>ID Canal YouTube</label><input id="artCanal" placeholder="UC..."></div>
+              <div><label>Contacto</label><input id="artContacto" placeholder="341..."></div>
+              <div class="md:col-span-2"><button onclick="cargarCanalMasivo()" class="btn btn-edit w-full"><i class="fa-solid fa-download"></i> 🚀 Importar Perfil y Videos</button></div>
+            </div>
 
-      <!-- SEÑALES -->
-      <details>
-        <summary>📡 Señales (Live Streams)</summary>
-        <div class="border border-uadav-border rounded-xl p-4 mt-3">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><label>Nombre</label><input id="senalNombre" placeholder="Señal UADAV TV" onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
-            <div><label>URL</label><input id="senalUrl" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
-            <div><label>Logo</label><input id="senalLogo" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
-            <div><label>Tipo</label><input id="senalTipo" placeholder="auto" onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
-            <div><label>Descripción</label><input id="senalDesc" placeholder="Transmisión oficial" onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
-            <div><label>¿Principal?</label><select id="senalPrincipal"><option value="true">Sí</option><option value="false">No</option></select></div>
+            <!-- Eventos -->
+            <div id="camposCartelera" class="hidden md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div><label>Nombre Evento</label><input id="evNombre" placeholder="Obra de Teatro"></div>
+              <div><label>Fecha</label><input id="evFecha" placeholder="15/08/2026"></div>
+              <div><label>Lugar</label><input id="evLugar" placeholder="Teatro Colón"></div>
+              <div class="md:col-span-2"><label>Imagen del Evento</label><input id="evImg" placeholder="https://..."></div>
+              <div><label>Trailer (ID)</label><input id="evTrailer" placeholder="dQw4w9WgXcQ"></div>
+              <div><label>Precio</label><input id="evPrecio" placeholder="15000"></div>
+              <div><label>Link Comprar</label><input id="evLink" placeholder="https://..."></div>
+              <div class="md:col-span-3"><label>Descripción</label><input id="evDesc" placeholder="Único show"></div>
+            </div>
+
+            <!-- Videos -->
+            <div id="camposVideo" class="grid md:col-span-3 grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="md:col-span-2"><label>URL o ID</label><input id="vidUrl" placeholder="dQw4w9WgXcQ"></div>
+              <div><label>Título</label><input id="vidTitulo" placeholder="Opcional"></div>
+              <div><label>Imagen</label><input id="vidImg" placeholder="Opcional"></div>
+            </div>
+            
+            <div class="md:col-span-3 flex gap-2">
+              <button onclick="agregarItem()" id="btnAgregarItem" class="btn btn-edit w-full">➕ Agregar</button>
+              <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn btn-del w-1/3 hidden">✕ Cancelar</button>
+            </div>
           </div>
-          <button onclick="guardarSenal()" class="btn btn-save mb-4">Agregar/Actualizar Señal</button>
-          <div id="senalesList"></div>
+          <div id="contenidoManualList" class="space-y-2"></div>
         </div>
       </details>
 
-      <!-- RADIOS -->
       <details>
-        <summary>🎙️ Radios</summary>
-        <div class="border border-uadav-border rounded-xl p-4 mt-3">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><label>Nombre</label><input id="radioNombre" placeholder="UADAV Radio" onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
-            <div><label>URL Stream</label><input id="radioStream" placeholder="https://stream.zeno.fm/..." onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
-            <div><label>Logo</label><input id="radioLogo" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
-            <div><label>Ubicación</label><input id="radioUbicacion" placeholder="Argentina" onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
-            <div><label>Descripción</label><input id="radioDesc" placeholder="Música 24/7" onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
-            <div><label>¿Oficial (Hero)?</label><select id="radioOficial"><option value="true">Sí</option><option value="false">No</option></select></div>
-          </div>
-          <button onclick="guardarRadio()" class="btn btn-save mb-4">Agregar/Actualizar Radio</button>
-          <div id="radiosList"></div>
+        <summary><i class="fa-solid fa-shoe-prints text-2xl"></i> Footer y Redes</summary>
+        <div class="p-4">
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label>Título Footer</label><input id="footerTitulo" placeholder="Disfrutá UADAVSTREAM"></div>
+              <div><label>Subtítulo</label><input id="footerSubtitulo" placeholder="Teatro y más"></div>
+              <div class="md:col-span-2"><label>Copyright</label><input id="footerCopyright" placeholder="© 2026 UADAVSTREAM"></div>
+           </div>
+           <hr class="border-slate-700 my-4">
+           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div><label>Instagram</label><input id="redInstagram"></div>
+              <div><label>Facebook</label><input id="redFacebook"></div>
+              <div><label>Twitter/X</label><input id="redTwitter"></div>
+              <div><label>YouTube</label><input id="redYoutube"></div>
+              <div><label>TikTok</label><input id="redTiktok"></div>
+              <div><label>WhatsApp</label><input id="redWhatsapp"></div>
+           </div>
+           <hr class="border-slate-700 my-4">
+           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div><label>Link 1 Texto</label><input id="link1Texto"></div><div><label>Link 1 URL</label><input id="link1Url"></div>
+              <div><label>Link 2 Texto</label><input id="link2Texto"></div><div><label>Link 2 URL</label><input id="link2Url"></div>
+           </div>
+           <button onclick="guardarFooter()" class="btn btn-save mt-4">Guardar Footer</button>
         </div>
       </details>
 
-      <!-- ARTISTAS -->
       <details>
-        <summary>🎤 Artistas</summary>
-        <div class="border border-uadav-border rounded-xl p-4 mt-3">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><label>Nombre</label><input id="artNombre" placeholder="URO" onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
-            <div><label>Rubro</label><input id="artRubro" placeholder="Música" onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
-            <div><label>Foto</label><input id="artFoto" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
-            <div><label>Portada</label><input id="artPortada" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
-            <div><label>Bio</label><textarea id="artBio"></textarea></div>
-            <div><label>Tiene YouTube</label><select id="artTieneYT"><option value="true">Sí</option><option value="false">No</option></select></div>
-            <div><label>ID Canal</label><input id="artLink" placeholder="UC..." onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
-            <div><label>Contacto</label><input id="artContacto" placeholder="WhatsApp" onkeydown="if(event.key === 'Enter') guardarArtista()"></div>
-            <div class="md:col-span-2"><label>Videos Manuales (IDs)</label><textarea id="artVideos"></textarea></div>
-          </div>
-          <button onclick="guardarArtista()" id="btnGuardarArtista" class="btn btn-save mb-4">Agregar Artista</button>
-          <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar</button>
-          <div id="artistasList" class="text-sm"></div>
+        <summary><i class="fa-solid fa-palette text-2xl"></i> Apariencia y Banners</summary>
+        <div class="p-4">
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><label>Título</label><input id="marcaTitulo" placeholder="UADAVSTREAM"></div>
+              <div><label>Eslogan</label><input id="marcaEslogan" placeholder="Plataforma Global"></div>
+           </div>
+           <div class="grid grid-cols-1 gap-4 mt-4">
+              <div><label>Banner Superior</label><textarea id="bannerTopHTML" rows="2"></textarea></div>
+              <div><label>Banner Intermedio</label><textarea id="bannerInfeedHTML" rows="2"></textarea></div>
+              <div><label>Banner Footer</label><textarea id="bannerFooterHTML" rows="2"></textarea></div>
+           </div>
+           <button onclick="guardarExtras()" class="btn btn-save mt-4">Guardar Apariencia</button>
         </div>
       </details>
 
-      <!-- CONFIGURACIÓN -->
       <details>
-        <summary>⚙️ Configuración General</summary>
-        <div class="border border-uadav-border rounded-xl p-4 mt-3">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label>País Tendencias</label><input id="configPais" placeholder="Auto" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
-            <div><label>Mostrar País (IP)</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
-            <div><label>Título Hero</label><input id="heroTitulo" placeholder="SEÑAL OFICIAL" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
-            <div><label>Subtítulo Hero</label><input id="heroSub" placeholder="UADAVSTREAM TV" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
-            <div><label>Texto Botón Hero</label><input id="heroBtnTexto" placeholder="Ver SEÑAL OFICIAL" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
-            <div><label>ID Video del Botón</label><input id="heroBtnUrl" placeholder="-479TZi-EAs" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
-            <div><label>Contador Base</label><input type="number" id="configVisitas" placeholder="0" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
-            <div class="md:col-span-2"><label>Texto Legal</label><textarea id="configLegal" rows="2">UADAV STREAM es un desarrollo de Beat Digital Medios.</textarea></div>
-          </div>
-          <button onclick="guardarConfig()" class="btn btn-save mt-4">Guardar Configuración</button>
+        <summary><i class="fa-solid fa-tower-broadcast text-2xl"></i> Señales y Radios</summary>
+        <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div><h3 class="text-white font-bold mb-4">Señales</h3><div id="senalesList"></div></div>
+          <div><h3 class="text-white font-bold mb-4">Radios</h3><div id="radiosList"></div></div>
         </div>
       </details>
 
-      <div class="fixed bottom-4 right-4">
-        <button onclick="guardarTodo()" class="btn btn-save text-base shadow-2xl px-6 py-4">💾 GUARDAR CAMBIOS EN LA NUBE</button>
+      <div class="fixed bottom-6 right-6">
+        <button onclick="guardarTodo()" class="btn btn-save text-lg shadow-2xl px-8 py-5 rounded-full"><i class="fa-solid fa-cloud-arrow-up"></i> GUARDAR TODO</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ⚠️ URL CORREGIDA (tu-dominio reemplazado por uadavstream)
+    // ⚠️ CAMBIAR AQUÍ LA URL DE UADAVSTREAM
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
-    let ADMIN_KEY = '', seccionesData = [], artistasData = [], radiosData = [], senalesData = [], editandoRadioId = null, editandoSenalId = null, editandoId = null;
-    let isDataLoadedSuccessfully = false;
-
-    function cargarSesion() {
-      const saved = localStorage.getItem('uadavstream_admin_key');
-      if (saved) {
-        document.getElementById('adminKeyInput').value = saved;
-        ADMIN_KEY = saved;
-        conectar();
-      }
-    }
-
-    function guardarSesion(key) {
-      localStorage.setItem('uadavstream_admin_key', key);
-    }
+    let ADMIN_KEY = '', seccionesData = [], senalesData = [], radiosData = [];
+    let editandoItemIndex = null;
 
     function desconectar() {
       localStorage.removeItem('uadavstream_admin_key');
       ADMIN_KEY = '';
       document.getElementById('panelContent').classList.add('hidden');
-      document.getElementById('adminKeyInput').value = '';
-      mostrarStatus('aparienciaStatus', 'Sesión cerrada.', 'error');
+      document.getElementById('btnLogout').classList.add('hidden');
     }
 
-    function mostrarStatus(id, mensaje, tipo) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.className = 'status-msg ' + (tipo === 'success' ? 'success' : 'error');
-      el.innerText = mensaje;
-      setTimeout(() => { el.className = 'status-msg'; el.innerText = ''; }, 5000);
-    }
-
-    // ===== CONEXIÓN CORREGIDA CON VALIDACIÓN REAL =====
     function conectar() {
       ADMIN_KEY = document.getElementById('adminKeyInput').value;
-      if (!ADMIN_KEY) { mostrarStatus('aparienciaStatus', 'Poné la clave', 'error'); return; }
+      fetch(API_URL + 'admin_check', { headers: { 'Authorization': 'Bearer ' + ADMIN_KEY } })
+      .then(res => { 
+        if (res.status !== 200) return alert("Clave incorrecta"); 
+        localStorage.setItem('uadavstream_admin_key', ADMIN_KEY);
+        document.getElementById('panelContent').classList.remove('hidden');
+        document.getElementById('btnLogout').classList.remove('hidden');
+        cargarDatos(); 
+      });
+    }
+
+    async function cargarDatos() {
+      const [secRes, apRes, banRes, senRes, radRes, footRes] = await Promise.all([
+        fetch(API_URL + 'secciones').then(r => r.json()).catch(() => []),
+        fetch(API_URL + 'apariencia').then(r => r.json()).catch(() => ({})),
+        fetch(API_URL + 'banners').then(r => r.json()).catch(() => ({})),
+        fetch(API_URL + 'senales_oficiales').then(r => r.json()).catch(() => []),
+        fetch(API_URL + 'radios').then(r => r.json()).catch(() => []),
+        fetch(API_URL + 'footer_config').then(r => r.json()).catch(() => ({}))
+      ]);
+
+      // Deduplicación
+      if (Array.isArray(secRes)) {
+        const uniqueMap = new Map(secRes.map(s => [s.id, s]));
+        seccionesData = Array.from(uniqueMap.values());
+      } else { seccionesData = []; }
+
+      senalesData = Array.isArray(senRes) ? senRes : [];
+      radiosData = Array.isArray(radRes) ? radRes : [];
+
+      // Secciones por defecto de UADAV
+      if (!seccionesData.find(s => s.id === 'radios')) seccionesData.unshift({ id: 'radios', nombre: 'Radios', icono: 'fa-radio', activa: true, tipo_contenido: 'videos', modo: 'manual', items: [] });
+      if (!seccionesData.find(s => s.id === 'teatros')) seccionesData.push({ id: 'teatros', nombre: 'Teatros', icono: 'fa-masks-theater', activa: true, tipo_contenido: 'videos', modo: 'auto', query: 'obra de teatro', items: [] });
+      if (!seccionesData.find(s => s.id === 'artistas')) seccionesData.push({ id: 'artistas', nombre: 'Artistas', icono: 'fa-user-group', activa: true, tipo_contenido: 'perfiles', modo: 'manual', items: [] });
+      if (!seccionesData.find(s => s.id === 'cartelera')) seccionesData.push({ id: 'cartelera', nombre: 'Cartelera', icono: 'fa-ticket', activa: true, tipo_contenido: 'eventos', modo: 'manual', items: [] });
+
+      renderSecciones();
+      actualizarFormularioYLista();
+      renderSenales(); renderRadios();
       
-      fetch(API_URL + 'admin_check', {
-        headers: { 'Authorization': 'Bearer ' + ADMIN_KEY }
-      })
-      .then(res => {
-        if (res.status !== 200) {
-          mostrarStatus('aparienciaStatus', '❌ Clave incorrecta. Intenta de nuevo.', 'error');
-          document.getElementById('panelContent').classList.add('hidden');
-          throw new Error('Clave incorrecta');
-        }
-        
-        guardarSesion(ADMIN_KEY);
-        
-        Promise.all([
-          fetch(API_URL + 'secciones').then(r => r.json()).catch(() => []),
-          fetch(API_URL + 'senales_oficiales').then(r => r.json()).catch(() => []),
-          fetch(API_URL + 'radios').then(r => r.json()).catch(() => []),
-          fetch(API_URL + 'artistas_uadav').then(r => r.json()).catch(() => []),
-          fetch(API_URL + 'config').then(r => r.json()).catch(() => ({})),
-          fetch(API_URL + 'contadores').then(r => r.json()).catch(() => ({})),
-          fetch(API_URL + 'apariencia').then(r => r.json()).catch(() => ({})),
-          fetch(API_URL + 'banners').then(r => r.json()).catch(() => ({})),
-          fetch(API_URL + 'estado_sitio').then(r => r.json()).catch(() => ({})),
-          fetch(API_URL + 'landing_config').then(r => r.json()).catch(() => ({}))
-        ]).then(([sec, sen, rad, art, conf, cont, apariencia, banners, estado, landing]) => {
-          document.getElementById('panelContent').classList.remove('hidden');
-          seccionesData = Array.isArray(sec) ? sec : [];
-          renderSecciones();
-          senalesData = Array.isArray(sen) ? sen : [];
-          renderSenales();
-          radiosData = Array.isArray(rad) ? rad : [];
-          renderRadios();
-          artistasData = Array.isArray(art) ? art : [];
-          renderArtistas();
-          renderConfig(conf);
-          renderApariencia(apariencia);
-          renderBanners(banners);
-          renderEstadoSitio(estado);
-          renderLandingConfig(landing);
-          document.getElementById('configVisitas').value = cont.visitas_totales || 0;
-          isDataLoadedSuccessfully = true;
-          mostrarStatus('aparienciaStatus', '✅ Datos cargados correctamente', 'success');
-        });
-      })
-      .catch(err => {
-        document.getElementById('panelContent').classList.add('hidden');
-        console.error(err);
-      });
+      document.getElementById('marcaTitulo').value = apRes.titulo_sitio || 'UADAVSTREAM';
+      document.getElementById('marcaEslogan').value = apRes.eslogan || 'Plataforma Global';
+      document.getElementById('bannerTopHTML').value = banRes.top?.html || '';
+      document.getElementById('bannerInfeedHTML').value = banRes.infeed?.html || '';
+      document.getElementById('bannerFooterHTML').value = banRes.footer?.html || '';
+
+      document.getElementById('footerTitulo').value = footRes.titulo || '';
+      document.getElementById('footerSubtitulo').value = footRes.subtitulo || '';
+      document.getElementById('footerCopyright').value = footRes.copyright || '';
+      document.getElementById('redInstagram').value = footRes.instagram || '';
+      document.getElementById('redFacebook').value = footRes.facebook || '';
+      document.getElementById('redTwitter').value = footRes.twitter || '';
+      document.getElementById('redYoutube').value = footRes.youtube || '';
+      document.getElementById('redTiktok').value = footRes.tiktok || '';
+      document.getElementById('redWhatsapp').value = footRes.whatsapp || '';
+      document.getElementById('link1Texto').value = footRes.link1_texto || ''; document.getElementById('link1Url').value = footRes.link1_url || '';
+      document.getElementById('link2Texto').value = footRes.link2_texto || ''; document.getElementById('link2Url').value = footRes.link2_url || '';
     }
 
-    // ===== APARIENCIA =====
-    function renderApariencia(data) {
-      document.getElementById('marcaLogo').value = data.logo_url || '';
-      document.getElementById('marcaTitulo').value = data.titulo_sitio || '';
-      document.getElementById('marcaEslogan').value = data.eslogan || '';
-      document.getElementById('marcaColorAcento').value = data.color_acento || '#00e5ff';
-      document.getElementById('marcaColorFondo').value = data.color_fondo || '#050505';
-      document.getElementById('marcaColorTarjetas').value = data.color_tarjetas || '#0f0f13';
-    }
-
-    function guardarApariencia() {
-      const apariencia = {
-        logo_url: document.getElementById('marcaLogo').value,
-        titulo_sitio: document.getElementById('marcaTitulo').value,
-        eslogan: document.getElementById('marcaEslogan').value,
-        color_acento: document.getElementById('marcaColorAcento').value,
-        color_fondo: document.getElementById('marcaColorFondo').value,
-        color_tarjetas: document.getElementById('marcaColorTarjetas').value
-      };
-      fetch(API_URL + 'apariencia', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(apariencia)
-      })
-      .then(() => mostrarStatus('aparienciaStatus', '✅ Apariencia guardada', 'success'))
-      .catch(err => mostrarStatus('aparienciaStatus', '❌ Error: ' + err.message, 'error'));
-    }
-
-    // ===== ESTADO DEL SITIO =====
-    function renderEstadoSitio(data) {
-      if (!data) data = { modo: 'normal', titulo: '', mensaje: '', landing_url: '' };
-      document.getElementById('estadoModo').value = data.modo || 'normal';
-      document.getElementById('estadoLandingUrl').value = data.landing_url || '';
-      document.getElementById('estadoMantTitulo').value = data.titulo || '🔧 En construcción';
-      document.getElementById('estadoMantMensaje').value = data.mensaje || 'Estamos mejorando la plataforma. Vuelve pronto.';
-      toggleEstadoCampos();
-    }
-
-    function toggleEstadoCampos() {
-      const modo = document.getElementById('estadoModo').value;
-      document.getElementById('estadoLandingUrlGroup').style.display = modo === 'landing' ? 'block' : 'none';
-      document.getElementById('estadoMantenimientoGroup').style.display = modo === 'mantenimiento' ? 'block' : 'none';
-    }
-    document.getElementById('estadoModo').addEventListener('change', toggleEstadoCampos);
-
-    function guardarEstadoSitio() {
-      const estado = {
-        modo: document.getElementById('estadoModo').value,
-        landing_url: document.getElementById('estadoLandingUrl').value.trim(),
-        titulo: document.getElementById('estadoMantTitulo').value.trim(),
-        mensaje: document.getElementById('estadoMantMensaje').value.trim()
-      };
-      fetch(API_URL + 'estado_sitio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(estado)
-      })
-      .then(() => mostrarStatus('estadoStatus', '✅ Estado del sitio guardado', 'success'))
-      .catch(err => mostrarStatus('estadoStatus', '❌ Error: ' + err.message, 'error'));
-    }
-
-    // ===== BANNERS =====
-    function renderBanners(data) {
-      if (!data) data = { top: { activo: true, html: '' }, infeed: { activo: true, html: '' }, footer: { activo: true, html: '' } };
-      document.getElementById('bannerTopActivo').value = data.top?.activo ? 'true' : 'false';
-      document.getElementById('bannerTopHTML').value = data.top?.html || '';
-      document.getElementById('bannerInfeedActivo').value = data.infeed?.activo ? 'true' : 'false';
-      document.getElementById('bannerInfeedHTML').value = data.infeed?.html || '';
-      document.getElementById('bannerFooterActivo').value = data.footer?.activo ? 'true' : 'false';
-      document.getElementById('bannerFooterHTML').value = data.footer?.html || '';
-    }
-
-    function guardarBanners() {
-      const banners = {
-        top: { activo: document.getElementById('bannerTopActivo').value === 'true', html: document.getElementById('bannerTopHTML').value },
-        infeed: { activo: document.getElementById('bannerInfeedActivo').value === 'true', html: document.getElementById('bannerInfeedHTML').value },
-        footer: { activo: document.getElementById('bannerFooterActivo').value === 'true', html: document.getElementById('bannerFooterHTML').value }
-      };
-      fetch(API_URL + 'banners', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(banners)
-      })
-      .then(() => mostrarStatus('bannersStatus', '✅ Banners guardados', 'success'))
-      .catch(err => mostrarStatus('bannersStatus', '❌ Error: ' + err.message, 'error'));
-    }
-
-    // ===== LANDING CONFIG =====
-    function renderLandingConfig(data) {
-      if (!data) data = {};
-      document.getElementById('landingHeroTitulo').value = data.hero_titulo || '';
-      document.getElementById('landingHeroSubtitulo').value = data.hero_subtitulo || '';
-      document.getElementById('landingMensajeEspera').value = data.mensaje_espera || 'Pronto podrás disfrutar de una experiencia única. Déjanos tu correo y te avisaremos.';
-      document.getElementById('landingBotonTexto').value = data.texto_boton_captador || 'Enviar';
-      document.getElementById('landingHeroImagen').value = data.hero_imagen || '';
-      document.getElementById('landingMostrarCaptador').value = data.mostrar_captador !== undefined ? (data.mostrar_captador ? 'true' : 'false') : 'true';
-      document.getElementById('landingColorFondo').value = data.color_fondo || '#050505';
-      document.getElementById('landingColorAcento').value = data.color_acento || '#00e5ff';
-      document.getElementById('landingColorTarjetas').value = data.color_tarjetas || '#0f0f13';
-      document.getElementById('landingColorTextoPrincipal').value = data.color_texto_principal || '#ffffff';
-      document.getElementById('landingColorTextoSecundario').value = data.color_texto_secundario || '#94a3b8';
-      document.getElementById('landingVideosDestacados').value = (data.videos_destacados_ids || []).join(',');
-      document.getElementById('landingModoDestacados').value = data.modo_destacados || 'secciones';
-      document.getElementById('landingPalabrasClave').value = data.palabras_clave_destacados || '';
-      document.getElementById('landingLimiteDestacados').value = data.limite_destacados || 12;
-      document.getElementById('landingFooterTexto').value = data.footer_texto || '';
-      document.getElementById('landingFooterContacto').value = data.footer_contacto || '';
-    }
-
-    function guardarLandingConfig() {
-      const config = {
-        hero_titulo: document.getElementById('landingHeroTitulo').value,
-        hero_subtitulo: document.getElementById('landingHeroSubtitulo').value,
-        mensaje_espera: document.getElementById('landingMensajeEspera').value,
-        texto_boton_captador: document.getElementById('landingBotonTexto').value,
-        hero_imagen: document.getElementById('landingHeroImagen').value,
-        mostrar_captador: document.getElementById('landingMostrarCaptador').value === 'true',
-        color_fondo: document.getElementById('landingColorFondo').value,
-        color_acento: document.getElementById('landingColorAcento').value,
-        color_tarjetas: document.getElementById('landingColorTarjetas').value,
-        color_texto_principal: document.getElementById('landingColorTextoPrincipal').value,
-        color_texto_secundario: document.getElementById('landingColorTextoSecundario').value,
-        videos_destacados_ids: document.getElementById('landingVideosDestacados').value.split(',').map(s => s.trim()).filter(s => s),
-        modo_destacados: document.getElementById('landingModoDestacados').value,
-        palabras_clave_destacados: document.getElementById('landingPalabrasClave').value,
-        limite_destacados: parseInt(document.getElementById('landingLimiteDestacados').value) || 12,
-        footer_texto: document.getElementById('landingFooterTexto').value,
-        footer_contacto: document.getElementById('landingFooterContacto').value
-      };
-      fetch(API_URL + 'landing_config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(config)
-      })
-      .then(() => mostrarStatus('landingStatus', '✅ Configuración de landing guardada', 'success'))
-      .catch(err => mostrarStatus('landingStatus', '❌ Error: ' + err.message, 'error'));
-    }
-
-    // ===== SUSCRIPTORES =====
-    function verSuscriptores() {
-      const listEl = document.getElementById('suscriptoresList');
-      listEl.innerHTML = 'Cargando...';
-      fetch(API_URL + 'suscriptores', {
-        headers: { 'Authorization': 'Bearer ' + ADMIN_KEY }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.length === 0) {
-          listEl.innerHTML = 'No hay suscriptores aún.';
-          return;
-        }
-        let html = '<table class="w-full text-left text-xs"><tr><th class="px-2 py-1">Email</th><th class="px-2 py-1">Fecha</th></tr>';
-        data.forEach(s => {
-          html += `<tr><td class="px-2 py-1">${s.email}</td><td class="px-2 py-1">${s.fecha || ''}</td></tr>`;
-        });
-        html += '</table>';
-        listEl.innerHTML = html;
-      })
-      .catch(() => {
-        listEl.innerHTML = 'Error al cargar suscriptores.';
-      });
-    }
-
-    function exportarSuscriptores() {
-      const token = ADMIN_KEY;
-      window.open(API_URL + 'suscriptores/export?token=' + encodeURIComponent(token), '_blank');
-    }
-
-    // ===== SECCIONES =====
     function renderSecciones() {
       const list = document.getElementById('seccionesList');
       list.innerHTML = '';
       seccionesData.forEach((sec, index) => {
         list.innerHTML += `
-          <div class="item-box" data-index="${index}">
+          <div class="item-box">
             <div class="flex justify-between items-center mb-2">
-              <div class="flex items-center gap-2 flex-1">
-                <button onclick="moverSeccion(${index}, -1)" class="btn btn-move" ${index === 0 ? 'disabled' : ''}>⬆️</button>
-                <button onclick="moverSeccion(${index}, 1)" class="btn btn-move" ${index === seccionesData.length - 1 ? 'disabled' : ''}>⬇️</button>
-                <span class="text-xs text-slate-400">#${index + 1}</span>
+              <div class="flex gap-2">
+                <button onclick="moverSeccion(${index}, -1)" class="btn btn-move">⬆️</button>
+                <button onclick="moverSeccion(${index}, 1)" class="btn btn-move">⬇️</button>
+                <button onclick="eliminarSeccion(${index})" class="btn btn-del">Eliminar</button>
               </div>
-              <button onclick="eliminarSeccion(${index})" class="btn btn-del text-xs">Eliminar</button>
+              <label><input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa</label>
             </div>
-            <div class="flex justify-between items-center mb-2">
-              <label class="text-[11px] text-slate-400 uppercase font-bold w-full">Nombre Visible</label>
-              <input type="text" class="font-bold text-white w-full" value="${sec.nombre}" oninput="seccionesData[${index}].nombre = this.value">
-            </div>
-            <div class="flex justify-between items-center mb-2">
-              <span class="font-bold text-sm"><i class="fa-solid ${sec.icono || 'fa-circle'} text-uadav-accent mr-2"></i></span>
-              <label class="flex items-center gap-2 text-xs text-slate-400">
-                <input type="checkbox" ${sec.activa ? 'checked' : ''} onchange="seccionesData[${index}].activa = this.checked"> Activa
-              </label>
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-              <div><label>Modo</label><select onchange="seccionesData[${index}].modo = this.value">
-                <option value="auto" ${sec.modo === 'auto' ? 'selected' : ''}>Auto</option>
-                <option value="manual" ${sec.modo === 'manual' ? 'selected' : ''}>Manual</option>
-              </select></div>
-              <div><label>Query</label><input value="${sec.query || ''}" oninput="seccionesData[${index}].query = this.value"></div>
-              <div><label>IDs</label><input value="${(sec.ids_manuales || []).join(',')}" oninput="seccionesData[${index}].ids_manuales = this.value.split(',').map(i => i.trim()).filter(i => i)"></div>
+            <div class="grid grid-cols-4 gap-2">
+              <div><label>Nombre</label><input value="${sec.nombre}" oninput="seccionesData[${index}].nombre = this.value"></div>
+              <div><label>Ícono</label><input value="${sec.icono || 'fa-circle'}" oninput="seccionesData[${index}].icono = this.value"></div>
+              <div><label>Tipo</label><select onchange="seccionesData[${index}].tipo_contenido = this.value; actualizarFormularioYLista();"><option value="videos" ${sec.tipo_contenido === 'videos' || !sec.tipo_contenido ? 'selected' : ''}>Videos</option><option value="perfiles" ${sec.tipo_contenido === 'perfiles' ? 'selected' : ''}>Perfiles</option><option value="eventos" ${sec.tipo_contenido === 'eventos' ? 'selected' : ''}>Eventos</option></select></div>
+              <div><label>Modo</label><select onchange="seccionesData[${index}].modo = this.value; actualizarFormularioYLista();"><option value="auto" ${sec.modo === 'auto' ? 'selected' : ''}>Auto</option><option value="manual" ${sec.modo === 'manual' ? 'selected' : ''}>Manual</option></select></div>
             </div>
           </div>
         `;
       });
+      actualizarFormularioYLista();
     }
 
-    function moverSeccion(index, direccion) {
-      const nuevoIndex = index + direccion;
-      if (nuevoIndex < 0 || nuevoIndex >= seccionesData.length) return;
-      const temp = seccionesData[index];
-      seccionesData[index] = seccionesData[nuevoIndex];
-      seccionesData[nuevoIndex] = temp;
-      renderSecciones();
-    }
-
-    function eliminarSeccion(index) {
-      if (!confirm(`¿Eliminar la sección "${seccionesData[index].nombre}"?`)) return;
-      seccionesData.splice(index, 1);
-      renderSecciones();
-    }
-
+    function moverSeccion(index, dir) { const n = index + dir; if (n < 0 || n >= seccionesData.length) return; [seccionesData[index], seccionesData[n]] = [seccionesData[n], seccionesData[index]]; renderSecciones(); }
+    function eliminarSeccion(index) { if (!confirm("¿Eliminar sección?")) return; seccionesData.splice(index, 1); renderSecciones(); }
     function agregarNuevaSeccion() {
       const id = document.getElementById('nuevoSecId').value.trim().replace(/\s+/g, '_');
       const nombre = document.getElementById('nuevoSecNombre').value.trim();
-      const icono = document.getElementById('nuevoSecIcono').value.trim() || 'fa-circle';
-      const query = document.getElementById('nuevoSecQuery').value.trim();
-      if (!id || !nombre) { mostrarStatus('aparienciaStatus', 'Poné ID y Nombre', 'error'); return; }
-      if (seccionesData.find(s => s.id === id)) { mostrarStatus('aparienciaStatus', 'Ya existe ese ID', 'error'); return; }
-      seccionesData.push({ id, nombre, icono, activa: true, modo: 'auto', query: query || nombre, ids_manuales: [] });
+      const tipo = document.getElementById('nuevoSecTipo').value;
+      if (!id || !nombre) return alert("ID y Nombre requeridos");
+      if (seccionesData.find(s => s.id === id)) return alert("ID ya existe");
+      seccionesData.push({ id, nombre, icono: document.getElementById('nuevoSecIcono').value || 'fa-circle', tipo_contenido: tipo, activa: true, modo: 'auto', query: document.getElementById('nuevoSecQuery').value || nombre, items: [] });
       renderSecciones();
-      document.getElementById('nuevoSecId').value = '';
-      document.getElementById('nuevoSecNombre').value = '';
-      document.getElementById('nuevoSecIcono').value = '';
-      document.getElementById('nuevoSecQuery').value = '';
-      mostrarStatus('aparienciaStatus', '✅ Sección agregada', 'success');
     }
 
-    // ===== SEÑALES =====
-    function renderSenales() {
-      const list = document.getElementById('senalesList');
-      list.innerHTML = '';
-      senalesData.forEach(s => {
-        list.innerHTML += `<div class="item-box flex justify-between items-center"><div><h4 class="font-bold">${s.nombre}</h4><p class="text-xs text-slate-400">${s.url}</p></div><div class="flex gap-2"><button onclick="editarSenal('${s.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarSenal('${s.id}')" class="btn btn-del">Eliminar</button></div></div>`;
+    function actualizarFormularioYLista() {
+      const select = document.getElementById('selectSeccionManual');
+      const val = select.value;
+      select.innerHTML = '';
+      seccionesData.forEach((sec, index) => {
+        if (sec.id !== 'radios') select.innerHTML += `<option value="${index}">${sec.nombre} (${sec.tipo_contenido || 'videos'})</option>`;
       });
+      if (val && select.querySelector(`option[value="${val}"]`)) select.value = val;
+      toggleCamposDinamicos();
+      renderLista();
     }
 
-    function editarSenal(id) {
-      const s = senalesData.find(x => x.id === id);
-      if (!s) return;
-      editandoSenalId = id;
-      document.getElementById('senalNombre').value = s.nombre;
-      document.getElementById('senalUrl').value = s.url;
-      document.getElementById('senalLogo').value = s.logo || '';
-      document.getElementById('senalTipo').value = s.tipo || 'auto';
-      document.getElementById('senalDesc').value = s.descripcion || '';
-      document.getElementById('senalPrincipal').value = s.es_principal ? 'true' : 'false';
+    function toggleCamposDinamicos() {
+      const secIndex = document.getElementById('selectSeccionManual').value;
+      const sec = seccionesData[secIndex];
+      document.getElementById('camposVideo').classList.add('hidden');
+      document.getElementById('camposArtista').classList.add('hidden');
+      document.getElementById('camposCartelera').classList.add('hidden');
+      document.getElementById('divTipoContenido').classList.remove('hidden');
+      if (sec && sec.tipo_contenido === 'perfiles') { document.getElementById('camposArtista').classList.remove('hidden'); document.getElementById('divTipoContenido').classList.add('hidden'); }
+      else if (sec && sec.tipo_contenido === 'eventos') { document.getElementById('camposCartelera').classList.remove('hidden'); document.getElementById('divTipoContenido').classList.add('hidden'); }
+      else { document.getElementById('camposVideo').classList.remove('hidden'); }
     }
 
-    function eliminarSenal(id) {
-      if (!confirm("¿Eliminar señal?")) return;
-      senalesData = senalesData.filter(s => s.id !== id);
-      renderSenales();
+    async function cargarCanalMasivo() {
+      const idCanal = prompt("Ingresa el ID del Canal (UC...) o el link:");
+      if (!idCanal) return;
+      const btn = document.getElementById('btnAgregarItem');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando...';
+      try {
+        let channelId = idCanal;
+        if (channelId.includes('channel_id=')) channelId = channelId.split('channel_id=')[1].split('&')[0];
+        else if (channelId.includes('/channel/')) channelId = channelId.split('/channel/')[1].split('/')[0];
+        else if (channelId.includes('/@')) channelId = channelId.split('/@')[1].split('/')[0];
+        const res = await fetch(`${API_URL}channel_videos?channel_id=${channelId}`);
+        const videos = await res.json();
+        if (!videos || videos.length === 0) { alert("No se encontraron videos."); btn.innerHTML = '➕ Agregar'; return; }
+        const nombre = prompt("¿Cómo se llama?", "Artista Importado");
+        const nuevoArtista = { tipo: 'artista', nombre: nombre || "Artista", rubro: "YouTube", foto: "https://i.ytimg.com/vi/" + videos[0].id + "/hqdefault.jpg", bio: "Importado.", canal: channelId, contacto: "", videos: videos };
+        const secIndex = document.getElementById('selectSeccionManual').value;
+        if (secIndex === '') return alert("Selecciona sección");
+        seccionesData[secIndex].items.push(nuevoArtista);
+        renderLista();
+        alert(`✅ Artista importado con ${videos.length} videos.`);
+      } catch (e) { alert("Error al conectar."); } finally { btn.innerHTML = '➕ Agregar'; }
     }
 
-    function guardarSenal() {
-      const id = editandoSenalId || 'senal-' + Date.now();
-      const nuevaSenal = {
-        id, nombre: document.getElementById('senalNombre').value,
-        url: document.getElementById('senalUrl').value,
-        logo: document.getElementById('senalLogo').value,
-        tipo: document.getElementById('senalTipo').value || 'auto',
-        descripcion: document.getElementById('senalDesc').value,
-        es_principal: document.getElementById('senalPrincipal').value === 'true'
-      };
-      const index = senalesData.findIndex(s => s.id === id);
-      if (index !== -1) senalesData[index] = nuevaSenal;
-      else senalesData.push(nuevaSenal);
-      editandoSenalId = null;
-      renderSenales();
-      mostrarStatus('bannersStatus', '✅ Señal guardada', 'success');
+    function agregarItem() {
+      const secIndex = document.getElementById('selectSeccionManual').value;
+      if (secIndex === '') return alert("Selecciona una sección");
+      const sec = seccionesData[secIndex];
+      if (!sec.items) sec.items = [];
+      if (sec.modo !== 'manual') { sec.modo = 'manual'; renderSecciones(); }
+
+      let newItem = {};
+      if (sec.tipo_contenido === 'perfiles') {
+        newItem = { tipo: 'artista', nombre: document.getElementById('artNombre').value, rubro: document.getElementById('artRubro').value, foto: document.getElementById('artFoto').value, bio: document.getElementById('artBio').value, canal: document.getElementById('artCanal').value, contacto: document.getElementById('artContacto').value };
+        if (!newItem.nombre) return alert("Nombre obligatorio");
+      } else if (sec.tipo_contenido === 'eventos') {
+        newItem = { tipo: 'evento', nombre: document.getElementById('evNombre').value, fecha: document.getElementById('evFecha').value, lugar: document.getElementById('evLugar').value, imagen: document.getElementById('evImg').value, trailer: document.getElementById('evTrailer').value, precio: document.getElementById('evPrecio').value, link_compra: document.getElementById('evLink').value, descripcion: document.getElementById('evDesc').value };
+        if (!newItem.nombre) return alert("Nombre obligatorio");
+      } else {
+        const tipo = document.getElementById('tipoContenido').value;
+        newItem = { tipo: tipo, url: document.getElementById('vidUrl').value, titulo: document.getElementById('vidTitulo').value || 'Contenido', imagen: document.getElementById('vidImg').value };
+        if (!newItem.url) return alert("URL obligatoria");
+      }
+
+      if (editandoItemIndex !== null) { sec.items[editandoItemIndex] = newItem; cancelarEdicion(); }
+      else { sec.items.push(newItem); }
+      renderLista();
+      document.getElementById('vidUrl').value = ''; document.getElementById('vidTitulo').value = ''; document.getElementById('vidImg').value = '';
+      document.getElementById('artNombre').value = ''; document.getElementById('artBio').value = '';
+      document.getElementById('evNombre').value = ''; document.getElementById('evImg').value = '';
     }
 
-    // ===== RADIOS =====
-    function renderRadios() {
-      const list = document.getElementById('radiosList');
-      list.innerHTML = '';
-      if (radiosData.length === 0) { list.innerHTML = '<div class="text-slate-400 text-xs">No hay radios cargadas.</div>'; return; }
-      radiosData.forEach(r => {
-        list.innerHTML += `<div class="item-box flex justify-between items-center"><div><h4 class="font-bold">${r.nombre}</h4><p class="text-xs text-slate-400">${r.descripcion || ''} (${r.es_oficial ? 'Hero' : 'Mini'})</p></div><div class="flex gap-2"><button onclick="editarRadio('${r.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarRadio('${r.id}')" class="btn btn-del">Eliminar</button></div></div>`;
-      });
-    }
-
-    function editarRadio(id) {
-      const r = radiosData.find(x => x.id === id);
-      if (!r) return;
-      editandoRadioId = id;
-      document.getElementById('radioNombre').value = r.nombre;
-      document.getElementById('radioStream').value = r.stream_url;
-      document.getElementById('radioLogo').value = r.logo;
-      document.getElementById('radioUbicacion').value = r.ubicacion || '';
-      document.getElementById('radioDesc').value = r.descripcion || '';
-      document.getElementById('radioOficial').value = r.es_oficial ? 'true' : 'false';
-    }
-
-    function eliminarRadio(id) {
-      if (!confirm("¿Eliminar radio?")) return;
-      radiosData = radiosData.filter(r => r.id !== id);
-      renderRadios();
-    }
-
-    function guardarRadio() {
-      const id = editandoRadioId || 'radio-' + Date.now();
-      const nuevaRadio = {
-        id, nombre: document.getElementById('radioNombre').value,
-        stream_url: document.getElementById('radioStream').value,
-        logo: document.getElementById('radioLogo').value,
-        ubicacion: document.getElementById('radioUbicacion').value,
-        descripcion: document.getElementById('radioDesc').value,
-        es_oficial: document.getElementById('radioOficial').value === 'true'
-      };
-      const index = radiosData.findIndex(r => r.id === id);
-      if (index !== -1) radiosData[index] = nuevaRadio;
-      else radiosData.push(nuevaRadio);
-      editandoRadioId = null;
-      renderRadios();
-      mostrarStatus('bannersStatus', '✅ Radio guardada', 'success');
-    }
-
-    // ===== ARTISTAS =====
-    function renderArtistas() {
-      const list = document.getElementById('artistasList');
-      list.innerHTML = '';
-      if (artistasData.length === 0) { list.innerHTML = '<div class="text-slate-400 text-xs p-2">No hay artistas cargados.</div>'; return; }
-      artistasData.forEach(a => {
-        list.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold">${a.nombre}</h4><p class="text-xs text-slate-400">${a.rubro || ''} - ${a.tiene_youtube ? 'Con YouTube' : 'Link Directo'}</p></div><div class="flex gap-2"><button onclick="editarArtista('${a.id}')" class="btn btn-edit">Editar</button><button onclick="eliminarArtista('${a.id}')" class="btn btn-del">Eliminar</button></div></div>`;
-      });
-    }
-
-    function editarArtista(id) {
-      const a = artistasData.find(x => x.id === id);
-      if (!a) return;
-      editandoId = id;
-      document.getElementById('artNombre').value = a.nombre;
-      document.getElementById('artRubro').value = a.rubro || '';
-      document.getElementById('artFoto').value = a.foto || '';
-      document.getElementById('artPortada').value = a.portada || '';
-      document.getElementById('artBio').value = a.bio || '';
-      document.getElementById('artTieneYT').value = a.tiene_youtube ? 'true' : 'false';
-      document.getElementById('artLink').value = a.youtube_channel_id || '';
-      document.getElementById('artContacto').value = a.contacto || '';
-      document.getElementById('artVideos').value = (a.videos_manuales || []).map(v => v.url).join('\n');
-      document.getElementById('btnGuardarArtista').innerText = "Actualizar";
-      document.getElementById('btnGuardarArtista').classList.add('bg-blue-500');
+    function editarItem(secIndex, itemIndex) {
+      const sec = seccionesData[secIndex];
+      const item = sec.items[itemIndex];
+      editandoItemIndex = itemIndex;
+      if (item.tipo === 'artista') { document.getElementById('artNombre').value = item.nombre; document.getElementById('artRubro').value = item.rubro; document.getElementById('artFoto').value = item.foto; document.getElementById('artBio').value = item.bio; document.getElementById('artCanal').value = item.canal; document.getElementById('artContacto').value = item.contacto; }
+      else if (item.tipo === 'evento') { document.getElementById('evNombre').value = item.nombre; document.getElementById('evFecha').value = item.fecha; document.getElementById('evLugar').value = item.lugar; document.getElementById('evImg').value = item.imagen; document.getElementById('evTrailer').value = item.trailer; document.getElementById('evPrecio').value = item.precio; document.getElementById('evLink').value = item.link_compra; document.getElementById('evDesc').value = item.descripcion; }
+      else { document.getElementById('vidUrl').value = item.url; document.getElementById('vidTitulo').value = item.titulo; document.getElementById('vidImg').value = item.imagen; document.getElementById('tipoContenido').value = item.tipo; }
+      document.getElementById('btnAgregarItem').innerHTML = '💾 Actualizar';
       document.getElementById('btnCancelarEdicion').classList.remove('hidden');
     }
 
     function cancelarEdicion() {
-      editandoId = null;
-      document.getElementById('btnGuardarArtista').innerText = "Agregar Artista";
-      document.getElementById('btnGuardarArtista').classList.remove('bg-blue-500');
+      editandoItemIndex = null;
+      document.getElementById('btnAgregarItem').innerHTML = '➕ Agregar';
       document.getElementById('btnCancelarEdicion').classList.add('hidden');
-      document.getElementById('artNombre').value = '';
-      document.getElementById('artRubro').value = '';
-      document.getElementById('artFoto').value = '';
-      document.getElementById('artPortada').value = '';
-      document.getElementById('artBio').value = '';
-      document.getElementById('artLink').value = '';
-      document.getElementById('artContacto').value = '';
-      document.getElementById('artVideos').value = '';
-      document.getElementById('artTieneYT').value = 'true';
     }
 
-    function guardarArtista() {
-      const videosRaw = document.getElementById('artVideos').value.trim();
-      const videos = videosRaw ? videosRaw.split('\n').map(line => {
-        let trimmed = line.trim();
-        if (!trimmed) return null;
-        if (trimmed.startsWith('UC') && trimmed.length > 20) return null;
-        if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return { tipo: 'youtube', url: trimmed };
-        if (trimmed.includes('youtube.com')) {
-          let id = trimmed.split('v=')[1] || trimmed.split('/').pop();
-          if (id.includes('&')) id = id.split('&')[0];
-          if (id && id.length === 11) return { tipo: 'youtube', url: id };
-        }
-        return { tipo: 'mp4', url: trimmed };
-      }).filter(v => v) : [];
-
-      let channelIdInput = document.getElementById('artLink').value.trim();
-      if (channelIdInput.includes('channel_id=')) channelIdInput = channelIdInput.split('channel_id=')[1].split('&')[0];
-      else if (channelIdInput.includes('/channel/')) channelIdInput = channelIdInput.split('/channel/')[1].split('/')[0];
-      else if (channelIdInput.includes('/@')) channelIdInput = channelIdInput.split('/@')[1].split('/')[0];
-      if (!channelIdInput.startsWith('UC')) channelIdInput = '';
-
-      const dataArtista = {
-        id: editandoId || 'art-' + Date.now(),
-        nombre: document.getElementById('artNombre').value,
-        rubro: document.getElementById('artRubro').value,
-        foto: document.getElementById('artFoto').value,
-        portada: document.getElementById('artPortada').value,
-        bio: document.getElementById('artBio').value,
-        tiene_youtube: document.getElementById('artTieneYT').value === 'true',
-        youtube_channel_id: channelIdInput,
-        videos_manuales: videos,
-        contacto: document.getElementById('artContacto').value
-      };
-      if (!dataArtista.nombre) { mostrarStatus('aparienciaStatus', 'Poné el nombre del artista', 'error'); return; }
-      if (editandoId) {
-        const index = artistasData.findIndex(a => a.id === editandoId);
-        if (index !== -1) artistasData[index] = dataArtista;
-        cancelarEdicion();
-      } else {
-        artistasData.push(dataArtista);
-      }
-      renderArtistas();
-      mostrarStatus('aparienciaStatus', '✅ Artista guardado', 'success');
-    }
-
-    function eliminarArtista(id) {
-      if (!confirm("¿Eliminar?")) return;
-      if (editandoId === id) cancelarEdicion();
-      artistasData = artistasData.filter(a => a.id !== id);
-      renderArtistas();
-    }
-
-    // ===== CONFIGURACIÓN =====
-    function renderConfig(data) {
-      document.getElementById('configPais').value = data.pais_trending || 'Auto';
-      document.getElementById('configShowCountry').value = data.mostrar_ip ? 'true' : 'false';
-      document.getElementById('configLegal').value = data.texto_legal || '';
-      document.getElementById('heroTitulo').value = data.hero_titulo || 'SEÑAL OFICIAL';
-      document.getElementById('heroSub').value = data.hero_subtitulo || 'UADAVSTREAM TV';
-      document.getElementById('heroBtnTexto').value = data.hero_boton_texto || 'Ver SEÑAL OFICIAL';
-      document.getElementById('heroBtnUrl').value = data.hero_boton_url || '-479TZi-EAs';
-    }
-
-    function guardarConfig() {
-      const config = {
-        pais_trending: document.getElementById('configPais').value.trim() || 'Auto',
-        mostrar_ip: document.getElementById('configShowCountry').value === 'true',
-        texto_legal: document.getElementById('configLegal').value,
-        hero_titulo: document.getElementById('heroTitulo').value,
-        hero_subtitulo: document.getElementById('heroSub').value,
-        hero_boton_texto: document.getElementById('heroBtnTexto').value,
-        hero_boton_url: document.getElementById('heroBtnUrl').value
-      };
-      fetch(API_URL + 'config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-        body: JSON.stringify(config)
-      })
-      .then(() => {
-        const contadores = { visitas_totales: parseInt(document.getElementById('configVisitas').value) || 0, descargas_app: 0 };
-        return fetch(API_URL + 'contadores', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-          body: JSON.stringify(contadores)
+    function renderLista() {
+      const list = document.getElementById('contenidoManualList');
+      list.innerHTML = '';
+      const secIndex = document.getElementById('selectSeccionManual').value;
+      if (secIndex === '') return;
+      const sec = seccionesData[secIndex];
+      if (sec.items && sec.items.length > 0) {
+        sec.items.forEach((item, i) => {
+          let img = ''; let titulo = '';
+          if (item.tipo === 'artista') { img = item.foto; titulo = item.nombre; }
+          else if (item.tipo === 'evento') { img = item.imagen || 'https://i.ytimg.com/vi/aqz-KE-bpKQ/hqdefault.jpg'; titulo = `${item.nombre} - ${item.fecha || ''}`; }
+          else { img = item.imagen || `https://i.ytimg.com/vi/${item.url}/mqdefault.jpg`; titulo = item.titulo; }
+          list.innerHTML += `<div class="content-video-box"><img src="${img}" class="w-16 h-10 rounded object-cover"><span class="flex-1 px-2 text-sm truncate font-mono">${titulo}</span><button onclick="moverItem(${secIndex}, ${i}, -1)" class="btn btn-move">⬆️</button><button onclick="moverItem(${secIndex}, ${i}, 1)" class="btn btn-move">⬇️</button><button onclick="editarItem(${secIndex}, ${i})" class="btn btn-edit"><i class="fa-solid fa-pen"></i></button><button onclick="eliminarItem(${secIndex}, ${i})" class="btn btn-del">✕</button></div>`;
         });
-      })
-      .then(() => mostrarStatus('aparienciaStatus', '✅ Configuración guardada', 'success'))
-      .catch(err => mostrarStatus('aparienciaStatus', '❌ Error: ' + err.message, 'error'));
+      } else { list.innerHTML = '<div class="text-slate-500 text-sm p-4 border border-dashed border-slate-700 rounded-xl">No hay ítems.</div>'; }
     }
 
-    // ===== GUARDAR TODO =====
-    function guardarTodo() {
-      if (!ADMIN_KEY) return alert("Conectate primero");
-      if (!isDataLoadedSuccessfully) {
-        alert("⚠️ Datos no cargados. No se guardarán cambios.");
-        return;
-      }
-      guardarApariencia();
-      guardarBanners();
-      guardarEstadoSitio();
-      guardarLandingConfig();
-      Promise.all([
-        fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) }),
-        fetch(API_URL + 'senales_oficiales', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(senalesData) }),
-        fetch(API_URL + 'radios', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(radiosData) }),
-        fetch(API_URL + 'artistas_uadav', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(artistasData) })
-      ])
-      .then(() => alert('✅ Todo guardado en la nube'))
-      .catch(err => alert('❌ Error: ' + err.message));
+    function moverItem(secIdx, itemIdx, dir) { const n = itemIdx + dir; if (n < 0 || n >= seccionesData[secIdx].items.length) return; [seccionesData[secIdx].items[itemIdx], seccionesData[secIdx].items[n]] = [seccionesData[secIdx].items[n], seccionesData[secIdx].items[itemIdx]]; renderLista(); }
+    function eliminarItem(secIdx, itemIdx) { seccionesData[secIdx].items.splice(itemIdx, 1); renderLista(); }
+
+    function renderSenales() { const l = document.getElementById('senalesList'); l.innerHTML=''; senalesData.forEach((s,i)=> l.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold text-white">${s.nombre}</h4><p class="text-xs text-slate-400">${s.url}</p></div><button onclick="senalesData.splice(${i},1); renderSenales();" class="btn btn-del">Eliminar</button></div>`); l.innerHTML += `<div class="grid grid-cols-1 gap-2 mt-2"><input id="newSenalNombre" placeholder="Nombre"><input id="newSenalUrl" placeholder="URL"><button onclick="senalesData.push({id:'s'+Date.now(), nombre:document.getElementById('newSenalNombre').value, url:document.getElementById('newSenalUrl').value}); renderSenales();" class="btn btn-edit">Agregar</button></div>`; }
+    function renderRadios() { const l = document.getElementById('radiosList'); l.innerHTML=''; radiosData.forEach((r,i)=> l.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold text-white">${r.nombre}</h4><p class="text-xs text-slate-400">${r.stream_url}</p></div><button onclick="radiosData.splice(${i},1); renderRadios();" class="btn btn-del">Eliminar</button></div>`); l.innerHTML += `<div class="grid grid-cols-1 gap-2 mt-2"><input id="newRadioNombre" placeholder="Nombre"><input id="newRadioUrl" placeholder="URL Stream"><button onclick="radiosData.push({id:'r'+Date.now(), nombre:document.getElementById('newRadioNombre').value, stream_url:document.getElementById('newRadioUrl').value}); renderRadios();" class="btn btn-edit">Agregar</button></div>`; }
+
+    function guardarExtras() {
+      fetch(API_URL + 'apariencia', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify({ titulo_sitio: document.getElementById('marcaTitulo').value, eslogan: document.getElementById('marcaEslogan').value }) });
+      fetch(API_URL + 'banners', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify({ top:{activo:true, html:document.getElementById('bannerTopHTML').value}, infeed:{activo:true, html:document.getElementById('bannerInfeedHTML').value}, footer:{activo:true, html:document.getElementById('bannerFooterHTML').value} }) });
     }
 
-    window.onload = function() {
-      cargarSesion();
+    function guardarFooter() {
+      const footer = { titulo: document.getElementById('footerTitulo').value, subtitulo: document.getElementById('footerSubtitulo').value, copyright: document.getElementById('footerCopyright').value, instagram: document.getElementById('redInstagram').value, facebook: document.getElementById('redFacebook').value, twitter: document.getElementById('redTwitter').value, youtube: document.getElementById('redYoutube').value, tiktok: document.getElementById('redTiktok').value, whatsapp: document.getElementById('redWhatsapp').value, link1_texto: document.getElementById('link1Texto').value, link1_url: document.getElementById('link1Url').value, link2_texto: document.getElementById('link2Texto').value, link2_url: document.getElementById('link2Url').value };
+      fetch(API_URL + 'footer_config', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(footer) });
+    }
+
+    async function guardarTodo() {
+      guardarExtras(); guardarFooter();
+      await fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) });
+      await fetch(API_URL + 'senales_oficiales', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(senalesData) });
+      await fetch(API_URL + 'radios', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(radiosData) });
+      alert('✅ Todo guardado en la nube');
+    }
+
+    window.onload = () => {
+      const saved = localStorage.getItem('uadavstream_admin_key');
+      if (saved) { document.getElementById('adminKeyInput').value = saved; conectar(); }
     };
   </script>
 </body>
