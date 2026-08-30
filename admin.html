@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Control - UADAV STREAM</title>
+  <title>Panel de Control - UADAVSTREAM</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = { theme: { extend: { colors: { uadav: { accent: '#00e5ff', dark: '#050505', card: '#0f0f13', border: '#1f1f26' } }, fontFamily: { sans: ['Outfit', 'sans-serif'] } } } }
@@ -44,14 +44,15 @@
     </div>
 
     <div id="panelContent" class="hidden space-y-6">
+
       <!-- APARIENCIA -->
       <details open>
         <summary>🎨 Apariencia y Marca</summary>
         <div class="border border-uadav-border rounded-xl p-4 mt-3">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><label>Logo (URL)</label><input id="marcaLogo" placeholder="https://..."></div>
-            <div><label>Título del Sitio</label><input id="marcaTitulo" placeholder="UADAV STREAM"></div>
-            <div><label>Eslogan</label><input id="marcaEslogan" placeholder="Tu música sin límites"></div>
+            <div><label>Título del Sitio</label><input id="marcaTitulo" placeholder="UADAVSTREAM"></div>
+            <div><label>Eslogan</label><input id="marcaEslogan" placeholder="Plataforma Global"></div>
             <div><label>Color Acento</label><input type="color" id="marcaColorAcento" value="#00e5ff"></div>
             <div><label>Color Fondo</label><input type="color" id="marcaColorFondo" value="#050505"></div>
             <div><label>Color Tarjetas</label><input type="color" id="marcaColorTarjetas" value="#0f0f13"></div>
@@ -122,13 +123,13 @@
 
       <!-- LANDING PAGE CONFIG -->
       <details>
-        <summary>🎨 Landing Page (configuración visual y destacados)</summary>
+        <summary>🎨 Landing Page (configuración visual)</summary>
         <div class="border border-uadav-border rounded-xl p-4 mt-3">
-          <p class="text-xs text-slate-400 mb-4">Personalizá la apariencia, el mensaje y el origen de los videos destacados.</p>
+          <p class="text-xs text-slate-400 mb-4">Personalizá la apariencia y el mensaje de la landing page. Los colores y textos se actualizan automáticamente.</p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label>Título Hero</label><input id="landingHeroTitulo" placeholder="La música que te mueve"></div>
-            <div><label>Subtítulo Hero</label><input id="landingHeroSubtitulo" placeholder="Descubrí los mejores shows, artistas y conciertos..."></div>
-            <div><label>Mensaje de espera</label><input id="landingMensajeEspera" placeholder="Pronto podrás disfrutar de una experiencia única..."></div>
+            <div><label>Título Hero</label><input id="landingHeroTitulo" placeholder="El arte escénico al alcance de todos"></div>
+            <div><label>Subtítulo Hero</label><input id="landingHeroSubtitulo" placeholder="Descubrí obras de teatro, circos, humoristas y espectáculos..."></div>
+            <div><label>Mensaje de espera</label><input id="landingMensajeEspera" placeholder="Pronto podrás disfrutar de una experiencia única. Déjanos tu correo y te avisaremos."></div>
             <div><label>Texto botón captador</label><input id="landingBotonTexto" placeholder="Enviar"></div>
             <div><label>Imagen de fondo (URL)</label><input id="landingHeroImagen" placeholder="https://..."></div>
             <div><label>Mostrar captador</label><select id="landingMostrarCaptador"><option value="true">Sí</option><option value="false">No</option></select></div>
@@ -147,12 +148,12 @@
               </select>
             </div>
             <div><label>Palabras clave (separadas por coma)</label>
-              <input id="landingPalabrasClave" placeholder="rock nacional, pop, conciertos">
+              <input id="landingPalabrasClave" placeholder="teatro, circo, magia, humor">
             </div>
             <div><label>Límite de videos destacados</label>
               <input type="number" id="landingLimiteDestacados" value="12" min="1" max="30">
             </div>
-            <div class="md:col-span-2"><label>Texto del footer</label><input id="landingFooterTexto" placeholder="© 2025 UADAV STREAM - Todos los derechos reservados."></div>
+            <div class="md:col-span-2"><label>Texto del footer</label><input id="landingFooterTexto" placeholder="© 2025 UADAVSTREAM - Todos los derechos reservados."></div>
             <div class="md:col-span-2"><label>Contacto del footer</label><input id="landingFooterContacto" placeholder="+54 341 3 602 783"></div>
           </div>
           <button onclick="guardarLandingConfig()" class="btn btn-save mt-4">Guardar configuración de Landing</button>
@@ -180,6 +181,7 @@
           </div>
           <button onclick="agregarNuevaSeccion()" class="btn btn-save mb-4">+ Agregar Sección</button>
           <div id="seccionesList" class="space-y-2"></div>
+          <p class="text-xs text-slate-400 mt-2">Usá los botones ⬆️⬇️ para reordenar. Luego guardá cambios.</p>
         </div>
       </details>
 
@@ -188,7 +190,7 @@
         <summary>📡 Señales (Live Streams)</summary>
         <div class="border border-uadav-border rounded-xl p-4 mt-3">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><label>Nombre</label><input id="senalNombre" placeholder="Señal UADAV" onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
+            <div><label>Nombre</label><input id="senalNombre" placeholder="Señal UADAV TV" onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
             <div><label>URL</label><input id="senalUrl" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
             <div><label>Logo</label><input id="senalLogo" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
             <div><label>Tipo</label><input id="senalTipo" placeholder="auto" onkeydown="if(event.key === 'Enter') guardarSenal()"></div>
@@ -208,7 +210,7 @@
             <div><label>Nombre</label><input id="radioNombre" placeholder="UADAV Radio" onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
             <div><label>URL Stream</label><input id="radioStream" placeholder="https://stream.zeno.fm/..." onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
             <div><label>Logo</label><input id="radioLogo" placeholder="https://..." onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
-            <div><label>Ubicación</label><input id="radioUbicacion" placeholder="Rosario, AR" onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
+            <div><label>Ubicación</label><input id="radioUbicacion" placeholder="Argentina" onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
             <div><label>Descripción</label><input id="radioDesc" placeholder="Música 24/7" onkeydown="if(event.key === 'Enter') guardarRadio()"></div>
             <div><label>¿Oficial (Hero)?</label><select id="radioOficial"><option value="true">Sí</option><option value="false">No</option></select></div>
           </div>
@@ -245,12 +247,12 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div><label>País Tendencias</label><input id="configPais" placeholder="Auto" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
             <div><label>Mostrar País (IP)</label><select id="configShowCountry"><option value="true">Sí</option><option value="false">No</option></select></div>
-            <div><label>Título Hero</label><input id="heroTitulo" placeholder="UADAV STREAM" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
-            <div><label>Subtítulo Hero</label><input id="heroSub" placeholder="MUSICA SIN LIMITES" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
-            <div><label>Texto Botón Hero</label><input id="heroBtnTexto" placeholder="Ver UADAV TV" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
+            <div><label>Título Hero</label><input id="heroTitulo" placeholder="SEÑAL OFICIAL" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
+            <div><label>Subtítulo Hero</label><input id="heroSub" placeholder="UADAVSTREAM TV" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
+            <div><label>Texto Botón Hero</label><input id="heroBtnTexto" placeholder="Ver SEÑAL OFICIAL" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
             <div><label>ID Video del Botón</label><input id="heroBtnUrl" placeholder="-479TZi-EAs" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
             <div><label>Contador Base</label><input type="number" id="configVisitas" placeholder="0" onkeydown="if(event.key === 'Enter') guardarConfig()"></div>
-            <div class="md:col-span-2"><label>Texto Legal</label><textarea id="configLegal" rows="2">UADAV STREAM es un desarrollo de UADAV Medios.</textarea></div>
+            <div class="md:col-span-2"><label>Texto Legal</label><textarea id="configLegal" rows="2">UADAV STREAM es un desarrollo de Beat Digital Medios.</textarea></div>
           </div>
           <button onclick="guardarConfig()" class="btn btn-save mt-4">Guardar Configuración</button>
         </div>
@@ -263,14 +265,13 @@
   </div>
 
   <script>
-    // ⚠️ IMPORTANTE: Reemplaza esta URL por la URL real de tu Worker UADAV
-    const API_URL = 'https://uadav-api.tu-dominio.workers.dev/api/'; 
-    
+    // ⚠️ URL CORREGIDA (tu-dominio reemplazado por uadavstream)
+    const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
     let ADMIN_KEY = '', seccionesData = [], artistasData = [], radiosData = [], senalesData = [], editandoRadioId = null, editandoSenalId = null, editandoId = null;
     let isDataLoadedSuccessfully = false;
 
     function cargarSesion() {
-      const saved = localStorage.getItem('uadav_admin_key');
+      const saved = localStorage.getItem('uadavstream_admin_key');
       if (saved) {
         document.getElementById('adminKeyInput').value = saved;
         ADMIN_KEY = saved;
@@ -279,11 +280,11 @@
     }
 
     function guardarSesion(key) {
-      localStorage.setItem('uadav_admin_key', key);
+      localStorage.setItem('uadavstream_admin_key', key);
     }
 
     function desconectar() {
-      localStorage.removeItem('uadav_admin_key');
+      localStorage.removeItem('uadavstream_admin_key');
       ADMIN_KEY = '';
       document.getElementById('panelContent').classList.add('hidden');
       document.getElementById('adminKeyInput').value = '';
@@ -516,7 +517,8 @@
     }
 
     function exportarSuscriptores() {
-      window.open(API_URL + 'suscriptores/export?token=' + encodeURIComponent(ADMIN_KEY), '_blank');
+      const token = ADMIN_KEY;
+      window.open(API_URL + 'suscriptores/export?token=' + encodeURIComponent(token), '_blank');
     }
 
     // ===== SECCIONES =====
@@ -780,9 +782,9 @@
       document.getElementById('configPais').value = data.pais_trending || 'Auto';
       document.getElementById('configShowCountry').value = data.mostrar_ip ? 'true' : 'false';
       document.getElementById('configLegal').value = data.texto_legal || '';
-      document.getElementById('heroTitulo').value = data.hero_titulo || 'UADAV STREAM';
-      document.getElementById('heroSub').value = data.hero_subtitulo || 'MUSICA SIN LIMITES';
-      document.getElementById('heroBtnTexto').value = data.hero_boton_texto || 'Ver UADAV TV';
+      document.getElementById('heroTitulo').value = data.hero_titulo || 'SEÑAL OFICIAL';
+      document.getElementById('heroSub').value = data.hero_subtitulo || 'UADAVSTREAM TV';
+      document.getElementById('heroBtnTexto').value = data.hero_boton_texto || 'Ver SEÑAL OFICIAL';
       document.getElementById('heroBtnUrl').value = data.hero_boton_url || '-479TZi-EAs';
     }
 
