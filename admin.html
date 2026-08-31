@@ -20,6 +20,9 @@
     details { margin-bottom: 20px; border: 1px solid #334155; border-radius: 16px; background: #1e293b; padding: 10px; }
     summary { font-weight: 800; cursor: pointer; color: #00e5ff; font-size: 18px; padding: 10px; display: flex; align-items: center; gap: 10px; }
     .pro-header { background: #0f172a; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 50; padding: 10px; border-radius: 16px; margin-bottom: 10px; }
+    .status-msg { font-size: 12px; margin-top: 6px; padding: 6px; border-radius: 6px; }
+    .status-msg.success { background: #064e3b; color: #6ee7b7; }
+    .status-msg.error { background: #7f1d1d; color: #fca5a5; }
   </style>
 </head>
 <body class="p-4 sm:p-8 min-h-screen">
@@ -34,55 +37,70 @@
     </div>
 
     <div id="panelContent" class="hidden space-y-6">
+
+      <!-- 0. NUEVA SECCIÓN: ESTADO DEL SITIO -->
       <details open>
+        <summary><i class="fa-solid fa-gear text-2xl"></i> Estado del Sitio (Normal, Mantenimiento, Landing)</summary>
+        <div class="p-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label>Modo Sitio</label>
+              <select id="estadoModo" onchange="toggleEstadoCampos()">
+                <option value="normal">Normal (Web App Completa)</option>
+                <option value="mantenimiento">Mantenimiento (En Construcción)</option>
+                <option value="landing">Landing (Redirigir a otra URL)</option>
+              </select>
+            </div>
+            <div id="landingUrlDiv" style="display:none;">
+              <label>URL de Landing</label>
+              <input id="estadoLandingUrl" placeholder="https://...">
+            </div>
+          </div>
+          <button onclick="guardarEstadoSitio()" class="btn btn-save mt-4">Guardar Estado</button>
+          <div id="estadoStatus" class="status-msg mt-2"></div>
+        </div>
+      </details>
+
+      <!-- 1. SECCIONES DINÁMICAS -->
+      <details>
         <summary><i class="fa-solid fa-layer-group text-2xl"></i> Secciones Dinámicas y Contenido</summary>
         <div class="p-4">
           <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 p-4 bg-slate-900/50 rounded-xl">
-            <div><label>ID (sin espacios)</label><input id="nuevoSecId" placeholder="infantiles"></div>
-            <div><label>Nombre</label><input id="nuevoSecNombre" placeholder="Infantiles"></div>
-            <div><label>Ícono</label><input id="nuevoSecIcono" placeholder="fa-child"></div>
-            <div><label>Tipo</label><select id="nuevoSecTipo"><option value="videos">Videos</option><option value="perfiles">Perfiles</option><option value="eventos">Eventos</option></select></div>
-            <div><label>Query Auto</label><input id="nuevoSecQuery" placeholder="obras infantiles"></div>
+            <div><label>ID (sin espacios)</label><input id="nuevoSecId" placeholder="teatros"></div>
+            <div><label>Nombre</label><input id="nuevoSecNombre" placeholder="Teatros"></div>
+            <div><label>Ícono</label><input id="nuevoSecIcono" placeholder="fa-masks-theater"></div>
+            <div><label>Tipo de Contenido</label>
+              <select id="nuevoSecTipo">
+                <option value="videos">Videos / Playlists</option>
+                <option value="perfiles">Perfiles (Artistas, Teatros, Circos)</option>
+                <option value="eventos">Eventos / Cartelera</option>
+              </select>
+            </div>
+            <div><label>Query Auto</label><input id="nuevoSecQuery" placeholder="obras de teatro"></div>
             <div class="md:col-span-5"><button onclick="agregarNuevaSeccion()" class="btn btn-save">+ Agregar Sección</button></div>
           </div>
           <div id="seccionesList" class="space-y-2"></div>
           <hr class="border-slate-700 my-6">
-          
           <div class="font-bold text-white mb-4 text-lg">🎬 Agregar / Editar Contenido</div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-slate-900/50 rounded-xl">
             <div class="md:col-span-2"><label>Seleccionar Sección</label><select id="selectSeccionManual" onchange="actualizarFormularioYLista()"></select></div>
             <div id="divTipoContenido"><label>Tipo de Video</label><select id="tipoContenido" onchange="toggleCamposDinamicos()"><option value="youtube">YouTube</option><option value="mp4">MP4 / URL</option><option value="m3u8">M3U8</option><option value="twitch">Twitch</option><option value="kick">Kick</option></select></div>
-            
-            <!-- Perfiles -->
             <div id="camposArtista" class="hidden md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label>Nombre</label><input id="artNombre" placeholder="URO"></div>
-              <div><label>Rubro</label><input id="artRubro" placeholder="Música"></div>
-              <div><label>Foto URL</label><input id="artFoto" placeholder="https://..."></div>
-              <div><label>Bio</label><textarea id="artBio"></textarea></div>
-              <div><label>ID Canal YouTube</label><input id="artCanal" placeholder="UC..."></div>
-              <div><label>Contacto</label><input id="artContacto" placeholder="341..."></div>
-              <div class="md:col-span-2"><button onclick="cargarCanalMasivo()" class="btn btn-edit w-full"><i class="fa-solid fa-download"></i> 🚀 Importar Perfil y Videos</button></div>
+              <div><label>Nombre</label><input id="artNombre" placeholder="URO"></div><div><label>Rubro</label><input id="artRubro" placeholder="Música"></div>
+              <div><label>Foto URL</label><input id="artFoto" placeholder="https://..."></div><div><label>Bio</label><textarea id="artBio"></textarea></div>
+              <div><label>ID Canal YouTube</label><input id="artCanal" placeholder="UC..."></div><div><label>Contacto</label><input id="artContacto" placeholder="341..."></div>
+              <div class="md:col-span-2"><button onclick="cargarCanalMasivo()" class="btn btn-edit w-full">🚀 Importar Perfil y Videos</button></div>
             </div>
-
-            <!-- Eventos -->
             <div id="camposCartelera" class="hidden md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><label>Nombre Evento</label><input id="evNombre" placeholder="Obra de Teatro"></div>
-              <div><label>Fecha</label><input id="evFecha" placeholder="15/08/2026"></div>
-              <div><label>Lugar</label><input id="evLugar" placeholder="Teatro Colón"></div>
-              <div class="md:col-span-2"><label>Imagen del Evento</label><input id="evImg" placeholder="https://..."></div>
-              <div><label>Trailer (ID)</label><input id="evTrailer" placeholder="dQw4w9WgXcQ"></div>
-              <div><label>Precio</label><input id="evPrecio" placeholder="15000"></div>
-              <div><label>Link Comprar</label><input id="evLink" placeholder="https://..."></div>
-              <div class="md:col-span-3"><label>Descripción</label><input id="evDesc" placeholder="Único show"></div>
+              <div><label>Nombre Evento</label><input id="evNombre" placeholder="Obra"></div><div><label>Fecha</label><input id="evFecha" placeholder="15/08/2026"></div>
+              <div><label>Lugar</label><input id="evLugar" placeholder="Teatro"></div><div class="md:col-span-2"><label>Imagen</label><input id="evImg" placeholder="https://..."></div>
+              <div><label>Trailer ID</label><input id="evTrailer" placeholder="dQw4w9WgXcQ"></div><div><label>Precio</label><input id="evPrecio" placeholder="15000"></div>
+              <div><label>Link Compra</label><input id="evLink" placeholder="https://..."></div><div class="md:col-span-3"><label>Descripción</label><input id="evDesc" placeholder="Único show"></div>
             </div>
-
-            <!-- Videos -->
             <div id="camposVideo" class="grid md:col-span-3 grid-cols-1 md:grid-cols-2 gap-4">
               <div class="md:col-span-2"><label>URL o ID</label><input id="vidUrl" placeholder="dQw4w9WgXcQ"></div>
-              <div><label>Título</label><input id="vidTitulo" placeholder="Opcional"></div>
-              <div><label>Imagen</label><input id="vidImg" placeholder="Opcional"></div>
+              <div><label>Título</label><input id="vidTitulo" placeholder="Opcional"></div><div><label>Imagen</label><input id="vidImg" placeholder="Opcional"></div>
             </div>
-            
             <div class="md:col-span-3 flex gap-2">
               <button onclick="agregarItem()" id="btnAgregarItem" class="btn btn-edit w-full">➕ Agregar</button>
               <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn btn-del w-1/3 hidden">✕ Cancelar</button>
@@ -92,38 +110,15 @@
         </div>
       </details>
 
-      <details>
-        <summary><i class="fa-solid fa-shoe-prints text-2xl"></i> Footer y Redes</summary>
-        <div class="p-4">
-           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label>Título Footer</label><input id="footerTitulo" placeholder="Disfrutá UADAVSTREAM"></div>
-              <div><label>Subtítulo</label><input id="footerSubtitulo" placeholder="Teatro y más"></div>
-              <div class="md:col-span-2"><label>Copyright</label><input id="footerCopyright" placeholder="© 2026 UADAVSTREAM"></div>
-           </div>
-           <hr class="border-slate-700 my-4">
-           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div><label>Instagram</label><input id="redInstagram"></div>
-              <div><label>Facebook</label><input id="redFacebook"></div>
-              <div><label>Twitter/X</label><input id="redTwitter"></div>
-              <div><label>YouTube</label><input id="redYoutube"></div>
-              <div><label>TikTok</label><input id="redTiktok"></div>
-              <div><label>WhatsApp</label><input id="redWhatsapp"></div>
-           </div>
-           <hr class="border-slate-700 my-4">
-           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div><label>Link 1 Texto</label><input id="link1Texto"></div><div><label>Link 1 URL</label><input id="link1Url"></div>
-              <div><label>Link 2 Texto</label><input id="link2Texto"></div><div><label>Link 2 URL</label><input id="link2Url"></div>
-           </div>
-           <button onclick="guardarFooter()" class="btn btn-save mt-4">Guardar Footer</button>
-        </div>
-      </details>
-
+      <!-- 2. APARIENCIA Y BANNERS -->
       <details>
         <summary><i class="fa-solid fa-palette text-2xl"></i> Apariencia y Banners</summary>
         <div class="p-4">
            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><label>Título</label><input id="marcaTitulo" placeholder="UADAVSTREAM"></div>
-              <div><label>Eslogan</label><input id="marcaEslogan" placeholder="Plataforma Global"></div>
+              <div><label>Título Sitio</label><input id="marcaTitulo" placeholder="UADAVSTREAM"></div>
+              <div><label>Eslogan</label><input id="marcaEslogan" placeholder="Teatro y Espectáculos"></div>
+              <div><label>Color Acento</label><input type="color" id="marcaColorAcento" value="#00e5ff"></div>
+              <div><label>Color Fondo</label><input type="color" id="marcaColorFondo" value="#050505"></div>
            </div>
            <div class="grid grid-cols-1 gap-4 mt-4">
               <div><label>Banner Superior</label><textarea id="bannerTopHTML" rows="2"></textarea></div>
@@ -134,10 +129,34 @@
         </div>
       </details>
 
+      <!-- 3. FOOTER Y REDES -->
+      <details>
+        <summary><i class="fa-solid fa-shoe-prints text-2xl"></i> Footer y Redes Sociales</summary>
+        <div class="p-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label>Título Principal del Footer</label><input id="footerTitulo" placeholder="Disfrutá UADAVSTREAM"></div>
+            <div><label>Subtítulo</label><input id="footerSubtitulo" placeholder="El mejor teatro y música."></div>
+            <div class="md:col-span-2"><label>Texto de Copyright</label><input id="footerCopyright" placeholder="© 2026 UADAVSTREAM"></div>
+          </div>
+          <hr class="border-slate-700 my-4">
+          <h3 class="text-white font-bold mb-2">Redes Sociales</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div><label>Instagram</label><input id="redInstagram"></div>
+            <div><label>Facebook</label><input id="redFacebook"></div>
+            <div><label>X</label><input id="redTwitter"></div>
+            <div><label>YouTube</label><input id="redYoutube"></div>
+            <div><label>TikTok</label><input id="redTiktok"></div>
+            <div><label>WhatsApp</label><input id="redWhatsapp"></div>
+          </div>
+          <button onclick="guardarFooter()" class="btn btn-save mt-4">Guardar Footer</button>
+        </div>
+      </details>
+
+      <!-- 4. SEÑALES Y RADIOS -->
       <details>
         <summary><i class="fa-solid fa-tower-broadcast text-2xl"></i> Señales y Radios</summary>
         <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div><h3 class="text-white font-bold mb-4">Señales</h3><div id="senalesList"></div></div>
+          <div><h3 class="text-white font-bold mb-4">Señales (Streams)</h3><div id="senalesList"></div></div>
           <div><h3 class="text-white font-bold mb-4">Radios</h3><div id="radiosList"></div></div>
         </div>
       </details>
@@ -149,9 +168,9 @@
   </div>
 
   <script>
-    // ⚠️ CAMBIAR AQUÍ LA URL DE UADAVSTREAM
+    // ⚠️ CAMBIADO A UADAV
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
-    let ADMIN_KEY = '', seccionesData = [], senalesData = [], radiosData = [];
+    let ADMIN_KEY = '', seccionesData = [], senalesData = [], radiosData = [], footerConfig = {};
     let editandoItemIndex = null;
 
     function desconectar() {
@@ -174,16 +193,16 @@
     }
 
     async function cargarDatos() {
-      const [secRes, apRes, banRes, senRes, radRes, footRes] = await Promise.all([
+      const [secRes, apRes, banRes, estRes, senRes, radRes, footRes] = await Promise.all([
         fetch(API_URL + 'secciones').then(r => r.json()).catch(() => []),
         fetch(API_URL + 'apariencia').then(r => r.json()).catch(() => ({})),
         fetch(API_URL + 'banners').then(r => r.json()).catch(() => ({})),
+        fetch(API_URL + 'estado_sitio').then(r => r.json()).catch(() => ({})),
         fetch(API_URL + 'senales_oficiales').then(r => r.json()).catch(() => []),
         fetch(API_URL + 'radios').then(r => r.json()).catch(() => []),
         fetch(API_URL + 'footer_config').then(r => r.json()).catch(() => ({}))
       ]);
 
-      // Deduplicación
       if (Array.isArray(secRes)) {
         const uniqueMap = new Map(secRes.map(s => [s.id, s]));
         seccionesData = Array.from(uniqueMap.values());
@@ -191,10 +210,11 @@
 
       senalesData = Array.isArray(senRes) ? senRes : [];
       radiosData = Array.isArray(radRes) ? radRes : [];
-
-      // Secciones por defecto de UADAV
-      if (!seccionesData.find(s => s.id === 'radios')) seccionesData.unshift({ id: 'radios', nombre: 'Radios', icono: 'fa-radio', activa: true, tipo_contenido: 'videos', modo: 'manual', items: [] });
-      if (!seccionesData.find(s => s.id === 'teatros')) seccionesData.push({ id: 'teatros', nombre: 'Teatros', icono: 'fa-masks-theater', activa: true, tipo_contenido: 'videos', modo: 'auto', query: 'obra de teatro', items: [] });
+      footerConfig = footRes || {};
+      
+      if (!seccionesData.find(s => s.id === 'senales')) seccionesData.unshift({ id: 'senales', nombre: 'Señales', icono: 'fa-tower-broadcast', activa: true, tipo_contenido: 'videos', modo: 'manual', items: [] });
+      if (!seccionesData.find(s => s.id === 'radios')) seccionesData.push({ id: 'radios', nombre: 'Radios', icono: 'fa-radio', activa: true, tipo_contenido: 'videos', modo: 'manual', items: [] });
+      if (!seccionesData.find(s => s.id === 'teatros')) seccionesData.push({ id: 'teatros', nombre: 'Teatros', icono: 'fa-masks-theater', activa: true, tipo_contenido: 'videos', modo: 'auto', query: 'obra de teatro completa', items: [] });
       if (!seccionesData.find(s => s.id === 'artistas')) seccionesData.push({ id: 'artistas', nombre: 'Artistas', icono: 'fa-user-group', activa: true, tipo_contenido: 'perfiles', modo: 'manual', items: [] });
       if (!seccionesData.find(s => s.id === 'cartelera')) seccionesData.push({ id: 'cartelera', nombre: 'Cartelera', icono: 'fa-ticket', activa: true, tipo_contenido: 'eventos', modo: 'manual', items: [] });
 
@@ -203,22 +223,52 @@
       renderSenales(); renderRadios();
       
       document.getElementById('marcaTitulo').value = apRes.titulo_sitio || 'UADAVSTREAM';
-      document.getElementById('marcaEslogan').value = apRes.eslogan || 'Plataforma Global';
+      document.getElementById('marcaEslogan').value = apRes.eslogan || 'Teatro y Espectáculos';
+      document.getElementById('marcaColorAcento').value = apRes.color_acento || '#00e5ff';
+      document.getElementById('marcaColorFondo').value = apRes.color_fondo || '#050505';
       document.getElementById('bannerTopHTML').value = banRes.top?.html || '';
       document.getElementById('bannerInfeedHTML').value = banRes.infeed?.html || '';
       document.getElementById('bannerFooterHTML').value = banRes.footer?.html || '';
+      
+      // Estado
+      document.getElementById('estadoModo').value = estRes.modo || 'normal';
+      document.getElementById('estadoLandingUrl').value = estRes.landing_url || '';
+      toggleEstadoCampos();
 
-      document.getElementById('footerTitulo').value = footRes.titulo || '';
-      document.getElementById('footerSubtitulo').value = footRes.subtitulo || '';
-      document.getElementById('footerCopyright').value = footRes.copyright || '';
-      document.getElementById('redInstagram').value = footRes.instagram || '';
-      document.getElementById('redFacebook').value = footRes.facebook || '';
-      document.getElementById('redTwitter').value = footRes.twitter || '';
-      document.getElementById('redYoutube').value = footRes.youtube || '';
-      document.getElementById('redTiktok').value = footRes.tiktok || '';
-      document.getElementById('redWhatsapp').value = footRes.whatsapp || '';
-      document.getElementById('link1Texto').value = footRes.link1_texto || ''; document.getElementById('link1Url').value = footRes.link1_url || '';
-      document.getElementById('link2Texto').value = footRes.link2_texto || ''; document.getElementById('link2Url').value = footRes.link2_url || '';
+      // Footer
+      document.getElementById('footerTitulo').value = footerConfig.titulo || '';
+      document.getElementById('footerSubtitulo').value = footerConfig.subtitulo || '';
+      document.getElementById('footerCopyright').value = footerConfig.copyright || '';
+      document.getElementById('redInstagram').value = footerConfig.instagram || '';
+      document.getElementById('redFacebook').value = footerConfig.facebook || '';
+      document.getElementById('redTwitter').value = footerConfig.twitter || '';
+      document.getElementById('redYoutube').value = footerConfig.youtube || '';
+      document.getElementById('redTiktok').value = footerConfig.tiktok || '';
+      document.getElementById('redWhatsapp').value = footerConfig.whatsapp || '';
+    }
+
+    // ⭐ NUEVAS FUNCIONES PARA ESTADO DEL SITIO
+    function toggleEstadoCampos() {
+      const modo = document.getElementById('estadoModo').value;
+      document.getElementById('landingUrlDiv').style.display = modo === 'landing' ? 'block' : 'none';
+    }
+
+    function guardarEstadoSitio() {
+      const estado = {
+        modo: document.getElementById('estadoModo').value,
+        landing_url: document.getElementById('estadoLandingUrl').value
+      };
+      fetch(API_URL + 'estado_sitio', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(estado) })
+      .then(() => mostrarStatus('estadoStatus', '✅ Estado guardado correctamente', 'success'))
+      .catch(err => mostrarStatus('estadoStatus', '❌ Error: ' + err.message, 'error'));
+    }
+
+    function mostrarStatus(id, mensaje, tipo) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = 'status-msg ' + (tipo === 'success' ? 'success' : 'error');
+      el.innerText = mensaje;
+      setTimeout(() => { el.className = 'status-msg'; el.innerText = ''; }, 5000);
     }
 
     function renderSecciones() {
@@ -238,7 +288,13 @@
             <div class="grid grid-cols-4 gap-2">
               <div><label>Nombre</label><input value="${sec.nombre}" oninput="seccionesData[${index}].nombre = this.value"></div>
               <div><label>Ícono</label><input value="${sec.icono || 'fa-circle'}" oninput="seccionesData[${index}].icono = this.value"></div>
-              <div><label>Tipo</label><select onchange="seccionesData[${index}].tipo_contenido = this.value; actualizarFormularioYLista();"><option value="videos" ${sec.tipo_contenido === 'videos' || !sec.tipo_contenido ? 'selected' : ''}>Videos</option><option value="perfiles" ${sec.tipo_contenido === 'perfiles' ? 'selected' : ''}>Perfiles</option><option value="eventos" ${sec.tipo_contenido === 'eventos' ? 'selected' : ''}>Eventos</option></select></div>
+              <div><label>Tipo</label>
+                <select onchange="seccionesData[${index}].tipo_contenido = this.value; actualizarFormularioYLista();">
+                  <option value="videos" ${sec.tipo_contenido === 'videos' || !sec.tipo_contenido ? 'selected' : ''}>Videos</option>
+                  <option value="perfiles" ${sec.tipo_contenido === 'perfiles' ? 'selected' : ''}>Perfiles</option>
+                  <option value="eventos" ${sec.tipo_contenido === 'eventos' ? 'selected' : ''}>Eventos</option>
+                </select>
+              </div>
               <div><label>Modo</label><select onchange="seccionesData[${index}].modo = this.value; actualizarFormularioYLista();"><option value="auto" ${sec.modo === 'auto' ? 'selected' : ''}>Auto</option><option value="manual" ${sec.modo === 'manual' ? 'selected' : ''}>Manual</option></select></div>
             </div>
           </div>
@@ -264,7 +320,7 @@
       const val = select.value;
       select.innerHTML = '';
       seccionesData.forEach((sec, index) => {
-        if (sec.id !== 'radios') select.innerHTML += `<option value="${index}">${sec.nombre} (${sec.tipo_contenido || 'videos'})</option>`;
+        if (sec.id !== 'radios' && sec.id !== 'senales') select.innerHTML += `<option value="${index}">${sec.nombre} (${sec.tipo_contenido || 'videos'})</option>`;
       });
       if (val && select.querySelector(`option[value="${val}"]`)) select.value = val;
       toggleCamposDinamicos();
@@ -284,7 +340,7 @@
     }
 
     async function cargarCanalMasivo() {
-      const idCanal = prompt("Ingresa el ID del Canal (UC...) o el link:");
+      const idCanal = prompt("Ingresa el ID del Canal (UC...) o el link del canal de YouTube:");
       if (!idCanal) return;
       const btn = document.getElementById('btnAgregarItem');
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando...';
@@ -296,13 +352,13 @@
         const res = await fetch(`${API_URL}channel_videos?channel_id=${channelId}`);
         const videos = await res.json();
         if (!videos || videos.length === 0) { alert("No se encontraron videos."); btn.innerHTML = '➕ Agregar'; return; }
-        const nombre = prompt("¿Cómo se llama?", "Artista Importado");
-        const nuevoArtista = { tipo: 'artista', nombre: nombre || "Artista", rubro: "YouTube", foto: "https://i.ytimg.com/vi/" + videos[0].id + "/hqdefault.jpg", bio: "Importado.", canal: channelId, contacto: "", videos: videos };
+        const nombreArtista = prompt("¿Cómo se llama el Artista?", "Artista Importado");
+        const nuevoArtista = { tipo: 'artista', nombre: nombreArtista || "Artista Importado", rubro: "YouTube", foto: "https://i.ytimg.com/vi/" + videos[0].id + "/hqdefault.jpg", bio: "Artista importado.", canal: channelId, contacto: "", videos: videos };
         const secIndex = document.getElementById('selectSeccionManual').value;
         if (secIndex === '') return alert("Selecciona sección");
         seccionesData[secIndex].items.push(nuevoArtista);
         renderLista();
-        alert(`✅ Artista importado con ${videos.length} videos.`);
+        alert(`✅ Importado con ${videos.length} videos.`);
       } catch (e) { alert("Error al conectar."); } finally { btn.innerHTML = '➕ Agregar'; }
     }
 
@@ -316,14 +372,14 @@
       let newItem = {};
       if (sec.tipo_contenido === 'perfiles') {
         newItem = { tipo: 'artista', nombre: document.getElementById('artNombre').value, rubro: document.getElementById('artRubro').value, foto: document.getElementById('artFoto').value, bio: document.getElementById('artBio').value, canal: document.getElementById('artCanal').value, contacto: document.getElementById('artContacto').value };
-        if (!newItem.nombre) return alert("Nombre obligatorio");
+        if (!newItem.nombre) return alert("El nombre es obligatorio");
       } else if (sec.tipo_contenido === 'eventos') {
         newItem = { tipo: 'evento', nombre: document.getElementById('evNombre').value, fecha: document.getElementById('evFecha').value, lugar: document.getElementById('evLugar').value, imagen: document.getElementById('evImg').value, trailer: document.getElementById('evTrailer').value, precio: document.getElementById('evPrecio').value, link_compra: document.getElementById('evLink').value, descripcion: document.getElementById('evDesc').value };
-        if (!newItem.nombre) return alert("Nombre obligatorio");
+        if (!newItem.nombre) return alert("El nombre del evento es obligatorio");
       } else {
         const tipo = document.getElementById('tipoContenido').value;
         newItem = { tipo: tipo, url: document.getElementById('vidUrl').value, titulo: document.getElementById('vidTitulo').value || 'Contenido', imagen: document.getElementById('vidImg').value };
-        if (!newItem.url) return alert("URL obligatoria");
+        if (!newItem.url) return alert("La URL del video es obligatoria");
       }
 
       if (editandoItemIndex !== null) { sec.items[editandoItemIndex] = newItem; cancelarEdicion(); }
@@ -349,6 +405,9 @@
       editandoItemIndex = null;
       document.getElementById('btnAgregarItem').innerHTML = '➕ Agregar';
       document.getElementById('btnCancelarEdicion').classList.add('hidden');
+      document.getElementById('vidUrl').value = ''; document.getElementById('vidTitulo').value = ''; document.getElementById('vidImg').value = '';
+      document.getElementById('artNombre').value = ''; document.getElementById('artBio').value = '';
+      document.getElementById('evNombre').value = ''; document.getElementById('evImg').value = '';
     }
 
     function renderLista() {
@@ -371,20 +430,21 @@
     function moverItem(secIdx, itemIdx, dir) { const n = itemIdx + dir; if (n < 0 || n >= seccionesData[secIdx].items.length) return; [seccionesData[secIdx].items[itemIdx], seccionesData[secIdx].items[n]] = [seccionesData[secIdx].items[n], seccionesData[secIdx].items[itemIdx]]; renderLista(); }
     function eliminarItem(secIdx, itemIdx) { seccionesData[secIdx].items.splice(itemIdx, 1); renderLista(); }
 
-    function renderSenales() { const l = document.getElementById('senalesList'); l.innerHTML=''; senalesData.forEach((s,i)=> l.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold text-white">${s.nombre}</h4><p class="text-xs text-slate-400">${s.url}</p></div><button onclick="senalesData.splice(${i},1); renderSenales();" class="btn btn-del">Eliminar</button></div>`); l.innerHTML += `<div class="grid grid-cols-1 gap-2 mt-2"><input id="newSenalNombre" placeholder="Nombre"><input id="newSenalUrl" placeholder="URL"><button onclick="senalesData.push({id:'s'+Date.now(), nombre:document.getElementById('newSenalNombre').value, url:document.getElementById('newSenalUrl').value}); renderSenales();" class="btn btn-edit">Agregar</button></div>`; }
+    function renderSenales() { const l = document.getElementById('senalesList'); l.innerHTML=''; senalesData.forEach((s,i)=> l.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold text-white">${s.nombre}</h4><p class="text-xs text-slate-400">${s.url}</p></div><button onclick="senalesData.splice(${i},1); renderSenales();" class="btn btn-del">Eliminar</button></div>`); l.innerHTML += `<div class="grid grid-cols-1 gap-2 mt-2"><input id="newSenalNombre" placeholder="Nombre"><input id="newSenalUrl" placeholder="URL (RTMP, m3u8, YouTube)"><button onclick="senalesData.push({id:'s'+Date.now(), nombre:document.getElementById('newSenalNombre').value, url:document.getElementById('newSenalUrl').value}); renderSenales();" class="btn btn-edit">Agregar</button></div>`; }
     function renderRadios() { const l = document.getElementById('radiosList'); l.innerHTML=''; radiosData.forEach((r,i)=> l.innerHTML += `<div class="item-box flex justify-between"><div><h4 class="font-bold text-white">${r.nombre}</h4><p class="text-xs text-slate-400">${r.stream_url}</p></div><button onclick="radiosData.splice(${i},1); renderRadios();" class="btn btn-del">Eliminar</button></div>`); l.innerHTML += `<div class="grid grid-cols-1 gap-2 mt-2"><input id="newRadioNombre" placeholder="Nombre"><input id="newRadioUrl" placeholder="URL Stream"><button onclick="radiosData.push({id:'r'+Date.now(), nombre:document.getElementById('newRadioNombre').value, stream_url:document.getElementById('newRadioUrl').value}); renderRadios();" class="btn btn-edit">Agregar</button></div>`; }
 
     function guardarExtras() {
-      fetch(API_URL + 'apariencia', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify({ titulo_sitio: document.getElementById('marcaTitulo').value, eslogan: document.getElementById('marcaEslogan').value }) });
+      fetch(API_URL + 'apariencia', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify({ titulo_sitio: document.getElementById('marcaTitulo').value, eslogan: document.getElementById('marcaEslogan').value, color_acento: document.getElementById('marcaColorAcento').value, color_fondo: document.getElementById('marcaColorFondo').value }) });
       fetch(API_URL + 'banners', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify({ top:{activo:true, html:document.getElementById('bannerTopHTML').value}, infeed:{activo:true, html:document.getElementById('bannerInfeedHTML').value}, footer:{activo:true, html:document.getElementById('bannerFooterHTML').value} }) });
     }
 
     function guardarFooter() {
-      const footer = { titulo: document.getElementById('footerTitulo').value, subtitulo: document.getElementById('footerSubtitulo').value, copyright: document.getElementById('footerCopyright').value, instagram: document.getElementById('redInstagram').value, facebook: document.getElementById('redFacebook').value, twitter: document.getElementById('redTwitter').value, youtube: document.getElementById('redYoutube').value, tiktok: document.getElementById('redTiktok').value, whatsapp: document.getElementById('redWhatsapp').value, link1_texto: document.getElementById('link1Texto').value, link1_url: document.getElementById('link1Url').value, link2_texto: document.getElementById('link2Texto').value, link2_url: document.getElementById('link2Url').value };
+      const footer = { titulo: document.getElementById('footerTitulo').value, subtitulo: document.getElementById('footerSubtitulo').value, copyright: document.getElementById('footerCopyright').value, instagram: document.getElementById('redInstagram').value, facebook: document.getElementById('redFacebook').value, twitter: document.getElementById('redTwitter').value, youtube: document.getElementById('redYoutube').value, tiktok: document.getElementById('redTiktok').value, whatsapp: document.getElementById('redWhatsapp').value };
       fetch(API_URL + 'footer_config', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(footer) });
     }
 
     async function guardarTodo() {
+      guardarEstadoSitio();
       guardarExtras(); guardarFooter();
       await fetch(API_URL + 'secciones', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(seccionesData) });
       await fetch(API_URL + 'senales_oficiales', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY }, body: JSON.stringify(senalesData) });
