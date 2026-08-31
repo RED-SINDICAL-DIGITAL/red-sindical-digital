@@ -1,21 +1,10 @@
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open('uadavstream-v1').then(cache => {
-      return cache.addAll([
-        '/',
-        '/index.html',
-        '/manifest.json'
-      ]).catch(err => console.warn('Error al cachear:', err));
-    })
-  );
+self.addEventListener('install', (e) => self.skipWaiting());
+self.addEventListener('activate', (e) => {
+  e.waitUntil(self.clients.claim());
+  // Borrar cachés viejas
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))));
 });
-
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(response => {
-      return response || fetch(e.request).catch(() => {
-        return new Response('', { status: 404 });
-      });
-    })
-  );
+self.addEventListener('fetch', (e) => {
+  // No cachear NADA, siempre ir al servidor
+  return;
 });
