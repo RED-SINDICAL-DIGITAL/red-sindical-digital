@@ -224,21 +224,27 @@
 
   <script>
     // ⚠️ CAMBIADO A UADAV
-    (async function() {
+        (async function() {
       const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
       const overlay = document.getElementById('maintenance-overlay');
       const pageContent = document.getElementById('pageContent');
+      
+      // ⭐ NUEVA LÍNEA: Detectar el modo preview
+      const urlParams = new URLSearchParams(window.location.search);
+      const isPreview = urlParams.get('preview') === '1';
+
       try {
         const res = await fetch(API_URL + 'estado_sitio?_=' + Date.now());
         if (res.ok) {
           const estado = await res.json();
-          if (estado.modo === 'mantenimiento') {
+          if (estado.modo === 'mantenimiento' && !isPreview) {
             document.getElementById('maintenance-title').innerText = estado.titulo || '🔧 En construcción';
             document.getElementById('maintenance-message').innerText = estado.mensaje || 'Estamos mejorando.';
             overlay.style.display = 'flex';
             pageContent.style.display = 'none';
             return; 
-          } else if (estado.modo === 'landing' && estado.landing_url) {
+          } else if (estado.modo === 'landing' && estado.landing_url && !isPreview) {
+            // ⚠️ AHORA SOLO REDIRIGE SI NO ESTÁS EN MODO PREVIEW
             window.location.href = estado.landing_url;
             return;
           }
