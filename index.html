@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UADAVSTREAM - Teatro, Circos y Entretenimiento</title>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+  <!-- ⚠️ CAMBIADO PARA RAÍZ -->
   <link rel="manifest" href="/manifest.json">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,13 +24,16 @@
     .overflow-x-auto:active { cursor: grabbing; }
     input[type="range"] { -webkit-appearance: none; appearance: none; height: 4px; background: #334155; border-radius: 5px; outline: none; }
     input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: #00e5ff; border-radius: 50%; cursor: pointer; border: 2px solid #050505; }
+    
     .live-badge { position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; font-weight: 900; font-size: 10px; padding: 4px 8px; border-radius: 20px; display: flex; align-items: center; gap: 4px; box-shadow: 0 0 15px rgba(239,68,68,0.6); }
     .live-badge::before { content: ''; width: 8px; height: 8px; background: white; border-radius: 50%; animation: ping 1s infinite; }
     @keyframes ping { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+
     .modal-overlay { display: none; position: fixed; inset: 0; z-index: 60; background: rgba(5,5,5,0.95); backdrop-filter: blur(8px); place-items: center; padding: 10px; }
     .modal-overlay.active { display: grid; }
     .modal-content-video { max-height: 85vh; max-width: 100vw; width: 100%; border-radius: 20px; overflow: hidden; position: relative; background: #0a0a0c; border: 1px solid #1f1f26; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
     .modal-content-video iframe, .modal-content-video video { width: 100%; aspect-ratio: 16/9; display: block; max-height: 75vh; }
+
     .footer-gradient { background: linear-gradient(135deg, #050505 0%, #0f172a 100%); border-top: 2px solid #00e5ff; }
   </style>
 </head>
@@ -47,6 +48,7 @@
 
   <div id="pageContent" style="display: none;">
 
+    <!-- HEADER -->
     <header class="sticky top-0 z-40 bg-[#050505]/90 backdrop-blur-xl border-b border-[#1f1f26]">
       <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
         <div tabindex="0" onclick="resetearVista()" class="tv-focusable flex items-center gap-2 sm:gap-3 cursor-pointer flex-shrink-0">
@@ -58,7 +60,7 @@
         </div>
         
         <div class="flex-1 max-w-2xl relative">
-          <input type="text" id="searchInput" onkeydown="if(event.key === 'Enter') ejecutarBusqueda()" placeholder="Buscar artistas, eventos, obras..." class="w-full p-2.5 bg-[#0a0a0c] border border-[#1f1f26] rounded-full text-sm text-center text-white outline-none focus:border-[#00e5ff]">
+          <input type="text" id="searchInput" onkeydown="if(event.key === 'Enter') ejecutarBusqueda()" placeholder="Buscar obras, artistas, eventos..." class="w-full p-2.5 bg-[#0a0a0c] border border-[#1f1f26] rounded-full text-sm text-center text-white outline-none focus:border-[#00e5ff]">
         </div>
 
         <button onclick="reproducirUniversal('youtube', '-479TZi-EAs', 'UADAV LIVE', 'En Vivo')" class="bg-red-500/10 border border-red-500/50 text-red-500 px-3 py-2 rounded-full text-xs font-bold flex items-center gap-2">
@@ -70,26 +72,29 @@
       </nav>
     </header>
 
+    <!-- HERO -->
     <section class="relative bg-[#050505] border-b border-[#1f1f26] overflow-hidden">
       <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1503095396549-807759245b35?q=80&w=1600')] bg-cover bg-center opacity-30 blur-[2px]"></div>
       <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#050505] via-[#050505]/90 to-transparent"></div>
       <div class="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-10 md:py-20 flex flex-col items-start justify-center">
         <span class="inline-flex items-center gap-2 bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase mb-4 tracking-widest">
-          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Al Aire 24/7
+          <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Señal Oficial 24/7
         </span>
         <h1 id="heroTitulo" class="text-3xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-3 tracking-tight">UADAVSTREAM</h1>
         <span id="heroSub" class="text-transparent bg-clip-text bg-gradient-to-r from-[#00e5ff] to-purple-500 text-3xl sm:text-5xl lg:text-7xl font-black leading-[1.1] mb-4">TEATRO Y ESPECTÁCULOS</span>
-        <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 font-light">Sintoniza nuestra transmisión oficial de teatro, música y shows.</p>
+        <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 font-light">Sintoniza nuestra transmisión oficial continua de obras de teatro, circos y música.</p>
         <button id="heroBtn" onclick="reproducirUniversal('youtube', '-479TZi-EAs', 'UADAV LIVE', 'En Vivo')" class="bg-[#00e5ff] hover:bg-white text-black px-6 sm:px-10 py-4 rounded-full font-black text-sm sm:text-base flex items-center gap-3 shadow-[0_0_25px_rgba(0,229,255,0.5)] transition-all">
           <i class="fa-solid fa-play"></i> <span id="heroBtnTexto">VER SEÑAL EN VIVO</span>
         </button>
       </div>
     </section>
 
+    <!-- SECCIONES DINÁMICAS -->
     <main id="mainContainer" class="max-w-[1400px] mx-auto px-4 py-8 space-y-14">
       <div id="dynamicSections"></div>
     </main>
 
+    <!-- VISTA DE BÚSQUEDA -->
     <section id="gridViewSection" class="hidden max-w-[1400px] mx-auto px-4 py-8">
       <div class="flex justify-between items-center mb-6 border-b border-[#1f1f26] pb-4">
         <h2 id="gridTitle" class="text-xl font-black text-white">Resultados</h2>
@@ -98,6 +103,7 @@
       <div id="gridContainer" class="space-y-10"></div>
     </section>
 
+    <!-- MODAL DE VIDEO -->
     <div id="videoModal" onclick="cerrarModalBackdrop(event)" class="modal-overlay">
       <div class="modal-content-video" onclick="event.stopPropagation()">
         <button onclick="cerrarModal()" class="absolute top-3 right-3 z-20 w-10 h-10 bg-black text-white rounded-full hover:bg-[#00e5ff] hover:text-black"><i class="fa-solid fa-xmark"></i></button>
@@ -114,6 +120,7 @@
       </div>
     </div>
 
+    <!-- MODAL DE EVENTOS -->
     <div id="eventModal" onclick="cerrarEventoBackdrop(event)" class="modal-overlay">
       <div class="bg-[#0f0f13] border border-[#1f1f26] w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar" onclick="event.stopPropagation()">
         <div class="relative h-64 w-full bg-gradient-to-br from-slate-800 to-black overflow-hidden">
@@ -137,13 +144,17 @@
       </div>
     </div>
 
+    <!-- MODAL DE ARTISTA / PERFIL -->
     <div id="artistModal" onclick="cerrarModalArtistaBackdrop(event)" class="modal-overlay">
       <div class="bg-[#0f0f13] border border-[#1f1f26] w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl relative max-h-[90vh] overflow-y-auto no-scrollbar" onclick="event.stopPropagation()">
         <div class="relative h-52 w-full bg-gradient-to-br from-slate-800 to-black overflow-hidden"><img id="artModalBanner" src="" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 bg-gradient-to-t from-[#0f0f13] to-transparent"></div></div>
         <div class="relative px-6 pb-6 -mt-20">
           <div class="flex items-end gap-5">
             <img id="artModalFoto" src="" class="w-32 h-32 rounded-full object-cover border-4 border-[#0f0f13] shadow-2xl">
-            <div class="pb-2"><h3 id="artModalNombre" class="text-4xl font-black text-white"></h3><p id="artModalGenero" class="text-sm text-slate-400"></p></div>
+            <div class="pb-2">
+              <h3 id="artModalNombre" class="text-4xl font-black text-white"></h3>
+              <p id="artModalGenero" class="text-sm text-slate-400"></p>
+            </div>
           </div>
           <div id="artModalBio" class="mt-6 text-sm text-slate-300 border-t border-[#1f1f26] pt-4 leading-relaxed"></div>
           <div class="mt-5 flex flex-wrap gap-3">
@@ -151,15 +162,23 @@
             <button id="artModalContactBtn" class="hidden bg-slate-900 border border-[#1f1f26] text-white font-bold text-xs px-5 py-3 rounded-full"><i class="fa-brands fa-whatsapp text-green-500 mr-1"></i> Contactar</button>
           </div>
         </div>
-        <div class="px-6 pb-8"><h4 class="text-sm font-black text-white mb-4 uppercase text-[#00e5ff]">Canciones y Videos</h4><div id="artModalListaVideos" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div></div>
+        <div class="px-6 pb-8">
+          <h4 class="text-sm font-black text-white mb-4 uppercase text-[#00e5ff]">Canciones y Videos</h4>
+          <div id="artModalListaVideos" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+        </div>
       </div>
     </div>
 
+    <!-- COLA -->
     <div id="queueBar" class="hidden fixed bottom-20 right-4 z-40 bg-[#0a0a0d]/95 border border-[#1f1f26] rounded-xl p-3 w-72 shadow-2xl backdrop-blur-xl">
-      <div class="flex justify-between items-center mb-2"><h4 class="text-xs font-black text-[#00e5ff] uppercase">Cola</h4><button onclick="toggleQueue()" class="text-slate-400 hover:text-white">✕</button></div>
+      <div class="flex justify-between items-center mb-2">
+        <h4 class="text-xs font-black text-[#00e5ff] uppercase">Cola</h4>
+        <button onclick="toggleQueue()" class="text-slate-400 hover:text-white">✕</button>
+      </div>
       <div id="queueList" class="space-y-1 max-h-40 overflow-y-auto no-scrollbar"></div>
     </div>
 
+    <!-- FOOTER -->
     <footer id="dynamicFooter" class="footer-gradient mt-16">
       <div class="max-w-[1400px] mx-auto px-6 py-12">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
@@ -173,24 +192,38 @@
             <div id="footerSocials" class="flex gap-3"></div>
           </div>
         </div>
-        <div class="border-t border-[#1f1f26] pt-8 mb-8"><div class="flex flex-wrap gap-4"><div id="footerLinks" class="flex flex-wrap gap-4"></div></div></div>
+        <div class="border-t border-[#1f1f26] pt-8 mb-8">
+          <div class="flex flex-wrap gap-4">
+            <div id="footerLinks" class="flex flex-wrap gap-4"></div>
+          </div>
+        </div>
         <div class="border-t border-[#1f1f26] pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-           <p id="footerCopyright" class="text-slate-500 text-xs">© 2026 UADAVSTREAM</p>
-           <div class="flex items-center gap-2 text-slate-500 text-xs"><i class="fa-solid fa-eye text-[#00e5ff]"></i> <span id="visitCounter">0</span> Visitas</div>
+           <p id="footerCopyright" class="text-slate-500 text-xs">© 2026 UADAVSTREAM - Todos los derechos reservados.</p>
+           <div class="flex items-center gap-2 text-slate-500 text-xs">
+              <i class="fa-solid fa-eye text-[#00e5ff]"></i> <span id="visitCounter">0</span> Visitas
+           </div>
         </div>
       </div>
     </footer>
 
+    <!-- RADIO FLOTANTE -->
     <div id="floatingRadioPlayer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0d]/95 border-t-2 border-[#00e5ff] backdrop-blur-xl px-4 py-3 shadow-2xl transform translate-y-full transition-transform duration-300">
       <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
-        <div class="flex items-center gap-3 overflow-hidden"><img id="radioPlayerImg" src="" class="w-12 h-12 rounded-xl object-cover border border-[#00e5ff]"><div class="overflow-hidden"><h4 id="radioPlayerTitle" class="text-sm font-black text-white truncate">Radio</h4><p id="radioPlayerLocation" class="text-xs text-slate-400 truncate">En Vivo</p></div></div>
-        <div class="flex items-center gap-3"><button onclick="togglePlayRadio()" id="radioPlayBtn" class="w-11 h-11 bg-[#00e5ff] text-black rounded-full flex items-center justify-center"><i class="fa-solid fa-pause"></i></button><button onclick="cerrarRadio()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="flex items-center gap-3 overflow-hidden">
+          <img id="radioPlayerImg" src="" class="w-12 h-12 rounded-xl object-cover border border-[#00e5ff]">
+          <div class="overflow-hidden"><h4 id="radioPlayerTitle" class="text-sm font-black text-white truncate">Radio</h4><p id="radioPlayerLocation" class="text-xs text-slate-400 truncate">En Vivo</p></div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="togglePlayRadio()" id="radioPlayBtn" class="w-11 h-11 bg-[#00e5ff] text-black rounded-full flex items-center justify-center"><i class="fa-solid fa-pause"></i></button>
+          <button onclick="cerrarRadio()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
       </div>
       <audio id="audioStream"></audio>
     </div>
   </div>
 
   <script>
+    // ⚠️ CAMBIADO A UADAV
     (async function() {
       const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
       const overlay = document.getElementById('maintenance-overlay');
@@ -199,8 +232,16 @@
         const res = await fetch(API_URL + 'estado_sitio?_=' + Date.now());
         if (res.ok) {
           const estado = await res.json();
-          if (estado.modo === 'mantenimiento') { document.getElementById('maintenance-title').innerText = estado.titulo || '🔧 En construcción'; document.getElementById('maintenance-message').innerText = estado.mensaje || 'Estamos mejorando.'; overlay.style.display = 'flex'; pageContent.style.display = 'none'; return; }
-          else if (estado.modo === 'landing' && estado.landing_url) { window.location.href = estado.landing_url; return; }
+          if (estado.modo === 'mantenimiento') {
+            document.getElementById('maintenance-title').innerText = estado.titulo || '🔧 En construcción';
+            document.getElementById('maintenance-message').innerText = estado.mensaje || 'Estamos mejorando.';
+            overlay.style.display = 'flex';
+            pageContent.style.display = 'none';
+            return; 
+          } else if (estado.modo === 'landing' && estado.landing_url) {
+            window.location.href = estado.landing_url;
+            return;
+          }
         }
       } catch (e) { console.warn('Sin respuesta, cargando normal:', e); }
       overlay.style.display = 'none';
@@ -208,27 +249,14 @@
       if (typeof cargarHome === 'function') cargarHome();
     })();
 
+    // ⚠️ CAMBIADO A UADAV
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
     const FALLBACK_THUMB = 'https://i.ytimg.com/vi/aqz-KE-bpKQ/hqdefault.jpg';
+    
     let seccionesActivas = [], radiosData = [], artistasData = [], footerConfig = {};
     let queue = [], currentIndex = -1;
     let isRadioPlaying = false;
     let zenoEventSource = null;
-
-    function limpiarSecciones(secciones) {
-      const mapa = new Map();
-      secciones.forEach(sec => {
-        let id = (sec.id || sec.nombre || '').toString().trim().toLowerCase().replace(/\s+/g, '_');
-        if (!mapa.has(id)) { mapa.set(id, sec); }
-        else {
-          const existente = mapa.get(id);
-          const itemsActuales = (sec.items || []).length;
-          const itemsExistentes = (existente.items || []).length;
-          if (itemsActuales > itemsExistentes || (!existente.query && sec.query)) { mapa.set(id, sec); }
-        }
-      });
-      return Array.from(mapa.values()).filter(sec => sec.id === 'radios' || (sec.items && sec.items.length > 0) || (sec.query && sec.query.length > 0));
-    }
 
     async function cargarHome() {
       const [secRes, radRes, artRes, footRes] = await Promise.all([
@@ -237,15 +265,24 @@
         fetch(API_URL + 'artistas_uadav?_=' + Date.now()).then(r => r.json()).catch(() => []),
         fetch(API_URL + 'footer_config?_=' + Date.now()).then(r => r.json()).catch(() => ({}))
       ]);
-      seccionesActivas = limpiarSecciones(secRes || []);
+
+      // DEDUPLICACIÓN
+      const uniqueSecciones = [...new Map((secRes || []).map(s => [s.id, s])).values()];
+      seccionesActivas = uniqueSecciones;
+
       radiosData = radRes || [];
       artistasData = artRes || [];
       footerConfig = footRes || {};
 
       const container = document.getElementById('dynamicSections');
       container.innerHTML = '';
-      for (const sec of seccionesActivas) { if (sec.activa) await renderSeccionDinamica(sec); }
-      renderNavbar(); renderFooter();
+      for (const sec of seccionesActivas) {
+        if (sec.activa) await renderSeccionDinamica(sec);
+      }
+
+      renderNavbar();
+      renderFooter();
+
       const resV = await fetch(API_URL + 'visits?_=' + Date.now()).then(r => r.json()).catch(() => ({}));
       if (resV.visitas_totales) document.getElementById('visitCounter').innerText = resV.visitas_totales;
       fetch(API_URL + 'visits', { method: 'POST' });
@@ -253,17 +290,27 @@
 
     async function renderSeccionDinamica(sec) {
       const container = document.getElementById('dynamicSections');
+
       if (sec.id === 'radios') {
         container.innerHTML += `<section id="${sec.id}Section" class="mb-12"><h2 class="text-xl sm:text-2xl font-black text-white mb-5 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid ${sec.icono || 'fa-radio'} text-[#00e5ff]"></i> ${sec.nombre}</h2><div id="radiosGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div></section>`;
         const grid = document.getElementById('radiosGrid');
-        radiosData.forEach(r => { grid.innerHTML += `<div class="bg-[#0f0f13] border border-[#1f1f26] rounded-2xl p-4 hover:border-[#00e5ff] cursor-pointer" onclick="sintonizarRadio('${r.nombre}', '${r.stream_url}', '${r.logo}')"><h4 class="font-black text-white mb-1">${r.nombre}</h4><p class="text-xs text-slate-400 mb-3">${r.descripcion || ''}</p><button class="bg-[#00e5ff] text-black px-4 py-2 rounded-full text-xs font-bold">▶ Escuchar</button></div>`; });
+        radiosData.forEach(r => {
+          grid.innerHTML += `<div class="bg-[#0f0f13] border border-[#1f1f26] rounded-2xl p-4 hover:border-[#00e5ff] cursor-pointer" onclick="sintonizarRadio('${r.nombre}', '${r.stream_url}', '${r.logo}')"><h4 class="font-black text-white mb-1">${r.nombre}</h4><p class="text-xs text-slate-400 mb-3">${r.descripcion || ''}</p><button class="bg-[#00e5ff] text-black px-4 py-2 rounded-full text-xs font-bold">▶ Escuchar</button></div>`;
+        });
       } 
+      // TIPO: PERFILES
       else if (sec.tipo_contenido === 'perfiles') {
-        let items = sec.items && sec.items.length > 0 ? sec.items : artistasData;
+        let items = [];
+        if (sec.items && sec.items.length > 0) items = sec.items;
+        else items = artistasData;
+
         container.innerHTML += `<section id="${sec.id}Section" class="mb-12"><h2 class="text-xl sm:text-2xl font-black text-white mb-5 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid ${sec.icono || 'fa-user-group'} text-[#00e5ff]"></i> ${sec.nombre}</h2><div id="${sec.id}Grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4"></div></section>`;
         const grid = document.getElementById(sec.id + 'Grid');
-        items.forEach(a => { grid.innerHTML += `<div onclick="abrirPerfil('${a.nombre}', '${sec.id}')" class="bg-[#0f0f13] border border-[#1f1f26] rounded-2xl p-3 text-center cursor-pointer hover:border-[#00e5ff]"><img src="${a.foto || FALLBACK_THUMB}" class="w-20 h-20 mx-auto rounded-full object-cover mb-2"><h4 class="text-sm font-bold text-white truncate">${a.nombre}</h4></div>`; });
+        items.forEach(a => {
+          grid.innerHTML += `<div onclick="abrirPerfil('${a.nombre}', '${sec.id}')" class="bg-[#0f0f13] border border-[#1f1f26] rounded-2xl p-3 text-center cursor-pointer hover:border-[#00e5ff]"><img src="${a.foto || FALLBACK_THUMB}" class="w-20 h-20 mx-auto rounded-full object-cover mb-2"><h4 class="text-sm font-bold text-white truncate">${a.nombre}</h4></div>`;
+        });
       }
+      // TIPO: EVENTOS
       else if (sec.tipo_contenido === 'eventos') {
         let eventos = (sec.items || []).filter(i => i.tipo === 'evento');
         if (eventos.length === 0) return;
@@ -272,20 +319,37 @@
         rail.innerHTML = '';
         eventos.forEach(ev => {
           const img = ev.imagen || FALLBACK_THUMB;
-          rail.innerHTML += `<div onclick="abrirEvento('${ev.nombre}')" class="min-w-[300px] bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden flex-shrink-0 cursor-pointer hover:border-[#00e5ff]"><div class="relative h-40"><img src="${img}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div></div><div class="p-4"><span class="text-xs font-black text-[#00e5ff] uppercase">${ev.fecha || 'Próximamente'}</span><h4 class="text-lg font-black text-white mt-1 truncate">${ev.nombre}</h4><p class="text-xs text-slate-400 mt-1">📍 ${ev.lugar || ''}</p></div></div>`;
+          rail.innerHTML += `
+            <div onclick="abrirEvento('${ev.nombre}')" class="min-w-[300px] bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden flex-shrink-0 cursor-pointer hover:border-[#00e5ff]">
+              <div class="relative h-40"><img src="${img}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div></div>
+              <div class="p-4">
+                <span class="text-xs font-black text-[#00e5ff] uppercase">${ev.fecha || 'Próximamente'}</span>
+                <h4 class="text-lg font-black text-white mt-1 truncate">${ev.nombre}</h4>
+                <p class="text-xs text-slate-400 mt-1">📍 ${ev.lugar || ''}</p>
+              </div>
+            </div>`;
         });
       }
+      // TIPO: VIDEOS
       else {
         container.innerHTML += `<section id="${sec.id}Section" class="mb-12"><h2 class="text-xl sm:text-2xl font-black text-white mb-5 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid ${sec.icono || 'fa-circle'} text-[#00e5ff]"></i> ${sec.nombre}</h2><div id="${sec.id}Rail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div></section>`;
         const rail = document.getElementById(sec.id + 'Rail');
         let items = [];
         if (sec.modo === 'manual' && sec.items && sec.items.length > 0) items = sec.items;
-        else { const data = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(sec.query || sec.nombre)}&_=${Date.now()}`).then(r => r.json()).catch(() => []); items = data.slice(0, 10).map(v => ({ tipo: 'youtube', url: v.id, titulo: v.titulo, imagen: v.thumbnail })); }
+        else {
+          const query = sec.query || sec.nombre;
+          const data = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(query)}&_=${Date.now()}`).then(r => r.json()).catch(() => []);
+          items = data.slice(0, 10).map(v => ({ tipo: 'youtube', url: v.id, titulo: v.titulo, imagen: v.thumbnail }));
+        }
         rail.innerHTML = '';
         items.forEach(item => {
           let img = item.imagen || `https://i.ytimg.com/vi/${item.url}/hqdefault.jpg`;
           const cat = item.categoria || sec.nombre;
-          rail.innerHTML += `<div onclick="reproducirUniversal('${item.tipo || 'youtube'}', '${item.url}', '${item.titulo || 'Video'}', '${cat}')" class="min-w-[220px] max-w-[260px] bg-[#0f0f13] border border-[#1f1f26] rounded-2xl overflow-hidden cursor-pointer hover:border-[#00e5ff] transition-all group flex-shrink-0"><div class="relative aspect-video overflow-hidden"><img src="${img}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"><div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"><div class="w-12 h-12 bg-[#00e5ff] text-black rounded-full flex items-center justify-center"><i class="fa-solid fa-play"></i></div></div></div><div class="p-3"><span class="text-[9px] text-[#00e5ff] uppercase font-black">${cat}</span><h4 class="text-xs font-bold text-white truncate mt-1">${item.titulo || ''}</h4></div></div>`;
+          rail.innerHTML += `
+            <div onclick="reproducirUniversal('${item.tipo || 'youtube'}', '${item.url}', '${item.titulo || 'Video'}', '${cat}')" class="min-w-[220px] max-w-[260px] bg-[#0f0f13] border border-[#1f1f26] rounded-2xl overflow-hidden cursor-pointer hover:border-[#00e5ff] transition-all group flex-shrink-0">
+              <div class="relative aspect-video overflow-hidden"><img src="${img}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"><div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity"><div class="w-12 h-12 bg-[#00e5ff] text-black rounded-full flex items-center justify-center"><i class="fa-solid fa-play"></i></div></div></div>
+              <div class="p-3"><span class="text-[9px] text-[#00e5ff] uppercase font-black">${cat}</span><h4 class="text-xs font-bold text-white truncate mt-1">${item.titulo || ''}</h4></div>
+            </div>`;
         });
       }
     }
@@ -294,14 +358,32 @@
       if (footerConfig.titulo) document.getElementById('footerTitulo').innerText = footerConfig.titulo;
       if (footerConfig.subtitulo) document.getElementById('footerSubtitulo').innerText = footerConfig.subtitulo;
       if (footerConfig.copyright) document.getElementById('footerCopyright').innerText = footerConfig.copyright;
+
       const socials = document.getElementById('footerSocials');
-      const redes = [{ url: footerConfig.instagram, icon: 'fa-instagram' }, { url: footerConfig.facebook, icon: 'fa-facebook' }, { url: footerConfig.twitter, icon: 'fa-x-twitter' }, { url: footerConfig.youtube, icon: 'fa-youtube' }, { url: footerConfig.tiktok, icon: 'fa-tiktok' }, { url: footerConfig.whatsapp, icon: 'fa-whatsapp' }];
+      const redes = [
+        { url: footerConfig.instagram, icon: 'fa-instagram' },
+        { url: footerConfig.facebook, icon: 'fa-facebook' },
+        { url: footerConfig.twitter, icon: 'fa-x-twitter' },
+        { url: footerConfig.youtube, icon: 'fa-youtube' },
+        { url: footerConfig.tiktok, icon: 'fa-tiktok' },
+        { url: footerConfig.whatsapp, icon: 'fa-whatsapp' }
+      ];
       socials.innerHTML = '';
-      redes.forEach(red => { if (red.url) socials.innerHTML += `<a href="${red.url}" target="_blank" class="w-10 h-10 bg-[#1e293b] rounded-full flex items-center justify-center text-[#00e5ff] hover:bg-[#00e5ff] hover:text-black transition-all"><i class="fa-brands ${red.icon}"></i></a>`; });
+      redes.forEach(red => {
+        if (red.url) socials.innerHTML += `<a href="${red.url}" target="_blank" class="w-10 h-10 bg-[#1e293b] rounded-full flex items-center justify-center text-[#00e5ff] hover:bg-[#00e5ff] hover:text-black transition-all"><i class="fa-brands ${red.icon}"></i></a>`;
+      });
+
       const links = document.getElementById('footerLinks');
-      const footerLinks = [{ texto: footerConfig.link1_texto, url: footerConfig.link1_url }, { texto: footerConfig.link2_texto, url: footerConfig.link2_url }];
+      const footerLinks = [
+        { texto: footerConfig.link1_texto, url: footerConfig.link1_url },
+        { texto: footerConfig.link2_texto, url: footerConfig.link2_url },
+        { texto: footerConfig.link3_texto, url: footerConfig.link3_url },
+        { texto: footerConfig.link4_texto, url: footerConfig.link4_url }
+      ];
       links.innerHTML = '';
-      footerLinks.forEach(link => { if (link.texto) links.innerHTML += `<a href="${link.url || '#'}" class="text-slate-400 hover:text-[#00e5ff] text-xs font-bold uppercase tracking-wider">${link.texto}</a>`; });
+      footerLinks.forEach(link => {
+        if (link.texto) links.innerHTML += `<a href="${link.url || '#'}" class="text-slate-400 hover:text-[#00e5ff] text-xs font-bold uppercase tracking-wider">${link.texto}</a>`;
+      });
     }
 
     function renderNavbar() {
@@ -318,15 +400,21 @@
     function reproducirUniversal(tipo, url, titulo, categoria = "Contenido") {
       if (isRadioPlaying) togglePlayRadio();
       cerrarEvento(); cerrarModalArtista();
+      
       let itemIndex = queue.findIndex(item => item.url === url);
       if (itemIndex === -1) { queue.push({ url: url, tipo: tipo, titulo: titulo, categoria: categoria }); itemIndex = queue.length - 1; }
-      currentIndex = itemIndex; renderQueue();
+      currentIndex = itemIndex;
+      renderQueue();
+
       document.getElementById('modalTitulo').innerText = titulo;
       document.getElementById('modalCategoria').innerText = categoria;
       document.getElementById('videoModal').classList.add('active');
       document.body.style.overflow = 'hidden';
-      const iframe = document.getElementById('iframePlayer'); const video = document.getElementById('html5Player');
+
+      const iframe = document.getElementById('iframePlayer');
+      const video = document.getElementById('html5Player');
       iframe.classList.add('hidden'); video.classList.add('hidden');
+
       if (tipo === 'mp4' || tipo === 'm3u8') { video.src = url; video.classList.remove('hidden'); video.play(); }
       else if (tipo === 'twitch') { iframe.src = `https://player.twitch.tv/?channel=${url.split('/').pop()}&parent=${window.location.hostname}`; iframe.classList.remove('hidden'); }
       else if (tipo === 'kick') { iframe.src = `https://player.kick.com/${url.split('/').pop()}`; iframe.classList.remove('hidden'); }
@@ -337,46 +425,82 @@
     function cerrarModalBackdrop(e) { if (e.target.id === 'videoModal') cerrarModal(); }
 
     function abrirEvento(nombre) {
-      let evento; for (const sec of seccionesActivas) { if (sec.tipo_contenido === 'eventos') { evento = (sec.items || []).find(i => i.nombre === nombre); if (evento) break; } }
+      let evento;
+      for (const sec of seccionesActivas) {
+        if (sec.tipo_contenido === 'eventos') {
+          evento = (sec.items || []).find(i => i.nombre === nombre);
+          if (evento) break;
+        }
+      }
       if (!evento) return;
+
       document.getElementById('evModalImg').src = evento.imagen || FALLBACK_THUMB;
       document.getElementById('evModalNombre').innerText = evento.nombre;
       document.getElementById('evModalFecha').innerText = evento.fecha || 'Próximamente';
       document.getElementById('evModalLugar').innerText = evento.lugar || 'Por confirmar';
       document.getElementById('evModalPrecio').innerText = evento.precio ? '$' + evento.precio : 'Gratis';
       document.getElementById('evModalDesc').innerText = evento.descripcion || '';
+
       const btnComprar = document.getElementById('evModalComprar');
-      if (evento.link_compra) { btnComprar.classList.remove('hidden'); btnComprar.onclick = () => window.open(evento.link_compra, '_blank'); } else btnComprar.classList.add('hidden');
+      if (evento.link_compra) {
+        btnComprar.classList.remove('hidden');
+        btnComprar.onclick = () => window.open(evento.link_compra, '_blank');
+      } else btnComprar.classList.add('hidden');
+
       const btnTrailer = document.getElementById('evModalTrailer');
-      if (evento.trailer) { btnTrailer.classList.remove('hidden'); btnTrailer.onclick = () => reproducirUniversal('youtube', evento.trailer, 'Trailer: ' + evento.nombre, 'Evento'); } else btnTrailer.classList.add('hidden');
-      document.getElementById('eventModal').classList.add('active'); document.body.style.overflow = 'hidden';
+      if (evento.trailer) {
+        btnTrailer.classList.remove('hidden');
+        btnTrailer.onclick = () => reproducirUniversal('youtube', evento.trailer, 'Trailer: ' + evento.nombre, 'Evento');
+      } else btnTrailer.classList.add('hidden');
+
+      document.getElementById('eventModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
     }
     function cerrarEvento() { document.getElementById('eventModal').classList.remove('active'); document.body.style.overflow = 'auto'; }
     function cerrarEventoBackdrop(e) { if (e.target.id === 'eventModal') cerrarEvento(); }
 
     async function abrirPerfil(nombre, secId) {
-      let artista; const sec = seccionesActivas.find(s => s.id === secId);
+      let artista;
+      const sec = seccionesActivas.find(s => s.id === secId);
       if (sec) artista = (sec.items || []).find(i => i.nombre === nombre);
       if (!artista) artista = artistasData.find(a => a.nombre === nombre);
       if (!artista) return;
+
       document.getElementById('artModalFoto').src = artista.foto || FALLBACK_THUMB;
       document.getElementById('artModalBanner').src = artista.foto || FALLBACK_THUMB;
       document.getElementById('artModalNombre').innerText = artista.nombre;
       document.getElementById('artModalGenero').innerText = artista.rubro || "Artista";
       document.getElementById('artModalBio').innerText = artista.bio || "Sin biografía cargada.";
+
       const btnContacto = document.getElementById('artModalContactBtn');
-      if (artista.contacto) { btnContacto.classList.remove('hidden'); btnContacto.onclick = () => window.open(`https://wa.me/${artista.contacto.replace(/\D/g, '')}`, '_blank'); } else btnContacto.classList.add('hidden');
-      document.getElementById('artistModal').classList.add('active'); document.body.style.overflow = 'hidden';
+      if (artista.contacto) { btnContacto.classList.remove('hidden'); btnContacto.onclick = () => window.open(`https://wa.me/${artista.contacto.replace(/\D/g, '')}`, '_blank'); }
+      else btnContacto.classList.add('hidden');
+
+      document.getElementById('artistModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
       const contVideos = document.getElementById('artModalListaVideos');
       contVideos.innerHTML = '<p class="text-xs text-slate-500">Cargando...</p>';
+
       let videos = artista.videos || [];
-      if (artista.canal && videos.length === 0) { const videosCanal = await fetch(`${API_URL}channel_videos?channel_id=${artista.canal}`).then(r => r.json()).catch(() => []); videos = videosCanal; }
+      if (artista.canal && videos.length === 0) {
+        const videosCanal = await fetch(`${API_URL}channel_videos?channel_id=${artista.canal}`).then(r => r.json()).catch(() => []);
+        videos = videosCanal;
+      }
+
       if (videos.length > 0) {
         queue = videos.map(v => ({ url: v.id || v.url, tipo: 'youtube', titulo: v.titulo || 'Video', categoria: artista.nombre }));
-        currentIndex = -1; renderQueue();
+        currentIndex = -1;
+        renderQueue();
         contVideos.innerHTML = '';
-        videos.forEach((v) => { const id = v.id || v.url; const thumb = `https://i.ytimg.com/vi/${id}/mqdefault.jpg`; contVideos.innerHTML += `<div onclick="reproducirUniversal('youtube', '${id}', '${v.titulo || 'Video'}', '${artista.nombre}')" class="bg-slate-900 border border-[#1f1f26] hover:border-[#00e5ff] rounded-xl overflow-hidden cursor-pointer"><div class="relative aspect-video"><img src="${thumb}" class="w-full h-full object-cover"></div><div class="p-2"><h5 class="font-bold text-xs text-white truncate">${v.titulo || 'Video'}</h5></div></div>`; });
-      } else { contVideos.innerHTML = '<p class="text-xs text-slate-500">No hay videos cargados.</p>'; }
+        videos.forEach((v) => {
+          const id = v.id || v.url;
+          const thumb = `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+          contVideos.innerHTML += `<div onclick="reproducirUniversal('youtube', '${id}', '${v.titulo || 'Video'}', '${artista.nombre}')" class="bg-slate-900 border border-[#1f1f26] hover:border-[#00e5ff] rounded-xl overflow-hidden cursor-pointer"><div class="relative aspect-video"><img src="${thumb}" class="w-full h-full object-cover"></div><div class="p-2"><h5 class="font-bold text-xs text-white truncate">${v.titulo || 'Video'}</h5></div></div>`;
+        });
+      } else {
+        contVideos.innerHTML = '<p class="text-xs text-slate-500">No hay videos cargados para este artista.</p>';
+      }
     }
     function cerrarModalArtista() { document.getElementById('artistModal').classList.remove('active'); document.body.style.overflow = 'auto'; }
     function cerrarModalArtistaBackdrop(e) { if (e.target.id === 'artistModal') cerrarModalArtista(); }
@@ -384,28 +508,64 @@
     async function ejecutarBusqueda() {
       const q = document.getElementById('searchInput').value.trim().toLowerCase();
       if (!q) return;
-      document.getElementById('mainContainer').classList.add('hidden'); document.getElementById('gridViewSection').classList.remove('hidden');
+      document.getElementById('mainContainer').classList.add('hidden');
+      document.getElementById('gridViewSection').classList.remove('hidden');
       document.getElementById('gridTitle').innerText = `Resultados para "${q}"`;
       const gridContainer = document.getElementById('gridContainer');
       gridContainer.innerHTML = '<p class="text-slate-500 text-sm py-10 text-center">Buscando...</p>';
-      let htmlResultados = ''; let encontrados = false;
+
+      let htmlResultados = '';
+      let encontrados = false;
+
       for (const sec of seccionesActivas) {
         if (sec.tipo_contenido === 'perfiles') {
           const items = (sec.items || []).filter(i => (i.nombre || '').toLowerCase().includes(q));
-          if (items.length > 0) { encontrados = true; htmlResultados += `<div class="mb-8"><h3 class="text-lg font-black text-white mb-3 uppercase tracking-wider">${sec.nombre}</h3><div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">`; items.forEach(a => { htmlResultados += `<div onclick="abrirPerfil('${a.nombre}', '${sec.id}')" class="bg-[#0f0f13] border border-[#1f1f26] rounded-2xl p-3 text-center cursor-pointer hover:border-[#00e5ff]"><img src="${a.foto || FALLBACK_THUMB}" class="w-20 h-20 mx-auto rounded-full object-cover mb-2"><h4 class="text-sm font-bold text-white truncate">${a.nombre}</h4></div>`; }); htmlResultados += `</div></div>`; }
+          if (items.length > 0) {
+            encontrados = true;
+            htmlResultados += `<div class="mb-8"><h3 class="text-lg font-black text-white mb-3 uppercase tracking-wider">${sec.nombre}</h3><div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">`;
+            items.forEach(a => {
+              htmlResultados += `<div onclick="abrirPerfil('${a.nombre}', '${sec.id}')" class="bg-[#0f0f13] border border-[#1f1f26] rounded-2xl p-3 text-center cursor-pointer hover:border-[#00e5ff]"><img src="${a.foto || FALLBACK_THUMB}" class="w-20 h-20 mx-auto rounded-full object-cover mb-2"><h4 class="text-sm font-bold text-white truncate">${a.nombre}</h4></div>`;
+            });
+            htmlResultados += `</div></div>`;
+          }
         }
         if (sec.tipo_contenido === 'eventos') {
           const items = (sec.items || []).filter(i => (i.nombre || '').toLowerCase().includes(q));
-          if (items.length > 0) { encontrados = true; htmlResultados += `<div class="mb-8"><h3 class="text-lg font-black text-white mb-3 uppercase tracking-wider">${sec.nombre}</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">`; items.forEach(ev => { htmlResultados += `<div onclick="abrirEvento('${ev.nombre}')" class="bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden cursor-pointer hover:border-[#00e5ff]"><div class="h-40 overflow-hidden"><img src="${ev.imagen || FALLBACK_THUMB}" class="w-full h-full object-cover"></div><div class="p-4"><span class="text-xs font-black text-[#00e5ff] uppercase">${ev.fecha || ''}</span><h4 class="text-lg font-black text-white truncate">${ev.nombre}</h4></div></div>`; }); htmlResultados += `</div></div>`; }
+          if (items.length > 0) {
+            encontrados = true;
+            htmlResultados += `<div class="mb-8"><h3 class="text-lg font-black text-white mb-3 uppercase tracking-wider">${sec.nombre}</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">`;
+            items.forEach(ev => {
+              htmlResultados += `<div onclick="abrirEvento('${ev.nombre}')" class="bg-[#1e293b] border border-[#334155] rounded-2xl overflow-hidden cursor-pointer hover:border-[#00e5ff]"><div class="h-40 overflow-hidden"><img src="${ev.imagen || FALLBACK_THUMB}" class="w-full h-full object-cover"></div><div class="p-4"><span class="text-xs font-black text-[#00e5ff] uppercase">${ev.fecha || ''}</span><h4 class="text-lg font-black text-white truncate">${ev.nombre}</h4></div></div>`;
+            });
+            htmlResultados += `</div></div>`;
+          }
         }
       }
+
       const data = await fetch(`${API_URL}youtube/search?q=${encodeURIComponent(q)}&_=${Date.now()}`).then(r => r.json()).catch(() => []);
-      if (data.length > 0) { encontrados = true; htmlResultados += `<div class="mb-8"><h3 class="text-lg font-black text-white mb-3 uppercase tracking-wider">Videos de YouTube</h3><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">`; data.forEach(v => { htmlResultados += `<div onclick="reproducirUniversal('youtube', '${v.id}', '${v.titulo}')" class="bg-[#0f0f13] rounded-2xl overflow-hidden"><img src="${v.thumbnail}" class="w-full aspect-video object-cover"><div class="p-3"><h4 class="text-xs font-bold text-white truncate">${v.titulo}</h4></div></div>`; }); htmlResultados += `</div></div>`; }
-      if (!encontrados) { htmlResultados = '<p class="text-slate-500 text-sm py-10 text-center">No se encontraron resultados.</p>'; }
+      if (data.length > 0) {
+        encontrados = true;
+        htmlResultados += `<div class="mb-8"><h3 class="text-lg font-black text-white mb-3 uppercase tracking-wider">Videos de YouTube</h3><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">`;
+        data.forEach(v => {
+          htmlResultados += `<div onclick="reproducirUniversal('youtube', '${v.id}', '${v.titulo}')" class="bg-[#0f0f13] rounded-2xl overflow-hidden"><img src="${v.thumbnail}" class="w-full aspect-video object-cover"><div class="p-3"><h4 class="text-xs font-bold text-white truncate">${v.titulo}</h4></div></div>`;
+        });
+        htmlResultados += `</div></div>`;
+      }
+
+      if (!encontrados) {
+        htmlResultados = '<p class="text-slate-500 text-sm py-10 text-center">No se encontraron resultados para tu búsqueda.</p>';
+      }
+
       gridContainer.innerHTML = htmlResultados;
     }
 
-    function resetearVista() { document.getElementById('mainContainer').classList.remove('hidden'); document.getElementById('gridViewSection').classList.add('hidden'); document.getElementById('searchInput').value = ''; document.getElementById('dynamicSections').innerHTML = ''; cargarHome(); }
+    function resetearVista() {
+      document.getElementById('mainContainer').classList.remove('hidden');
+      document.getElementById('gridViewSection').classList.add('hidden');
+      document.getElementById('searchInput').value = '';
+      document.getElementById('dynamicSections').innerHTML = '';
+      cargarHome();
+    }
 
     function renderQueue() { const list = document.getElementById('queueList'); list.innerHTML = ''; queue.forEach((item, index) => { list.innerHTML += `<div onclick="loadFromQueue(${index})" class="flex items-center gap-2 p-2 bg-slate-900 rounded-lg cursor-pointer hover:bg-slate-800 ${index === currentIndex ? 'border border-[#00e5ff]' : ''}"><span class="text-xs text-white truncate">${item.titulo}</span></div>`; }); }
     function toggleQueue() { document.getElementById('queueBar').classList.toggle('hidden'); }
@@ -415,12 +575,32 @@
     function addToQueue() { const newItem = { url: document.getElementById('iframePlayer').src || document.getElementById('html5Player').src, titulo: document.getElementById('modalTitulo').innerText, categoria: document.getElementById('modalCategoria').innerText, tipo: document.getElementById('html5Player').classList.contains('hidden') ? 'youtube' : 'mp4' }; queue.push(newItem); renderQueue(); document.getElementById('queueBar').classList.remove('hidden'); }
     document.getElementById('html5Player').addEventListener('ended', function() { nextVideo(); });
 
-    function sintonizarRadio(nombre, url, img) { const audio = document.getElementById('audioStream'); audio.src = url; audio.play(); document.getElementById('radioPlayerTitle').innerText = nombre; if (img) document.getElementById('radioPlayerImg').src = img; document.getElementById('floatingRadioPlayer').classList.remove('translate-y-full'); isRadioPlaying = true; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; }
-    function togglePlayRadio() { const audio = document.getElementById('audioStream'); if (isRadioPlaying) { audio.pause(); isRadioPlaying = false; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-play"></i>'; } else { audio.play(); isRadioPlaying = true; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; } }
-    function cerrarRadio() { const audio = document.getElementById('audioStream'); audio.pause(); isRadioPlaying = false; if (zenoEventSource) zenoEventSource.close(); document.getElementById('floatingRadioPlayer').classList.add('translate-y-full'); }
+    function sintonizarRadio(nombre, url, img) {
+      const audio = document.getElementById('audioStream');
+      audio.src = url; audio.play();
+      document.getElementById('radioPlayerTitle').innerText = nombre;
+      if (img) document.getElementById('radioPlayerImg').src = img;
+      document.getElementById('floatingRadioPlayer').classList.remove('translate-y-full');
+      isRadioPlaying = true;
+      document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
+    }
+    function togglePlayRadio() {
+      const audio = document.getElementById('audioStream');
+      if (isRadioPlaying) { audio.pause(); isRadioPlaying = false; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-play"></i>'; }
+      else { audio.play(); isRadioPlaying = true; document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>'; }
+    }
+    function cerrarRadio() {
+      const audio = document.getElementById('audioStream');
+      audio.pause(); isRadioPlaying = false;
+      if (zenoEventSource) zenoEventSource.close();
+      document.getElementById('floatingRadioPlayer').classList.add('translate-y-full');
+    }
 
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cerrarModal(); cerrarModalArtista(); cerrarEvento(); } if (e.key === 'ArrowRight') nextVideo(); if (e.key === 'ArrowLeft') prevVideo(); });
-    // ⚠️ NO PONER "window.onload = cargarHome;" AQUÍ. YA ESTÁ LLAMADO ARRIBA. ESTO EVITA LOS DUPLICADOS.
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { cerrarModal(); cerrarModalArtista(); cerrarEvento(); }
+      if (e.key === 'ArrowRight') nextVideo();
+      if (e.key === 'ArrowLeft') prevVideo();
+    });
   </script>
 </body>
 </html>
