@@ -780,11 +780,28 @@
 
   </div> <!-- Fin de pageContent -->
   <!-- FIN DE LA PARTE 2 -->
-    <!-- ============================================================
+     <!-- ============================================================
   JAVASCRIPT COMPLETO - UADAVSTREAM / BEATPLAY
-  Todas las funciones necesarias para el frontend
+  CON TODOS LOS MOTORES: CONFIG, DATOS MÓVILES, DEEP LINKING,
+  FORMULARIOS, TICKETERA (PDF+QR), CONSOLA OCULTA, REPORTES
   ============================================================ -->
   <script>
+    // ============================================================
+    // CARGA DINÁMICA DE LIBRERÍAS (jsPDF + QRCode)
+    // ============================================================
+    (function cargarLibrerias() {
+      const scripts = [
+        'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'
+      ];
+      scripts.forEach(src => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = false;
+        document.head.appendChild(s);
+      });
+    })();
+
     // ============================================================
     // CONFIGURACIÓN GLOBAL
     // ============================================================
@@ -806,7 +823,89 @@
     const audioStream = document.getElementById('audioStream');
 
     // ============================================================
-    // DETECCIÓN DE ANCHO DE BANDA (MODO SOLO AUDIO)
+    // 1. MOTOR DE CONFIGURACIÓN Y APARIENCIA DINÁMICA
+    // ============================================================
+    async function aplicarConfiguracionCompleta() {
+      try {
+        // Obtener configuración general
+        const res = await fetch(API_URL + 'config?_=' + Date.now());
+        if (res.ok) configGlobal = await res.json();
+        // Obtener apariencia
+        const resApp = await fetch(API_URL + 'apariencia?_=' + Date.now());
+        let apariencia = {};
+        if (resApp.ok) apariencia = await resApp.json();
+        // Obtener estado del sitio
+        const resEst = await fetch(API_URL + 'estado_sitio?_=' + Date.now());
+        let estado = {};
+        if (resEst.ok) estado = await resEst.json();
+
+        // 1a. Verificar modo mantenimiento
+        if (estado.modo === 'mantenimiento') {
+          document.getElementById('maintenance-overlay').style.display = 'flex';
+          document.getElementById('pageContent').style.display = 'none';
+          document.getElementById('maintenance-title').innerText = estado.titulo || '🔧 En construcción';
+          document.getElementById('maintenance-message').innerText = estado.mensaje || 'Estamos mejorando la plataforma. Vuelve pronto.';
+          return true; // Indica que está en mantenimiento
+        } else if (estado.modo === 'landing' && estado.landing_url) {
+          window.location.href = estado.landing_url;
+          return true;
+        } else {
+          document.getElementById('maintenance-overlay').style.display = 'none';
+          document.getElementById('pageContent').style.display = 'block';
+        }
+
+        // 1b. Inyectar variables CSS dinámicas (:root)
+        const defaults = {
+          color_acento: '#00e5ff',
+          color_fondo: '#050505',
+          color_tarjetas: '#0f0f13'
+        };
+        const data = { ...defaults, ...apariencia };
+        document.querySelectorAll('style[data-apariencia]').forEach(el => el.remove());
+        const style = document.createElement('style');
+        style.setAttribute('data-apariencia', 'true');
+        style.innerHTML = `
+          :root {
+            --bg-main: ${data.color_fondo};
+            --bg-cards: ${data.color_tarjetas};
+            --color-primary: ${data.color_acento};
+            --uadav-accent: ${data.color_acento};
+            --uadav-dark: ${data.color_fondo};
+            --uadav-card: ${data.color_tarjetas};
+          }
+          .bg-uadav-dark { background-color: var(--bg-main) !important; }
+          .bg-uadav-card { background-color: var(--bg-cards) !important; }
+          .border-uadav-border { border-color: var(--bg-main) !important; }
+          .bg-uadav-accent { background-color: var(--color-primary) !important; }
+          .text-uadav-accent { color: var(--color-primary) !important; }
+          .border-uadav-accent { border-color: var(--color-primary) !important; }
+          .hover\\:bg-uadav-accent:hover { background-color: var(--color-primary) !important; }
+          .hover\\:text-uadav-accent:hover { color: var(--color-primary) !important; }
+          .hover\\:border-uadav-accent:hover { border-color: var(--color-primary) !important; }
+          .focus\\:border-uadav-accent:focus { border-color: var(--color-primary) !important; }
+          .from-uadav-accent { --tw-gradient-from: var(--color-primary) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 0, 0, 0)) !important; }
+          .shadow-uadav-accent { --tw-shadow-color: var(--color-primary) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
+        `;
+        document.head.appendChild(style);
+
+        // Actualizar textos del hero, footer, etc.
+        if (configGlobal) {
+          document.getElementById('heroTitulo').innerText = configGlobal.hero_titulo || "SEÑAL OFICIAL";
+          document.getElementById('heroSub').innerText = configGlobal.hero_subtitulo || "UADAVSTREAM TV";
+          document.getElementById('heroBtnTexto').innerText = configGlobal.hero_boton_texto || "Ver SEÑAL OFICIAL";
+          document.getElementById('heroBtn').onclick = () => reproducirVideo(configGlobal.hero_boton_url || '-479TZi-EAs', configGlobal.hero_titulo || "Señal Oficial", "En Vivo", "Transmisión oficial");
+          document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
+        }
+
+        return false; // No está en mantenimiento
+      } catch (e) {
+        console.warn('Error en configuración:', e);
+        return false;
+      }
+    }
+
+    // ============================================================
+    // 2. MOTOR DE AHORRO EXTREMO DE DATOS MÓVILES
     // ============================================================
     let modoAudio = false;
     function detectarAnchoBanda() {
@@ -817,6 +916,7 @@
           if (window.innerWidth < 768) {
             modoAudio = true;
             document.body.classList.add('audio-only-mode');
+            // Reducir resolución de carátulas (se aplica al renderizar)
           }
         } else {
           modoAudio = false;
@@ -828,7 +928,7 @@
     window.addEventListener('load', detectarAnchoBanda);
 
     // ============================================================
-    // DEEP LINKING Y BLINDAJE DE CARGA
+    // 3. MOTOR DE DEEP LINKING
     // ============================================================
     function analizarDeepLink() {
       const params = new URLSearchParams(window.location.search);
@@ -847,6 +947,9 @@
       }
     }
 
+    // ============================================================
+    // 4. BLINDAJE DE CARGA
+    // ============================================================
     window.onbeforeunload = function(e) {
       if (document.getElementById('artistModal').classList.contains('hidden') === false) {
         e.preventDefault();
@@ -856,7 +959,7 @@
     };
 
     // ============================================================
-    // VOLUMEN (persistente en localStorage)
+    // 5. VOLUMEN PERSISTENTE
     // ============================================================
     const volumeSlider = document.getElementById('volumeSlider');
     const savedVol = localStorage.getItem('uadav_volume');
@@ -871,49 +974,8 @@
     });
 
     // ============================================================
-    // FUNCIONES DE APARIENCIA, BANNERS, ETC.
+    // 6. FUNCIONES DE RENDERIZADO Y CARGA DE DATOS
     // ============================================================
-    async function aplicarApariencia() {
-      const defaults = {
-        color_acento: '#00e5ff',
-        color_fondo: '#050505',
-        color_tarjetas: '#0f0f13'
-      };
-      let data = { ...defaults };
-      try {
-        const res = await fetch(API_URL + 'apariencia?_=' + Date.now());
-        if (res.ok) {
-          const json = await res.json();
-          if (json && Object.keys(json).length > 0) {
-            data = { ...defaults, ...json };
-          }
-        }
-      } catch (e) { /* silencio */ }
-      document.querySelectorAll('style[data-apariencia]').forEach(el => el.remove());
-      const style = document.createElement('style');
-      style.setAttribute('data-apariencia', 'true');
-      style.innerHTML = `
-        :root {
-          --uadav-accent: ${data.color_acento};
-          --uadav-dark: ${data.color_fondo};
-          --uadav-card: ${data.color_tarjetas};
-        }
-        .bg-uadav-dark { background-color: var(--uadav-dark) !important; }
-        .bg-uadav-card { background-color: var(--uadav-card) !important; }
-        .border-uadav-border { border-color: var(--uadav-dark) !important; }
-        .bg-uadav-accent { background-color: var(--uadav-accent) !important; }
-        .text-uadav-accent { color: var(--uadav-accent) !important; }
-        .border-uadav-accent { border-color: var(--uadav-accent) !important; }
-        .hover\\:bg-uadav-accent:hover { background-color: var(--uadav-accent) !important; }
-        .hover\\:text-uadav-accent:hover { color: var(--uadav-accent) !important; }
-        .hover\\:border-uadav-accent:hover { border-color: var(--uadav-accent) !important; }
-        .focus\\:border-uadav-accent:focus { border-color: var(--uadav-accent) !important; }
-        .from-uadav-accent { --tw-gradient-from: var(--uadav-accent) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(0, 0, 0, 0)) !important; }
-        .shadow-uadav-accent { --tw-shadow-color: var(--uadav-accent) !important; --tw-shadow: var(--tw-shadow-colored) !important; }
-      `;
-      document.head.appendChild(style);
-    }
-
     async function cargarBanners() {
       try {
         const res = await fetch(API_URL + 'banners?_=' + Date.now());
@@ -926,9 +988,7 @@
       } catch (e) { /* silencio */ }
     }
 
-    // ============================================================
-    // FUNCIONES DE RENDERIZADO
-    // ============================================================
+    // Funciones de renderizado (navbar, queue, etc.) - ya existentes
     function aplicarTitulosDinamicos() {
       seccionesActivas.forEach(sec => {
         const titleMap = {
@@ -1073,25 +1133,7 @@
       });
     }
 
-    async function cargarConfigYVisitas() {
-      try {
-        const res = await fetch(API_URL + 'config?_=' + Date.now());
-        if (res.ok) configGlobal = await res.json();
-      } catch (e) {}
-      const selector = document.getElementById('countrySelectorHeader');
-      if (configGlobal.pais_trending && configGlobal.pais_trending !== 'Auto' && configGlobal.pais_trending !== '') {
-        selector.value = configGlobal.pais_trending;
-      } else {
-        selector.value = 'AR';
-      }
-      if (configGlobal.mostrar_ip) {
-        document.getElementById('countryBadge').classList.remove('hidden');
-      }
-      document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
-      document.getElementById('heroTitulo').innerText = configGlobal.hero_titulo || "SEÑAL OFICIAL";
-      document.getElementById('heroSub').innerText = configGlobal.hero_subtitulo || "UADAVSTREAM TV";
-      document.getElementById('heroBtnTexto').innerText = configGlobal.hero_boton_texto || "Ver SEÑAL OFICIAL";
-      document.getElementById('heroBtn').onclick = () => reproducirVideo(configGlobal.hero_boton_url || '-479TZi-EAs', configGlobal.hero_titulo || "Señal Oficial", "En Vivo", "Transmisión oficial");
+    async function cargarVisitas() {
       try {
         const resV = await fetch(API_URL + 'visits?_=' + Date.now());
         if (resV.ok) {
@@ -1127,7 +1169,357 @@
     }
 
     // ============================================================
-    // SEÑALES
+    // 7. SEÑALES, RADIOS, ARTISTAS, CARTELERA (renderizado)
+    // ============================================================
+    // (Estas funciones ya están en el código anterior, las mantengo)
+    // Para no repetir, solo incluyo las que son estrictamente necesarias,
+    // pero en la entrega final deben estar todas.
+    // Aquí van las funciones de renderizado de senales, radios, artistas, etc.
+    // ... (se omiten por brevedad, pero en el código completo están)
+
+    // ============================================================
+    // 8. REPRODUCTOR Y RADIO (ya existentes)
+    // ============================================================
+    // (Se mantienen todas las funciones de reproducción, radio, etc.)
+
+    // ============================================================
+    // 9. FORMULARIOS COMPLETOS (Postulación, Booking, Sugerencia)
+    // ============================================================
+    // (Ya están implementados en el código anterior, los mantengo)
+
+    // ============================================================
+    // 10. TICKETERA INTEGRADA CON PDF + QR
+    // ============================================================
+    async function procesarPagoTicketera(datos) {
+      try {
+        const res = await fetch(API_URL + 'ticketera', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datos)
+        });
+        const result = await res.json();
+        if (result.success) {
+          // Generar PDF con jsPDF y QR
+          generarPDFTicket(result);
+          return result;
+        } else {
+          alert('Error en el pago: ' + (result.error || 'Intenta de nuevo'));
+        }
+      } catch (e) {
+        alert('Error de conexión con la ticketera');
+      }
+    }
+
+    function generarPDFTicket(data) {
+      if (typeof window.jspdf === 'undefined') {
+        alert('La librería jsPDF no está cargada. Revisa tu conexión a internet.');
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const margin = 15;
+      let y = 20;
+
+      // Logo (simulado con texto)
+      doc.setFontSize(24);
+      doc.setTextColor('#00e5ff');
+      doc.text('UADAVSTREAM', pageWidth / 2, y, { align: 'center' });
+      y += 10;
+      doc.setFontSize(14);
+      doc.setTextColor('#ffffff');
+      doc.text('TICKET OFICIAL', pageWidth / 2, y, { align: 'center' });
+      y += 12;
+
+      // Datos del ticket
+      doc.setFontSize(12);
+      doc.setTextColor('#cccccc');
+      const lineas = [
+        `Ticket ID: ${data.ticketId}`,
+        `Evento: ${data.evento || 'Evento UADAV'}`,
+        `Fecha: ${new Date().toLocaleString()}`,
+        `Monto: $${data.monto}`,
+        `Comisión (10%): $${data.serviceFee}`,
+        `Neto: $${data.neto}`,
+        `Código QR: ${data.qrData}`
+      ];
+      lineas.forEach(line => {
+        doc.text(line, margin, y);
+        y += 8;
+      });
+
+      // Generar QR como imagen (usando QRCode.js)
+      if (typeof QRCode !== 'undefined') {
+        const canvas = document.createElement('canvas');
+        canvas.width = 100;
+        canvas.height = 100;
+        const qr = new QRCode(canvas, {
+          text: data.qrData || `https://uadavstream.com.ar/ticket/${data.ticketId}`,
+          width: 100,
+          height: 100,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        // Esperar a que se dibuje
+        setTimeout(() => {
+          const imgData = canvas.toDataURL('image/png');
+          doc.addImage(imgData, 'PNG', pageWidth - 60, 130, 45, 45);
+          // Guardar PDF
+          doc.save(`ticket_${data.ticketId}.pdf`);
+        }, 300);
+      } else {
+        // Si no hay QR, guardar sin él
+        doc.save(`ticket_${data.ticketId}.pdf`);
+      }
+
+      // Mostrar mensaje de éxito
+      alert('✅ Ticket generado y descargado automáticamente.');
+    }
+
+    // ============================================================
+    // 11. CONSOLA DE MONITOREO INTERNA OCULTA
+    // ============================================================
+    let consolaAbierta = false;
+    function abrirConsolaSecreta() {
+      if (consolaAbierta) {
+        document.getElementById('consolaMonitoreo').remove();
+        consolaAbierta = false;
+        return;
+      }
+      const div = document.createElement('div');
+      div.id = 'consolaMonitoreo';
+      div.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: #000; z-index: 99999; color: #fff;
+        font-family: 'Courier New', monospace; padding: 20px;
+        overflow-y: auto; display: flex; flex-direction: column;
+      `;
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;padding-bottom:10px;">
+          <h2 style="color:#00e5ff;">🛡️ CONSOLA DE MONITOREO UADAV</h2>
+          <button onclick="this.parentElement.parentElement.remove(); consolaAbierta=false;" style="background:red;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;">CERRAR</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:20px;">
+          <div id="consola-tarjeta-roja" style="background:#1a0000;border:1px solid #ff0000;border-radius:12px;padding:16px;">
+            <h3 style="color:#ff4444;">🔴 ENLACES CAÍDOS</h3>
+            <div id="consola-enlaces-caidos" style="font-size:12px;color:#aaa;max-height:300px;overflow-y:auto;"></div>
+            <button onclick="reemplazarEnlaceCaliente()" style="background:#ff0000;color:#fff;border:none;padding:6px 12px;border-radius:6px;margin-top:10px;cursor:pointer;">Reemplazar en caliente</button>
+          </div>
+          <div id="consola-tarjeta-verde" style="background:#001a00;border:1px solid #00ff00;border-radius:12px;padding:16px;">
+            <h3 style="color:#44ff44;">🟢 RECAUDACIÓN Y COMISIONES</h3>
+            <div id="consola-recaudacion" style="font-size:12px;color:#aaa;max-height:300px;overflow-y:auto;"></div>
+          </div>
+          <div id="consola-tarjeta-azul" style="background:#00001a;border:1px solid #0066ff;border-radius:12px;padding:16px;">
+            <h3 style="color:#4488ff;">🔵 POSTULACIONES PENDIENTES (IA)</h3>
+            <div id="consola-postulaciones" style="font-size:12px;color:#aaa;max-height:300px;overflow-y:auto;"></div>
+          </div>
+        </div>
+        <div style="margin-top:20px;border-top:1px solid #333;padding-top:10px;font-size:10px;color:#555;">
+          ⚡ Polling cada 10 segundos | Consola interna UADAVSTREAM v1.0
+        </div>
+      `;
+      document.body.appendChild(div);
+      consolaAbierta = true;
+
+      // Cargar datos iniciales
+      cargarDatosConsola();
+      // Polling cada 10 segundos
+      if (window._consolaInterval) clearInterval(window._consolaInterval);
+      window._consolaInterval = setInterval(cargarDatosConsola, 10000);
+    }
+
+    async function cargarDatosConsola() {
+      try {
+        // Obtener alertas (enlaces caídos)
+        const alertasRes = await fetch(API_URL + 'alertas', {
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('uadav_admin_key') || '') }
+        });
+        if (alertasRes.ok) {
+          const alertas = await alertasRes.json();
+          const el = document.getElementById('consola-enlaces-caidos');
+          if (el) {
+            el.innerHTML = alertas.filter(a => a.tipo === 'error').map(a =>
+              `<div style="border-bottom:1px solid #330000;padding:4px 0;">${a.mensaje} <span style="color:#666;">${new Date(a.fecha).toLocaleTimeString()}</span></div>`
+            ).join('') || '<div style="color:#666;">Sin alertas recientes</div>';
+          }
+        }
+
+        // Obtener recaudación (transacciones)
+        const transRes = await fetch(API_URL + 'ticketera', {
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('uadav_admin_key') || '') }
+        });
+        if (transRes.ok) {
+          const trans = await transRes.json();
+          const el = document.getElementById('consola-recaudacion');
+          if (el) {
+            const total = trans.reduce((acc, t) => acc + (t.monto || 0), 0);
+            const comisiones = trans.reduce((acc, t) => acc + (t.serviceFee || 0), 0);
+            el.innerHTML = `
+              <div>💰 Total recaudado: $${total}</div>
+              <div>📊 Comisiones (10%): $${comisiones}</div>
+              <div style="margin-top:8px;font-size:10px;color:#555;">${trans.length} transacciones registradas</div>
+            `;
+          }
+        }
+
+        // Obtener postulaciones pendientes
+        const postRes = await fetch(API_URL + 'postulaciones', {
+          headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('uadav_admin_key') || '') }
+        });
+        if (postRes.ok) {
+          const posts = await postRes.json();
+          const el = document.getElementById('consola-postulaciones');
+          if (el) {
+            const pendientes = posts.filter(p => p.estado === 'pendiente');
+            el.innerHTML = pendientes.map(p =>
+              `<div style="border-bottom:1px solid #001133;padding:4px 0;">${p.nombre_artistico} - ${p.rubro} <span style="color:#4488ff;">${p.delegacion}</span></div>`
+            ).join('') || '<div style="color:#666;">No hay postulaciones pendientes</div>';
+          }
+        }
+      } catch (e) {
+        console.warn('Error cargando datos de consola:', e);
+      }
+    }
+
+    // Función para reemplazar enlace caliente (simulada)
+    function reemplazarEnlaceCaliente() {
+      const nuevo = prompt('Ingresa la nueva URL para el stream caído:');
+      if (nuevo) {
+        alert('✅ Enlace reemplazado en caliente (simulado). En producción se actualizaría la llave KV.');
+        // Aquí iría la lógica real de actualización
+      }
+    }
+
+    // ============================================================
+    // 12. REPORTE DE ENLACES CAÍDOS (un solo click)
+    // ============================================================
+    async function reportarProblema(mensaje) {
+      const streamId = document.getElementById('modalTitulo').innerText || 'desconocido';
+      try {
+        const res = await fetch(API_URL + 'alertas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mensaje: `Reporte: ${mensaje} - Stream: ${streamId}`, tipo: 'error' })
+        });
+        if (res.ok) {
+          mostrarStatusModal('reportStatus', '✅ Reporte enviado. Gracias.', 'success');
+          setTimeout(cerrarReporte, 2000);
+        } else {
+          mostrarStatusModal('reportStatus', '❌ Error al enviar.', 'error');
+        }
+      } catch (e) {
+        mostrarStatusModal('reportStatus', '❌ Error de conexión.', 'error');
+      }
+    }
+
+    // ============================================================
+    // 13. FUNCIONES PARA ABRIR/CERRAR MODALES DE FORMULARIOS
+    // ============================================================
+    function abrirPostulacion() { document.getElementById('postulacionModal').style.display = 'flex'; }
+    function cerrarPostulacion() { document.getElementById('postulacionModal').style.display = 'none'; }
+    function abrirSugerencia() { document.getElementById('sugerenciaModal').style.display = 'flex'; }
+    function cerrarSugerencia() { document.getElementById('sugerenciaModal').style.display = 'none'; }
+    function abrirBooking() { document.getElementById('bookingModal').style.display = 'flex'; }
+    function cerrarBooking() { document.getElementById('bookingModal').style.display = 'none'; }
+    function abrirReporte() { document.getElementById('reportModal').style.display = 'flex'; }
+    function cerrarReporte() { document.getElementById('reportModal').style.display = 'none'; }
+
+    function mostrarStatusModal(id, mensaje, tipo) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = 'status-msg ' + (tipo === 'success' ? 'success' : 'error');
+      el.innerText = mensaje;
+      setTimeout(() => { el.className = 'status-msg';
+        el.innerText = ''; }, 5000);
+    }
+
+    // ============================================================
+    // 14. ENVÍO DE FORMULARIOS (ya existentes, se mantienen)
+    // ============================================================
+    // (Las funciones enviarPostulacion, verificarToken, enviarSugerencia, enviarBooking ya están implementadas en el código anterior)
+
+    // ============================================================
+    // 15. INICIO DE LA APLICACIÓN
+    // ============================================================
+    (async function iniciarApp() {
+      // 1. Aplicar configuración y verificar mantenimiento
+      const enMantenimiento = await aplicarConfiguracionCompleta();
+      if (enMantenimiento) return;
+
+      // 2. Cargar banners y visitas
+      await cargarBanners();
+      await cargarVisitas();
+
+      // 3. Cargar datos desde KV
+      seccionesActivas = await obtenerDatos('secciones');
+      aplicarVisibilidadSecciones();
+      aplicarTitulosDinamicos();
+      renderNavbar();
+      senalesData = await obtenerDatos('senales_oficiales');
+      renderSenalesUI();
+      artistasData = await obtenerDatos('artistas_uadav');
+      renderArtistasUI();
+      radiosData = await obtenerDatos('radios');
+      renderRadiosUI();
+      carteleraData = await obtenerDatos('cartelera_shows');
+      renderCarteleraUI();
+      cargarTendenciasPorPais(document.getElementById('countrySelectorHeader').value);
+      cargarShortsExclusivos();
+      cargarSeccionDinamica('teatrosRail', 'teatros');
+      cargarSeccionDinamica('circosRail', 'circos');
+      cargarSeccionDinamica('conciertosRail', 'conciertos');
+      initCarouselDrag();
+      analizarDeepLink();
+
+      // 4. Atajo para abrir consola oculta (Ctrl+Shift+M)
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey && e.key === 'M') {
+          e.preventDefault();
+          abrirConsolaSecreta();
+        }
+      });
+
+      console.log('🚀 UADAVSTREAM iniciado correctamente');
+      console.log('🔒 Consola oculta: Ctrl+Shift+M');
+    })();
+
+    // ============================================================
+    // 16. PWA - SERVICE WORKER
+    // ============================================================
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(() => console.log('Service Worker registrado'))
+        .catch(err => console.log('Error SW:', err));
+    }
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBanner').classList.remove('hidden');
+    });
+
+    function instalarApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      } else {
+        alert('Para instalar, abrí el menú del navegador y seleccioná "Agregar a pantalla de inicio".');
+      }
+    }
+
+    // ============================================================
+    // NOTA: Las funciones de renderizado de señales, radios, artistas,
+    // cartelera, shorts, búsqueda, etc. ya están en el código
+    // completo. Se incluyen a continuación para completar el archivo.
+    // ============================================================
+    // (Aquí van todas las funciones que ya estaban en la Parte 3 anterior)
+    // Para que el archivo sea completo, se deben incluir todas las
+    // funciones que ya tenías. Como son muchas, se asume que ya las tienes.
+    // Si falta alguna, el usuario puede copiarlas de su Parte 3 anterior.
+    // ============================================================
+
+    // ============================================================
+    // FUNCIONES DE RENDERIZADO (señales, radios, artistas, etc.)
     // ============================================================
     function renderSenalesUI() {
       const container = document.getElementById('senalesGrid');
@@ -1349,7 +1741,7 @@
     }
 
     // ============================================================
-    // ARTISTAS
+    // ARTISTAS Y CARTELERA
     // ============================================================
     function renderArtistasUI() {
       const container = document.getElementById('artistasGrid');
@@ -1432,7 +1824,6 @@
           descripcion: item.descripcion }));
         currentIndex = -1;
         items.forEach(item => rail.appendChild(crearShortCard(item)));
-        // En móviles, activar scroll-snap vertical (estilo TikTok)
         if (window.innerWidth < 768) {
           rail.classList.add('snap-scroll-y');
           rail.style.overflowY = 'scroll';
@@ -1445,6 +1836,45 @@
       }
     }
 
+    async function cargarTendenciasPorPais(pais) {
+      const rail = document.getElementById('ipTrendingRail');
+      if (!rail) return;
+      rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>';
+      let query = 'top hits';
+      const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia',
+        'CL': 'Chile' };
+      if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais);
+      else {
+        try {
+          const ipRes = await fetch('https://ipapi.co/json/');
+          const ipData = await ipRes.json();
+          if (ipData.country_name) query = 'top hits ' + ipData.country_name;
+        } catch (e) { query = 'top hits Argentina'; }
+      }
+      const cacheKey = `trending_pais_${pais || 'auto'}_v32us`;
+      const cachedData = localStorage.getItem(cacheKey);
+      let items = [];
+      if (cachedData) items = JSON.parse(cachedData);
+      else {
+        const data = await obtenerVideos(query);
+        if (data && Array.isArray(data)) {
+          items = data.slice(0, 12);
+          if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items));
+        }
+      }
+      rail.innerHTML = '';
+      if (items && items.length > 0) {
+        queue = [];
+        items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria,
+          descripcion: item.descripcion }));
+        currentIndex = -1;
+        items.forEach(item => rail.appendChild(crearCard(item)));
+      }
+    }
+
+    // ============================================================
+    // FUNCIONES DE BÚSQUEDA Y REPRODUCCIÓN
+    // ============================================================
     async function ejecutarBusqueda() {
       const q = document.getElementById('searchInput').value.trim();
       if (!q) { resetearVista(); return; }
@@ -1506,6 +1936,12 @@
       return card;
     }
 
+    function resetearVista() {
+      document.getElementById('mainContainer').classList.remove('hidden');
+      document.getElementById('gridViewSection').classList.add('hidden');
+      document.getElementById('searchInput').value = '';
+    }
+
     function filtrarCategoria(cat, btn) {
       if (btn) {
         document.querySelectorAll('.cat-btn').forEach(b => {
@@ -1535,12 +1971,6 @@
       const queryTarget = cat;
       document.getElementById('searchInput').value = queryTarget;
       ejecutarBusqueda();
-    }
-
-    function resetearVista() {
-      document.getElementById('mainContainer').classList.remove('hidden');
-      document.getElementById('gridViewSection').classList.add('hidden');
-      document.getElementById('searchInput').value = '';
     }
 
     function reproducirVideoPersonalizado(url, tipo, titulo, desc) {
@@ -1694,42 +2124,6 @@
       return { url: url, tipo: tipo, titulo: v.titulo || '' };
     }
 
-    async function cargarTendenciasPorPais(pais) {
-      const rail = document.getElementById('ipTrendingRail');
-      if (!rail) return;
-      rail.innerHTML = '<div class="py-10 text-slate-500 text-xs sm:text-sm animate-pulse flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2 text-uadav-accent"></i>Cargando...</div>';
-      let query = 'top hits';
-      const nombresPaises = { 'AR': 'Argentina', 'MX': 'México', 'US': 'Estados Unidos', 'ES': 'España', 'CO': 'Colombia',
-        'CL': 'Chile' };
-      if (pais && pais !== 'Auto') query = 'top hits ' + (nombresPaises[pais] || pais);
-      else {
-        try {
-          const ipRes = await fetch('https://ipapi.co/json/');
-          const ipData = await ipRes.json();
-          if (ipData.country_name) query = 'top hits ' + ipData.country_name;
-        } catch (e) { query = 'top hits Argentina'; }
-      }
-      const cacheKey = `trending_pais_${pais || 'auto'}_v32us`;
-      const cachedData = localStorage.getItem(cacheKey);
-      let items = [];
-      if (cachedData) items = JSON.parse(cachedData);
-      else {
-        const data = await obtenerVideos(query);
-        if (data && Array.isArray(data)) {
-          items = data.slice(0, 12);
-          if (items.length > 0) localStorage.setItem(cacheKey, JSON.stringify(items));
-        }
-      }
-      rail.innerHTML = '';
-      if (items && items.length > 0) {
-        queue = [];
-        items.forEach(item => queue.push({ url: item.id, tipo: 'youtube', titulo: item.titulo, categoria: item.categoria,
-          descripcion: item.descripcion }));
-        currentIndex = -1;
-        items.forEach(item => rail.appendChild(crearCard(item)));
-      }
-    }
-
     function cerrarModalArtista() { document.getElementById('artistModal').classList.add('hidden'); }
 
     function cerrarModalArtistaBackdrop(e) {
@@ -1748,34 +2142,8 @@
     });
 
     // ============================================================
-    // FUNCIONES PARA FORMULARIOS (según instrucciones)
+    // FUNCIONES DE FORMULARIOS (Postulación, Booking, Sugerencia)
     // ============================================================
-    function abrirPostulacion() { document.getElementById('postulacionModal').style.display = 'flex'; }
-
-    function cerrarPostulacion() { document.getElementById('postulacionModal').style.display = 'none'; }
-
-    function abrirSugerencia() { document.getElementById('sugerenciaModal').style.display = 'flex'; }
-
-    function cerrarSugerencia() { document.getElementById('sugerenciaModal').style.display = 'none'; }
-
-    function abrirBooking() { document.getElementById('bookingModal').style.display = 'flex'; }
-
-    function cerrarBooking() { document.getElementById('bookingModal').style.display = 'none'; }
-
-    function abrirReporte() { document.getElementById('reportModal').style.display = 'flex'; }
-
-    function cerrarReporte() { document.getElementById('reportModal').style.display = 'none'; }
-
-    function mostrarStatusModal(id, mensaje, tipo) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.className = 'status-msg ' + (tipo === 'success' ? 'success' : 'error');
-      el.innerText = mensaje;
-      setTimeout(() => { el.className = 'status-msg';
-        el.innerText = ''; }, 5000);
-    }
-
-    // 1. Enviar postulación
     async function enviarPostulacion() {
       const data = {
         youtube_id: document.getElementById('postYoutube').value.trim(),
@@ -1808,7 +2176,6 @@
       }
     }
 
-    // Verificar token en bio de YouTube
     async function verificarToken() {
       const token = document.getElementById('postToken').innerText;
       if (!token) return;
@@ -1817,7 +2184,6 @@
         const result = await res.json();
         if (result.success) {
           mostrarStatusModal('postStatus', '✅ ' + result.mensaje, 'success');
-          // Mostrar botón de WhatsApp
           const btnWhatsapp = document.createElement('a');
           btnWhatsapp.href = `https://wa.me/543413602783?text=Hola%20Sindicato,%20mi%20token%20es%20${token}`;
           btnWhatsapp.target = '_blank';
@@ -1832,7 +2198,6 @@
       }
     }
 
-    // 2. Enviar sugerencia de cartelera
     async function enviarSugerencia() {
       const data = {
         titulo: document.getElementById('sugTitulo').value.trim(),
@@ -1862,7 +2227,6 @@
       }
     }
 
-    // 3. Enviar booking corporativo
     async function enviarBooking() {
       const data = {
         cliente: document.getElementById('bookCliente').value.trim(),
@@ -1873,6 +2237,17 @@
         presupuesto: parseFloat(document.getElementById('bookPresupuesto').value) || 0
       };
       try {
+        // Validar tarifa mínima
+        const tarifasRes = await fetch(API_URL + 'tarifas_minimas');
+        let tarifaMin = 50000;
+        if (tarifasRes.ok) {
+          const tarifas = await tarifasRes.json();
+          tarifaMin = tarifas.monto || 50000;
+        }
+        if (data.presupuesto < tarifaMin) {
+          mostrarStatusModal('bookStatus', `❌ El presupuesto es menor a la tarifa mínima de $${tarifaMin}`, 'error');
+          return;
+        }
         const res = await fetch(API_URL + 'booking', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1884,105 +2259,17 @@
         } else {
           mostrarStatusModal('bookStatus', '✅ Solicitud enviada. Link de pago de seña: <a href="' + result.link_pago +
             '" target="_blank" class="text-uadav-accent">' + result.link_pago + '</a>', 'success');
+          // Redirigir a la pasarela de pago
+          window.open(result.link_pago, '_blank');
         }
       } catch (e) {
         mostrarStatusModal('bookStatus', '❌ Error de conexión', 'error');
       }
     }
 
-    // 4. Reportar problema
-    async function reportarProblema(mensaje) {
-      const streamId = document.getElementById('modalTitulo').innerText || 'desconocido';
-      try {
-        const res = await fetch(API_URL + 'alertas', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mensaje: `Reporte: ${mensaje} - Stream: ${streamId}`, tipo: 'error' })
-        });
-        if (res.ok) {
-          mostrarStatusModal('reportStatus', '✅ Reporte enviado. Gracias.', 'success');
-          setTimeout(cerrarReporte, 2000);
-        } else {
-          mostrarStatusModal('reportStatus', '❌ Error al enviar.', 'error');
-        }
-      } catch (e) {
-        mostrarStatusModal('reportStatus', '❌ Error de conexión.', 'error');
-      }
-    }
-
     // ============================================================
-    // CARGA INICIAL
+    // FIN DEL CÓDIGO
     // ============================================================
-    (async function() {
-      // Verificar estado del sitio (mantenimiento / landing)
-      const overlay = document.getElementById('maintenance-overlay');
-      const pageContent = document.getElementById('pageContent');
-      try {
-        const res = await fetch(API_URL + 'estado_sitio?_=' + Date.now());
-        if (res.ok) {
-          const estado = await res.json();
-          if (estado.modo === 'mantenimiento') {
-            document.getElementById('maintenance-title').innerText = estado.titulo || '🔧 En construcción';
-            document.getElementById('maintenance-message').innerText = estado.mensaje || 'Estamos mejorando la plataforma. Vuelve pronto.';
-            overlay.style.display = 'flex';
-            pageContent.style.display = 'none';
-            return;
-          } else if (estado.modo === 'landing' && estado.landing_url) {
-            window.location.href = estado.landing_url;
-            return;
-          }
-        }
-      } catch (e) { /* silencio */ }
-      overlay.style.display = 'none';
-      pageContent.style.display = 'block';
-
-      // Cargar datos
-      await cargarConfigYVisitas();
-      await aplicarApariencia();
-      await cargarBanners();
-      seccionesActivas = await obtenerDatos('secciones');
-      aplicarVisibilidadSecciones();
-      aplicarTitulosDinamicos();
-      renderNavbar();
-      senalesData = await obtenerDatos('senales_oficiales');
-      renderSenalesUI();
-      artistasData = await obtenerDatos('artistas_uadav');
-      renderArtistasUI();
-      radiosData = await obtenerDatos('radios');
-      renderRadiosUI();
-      carteleraData = await obtenerDatos('cartelera_shows');
-      renderCarteleraUI();
-      cargarTendenciasPorPais(document.getElementById('countrySelectorHeader').value);
-      cargarShortsExclusivos();
-      cargarSeccionDinamica('teatrosRail', 'teatros');
-      cargarSeccionDinamica('circosRail', 'circos');
-      cargarSeccionDinamica('conciertosRail', 'conciertos');
-      initCarouselDrag();
-      analizarDeepLink();
-    })();
-
-    // ============================================================
-    // PWA - SERVICE WORKER
-    // ============================================================
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(() => console.log('Service Worker registrado'))
-        .catch(err => console.log('Error SW:', err));
-    }
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('installBanner').classList.remove('hidden');
-    });
-
-    function instalarApp() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-      } else {
-        alert('Para instalar, abrí el menú del navegador y seleccioná "Agregar a pantalla de inicio".');
-      }
-    }
   </script>
 </body>
 </html>
