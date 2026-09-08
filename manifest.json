@@ -1,23 +1,23 @@
 {
-  "name": "UADAVSTREAM - Entretenimiento, Teatros & Música Global",
-  "short_name": "UADAVSTREAM",
-  "description": "Plataforma Oficial del Sindicato de Artistas. Teatros, Variedades, Música e IPTV.",
-  "start_url": "/index.html",
+  "name": "UADAV STREAM - Entretenimiento Global",
+  "short_name": "UADAV",
+  "description": "Plataforma oficial del sindicato de artistas. Señales en vivo, radios, teatros, circos y música 24/7.",
+  "start_url": "/",
   "display": "standalone",
-  "orientation": "any",
-  "background_color": "#050505",
-  "theme_color": "#00e5ff",
+  "background_color": "#0f0f0f",
+  "theme_color": "#e50914",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://unsplash.com",
+      "src": "https://uadavstream.com.ar/icon-192.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://unsplash.com",
+      "src": "https://uadavstream.com.ar/icon-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
