@@ -54,7 +54,7 @@
     }
     body { background: var(--bg-color); color: var(--text-primary); }
     .video-card { background: var(--card-color); border-color: var(--bg-color); }
-    .video-card:hover { border-color: var(--accent-color); box-shadow: 0 10px 30px rgba(0,229,255,0.15); }
+    .video-card:hover { border-color: var(--accent-color); }
     .search-bar input:focus { border-color: var(--accent-color); }
     .search-bar button { background: var(--accent-color); color: var(--bg-color); }
     .search-bar button:hover { filter: brightness(0.9); }
@@ -119,7 +119,9 @@
   </div>
 
   <script>
-    // ⚠️ URL CORREGIDA
+    // ============================================================
+    // LANDING PAGE COMPLETA - UADAVSTREAM
+    // ============================================================
     const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
     const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80';
     let allVideos = [];
@@ -246,14 +248,7 @@
       if (modo === 'ids' || modo === 'mixto') {
         if (config.videos_destacados_ids && config.videos_destacados_ids.length > 0) {
           for (const id of config.videos_destacados_ids) {
-            videosTemp.push({
-              id: id,
-              titulo: 'Destacado',
-              descripcion: 'Contenido especial',
-              categoria: 'Destacado',
-              duracion: 'HD',
-              thumbnail: obtenerCaratula(id)
-            });
+            videosTemp.push({ id, titulo: 'Destacado', descripcion: 'Contenido especial', categoria: 'Destacado', duracion: 'HD', thumbnail: obtenerCaratula(id) });
           }
         }
       }
