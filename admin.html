@@ -83,6 +83,26 @@
         </div>
       </details>
 
+      <!-- CONSOLA DE MONITOREO INTERNA (solo Nacional) -->
+      <details id="panelConsola" class="hidden">
+        <summary>📋 Consola de Monitoreo (Postulaciones, Cartelera, Booking, Reportes)</summary>
+        <div class="border border-uadav-border rounded-xl p-4 mt-3">
+          <button onclick="cargarConsolaMonitoreo()" class="btn btn-edit mb-4">🔄 Actualizar todo</button>
+
+          <p class="text-xs font-black text-blue-400 uppercase tracking-widest mb-2 mt-2">🔵 Postulaciones de Artistas Pendientes</p>
+          <div id="consolaPostulaciones" class="text-sm space-y-2 mb-6"></div>
+
+          <p class="text-xs font-black text-uadav-accent uppercase tracking-widest mb-2">🎭 Sugerencias de Cartelera Pendientes</p>
+          <div id="consolaSugerencias" class="text-sm space-y-2 mb-6"></div>
+
+          <p class="text-xs font-black text-emerald-400 uppercase tracking-widest mb-2">🟢 Solicitudes de Booking Corporativo</p>
+          <div id="consolaBooking" class="text-sm space-y-2 mb-6"></div>
+
+          <p class="text-xs font-black text-red-400 uppercase tracking-widest mb-2">🔴 Reportes de Enlaces Caídos</p>
+          <div id="consolaAlertas" class="text-sm space-y-2"></div>
+        </div>
+      </details>
+
       <!-- APARIENCIA -->
       <details open>
         <summary>🎨 Apariencia y Marca</summary>
@@ -273,6 +293,14 @@
             <div><label>Delegación / Provincia</label><select id="artProvincia"></select></div>
             <div class="md:col-span-2"><label>Videos Manuales (IDs)</label><textarea id="artVideos"></textarea></div>
           </div>
+          <div class="border-t border-uadav-border pt-4 mt-2 mb-4">
+            <p class="text-xs font-black text-uadav-accent uppercase tracking-widest mb-3">💼 Datos de Booking Corporativo</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div><label>Tarifa Mínima de Convenio ($)</label><input id="artTarifaMinima" placeholder="50000"></div>
+              <div class="md:col-span-2"><label>Calendario de Disponibilidad</label><input id="artDisponibilidad" placeholder="Ej: Lunes a Viernes, no festivos"></div>
+              <div class="md:col-span-3"><label>Rider Técnico</label><textarea id="artRiderTecnico" placeholder="Necesidades de sonido, luces, escenario..."></textarea></div>
+            </div>
+          </div>
           <button onclick="guardarArtista()" id="btnGuardarArtista" class="btn btn-save mb-4">Agregar Artista</button>
           <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn bg-slate-600 text-white mb-4 hidden">Cancelar</button>
           <div id="artistasList" class="text-sm"></div>
@@ -379,19 +407,21 @@
         badge.classList.remove('hidden');
         document.getElementById('panelDelegaciones').classList.remove('hidden');
         document.getElementById('panelModeracion').classList.remove('hidden');
+        document.getElementById('panelConsola').classList.remove('hidden');
       } else if (ADMIN_ROL === 'provincial') {
         badge.textContent = '📍 ' + ADMIN_NOMBRE;
         badge.className = 'inline-block mt-1 text-[11px] font-bold px-2 py-1 rounded-full bg-blue-600 text-white';
         badge.classList.remove('hidden');
         document.getElementById('panelDelegaciones').classList.add('hidden');
         document.getElementById('panelModeracion').classList.add('hidden');
+        document.getElementById('panelConsola').classList.add('hidden');
 
         // Bloquea las secciones que son exclusivas del Nacional
         ['marcaLogo'].forEach(() => {}); // noop de seguridad
         document.querySelectorAll('details').forEach(det => {
           const titulo = det.querySelector('summary')?.textContent || '';
           const permitido = titulo.includes('Artistas') || titulo.includes('Cartelera');
-          if (!permitido && det.id !== 'panelDelegaciones' && det.id !== 'panelModeracion') {
+          if (!permitido && det.id !== 'panelDelegaciones' && det.id !== 'panelModeracion' && det.id !== 'panelConsola') {
             det.style.display = 'none';
           }
         });
@@ -496,6 +526,7 @@
           renderArtistas();
           renderCartelera();
           renderDelegaciones();
+          if (ADMIN_ROL === 'nacional') cargarConsolaMonitoreo();
 
           isDataLoadedSuccessfully = true;
           mostrarStatus('aparienciaStatus', '✅ Datos cargados correctamente (' + (ADMIN_ROL === 'nacional' ? 'Nacional' : 'Delegación ' + ADMIN_PROVINCIA) + ')', 'success');
@@ -865,6 +896,9 @@
       document.getElementById('artLink').value = a.youtube_channel_id || '';
       document.getElementById('artContacto').value = a.contacto || '';
       document.getElementById('artVideos').value = (a.videos_manuales || []).map(v => v.url).join('\n');
+      document.getElementById('artTarifaMinima').value = a.tarifa_minima || '';
+      document.getElementById('artDisponibilidad').value = a.disponibilidad || '';
+      document.getElementById('artRiderTecnico').value = a.rider_tecnico || '';
       if (ADMIN_ROL === 'nacional') document.getElementById('artProvincia').value = a.provincia || '';
       document.getElementById('btnGuardarArtista').innerText = "Actualizar";
       document.getElementById('btnGuardarArtista').classList.add('bg-blue-500');
@@ -884,6 +918,9 @@
       document.getElementById('artLink').value = '';
       document.getElementById('artContacto').value = '';
       document.getElementById('artVideos').value = '';
+      document.getElementById('artTarifaMinima').value = '';
+      document.getElementById('artDisponibilidad').value = '';
+      document.getElementById('artRiderTecnico').value = '';
       document.getElementById('artTieneYT').value = 'true';
       if (ADMIN_ROL === 'nacional') document.getElementById('artProvincia').value = '';
     }
@@ -922,7 +959,10 @@
         youtube_channel_id: channelIdInput,
         videos_manuales: videos,
         contacto: document.getElementById('artContacto').value,
-        provincia: provinciaAsignada
+        provincia: provinciaAsignada,
+        tarifa_minima: document.getElementById('artTarifaMinima').value.trim(),
+        disponibilidad: document.getElementById('artDisponibilidad').value.trim(),
+        rider_tecnico: document.getElementById('artRiderTecnico').value.trim()
       };
       if (!dataArtista.nombre) { mostrarStatus('aparienciaStatus', 'Poné el nombre del artista', 'error'); return; }
       if (editandoId) {
@@ -1190,6 +1230,105 @@
       .then(r => r.json())
       .then(() => cargarChatModeracion())
       .catch(err => mostrarStatus('chatModeracionStatus', '❌ Error: ' + err.message, 'error'));
+    }
+
+    // ===== CONSOLA DE MONITOREO (postulaciones, sugerencias, booking, reportes) =====
+    function cargarConsolaMonitoreo() {
+      const headers = { 'Authorization': 'Bearer ' + ADMIN_KEY };
+      fetch(API_URL + 'postulaciones', { headers }).then(r => r.json()).then(renderConsolaPostulaciones).catch(() => {});
+      fetch(API_URL + 'cartelera/sugerencias', { headers }).then(r => r.json()).then(renderConsolaSugerencias).catch(() => {});
+      fetch(API_URL + 'contratacion', { headers }).then(r => r.json()).then(renderConsolaBooking).catch(() => {});
+      fetch(API_URL + 'alertas', { headers }).then(r => r.json()).then(renderConsolaAlertas).catch(() => {});
+    }
+
+    function renderConsolaPostulaciones(lista) {
+      const cont = document.getElementById('consolaPostulaciones');
+      const pendientes = (lista || []).filter(p => p.estado === 'pendiente_verificacion' || p.estado === 'verificado');
+      if (pendientes.length === 0) { cont.innerHTML = '<div class="text-slate-400 text-xs p-2">No hay postulaciones pendientes.</div>'; return; }
+      cont.innerHTML = pendientes.map(p => `<div class="item-box">
+        <div class="flex justify-between items-start flex-wrap gap-2">
+          <div>
+            <h4 class="font-bold">${p.nombre_artistico} ${p.verificado ? '<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300 ml-1">Verificado por YouTube</span>' : '<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 ml-1">Sin verificar</span>'}</h4>
+            <p class="text-xs text-slate-400">${p.rubro || ''} · ${p.provincia || 'sin provincia'} · ${p.email || ''} ${p.solicita_afiliacion ? '· Solicita afiliación digital' : ''}</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="moderarPostulacion('${p.id}', 'aprobada')" class="btn btn-save">Aprobar</button>
+            <button onclick="moderarPostulacion('${p.id}', 'rechazada')" class="btn btn-del">Rechazar</button>
+          </div>
+        </div>
+      </div>`).join('');
+    }
+
+    function moderarPostulacion(id, estado) {
+      fetch(API_URL + 'postulaciones', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+        body: JSON.stringify({ id, estado })
+      }).then(r => r.json()).then(() => cargarConsolaMonitoreo());
+    }
+
+    function renderConsolaSugerencias(lista) {
+      const cont = document.getElementById('consolaSugerencias');
+      const pendientes = (lista || []).filter(s => s.estado === 'pendiente');
+      if (pendientes.length === 0) { cont.innerHTML = '<div class="text-slate-400 text-xs p-2">No hay sugerencias pendientes.</div>'; return; }
+      cont.innerHTML = pendientes.map(s => `<div class="item-box">
+        <div class="flex justify-between items-start flex-wrap gap-2">
+          <div>
+            <h4 class="font-bold">${s.titulo} ${s.auditoria_ia?.aprobado === false ? '<span class="text-[10px] px-2 py-0.5 rounded-full bg-red-900 text-red-300 ml-1">⚠️ IA sugiere revisar</span>' : '<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300 ml-1">✅ IA aprobó</span>'}</h4>
+            <p class="text-xs text-slate-400">${s.lugar || ''} · ${s.provincia || 'sin provincia'} · desde $${s.precio || '0'}</p>
+            ${s.auditoria_ia?.motivo ? `<p class="text-[11px] text-slate-500 mt-1">🤖 ${s.auditoria_ia.motivo}</p>` : ''}
+          </div>
+          <div class="flex gap-2">
+            <button onclick="moderarSugerencia('${s.id}', 'aprobar')" class="btn btn-save">Aprobar</button>
+            <button onclick="moderarSugerencia('${s.id}', 'rechazar')" class="btn btn-del">Rechazar</button>
+          </div>
+        </div>
+      </div>`).join('');
+    }
+
+    function moderarSugerencia(id, accion) {
+      fetch(API_URL + 'cartelera/sugerencias', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+        body: JSON.stringify({ id, accion })
+      }).then(r => r.json()).then(() => { cargarConsolaMonitoreo(); if (accion === 'aprobar') { fetch(API_URL + 'cartelera_shows').then(r => r.json()).then(c => { carteleraData = c; renderCartelera(); }); } });
+    }
+
+    function renderConsolaBooking(lista) {
+      const cont = document.getElementById('consolaBooking');
+      if (!lista || lista.length === 0) { cont.innerHTML = '<div class="text-slate-400 text-xs p-2">No hay solicitudes de booking todavía.</div>'; return; }
+      cont.innerHTML = lista.slice().reverse().map(b => {
+        const estadoBadge = b.estado === 'pendiente_sena'
+          ? '<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-900 text-emerald-300">Pendiente de seña</span>'
+          : '<span class="text-[10px] px-2 py-0.5 rounded-full bg-red-900 text-red-300">Rechazada (bajo tarifa)</span>';
+        return `<div class="item-box">
+          <h4 class="font-bold">${b.razon_social} → ${b.artistaNombre} ${estadoBadge}</h4>
+          <p class="text-xs text-slate-400">${b.tipo_evento || ''} · ${b.provincia || ''} · ${b.fecha || ''} · Presupuesto $${b.presupuesto} ${b.sena_10pct ? `· Seña 10%: $${b.sena_10pct}` : ''}</p>
+        </div>`;
+      }).join('');
+    }
+
+    function renderConsolaAlertas(lista) {
+      const cont = document.getElementById('consolaAlertas');
+      const pendientes = (lista || []).filter(a => !a.resuelto);
+      if (pendientes.length === 0) { cont.innerHTML = '<div class="text-slate-400 text-xs p-2">No hay reportes de enlaces caídos pendientes. 🎉</div>'; return; }
+      cont.innerHTML = pendientes.slice().reverse().map(a => `<div class="item-box border-red-800 bg-red-950/30">
+        <div class="flex justify-between items-start flex-wrap gap-2">
+          <div>
+            <h4 class="font-bold">${a.titulo || a.streamId}</h4>
+            <p class="text-xs text-slate-400">${a.tipo} · ${new Date(a.fecha).toLocaleString('es-AR')}</p>
+          </div>
+          <button onclick="resolverAlerta('${a.id}')" class="btn btn-save">Marcar resuelto</button>
+        </div>
+      </div>`).join('');
+    }
+
+    function resolverAlerta(id) {
+      fetch(API_URL + 'alertas', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
+        body: JSON.stringify({ id, resuelto: true })
+      }).then(r => r.json()).then(() => cargarConsolaMonitoreo());
     }
 
     // ===== CONFIGURACIÓN =====
