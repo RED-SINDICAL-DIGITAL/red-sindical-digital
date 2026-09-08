@@ -1,50 +1,62 @@
-const CACHE_NAME = 'uadavstream-static-v4';
-const ASSETS_TO_CACHE = ['/', '/index.html', '/manifest.json'];
+// ============================================================
+// SERVICE WORKER - UADAV STREAM (Motor de App Nativa y Caché)
+// ============================================================
 
-self.addEventListener('install', e => {
-  self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+const CACHE_NAME = 'uadav-cache-v2.0'; // Versión 2.0 (Se actualiza sola cuando cambies cosas)
+
+// Archivos que se guardan en el celular para abrir al instante
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/manifest.json'
+];
+
+// 1. INSTALACIÓN: Guarda los archivos base en el celular
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('✅ Cache abierto: Instalando archivos base');
+        return cache.addAll(urlsToCache);
+      })
+      .catch(err => console.log('⚠️ Error cacheando:', err))
   );
+  self.skipWaiting(); // Fuerza la activación inmediata
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys => {
+// 2. ACTIVACIÓN: Borra cachés viejos para liberar espacio en el celular
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
       return Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('🗑️ Borrando caché vieja:', cacheName);
+            return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    })
   );
+  self.clients.claim(); // Toma control inmediato de todas las pestañas
 });
 
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  if (url.pathname.startsWith('/api/')) {
-    e.respondWith(fetch(e.request));
-    return;
+// 3. NAVEGACIÓN: Intercepta las peticiones para ahorrar datos
+self.addEventListener('fetch', event => {
+  // No cachear peticiones de la API (siempre deben ser frescas)
+  if (event.request.url.includes('/api/')) {
+    return; 
   }
-  e.respondWith(
-    caches.match(e.request).then(cachedResponse => {
-      if (cachedResponse) return cachedResponse;
-      return fetch(e.request).then(networkResponse => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        // Si está en caché, lo muestra al instante
+        if (response) {
+          return response;
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          if (!url.href.includes('youtube.com') && !url.href.includes('googlevideo.com')) {
-            cache.put(e.request, responseToCache);
-          }
-        });
-        return networkResponse;
-      }).catch(() => new Response('', { status: 404 }));
-    })
+        // Si no, lo baja de internet
+        return fetch(event.request);
+      })
   );
 });
