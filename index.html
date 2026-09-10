@@ -106,13 +106,16 @@
   </footer>
 
   <script>
+    // URL DIRECTO DEL WORKER
+    const API_BASE = 'https://uadav-api.uadavstream.workers.dev';
+
     // CARGA DE DATOS
     async function cargarDatos() {
       const endpoints = [
-        { id: 'carousel-senales', url: '/api/senales' },
-        { id: 'carousel-radios', url: '/api/radios' },
-        { id: 'carousel-artistas', url: '/api/artistas_uadav' },
-        { id: 'carousel-cartelera', url: '/api/cartelera_shows' }
+        { id: 'carousel-senales', url: `${API_BASE}/api/senales` },
+        { id: 'carousel-radios', url: `${API_BASE}/api/radios` },
+        { id: 'carousel-artistas', url: `${API_BASE}/api/artistas_uadav` },
+        { id: 'carousel-cartelera', url: `${API_BASE}/api/cartelera_shows` }
       ];
 
       for (const ep of endpoints) {
@@ -164,7 +167,7 @@
         document.getElementById('searchResults').innerHTML = '';
 
         try {
-          const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
+          const res = await fetch(`${API_BASE}/api/youtube/search?q=${encodeURIComponent(query)}`);
           const resultados = await res.json();
           document.getElementById('searchLoader').style.display = 'none';
           
@@ -212,7 +215,7 @@
     // INICIALIZAR
     document.addEventListener('DOMContentLoaded', () => {
       cargarDatos();
-      fetch('/api/visits', { method: 'POST' }).catch(() => {});
+      fetch(`${API_BASE}/api/visits`, { method: 'POST' }).catch(() => {});
     });
   </script>
 </body>
