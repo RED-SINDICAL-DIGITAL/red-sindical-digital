@@ -458,7 +458,7 @@
     </div>
   </header>
 
-  <!-- CONTENIDO PRINCIPAL -->
+  <!-- CONTENIDO PRINCIPAL - MANTENIENDO TU ESTRUCTURA ORIGINAL -->
   <main id="mainContent">
     <section class="hero">
       <div class="hero-content">
@@ -542,9 +542,10 @@
     <p style="margin-top: 0.5rem;"><i class="fab fa-whatsapp"></i> +54 341 3 602 783</p>
   </footer>
 
+  <!-- JAVASCRIPT - MANTENIENDO TU LÓGICA ORIGINAL -->
   <script>
     // ============================================================
-    // 1. CARGA DE DATOS DESDE KV
+    // 1. CARGA DE DATOS DESDE KV (TU CÓDIGO ORIGINAL MEJORADO)
     // ============================================================
     async function cargarDatos() {
       const secciones = [
@@ -577,10 +578,11 @@
       datos.forEach(item => {
         const card = document.createElement('div');
         card.className = 'card';
+        // MEJORA: Placeholder para imágenes rotas
         let imagen = item.foto_portada || item.flyer || item.thumbnail || item.logo || 'https://placehold.co/400x225/1f1f1f/ffffff?text=UADAV';
         let titulo = item.titulo || item.nombre || 'Sin título';
         let meta = item.descripcion || item.rubro || item.lugar || item.ubicacion || 'UADAVSTREAM';
-        let tag = tipo === 'senal' ? '🔴 EN VIVO' : (tipo === 'artista' ? '🎤 ARTISTA' : (tipo === 'radio' ? '📻 RADIO' : ' EVENTO'));
+        let tag = tipo === 'senal' ? '🔴 EN VIVO' : (tipo === 'artista' ? '🎤 ARTISTA' : (tipo === 'radio' ? '📻 RADIO' : '🎭 EVENTO'));
         let videoId = item.video_id || item.id;
         
         card.innerHTML = `
@@ -597,7 +599,7 @@
     }
 
     // ============================================================
-    // 2. BUSCADOR CON INVIDIOUS (CUOTA CERO)
+    // 2. BUSCADOR CON INVIDIOUS (TU CÓDIGO ORIGINAL)
     // ============================================================
     let searchTimeout;
     document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -649,7 +651,7 @@
     }
 
     // ============================================================
-    // 3. REPRODUCTOR Y CHAT EN VIVO
+    // 3. REPRODUCTOR Y CHAT EN VIVO (TU CÓDIGO ORIGINAL)
     // ============================================================
     let currentStreamId = null;
     let chatInterval = null;
@@ -717,7 +719,7 @@
     });
 
     // ============================================================
-    // 4. NEWSLETTER
+    // 4. NEWSLETTER (TU CÓDIGO ORIGINAL)
     // ============================================================
     document.getElementById('newsletterForm').addEventListener('submit', async (e) => {
       e.preventDefault();
