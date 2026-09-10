@@ -4,15 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0a0a0a">
-  <meta name="description" content="UADAVSTREAM: Plataforma sindical de teatro, circo, música y radio en vivo.">
+  <meta name="description" content="UADAVSTREAM: Plataforma sindical de teatro, circo, música y radio en vivo. Sin registros, 100% gratuito.">
   <title>UADAVSTREAM | Entretenimiento Global</title>
-  
   <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/png" href="https://placehold.co/192x192/e50914/ffffff?text=UADAV">
+  <link rel="apple-touch-icon" href="https://placehold.co/192x192/e50914/ffffff?text=UADAV">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
   <style>
     :root {
       --bg-primary: #0a0a0a;
@@ -28,11 +28,11 @@
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; }
-    body { 
-      font-family: 'Inter', sans-serif; 
-      background-color: var(--bg-primary); 
-      color: var(--text-primary); 
-      line-height: 1.6; 
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
@@ -443,7 +443,6 @@
   </style>
 </head>
 <body>
-
   <!-- HEADER -->
   <header class="header" id="header">
     <div class="logo" onclick="resetView()">UADAV<span>STREAM</span></div>
@@ -458,11 +457,11 @@
     </div>
   </header>
 
-  <!-- CONTENIDO PRINCIPAL - MANTENIENDO TU ESTRUCTURA ORIGINAL -->
+  <!-- CONTENIDO PRINCIPAL -->
   <main id="mainContent">
     <section class="hero">
       <div class="hero-content">
-        <span class="hero-badge">🔴 Plataforma Oficial del Sindicato</span>
+        <span class="hero-badge"> Plataforma Oficial del Sindicato</span>
         <h1>El Arte Escénico al Alcance de Todos</h1>
         <p>Teatro, circo, música y radio en vivo. Sin registros, sin pagos. 100% gratuito y abierto.</p>
         <div class="hero-buttons">
@@ -493,7 +492,7 @@
     </section>
   </main>
 
-  <!-- VISTA DE BÚSQUEDA (Oculta por defecto) -->
+  <!-- VISTA DE BÚSQUEDA -->
   <main id="searchView">
     <div class="section-header">
       <h2 class="section-title"><i class="fas fa-search"></i> Resultados</h2>
@@ -541,11 +540,9 @@
     <p>© 2025 UADAVSTREAM. Desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.</p>
     <p style="margin-top: 0.5rem;"><i class="fab fa-whatsapp"></i> +54 341 3 602 783</p>
   </footer>
-
-  <!-- JAVASCRIPT - MANTENIENDO TU LÓGICA ORIGINAL -->
   <script>
     // ============================================================
-    // 1. CARGA DE DATOS DESDE KV (TU CÓDIGO ORIGINAL MEJORADO)
+    // 1. CARGA DE DATOS DESDE KV
     // ============================================================
     async function cargarDatos() {
       const secciones = [
@@ -578,7 +575,6 @@
       datos.forEach(item => {
         const card = document.createElement('div');
         card.className = 'card';
-        // MEJORA: Placeholder para imágenes rotas
         let imagen = item.foto_portada || item.flyer || item.thumbnail || item.logo || 'https://placehold.co/400x225/1f1f1f/ffffff?text=UADAV';
         let titulo = item.titulo || item.nombre || 'Sin título';
         let meta = item.descripcion || item.rubro || item.lugar || item.ubicacion || 'UADAVSTREAM';
@@ -599,7 +595,7 @@
     }
 
     // ============================================================
-    // 2. BUSCADOR CON INVIDIOUS (TU CÓDIGO ORIGINAL)
+    // 2. BUSCADOR CON INVIDIOUS (CUOTA CERO)
     // ============================================================
     let searchTimeout;
     document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -651,7 +647,7 @@
     }
 
     // ============================================================
-    // 3. REPRODUCTOR Y CHAT EN VIVO (TU CÓDIGO ORIGINAL)
+    // 3. REPRODUCTOR Y CHAT EN VIVO
     // ============================================================
     let currentStreamId = null;
     let chatInterval = null;
@@ -719,7 +715,7 @@
     });
 
     // ============================================================
-    // 4. NEWSLETTER (TU CÓDIGO ORIGINAL)
+    // 4. NEWSLETTER
     // ============================================================
     document.getElementById('newsletterForm').addEventListener('submit', async (e) => {
       e.preventDefault();
