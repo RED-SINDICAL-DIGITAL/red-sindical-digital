@@ -2,791 +2,142 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0a0a0a">
-  <meta name="description" content="UADAVSTREAM: Plataforma sindical de teatro, circo, música y radio en vivo. Sin registros, 100% gratuito.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UADAVSTREAM | Entretenimiento Global</title>
   <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/png" href="https://uadavstream.com.ar/icon-192.png">
-  <link rel="apple-touch-icon" href="https://uadavstream.com.ar/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --bg-primary: #0a0a0a;
-      --bg-secondary: #141414;
-      --bg-card: #1f1f1f;
-      --accent: #e50914;
-      --accent-hover: #f40612;
-      --gold: #d4af37;
-      --text-primary: #ffffff;
-      --text-secondary: #b3b3b3;
-      --radius: 8px;
-      --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
+    :root { --bg-primary: #0a0a0a; --bg-secondary: #141414; --accent: #e50914; --text-primary: #fff; --text-secondary: #b3b3b3; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      line-height: 1.6;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-    a { text-decoration: none; color: inherit; }
-    button { cursor: pointer; border: none; font-family: inherit; }
-    img { max-width: 100%; display: block; }
-
-    /* ========== HEADER ========== */
-    .header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 1000;
-      padding: 1rem 4%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
-      transition: var(--transition);
-    }
-    .header.scrolled {
-      background: rgba(10, 10, 10, 0.95);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    }
-    .logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.6rem;
-      font-weight: 900;
-      color: var(--accent);
-      letter-spacing: -1px;
-      cursor: pointer;
-    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text-primary); }
+    .header { position: fixed; top: 0; left: 0; right: 0; padding: 1rem 4%; display: flex; align-items: center; gap: 1rem; background: rgba(0,0,0,0.9); z-index: 1000; }
+    .logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 900; color: var(--accent); }
     .logo span { color: var(--text-primary); }
-
-    .search-container {
-      position: relative;
-      flex: 1;
-      max-width: 500px;
-      margin: 0 1.5rem;
-    }
-    .search-input {
-      width: 100%;
-      padding: 0.7rem 1rem 0.7rem 2.8rem;
-      border-radius: 30px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(0,0,0,0.6);
-      color: white;
-      font-size: 0.95rem;
-      transition: var(--transition);
-    }
-    .search-input:focus {
-      outline: none;
-      border-color: var(--accent);
-      background: rgba(0,0,0,0.9);
-    }
-    .search-icon {
-      position: absolute;
-      left: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-secondary);
-    }
-
-    .nav-actions { display: flex; gap: 0.8rem; align-items: center; }
-    .btn-install, .btn-country {
-      background: rgba(255,255,255,0.1);
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: var(--transition);
-    }
-    .btn-install:hover, .btn-country:hover { background: rgba(255,255,255,0.2); }
-
-    /* ========== HERO ========== */
-    .hero {
-      position: relative;
-      height: 85vh;
-      min-height: 600px;
-      display: flex;
-      align-items: center;
-      padding: 0 4%;
-      background: url('https://images.unsplash.com/photo-1503095392237-fc7852ad0458?w=1920&q=80') center/cover no-repeat;
-    }
-    .hero::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to right, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.6) 50%, rgba(10,10,10,0.3) 100%),
-                  linear-gradient(to top, var(--bg-primary) 0%, transparent 40%);
-    }
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 650px;
-      animation: fadeInUp 1s ease-out;
-    }
-    .hero-badge {
-      display: inline-block;
-      background: var(--accent);
-      color: white;
-      padding: 0.4rem 1rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 1rem;
-    }
-    .hero h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2.5rem, 5vw, 4rem);
-      line-height: 1.1;
-      margin-bottom: 1rem;
-      text-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    }
-    .hero p {
-      font-size: 1.15rem;
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-      max-width: 550px;
-    }
-    .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-      padding: 0.9rem 2rem;
-      border-radius: var(--radius);
-      font-weight: 700;
-      font-size: 1rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: var(--transition);
-    }
-    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-2px); }
-    .btn-secondary {
-      background: rgba(255,255,255,0.15);
-      color: white;
-      padding: 0.9rem 2rem;
-      border-radius: var(--radius);
-      font-weight: 600;
-      font-size: 1rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      backdrop-filter: blur(5px);
-      transition: var(--transition);
-    }
-    .btn-secondary:hover { background: rgba(255,255,255,0.25); }
-
-    /* ========== SECCIONES ========== */
-    .section { padding: 2.5rem 0; position: relative; }
-    .section-header {
-      padding: 0 4%;
-      margin-bottom: 1.2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-    .section-title i { color: var(--accent); }
-
-    .carousel {
-      display: flex;
-      gap: 1rem;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      padding: 1rem 4% 2rem 4%;
-      scrollbar-width: none;
-    }
-    .carousel::-webkit-scrollbar { display: none; }
-
-    .card {
-      flex: 0 0 auto;
-      width: 280px;
-      scroll-snap-align: start;
-      background: var(--bg-card);
-      border-radius: var(--radius);
-      overflow: hidden;
-      transition: var(--transition);
-      position: relative;
-      cursor: pointer;
-    }
-    .card:hover {
-      transform: scale(1.05);
-      z-index: 10;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    .card-image {
-      width: 100%;
-      aspect-ratio: 16/9;
-      object-fit: cover;
-    }
+    .search-input { flex: 1; max-width: 500px; padding: 0.7rem 1rem; border-radius: 30px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.6); color: white; }
+    .hero { margin-top: 80px; padding: 4rem 4%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1503095392237-fc7852ad0458?w=1920&q=80') center/cover; min-height: 60vh; display: flex; align-items: center; }
+    .hero h1 { font-family: 'Playfair Display', serif; font-size: 3rem; margin-bottom: 1rem; }
+    .section { padding: 2rem 4%; }
+    .section h2 { font-size: 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .section h2 i { color: var(--accent); }
+    .carousel { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; }
+    .card { min-width: 280px; background: var(--bg-secondary); border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.3s; }
+    .card:hover { transform: scale(1.05); }
+    .card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
     .card-content { padding: 1rem; }
-    .card-tag {
-      font-size: 0.7rem;
-      color: var(--gold);
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 0.3rem;
-    }
-    .card-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 0.3rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .card-meta {
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-    }
-
-    /* ========== MODO TIKTOK (Mobile) ========== */
+    .card h3 { font-size: 1rem; margin-bottom: 0.3rem; }
+    .card p { font-size: 0.85rem; color: var(--text-secondary); }
+    .btn { padding: 0.8rem 1.5rem; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: var(--accent); color: white; }
+    .loader { text-align: center; padding: 2rem; color: var(--text-secondary); }
     @media (max-width: 768px) {
-      .hide-mobile { display: none !important; }
-      .search-container { display: none; }
-      .hero { height: 70vh; min-height: 500px; }
+      .carousel { flex-direction: column; }
+      .card { width: 100%; height: 60vh; }
+      .card img { height: 100%; }
       .hero h1 { font-size: 2rem; }
-      .carousel {
-        flex-direction: column;
-        padding: 1rem 4%;
-        scroll-snap-type: y mandatory;
-        gap: 1.5rem;
-      }
-      .card {
-        width: 100%;
-        height: 70vh;
-        scroll-snap-align: center;
-        border-radius: 16px;
-      }
-      .card-image { width: 100%; height: 100%; }
-      .card-content {
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-      }
-      .card-title { font-size: 1.3rem; white-space: normal; }
-      .card .btn-primary {
-        width: 100%;
-        justify-content: center;
-        padding: 0.8rem;
-        margin-top: 0.8rem;
-      }
-    }
-
-    /* ========== BÚSQUEDA ========== */
-    #searchView { display: none; padding-top: 90px; min-height: 100vh; }
-    .search-results-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1rem;
-      padding: 1rem 4%;
-    }
-    @media (max-width: 768px) { .search-results-grid { grid-template-columns: 1fr; } }
-    .search-card {
-      aspect-ratio: 16/9;
-      border-radius: var(--radius);
-      overflow: hidden;
-      position: relative;
-      cursor: pointer;
-      transition: var(--transition);
-      background: var(--bg-card);
-    }
-    .search-card:hover { transform: scale(1.03); }
-    .search-card img { width: 100%; height: 100%; object-fit: cover; }
-    .search-card-info {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      padding: 1rem;
-      background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
-    }
-
-    /* ========== MODAL REPRODUCTOR ========== */
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.95);
-      z-index: 2000;
-      overflow-y: auto;
-    }
-    .modal.active { display: flex; flex-direction: column; }
-    .modal-header {
-      padding: 1rem 4%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .modal-close {
-      background: none;
-      color: white;
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-    .player-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 1rem 4%;
-      gap: 1rem;
-    }
-    @media (min-width: 768px) {
-      .player-container { flex-direction: row; }
-      .video-wrapper { flex: 2; aspect-ratio: 16/9; }
-      .chat-wrapper { flex: 1; background: var(--bg-secondary); border-radius: var(--radius); display: flex; flex-direction: column; height: 500px; }
-    }
-    .video-wrapper {
-      width: 100%;
-      background: black;
-      border-radius: var(--radius);
-      overflow: hidden;
-    }
-    .video-wrapper iframe { width: 100%; height: 100%; border: none; }
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      font-size: 0.9rem;
-    }
-    .chat-input-area {
-      padding: 1rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      display: flex;
-      gap: 0.5rem;
-    }
-    .chat-input {
-      flex: 1;
-      padding: 0.7rem;
-      border-radius: 4px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(0,0,0,0.5);
-      color: white;
-    }
-
-    /* ========== NEWSLETTER & FOOTER ========== */
-    .newsletter {
-      background: var(--bg-secondary);
-      padding: 4rem 4%;
-      text-align: center;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    .newsletter h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
-    .newsletter p { color: var(--text-secondary); margin-bottom: 1.5rem; }
-    .newsletter-form {
-      display: flex;
-      gap: 0.5rem;
-      max-width: 500px;
-      margin: 0 auto;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .newsletter-form input {
-      flex: 1;
-      padding: 0.9rem 1rem;
-      border-radius: var(--radius);
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.05);
-      color: white;
-      min-width: 250px;
-    }
-    .newsletter-form input:focus { outline: none; border-color: var(--accent); }
-    .footer {
-      background: #000;
-      padding: 3rem 4%;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    .footer-content {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 2rem;
-      margin-bottom: 2rem;
-    }
-    .footer h3 { color: white; margin-bottom: 1rem; font-size: 1rem; }
-    .footer ul { list-style: none; }
-    .footer li { margin-bottom: 0.5rem; }
-    .footer a:hover { color: var(--accent); }
-    .footer-bottom {
-      text-align: center;
-      padding-top: 2rem;
-      border-top: 1px solid rgba(255,255,255,0.05);
-      font-size: 0.8rem;
-    }
-
-    /* ========== UTILIDADES ========== */
-    .loader {
-      text-align: center;
-      padding: 2rem;
-      color: var(--text-secondary);
-    }
-    .loader i {
-      animation: spin 1s linear infinite;
-      color: var(--accent);
-    }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <!-- HEADER -->
-  <header class="header" id="header">
-    <a href="/" class="logo" onclick="resetView()">UADAV<span>STREAM</span></a>
-    <div class="search-container">
-      <i class="fas fa-search search-icon"></i>
-      <input type="text" class="search-input" id="searchInput" placeholder="Buscar artistas, obras, señales...">
-    </div>
-    <div class="nav-actions">
-      <button class="btn-install" id="installBtn" style="display: none;">
-        <i class="fas fa-download"></i> <span class="hide-mobile">Instalar App</span>
-      </button>
-    </div>
+  <header class="header">
+    <div class="logo">UADAV<span>STREAM</span></div>
+    <input type="text" class="search-input" id="searchInput" placeholder="Buscar artistas, obras, señales...">
   </header>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <main id="mainContent">
+  <main>
     <section class="hero">
-      <div class="hero-content">
-        <span class="hero-badge">🔴 Plataforma Oficial del Sindicato</span>
+      <div>
         <h1>El Arte Escénico al Alcance de Todos</h1>
-        <p>Teatro, circo, música y radio en vivo. Sin registros, sin pagos. 100% gratuito y abierto.</p>
-        <div class="hero-buttons">
-          <button class="btn-primary" onclick="scrollToSection('senales')"><i class="fas fa-play"></i> Ver Señales</button>
-          <button class="btn-secondary" onclick="scrollToSection('cartelera')"><i class="fas fa-ticket-alt"></i> Cartelera</button>
-        </div>
+        <p>Teatro, circo, música y radio en vivo. 100% gratuito.</p>
       </div>
     </section>
 
     <section class="section" id="senales">
-      <div class="section-header"><h2 class="section-title"><i class="fas fa-broadcast-tower"></i> Señales Oficiales</h2></div>
-      <div class="carousel" id="carousel-senales"><div class="loader"><i class="fas fa-circle-notch fa-2x"></i></div></div>
+      <h2><i class="fas fa-broadcast-tower"></i> Señales Oficiales</h2>
+      <div class="carousel" id="carousel-senales"><div class="loader">Cargando...</div></div>
     </section>
 
     <section class="section" id="radios">
-      <div class="section-header"><h2 class="section-title"><i class="fas fa-radio"></i> Radios Difusoras</h2></div>
-      <div class="carousel" id="carousel-radios"><div class="loader"><i class="fas fa-circle-notch fa-2x"></i></div></div>
+      <h2><i class="fas fa-radio"></i> Radios Difusoras</h2>
+      <div class="carousel" id="carousel-radios"><div class="loader">Cargando...</div></div>
     </section>
 
     <section class="section" id="artistas">
-      <div class="section-header"><h2 class="section-title"><i class="fas fa-microphone-alt"></i> Artistas Destacados</h2></div>
-      <div class="carousel" id="carousel-artistas"><div class="loader"><i class="fas fa-circle-notch fa-2x"></i></div></div>
+      <h2><i class="fas fa-microphone-alt"></i> Artistas Destacados</h2>
+      <div class="carousel" id="carousel-artistas"><div class="loader">Cargando...</div></div>
     </section>
 
     <section class="section" id="cartelera">
-      <div class="section-header"><h2 class="section-title"><i class="fas fa-theater-masks"></i> Cartelera de Eventos</h2></div>
-      <div class="carousel" id="carousel-cartelera"><div class="loader"><i class="fas fa-circle-notch fa-2x"></i></div></div>
+      <h2><i class="fas fa-theater-masks"></i> Cartelera de Eventos</h2>
+      <div class="carousel" id="carousel-cartelera"><div class="loader">Cargando...</div></div>
     </section>
   </main>
 
-  <!-- VISTA DE BÚSQUEDA (Oculta por defecto) -->
-  <main id="searchView">
-    <div class="section-header">
-      <h2 class="section-title"><i class="fas fa-search"></i> Resultados</h2>
-      <button class="btn-secondary" style="padding: 0.5rem 1rem;" onclick="resetView()">Volver</button>
-    </div>
-    <div id="searchLoader" class="loader" style="display: none;"><i class="fas fa-circle-notch fa-2x"></i><p>Buscando con Cuota Cero...</p></div>
-    <div class="search-results-grid" id="searchResults"></div>
-  </main>
-
-  <!-- MODAL REPRODUCTOR + CHAT -->
-  <div class="modal" id="playerModal">
-    <div class="modal-header">
-      <h3 id="modalTitle">Reproduciendo</h3>
-      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="player-container">
-      <div class="video-wrapper">
-        <iframe id="videoFrame" src="" allowfullscreen></iframe>
-      </div>
-      <div class="chat-wrapper">
-        <div style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600;"><i class="fas fa-comments"></i> Chat en Vivo</div>
-        <div id="chatMessages" class="chat-messages">
-          <p style="text-align: center; color: var(--text-secondary); margin-top: 2rem;">Cargando chat...</p>
-        </div>
-        <div class="chat-input-area">
-          <input type="text" id="chatInput" class="chat-input" placeholder="Escribí un mensaje...">
-          <button class="btn-primary" style="padding: 0.6rem 1rem;" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- NEWSLETTER -->
-  <section class="newsletter">
-    <h2>No te pierdas ningún estreno</h2>
-    <p>Déjanos tu correo y te avisamos cuando haya nuevos espectáculos.</p>
-    <form class="newsletter-form" id="newsletterForm">
-      <input type="email" placeholder="tu@email.com" required id="emailInput">
-      <button type="submit" class="btn-primary">Suscribirme</button>
-    </form>
-    <p id="newsletterMsg" style="margin-top: 1rem; font-size: 0.9rem; display: none;"></p>
-  </section>
-
-  <footer class="footer">
-    <p>© 2025 UADAVSTREAM. Desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.</p>
-    <p style="margin-top: 0.5rem;"><i class="fab fa-whatsapp"></i> +54 341 3 602 783</p>
-  </footer>
   <script>
-    // ============================================================
-    // 1. CARGA DE DATOS DESDE KV (CORREGIDO - SIN TILDES)
-    // ============================================================
+    // CARGA DE DATOS
     async function cargarDatos() {
-      const secciones = [
-        { id: 'carousel-senales', endpoint: '/api/senales', tipo: 'senal' },
-        { id: 'carousel-radios', endpoint: '/api/radios', tipo: 'radio' },
-        { id: 'carousel-artistas', endpoint: '/api/artistas_uadav', tipo: 'artista' },
-        { id: 'carousel-cartelera', endpoint: '/api/cartelera_shows', tipo: 'show' }
+      const endpoints = [
+        { id: 'carousel-senales', url: '/api/senales' },
+        { id: 'carousel-radios', url: '/api/radios' },
+        { id: 'carousel-artistas', url: '/api/artistas_uadav' },
+        { id: 'carousel-cartelera', url: '/api/cartelera_shows' }
       ];
 
-      for (const sec of secciones) {
+      for (const ep of endpoints) {
         try {
-          const res = await fetch(sec.endpoint);
-          if (!res.ok) throw new Error('Error HTTP');
+          const res = await fetch(ep.url);
           const datos = await res.json();
-          renderizarCarousel(sec.id, datos, sec.tipo);
+          const container = document.getElementById(ep.id);
+          
+          if (!datos || datos.length === 0) {
+            container.innerHTML = '<p style="padding: 2rem; color: #666;">Próximamente...</p>';
+            continue;
+          }
+
+          container.innerHTML = '';
+          datos.slice(0, 10).forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            const img = item.foto_portada || item.flyer || item.thumbnail || 'https://via.placeholder.com/400x225/1f1f1f/ffffff?text=UADAV';
+            const titulo = item.titulo || item.nombre || 'Sin título';
+            const desc = item.descripcion || item.rubro || item.lugar || '';
+            
+            card.innerHTML = `
+              <img src="${img}" onerror="this.src='https://via.placeholder.com/400x225/1f1f1f/ffffff?text=Error'" alt="${titulo}">
+              <div class="card-content">
+                <h3>${titulo}</h3>
+                <p>${desc}</p>
+              </div>
+            `;
+            container.appendChild(card);
+          });
         } catch (e) {
-          console.error(`Error cargando ${sec.endpoint}:`, e);
-          document.getElementById(sec.id).innerHTML = '<p style="padding: 1rem; color: var(--text-secondary);">Próximamente...</p>';
+          console.error(`Error cargando ${ep.url}:`, e);
+          document.getElementById(ep.id).innerHTML = '<p style="padding: 2rem; color: #f87171;">Error al cargar</p>';
         }
       }
     }
 
-    function renderizarCarousel(containerId, datos, tipo) {
-      const container = document.getElementById(containerId);
-      if (!datos || datos.length === 0) {
-        container.innerHTML = '<p style="padding: 1rem; color: var(--text-secondary);">Próximamente...</p>';
-        return;
-      }
-      container.innerHTML = '';
-      datos.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        let imagen = item.foto_portada || item.flyer || item.thumbnail || item.logo || 'https://images.unsplash.com/photo-1503095392237-fc7852ad0458?w=800&q=80';
-        let titulo = item.titulo || item.nombre || 'Sin título';
-        let meta = item.descripcion || item.rubro || item.lugar || item.ubicacion || 'UADAVSTREAM';
-        let tag = tipo === 'senal' ? ' EN VIVO' : (tipo === 'artista' ? '🎤 ARTISTA' : (tipo === 'radio' ? '📻 RADIO' : '🎭 EVENTO'));
-        let videoId = item.video_id || item.id;
-        
-        card.innerHTML = `
-          <img src="${imagen}" alt="${titulo}" class="card-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1503095392237-fc7852ad0458?w=800&q=80'">
-          <div class="card-content">
-            <div class="card-tag">${tag}</div>
-            <h3 class="card-title">${titulo}</h3>
-            <div class="card-meta"><span>${meta}</span></div>
-            ${tipo !== 'artista' ? `<button class="btn-primary" style="margin-top: 0.8rem; font-size: 0.85rem; padding: 0.5rem; width: 100%; justify-content: center;" onclick="abrirReproductor('${videoId}', '${titulo.replace(/'/g, "\\'")}')"><i class="fas fa-play"></i> Ver</button>` : ''}
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    // ============================================================
-    // 2. BUSCADOR CON INVIDIOUS (CUOTA CERO)
-    // ============================================================
+    // BUSCADOR
     let searchTimeout;
     document.getElementById('searchInput').addEventListener('input', (e) => {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(async () => {
         const query = e.target.value.trim();
-        if (query.length < 3) { resetView(); return; }
+        if (query.length < 3) return;
         
-        document.getElementById('mainContent').style.display = 'none';
-        document.getElementById('searchView').style.display = 'block';
-        document.getElementById('searchLoader').style.display = 'block';
-        document.getElementById('searchResults').innerHTML = '';
-
         try {
           const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
           const resultados = await res.json();
-          document.getElementById('searchLoader').style.display = 'none';
-          
-          if (resultados.length === 0) {
-            document.getElementById('searchResults').innerHTML = '<p style="padding: 2rem; text-align: center; color: var(--text-secondary);">No se encontraron resultados.</p>';
-            return;
-          }
-
-          resultados.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'search-card';
-            div.innerHTML = `
-              <img src="${item.thumbnail}" alt="${item.titulo}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1503095392237-fc7852ad0458?w=800&q=80'">
-              <div class="search-card-info">
-                <div class="card-tag">${item.tipo === 'short' ? 'SHORT' : 'VIDEO'}</div>
-                <h4 style="font-size: 0.9rem; margin-bottom: 0.2rem;">${item.titulo}</h4>
-                <p style="font-size: 0.75rem; color: var(--text-secondary);">${item.categoria} • ${item.duracion}</p>
-              </div>
-            `;
-            div.onclick = () => abrirReproductor(item.id, item.titulo);
-            document.getElementById('searchResults').appendChild(div);
-          });
-        } catch (err) {
-          document.getElementById('searchLoader').style.display = 'none';
-          document.getElementById('searchResults').innerHTML = '<p style="padding: 2rem; text-align: center; color: #f87171;">Error al buscar. Verificá tu conexión.</p>';
+          console.log('Resultados:', resultados);
+        } catch (e) {
+          console.error('Error en búsqueda:', e);
         }
       }, 600);
     });
 
-    function resetView() {
-      document.getElementById('mainContent').style.display = 'block';
-      document.getElementById('searchView').style.display = 'none';
-      document.getElementById('searchInput').value = '';
-    }
-
-    // ============================================================
-    // 3. REPRODUCTOR Y CHAT EN VIVO
-    // ============================================================
-    let currentStreamId = null;
-    let chatInterval = null;
-
-    function abrirReproductor(videoId, titulo) {
-      if (!videoId) { alert('Este contenido no tiene video asociado aún.'); return; }
-      currentStreamId = videoId;
-      document.getElementById('modalTitle').textContent = titulo;
-      document.getElementById('videoFrame').src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-      document.getElementById('playerModal').classList.add('active');
-      cargarChat(videoId);
-    }
-
-    function closeModal() {
-      document.getElementById('playerModal').classList.remove('active');
-      document.getElementById('videoFrame').src = '';
-      currentStreamId = null;
-      if (chatInterval) clearInterval(chatInterval);
-    }
-
-    async function cargarChat(streamId) {
-      const chatContainer = document.getElementById('chatMessages');
-      try {
-        const res = await fetch(`/api/chat?streamId=${streamId}`);
-        renderizarChat(await res.json());
-        chatInterval = setInterval(async () => {
-          if (!currentStreamId) return;
-          const res = await fetch(`/api/chat?streamId=${currentStreamId}`);
-          renderizarChat(await res.json());
-        }, 5000);
-      } catch (e) { chatContainer.innerHTML = '<p style="text-align:center; color: #f87171;">Error al cargar chat.</p>'; }
-    }
-
-    function renderizarChat(mensajes) {
-      const chatContainer = document.getElementById('chatMessages');
-      chatContainer.innerHTML = '';
-      mensajes.forEach(msg => {
-        if (msg.oculto) return;
-        const div = document.createElement('div');
-        div.style.marginBottom = '0.6rem';
-        div.innerHTML = `<strong style="color: var(--gold);">${msg.autor}:</strong> <span style="color: white;">${msg.mensaje}</span>`;
-        chatContainer.appendChild(div);
-      });
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    async function sendChatMessage() {
-      const input = document.getElementById('chatInput');
-      const mensaje = input.value.trim();
-      if (!mensaje || !currentStreamId) return;
-      try {
-        await fetch('/api/chat/mensaje', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ streamId: currentStreamId, autor: 'Espectador', mensaje })
-        });
-        input.value = '';
-        const res = await fetch(`/api/chat?streamId=${currentStreamId}`);
-        renderizarChat(await res.json());
-      } catch (e) { alert('Error al enviar'); }
-    }
-
-    // Enter para enviar chat
-    document.getElementById('chatInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendChatMessage();
-    });
-
-    // ============================================================
-    // 4. NEWSLETTER
-    // ============================================================
-    document.getElementById('newsletterForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('emailInput').value;
-      const msg = document.getElementById('newsletterMsg');
-      try {
-        const res = await fetch('/api/suscriptores', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        if (!res.ok) throw new Error('Error del servidor');
-        msg.textContent = '¡Gracias! Te avisaremos de los nuevos estrenos.';
-        msg.style.color = '#4ade80';
-        msg.style.display = 'block';
-        document.getElementById('emailInput').value = '';
-      } catch (err) {
-        msg.textContent = err.message;
-        msg.style.color = '#f87171';
-        msg.style.display = 'block';
-      }
-    });
-
-    // ============================================================
-    // 5. PWA INSTALL PROMPT
-    // ============================================================
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('installBtn').style.display = 'flex';
-    });
-    document.getElementById('installBtn').addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        document.getElementById('installBtn').style.display = 'none';
-        deferredPrompt = null;
-      }
-    });
-
-    // ============================================================
-    // 6. HEADER SCROLL EFFECT
-    // ============================================================
-    window.addEventListener('scroll', () => {
-      document.getElementById('header').classList.toggle('scrolled', window.scrollY > 50);
-    });
-
-    function scrollToSection(id) {
-      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // ============================================================
-    // 7. INICIALIZACIÓN
-    // ============================================================
+    // INICIAR
     document.addEventListener('DOMContentLoaded', () => {
       cargarDatos();
       fetch('/api/visits', { method: 'POST' }).catch(() => {});
