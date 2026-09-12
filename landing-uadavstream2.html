@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>UADAVSTREAM — Arte, entretenimiento y artistas</title>
+  <meta name="description" content="UADAVSTREAM: descubrí artistas, videos, espectáculos, transmisiones y cartelera de variedades.">
+  <meta name="theme-color" content="#070707">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="UADAVSTREAM — Arte, entretenimiento y artistas">
+  <meta property="og:description" content="Descubrí artistas, videos, espectáculos, transmisiones y cartelera.">
+  <meta property="og:image" content="https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root{--bg:#070707;--surface:#111114;--surface2:#17171b;--accent:#00e5ff;--text:#fff;--muted:#a4a4ad;--line:rgba(255,255,255,.09);--hero-image:none}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--bg)}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Outfit,system-ui,sans-serif;overflow-x:hidden}
+    button,input{font:inherit}.hidden{display:none!important}
+    a{color:inherit;text-decoration:none}
+
+    /* NAV */
+    .nav{position:fixed;z-index:100;top:0;left:0;right:0;height:72px;display:flex;align-items:center;padding:0 clamp(16px,4vw,56px);gap:28px;background:linear-gradient(180deg,rgba(0,0,0,.92),rgba(0,0,0,.45),transparent);transition:.25s}
+    .nav.scrolled{background:rgba(7,7,7,.96);backdrop-filter:blur(14px)}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px;letter-spacing:-.7px;white-space:nowrap}
+    .brand-mark{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:var(--accent);color:#000;box-shadow:0 0 24px rgba(0,229,255,.22)}
+    .nav-links{display:flex;gap:22px;align-items:center;font-size:14px;color:#ddd}.nav-links a:hover{color:var(--accent)}
+    .nav-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.nav-icon{width:42px;height:42px;border:0;background:transparent;color:#fff;border-radius:50%;cursor:pointer}.nav-icon:hover{background:#222}
+    .nav-search{display:flex;align-items:center;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.16);border-radius:24px;padding:0 13px;width:220px}.nav-search input{width:100%;border:0;outline:0;background:transparent;color:#fff;padding:9px 8px}.nav-search button{border:0;background:transparent;color:#fff;cursor:pointer}
+
+    /* HERO */
+    .hero{min-height:78vh;position:relative;display:flex;align-items:flex-end;padding:120px clamp(20px,5vw,70px) 70px;background-image:linear-gradient(90deg,rgba(0,0,0,.94) 0%,rgba(0,0,0,.66) 38%,rgba(0,0,0,.18) 75%,rgba(0,0,0,.55)),linear-gradient(0deg,var(--bg) 0%,transparent 30%),var(--hero-image);background-size:cover;background-position:center;isolation:isolate}
+    .hero::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 75% 45%,rgba(0,229,255,.08),transparent 32%);pointer-events:none}
+    .hero-content{max-width:720px;position:relative;z-index:2}.eyebrow{display:inline-flex;gap:8px;align-items:center;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:2px;font-size:11px;margin-bottom:15px}.dot{width:7px;height:7px;border-radius:50%;background:#ff3b30;box-shadow:0 0 12px #ff3b30}
+    .hero h1{font-size:clamp(42px,7vw,82px);line-height:.94;letter-spacing:-3px;margin:0 0 22px;font-weight:900}.hero p{font-size:clamp(17px,2vw,22px);line-height:1.45;color:#ddd;max-width:650px;margin:0 0 28px}.hero-actions{display:flex;gap:12px;flex-wrap:wrap}.btn{border:0;border-radius:7px;padding:13px 22px;font-weight:800;cursor:pointer;display:inline-flex;gap:10px;align-items:center;justify-content:center;transition:.2s}.btn-primary{background:#fff;color:#000}.btn-primary:hover{background:var(--accent);transform:translateY(-1px)}.btn-secondary{background:rgba(80,80,80,.7);color:#fff}.btn-secondary:hover{background:rgba(110,110,110,.85)}
+    .hero-fade{position:absolute;left:0;right:0;bottom:0;height:180px;background:linear-gradient(transparent,var(--bg));z-index:1}
+
+    /* SEARCH */
+    .search-wrap{padding:26px clamp(18px,5vw,70px) 8px}.big-search{max-width:900px;margin:auto;display:flex;background:#111;border:1px solid var(--line);border-radius:9px;overflow:hidden}.big-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#fff;padding:16px 18px;font-size:16px}.big-search button{border:0;background:var(--accent);color:#000;padding:0 24px;font-weight:900;cursor:pointer}
+    .search-status{text-align:center;color:var(--muted);font-size:13px;min-height:25px;padding-top:9px}
+
+    /* ROWS */
+    .content{padding:14px 0 70px}.row{padding:18px clamp(18px,4vw,60px)}.row-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:13px}.row-title{font-size:22px;font-weight:800;letter-spacing:-.4px}.row-subtitle{color:var(--muted);font-size:12px;margin-top:3px}.row-more{font-size:13px;color:var(--accent);font-weight:700;background:none;border:0;cursor:pointer}.rail{display:flex;gap:12px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;padding:4px 4px 16px}.rail::-webkit-scrollbar{display:none}
+    .card{flex:0 0 clamp(190px,19vw,270px);border-radius:7px;overflow:hidden;background:var(--surface);border:1px solid transparent;cursor:pointer;position:relative;transition:transform .2s,border-color .2s,box-shadow .2s}.card:hover{transform:scale(1.035);border-color:rgba(255,255,255,.2);box-shadow:0 15px 35px rgba(0,0,0,.45);z-index:3}.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1a1a1d}.card-body{padding:10px 11px 12px}.card-title{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-meta{font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.play-overlay{position:absolute;left:10px;bottom:57px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.75);display:grid;place-items:center;opacity:0;transform:translateY(5px);transition:.2s}.card:hover .play-overlay{opacity:1;transform:none}
+    .portrait-card{flex-basis:clamp(150px,14vw,200px);background:transparent;border:0}.portrait-card:hover{box-shadow:none}.portrait-card .thumb{aspect-ratio:1/1;border-radius:50%;border:3px solid #222}.portrait-card:hover .thumb{border-color:var(--accent)}.portrait-card .card-body{text-align:center}.portrait-card .card-title{font-size:14px}.badge{position:absolute;top:9px;left:9px;background:#111d;color:#fff;padding:4px 7px;border-radius:4px;font-size:9px;font-weight:800;text-transform:uppercase}.badge.live{background:#e50914}.badge.verify{background:rgba(0,229,255,.9);color:#001014}
+
+    /* FEATURES */
+    .features{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:35px clamp(18px,4vw,60px)}.feature{background:linear-gradient(145deg,#111,#0c0c0e);border:1px solid var(--line);border-radius:12px;padding:23px}.feature i{font-size:22px;color:var(--accent);margin-bottom:13px}.feature h3{margin:0 0 7px;font-size:16px}.feature p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
+    .cta{margin:20px clamp(18px,4vw,60px) 50px;border:1px solid var(--line);border-radius:16px;padding:42px;background:radial-gradient(circle at 80% 20%,rgba(0,229,255,.11),transparent 35%),#101013}.cta h2{font-size:clamp(28px,4vw,45px);margin:0 0 9px;letter-spacing:-1.5px}.cta p{color:#bbb;max-width:650px;margin:0 0 22px;line-height:1.5}
+
+    /* MODALS */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.91);backdrop-filter:blur(10px);z-index:500;display:none;overflow:auto;padding:50px 16px}.overlay.active{display:flex;align-items:center;justify-content:center}.modal{width:min(980px,100%);background:#111114;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative}.close{position:absolute;right:14px;top:14px;z-index:5;width:42px;height:42px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:20px;cursor:pointer}.close:hover{background:#fff;color:#000}.player{width:100%;aspect-ratio:16/9;background:#000}.player iframe{width:100%;height:100%;border:0}.modal-info{padding:20px 22px 24px}.modal-info h2{margin:0 0 8px;font-size:24px}.modal-info p{margin:0;color:#aaa;line-height:1.5}.modal-actions{display:flex;gap:9px;margin-top:17px;flex-wrap:wrap}.mini-btn{border:1px solid #333;background:#19191d;color:#fff;border-radius:7px;padding:10px 14px;cursor:pointer}.mini-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+    /* NEWSLETTER */
+    .newsletter{display:flex;gap:10px;max-width:650px}.newsletter input{flex:1;min-width:0;background:#09090b;border:1px solid #303037;color:#fff;border-radius:7px;padding:13px 15px;outline:none}.newsletter input:focus{border-color:var(--accent)}.newsletter button{border:0;border-radius:7px;background:var(--accent);color:#000;font-weight:900;padding:13px 20px;cursor:pointer}.form-message{font-size:13px;margin-top:9px;color:#78f0a2;min-height:18px}
+
+    /* FOOTER */
+    footer{border-top:1px solid var(--line);padding:40px clamp(18px,4vw,60px);color:var(--muted);font-size:12px}.footer-grid{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}.footer-brand{color:#fff;font-size:18px;font-weight:900}.footer-links{display:flex;gap:16px;flex-wrap:wrap}.footer-links a:hover{color:var(--accent)}
+
+    /* MOBILE */
+    @media(max-width:850px){.nav{height:62px;gap:12px}.nav-links{display:none}.brand{font-size:19px}.nav-search{width:auto;flex:1;max-width:210px}.nav-search input{font-size:13px}.hero{min-height:73vh;padding:100px 20px 60px;background-image:linear-gradient(0deg,rgba(7,7,7,1) 3%,rgba(7,7,7,.35) 70%,rgba(0,0,0,.6)),var(--hero-image);background-position:center}.hero h1{letter-spacing:-2px}.hero p{font-size:16px}.features{grid-template-columns:repeat(2,1fr)}.row{padding-left:14px;padding-right:14px}.card{flex-basis:210px}.portrait-card{flex-basis:145px}}
+    @media(max-width:520px){.nav-search{display:none}.hero{min-height:68vh}.hero-actions .btn{flex:1}.search-wrap{padding:16px 14px 5px}.big-search button{padding:0 17px}.features{grid-template-columns:1fr;padding:25px 14px}.cta{margin-left:14px;margin-right:14px;padding:27px 22px}.newsletter{flex-direction:column}.newsletter button{width:100%}.row-title{font-size:19px}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" aria-label="UADAVSTREAM inicio"><span class="brand-mark"><i class="fa-solid fa-play"></i></span><span id="brandName">UADAVSTREAM</span></a>
+    <nav class="nav-links" aria-label="Navegación principal">
+      <a href="#contenido">Inicio</a><a href="#artistas">Artistas</a><a href="#en-vivo">En vivo</a><a href="#cartelera">Cartelera</a>
+    </nav>
+    <div class="nav-actions">
+      <div class="nav-search"><i class="fa-solid fa-magnifying-glass"></i><input id="navSearchInput" aria-label="Buscar" placeholder="Buscar..." onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button aria-label="Buscar" onclick="ejecutarBusqueda(document.getElementById('navSearchInput').value)"><i class="fa-solid fa-arrow-right"></i></button></div>
+      <button class="nav-icon" title="Buscar" onclick="document.getElementById('searchInput').focus()"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero" id="heroSection">
+      <div class="hero-content">
+        <div class="eyebrow"><span class="dot"></span><span id="heroEyebrow">UADAVSTREAM</span></div>
+        <h1 id="heroTitulo">El arte escénico al alcance de todos.</h1>
+        <p id="heroSubtitulo">Descubrí artistas, videos, espectáculos, transmisiones y mucho más en un solo lugar.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#contenido"><i class="fa-solid fa-play"></i> Explorar ahora</a>
+          <a class="btn btn-secondary" href="#artistas"><i class="fa-solid fa-users"></i> Descubrir artistas</a>
+        </div>
+      </div>
+      <div class="hero-fade"></div>
+    </section>
+
+    <section class="search-wrap" aria-label="Buscador">
+      <div class="big-search"><input id="searchInput" placeholder="Buscar artistas, videos, shows, música, humor..." autocomplete="off" onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button onclick="ejecutarBusqueda(document.getElementById('searchInput').value)"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button></div>
+      <div id="searchStatus" class="search-status"></div>
+    </section>
+
+    <section class="content" id="contenido">
+      <div class="row" id="continueRow" hidden><div class="row-head"><div><div class="row-title">▶ Continuar viendo</div><div class="row-subtitle">Contenido que empezaste a disfrutar</div></div></div><div class="rail" id="continueRail"></div></div>
+      <div class="row" id="resultsRow" hidden><div class="row-head"><div><div class="row-title" id="resultsTitle">Resultados</div></div><button class="row-more" onclick="volverInicio()">Volver al inicio</button></div><div class="rail" id="resultsRail"></div></div>
+      <div class="row" id="featuredRow"><div class="row-head"><div><div class="row-title" id="featuredTitle">🔥 Destacados</div><div class="row-subtitle">Una selección para empezar a descubrir</div></div><button class="row-more" onclick="cargarDestacados(true)">Actualizar</button></div><div class="rail" id="featuredRail"><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div></div></div>
+      <div class="row" id="recommendedRow" hidden><div class="row-head"><div><div class="row-title">✨ Para vos</div><div class="row-subtitle">Recomendaciones según lo que explorás</div></div></div><div class="rail" id="recommendedRail"></div></div>
+      <div class="row" id="liveRow"><div class="row-head"><div><div class="row-title">🔴 En vivo</div><div class="row-subtitle">Señales y transmisiones</div></div><a class="row-more" href="#en-vivo">Ver todo</a></div><div class="rail" id="liveRail"></div></div>
+      <div class="row" id="artists"><div class="row-head"><div><div class="row-title">🎭 Artistas</div><div class="row-subtitle">Conocé a quienes hacen posible el espectáculo</div></div><button class="row-more" onclick="cargarArtistas(true)">Ver todos</button></div><div class="rail" id="artistsRail"></div></div>
+      <div class="row" id="cartelera"><div class="row-head"><div><div class="row-title">📅 Cartelera</div><div class="row-subtitle">Próximos espectáculos y eventos</div></div></div><div class="rail" id="eventsRail"></div></div>
+      <div class="row"><div class="row-head"><div><div class="row-title">🎬 Más para descubrir</div><div class="row-subtitle">Explorá contenido por temática</div></div></div><div class="rail" id="discoverRail"></div></div>
+    </section>
+
+    <section class="features" id="en-vivo">
+      <article class="feature"><i class="fa-solid fa-film"></i><h3>Contenido audiovisual</h3><p>Videos, música, entrevistas, humor, teatro, circo y propuestas de artistas.</p></article>
+      <article class="feature"><i class="fa-solid fa-tower-broadcast"></i><h3>Experiencias en vivo</h3><p>Encontrá transmisiones y señales para disfrutar desde cualquier dispositivo.</p></article>
+      <article class="feature"><i class="fa-solid fa-user-group"></i><h3>Artistas protagonistas</h3><p>Perfiles para conocer su trabajo, sus redes, sus videos y sus próximas presentaciones.</p></article>
+      <article class="feature"><i class="fa-solid fa-calendar-days"></i><h3>Cartelera</h3><p>Una vidriera para descubrir espectáculos y acceder a sus canales oficiales de información o entradas.</p></article>
+    </section>
+
+    <section class="cta" id="sumate">
+      <h2>¿Sos artista de variedades?</h2>
+      <p id="mensajeEspera">Mostrá tu trabajo, sumate a UADAVSTREAM y ayudá a que tu público te encuentre.</p>
+      <div class="hero-actions"><a class="btn btn-primary" href="/index.html#postular"><i class="fa-solid fa-star"></i> Quiero sumarme</a><a class="btn btn-secondary" href="/index.html"><i class="fa-solid fa-play"></i> Entrar a UADAVSTREAM</a></div>
+    </section>
+
+    <section class="cta" id="avisos">
+      <h2>Enterate primero</h2>
+      <p>Dejá tu email y te avisamos de novedades, lanzamientos y nuevas funciones de UADAVSTREAM.</p>
+      <div class="newsletter"><input type="email" id="emailInput" placeholder="Tu email" autocomplete="email"><button id="btnCaptador"><i class="fa-solid fa-bell"></i> Avisarme</button></div>
+      <div id="mensajeCaptador" class="form-message"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid"><div><div class="footer-brand" id="footerTexto">UADAVSTREAM</div><div id="footerContacto">La plataforma audiovisual de los artistas de variedades.</div></div><div class="footer-links"><a href="/index.html">Explorar</a><a href="#artistas">Artistas</a><a href="#cartelera">Cartelera</a><a href="#avisos">Novedades</a></div></div>
+    <div style="margin-top:22px">© <span id="footerYear"></span> UADAVSTREAM · Todos los derechos reservados.</div>
+  </footer>
+
+  <div class="overlay" id="videoModal" onclick="cerrarModal(event)">
+    <div class="modal" onclick="event.stopPropagation()"><button class="close" onclick="cerrarModal()">✕</button><div class="player"><iframe id="playerFrame" src="" title="Reproductor UADAVSTREAM" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div><div class="modal-info"><h2 id="modalTitle">Video</h2><p id="modalDesc">Contenido</p><div class="modal-actions"><button class="mini-btn" id="modalSaveBtn"><i class="fa-regular fa-bookmark"></i> Mi lista</button><button class="mini-btn" id="modalShareBtn"><i class="fa-solid fa-share-nodes"></i> Compartir</button></div></div></div>
+  </div>
+
+  <script>
+    const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
+    const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=900&q=80';
+    const STORAGE_KEY = 'uadavstream_discovery_v1';
+    let config = {};
+    let allVideos = [];
+    let allArtists = [];
+
+    const $ = id => document.getElementById(id);
+    const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+    function getDiscovery(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {history:[],saved:[],categories:{}}}catch{return {history:[],saved:[],categories:{}}} }
+    function setDiscovery(d){ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}catch{} }
+    function rememberVideo(v){
+      if(!v?.id)return;
+      const d=getDiscovery();
+      d.history=[{id:v.id,titulo:v.titulo||'Video',descripcion:v.descripcion||v.categoria||'Contenido',thumbnail:v.thumbnail||obtenerCaratula(v.id),categoria:v.categoria||'Contenido',ts:Date.now()},...d.history.filter(x=>x.id!==v.id)].slice(0,30);
+      const cat=(v.categoria||'Contenido').toLowerCase(); d.categories[cat]=(d.categories[cat]||0)+1; setDiscovery(d); renderContinue(); renderRecommendations();
+    }
+    function isSaved(id){return getDiscovery().saved.includes(id)}
+    function toggleSaved(v){const d=getDiscovery();if(isSaved(v.id))d.saved=d.saved.filter(x=>x!==v.id);else d.saved.unshift(v.id);setDiscovery(d);return !isSaved(v.id)}
+
+    async function api(path, options={}){const res=await fetch(API_URL+path+(path.includes('?')?'&':'?')+'_='+Date.now(),options);if(!res.ok)throw new Error('API '+res.status);return res.json()}
+
+    async function cargarConfig(){
+      try{config=await api('landing_config');aplicarConfig()}catch(e){console.warn('No se pudo cargar configuración',e)}
+    }
+    function aplicarConfig(){
+      const c=config||{};
+      $('heroTitulo').textContent=c.hero_titulo||'El arte escénico al alcance de todos.';
+      $('heroSubtitulo').textContent=c.hero_subtitulo||'Descubrí artistas, videos, espectáculos, transmisiones y mucho más en un solo lugar.';
+      $('mensajeEspera').textContent=c.mensaje_espera||'Mostrá tu trabajo, sumate a UADAVSTREAM y ayudá a que tu público te encuentre.';
+      $('btnCaptador').innerHTML='<i class="fa-solid fa-bell"></i> '+(c.texto_boton_captador||'Avisarme');
+      $('footerTexto').textContent=c.footer_texto||'UADAVSTREAM';
+      $('footerContacto').textContent=c.footer_contacto||'La plataforma audiovisual de los artistas de variedades.';
+      document.documentElement.style.setProperty('--bg',c.color_fondo||'#070707');document.documentElement.style.setProperty('--accent',c.color_acento||'#00e5ff');document.documentElement.style.setProperty('--surface',c.color_tarjetas||'#111114');document.documentElement.style.setProperty('--text',c.color_texto_principal||'#fff');document.documentElement.style.setProperty('--muted',c.color_texto_secundario||'#a4a4ad');
+      if(c.hero_imagen){$('heroSection').style.setProperty('--hero-image',`url("${String(c.hero_imagen).replace(/"/g,'%22')}")`)}
+      if(c.nombre_app){$('brandName').textContent=c.nombre_app;$('heroEyebrow').textContent=c.nombre_app}
+    }
+
+    function obtenerCaratula(id){return id&&id.length===11?`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`:FALLBACK_THUMB}
+    async function obtenerVideos(query){try{const data=await api('youtube/search?q='+encodeURIComponent(query));return Array.isArray(data)?data:[]}catch{return[]}}
+
+    function cardHTML(v, portrait=false){
+      const id=v.id||v.youtube_id||v.videoId; if(!id)return '';
+      const thumb=v.thumbnail||v.foto||obtenerCaratula(id);
+      const title=v.titulo||v.nombre_artistico||v.nombre||'Contenido';
+      const meta=v.descripcion||v.categoria||v.rubro||'UADAVSTREAM';
+      return `<article class="card ${portrait?'portrait-card':''}" data-id="${safe(id)}"><img class="thumb" src="${safe(thumb)}" alt="${safe(title)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">${v.en_vivo?'<span class="badge live">● En vivo</span>':''}${v.verificado?'<span class="badge verify">✓ Verificado</span>':''}<span class="play-overlay"><i class="fa-solid fa-play"></i></span><div class="card-body"><div class="card-title">${safe(title)}</div><div class="card-meta">${safe(meta)}</div></div></article>`;
+    }
+    function bindCards(container, items){container.querySelectorAll('.card').forEach((el,i)=>el.onclick=()=>{const v=items[i];if(v?.id||v?.youtube_id)reproducirVideo(v.id||v.youtube_id,v.titulo||v.nombre_artistico||v.nombre,v.descripcion||v.categoria||v.rubro,v)})}
+    function renderRail(id,items,portrait=false){const el=$(id);el.innerHTML=items.length?items.map(v=>cardHTML(v,portrait)).join(''):'<div style="padding:22px;color:#777">Todavía no hay contenido disponible.</div>';bindCards(el,items)}
+
+    async function cargarDestacados(refresh=false){
+      const rail=$('featuredRail');rail.innerHTML='<div style="padding:25px;color:#888"><i class="fa-solid fa-circle-notch fa-spin"></i> Descubriendo contenido...</div>';
+      let pool=[];
+      const limite=Number(config.limite_destacados||16);
+      if(Array.isArray(config.videos_destacados_ids)&&config.videos_destacados_ids.length){pool.push(...config.videos_destacados_ids.map(id=>({id,titulo:'Contenido destacado',categoria:'Destacado',thumbnail:obtenerCaratula(id)})))}
+      const queries=(config.palabras_clave_destacados||'artistas de variedades,teatro,circo,humor,música').split(',').map(x=>x.trim()).filter(Boolean).slice(0,4);
+      if(!pool.length||refresh){for(const q of queries){const r=await obtenerVideos(q);pool.push(...r.slice(0,5).map(v=>({...v,categoria:v.categoria&&v.categoria!=='Resultado'?v.categoria:q})))} }
+      const seen=new Set();allVideos=pool.filter(v=>v.id&&!seen.has(v.id)&&(seen.add(v.id))).slice(0,limite);
+      $('featuredTitle').textContent=config.titulo_destacados||'🔥 Destacados';renderRail('featuredRail',allVideos);renderRecommendations();
+    }
+
+    async function cargarDiscover(){
+      const queries=['teatro','circo','humor','música','magia','podcast','entretenimiento'];const pool=[];
+      for(const q of queries){const r=await obtenerVideos(q);pool.push(...r.slice(0,3).map(v=>({...v,categoria:q})))}
+      const seen=new Set();renderRail('discoverRail',pool.filter(v=>v.id&&!seen.has(v.id)&&(seen.add(v.id))).slice(0,18));
+    }
+
+    function renderContinue(){const d=getDiscovery();const items=d.history||[];if(!items.length){$('continueRow').hidden=true;return}$('continueRow').hidden=false;renderRail('continueRail',items.slice(0,12))}
+    function renderRecommendations(){
+      const d=getDiscovery();const cats=Object.entries(d.categories||{}).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);if(!cats.length){$('recommendedRow').hidden=true;return}
+      const q=cats[0];obtenerVideos(q).then(items=>{if(items.length){$('recommendedRow').hidden=false;renderRail('recommendedRail',items.slice(0,12))}})
+    }
+
+    async function cargarArtistas(){
+      let data=[];try{data=await api('artistas')}catch{}
+      if(!Array.isArray(data))data=[];allArtists=data.filter(a=>a&&((a.estado||'aprobado')==='aprobado'||a.aprobado===true));
+      if(!allArtists.length){$('artistsRail').innerHTML='<div style="padding:22px;color:#777">Los perfiles de artistas aparecerán aquí.</div>';return}
+      renderRail('artistsRail',allArtists.slice(0,18),true);
+    }
+
+    async function cargarEventos(){
+      let data=[];try{data=await api('cartelera_aprobada')}catch{}
+      if(!Array.isArray(data))data=[];
+      const items=data.filter(x=>x&&x.estado!=='cancelado').slice(0,18).map(e=>({id:e.youtube_id||e.id||('event-'+Math.random()),titulo:e.titulo||e.nombre||'Evento',descripcion:[e.fecha,e.lugar].filter(Boolean).join(' · ')||'Próximo espectáculo',thumbnail:e.imagen||e.poster||FALLBACK_THUMB,categoria:'Evento',eventData:e}));
+      renderRail('eventsRail',items);
+    }
+
+    async function cargarLive(){
+      let data=[];try{data=await api('senales')}catch{}if(!Array.isArray(data))data=[];
+      const live=data.filter(x=>x&&((x.activa!==false)&&((x.en_vivo===true)||x.tipo==='live'||x.stream_url||x.youtube_id))).slice(0,12).map(x=>({...x,id:x.youtube_id||x.id,titulo:x.nombre||x.titulo||'Señal en vivo',descripcion:x.descripcion||'Transmisión',thumbnail:x.thumbnail||x.imagen||FALLBACK_THUMB,en_vivo:true}));
+      renderRail('liveRail',live);
+    }
+
+    async function ejecutarBusqueda(value){
+      const q=String(value||'').trim();if(!q){volverInicio();return}
+      $('searchInput').value=q;$('navSearchInput').value=q;$('searchStatus').innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando contenido...';
+      $('featuredRow').hidden=true;$('recommendedRow').hidden=true;$('liveRow').hidden=true;$('artists').hidden=true;$('cartelera').hidden=true;$('discoverRail').parentElement.parentElement.hidden=true;$('resultsRow').hidden=false;
+      const results=await obtenerVideos(q);$('resultsTitle').textContent=`Resultados para “${q}”`;$('searchStatus').textContent=results.length?`${results.length} resultados encontrados`:'No encontramos resultados';renderRail('resultsRail',results);window.scrollTo({top:$('resultsRow').offsetTop-70,behavior:'smooth'});
+    }
+    function volverInicio(){['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>$(id).hidden=false);$('discoverRail').parentElement.parentElement.hidden=false;$('resultsRow').hidden=true;$('searchStatus').textContent='';$('searchInput').value='';$('navSearchInput').value='';window.scrollTo({top:0,behavior:'smooth'})}
+
+    function reproducirVideo(id,titulo,desc,video){
+      if(!id||String(id).startsWith('event-')){if(video?.eventData){const e=video.eventData;const link=e.link_pago||e.url||e.link||e.whatsapp;if(link)window.open(link,'_blank','noopener');}return}
+      rememberVideo({id,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(id),categoria:video?.categoria||'Contenido'});
+      $('modalTitle').textContent=titulo||'Video';$('modalDesc').textContent=desc||'Contenido audiovisual';$('playerFrame').src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;$('videoModal').classList.add('active');document.body.style.overflow='hidden';
+      $('modalSaveBtn').innerHTML=`<i class="fa-${isSaved(id)?'solid':'regular'} fa-bookmark"></i> ${isSaved(id)?'Guardado':'Mi lista'}`;$('modalSaveBtn').onclick=()=>{const now=toggleSaved({id,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(id)});$('modalSaveBtn').innerHTML=`<i class="fa-${now?'solid':'regular'} fa-bookmark"></i> ${now?'Guardado':'Mi lista'}`};$('modalShareBtn').onclick=async()=>{const url=`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;try{await navigator.clipboard.writeText(url);$('modalShareBtn').innerHTML='<i class="fa-solid fa-check"></i> Copiado'}catch{window.open(url,'_blank','noopener')}};
+    }
+    function cerrarModal(e){if(e&&e.target!==e.currentTarget)return;$('videoModal').classList.remove('active');$('playerFrame').src='';document.body.style.overflow=''}
+
+    $('btnCaptador').addEventListener('click',async()=>{const email=$('emailInput').value.trim();if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ $('mensajeCaptador').style.color='#ff7b7b';$('mensajeCaptador').textContent='Ingresá un email válido.';return}try{const res=await fetch(API_URL+'suscriptores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});if(!res.ok)throw new Error();$('emailInput').value='';$('mensajeCaptador').style.color='#78f0a2';$('mensajeCaptador').textContent='✓ Listo. Te avisaremos de las novedades.'}catch{$('mensajeCaptador').style.color='#ff7b7b';$('mensajeCaptador').textContent='No pudimos registrar el email. Intentá nuevamente.'}});
+
+    window.addEventListener('scroll',()=>{$('nav').classList.toggle('scrolled',window.scrollY>30)});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarModal()});
+    $('footerYear').textContent=new Date().getFullYear();
+
+    async function init(){
+      await cargarConfig();
+      renderContinue();
+      await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarDiscover()]);
+      renderRecommendations();
+      if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js')}catch(e){console.warn('SW',e)}}
+    }
+    init();
+  </script>
+</body>
+</html>
