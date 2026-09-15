@@ -66,6 +66,19 @@
     @media(max-width:520px){.nav-search{display:none}.hero{min-height:68vh}.hero-actions .btn{flex:1}.search-wrap{padding:16px 14px 5px}.big-search button{padding:0 17px}.features{grid-template-columns:1fr;padding:25px 14px}.cta{margin-left:14px;margin-right:14px;padding:27px 22px}.newsletter{flex-direction:column}.newsletter button{width:100%}.row-title{font-size:19px}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
   </style>
+<style id="uadav-v5-ux">
+.rail:not(.results-rail){cursor:grab;scroll-behavior:smooth;overscroll-behavior-x:contain;touch-action:pan-x}
+.rail:not(.results-rail).dragging{cursor:grabbing;scroll-behavior:auto;user-select:none}
+.rail.dragging .card{pointer-events:none}
+.results-rail{cursor:default!important}
+#contenido,#artists,#cartelera,#en-vivo{scroll-margin-top:82px}
+.overlay{align-items:center!important;justify-content:center!important;padding:20px!important}
+.overlay.active{display:flex!important}
+.modal{width:min(1000px,96vw)!important;max-height:calc(100vh - 40px)!important;overflow:auto!important;margin:auto!important}
+.player{width:100%!important;aspect-ratio:16/9!important;background:#000!important;position:relative!important}
+.player iframe{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
+@media(max-width:600px){.nav-links{display:none}.nav-search{width:190px}.modal{width:96vw!important;max-height:calc(100vh - 20px)!important}.overlay{padding:10px!important}}
+</style>
 </head>
 <body>
   <header class="nav" id="nav">
@@ -201,15 +214,33 @@
       const meta=v.descripcion||v.categoria||v.rubro||'UADAVSTREAM';
       return `<article class="card ${portrait?'portrait-card':''}" data-id="${safe(id)}"><img class="thumb" src="${safe(thumb)}" alt="${safe(title)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">${v.en_vivo?'<span class="badge live">● En vivo</span>':''}${v.verificado?'<span class="badge verify">✓ Verificado</span>':''}<span class="play-overlay"><i class="fa-solid fa-play"></i></span><div class="card-body"><div class="card-title">${safe(title)}</div><div class="card-meta">${safe(meta)}</div></div></article>`;
     }
-    function bindCards(container, items){
-      container.querySelectorAll('.card').forEach(el=>{
-        el.onclick=()=>{
-          const id=el.dataset.id;
-          const v=items.find(x=>String(x.id||x.youtube_id||x.videoId)===String(id));
-          if(v) reproducirVideo(v.id||v.youtube_id||v.videoId,v.titulo||v.title||v.nombre_artistico||v.nombre||'Video',v.descripcion||v.author||v.channelTitle||v.categoria||'Contenido',v);
-        };
+    function bindCards(container,items){
+      container.querySelectorAll('.card').forEach((el,index)=>{
+        const id=el.dataset.id; let sx=0,sy=0,moved=false;
+        el.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;moved=false});
+        el.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-sx,e.clientY-sy)>8)moved=true});
+        el.addEventListener('click',e=>{
+          if(moved){e.preventDefault();e.stopPropagation();return}
+          const v=items[index]; if(!v||!id)return;
+          const fn=window.reproducirVideo||window.abrirVideo;
+          if(typeof fn==='function')fn(v.id||v.youtube_id||v.videoId,v.titulo||v.title||v.nombre||'Video',v.descripcion||v.author||v.channelTitle||'Contenido',v);
+        });
       });
     }
+    function enableRailDrag(rail){
+      if(!rail||rail.classList.contains('results-rail')||rail.dataset.dragReady==='1')return;
+      rail.dataset.dragReady='1'; let dragging=false,sx=0,ss=0;
+      rail.addEventListener('wheel',e=>{if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){e.preventDefault();rail.scrollLeft+=e.deltaY}},{passive:false});
+      rail.addEventListener('pointerdown',e=>{
+        if(e.button!==undefined&&e.button!==0)return;
+        dragging=true;sx=e.clientX;ss=rail.scrollLeft;rail.classList.add('dragging');
+        try{rail.setPointerCapture(e.pointerId)}catch{}
+      });
+      rail.addEventListener('pointermove',e=>{if(dragging)rail.scrollLeft=ss-(e.clientX-sx)*1.15});
+      const end=()=>{dragging=false;rail.classList.remove('dragging')};
+      rail.addEventListener('pointerup',end);rail.addEventListener('pointercancel',end);rail.addEventListener('lostpointercapture',end);
+    }
+    function activarArrastreCarruseles(){document.querySelectorAll('.rail:not(.results-rail)').forEach(enableRailDrag)}
     function renderRail(id,items,portrait=false){
       const el=$(id); if(!el)return;
       const valid=(items||[]).filter(v=>v&&(v.id||v.youtube_id||v.videoId));
@@ -282,12 +313,25 @@
         rail.innerHTML='<div style="grid-column:1/-1;padding:35px;text-align:center;color:#ff7777">No pudimos cargar los resultados. Revisá la conexión con la API.</div>';
       }
     }
-    function volverInicio(){['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>$(id).hidden=false);$('discoverRail').parentElement.parentElement.hidden=false;$('resultsRow').hidden=true;$('searchStatus').textContent='';$('searchInput').value='';$('navSearchInput').value='';window.scrollTo({top:0,behavior:'smooth'})}
+    function irASeccion(id){
+      const el=$(id);if(!el)return;
+      if($('resultsRow')&&!$('resultsRow').hidden)volverInicio();
+      setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),40);
+    }
+    function volverInicio(){
+      ['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>{if($(id))$(id).hidden=false});
+      if($('discoverRail')?.parentElement?.parentElement)$('discoverRail').parentElement.parentElement.hidden=false;
+      if($('resultsRow'))$('resultsRow').hidden=true;
+      if($('searchStatus'))$('searchStatus').textContent='';
+      if($('searchInput'))$('searchInput').value='';
+      if($('navSearchInput'))$('navSearchInput').value='';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
 
     function reproducirVideo(id,titulo,desc,video){
       if(!id||String(id).startsWith('event-')){if(video?.eventData){const e=video.eventData;const link=e.link_pago||e.url||e.link||e.whatsapp;if(link)window.open(link,'_blank','noopener');}return}
       rememberVideo({id,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(id),categoria:video?.categoria||'Contenido'});
-      $('modalTitle').textContent=titulo||'Video';$('modalDesc').textContent=desc||'Contenido audiovisual';$('playerFrame').src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;$('videoModal').classList.add('active');document.body.style.overflow='hidden';
+      $('modalTitle').textContent=titulo||'Video';$('modalDesc').textContent=desc||'Contenido audiovisual';$('playerFrame').src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;$('videoModal').classList.add('active');document.body.style.overflow='hidden';
       $('modalSaveBtn').innerHTML=`<i class="fa-${isSaved(id)?'solid':'regular'} fa-bookmark"></i> ${isSaved(id)?'Guardado':'Mi lista'}`;$('modalSaveBtn').onclick=()=>{const now=toggleSaved({id,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(id)});$('modalSaveBtn').innerHTML=`<i class="fa-${now?'solid':'regular'} fa-bookmark"></i> ${now?'Guardado':'Mi lista'}`};$('modalShareBtn').onclick=async()=>{const url=`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;try{await navigator.clipboard.writeText(url);$('modalShareBtn').innerHTML='<i class="fa-solid fa-check"></i> Copiado'}catch{window.open(url,'_blank','noopener')}};
     }
     function cerrarModal(e){if(e&&e.target!==e.currentTarget)return;$('videoModal').classList.remove('active');$('playerFrame').src='';document.body.style.overflow=''}
@@ -306,6 +350,11 @@
       if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js')}catch(e){console.warn('SW',e)}}
     }
     init();
-  </script>
+  document.addEventListener('keydown',e=>{
+      if(e.key!=='Escape')return;
+      if($('videoModal')?.classList.contains('active'))cerrarModal();
+      else if($('resultsRow')&&!$('resultsRow').hidden)volverInicio();
+    });
+</script>
 </body>
 </html>
