@@ -164,6 +164,16 @@
 }
 </style>
 
+
+<style id="uadav-v7-repair">
+.player-host{position:absolute;inset:0;width:100%;height:100%;background:#000}
+.player-host iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.overlay.pip-mode .modal{width:min(480px,92vw)!important}
+.overlay.pip-mode .player{min-height:270px}
+@media(max-width:600px){.overlay.pip-mode .modal{width:min(360px,92vw)!important}.overlay.pip-mode .player{min-height:202px}}
+</style>
+
+<meta name="uadav-build" content="UADAVSTREAM V7 repaired">
 </head>
 <body>
   <header class="nav" id="nav">
@@ -235,7 +245,7 @@
   </footer>
 
   <div class="overlay" id="videoModal" onclick="cerrarModal(event)">
-    <div class="modal" onclick="event.stopPropagation()"><button class="close" onclick="cerrarModal()">✕</button><div class="player"><iframe id="playerFrame" src="" title="Reproductor UADAVSTREAM" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div><div class="modal-info"><h2 id="modalTitle">Video</h2><p id="modalDesc">Contenido</p><div class="modal-actions"><button class="mini-btn" id="modalSaveBtn"><i class="fa-regular fa-bookmark"></i> Mi lista</button><button class="mini-btn" id="modalShareBtn"><i class="fa-solid fa-share-nodes"></i> Compartir</button></div></div></div>
+    <div class="modal" onclick="event.stopPropagation()"><button class="close" onclick="cerrarModal()">✕</button><div class="player"><div id="playerFrame" class="player-host" aria-label="Reproductor UADAVSTREAM"></div></div><div class="modal-info"><h2 id="modalTitle">Video</h2><p id="modalDesc">Contenido</p><div class="modal-actions"><button class="mini-btn" id="modalSaveBtn"><i class="fa-regular fa-bookmark"></i> Mi lista</button><button class="mini-btn" id="modalShareBtn"><i class="fa-solid fa-share-nodes"></i> Compartir</button></div></div></div>
   </div>
 
   <script>
@@ -480,31 +490,80 @@
     }
 
     let ytPlayer=null;
+    let ytApiReady=false;
+    let pendingVideoId=null;
     let currentQueue=[];
     let currentQueueIndex=0;
     let currentVideoData=null;
 
+    window.onYouTubeIframeAPIReady=function(){
+      ytApiReady=true;
+      if(pendingVideoId) crearOActualizarPlayer(pendingVideoId);
+    };
+
+    function crearOActualizarPlayer(id){
+      if(!id)return;
+      pendingVideoId=id;
+
+      if(!ytApiReady || !window.YT || !YT.Player)return;
+
+      const host=$('playerFrame');
+      if(!host)return;
+
+      if(ytPlayer && typeof ytPlayer.loadVideoById==='function'){
+        try{
+          ytPlayer.loadVideoById({videoId:id,startSeconds:0});
+          try{ytPlayer.setPlaybackQuality('hd720')}catch{}
+          return;
+        }catch{}
+      }
+
+      host.innerHTML='';
+      ytPlayer=new YT.Player('playerFrame',{
+        width:'100%',
+        height:'100%',
+        videoId:id,
+        playerVars:{
+          autoplay:1,
+          controls:1,
+          rel:0,
+          playsinline:1,
+          enablejsapi:1,
+          origin:location.origin
+        },
+        events:{
+          onReady:function(e){
+            try{e.target.playVideo()}catch{}
+            try{e.target.setPlaybackQuality('hd720')}catch{}
+          },
+          onStateChange:function(e){
+            if(e.data===0) reproducirSiguiente();
+          },
+          onAutoplayBlocked:function(){
+            // The user already clicked the card, so the browser normally allows playback.
+            // If a browser still blocks it, controls remain available.
+          }
+        }
+      });
+    }
+
     function cargarPlayerYouTube(id){
       if(!id)return;
-      if(window.YT&&YT.Player){
-        if(ytPlayer&&typeof ytPlayer.loadVideoById==='function'){
-          ytPlayer.loadVideoById(id);
-        }else{
-          ytPlayer=new YT.Player('playerFrame',{
-            videoId:id,
-            playerVars:{
-              autoplay:1,rel:0,modestbranding:1,playsinline:1,
-              enablejsapi:1,origin:location.origin
-            },
-            events:{
-              onStateChange:function(e){
-                if(e.data===0) reproducirSiguiente();
-              }
-            }
-          });
-        }
-      }else{
-        $('playerFrame').src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+      pendingVideoId=id;
+
+      if(ytApiReady && window.YT && YT.Player){
+        crearOActualizarPlayer(id);
+        return;
+      }
+
+      // Fallback while the API is still loading.
+      const host=$('playerFrame');
+      if(host){
+        host.innerHTML=`<iframe
+          src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=1&rel=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}"
+          title="Reproductor UADAVSTREAM"
+          allow="autoplay; encrypted-media; picture-in-picture; web-share"
+          allowfullscreen></iframe>`;
       }
     }
 
@@ -525,8 +584,8 @@
       rememberVideo(v);
       $('modalTitle').textContent=v.titulo||'Video';
       $('modalDesc').textContent=v.descripcion||'Contenido audiovisual';
-      cargarPlayerYouTube(v.id);
       actualizarBotonesPlayer(v);
+      cargarPlayerYouTube(v.id);
     }
 
     function actualizarBotonesPlayer(v){
@@ -551,18 +610,22 @@
     function reproducirVideo(id,titulo,desc,video){
       if(!id||String(id).startsWith('event-')){
         if(video?.eventData){
-          const e=video.eventData;const link=e.link_pago||e.url||e.link||e.whatsapp;
+          const e=video.eventData;
+          const link=e.link_pago||e.url||e.link||e.whatsapp;
           if(link)window.open(link,'_blank','noopener');
         }
         return;
       }
+
       const v={
-        ...(video||{}),id,
+        ...(video||{}),
+        id,
         titulo:titulo||video?.titulo||'Video',
         descripcion:desc||video?.descripcion||'Contenido audiovisual',
         thumbnail:video?.thumbnail||obtenerCaratula(id),
         categoria:video?.categoria||'Contenido'
       };
+
       prepararCola(v);
       currentVideoData=v;
       rememberVideo(v);
@@ -578,8 +641,12 @@
     function cerrarModal(e){
       if(e&&e.target!==e.currentTarget)return;
       $('videoModal').classList.remove('active','pip-mode');
-      if(ytPlayer&&typeof ytPlayer.stopVideo==='function')ytPlayer.stopVideo();
-      $('playerFrame').src='';
+      if(ytPlayer&&typeof ytPlayer.stopVideo==='function'){
+        try{ytPlayer.stopVideo()}catch{}
+      }
+      const host=$('playerFrame');
+      if(host)host.innerHTML='';
+      pendingVideoId=null;
       document.body.style.overflow='';
       currentVideoData=null;
     }
@@ -601,6 +668,7 @@
       renderContinue();
       await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarDiscover()]);
       renderRecommendations();
+      activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js')}catch(e){console.warn('SW',e)}}
     }
     init();
@@ -610,6 +678,6 @@
       else if($('resultsRow')&&!$('resultsRow').hidden)volverInicio();
     });
 </script>
-<script src="https://www.youtube.com/iframe_api"></script>
+<script src="https://www.youtube.com/iframe_api" async></script>
 </body>
 </html>
