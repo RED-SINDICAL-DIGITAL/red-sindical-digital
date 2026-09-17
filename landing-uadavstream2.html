@@ -173,7 +173,75 @@
 @media(max-width:600px){.overlay.pip-mode .modal{width:min(360px,92vw)!important}.overlay.pip-mode .player{min-height:202px}}
 </style>
 
-<meta name="uadav-build" content="UADAVSTREAM V7 repaired">
+<meta name="uadav-build" content="UADAVSTREAM V8 UX repaired">
+
+<style id="uadav-v8">
+/* ===== V8 VISUAL STABILITY ===== */
+html,body{filter:none!important}
+body:has(#videoModal.pip-mode){filter:none!important}
+body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
+
+/* Keep the background page completely normal while the player floats. */
+.overlay.pip-mode{
+  background:transparent!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.overlay.pip-mode .modal{
+  transform:none!important;
+  filter:none!important;
+  opacity:1!important;
+  isolation:isolate;
+  will-change:transform;
+}
+.overlay.pip-mode .player,
+.overlay.pip-mode .player-host,
+.overlay.pip-mode .player-host iframe{
+  filter:none!important;
+  opacity:1!important;
+  transform:none!important;
+}
+
+/* Better PiP proportions: large enough for YouTube to avoid an unnecessarily tiny render target. */
+.overlay.pip-mode .modal{
+  width:min(460px,42vw)!important;
+  min-width:320px!important;
+}
+.overlay.pip-mode .player{aspect-ratio:16/9!important;min-height:0!important}
+.overlay.pip-mode .modal-info{display:none!important}
+
+@media(max-width:700px){
+  .overlay.pip-mode{
+    padding:12px!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+  }
+  .overlay.pip-mode .modal{
+    width:min(94vw,390px)!important;
+    min-width:0!important;
+  }
+}
+
+/* Explicit grab affordance. */
+.rail:not(.results-rail){cursor:grab}
+.rail:not(.results-rail).dragging{cursor:grabbing}
+.rail:not(.results-rail):hover{scrollbar-width:none}
+
+/* Edge controls make the horizontal interaction discoverable. */
+.rail-wrap{position:relative}
+.rail-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:38px;height:38px;border:1px solid rgba(255,255,255,.14);
+  border-radius:50%;background:rgba(10,10,12,.88);color:#fff;
+  display:grid;place-items:center;z-index:4;cursor:pointer;
+  box-shadow:0 8px 25px rgba(0,0,0,.35);opacity:0;transition:.18s;
+}
+.rail-wrap:hover .rail-arrow,.rail-wrap:focus-within .rail-arrow{opacity:1}
+.rail-arrow.left{left:4px}.rail-arrow.right{right:4px}
+.rail-arrow:hover{background:rgba(255,255,255,.12)}
+@media(max-width:700px){.rail-arrow{display:none}}
+</style>
+
 </head>
 <body>
   <header class="nav" id="nav">
@@ -343,58 +411,122 @@
     }
     function bindCards(container,items){
       container.querySelectorAll('.card').forEach((el,index)=>{
-        const id=el.dataset.id; let sx=0,sy=0,moved=false;
-        el.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;moved=false});
-        el.addEventListener('pointermove',e=>{if(Math.hypot(e.clientX-sx,e.clientY-sy)>8)moved=true});
+        const id=el.dataset.id;
+        let sx=0,sy=0,moved=false;
+
+        el.addEventListener('pointerdown',e=>{
+          sx=e.clientX;sy=e.clientY;moved=false;
+        },{passive:true});
+
+        el.addEventListener('pointermove',e=>{
+          if(Math.hypot(e.clientX-sx,e.clientY-sy)>10)moved=true;
+        },{passive:true});
+
         el.addEventListener('click',e=>{
           if(moved){e.preventDefault();e.stopPropagation();return}
-          const v=items[index]; if(!v||!id)return;
+          const v=items[index];
+          if(!v||!id)return;
           const fn=window.reproducirVideo||window.abrirVideo;
-          if(typeof fn==='function')fn(v.id||v.youtube_id||v.videoId,v.titulo||v.title||v.nombre||'Video',v.descripcion||v.author||v.channelTitle||'Contenido',v);
+          if(typeof fn==='function'){
+            fn(v.id||v.youtube_id||v.videoId,
+              v.titulo||v.title||v.nombre||'Video',
+              v.descripcion||v.author||v.channelTitle||'Contenido',v);
+          }
         });
       });
     }
+
     function enableRailDrag(rail){
       if(!rail||rail.classList.contains('results-rail')||rail.dataset.dragReady==='1')return;
       rail.dataset.dragReady='1';
-      let active=false,started=false,sx=0,sy=0,ss=0,pid=null;
+
+      let active=false,dragging=false,startX=0,startY=0,startScroll=0,pid=null;
+
+      const finish=()=>{
+        active=false;
+        dragging=false;
+        rail.classList.remove('dragging');
+        if(pid!==null){try{rail.releasePointerCapture(pid)}catch{}}
+        pid=null;
+      };
+
       rail.addEventListener('wheel',e=>{
-        if(Math.abs(e.deltaY)>Math.abs(e.deltaX) && rail.scrollWidth>rail.clientWidth){
-          e.preventDefault();rail.scrollLeft+=e.deltaY;
-        }
+        if(rail.scrollWidth<=rail.clientWidth)return;
+        const amount=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
+        if(amount===0)return;
+        e.preventDefault();
+        rail.scrollLeft+=amount;
       },{passive:false});
+
       rail.addEventListener('pointerdown',e=>{
         if(e.pointerType==='mouse' && e.button!==0)return;
-        active=true;started=false;pid=e.pointerId;sx=e.clientX;sy=e.clientY;ss=rail.scrollLeft;
-      });
+        active=true;dragging=false;pid=e.pointerId;
+        startX=e.clientX;startY=e.clientY;startScroll=rail.scrollLeft;
+      },{passive:true});
+
       rail.addEventListener('pointermove',e=>{
         if(!active)return;
-        const dx=e.clientX-sx,dy=e.clientY-sy;
-        if(!started){
-          if(Math.abs(dy)>Math.abs(dx) && Math.abs(dy)>7){active=false;return}
-          if(Math.abs(dx)>8){
-            started=true;rail.classList.add('dragging');
-            try{rail.setPointerCapture(pid)}catch{}
+        const dx=e.clientX-startX;
+        const dy=e.clientY-startY;
+
+        if(!dragging){
+          // A vertical gesture belongs to the page. A horizontal gesture belongs to the rail.
+          if(Math.abs(dy)>10 && Math.abs(dy)>Math.abs(dx)*1.15){
+            finish();
+            return;
+          }
+          if(Math.abs(dx)>8 && Math.abs(dx)>Math.abs(dy)){
+            dragging=true;
+            rail.classList.add('dragging');
+            try{rail.setPointerCapture(e.pointerId)}catch{}
           }
         }
-        if(started){
+
+        if(dragging){
           e.preventDefault();
-          rail.scrollLeft=ss-dx*1.15;
+          rail.scrollLeft=startScroll-dx*1.12;
         }
       },{passive:false});
-      const end=()=>{
-        active=false;started=false;rail.classList.remove('dragging');
-      };
-      rail.addEventListener('pointerup',end);
-      rail.addEventListener('pointercancel',end);
-      rail.addEventListener('lostpointercapture',end);
+
+      rail.addEventListener('pointerup',finish);
+      rail.addEventListener('pointercancel',finish);
+      rail.addEventListener('lostpointercapture',finish);
     }
+
+    
+    function prepararRailWrappers(){
+      document.querySelectorAll('.rail:not(.results-rail)').forEach(rail=>{
+        if(rail.parentElement?.classList.contains('rail-wrap'))return;
+        const wrap=document.createElement('div');
+        wrap.className='rail-wrap';
+        rail.parentNode.insertBefore(wrap,rail);
+        wrap.appendChild(rail);
+      });
+    }
+
     function activarArrastreCarruseles(){document.querySelectorAll('.rail:not(.results-rail)').forEach(enableRailDrag)}
     function renderRail(id,items,portrait=false){
       const el=$(id); if(!el)return;
       const valid=(items||[]).filter(v=>v&&(v.id||v.youtube_id||v.videoId));
       el.innerHTML=valid.length?valid.map(v=>cardHTML(v,portrait)).join(''):'<div style="padding:22px;color:#777">Todavía no hay contenido disponible.</div>';
       bindCards(el,valid);
+
+      if(!el.classList.contains('results-rail')){
+        const wrap=el.closest('.rail-wrap');
+        if(wrap){
+          wrap.querySelectorAll('.rail-arrow').forEach(x=>x.remove());
+          const left=document.createElement('button');
+          left.className='rail-arrow left';left.type='button';left.setAttribute('aria-label','Anterior');
+          left.innerHTML='<i class="fa-solid fa-chevron-left"></i>';
+          left.onclick=()=>el.scrollBy({left:-Math.max(el.clientWidth*.72,320),behavior:'smooth'});
+          const right=document.createElement('button');
+          right.className='rail-arrow right';right.type='button';right.setAttribute('aria-label','Siguiente');
+          right.innerHTML='<i class="fa-solid fa-chevron-right"></i>';
+          right.onclick=()=>el.scrollBy({left:Math.max(el.clientWidth*.72,320),behavior:'smooth'});
+          wrap.append(left,right);
+        }
+      }
+      enableRailDrag(el);
     }
 
     async function cargarDestacados(refresh=false){
@@ -428,8 +560,28 @@
     }
 
     function renderRecommendations(){
-      const d=getDiscovery();const cats=Object.entries(d.categories||{}).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);if(!cats.length){$('recommendedRow').hidden=true;return}
-      const q=cats[0];obtenerVideos(q).then(items=>{if(items.length){$('recommendedRow').hidden=false;renderRail('recommendedRail',items.slice(0,12))}})
+      const d=getDiscovery();
+      const cats=Object.entries(d.categories||{})
+        .sort((a,b)=>b[1]-a[1])
+        .map(x=>x[0])
+        .filter(Boolean);
+
+      if(!cats.length){
+        $('recommendedRow').hidden=true;
+        return;
+      }
+
+      const q=cats[0];
+      $('recommendedRow').hidden=false;
+      $('recommendedTitle').textContent=`Para vos · ${q.charAt(0).toUpperCase()+q.slice(1)}`;
+
+      obtenerVideos(q).then(items=>{
+        const watched=new Set((d.history||[]).map(x=>x.id));
+        const filtered=items.filter(x=>x&&x.id&&!watched.has(x.id));
+        const finalItems=(filtered.length?filtered:items).slice(0,12);
+        if(finalItems.length)renderRail('recommendedRail',finalItems);
+        else $('recommendedRow').hidden=true;
+      }).catch(()=>{});
     }
 
     async function cargarArtistas(){
@@ -665,9 +817,11 @@
 
     async function init(){
       await cargarConfig();
+      prepararRailWrappers();
       renderContinue();
       await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarDiscover()]);
       renderRecommendations();
+      prepararRailWrappers();
       activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js')}catch(e){console.warn('SW',e)}}
     }
