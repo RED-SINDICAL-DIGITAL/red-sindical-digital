@@ -173,7 +173,7 @@
 @media(max-width:600px){.overlay.pip-mode .modal{width:min(360px,92vw)!important}.overlay.pip-mode .player{min-height:202px}}
 </style>
 
-<meta name="uadav-build" content="UADAVSTREAM V8.1 repaired">
+<meta name="uadav-build" content="UADAVSTREAM V9.1 navigation engine">
 
 <style id="uadav-v8">
 /* ===== V8 VISUAL STABILITY ===== */
@@ -292,6 +292,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
 }
 </style>
 
+<link rel="icon" href="/favicon.ico" sizes="any">
 </head>
 <body>
   <header class="nav" id="nav">
@@ -914,5 +915,122 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     });
 </script>
 <script src="https://www.youtube.com/iframe_api" async></script>
+
+<style id="uadav-v9-navigation">
+/* V9 — Netflix-like responsive navigation */
+:root{--card-w:clamp(150px,15vw,220px)}
+.rail-wrap{position:relative;overflow:visible;width:100%;min-width:0}
+.rail:not(.results-rail){
+  display:flex!important;flex-wrap:nowrap!important;gap:14px;
+  overflow-x:auto!important;overflow-y:hidden!important;
+  width:100%!important;max-width:100%!important;
+  scrollbar-width:none;-ms-overflow-style:none;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;overscroll-behavior-y:auto;
+  scroll-behavior:smooth;
+  cursor:grab!important;
+  user-select:none;-webkit-user-select:none;
+  touch-action:pan-y;
+  padding-bottom:5px;
+}
+.rail:not(.results-rail)::-webkit-scrollbar{display:none}
+.rail:not(.results-rail).dragging{cursor:grabbing!important;scroll-behavior:auto}
+.rail:not(.results-rail) .card{
+  flex:0 0 var(--card-w)!important;width:var(--card-w)!important;
+  min-width:var(--card-w)!important;float:none!important;
+  user-select:none;-webkit-user-drag:none;
+}
+@media(min-width:1200px){:root{--card-w:190px}}
+@media(min-width:1500px){:root{--card-w:205px}}
+@media(max-width:700px){
+  :root{--card-w:132px}
+  .rail:not(.results-rail){gap:10px;touch-action:pan-y;scroll-padding-inline:12px}
+  .rail:not(.results-rail) .card{flex-basis:132px!important;width:132px!important;min-width:132px!important}
+}
+@media(max-width:380px){
+  :root{--card-w:118px}
+  .rail:not(.results-rail) .card{flex-basis:118px!important;width:118px!important;min-width:118px!important}
+}
+/* Let the page remain scrollable over the video/player surface. */
+.overlay.pip-mode{pointer-events:none!important}
+.overlay.pip-mode .modal{pointer-events:auto!important}
+.player-host,.player-host iframe{touch-action:auto!important}
+/* Never blur/dim the page when player is floating. */
+body,body>*{filter:none!important}
+body:has(#videoModal.pip-mode)>*{filter:none!important;opacity:1!important}
+</style>
+<script id="uadav-v9-engine">
+(function(){
+  'use strict';
+  function rails(){
+    return Array.from(document.querySelectorAll('.rail:not(.results-rail)'));
+  }
+  function setupRail(rail){
+    if(!rail || rail.dataset.v9==='1') return;
+    rail.dataset.v9='1';
+    let active=false, moved=false, vertical=false, startX=0,startY=0,startScroll=0,id=null;
+
+    rail.addEventListener('pointerdown',function(e){
+      if(e.pointerType==='mouse' && e.button!==0)return;
+      if(rail.scrollWidth<=rail.clientWidth+2)return;
+      active=true;moved=false;vertical=false;id=e.pointerId;
+      startX=e.clientX;startY=e.clientY;startScroll=rail.scrollLeft;
+    },{passive:true});
+
+    rail.addEventListener('pointermove',function(e){
+      if(!active)return;
+      const dx=e.clientX-startX,dy=e.clientY-startY;
+      if(!moved && Math.hypot(dx,dy)<6)return;
+      if(!moved){
+        if(Math.abs(dy)>Math.abs(dx)){vertical=true;active=false;return}
+        moved=true;rail.classList.add('dragging');
+        try{rail.setPointerCapture(e.pointerId)}catch(_){}
+      }
+      if(moved){e.preventDefault();rail.scrollLeft=startScroll-dx}
+    },{passive:false});
+
+    function end(){
+      active=false;
+      if(moved){
+        setTimeout(function(){rail.classList.remove('dragging')},20);
+      }else rail.classList.remove('dragging');
+      moved=false;vertical=false;id=null;
+    }
+    rail.addEventListener('pointerup',end,{passive:true});
+    rail.addEventListener('pointercancel',end,{passive:true});
+    rail.addEventListener('lostpointercapture',end,{passive:true});
+
+    rail.addEventListener('wheel',function(e){
+      if(rail.scrollWidth<=rail.clientWidth+2)return;
+      const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
+      if(delta){e.preventDefault();rail.scrollLeft+=delta}
+    },{passive:false});
+
+    /* Avoid accidental card activation after a drag. */
+    rail.addEventListener('click',function(e){
+      if(rail.classList.contains('dragging')){e.preventDefault();e.stopPropagation()}
+    },true);
+  }
+  function setupAll(){rails().forEach(setupRail)}
+  window.uadavV9SetupRails=setupAll;
+  const obs=new MutationObserver(function(){setupAll()});
+  if(document.body)obs.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener('DOMContentLoaded',setupAll);
+  setTimeout(setupAll,300);
+  setTimeout(setupAll,1000);
+
+  /* Mobile: scrolling must belong to the document, not the YouTube iframe.
+     A tap on the player still works normally; navigation outside the iframe remains native. */
+  let lastY=0;
+  window.addEventListener('touchstart',function(e){
+    if(e.touches&&e.touches[0])lastY=e.touches[0].clientY;
+  },{passive:true});
+  window.addEventListener('touchmove',function(e){
+    if(!e.touches||!e.touches[0])return;
+    lastY=e.touches[0].clientY;
+  },{passive:true});
+})();
+</script>
+
 </body>
 </html>
