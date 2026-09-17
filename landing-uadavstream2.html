@@ -173,7 +173,7 @@
 @media(max-width:600px){.overlay.pip-mode .modal{width:min(360px,92vw)!important}.overlay.pip-mode .player{min-height:202px}}
 </style>
 
-<meta name="uadav-build" content="UADAVSTREAM V8 UX repaired">
+<meta name="uadav-build" content="UADAVSTREAM V8.1 repaired">
 
 <style id="uadav-v8">
 /* ===== V8 VISUAL STABILITY ===== */
@@ -240,6 +240,56 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
 .rail-arrow.left{left:4px}.rail-arrow.right{right:4px}
 .rail-arrow:hover{background:rgba(255,255,255,.12)}
 @media(max-width:700px){.rail-arrow{display:none}}
+</style>
+
+
+<style id="uadav-v8-fix">
+/* ===== HORIZONTAL RAIL ENGINE ===== */
+.rail-wrap{
+  position:relative;
+  width:100%;
+  min-width:0;
+  overflow:visible;
+}
+.rail:not(.results-rail){
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  white-space:nowrap;
+  scroll-behavior:smooth;
+  overscroll-behavior-x:contain;
+  overscroll-behavior-y:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  cursor:grab!important;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:pan-x pan-y;
+}
+.rail:not(.results-rail)::-webkit-scrollbar{display:none}
+.rail:not(.results-rail).dragging{
+  cursor:grabbing!important;
+  scroll-behavior:auto;
+}
+.rail:not(.results-rail) .card{
+  flex:0 0 auto!important;
+  float:none!important;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+@media(max-width:700px){
+  .rail:not(.results-rail){
+    touch-action:pan-x;
+    scroll-snap-type:none!important;
+  }
+  .rail:not(.results-rail) .card{
+    flex-shrink:0!important;
+  }
+}
 </style>
 
 </head>
@@ -348,7 +398,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
       },...d.history.filter(x=>x.id!==v.id)].slice(0,30);
       const cat=(v.categoria||'Contenido').toLowerCase();
       d.categories[cat]=(d.categories[cat]||0)+1;
-      setDiscovery(d);renderContinue();renderRecommendations();renderSaved();
+      setDiscovery(d);renderContinue();try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}renderSaved();
     }
     function savedIds(){
       return getDiscovery().saved.map(x=>typeof x==='string'?x:x?.id).filter(Boolean);
@@ -410,90 +460,107 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
       return `<article class="card ${portrait?'portrait-card':''}" data-id="${safe(id)}"><img class="thumb" src="${safe(thumb)}" alt="${safe(title)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">${v.en_vivo?'<span class="badge live">● En vivo</span>':''}${v.verificado?'<span class="badge verify">✓ Verificado</span>':''}<span class="play-overlay"><i class="fa-solid fa-play"></i></span><div class="card-body"><div class="card-title">${safe(title)}</div><div class="card-meta">${safe(meta)}</div></div></article>`;
     }
     function bindCards(container,items){
+      if(!container)return;
       container.querySelectorAll('.card').forEach((el,index)=>{
-        const id=el.dataset.id;
         let sx=0,sy=0,moved=false;
-
         el.addEventListener('pointerdown',e=>{
           sx=e.clientX;sy=e.clientY;moved=false;
         },{passive:true});
-
         el.addEventListener('pointermove',e=>{
-          if(Math.hypot(e.clientX-sx,e.clientY-sy)>10)moved=true;
+          if(Math.hypot(e.clientX-sx,e.clientY-sy)>9)moved=true;
         },{passive:true});
-
         el.addEventListener('click',e=>{
-          if(moved){e.preventDefault();e.stopPropagation();return}
-          const v=items[index];
-          if(!v||!id)return;
-          const fn=window.reproducirVideo||window.abrirVideo;
-          if(typeof fn==='function'){
-            fn(v.id||v.youtube_id||v.videoId,
-              v.titulo||v.title||v.nombre||'Video',
-              v.descripcion||v.author||v.channelTitle||'Contenido',v);
+          if(moved){
+            e.preventDefault();
+            e.stopPropagation();
+            return;
           }
+          const v=items[index];
+          if(!v)return;
+          const id=v.id||v.youtube_id||v.videoId;
+          if(!id)return;
+          reproducirVideo(
+            id,
+            v.titulo||v.title||v.nombre||'Video',
+            v.descripcion||v.author||v.channelTitle||'Contenido',
+            v
+          );
         });
       });
     }
 
     function enableRailDrag(rail){
-      if(!rail||rail.classList.contains('results-rail')||rail.dataset.dragReady==='1')return;
+      if(!rail || rail.classList.contains('results-rail')) return;
+      if(rail.dataset.dragReady==='1') return;
       rail.dataset.dragReady='1';
 
-      let active=false,dragging=false,startX=0,startY=0,startScroll=0,pid=null;
+      let down=false,dragging=false;
+      let sx=0,sy=0,scrollStart=0,pointerId=null;
 
-      const finish=()=>{
-        active=false;
+      function stop(){
+        down=false;
         dragging=false;
         rail.classList.remove('dragging');
-        if(pid!==null){try{rail.releasePointerCapture(pid)}catch{}}
-        pid=null;
-      };
-
-      rail.addEventListener('wheel',e=>{
-        if(rail.scrollWidth<=rail.clientWidth)return;
-        const amount=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
-        if(amount===0)return;
-        e.preventDefault();
-        rail.scrollLeft+=amount;
-      },{passive:false});
+        if(pointerId!==null){
+          try{rail.releasePointerCapture(pointerId)}catch{}
+        }
+        pointerId=null;
+      }
 
       rail.addEventListener('pointerdown',e=>{
         if(e.pointerType==='mouse' && e.button!==0)return;
-        active=true;dragging=false;pid=e.pointerId;
-        startX=e.clientX;startY=e.clientY;startScroll=rail.scrollLeft;
+        if(rail.scrollWidth<=rail.clientWidth)return;
+        down=true;
+        dragging=false;
+        pointerId=e.pointerId;
+        sx=e.clientX;
+        sy=e.clientY;
+        scrollStart=rail.scrollLeft;
       },{passive:true});
 
       rail.addEventListener('pointermove',e=>{
-        if(!active)return;
-        const dx=e.clientX-startX;
-        const dy=e.clientY-startY;
+        if(!down)return;
+        const dx=e.clientX-sx;
+        const dy=e.clientY-sy;
 
         if(!dragging){
-          // A vertical gesture belongs to the page. A horizontal gesture belongs to the rail.
-          if(Math.abs(dy)>10 && Math.abs(dy)>Math.abs(dx)*1.15){
-            finish();
+          if(Math.abs(dx)<7 && Math.abs(dy)<7)return;
+
+          // Vertical gesture: let the page handle it.
+          if(Math.abs(dy)>Math.abs(dx)){
+            stop();
             return;
           }
-          if(Math.abs(dx)>8 && Math.abs(dx)>Math.abs(dy)){
-            dragging=true;
-            rail.classList.add('dragging');
-            try{rail.setPointerCapture(e.pointerId)}catch{}
-          }
+
+          // Horizontal gesture: take control of the rail.
+          dragging=true;
+          rail.classList.add('dragging');
+          try{rail.setPointerCapture(e.pointerId)}catch{}
         }
 
         if(dragging){
           e.preventDefault();
-          rail.scrollLeft=startScroll-dx*1.12;
+          rail.scrollLeft=scrollStart-dx;
         }
       },{passive:false});
 
-      rail.addEventListener('pointerup',finish);
-      rail.addEventListener('pointercancel',finish);
-      rail.addEventListener('lostpointercapture',finish);
+      rail.addEventListener('pointerup',stop,{passive:true});
+      rail.addEventListener('pointercancel',stop,{passive:true});
+      rail.addEventListener('lostpointercapture',()=>{
+        down=false;dragging=false;rail.classList.remove('dragging');
+        pointerId=null;
+      },{passive:true});
+
+      // Wheel: vertical wheel over a rail becomes horizontal navigation.
+      rail.addEventListener('wheel',e=>{
+        if(rail.scrollWidth<=rail.clientWidth)return;
+        const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
+        if(!delta)return;
+        e.preventDefault();
+        rail.scrollLeft += delta;
+      },{passive:false});
     }
 
-    
     function prepararRailWrappers(){
       document.querySelectorAll('.rail:not(.results-rail)').forEach(rail=>{
         if(rail.parentElement?.classList.contains('rail-wrap'))return;
@@ -537,7 +604,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
       const queries=(config.palabras_clave_destacados||'artistas de variedades,teatro,circo,humor,música').split(',').map(x=>x.trim()).filter(Boolean).slice(0,4);
       if(!pool.length||refresh){for(const q of queries){const r=await obtenerVideos(q);pool.push(...r.slice(0,5).map(v=>({...v,categoria:v.categoria&&v.categoria!=='Resultado'?v.categoria:q})))} }
       const seen=new Set();allVideos=pool.filter(v=>v.id&&!seen.has(v.id)&&(seen.add(v.id))).slice(0,limite);
-      $('featuredTitle').textContent=config.titulo_destacados||'🔥 Destacados';renderRail('featuredRail',allVideos);renderRecommendations();
+      $('featuredTitle').textContent=config.titulo_destacados||'🔥 Destacados';renderRail('featuredRail',allVideos);try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}
     }
 
     async function cargarDiscover(){
@@ -566,22 +633,36 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
         .map(x=>x[0])
         .filter(Boolean);
 
+      const row=$('recommendedRow');
+      const rail=$('recommendedRail');
+      const title=$('recommendedTitle');
+
+      if(!row || !rail){
+        // The recommendation rail is optional in the current skin.
+        return;
+      }
+
       if(!cats.length){
-        $('recommendedRow').hidden=true;
+        row.hidden=true;
         return;
       }
 
       const q=cats[0];
-      $('recommendedRow').hidden=false;
-      $('recommendedTitle').textContent=`Para vos · ${q.charAt(0).toUpperCase()+q.slice(1)}`;
+      row.hidden=false;
+      if(title) title.textContent=`Para vos · ${q.charAt(0).toUpperCase()+q.slice(1)}`;
 
       obtenerVideos(q).then(items=>{
         const watched=new Set((d.history||[]).map(x=>x.id));
-        const filtered=items.filter(x=>x&&x.id&&!watched.has(x.id));
-        const finalItems=(filtered.length?filtered:items).slice(0,12);
-        if(finalItems.length)renderRail('recommendedRail',finalItems);
-        else $('recommendedRow').hidden=true;
-      }).catch(()=>{});
+        const filtered=(items||[]).filter(x=>x&&x.id&&!watched.has(x.id));
+        const finalItems=(filtered.length?filtered:items||[]).slice(0,12);
+        if(finalItems.length){
+          renderRail('recommendedRail',finalItems);
+        }else{
+          row.hidden=true;
+        }
+      }).catch(()=>{
+        row.hidden=true;
+      });
     }
 
     async function cargarArtistas(){
@@ -820,7 +901,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
       prepararRailWrappers();
       renderContinue();
       await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarDiscover()]);
-      renderRecommendations();
+      try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}
       prepararRailWrappers();
       activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js')}catch(e){console.warn('SW',e)}}
