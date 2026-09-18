@@ -44,7 +44,7 @@
     .search-status{text-align:center;color:var(--muted);font-size:13px;min-height:25px;padding-top:9px}
 
     /* ROWS */
-    .content{padding:14px 0 70px}.row{padding:18px clamp(18px,4vw,60px)}.row-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:13px}.row-title{font-size:22px;font-weight:800;letter-spacing:-.4px}.row-subtitle{color:var(--muted);font-size:12px;margin-top:3px}.row-more{font-size:13px;color:var(--accent);font-weight:700;background:none;border:0;cursor:pointer}.rail{display:flex;gap:12px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;padding:4px 4px 16px;min-height:40px}.results-rail{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));overflow:visible;gap:16px}.results-rail .card{min-width:0;width:100%}.rail::-webkit-scrollbar{display:none}
+    .content{padding:14px 0 70px}.row{padding:18px clamp(18px,4vw,60px)}.row-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:13px}.row-title{font-size:22px;font-weight:800;letter-spacing:-.4px}.row-subtitle{color:var(--muted);font-size:12px;margin-top:3px}.row-more{font-size:13px;color:var(--accent);font-weight:700;background:none;border:0;cursor:pointer}.rail{display:flex;gap:12px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;padding:4px 4px 16px}.rail::-webkit-scrollbar{display:none}
     .card{flex:0 0 clamp(190px,19vw,270px);border-radius:7px;overflow:hidden;background:var(--surface);border:1px solid transparent;cursor:pointer;position:relative;transition:transform .2s,border-color .2s,box-shadow .2s}.card:hover{transform:scale(1.035);border-color:rgba(255,255,255,.2);box-shadow:0 15px 35px rgba(0,0,0,.45);z-index:3}.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1a1a1d}.card-body{padding:10px 11px 12px}.card-title{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-meta{font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.play-overlay{position:absolute;left:10px;bottom:57px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.75);display:grid;place-items:center;opacity:0;transform:translateY(5px);transition:.2s}.card:hover .play-overlay{opacity:1;transform:none}
     .portrait-card{flex-basis:clamp(150px,14vw,200px);background:transparent;border:0}.portrait-card:hover{box-shadow:none}.portrait-card .thumb{aspect-ratio:1/1;border-radius:50%;border:3px solid #222}.portrait-card:hover .thumb{border-color:var(--accent)}.portrait-card .card-body{text-align:center}.portrait-card .card-title{font-size:14px}.badge{position:absolute;top:9px;left:9px;background:#111d;color:#fff;padding:4px 7px;border-radius:4px;font-size:9px;font-weight:800;text-transform:uppercase}.badge.live{background:#e50914}.badge.verify{background:rgba(0,229,255,.9);color:#001014}
 
@@ -66,239 +66,12 @@
     @media(max-width:520px){.nav-search{display:none}.hero{min-height:68vh}.hero-actions .btn{flex:1}.search-wrap{padding:16px 14px 5px}.big-search button{padding:0 17px}.features{grid-template-columns:1fr;padding:25px 14px}.cta{margin-left:14px;margin-right:14px;padding:27px 22px}.newsletter{flex-direction:column}.newsletter button{width:100%}.row-title{font-size:19px}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
   </style>
-<style id="uadav-v5-ux">
-.rail:not(.results-rail){cursor:grab;scroll-behavior:smooth;overscroll-behavior-x:contain;touch-action:pan-x}
-.rail:not(.results-rail).dragging{cursor:grabbing;scroll-behavior:auto;user-select:none}
-.rail.dragging .card{pointer-events:none}
-.results-rail{cursor:default!important}
-#contenido,#artists,#cartelera,#en-vivo{scroll-margin-top:82px}
-.overlay{align-items:center!important;justify-content:center!important;padding:20px!important}
-.overlay.active{display:flex!important}
-.modal{width:min(1000px,96vw)!important;max-height:calc(100vh - 40px)!important;overflow:auto!important;margin:auto!important}
-.player{width:100%!important;aspect-ratio:16/9!important;background:#000!important;position:relative!important}
-.player iframe{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
-@media(max-width:600px){.nav-links{display:none}.nav-search{width:190px}.modal{width:96vw!important;max-height:calc(100vh - 20px)!important}.overlay{padding:10px!important}}
-</style>
-
-<style id="uadav-v6-ux">
-.rail:not(.results-rail){
-  cursor:grab;
-  scroll-behavior:smooth;
-  overscroll-behavior-x:contain;
-  touch-action:pan-y;
-  -webkit-overflow-scrolling:touch;
-}
-.rail:not(.results-rail).dragging{
-  cursor:grabbing;
-  scroll-behavior:auto;
-  user-select:none;
-}
-.rail.dragging .card{pointer-events:none}
-.results-rail{cursor:default!important}
-#contenido,#artists,#cartelera,#en-vivo{scroll-margin-top:82px}
-
-.overlay{
-  align-items:center!important;
-  justify-content:center!important;
-  padding:20px!important;
-}
-.overlay.active{display:flex!important}
-.overlay.pip-mode{
-  pointer-events:none!important;
-  background:transparent!important;
-  align-items:flex-end!important;
-  justify-content:flex-end!important;
-  padding:20px!important;
-}
-.overlay.pip-mode .modal{
-  pointer-events:auto!important;
-  width:min(390px,92vw)!important;
-  max-height:none!important;
-  margin:0!important;
-  overflow:hidden!important;
-  border-radius:14px!important;
-  box-shadow:0 16px 60px rgba(0,0,0,.65)!important;
-}
-.overlay.pip-mode .player{
-  aspect-ratio:16/9!important;
-}
-.overlay.pip-mode .modal-info{
-  padding:10px 12px!important;
-}
-.overlay.pip-mode .modal-info p{
-  display:none!important;
-}
-.overlay.pip-mode .modal-actions{
-  display:none!important;
-}
-.overlay.pip-mode .close{
-  z-index:5;
-}
-.modal{
-  width:min(1000px,96vw)!important;
-  max-height:calc(100vh - 40px)!important;
-  overflow:auto!important;
-  margin:auto!important;
-}
-.player{
-  width:100%!important;
-  aspect-ratio:16/9!important;
-  background:#000!important;
-  position:relative!important;
-}
-.player iframe{
-  position:absolute!important;
-  inset:0!important;
-  width:100%!important;
-  height:100%!important;
-}
-.saved-empty{
-  padding:22px;
-  color:#777;
-}
-@media(max-width:600px){
-  .modal{width:96vw!important;max-height:calc(100vh - 20px)!important}
-  .overlay{padding:10px!important}
-  .overlay.pip-mode{padding:10px!important}
-  .overlay.pip-mode .modal{width:min(360px,92vw)!important}
-}
-</style>
-
-
-<style id="uadav-v7-repair">
-.player-host{position:absolute;inset:0;width:100%;height:100%;background:#000}
-.player-host iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.overlay.pip-mode .modal{width:min(480px,92vw)!important}
-.overlay.pip-mode .player{min-height:270px}
-@media(max-width:600px){.overlay.pip-mode .modal{width:min(360px,92vw)!important}.overlay.pip-mode .player{min-height:202px}}
-</style>
-
-<meta name="uadav-build" content="UADAVSTREAM V9.1 navigation engine">
-
-<style id="uadav-v8">
-/* ===== V8 VISUAL STABILITY ===== */
-html,body{filter:none!important}
-body:has(#videoModal.pip-mode){filter:none!important}
-body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
-
-/* Keep the background page completely normal while the player floats. */
-.overlay.pip-mode{
-  background:transparent!important;
-  backdrop-filter:none!important;
-  -webkit-backdrop-filter:none!important;
-}
-.overlay.pip-mode .modal{
-  transform:none!important;
-  filter:none!important;
-  opacity:1!important;
-  isolation:isolate;
-  will-change:transform;
-}
-.overlay.pip-mode .player,
-.overlay.pip-mode .player-host,
-.overlay.pip-mode .player-host iframe{
-  filter:none!important;
-  opacity:1!important;
-  transform:none!important;
-}
-
-/* Better PiP proportions: large enough for YouTube to avoid an unnecessarily tiny render target. */
-.overlay.pip-mode .modal{
-  width:min(460px,42vw)!important;
-  min-width:320px!important;
-}
-.overlay.pip-mode .player{aspect-ratio:16/9!important;min-height:0!important}
-.overlay.pip-mode .modal-info{display:none!important}
-
-@media(max-width:700px){
-  .overlay.pip-mode{
-    padding:12px!important;
-    align-items:flex-end!important;
-    justify-content:center!important;
-  }
-  .overlay.pip-mode .modal{
-    width:min(94vw,390px)!important;
-    min-width:0!important;
-  }
-}
-
-/* Explicit grab affordance. */
-.rail:not(.results-rail){cursor:grab}
-.rail:not(.results-rail).dragging{cursor:grabbing}
-.rail:not(.results-rail):hover{scrollbar-width:none}
-
-/* Edge controls make the horizontal interaction discoverable. */
-.rail-wrap{position:relative}
-.rail-arrow{
-  position:absolute;top:50%;transform:translateY(-50%);
-  width:38px;height:38px;border:1px solid rgba(255,255,255,.14);
-  border-radius:50%;background:rgba(10,10,12,.88);color:#fff;
-  display:grid;place-items:center;z-index:4;cursor:pointer;
-  box-shadow:0 8px 25px rgba(0,0,0,.35);opacity:0;transition:.18s;
-}
-.rail-wrap:hover .rail-arrow,.rail-wrap:focus-within .rail-arrow{opacity:1}
-.rail-arrow.left{left:4px}.rail-arrow.right{right:4px}
-.rail-arrow:hover{background:rgba(255,255,255,.12)}
-@media(max-width:700px){.rail-arrow{display:none}}
-</style>
-
-
-<style id="uadav-v8-fix">
-/* ===== HORIZONTAL RAIL ENGINE ===== */
-.rail-wrap{
-  position:relative;
-  width:100%;
-  min-width:0;
-  overflow:visible;
-}
-.rail:not(.results-rail){
-  display:flex!important;
-  flex-wrap:nowrap!important;
-  width:100%!important;
-  max-width:100%!important;
-  overflow-x:auto!important;
-  overflow-y:hidden!important;
-  white-space:nowrap;
-  scroll-behavior:smooth;
-  overscroll-behavior-x:contain;
-  overscroll-behavior-y:auto;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-  -ms-overflow-style:none;
-  cursor:grab!important;
-  user-select:none;
-  -webkit-user-select:none;
-  touch-action:pan-x pan-y;
-}
-.rail:not(.results-rail)::-webkit-scrollbar{display:none}
-.rail:not(.results-rail).dragging{
-  cursor:grabbing!important;
-  scroll-behavior:auto;
-}
-.rail:not(.results-rail) .card{
-  flex:0 0 auto!important;
-  float:none!important;
-  user-select:none;
-  -webkit-user-drag:none;
-}
-@media(max-width:700px){
-  .rail:not(.results-rail){
-    touch-action:pan-x;
-    scroll-snap-type:none!important;
-  }
-  .rail:not(.results-rail) .card{
-    flex-shrink:0!important;
-  }
-}
-</style>
-
-<link rel="icon" href="/favicon.ico" sizes="any">
-</head>
+<style id="uadav-v10-ux">html{scroll-behavior:smooth;overscroll-behavior-y:auto}body{overflow-x:hidden;-webkit-overflow-scrolling:touch}.rail{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;gap:12px;padding:6px 5px 18px;scrollbar-width:none;-ms-overflow-style:none;touch-action:pan-x;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;cursor:grab;user-select:none}.rail::-webkit-scrollbar{display:none}.rail.dragging{cursor:grabbing!important;scroll-behavior:auto!important}.rail .card{flex:0 0 clamp(170px,18vw,235px)!important;min-width:0}.rail .card img{-webkit-user-drag:none;pointer-events:none}@media(max-width:850px){.rail{gap:10px;margin-right:-14px;padding-right:30px}.rail .card{flex-basis:166px!important}.content{padding-bottom:86px}}@media(max-width:390px){.rail .card{flex-basis:154px!important}}.mini-player{position:fixed;z-index:480;right:16px;bottom:18px;width:min(390px,calc(100vw - 32px));display:none;background:#111114;border:1px solid rgba(255,255,255,.14);border-radius:12px;overflow:hidden;box-shadow:0 18px 55px rgba(0,0,0,.65)}.mini-player.active{display:block}.mini-player-media{aspect-ratio:16/9;background:#000}.mini-player iframe{width:100%;height:100%;border:0}.mini-player-head{display:flex;align-items:center;gap:8px;padding:8px 10px}.mini-player-title{flex:1;min-width:0;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mini-player-btn{width:32px;height:32px;border:0;border-radius:50%;background:#202024;color:#fff;cursor:pointer}@media(max-width:850px){.mini-player{left:10px;right:10px;bottom:80px;width:auto}}body.player-open .mini-player{display:none!important}.mobile-nav{display:none}@media(max-width:850px){.mobile-nav{position:fixed;z-index:450;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));height:62px;display:flex;align-items:center;justify-content:space-around;padding:5px;background:rgba(16,16,18,.95);border:1px solid rgba(255,255,255,.1);border-radius:18px;backdrop-filter:blur(18px)}.mobile-nav button{flex:1;height:52px;border:0;border-radius:13px;background:transparent;color:#aaa;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;font-weight:700}.mobile-nav button i{font-size:18px}.mobile-nav button.active{color:var(--accent);background:rgba(255,255,255,.06)}}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}img{-webkit-user-drag:none}</style></head>
 <body>
   <header class="nav" id="nav">
     <a class="brand" href="#top" aria-label="UADAVSTREAM inicio"><span class="brand-mark"><i class="fa-solid fa-play"></i></span><span id="brandName">UADAVSTREAM</span></a>
     <nav class="nav-links" aria-label="Navegación principal">
-      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#artistas" onclick="irASeccion('artists');return false">Artistas</a><a href="#en-vivo" onclick="irASeccion('en-vivo');return false">En vivo</a><a href="#cartelera" onclick="irASeccion('cartelera');return false">Cartelera</a>
+      <a href="#contenido">Inicio</a><a href="#artistas">Artistas</a><a href="#en-vivo">En vivo</a><a href="#cartelera">Cartelera</a>
     </nav>
     <div class="nav-actions">
       <div class="nav-search"><i class="fa-solid fa-magnifying-glass"></i><input id="navSearchInput" aria-label="Buscar" placeholder="Buscar..." onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button aria-label="Buscar" onclick="ejecutarBusqueda(document.getElementById('navSearchInput').value)"><i class="fa-solid fa-arrow-right"></i></button></div>
@@ -327,8 +100,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
 
     <section class="content" id="contenido">
       <div class="row" id="continueRow" hidden><div class="row-head"><div><div class="row-title">▶ Continuar viendo</div><div class="row-subtitle">Contenido que empezaste a disfrutar</div></div></div><div class="rail" id="continueRail"></div></div>
-      <div class="row" id="savedRow" hidden><div class="row-head"><div><div class="row-title">🔖 Mi lista</div><div class="row-subtitle">Guardados en este dispositivo</div></div></div><div class="rail" id="savedRail"></div></div>
-      <div class="row" id="resultsRow" hidden><div class="row-head"><div><div class="row-title" id="resultsTitle">Resultados</div></div><button class="row-more" onclick="volverInicio()">Volver al inicio</button></div><div class="rail results-rail" id="resultsRail"></div></div>
+      <div class="row" id="resultsRow" hidden><div class="row-head"><div><div class="row-title" id="resultsTitle">Resultados</div></div><button class="row-more" onclick="volverInicio()">Volver al inicio</button></div><div class="rail" id="resultsRail"></div></div>
       <div class="row" id="featuredRow"><div class="row-head"><div><div class="row-title" id="featuredTitle">🔥 Destacados</div><div class="row-subtitle">Una selección para empezar a descubrir</div></div><button class="row-more" onclick="cargarDestacados(true)">Actualizar</button></div><div class="rail" id="featuredRail"><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div></div></div>
       <div class="row" id="recommendedRow" hidden><div class="row-head"><div><div class="row-title">✨ Para vos</div><div class="row-subtitle">Recomendaciones según lo que explorás</div></div></div><div class="rail" id="recommendedRail"></div></div>
       <div class="row" id="liveRow"><div class="row-head"><div><div class="row-title">🔴 En vivo</div><div class="row-subtitle">Señales y transmisiones</div></div><a class="row-more" href="#en-vivo">Ver todo</a></div><div class="rail" id="liveRail"></div></div>
@@ -359,12 +131,12 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
   </main>
 
   <footer>
-    <div class="footer-grid"><div><div class="footer-brand" id="footerTexto">UADAVSTREAM</div><div id="footerContacto">La plataforma audiovisual de los artistas de variedades.</div></div><div class="footer-links"><a href="/index.html">Explorar</a><a href="#artistas" onclick="irASeccion('artists');return false">Artistas</a><a href="#cartelera" onclick="irASeccion('cartelera');return false">Cartelera</a><a href="#avisos">Novedades</a></div></div>
+    <div class="footer-grid"><div><div class="footer-brand" id="footerTexto">UADAVSTREAM</div><div id="footerContacto">La plataforma audiovisual de los artistas de variedades.</div></div><div class="footer-links"><a href="/index.html">Explorar</a><a href="#artistas">Artistas</a><a href="#cartelera">Cartelera</a><a href="#avisos">Novedades</a></div></div>
     <div style="margin-top:22px">© <span id="footerYear"></span> UADAVSTREAM · Todos los derechos reservados.</div>
   </footer>
 
   <div class="overlay" id="videoModal" onclick="cerrarModal(event)">
-    <div class="modal" onclick="event.stopPropagation()"><button class="close" onclick="cerrarModal()">✕</button><div class="player"><div id="playerFrame" class="player-host" aria-label="Reproductor UADAVSTREAM"></div></div><div class="modal-info"><h2 id="modalTitle">Video</h2><p id="modalDesc">Contenido</p><div class="modal-actions"><button class="mini-btn" id="modalSaveBtn"><i class="fa-regular fa-bookmark"></i> Mi lista</button><button class="mini-btn" id="modalShareBtn"><i class="fa-solid fa-share-nodes"></i> Compartir</button></div></div></div>
+    <div class="modal" onclick="event.stopPropagation()"><button class="close" onclick="cerrarModal()">✕</button><div class="player"><iframe id="playerFrame" src="" title="Reproductor UADAVSTREAM" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div><div class="modal-info"><h2 id="modalTitle">Video</h2><p id="modalDesc">Contenido</p><div class="modal-actions"><button class="mini-btn" id="modalSaveBtn"><i class="fa-regular fa-bookmark"></i> Mi lista</button><button class="mini-btn" id="modalShareBtn"><i class="fa-solid fa-share-nodes"></i> Compartir</button></div></div></div>
   </div>
 
   <script>
@@ -378,47 +150,16 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     const $ = id => document.getElementById(id);
     const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
-    function getDiscovery(){
-      try{
-        const d=JSON.parse(localStorage.getItem(STORAGE_KEY))||{};
-        d.history=Array.isArray(d.history)?d.history:[];
-        d.saved=Array.isArray(d.saved)?d.saved:[];
-        d.categories=d.categories&&typeof d.categories==='object'?d.categories:{};
-        return d;
-      }catch{return {history:[],saved:[],categories:{}}}
-    }
-    function setDiscovery(d){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}catch{}}
+    function getDiscovery(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {history:[],saved:[],categories:{}}}catch{return {history:[],saved:[],categories:{}}} }
+    function setDiscovery(d){ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}catch{} }
     function rememberVideo(v){
       if(!v?.id)return;
       const d=getDiscovery();
-      d.history=[{
-        id:v.id,titulo:v.titulo||'Video',
-        descripcion:v.descripcion||v.categoria||'Contenido',
-        thumbnail:v.thumbnail||obtenerCaratula(v.id),
-        categoria:v.categoria||'Contenido',ts:Date.now()
-      },...d.history.filter(x=>x.id!==v.id)].slice(0,30);
-      const cat=(v.categoria||'Contenido').toLowerCase();
-      d.categories[cat]=(d.categories[cat]||0)+1;
-      setDiscovery(d);renderContinue();try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}renderSaved();
+      d.history=[{id:v.id,titulo:v.titulo||'Video',descripcion:v.descripcion||v.categoria||'Contenido',thumbnail:v.thumbnail||obtenerCaratula(v.id),categoria:v.categoria||'Contenido',ts:Date.now()},...d.history.filter(x=>x.id!==v.id)].slice(0,30);
+      const cat=(v.categoria||'Contenido').toLowerCase(); d.categories[cat]=(d.categories[cat]||0)+1; setDiscovery(d); renderContinue(); renderRecommendations();
     }
-    function savedIds(){
-      return getDiscovery().saved.map(x=>typeof x==='string'?x:x?.id).filter(Boolean);
-    }
-    function isSaved(id){return savedIds().includes(id)}
-    function toggleSaved(v){
-      const d=getDiscovery();
-      const id=v?.id;
-      if(!id)return false;
-      if(isSaved(id)) d.saved=d.saved.filter(x=>(typeof x==='string'?x:x?.id)!==id);
-      else d.saved.unshift({
-        id,titulo:v.titulo||'Video',
-        descripcion:v.descripcion||'Contenido',
-        thumbnail:v.thumbnail||obtenerCaratula(id),
-        categoria:v.categoria||'Contenido',ts:Date.now()
-      });
-      setDiscovery(d);renderSaved();
-      return isSaved(id);
-    }
+    function isSaved(id){return getDiscovery().saved.includes(id)}
+    function toggleSaved(v){const d=getDiscovery();if(isSaved(v.id))d.saved=d.saved.filter(x=>x!==v.id);else d.saved.unshift(v.id);setDiscovery(d);return !isSaved(v.id)}
 
     async function api(path, options={}){const res=await fetch(API_URL+path+(path.includes('?')?'&':'?')+'_='+Date.now(),options);if(!res.ok)throw new Error('API '+res.status);return res.json()}
 
@@ -439,19 +180,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     }
 
     function obtenerCaratula(id){return id&&id.length===11?`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`:FALLBACK_THUMB}
-    async function obtenerVideos(query){
-      try{
-        const data=await api('youtube/search?q='+encodeURIComponent(query));
-        const arr=Array.isArray(data)?data:(Array.isArray(data.results)?data.results:(Array.isArray(data.items)?data.items:[]));
-        return arr.map(v=>({
-          ...v,
-          id:v.id||v.videoId||v.video_id||v.youtube_id||'',
-          titulo:v.titulo||v.title||'Contenido audiovisual',
-          descripcion:v.descripcion||v.author||v.channelTitle||v.channel||v.categoria||'YouTube',
-          thumbnail:v.thumbnail||v.thumbnailUrl||v.thumbnails?.high?.url||v.thumbnails?.medium?.url||v.thumbnails?.default?.url||''
-        })).filter(v=>v.id);
-      }catch(e){console.error('[UADAV] búsqueda:',e);return[]}
-    }
+    async function obtenerVideos(query){try{const data=await api('youtube/search?q='+encodeURIComponent(query));return Array.isArray(data)?data:[]}catch{return[]}}
 
     function cardHTML(v, portrait=false){
       const id=v.id||v.youtube_id||v.videoId; if(!id)return '';
@@ -460,142 +189,8 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
       const meta=v.descripcion||v.categoria||v.rubro||'UADAVSTREAM';
       return `<article class="card ${portrait?'portrait-card':''}" data-id="${safe(id)}"><img class="thumb" src="${safe(thumb)}" alt="${safe(title)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">${v.en_vivo?'<span class="badge live">● En vivo</span>':''}${v.verificado?'<span class="badge verify">✓ Verificado</span>':''}<span class="play-overlay"><i class="fa-solid fa-play"></i></span><div class="card-body"><div class="card-title">${safe(title)}</div><div class="card-meta">${safe(meta)}</div></div></article>`;
     }
-    function bindCards(container,items){
-      if(!container)return;
-      container.querySelectorAll('.card').forEach((el,index)=>{
-        let sx=0,sy=0,moved=false;
-        el.addEventListener('pointerdown',e=>{
-          sx=e.clientX;sy=e.clientY;moved=false;
-        },{passive:true});
-        el.addEventListener('pointermove',e=>{
-          if(Math.hypot(e.clientX-sx,e.clientY-sy)>9)moved=true;
-        },{passive:true});
-        el.addEventListener('click',e=>{
-          if(moved){
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-          }
-          const v=items[index];
-          if(!v)return;
-          const id=v.id||v.youtube_id||v.videoId;
-          if(!id)return;
-          reproducirVideo(
-            id,
-            v.titulo||v.title||v.nombre||'Video',
-            v.descripcion||v.author||v.channelTitle||'Contenido',
-            v
-          );
-        });
-      });
-    }
-
-    function enableRailDrag(rail){
-      if(!rail || rail.classList.contains('results-rail')) return;
-      if(rail.dataset.dragReady==='1') return;
-      rail.dataset.dragReady='1';
-
-      let down=false,dragging=false;
-      let sx=0,sy=0,scrollStart=0,pointerId=null;
-
-      function stop(){
-        down=false;
-        dragging=false;
-        rail.classList.remove('dragging');
-        if(pointerId!==null){
-          try{rail.releasePointerCapture(pointerId)}catch{}
-        }
-        pointerId=null;
-      }
-
-      rail.addEventListener('pointerdown',e=>{
-        if(e.pointerType==='mouse' && e.button!==0)return;
-        if(rail.scrollWidth<=rail.clientWidth)return;
-        down=true;
-        dragging=false;
-        pointerId=e.pointerId;
-        sx=e.clientX;
-        sy=e.clientY;
-        scrollStart=rail.scrollLeft;
-      },{passive:true});
-
-      rail.addEventListener('pointermove',e=>{
-        if(!down)return;
-        const dx=e.clientX-sx;
-        const dy=e.clientY-sy;
-
-        if(!dragging){
-          if(Math.abs(dx)<7 && Math.abs(dy)<7)return;
-
-          // Vertical gesture: let the page handle it.
-          if(Math.abs(dy)>Math.abs(dx)){
-            stop();
-            return;
-          }
-
-          // Horizontal gesture: take control of the rail.
-          dragging=true;
-          rail.classList.add('dragging');
-          try{rail.setPointerCapture(e.pointerId)}catch{}
-        }
-
-        if(dragging){
-          e.preventDefault();
-          rail.scrollLeft=scrollStart-dx;
-        }
-      },{passive:false});
-
-      rail.addEventListener('pointerup',stop,{passive:true});
-      rail.addEventListener('pointercancel',stop,{passive:true});
-      rail.addEventListener('lostpointercapture',()=>{
-        down=false;dragging=false;rail.classList.remove('dragging');
-        pointerId=null;
-      },{passive:true});
-
-      // Wheel: vertical wheel over a rail becomes horizontal navigation.
-      rail.addEventListener('wheel',e=>{
-        if(rail.scrollWidth<=rail.clientWidth)return;
-        const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
-        if(!delta)return;
-        e.preventDefault();
-        rail.scrollLeft += delta;
-      },{passive:false});
-    }
-
-    function prepararRailWrappers(){
-      document.querySelectorAll('.rail:not(.results-rail)').forEach(rail=>{
-        if(rail.parentElement?.classList.contains('rail-wrap'))return;
-        const wrap=document.createElement('div');
-        wrap.className='rail-wrap';
-        rail.parentNode.insertBefore(wrap,rail);
-        wrap.appendChild(rail);
-      });
-    }
-
-    function activarArrastreCarruseles(){document.querySelectorAll('.rail:not(.results-rail)').forEach(enableRailDrag)}
-    function renderRail(id,items,portrait=false){
-      const el=$(id); if(!el)return;
-      const valid=(items||[]).filter(v=>v&&(v.id||v.youtube_id||v.videoId));
-      el.innerHTML=valid.length?valid.map(v=>cardHTML(v,portrait)).join(''):'<div style="padding:22px;color:#777">Todavía no hay contenido disponible.</div>';
-      bindCards(el,valid);
-
-      if(!el.classList.contains('results-rail')){
-        const wrap=el.closest('.rail-wrap');
-        if(wrap){
-          wrap.querySelectorAll('.rail-arrow').forEach(x=>x.remove());
-          const left=document.createElement('button');
-          left.className='rail-arrow left';left.type='button';left.setAttribute('aria-label','Anterior');
-          left.innerHTML='<i class="fa-solid fa-chevron-left"></i>';
-          left.onclick=()=>el.scrollBy({left:-Math.max(el.clientWidth*.72,320),behavior:'smooth'});
-          const right=document.createElement('button');
-          right.className='rail-arrow right';right.type='button';right.setAttribute('aria-label','Siguiente');
-          right.innerHTML='<i class="fa-solid fa-chevron-right"></i>';
-          right.onclick=()=>el.scrollBy({left:Math.max(el.clientWidth*.72,320),behavior:'smooth'});
-          wrap.append(left,right);
-        }
-      }
-      enableRailDrag(el);
-    }
+    function bindCards(container, items){container.querySelectorAll('.card').forEach((el,i)=>el.onclick=()=>{const v=items[i];if(v?.id||v?.youtube_id)reproducirVideo(v.id||v.youtube_id,v.titulo||v.nombre_artistico||v.nombre,v.descripcion||v.categoria||v.rubro,v)})}
+    function renderRail(id,items,portrait=false){const el=$(id);el.innerHTML=items.length?items.map(v=>cardHTML(v,portrait)).join(''):'<div style="padding:22px;color:#777">Todavía no hay contenido disponible.</div>';bindCards(el,items)}
 
     async function cargarDestacados(refresh=false){
       const rail=$('featuredRail');rail.innerHTML='<div style="padding:25px;color:#888"><i class="fa-solid fa-circle-notch fa-spin"></i> Descubriendo contenido...</div>';
@@ -605,7 +200,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
       const queries=(config.palabras_clave_destacados||'artistas de variedades,teatro,circo,humor,música').split(',').map(x=>x.trim()).filter(Boolean).slice(0,4);
       if(!pool.length||refresh){for(const q of queries){const r=await obtenerVideos(q);pool.push(...r.slice(0,5).map(v=>({...v,categoria:v.categoria&&v.categoria!=='Resultado'?v.categoria:q})))} }
       const seen=new Set();allVideos=pool.filter(v=>v.id&&!seen.has(v.id)&&(seen.add(v.id))).slice(0,limite);
-      $('featuredTitle').textContent=config.titulo_destacados||'🔥 Destacados';renderRail('featuredRail',allVideos);try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}
+      $('featuredTitle').textContent=config.titulo_destacados||'🔥 Destacados';renderRail('featuredRail',allVideos);renderRecommendations();
     }
 
     async function cargarDiscover(){
@@ -615,55 +210,9 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     }
 
     function renderContinue(){const d=getDiscovery();const items=d.history||[];if(!items.length){$('continueRow').hidden=true;return}$('continueRow').hidden=false;renderRail('continueRail',items.slice(0,12))}
-    function renderSaved(){
-      const row=$('savedRow'),rail=$('savedRail');
-      if(!row||!rail)return;
-      const raw=getDiscovery().saved||[];
-      const items=raw.map(x=>typeof x==='string'?{
-        id:x,titulo:'Video guardado',descripcion:'Contenido guardado',
-        thumbnail:obtenerCaratula(x),categoria:'Mi lista'
-      }:x).filter(x=>x&&x.id);
-      if(!items.length){row.hidden=true;rail.innerHTML='';return}
-      row.hidden=false;renderRail('savedRail',items.slice(0,30));
-    }
-
     function renderRecommendations(){
-      const d=getDiscovery();
-      const cats=Object.entries(d.categories||{})
-        .sort((a,b)=>b[1]-a[1])
-        .map(x=>x[0])
-        .filter(Boolean);
-
-      const row=$('recommendedRow');
-      const rail=$('recommendedRail');
-      const title=$('recommendedTitle');
-
-      if(!row || !rail){
-        // The recommendation rail is optional in the current skin.
-        return;
-      }
-
-      if(!cats.length){
-        row.hidden=true;
-        return;
-      }
-
-      const q=cats[0];
-      row.hidden=false;
-      if(title) title.textContent=`Para vos · ${q.charAt(0).toUpperCase()+q.slice(1)}`;
-
-      obtenerVideos(q).then(items=>{
-        const watched=new Set((d.history||[]).map(x=>x.id));
-        const filtered=(items||[]).filter(x=>x&&x.id&&!watched.has(x.id));
-        const finalItems=(filtered.length?filtered:items||[]).slice(0,12);
-        if(finalItems.length){
-          renderRail('recommendedRail',finalItems);
-        }else{
-          row.hidden=true;
-        }
-      }).catch(()=>{
-        row.hidden=true;
-      });
+      const d=getDiscovery();const cats=Object.entries(d.categories||{}).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);if(!cats.length){$('recommendedRow').hidden=true;return}
+      const q=cats[0];obtenerVideos(q).then(items=>{if(items.length){$('recommendedRow').hidden=false;renderRail('recommendedRail',items.slice(0,12))}})
     }
 
     async function cargarArtistas(){
@@ -687,350 +236,35 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     }
 
     async function ejecutarBusqueda(value){
-      const q=String(value||'').trim();
-      if(!q){volverInicio();return;}
-      $('searchInput').value=q;$('navSearchInput').value=q;
-      $('searchStatus').innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando...';
-      ['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>$(id).hidden=true);
-      $('resultsRow').hidden=false;
-      const rail=$('resultsRail');
-      rail.innerHTML='<div style="grid-column:1/-1;padding:35px;text-align:center;color:#888"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando resultados...</div>';
-      try{
-        const results=await obtenerVideos(q);
-        $('resultsTitle').textContent='Resultados para “'+q+'”';
-        $('searchStatus').textContent=results.length?results.length+' resultados encontrados':'No encontramos resultados';
-        renderRail('resultsRail',results);
-        $('resultsRow').hidden=false;
-        requestAnimationFrame(()=>{document.getElementById('resultsRow').scrollIntoView({behavior:'smooth',block:'start'});});
-      }catch(e){
-        console.error('[UADAV] búsqueda fatal:',e);
-        $('searchStatus').textContent='Error al buscar';
-        rail.innerHTML='<div style="grid-column:1/-1;padding:35px;text-align:center;color:#ff7777">No pudimos cargar los resultados. Revisá la conexión con la API.</div>';
-      }
+      const q=String(value||'').trim();if(!q){volverInicio();return}
+      $('searchInput').value=q;$('navSearchInput').value=q;$('searchStatus').innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando contenido...';
+      $('featuredRow').hidden=true;$('recommendedRow').hidden=true;$('liveRow').hidden=true;$('artists').hidden=true;$('cartelera').hidden=true;$('discoverRail').parentElement.parentElement.hidden=true;$('resultsRow').hidden=false;
+      const results=await obtenerVideos(q);$('resultsTitle').textContent=`Resultados para “${q}”`;$('searchStatus').textContent=results.length?`${results.length} resultados encontrados`:'No encontramos resultados';renderRail('resultsRail',results);window.scrollTo({top:$('resultsRow').offsetTop-70,behavior:'smooth'});
     }
-    function irASeccion(id){
-      const el=$(id);if(!el)return;
-      if($('resultsRow')&&!$('resultsRow').hidden)volverInicio();
-      setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),40);
-    }
-    function volverInicio(){
-      ['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>{if($(id))$(id).hidden=false});
-      if($('discoverRail')?.parentElement?.parentElement)$('discoverRail').parentElement.parentElement.hidden=false;
-      if($('resultsRow'))$('resultsRow').hidden=true;
-      if($('searchStatus'))$('searchStatus').textContent='';
-      if($('searchInput'))$('searchInput').value='';
-      if($('navSearchInput'))$('navSearchInput').value='';
-      window.scrollTo({top:0,behavior:'smooth'});
-    }
-
-    let ytPlayer=null;
-    let ytApiReady=false;
-    let pendingVideoId=null;
-    let currentQueue=[];
-    let currentQueueIndex=0;
-    let currentVideoData=null;
-
-    window.onYouTubeIframeAPIReady=function(){
-      ytApiReady=true;
-      if(pendingVideoId) crearOActualizarPlayer(pendingVideoId);
-    };
-
-    function crearOActualizarPlayer(id){
-      if(!id)return;
-      pendingVideoId=id;
-
-      if(!ytApiReady || !window.YT || !YT.Player)return;
-
-      const host=$('playerFrame');
-      if(!host)return;
-
-      if(ytPlayer && typeof ytPlayer.loadVideoById==='function'){
-        try{
-          ytPlayer.loadVideoById({videoId:id,startSeconds:0});
-          try{ytPlayer.setPlaybackQuality('hd720')}catch{}
-          return;
-        }catch{}
-      }
-
-      host.innerHTML='';
-      ytPlayer=new YT.Player('playerFrame',{
-        width:'100%',
-        height:'100%',
-        videoId:id,
-        playerVars:{
-          autoplay:1,
-          controls:1,
-          rel:0,
-          playsinline:1,
-          enablejsapi:1,
-          origin:location.origin
-        },
-        events:{
-          onReady:function(e){
-            try{e.target.playVideo()}catch{}
-            try{e.target.setPlaybackQuality('hd720')}catch{}
-          },
-          onStateChange:function(e){
-            if(e.data===0) reproducirSiguiente();
-          },
-          onAutoplayBlocked:function(){
-            // The user already clicked the card, so the browser normally allows playback.
-            // If a browser still blocks it, controls remain available.
-          }
-        }
-      });
-    }
-
-    function cargarPlayerYouTube(id){
-      if(!id)return;
-      pendingVideoId=id;
-
-      if(ytApiReady && window.YT && YT.Player){
-        crearOActualizarPlayer(id);
-        return;
-      }
-
-      // Fallback while the API is still loading.
-      const host=$('playerFrame');
-      if(host){
-        host.innerHTML=`<iframe
-          src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=1&rel=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}"
-          title="Reproductor UADAVSTREAM"
-          allow="autoplay; encrypted-media; picture-in-picture; web-share"
-          allowfullscreen></iframe>`;
-      }
-    }
-
-    function prepararCola(video){
-      const base=(allVideos||[]).filter(v=>v&&v.id);
-      const pool=base.some(v=>v.id===video?.id)?base:[video,...base.filter(v=>v.id!==video?.id)];
-      currentQueue=pool;
-      currentQueueIndex=Math.max(0,currentQueue.findIndex(v=>v.id===video?.id));
-    }
-
-    function reproducirSiguiente(){
-      if(!currentQueue.length)return;
-      const next=(currentQueueIndex+1)%currentQueue.length;
-      currentQueueIndex=next;
-      const v=currentQueue[next];
-      if(!v)return;
-      currentVideoData=v;
-      rememberVideo(v);
-      $('modalTitle').textContent=v.titulo||'Video';
-      $('modalDesc').textContent=v.descripcion||'Contenido audiovisual';
-      actualizarBotonesPlayer(v);
-      cargarPlayerYouTube(v.id);
-    }
-
-    function actualizarBotonesPlayer(v){
-      $('modalSaveBtn').innerHTML=`<i class="fa-${isSaved(v.id)?'solid':'regular'} fa-bookmark"></i> ${isSaved(v.id)?'Guardado':'Mi lista'}`;
-      $('modalSaveBtn').onclick=()=>{
-        const now=toggleSaved(v);
-        $('modalSaveBtn').innerHTML=`<i class="fa-${now?'solid':'regular'} fa-bookmark"></i> ${now?'Guardado':'Mi lista'}`;
-      };
-      $('modalShareBtn').onclick=async()=>{
-        const url=`${location.origin}${location.pathname}?video=${encodeURIComponent(v.id)}`;
-        if(navigator.share){
-          try{await navigator.share({title:v.titulo||'UADAVSTREAM',text:v.descripcion||'Mirá este contenido en UADAVSTREAM',url});return}catch{}
-        }
-        try{
-          await navigator.clipboard.writeText(url);
-          $('modalShareBtn').innerHTML='<i class="fa-solid fa-check"></i> Copiado';
-          setTimeout(()=>{$('modalShareBtn').innerHTML='<i class="fa-solid fa-share-nodes"></i> Compartir'},1600);
-        }catch{window.open(url,'_blank','noopener')}
-      };
-    }
+    function volverInicio(){['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>$(id).hidden=false);$('discoverRail').parentElement.parentElement.hidden=false;$('resultsRow').hidden=true;$('searchStatus').textContent='';$('searchInput').value='';$('navSearchInput').value='';window.scrollTo({top:0,behavior:'smooth'})}
 
     function reproducirVideo(id,titulo,desc,video){
-      if(!id||String(id).startsWith('event-')){
-        if(video?.eventData){
-          const e=video.eventData;
-          const link=e.link_pago||e.url||e.link||e.whatsapp;
-          if(link)window.open(link,'_blank','noopener');
-        }
-        return;
-      }
-
-      const v={
-        ...(video||{}),
-        id,
-        titulo:titulo||video?.titulo||'Video',
-        descripcion:desc||video?.descripcion||'Contenido audiovisual',
-        thumbnail:video?.thumbnail||obtenerCaratula(id),
-        categoria:video?.categoria||'Contenido'
-      };
-
-      prepararCola(v);
-      currentVideoData=v;
-      rememberVideo(v);
-      $('modalTitle').textContent=v.titulo;
-      $('modalDesc').textContent=v.descripcion;
-      $('videoModal').classList.add('active');
-      $('videoModal').classList.remove('pip-mode');
-      document.body.style.overflow='';
-      actualizarBotonesPlayer(v);
-      cargarPlayerYouTube(id);
+      if(!id||String(id).startsWith('event-')){if(video?.eventData){const e=video.eventData;const link=e.link_pago||e.url||e.link||e.whatsapp;if(link)window.open(link,'_blank','noopener');}return}
+      rememberVideo({id,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(id),categoria:video?.categoria||'Contenido'});
+      $('modalTitle').textContent=titulo||'Video';$('modalDesc').textContent=desc||'Contenido audiovisual';$('playerFrame').src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;$('videoModal').classList.add('active');document.body.style.overflow='hidden';
+      $('modalSaveBtn').innerHTML=`<i class="fa-${isSaved(id)?'solid':'regular'} fa-bookmark"></i> ${isSaved(id)?'Guardado':'Mi lista'}`;$('modalSaveBtn').onclick=()=>{const now=toggleSaved({id,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(id)});$('modalSaveBtn').innerHTML=`<i class="fa-${now?'solid':'regular'} fa-bookmark"></i> ${now?'Guardado':'Mi lista'}`};$('modalShareBtn').onclick=async()=>{const url=`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;try{await navigator.clipboard.writeText(url);$('modalShareBtn').innerHTML='<i class="fa-solid fa-check"></i> Copiado'}catch{window.open(url,'_blank','noopener')}};
     }
-
-    function cerrarModal(e){
-      if(e&&e.target!==e.currentTarget)return;
-      $('videoModal').classList.remove('active','pip-mode');
-      if(ytPlayer&&typeof ytPlayer.stopVideo==='function'){
-        try{ytPlayer.stopVideo()}catch{}
-      }
-      const host=$('playerFrame');
-      if(host)host.innerHTML='';
-      pendingVideoId=null;
-      document.body.style.overflow='';
-      currentVideoData=null;
-    }
+    function cerrarModal(e){if(e&&e.target!==e.currentTarget)return;$('videoModal').classList.remove('active');$('playerFrame').src='';document.body.style.overflow=''}
 
     $('btnCaptador').addEventListener('click',async()=>{const email=$('emailInput').value.trim();if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ $('mensajeCaptador').style.color='#ff7b7b';$('mensajeCaptador').textContent='Ingresá un email válido.';return}try{const res=await fetch(API_URL+'suscriptores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});if(!res.ok)throw new Error();$('emailInput').value='';$('mensajeCaptador').style.color='#78f0a2';$('mensajeCaptador').textContent='✓ Listo. Te avisaremos de las novedades.'}catch{$('mensajeCaptador').style.color='#ff7b7b';$('mensajeCaptador').textContent='No pudimos registrar el email. Intentá nuevamente.'}});
 
-    function actualizarMiniPlayer(){
-      const modal=$('videoModal');
-      if(!modal||!modal.classList.contains('active'))return;
-      modal.classList.toggle('pip-mode',window.scrollY>180);
-    }
-    window.addEventListener('scroll',actualizarMiniPlayer,{passive:true});
     window.addEventListener('scroll',()=>{$('nav').classList.toggle('scrolled',window.scrollY>30)});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarModal()});
     $('footerYear').textContent=new Date().getFullYear();
 
     async function init(){
       await cargarConfig();
-      prepararRailWrappers();
       renderContinue();
       await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarDiscover()]);
-      try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}
-      prepararRailWrappers();
-      activarArrastreCarruseles();
+      renderRecommendations();
       if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js')}catch(e){console.warn('SW',e)}}
     }
     init();
-  document.addEventListener('keydown',e=>{
-      if(e.key!=='Escape')return;
-      if($('videoModal')?.classList.contains('active'))cerrarModal();
-      else if($('resultsRow')&&!$('resultsRow').hidden)volverInicio();
-    });
-</script>
-<script src="https://www.youtube.com/iframe_api" async></script>
-
-<style id="uadav-v9-navigation">
-/* V9 — Netflix-like responsive navigation */
-:root{--card-w:clamp(150px,15vw,220px)}
-.rail-wrap{position:relative;overflow:visible;width:100%;min-width:0}
-.rail:not(.results-rail){
-  display:flex!important;flex-wrap:nowrap!important;gap:14px;
-  overflow-x:auto!important;overflow-y:hidden!important;
-  width:100%!important;max-width:100%!important;
-  scrollbar-width:none;-ms-overflow-style:none;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior-x:contain;overscroll-behavior-y:auto;
-  scroll-behavior:smooth;
-  cursor:grab!important;
-  user-select:none;-webkit-user-select:none;
-  touch-action:pan-y;
-  padding-bottom:5px;
-}
-.rail:not(.results-rail)::-webkit-scrollbar{display:none}
-.rail:not(.results-rail).dragging{cursor:grabbing!important;scroll-behavior:auto}
-.rail:not(.results-rail) .card{
-  flex:0 0 var(--card-w)!important;width:var(--card-w)!important;
-  min-width:var(--card-w)!important;float:none!important;
-  user-select:none;-webkit-user-drag:none;
-}
-@media(min-width:1200px){:root{--card-w:190px}}
-@media(min-width:1500px){:root{--card-w:205px}}
-@media(max-width:700px){
-  :root{--card-w:132px}
-  .rail:not(.results-rail){gap:10px;touch-action:pan-y;scroll-padding-inline:12px}
-  .rail:not(.results-rail) .card{flex-basis:132px!important;width:132px!important;min-width:132px!important}
-}
-@media(max-width:380px){
-  :root{--card-w:118px}
-  .rail:not(.results-rail) .card{flex-basis:118px!important;width:118px!important;min-width:118px!important}
-}
-/* Let the page remain scrollable over the video/player surface. */
-.overlay.pip-mode{pointer-events:none!important}
-.overlay.pip-mode .modal{pointer-events:auto!important}
-.player-host,.player-host iframe{touch-action:auto!important}
-/* Never blur/dim the page when player is floating. */
-body,body>*{filter:none!important}
-body:has(#videoModal.pip-mode)>*{filter:none!important;opacity:1!important}
-</style>
-<script id="uadav-v9-engine">
-(function(){
-  'use strict';
-  function rails(){
-    return Array.from(document.querySelectorAll('.rail:not(.results-rail)'));
-  }
-  function setupRail(rail){
-    if(!rail || rail.dataset.v9==='1') return;
-    rail.dataset.v9='1';
-    let active=false, moved=false, vertical=false, startX=0,startY=0,startScroll=0,id=null;
-
-    rail.addEventListener('pointerdown',function(e){
-      if(e.pointerType==='mouse' && e.button!==0)return;
-      if(rail.scrollWidth<=rail.clientWidth+2)return;
-      active=true;moved=false;vertical=false;id=e.pointerId;
-      startX=e.clientX;startY=e.clientY;startScroll=rail.scrollLeft;
-    },{passive:true});
-
-    rail.addEventListener('pointermove',function(e){
-      if(!active)return;
-      const dx=e.clientX-startX,dy=e.clientY-startY;
-      if(!moved && Math.hypot(dx,dy)<6)return;
-      if(!moved){
-        if(Math.abs(dy)>Math.abs(dx)){vertical=true;active=false;return}
-        moved=true;rail.classList.add('dragging');
-        try{rail.setPointerCapture(e.pointerId)}catch(_){}
-      }
-      if(moved){e.preventDefault();rail.scrollLeft=startScroll-dx}
-    },{passive:false});
-
-    function end(){
-      active=false;
-      if(moved){
-        setTimeout(function(){rail.classList.remove('dragging')},20);
-      }else rail.classList.remove('dragging');
-      moved=false;vertical=false;id=null;
-    }
-    rail.addEventListener('pointerup',end,{passive:true});
-    rail.addEventListener('pointercancel',end,{passive:true});
-    rail.addEventListener('lostpointercapture',end,{passive:true});
-
-    rail.addEventListener('wheel',function(e){
-      if(rail.scrollWidth<=rail.clientWidth+2)return;
-      const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
-      if(delta){e.preventDefault();rail.scrollLeft+=delta}
-    },{passive:false});
-
-    /* Avoid accidental card activation after a drag. */
-    rail.addEventListener('click',function(e){
-      if(rail.classList.contains('dragging')){e.preventDefault();e.stopPropagation()}
-    },true);
-  }
-  function setupAll(){rails().forEach(setupRail)}
-  window.uadavV9SetupRails=setupAll;
-  const obs=new MutationObserver(function(){setupAll()});
-  if(document.body)obs.observe(document.body,{childList:true,subtree:true});
-  document.addEventListener('DOMContentLoaded',setupAll);
-  setTimeout(setupAll,300);
-  setTimeout(setupAll,1000);
-
-  /* Mobile: scrolling must belong to the document, not the YouTube iframe.
-     A tap on the player still works normally; navigation outside the iframe remains native. */
-  let lastY=0;
-  window.addEventListener('touchstart',function(e){
-    if(e.touches&&e.touches[0])lastY=e.touches[0].clientY;
-  },{passive:true});
-  window.addEventListener('touchmove',function(e){
-    if(!e.touches||!e.touches[0])return;
-    lastY=e.touches[0].clientY;
-  },{passive:true});
-})();
-</script>
-
-</body>
+  </script>
+<div class="mini-player" id="miniPlayer"><div class="mini-player-media"><iframe id="miniPlayerFrame" title="Reproductor minimizado" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div><div class="mini-player-head"><div class="mini-player-title" id="miniPlayerTitle">Video</div><button class="mini-player-btn" id="miniPlayerOpen" aria-label="Abrir reproductor">⛶</button><button class="mini-player-btn" id="miniPlayerClose" aria-label="Cerrar reproductor">✕</button></div></div><nav class="mobile-nav" id="mobileNav"><button data-target="top" class="active"><i class="fa-solid fa-house"></i><span>Inicio</span></button><button data-target="searchInput"><i class="fa-solid fa-magnifying-glass"></i><span>Buscar</span></button><button data-target="en-vivo"><i class="fa-solid fa-tower-broadcast"></i><span>En vivo</span></button><button data-target="artists"><i class="fa-solid fa-users"></i><span>Artistas</span></button><button data-action="saved"><i class="fa-regular fa-bookmark"></i><span>Mi lista</span></button></nav><script>(function(){const V={current:null};const $=id=>document.getElementById(id);function setupRail(r){if(!r||r.dataset.v10)return;r.dataset.v10=1;let down=false,drag=false,sx=0,sy=0,sl=0;const end=()=>{down=false;setTimeout(()=>r.classList.remove('dragging'),0)};r.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;if(r.scrollWidth<=r.clientWidth)return;down=true;drag=false;sx=e.clientX;sy=e.clientY;sl=r.scrollLeft});r.addEventListener('pointermove',e=>{if(!down)return;let dx=e.clientX-sx,dy=e.clientY-sy;if(!drag&&Math.abs(dx)<8&&Math.abs(dy)<8)return;if(Math.abs(dy)>Math.abs(dx)){end();return}drag=true;r.classList.add('dragging');try{r.setPointerCapture(e.pointerId)}catch{}e.preventDefault();r.scrollLeft=sl-dx},{passive:false});r.addEventListener('pointerup',end);r.addEventListener('pointercancel',end);r.addEventListener('click',e=>{if(drag){e.preventDefault();e.stopPropagation()}},true);r.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)>Math.abs(e.deltaY)||e.shiftKey){e.preventDefault();r.scrollLeft+=e.shiftKey?e.deltaY:e.deltaX}},{passive:false})}function rails(){document.querySelectorAll('.rail').forEach(setupRail)}window.addEventListener('DOMContentLoaded',()=>{rails();new MutationObserver(rails).observe(document.body,{childList:true,subtree:true});document.querySelectorAll('#mobileNav button').forEach(b=>b.onclick=()=>{if(b.dataset.action==='saved'){alert('Mi lista queda disponible desde las tarjetas guardadas.');return}let t=$(b.dataset.target);if(t){t.scrollIntoView({behavior:'smooth',block:'start'});if(b.dataset.target==='searchInput')setTimeout(()=>t.focus(),300)}});$('miniPlayerOpen')?.addEventListener('click',()=>{$('miniPlayer').classList.remove('active');document.body.classList.add('player-open');if(V.current){$('playerFrame').src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(V.current.id)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;$('videoModal').classList.add('active');document.body.style.overflow='hidden'}});$('miniPlayerClose')?.addEventListener('click',()=>{$('miniPlayerFrame').src='';$('miniPlayer').classList.remove('active');V.current=null})});window.reproducirVideo=function(id,titulo,desc,video){if(!id||String(id).startsWith('event-')){if(video?.eventData){let e=video.eventData,l=e.link_pago||e.url||e.link||e.whatsapp;if(l)window.open(l,'_blank','noopener')}return}V.current={id:String(id),titulo:titulo||'Video',desc:desc||'Contenido audiovisual'};rememberVideo({id:V.current.id,titulo:V.current.titulo,descripcion:V.current.desc,thumbnail:video?.thumbnail||obtenerCaratula(id),categoria:video?.categoria||'Contenido'});$('modalTitle').textContent=V.current.titulo;$('modalDesc').textContent=V.current.desc;$('playerFrame').src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;$('videoModal').classList.add('active');document.body.classList.add('player-open');document.body.style.overflow='hidden'};window.cerrarModal=function(e){if(e&&e.target!==e.currentTarget)return;if(V.current){$('playerFrame').src='';$('videoModal').classList.remove('active');document.body.style.overflow='';$('miniPlayerFrame').src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(V.current.id)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;$('miniPlayerTitle').textContent=V.current.titulo;$('miniPlayer').classList.add('active')}else{$('videoModal').classList.remove('active');document.body.style.overflow=''}}})();</script></body>
 </html>
