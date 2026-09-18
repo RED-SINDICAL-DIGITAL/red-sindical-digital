@@ -37,7 +37,7 @@
     .rail::-webkit-scrollbar{display:none}.rail.dragging{cursor:grabbing;scroll-behavior:auto;user-select:none}.rail>*{flex:0 0 auto}
     @media(max-width:700px){.rail{gap:10px;padding-bottom:14px;touch-action:pan-x}.card{width:150px!important}.card img{height:210px!important;object-fit:cover}.hero{min-height:68vh;padding-bottom:42px}}
     /* Floating mobile player */
-    .mobile-player-mini{display:none!important}
+    .mobile-player-mini{position:fixed;right:12px;bottom:76px;width:min(92vw,380px);aspect-ratio:16/9;z-index:800;background:#000;border-radius:12px;overflow:hidden;box-shadow:0 14px 42px rgba(0,0,0,.72);display:none;border:1px solid rgba(255,255,255,.14)}
     .mobile-player-mini.active{display:block}.mobile-player-mini .mini-host{width:100%;height:100%}.mobile-player-mini iframe{width:100%;height:100%;border:0;display:block}
     .mini-controls{position:absolute;right:7px;top:7px;z-index:5;display:flex;gap:6px}
     .mini-controls button{width:34px;height:34px;border:0;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;cursor:pointer;display:grid;place-items:center}
@@ -56,7 +56,7 @@
     .search-status{text-align:center;color:var(--muted);font-size:13px;min-height:25px;padding-top:9px}
 
     /* ROWS */
-    .content{padding:14px 0 70px}.row{padding:18px clamp(18px,4vw,60px)}.row-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:13px}.row-title{font-size:22px;font-weight:800;letter-spacing:-.4px}.row-subtitle{color:var(--muted);font-size:12px;margin-top:3px}.row-more{font-size:13px;color:var(--accent);font-weight:700;background:none;border:0;cursor:pointer}.rail{display:flex;gap:12px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;padding:4px 4px 16px;touch-action:pan-y;overscroll-behavior-x:contain;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-overflow-scrolling:touch}.rail.dragging{cursor:grabbing;scroll-behavior:auto}.rail::-webkit-scrollbar{display:none}
+    .content{padding:14px 0 70px}.row{padding:18px clamp(18px,4vw,60px)}.row-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:13px}.row-title{font-size:22px;font-weight:800;letter-spacing:-.4px}.row-subtitle{color:var(--muted);font-size:12px;margin-top:3px}.row-more{font-size:13px;color:var(--accent);font-weight:700;background:none;border:0;cursor:pointer}.rail{display:flex;gap:12px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;padding:4px 4px 16px}.rail::-webkit-scrollbar{display:none}
     .card{flex:0 0 clamp(190px,19vw,270px);border-radius:7px;overflow:hidden;background:var(--surface);border:1px solid transparent;cursor:pointer;position:relative;transition:transform .2s,border-color .2s,box-shadow .2s}.card:hover{transform:scale(1.035);border-color:rgba(255,255,255,.2);box-shadow:0 15px 35px rgba(0,0,0,.45);z-index:3}.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1a1a1d}.card-body{padding:10px 11px 12px}.card-title{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-meta{font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.play-overlay{position:absolute;left:10px;bottom:57px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.75);display:grid;place-items:center;opacity:0;transform:translateY(5px);transition:.2s}.card:hover .play-overlay{opacity:1;transform:none}
     .portrait-card{flex-basis:clamp(150px,14vw,200px);background:transparent;border:0}.portrait-card:hover{box-shadow:none}.portrait-card .thumb{aspect-ratio:1/1;border-radius:50%;border:3px solid #222}.portrait-card:hover .thumb{border-color:var(--accent)}.portrait-card .card-body{text-align:center}.portrait-card .card-title{font-size:14px}.badge{position:absolute;top:9px;left:9px;background:#111d;color:#fff;padding:4px 7px;border-radius:4px;font-size:9px;font-weight:800;text-transform:uppercase}.badge.live{background:#e50914}.badge.verify{background:rgba(0,229,255,.9);color:#001014}
 
@@ -65,7 +65,7 @@
     .cta{margin:20px clamp(18px,4vw,60px) 50px;border:1px solid var(--line);border-radius:16px;padding:42px;background:radial-gradient(circle at 80% 20%,rgba(0,229,255,.11),transparent 35%),#101013}.cta h2{font-size:clamp(28px,4vw,45px);margin:0 0 9px;letter-spacing:-1.5px}.cta p{color:#bbb;max-width:650px;margin:0 0 22px;line-height:1.5}
 
     /* MODALS */
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.91);backdrop-filter:blur(10px);z-index:500;display:none;overflow:auto;padding:50px 16px}.overlay.active{display:flex;align-items:center;justify-content:center}.overlay.mini-mode{display:block;background:transparent;backdrop-filter:none;overflow:visible;padding:0;pointer-events:none}.overlay.mini-mode .modal{pointer-events:auto;position:fixed;right:12px;bottom:76px;width:min(92vw,380px);margin:0;border-radius:12px;overflow:hidden;box-shadow:0 14px 42px rgba(0,0,0,.72)}.overlay.mini-mode .modal-info{display:none}.overlay.mini-mode .player{aspect-ratio:16/9}.overlay.mini-mode .close{width:34px;height:34px;right:7px;top:7px;font-size:18px}.overlay.mini-mode .modal-actions{display:none}@media(max-width:700px){.overlay.mini-mode .modal{right:8px;bottom:72px;width:min(94vw,360px)}}.modal{width:min(980px,100%);background:#111114;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative}.close{position:absolute;right:14px;top:14px;z-index:5;width:42px;height:42px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:20px;cursor:pointer}.close:hover{background:#fff;color:#000}.hard-close{display:none}.overlay.mini-mode .hard-close{display:block;position:absolute;left:8px;top:8px;z-index:6;border:0;border-radius:18px;background:rgba(0,0,0,.72);color:#fff;padding:7px 11px;font-size:12px;cursor:pointer}.overlay.mini-mode .hard-close:hover{background:#fff;color:#000}.player{width:100%;aspect-ratio:16/9;background:#000}.player iframe{width:100%;height:100%;border:0}.modal-info{padding:20px 22px 24px}.modal-info h2{margin:0 0 8px;font-size:24px}.modal-info p{margin:0;color:#aaa;line-height:1.5}.modal-actions{display:flex;gap:9px;margin-top:17px;flex-wrap:wrap}.mini-btn{border:1px solid #333;background:#19191d;color:#fff;border-radius:7px;padding:10px 14px;cursor:pointer}.mini-btn:hover{border-color:var(--accent);color:var(--accent)}
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.91);backdrop-filter:blur(10px);z-index:500;display:none;overflow:auto;padding:50px 16px}.overlay.active{display:flex;align-items:center;justify-content:center}.modal{width:min(980px,100%);background:#111114;border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative}.close{position:absolute;right:14px;top:14px;z-index:5;width:42px;height:42px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:20px;cursor:pointer}.close:hover{background:#fff;color:#000}.player{width:100%;aspect-ratio:16/9;background:#000}.player iframe{width:100%;height:100%;border:0}.modal-info{padding:20px 22px 24px}.modal-info h2{margin:0 0 8px;font-size:24px}.modal-info p{margin:0;color:#aaa;line-height:1.5}.modal-actions{display:flex;gap:9px;margin-top:17px;flex-wrap:wrap}.mini-btn{border:1px solid #333;background:#19191d;color:#fff;border-radius:7px;padding:10px 14px;cursor:pointer}.mini-btn:hover{border-color:var(--accent);color:var(--accent)}
 
     /* NEWSLETTER */
     .newsletter{display:flex;gap:10px;max-width:650px}.newsletter input{flex:1;min-width:0;background:#09090b;border:1px solid #303037;color:#fff;border-radius:7px;padding:13px 15px;outline:none}.newsletter input:focus{border-color:var(--accent)}.newsletter button{border:0;border-radius:7px;background:var(--accent);color:#000;font-weight:900;padding:13px 20px;cursor:pointer}.form-message{font-size:13px;margin-top:9px;color:#78f0a2;min-height:18px}
@@ -173,7 +173,7 @@ body{touch-action:pan-y;}
 
   <div class="overlay" id="videoModal" onclick="minimizarReproductor(event)">
     <div class="modal" onclick="event.stopPropagation()">
-      <button class="close" aria-label="Minimizar reproductor" onclick="minimizarReproductor()">✕</button><button class="hard-close" aria-label="Cerrar video" onclick="cerrarReproductor(true)">Cerrar</button>
+      <button class="close" aria-label="Minimizar reproductor" onclick="minimizarReproductor()">✕</button>
       <div class="player" id="playerHost">
         <iframe id="playerFrame" src="" title="Reproductor UADAVSTREAM" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
       </div>
@@ -238,16 +238,19 @@ body{touch-action:pan-y;}
     const SEARCH_INSTANCES=[
       'https://inv.nadeko.net',
       'https://invidious.nerdvpn.de',
-      'https://yt.chocolatemoo53.com',
-      'https://invidious.tiekoetter.com'
+      'https://yewtu.be',
+      'https://invidious.tiekoetter.com',
+      'https://yt.artemislena.eu',
+      'https://invidious.flokinet.to',
+      'https://invidious.privacydev.net'
     ];
     function normalizarResultados(data){
       const arr=Array.isArray(data)?data:(Array.isArray(data?.items)?data.items:(Array.isArray(data?.results)?data.results:[]));
       return arr.map(v=>{
-        const id=String(v.id||v.videoId||v.video_id||'').trim();
+        const id=v.id||v.videoId||v.video_id;
         if(!id)return null;
-        const thumbs=Array.isArray(v.videoThumbnails)?v.videoThumbnails:(Array.isArray(v.thumbnails)?v.thumbnails:[]);
-        const thumb=v.thumbnail||v.thumbnailUrl||thumbs.find(t=>t.quality==='medium')?.url||thumbs.find(t=>t.quality==='high')?.url||thumbs[0]?.url||obtenerCaratula(id);
+        const thumbs=v.videoThumbnails||v.thumbnails||[];
+        const thumb=v.thumbnail||v.thumbnailUrl||thumbs.find(t=>t.quality==='medium')?.url||thumbs[0]?.url||obtenerCaratula(id);
         const secs=Number(v.lengthSeconds||v.duration||0);
         return {id,titulo:v.titulo||v.title||'Video',categoria:v.categoria||'Resultado',descripcion:v.descripcion||v.author||v.authorTitle||v.channelTitle||'YouTube',duracion:v.duracion||(secs?`${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`:'HD'),thumbnail:thumb,tipo:secs&&secs<=60?'short':'video'};
       }).filter(Boolean);
@@ -255,26 +258,24 @@ body{touch-action:pan-y;}
     async function buscarDirectoInvidious(query){
       const encoded=encodeURIComponent(query);
       for(const base of SEARCH_INSTANCES){
-        const controller=new AbortController();
-        const timer=setTimeout(()=>controller.abort(),6000);
         try{
-          const r=await fetch(`${base}/api/v1/search?q=${encoded}&type=video`,{signal:controller.signal,headers:{Accept:'application/json'}});
+          const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),4500);
+          const r=await fetch(`${base}/api/v1/search?q=${encoded}&type=video&fields=videoId,title,author,lengthSeconds,videoThumbnails,thumbnailUrl`,{signal:controller.signal,headers:{Accept:'application/json'}});
+          clearTimeout(timer);
           if(!r.ok)continue;
-          const items=normalizarResultados(await r.json());
-          if(items.length)return items.slice(0,24);
-        }catch(e){} finally{clearTimeout(timer)}
+          const data=await r.json();const items=normalizarResultados(data);
+          if(items.length)return items;
+        }catch{}
       }
       return [];
     }
     async function obtenerVideos(query){
       const q=String(query||'').trim();if(!q)return[];
-      // Primero Worker: cache KV + Invidious + YouTube API fallback.
       try{
         const data=await api('youtube/search?q='+encodeURIComponent(q));
         const items=normalizarResultados(data);
-        if(items.length)return items.slice(0,24);
-      }catch(e){console.warn('[UADAV] Worker search:',e)}
-      // Segundo nivel: búsqueda directa contra instancias Invidious públicas actuales.
+        if(items.length)return items;
+      }catch(e){console.warn('Worker search',e)}
       return buscarDirectoInvidious(q);
     }
 
@@ -377,55 +378,77 @@ body{touch-action:pan-y;}
 
     function playerUrl(id){
       const origin=encodeURIComponent(location.origin);
-      return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=1&rel=0&playsinline=1&enablejsapi=1&origin=${origin}`;
+      return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1&enablejsapi=1&origin=${origin}`;
     }
-    function postPlayerCommand(func,args=[]){
+    function stopFrame(frame){
+      if(!frame)return;
+      try{frame.src='about:blank';}catch{}
+    }
+    function ensureMini(){
+      const mini=$('mobileMiniPlayer');
+      if(mini){
+        $('miniExpandBtn').onclick=restaurarReproductor;
+        $('miniCloseBtn').onclick=()=>cerrarReproductor(true);
+      }
+      return mini;
+    }
+    function moverPlayerA(host){
       const frame=$('playerFrame');
-      if(!frame?.contentWindow)return;
-      try{frame.contentWindow.postMessage(JSON.stringify({event:'command',func,args}), 'https://www.youtube-nocookie.com')}catch{}
+      if(!frame||!host)return;
+      host.appendChild(frame);
     }
-    function ensureMini(){return $('mobileMiniPlayer')}
     function mostrarModal(){
-      const modal=$('videoModal');
-      modal.classList.add('active');
-      modal.classList.remove('mini-mode');
+      $('videoModal').classList.add('active');
       document.body.style.overflow='hidden';
       playerState='modal';
+    }
+    function ocultarModal(){
+      $('videoModal').classList.remove('active');
+      document.body.style.overflow='';
     }
     function minimizarReproductor(e){
       if(e && e.target!==e.currentTarget)return;
       const frame=$('playerFrame');
-      if(!frame?.src || frame.src==='about:blank')return;
-      const modal=$('videoModal');
-      modal.classList.add('active','mini-mode');
-      document.body.style.overflow='';
+      if(!frame || !frame.src || frame.src==='about:blank')return;
+      const mini=ensureMini();
+      moverPlayerA($('miniHost'));
+      mini.classList.add('active');
+      ocultarModal();
       playerState='mini';
     }
     function restaurarReproductor(){
       const frame=$('playerFrame');
-      if(!frame?.src || frame.src==='about:blank')return;
+      if(!frame || !frame.src || frame.src==='about:blank')return;
+      moverPlayerA($('playerHost'));
+      ensureMini().classList.remove('active');
       mostrarModal();
     }
     function cerrarReproductor(stop=true){
       const frame=$('playerFrame');
       if(stop && frame){
-        postPlayerCommand('pauseVideo');
-        setTimeout(()=>{try{frame.src='about:blank'}catch{}},40);
+        try{
+          frame.contentWindow?.postMessage(JSON.stringify({event:'command',func:'pauseVideo',args:[]}), 'https://www.youtube-nocookie.com');
+        }catch{}
+        stopFrame(frame);
       }
-      const modal=$('videoModal');
-      modal.classList.remove('active','mini-mode');
-      document.body.style.overflow='';
-      currentVideoId='';currentVideoData=null;playerState='closed';
+      ensureMini().classList.remove('active');
+      ocultarModal();
+      currentVideoId='';
+      currentVideoData=null;
+      playerState='closed';
     }
     function cerrarMiniPlayer(){cerrarReproductor(true)}
 
     function reproducirVideo(id,titulo,desc,video){
       if(!id||String(id).startsWith('event-')){
-        if(video?.eventData){const e=video.eventData;const link=e.link_pago||e.url||e.link||e.whatsapp;if(link)window.open(link,'_blank','noopener');}
+        if(video?.eventData){
+          const e=video.eventData;const link=e.link_pago||e.url||e.link||e.whatsapp;
+          if(link)window.open(link,'_blank','noopener');
+        }
         return;
       }
       const cleanId=String(id).trim();
-      if(currentVideoId===cleanId && playerState==='mini'){restaurarReproductor();return;}
+      // Garantía de un único reproductor: el mismo iframe se reutiliza.
       cerrarReproductor(true);
       currentVideoId=cleanId;
       currentVideoData={id:cleanId,titulo,desc,video};
@@ -433,12 +456,21 @@ body{touch-action:pan-y;}
       $('modalTitle').textContent=titulo||'Video';
       $('modalDesc').textContent=desc||'Contenido audiovisual';
       const frame=$('playerFrame');
-      // Un solo iframe persistente. No se recrea al minimizar/restaurar.
+      moverPlayerA($('playerHost'));
       frame.src=playerUrl(cleanId);
       mostrarModal();
       $('modalSaveBtn').innerHTML=`<i class="fa-${isSaved(cleanId)?'solid':'regular'} fa-bookmark"></i> ${isSaved(cleanId)?'Guardado':'Mi lista'}`;
-      $('modalSaveBtn').onclick=()=>{const now=toggleSaved({id:cleanId,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(cleanId)});$('modalSaveBtn').innerHTML=`<i class="fa-${now?'solid':'regular'} fa-bookmark"></i> ${now?'Guardado':'Mi lista'}`};
-      $('modalShareBtn').onclick=async()=>{const url=`https://www.youtube.com/watch?v=${encodeURIComponent(cleanId)}`;try{if(navigator.share)await navigator.share({title:titulo||'UADAVSTREAM',text:desc||'Mirá este video',url});else{await navigator.clipboard.writeText(url);$('modalShareBtn').innerHTML='<i class="fa-solid fa-check"></i> Copiado';setTimeout(()=>{$('modalShareBtn').innerHTML='<i class="fa-solid fa-share-nodes"></i> Compartir'},1500)}}catch{}};
+      $('modalSaveBtn').onclick=()=>{
+        const now=toggleSaved({id:cleanId,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(cleanId)});
+        $('modalSaveBtn').innerHTML=`<i class="fa-${now?'solid':'regular'} fa-bookmark"></i> ${now?'Guardado':'Mi lista'}`;
+      };
+      $('modalShareBtn').onclick=async()=>{
+        const url=`https://www.youtube.com/watch?v=${encodeURIComponent(cleanId)}`;
+        try{
+          if(navigator.share) await navigator.share({title:titulo||'UADAVSTREAM',text:desc||'Mirá este video',url});
+          else {await navigator.clipboard.writeText(url);$('modalShareBtn').innerHTML='<i class="fa-solid fa-check"></i> Copiado';setTimeout(()=>$('modalShareBtn').innerHTML='<i class="fa-solid fa-share-nodes"></i> Compartir',1500);}
+        }catch{}
+      };
     }
 
     $('btnCaptador').addEventListener('click',async()=>{const email=$('emailInput').value.trim();if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ $('mensajeCaptador').style.color='#ff7b7b';$('mensajeCaptador').textContent='Ingresá un email válido.';return}try{const res=await fetch(API_URL+'suscriptores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});if(!res.ok)throw new Error();$('emailInput').value='';$('mensajeCaptador').style.color='#78f0a2';$('mensajeCaptador').textContent='✓ Listo. Te avisaremos de las novedades.'}catch{$('mensajeCaptador').style.color='#ff7b7b';$('mensajeCaptador').textContent='No pudimos registrar el email. Intentá nuevamente.'}});
@@ -452,33 +484,52 @@ body{touch-action:pan-y;}
         if(rail.dataset.dragReady)return;
         rail.dataset.dragReady='1';
         let down=false,startX=0,startY=0,startScroll=0,dragging=false,pointerId=null;
-        rail.addEventListener('pointerdown',e=>{
+        const begin=e=>{
           if(e.pointerType==='mouse'&&e.button!==0)return;
-          down=true;dragging=false;pointerId=e.pointerId;startX=e.clientX;startY=e.clientY;startScroll=rail.scrollLeft;
-        },{passive:true});
-        rail.addEventListener('pointermove',e=>{
+          down=true;dragging=false;pointerId=e.pointerId;
+          startX=e.clientX;startY=e.clientY;startScroll=rail.scrollLeft;
+          rail.classList.remove('dragging');
+        };
+        const move=e=>{
           if(!down)return;
           const dx=e.clientX-startX,dy=e.clientY-startY;
-          if(!dragging && Math.abs(dx)>7 && Math.abs(dx)>Math.abs(dy)){
+          if(!dragging && Math.abs(dx)>8 && Math.abs(dx)>Math.abs(dy)){
             dragging=true;rail.classList.add('dragging');
             try{rail.setPointerCapture(e.pointerId)}catch{}
           }
-          if(dragging){rail.scrollLeft=startScroll-dx;e.preventDefault();}
-        },{passive:false});
-        const end=()=>{if(!down)return;down=false;rail.classList.remove('dragging');setTimeout(()=>{dragging=false},0);try{if(pointerId!=null)rail.releasePointerCapture(pointerId)}catch{}pointerId=null};
-        rail.addEventListener('pointerup',end);rail.addEventListener('pointercancel',end);rail.addEventListener('lostpointercapture',end);
-        rail.addEventListener('click',e=>{if(rail.classList.contains('dragging')){e.preventDefault();e.stopPropagation()}},true);
+          if(dragging){
+            rail.scrollLeft=startScroll-dx;
+            e.preventDefault();
+          }
+        };
+        const end=()=>{
+          if(!down)return;
+          down=false;
+          if(dragging)rail.classList.remove('dragging');
+          dragging=false;
+          try{if(pointerId!=null)rail.releasePointerCapture(pointerId)}catch{}
+          pointerId=null;
+        };
+        rail.addEventListener('pointerdown',begin,{passive:true});
+        rail.addEventListener('pointermove',move,{passive:false});
+        rail.addEventListener('pointerup',end);
+        rail.addEventListener('pointercancel',end);
+        rail.addEventListener('lostpointercapture',end);
+        rail.addEventListener('click',e=>{
+          if(rail.classList.contains('dragging')){e.preventDefault();e.stopPropagation();}
+        },true);
       });
     }
-    new MutationObserver(enableRailDrag).observe(document.body,{childList:true,subtree:true});
-
+    const oldRenderRail=window.renderRail;
+    if(typeof oldRenderRail==='function'){}
+    new MutationObserver(()=>enableRailDrag()).observe(document.body,{childList:true,subtree:true});
     async function init(){
       ensureMini();
       await cargarConfig();
       renderContinue();
       await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarDiscover()]);
       renderRecommendations();
-      if('serviceWorker' in navigator){try{const reg=await navigator.serviceWorker.register('/service-worker.js?v=12',{updateViaCache:'none'});reg.update().catch(()=>{});}catch(e){console.warn('SW',e)}}
+      if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js')}catch(e){console.warn('SW',e)}}
     }
     init();
   </script>
