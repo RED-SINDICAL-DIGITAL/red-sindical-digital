@@ -73,7 +73,31 @@
     @media(max-width:850px){.nav{height:62px;gap:12px}.nav-links{display:none}.brand{font-size:19px}.nav-search{width:auto;flex:1;max-width:210px}.nav-search input{font-size:13px}.hero{min-height:73vh;padding:100px 20px 60px;background-image:linear-gradient(0deg,rgba(7,7,7,1) 3%,rgba(7,7,7,.35) 70%,rgba(0,0,0,.6)),var(--hero-image);background-position:center}.hero h1{letter-spacing:-2px}.hero p{font-size:16px}.features{grid-template-columns:repeat(2,1fr)}.row{padding-left:14px;padding-right:14px}.card{flex-basis:210px}.portrait-card{flex-basis:145px}}
     @media(max-width:520px){.nav-search{display:none}.hero{min-height:68vh}.hero-actions .btn{flex:1}.search-wrap{padding:16px 14px 5px}.big-search button{padding:0 17px}.features{grid-template-columns:1fr;padding:25px 14px}.cta{margin-left:14px;margin-right:14px;padding:27px 22px}.newsletter{flex-direction:column}.newsletter button{width:100%}.row-title{font-size:19px}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
-  </style>
+  
+/* V11 UX PATCH — navegación Netflix / móvil / mini-player */
+html,body{width:100%;max-width:100%;}
+body{touch-action:pan-y;}
+.rail{touch-action:pan-x pan-y;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-overflow-scrolling:touch;scroll-snap-type:none;overscroll-behavior-x:contain;}
+.rail.dragging{cursor:grabbing!important;}
+.rail .card{user-select:none;-webkit-user-select:none;-webkit-user-drag:none;}
+.rail .thumb{pointer-events:none;-webkit-user-drag:none;}
+.mobile-player-mini{width:min(94vw,390px);bottom:max(76px,calc(env(safe-area-inset-bottom) + 64px));}
+.mobile-player-mini::after{content:'×';position:absolute;right:6px;top:5px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;display:grid;place-items:center;font-weight:900;z-index:3;pointer-events:none;}
+@media(max-width:700px){
+  .content{padding-bottom:96px;}
+  .row{padding-left:14px;padding-right:0;}
+  .row-head{padding-right:14px;}
+  .rail{gap:10px;padding-left:2px;padding-right:18px;overscroll-behavior-x:contain;}
+  .card{width:150px!important;flex-basis:150px!important;}
+  .card .thumb{height:auto!important;aspect-ratio:16/9!important;}
+  .card-body{padding:8px 8px 10px;}
+  .card-title{font-size:13px;}
+  .card-meta{font-size:10px;}
+  #resultsRail .card{width:150px!important;flex-basis:150px!important;}
+}
+@media(min-width:701px){.rail{cursor:grab}.rail.dragging{cursor:grabbing}}
+
+</style>
 </head>
 <body>
   <header class="nav" id="nav">
@@ -219,8 +243,18 @@
 
     function renderContinue(){const d=getDiscovery();const items=d.history||[];if(!items.length){$('continueRow').hidden=true;return}$('continueRow').hidden=false;renderRail('continueRail',items.slice(0,12))}
     function renderRecommendations(){
-      const d=getDiscovery();const cats=Object.entries(d.categories||{}).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);if(!cats.length){$('recommendedRow').hidden=true;return}
-      const q=cats[0];obtenerVideos(q).then(items=>{if(items.length){$('recommendedRow').hidden=false;renderRail('recommendedRail',items.slice(0,12))}})
+      const row=$('recommendedRow'); const rail=$('recommendedRail');
+      if(!row||!rail)return;
+      const d=getDiscovery();
+      const cats=Object.entries(d.categories||{}).sort((a,b)=>b[1]-a[1]).map(x=>x[0]).filter(Boolean);
+      if(!cats.length){row.hidden=true;return;}
+      const q=cats[0];
+      obtenerVideos(q).then(items=>{
+        if(!row||!rail)return;
+        const clean=Array.isArray(items)?items.filter(v=>v&&(v.id||v.youtube_id||v.videoId)):[];
+        if(clean.length){row.hidden=false;renderRail('recommendedRail',clean.slice(0,12));}
+        else row.hidden=true;
+      }).catch(()=>{if(row)row.hidden=true;});
     }
 
     async function cargarArtistas(){
@@ -244,21 +278,68 @@
     }
 
     async function ejecutarBusqueda(value){
-      const q=String(value||'').trim();if(!q){volverInicio();return}
-      $('searchInput').value=q;$('navSearchInput').value=q;$('searchStatus').innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando contenido...';
-      $('featuredRow').hidden=true;$('recommendedRow').hidden=true;$('liveRow').hidden=true;$('artists').hidden=true;$('cartelera').hidden=true;$('discoverRail').parentElement.parentElement.hidden=true;$('resultsRow').hidden=false;
-      const results=await obtenerVideos(q);$('resultsTitle').textContent=`Resultados para “${q}”`;$('searchStatus').textContent=results.length?`${results.length} resultados encontrados`:'No encontramos resultados';renderRail('resultsRail',results);$('resultsRail').style.display='flex';$('resultsRow').hidden=false;window.scrollTo({top:Math.max(0,$('resultsRow').offsetTop-70),behavior:'smooth'});
+      const q=String(value||'').trim();
+      if(!q){volverInicio();return;}
+      const status=$('searchStatus'), resultsRow=$('resultsRow'), resultsRail=$('resultsRail');
+      $('searchInput').value=q;$('navSearchInput').value=q;
+      if(status)status.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando contenido...';
+      ['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>{if($(id))$(id).hidden=true;});
+      const discoverWrap=$('discoverRail')?.parentElement?.parentElement;if(discoverWrap)discoverWrap.hidden=true;
+      if(resultsRow)resultsRow.hidden=false;
+      if(resultsRail)resultsRail.innerHTML='<div style="padding:25px;color:#888">Buscando...</div>';
+      try{
+        const results=await obtenerVideos(q);
+        const clean=Array.isArray(results)?results.filter(v=>v&&(v.id||v.youtube_id||v.videoId)):[];
+        if($('resultsTitle'))$('resultsTitle').textContent=`Resultados para “${q}”`;
+        if(status)status.textContent=clean.length?`${clean.length} resultados encontrados`:'No encontramos resultados';
+        renderRail('resultsRail',clean);
+        if(resultsRow)resultsRow.hidden=false;
+        requestAnimationFrame(()=>{
+          const target=resultsRow?.getBoundingClientRect().top+window.scrollY-64;
+          window.scrollTo({top:Math.max(0,target||0),behavior:'smooth'});
+        });
+      }catch(err){
+        console.error('Búsqueda UADAVSTREAM',err);
+        if(status)status.textContent='No pudimos completar la búsqueda. Intentá nuevamente.';
+        renderRail('resultsRail',[]);
+        if(resultsRow)resultsRow.hidden=false;
+      }
     }
     function volverInicio(){['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>$(id).hidden=false);$('discoverRail').parentElement.parentElement.hidden=false;$('resultsRow').hidden=true;$('searchStatus').textContent='';$('searchInput').value='';$('navSearchInput').value='';window.scrollTo({top:0,behavior:'smooth'})}
 
+    let currentVideoId='';
+    function playerUrl(id){return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`; }
+    function stopFrame(frame){if(frame)frame.src='about:blank';}
+    function cerrarMiniPlayer(){const m=$('mobileMiniPlayer');if(m){const f=m.querySelector('iframe');stopFrame(f);m.classList.remove('active');}}
     function reproducirVideo(id,titulo,desc,video){
-      if(!id||String(id).startsWith('event-')){if(video?.eventData){const e=video.eventData;const link=e.link_pago||e.url||e.link||e.whatsapp;if(link)window.open(link,'_blank','noopener');}return}
+      if(!id||String(id).startsWith('event-')){if(video?.eventData){const e=video.eventData;const link=e.link_pago||e.url||e.link||e.whatsapp;if(link)window.open(link,'_blank','noopener');}return;}
+      // Un solo reproductor activo: primero detenemos cualquier mini-player anterior.
+      cerrarMiniPlayer();
+      currentVideoId=String(id);
       rememberVideo({id,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(id),categoria:video?.categoria||'Contenido'});
-      cerrarMiniPlayer();$('modalTitle').textContent=titulo||'Video';$('modalDesc').textContent=desc||'Contenido audiovisual';$('playerFrame').src=`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;$('videoModal').classList.add('active');document.body.style.overflow='hidden';
-      $('modalSaveBtn').innerHTML=`<i class="fa-${isSaved(id)?'solid':'regular'} fa-bookmark"></i> ${isSaved(id)?'Guardado':'Mi lista'}`;$('modalSaveBtn').onclick=()=>{const now=toggleSaved({id,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(id)});$('modalSaveBtn').innerHTML=`<i class="fa-${now?'solid':'regular'} fa-bookmark"></i> ${now?'Guardado':'Mi lista'}`};$('modalShareBtn').onclick=async()=>{const url=`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;try{await navigator.clipboard.writeText(url);$('modalShareBtn').innerHTML='<i class="fa-solid fa-check"></i> Copiado'}catch{window.open(url,'_blank','noopener')}};
+      $('modalTitle').textContent=titulo||'Video';$('modalDesc').textContent=desc||'Contenido audiovisual';
+      stopFrame($('playerFrame'));
+      $('playerFrame').src=playerUrl(id);
+      $('videoModal').classList.add('active');
+      document.body.style.overflow='hidden';
+      $('modalSaveBtn').innerHTML=`<i class="fa-${isSaved(id)?'solid':'regular'} fa-bookmark"></i> ${isSaved(id)?'Guardado':'Mi lista'}`;
+      $('modalSaveBtn').onclick=()=>{const now=toggleSaved({id,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(id)});$('modalSaveBtn').innerHTML=`<i class="fa-${now?'solid':'regular'} fa-bookmark"></i> ${now?'Guardado':'Mi lista'}`;};
+      $('modalShareBtn').onclick=async()=>{const url=`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;try{await navigator.clipboard.writeText(url);$('modalShareBtn').innerHTML='<i class="fa-solid fa-check"></i> Copiado';setTimeout(()=>$('modalShareBtn').innerHTML='<i class="fa-solid fa-share-nodes"></i> Compartir',1500);}catch{window.open(url,'_blank','noopener');}};
     }
-    function cerrarModal(e){if(e&&e.target!==e.currentTarget)return;const frame=$('playerFrame');const src=frame.src;if(!src){$('videoModal').classList.remove('active');document.body.style.overflow='';return}let mini=document.getElementById('mobileMiniPlayer');if(!mini){mini=document.createElement('div');mini.id='mobileMiniPlayer';mini.className='mobile-player-mini';mini.innerHTML='<iframe allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';document.body.appendChild(mini)}mini.querySelector('iframe').src=src;mini.classList.add('active');$('videoModal').classList.remove('active');frame.src='';document.body.style.overflow=''}
-function cerrarMiniPlayer(){const m=document.getElementById('mobileMiniPlayer');if(m){m.querySelector('iframe').src='';m.classList.remove('active')}}
+    function cerrarModal(e){
+      if(e&&e.target!==e.currentTarget)return;
+      const frame=$('playerFrame'),src=frame?.src;
+      if(!src||src==='about:blank'){if($('videoModal'))$('videoModal').classList.remove('active');document.body.style.overflow='';return;}
+      let mini=$('mobileMiniPlayer');
+      if(!mini){mini=document.createElement('div');mini.id='mobileMiniPlayer';mini.className='mobile-player-mini';mini.innerHTML='<iframe title="UADAVSTREAM mini player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';document.body.appendChild(mini);}
+      const mf=mini.querySelector('iframe');
+      // Mover el mismo contenido al mini-player evita tener dos iframes reproduciendo.
+      mf.src=src;
+      mini.classList.add('active');
+      stopFrame(frame);
+      $('videoModal').classList.remove('active');
+      document.body.style.overflow='';
+    }
 
 
     $('btnCaptador').addEventListener('click',async()=>{const email=$('emailInput').value.trim();if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ $('mensajeCaptador').style.color='#ff7b7b';$('mensajeCaptador').textContent='Ingresá un email válido.';return}try{const res=await fetch(API_URL+'suscriptores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});if(!res.ok)throw new Error();$('emailInput').value='';$('mensajeCaptador').style.color='#78f0a2';$('mensajeCaptador').textContent='✓ Listo. Te avisaremos de las novedades.'}catch{$('mensajeCaptador').style.color='#ff7b7b';$('mensajeCaptador').textContent='No pudimos registrar el email. Intentá nuevamente.'}});
@@ -267,7 +348,30 @@ function cerrarMiniPlayer(){const m=document.getElementById('mobileMiniPlayer');
     document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarModal()});
     $('footerYear').textContent=new Date().getFullYear();
 
-    function enableRailDrag(){document.querySelectorAll('.rail').forEach(rail=>{if(rail.dataset.dragReady)return;rail.dataset.dragReady='1';let down=false,startX=0,startScroll=0,moved=false;rail.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;down=true;moved=false;startX=e.clientX;startScroll=rail.scrollLeft;rail.classList.add('dragging');try{rail.setPointerCapture(e.pointerId)}catch{}});rail.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-startX;if(Math.abs(dx)>4)moved=true;rail.scrollLeft=startScroll-dx});const end=e=>{if(!down)return;down=false;rail.classList.remove('dragging');try{rail.releasePointerCapture(e.pointerId)}catch{}};rail.addEventListener('pointerup',end);rail.addEventListener('pointercancel',end);rail.addEventListener('click',e=>{if(moved){e.preventDefault();e.stopPropagation()}},{capture:true})})}
+    function enableRailDrag(){
+      document.querySelectorAll('.rail').forEach(rail=>{
+        if(rail.dataset.dragReady)return;
+        rail.dataset.dragReady='1';
+        let down=false,startX=0,startScroll=0,moved=false,pointerId=null;
+        const begin=e=>{
+          if(e.pointerType==='mouse'&&e.button!==0)return;
+          down=true;moved=false;pointerId=e.pointerId;startX=e.clientX;startScroll=rail.scrollLeft;
+          rail.classList.add('dragging');
+          try{rail.setPointerCapture(e.pointerId)}catch{}
+        };
+        const move=e=>{
+          if(!down)return;
+          const dx=e.clientX-startX;
+          if(Math.abs(dx)>5)moved=true;
+          if(moved){rail.scrollLeft=startScroll-dx;if(e.pointerType==='mouse')e.preventDefault();}
+        };
+        const end=()=>{if(!down)return;down=false;rail.classList.remove('dragging');try{if(pointerId!=null)rail.releasePointerCapture(pointerId)}catch{}pointerId=null;};
+        rail.addEventListener('pointerdown',begin,{passive:false});
+        rail.addEventListener('pointermove',move,{passive:false});
+        rail.addEventListener('pointerup',end);rail.addEventListener('pointercancel',end);rail.addEventListener('lostpointercapture',end);
+        rail.addEventListener('click',e=>{if(moved){e.preventDefault();e.stopPropagation();moved=false;}},{capture:true});
+      });
+    }
     const oldRenderRail=window.renderRail;
     if(typeof oldRenderRail==='function'){}
     new MutationObserver(()=>enableRailDrag()).observe(document.body,{childList:true,subtree:true});
