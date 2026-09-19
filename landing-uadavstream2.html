@@ -295,6 +295,45 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
 }
 </style>
 
+
+<style id="uadav-v14-mobile-ux">
+/* V14 — navegación móvil y tarjetas */
+html,body{overscroll-behavior-x:none;}
+@media (max-width:700px){
+  body{overflow-x:hidden;touch-action:pan-y;}
+  .rail-wrap{margin-inline:-2px;}
+  .rail:not(.results-rail){
+    gap:10px!important;
+    padding:4px 12px 18px!important;
+    margin:0!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    touch-action:pan-x!important;
+    -webkit-overflow-scrolling:touch!important;
+    scroll-padding-inline:12px;
+  }
+  .rail:not(.results-rail) .card{
+    flex:0 0 68vw!important;
+    width:68vw!important;
+    max-width:280px!important;
+    min-width:220px!important;
+  }
+  .rail:not(.results-rail) .thumb{aspect-ratio:16/9!important;}
+  .rail:not(.results-rail) .card-body{padding:8px 9px 10px!important;}
+  .rail:not(.results-rail) .card-title{font-size:14px!important;line-height:1.25!important;}
+  .rail:not(.results-rail) .card-meta{font-size:11px!important;}
+  .results-rail{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  .results-rail .card{width:100%!important;min-width:0!important;}
+  .results-rail .thumb{aspect-ratio:16/9!important;}
+}
+@media (min-width:701px){
+  .rail:not(.results-rail) .card{flex-basis:clamp(210px,20vw,280px)!important;}
+}
+</style>
 </head>
 <body>
   <header class="nav" id="nav">
@@ -980,5 +1019,35 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     });
 </script>
 <script src="https://www.youtube.com/iframe_api" async></script>
+
+<script id="uadav-v14-drag-fix">
+(function(){
+  function enhanceRails(){
+    document.querySelectorAll('.rail:not(.results-rail)').forEach(function(rail){
+      if(rail.dataset.v14==='1') return; rail.dataset.v14='1';
+      let active=false,sx=0,sy=0,sl=0,pid=null;
+      rail.addEventListener('pointerdown',function(e){
+        if(e.pointerType==='mouse' && e.button!==0)return;
+        if(rail.scrollWidth<=rail.clientWidth)return;
+        active=true; sx=e.clientX; sy=e.clientY; sl=rail.scrollLeft; pid=e.pointerId;
+        try{rail.setPointerCapture(pid)}catch(_){}
+      },{passive:true});
+      rail.addEventListener('pointermove',function(e){
+        if(!active)return;
+        const dx=e.clientX-sx,dy=e.clientY-sy;
+        if(Math.abs(dx)<6 && Math.abs(dy)<6)return;
+        if(Math.abs(dy)>Math.abs(dx)){ active=false; rail.classList.remove('dragging'); try{rail.releasePointerCapture(pid)}catch(_){}; return; }
+        rail.classList.add('dragging');
+        e.preventDefault();
+        rail.scrollLeft=sl-dx;
+      },{passive:false});
+      function end(){active=false;rail.classList.remove('dragging');if(pid!==null)try{rail.releasePointerCapture(pid)}catch(_){};pid=null;}
+      rail.addEventListener('pointerup',end,{passive:true}); rail.addEventListener('pointercancel',end,{passive:true});
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhanceRails);else enhanceRails();
+  new MutationObserver(enhanceRails).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
 </body>
 </html>
