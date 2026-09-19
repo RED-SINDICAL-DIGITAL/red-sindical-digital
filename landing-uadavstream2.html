@@ -19,7 +19,7 @@
     :root{--bg:#070707;--surface:#111114;--surface2:#17171b;--accent:#00e5ff;--text:#fff;--muted:#a4a4ad;--line:rgba(255,255,255,.09);--hero-image:none}
     *{box-sizing:border-box}
     html{scroll-behavior:smooth;background:var(--bg)}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:Outfit,system-ui,sans-serif;overflow-x:hidden;overscroll-behavior-y:auto}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Outfit,system-ui,sans-serif;overflow-x:hidden}
     button,input{font:inherit}.hidden{display:none!important}
     a{color:inherit;text-decoration:none}
 
@@ -31,18 +31,6 @@
     .nav-links{display:flex;gap:22px;align-items:center;font-size:14px;color:#ddd}.nav-links a:hover{color:var(--accent)}
     .nav-actions{margin-left:auto;display:flex;align-items:center;gap:10px}.nav-icon{width:42px;height:42px;border:0;background:transparent;color:#fff;border-radius:50%;cursor:pointer}.nav-icon:hover{background:#222}
     .nav-search{display:flex;align-items:center;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.16);border-radius:24px;padding:0 13px;width:220px}.nav-search input{width:100%;border:0;outline:0;background:transparent;color:#fff;padding:9px 8px}.nav-search button{border:0;background:transparent;color:#fff;cursor:pointer}
-
-    /* V10.2 TOUCH + DRAG RAILS */
-    .rail{display:flex;gap:14px;overflow-x:auto;overflow-y:hidden;padding:8px 4px 18px;scroll-behavior:smooth;scrollbar-width:none;touch-action:pan-x;cursor:grab;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
-    .rail::-webkit-scrollbar{display:none}.rail.dragging{cursor:grabbing;scroll-behavior:auto;user-select:none}.rail>*{flex:0 0 auto}
-    @media(max-width:700px){.rail{gap:10px;padding-bottom:14px;touch-action:pan-x}.card{width:150px!important}.card img{height:210px!important;object-fit:cover}.hero{min-height:68vh;padding-bottom:42px}}
-    /* Floating mobile player */
-    .mobile-player-mini{position:fixed;right:12px;bottom:76px;width:min(92vw,380px);aspect-ratio:16/9;z-index:800;background:#000;border-radius:12px;overflow:hidden;box-shadow:0 14px 42px rgba(0,0,0,.72);display:none;border:1px solid rgba(255,255,255,.14)}
-    .mobile-player-mini.active{display:block}.mobile-player-mini .mini-host{width:100%;height:100%}.mobile-player-mini iframe{width:100%;height:100%;border:0;display:block}
-    .mini-controls{position:absolute;right:7px;top:7px;z-index:5;display:flex;gap:6px}
-    .mini-controls button{width:34px;height:34px;border:0;border-radius:50%;background:rgba(0,0,0,.72);color:#fff;cursor:pointer;display:grid;place-items:center}
-    .mini-controls button:hover{background:#fff;color:#000}
-    @media(max-width:700px){.mobile-player-mini{right:8px;bottom:72px;width:min(94vw,360px)}}
 
     /* HERO */
     .hero{min-height:78vh;position:relative;display:flex;align-items:flex-end;padding:120px clamp(20px,5vw,70px) 70px;background-image:linear-gradient(90deg,rgba(0,0,0,.94) 0%,rgba(0,0,0,.66) 38%,rgba(0,0,0,.18) 75%,rgba(0,0,0,.55)),linear-gradient(0deg,var(--bg) 0%,transparent 30%),var(--hero-image);background-size:cover;background-position:center;isolation:isolate}
@@ -56,7 +44,7 @@
     .search-status{text-align:center;color:var(--muted);font-size:13px;min-height:25px;padding-top:9px}
 
     /* ROWS */
-    .content{padding:14px 0 70px}.row{padding:18px clamp(18px,4vw,60px)}.row-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:13px}.row-title{font-size:22px;font-weight:800;letter-spacing:-.4px}.row-subtitle{color:var(--muted);font-size:12px;margin-top:3px}.row-more{font-size:13px;color:var(--accent);font-weight:700;background:none;border:0;cursor:pointer}.rail{display:flex;gap:12px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;padding:4px 4px 16px}.rail::-webkit-scrollbar{display:none}
+    .content{padding:14px 0 70px}.row{padding:18px clamp(18px,4vw,60px)}.row-head{display:flex;align-items:end;justify-content:space-between;margin-bottom:13px}.row-title{font-size:22px;font-weight:800;letter-spacing:-.4px}.row-subtitle{color:var(--muted);font-size:12px;margin-top:3px}.row-more{font-size:13px;color:var(--accent);font-weight:700;background:none;border:0;cursor:pointer}.rail{display:flex;gap:12px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;padding:4px 4px 16px;min-height:40px}.results-rail{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));overflow:visible;gap:16px}.results-rail .card{min-width:0;width:100%}.rail::-webkit-scrollbar{display:none}
     .card{flex:0 0 clamp(190px,19vw,270px);border-radius:7px;overflow:hidden;background:var(--surface);border:1px solid transparent;cursor:pointer;position:relative;transition:transform .2s,border-color .2s,box-shadow .2s}.card:hover{transform:scale(1.035);border-color:rgba(255,255,255,.2);box-shadow:0 15px 35px rgba(0,0,0,.45);z-index:3}.thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1a1a1d}.card-body{padding:10px 11px 12px}.card-title{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-meta{font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.play-overlay{position:absolute;left:10px;bottom:57px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.75);display:grid;place-items:center;opacity:0;transform:translateY(5px);transition:.2s}.card:hover .play-overlay{opacity:1;transform:none}
     .portrait-card{flex-basis:clamp(150px,14vw,200px);background:transparent;border:0}.portrait-card:hover{box-shadow:none}.portrait-card .thumb{aspect-ratio:1/1;border-radius:50%;border:3px solid #222}.portrait-card:hover .thumb{border-color:var(--accent)}.portrait-card .card-body{text-align:center}.portrait-card .card-title{font-size:14px}.badge{position:absolute;top:9px;left:9px;background:#111d;color:#fff;padding:4px 7px;border-radius:4px;font-size:9px;font-weight:800;text-transform:uppercase}.badge.live{background:#e50914}.badge.verify{background:rgba(0,229,255,.9);color:#001014}
 
@@ -78,36 +66,241 @@
     @media(max-width:520px){.nav-search{display:none}.hero{min-height:68vh}.hero-actions .btn{flex:1}.search-wrap{padding:16px 14px 5px}.big-search button{padding:0 17px}.features{grid-template-columns:1fr;padding:25px 14px}.cta{margin-left:14px;margin-right:14px;padding:27px 22px}.newsletter{flex-direction:column}.newsletter button{width:100%}.row-title{font-size:19px}}
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
   
-/* V11 UX PATCH — navegación Netflix / móvil / mini-player */
-html,body{width:100%;max-width:100%;}
-body{touch-action:pan-y;}
-.rail{touch-action:pan-x pan-y;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-overflow-scrolling:touch;scroll-snap-type:none;overscroll-behavior-x:contain;}
-.rail.dragging{cursor:grabbing!important;}
-.rail .card{user-select:none;-webkit-user-select:none;-webkit-user-drag:none;}
-.rail .thumb{pointer-events:none;-webkit-user-drag:none;}
-.mobile-player-mini{width:min(94vw,390px);bottom:max(76px,calc(env(safe-area-inset-bottom) + 64px));}
-.mobile-player-mini::after{content:'×';position:absolute;right:6px;top:5px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;display:grid;place-items:center;font-weight:900;z-index:3;pointer-events:none;}
-@media(max-width:700px){
-  .content{padding-bottom:96px;}
-  .row{padding-left:14px;padding-right:0;}
-  .row-head{padding-right:14px;}
-  .rail{gap:10px;padding-left:2px;padding-right:18px;overscroll-behavior-x:contain;}
-  .card{width:150px!important;flex-basis:150px!important;}
-  .card .thumb{height:auto!important;aspect-ratio:16/9!important;}
-  .card-body{padding:8px 8px 10px;}
-  .card-title{font-size:13px;}
-  .card-meta{font-size:10px;}
-  #resultsRail .card{width:150px!important;flex-basis:150px!important;}
-}
-@media(min-width:701px){.rail{cursor:grab}.rail.dragging{cursor:grabbing}}
-
+.player-top-controls{position:absolute;right:10px;top:10px;z-index:20;display:flex;gap:8px}.player-top-controls button{border:0;background:rgba(0,0,0,.72);color:#fff;width:38px;height:38px;border-radius:50%;cursor:pointer}.player-top-controls .close{position:static!important}.player-mini{display:grid;place-items:center}.rail{touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-overflow-scrolling:touch}.rail.dragging{cursor:grabbing;scroll-behavior:auto!important}.rail .card{user-select:none;-webkit-user-drag:none}.results-rail{touch-action:pan-y}
+@media(max-width:600px){.overlay.pip-mode{align-items:flex-end!important;justify-content:center!important;padding:10px!important}.overlay.pip-mode .modal{width:min(96vw,420px)!important;min-width:0!important}.overlay.pip-mode .modal-info{display:none!important}.overlay.pip-mode .player{aspect-ratio:16/9!important}.overlay.pip-mode .player-top-controls .player-mini{display:none!important}}
 </style>
+<style id="uadav-v5-ux">
+.rail:not(.results-rail){cursor:grab;scroll-behavior:smooth;overscroll-behavior-x:contain;touch-action:pan-x}
+.rail:not(.results-rail).dragging{cursor:grabbing;scroll-behavior:auto;user-select:none}
+.rail.dragging .card{pointer-events:none}
+.results-rail{cursor:default!important}
+#contenido,#artists,#cartelera,#en-vivo{scroll-margin-top:82px}
+.overlay{align-items:center!important;justify-content:center!important;padding:20px!important}
+.overlay.active{display:flex!important}
+.modal{width:min(1000px,96vw)!important;max-height:calc(100vh - 40px)!important;overflow:auto!important;margin:auto!important}
+.player{width:100%!important;aspect-ratio:16/9!important;background:#000!important;position:relative!important}
+.player iframe{position:absolute!important;inset:0!important;width:100%!important;height:100%!important}
+@media(max-width:600px){.nav-links{display:none}.nav-search{width:190px}.modal{width:96vw!important;max-height:calc(100vh - 20px)!important}.overlay{padding:10px!important}}
+</style>
+
+<style id="uadav-v6-ux">
+.rail:not(.results-rail){
+  cursor:grab;
+  scroll-behavior:smooth;
+  overscroll-behavior-x:contain;
+  touch-action:pan-y;
+  -webkit-overflow-scrolling:touch;
+}
+.rail:not(.results-rail).dragging{
+  cursor:grabbing;
+  scroll-behavior:auto;
+  user-select:none;
+}
+.rail.dragging .card{pointer-events:none}
+.results-rail{cursor:default!important}
+#contenido,#artists,#cartelera,#en-vivo{scroll-margin-top:82px}
+
+.overlay{
+  align-items:center!important;
+  justify-content:center!important;
+  padding:20px!important;
+}
+.overlay.active{display:flex!important}
+.overlay.pip-mode{
+  pointer-events:none!important;
+  background:transparent!important;
+  align-items:flex-end!important;
+  justify-content:flex-end!important;
+  padding:20px!important;
+}
+.overlay.pip-mode .modal{
+  pointer-events:auto!important;
+  width:min(390px,92vw)!important;
+  max-height:none!important;
+  margin:0!important;
+  overflow:hidden!important;
+  border-radius:14px!important;
+  box-shadow:0 16px 60px rgba(0,0,0,.65)!important;
+}
+.overlay.pip-mode .player{
+  aspect-ratio:16/9!important;
+}
+.overlay.pip-mode .modal-info{
+  padding:10px 12px!important;
+}
+.overlay.pip-mode .modal-info p{
+  display:none!important;
+}
+.overlay.pip-mode .modal-actions{
+  display:none!important;
+}
+.overlay.pip-mode .close{
+  z-index:5;
+}
+.modal{
+  width:min(1000px,96vw)!important;
+  max-height:calc(100vh - 40px)!important;
+  overflow:auto!important;
+  margin:auto!important;
+}
+.player{
+  width:100%!important;
+  aspect-ratio:16/9!important;
+  background:#000!important;
+  position:relative!important;
+}
+.player iframe{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+}
+.saved-empty{
+  padding:22px;
+  color:#777;
+}
+@media(max-width:600px){
+  .modal{width:96vw!important;max-height:calc(100vh - 20px)!important}
+  .overlay{padding:10px!important}
+  .overlay.pip-mode{padding:10px!important}
+  .overlay.pip-mode .modal{width:min(360px,92vw)!important}
+}
+</style>
+
+
+<style id="uadav-v7-repair">
+.player-host{position:absolute;inset:0;width:100%;height:100%;background:#000}
+.player-host iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.overlay.pip-mode .modal{width:min(480px,92vw)!important}
+.overlay.pip-mode .player{min-height:270px}
+@media(max-width:600px){.overlay.pip-mode .modal{width:min(360px,92vw)!important}.overlay.pip-mode .player{min-height:202px}}
+</style>
+
+<meta name="uadav-build" content="UADAVSTREAM V13 CORE STABLE">
+
+<style id="uadav-v8">
+/* ===== V8 VISUAL STABILITY ===== */
+html,body{filter:none!important}
+body:has(#videoModal.pip-mode){filter:none!important}
+body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
+
+/* Keep the background page completely normal while the player floats. */
+.overlay.pip-mode{
+  background:transparent!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.overlay.pip-mode .modal{
+  transform:none!important;
+  filter:none!important;
+  opacity:1!important;
+  isolation:isolate;
+  will-change:transform;
+}
+.overlay.pip-mode .player,
+.overlay.pip-mode .player-host,
+.overlay.pip-mode .player-host iframe{
+  filter:none!important;
+  opacity:1!important;
+  transform:none!important;
+}
+
+/* Better PiP proportions: large enough for YouTube to avoid an unnecessarily tiny render target. */
+.overlay.pip-mode .modal{
+  width:min(460px,42vw)!important;
+  min-width:320px!important;
+}
+.overlay.pip-mode .player{aspect-ratio:16/9!important;min-height:0!important}
+.overlay.pip-mode .modal-info{display:none!important}
+
+@media(max-width:700px){
+  .overlay.pip-mode{
+    padding:12px!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+  }
+  .overlay.pip-mode .modal{
+    width:min(94vw,390px)!important;
+    min-width:0!important;
+  }
+}
+
+/* Explicit grab affordance. */
+.rail:not(.results-rail){cursor:grab}
+.rail:not(.results-rail).dragging{cursor:grabbing}
+.rail:not(.results-rail):hover{scrollbar-width:none}
+
+/* Edge controls make the horizontal interaction discoverable. */
+.rail-wrap{position:relative}
+.rail-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:38px;height:38px;border:1px solid rgba(255,255,255,.14);
+  border-radius:50%;background:rgba(10,10,12,.88);color:#fff;
+  display:grid;place-items:center;z-index:4;cursor:pointer;
+  box-shadow:0 8px 25px rgba(0,0,0,.35);opacity:0;transition:.18s;
+}
+.rail-wrap:hover .rail-arrow,.rail-wrap:focus-within .rail-arrow{opacity:1}
+.rail-arrow.left{left:4px}.rail-arrow.right{right:4px}
+.rail-arrow:hover{background:rgba(255,255,255,.12)}
+@media(max-width:700px){.rail-arrow{display:none}}
+</style>
+
+
+<style id="uadav-v8-fix">
+/* ===== HORIZONTAL RAIL ENGINE ===== */
+.rail-wrap{
+  position:relative;
+  width:100%;
+  min-width:0;
+  overflow:visible;
+}
+.rail:not(.results-rail){
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  white-space:nowrap;
+  scroll-behavior:smooth;
+  overscroll-behavior-x:contain;
+  overscroll-behavior-y:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  cursor:grab!important;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:pan-x pan-y;
+}
+.rail:not(.results-rail)::-webkit-scrollbar{display:none}
+.rail:not(.results-rail).dragging{
+  cursor:grabbing!important;
+  scroll-behavior:auto;
+}
+.rail:not(.results-rail) .card{
+  flex:0 0 auto!important;
+  float:none!important;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+@media(max-width:700px){
+  .rail:not(.results-rail){
+    touch-action:pan-x;
+    scroll-snap-type:none!important;
+  }
+  .rail:not(.results-rail) .card{
+    flex-shrink:0!important;
+  }
+}
+</style>
+
 </head>
 <body>
   <header class="nav" id="nav">
     <a class="brand" href="#top" aria-label="UADAVSTREAM inicio"><span class="brand-mark"><i class="fa-solid fa-play"></i></span><span id="brandName">UADAVSTREAM</span></a>
     <nav class="nav-links" aria-label="Navegación principal">
-      <a href="#contenido">Inicio</a><a href="#artistas">Artistas</a><a href="#en-vivo">En vivo</a><a href="#cartelera">Cartelera</a>
+      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#artistas" onclick="irASeccion('artists');return false">Artistas</a><a href="#en-vivo" onclick="irASeccion('en-vivo');return false">En vivo</a><a href="#cartelera" onclick="irASeccion('cartelera');return false">Cartelera</a>
     </nav>
     <div class="nav-actions">
       <div class="nav-search"><i class="fa-solid fa-magnifying-glass"></i><input id="navSearchInput" aria-label="Buscar" placeholder="Buscar..." onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button aria-label="Buscar" onclick="ejecutarBusqueda(document.getElementById('navSearchInput').value)"><i class="fa-solid fa-arrow-right"></i></button></div>
@@ -136,7 +329,8 @@ body{touch-action:pan-y;}
 
     <section class="content" id="contenido">
       <div class="row" id="continueRow" hidden><div class="row-head"><div><div class="row-title">▶ Continuar viendo</div><div class="row-subtitle">Contenido que empezaste a disfrutar</div></div></div><div class="rail" id="continueRail"></div></div>
-      <div class="row" id="resultsRow" hidden><div class="row-head"><div><div class="row-title" id="resultsTitle">Resultados</div></div><button class="row-more" onclick="volverInicio()">Volver al inicio</button></div><div class="rail" id="resultsRail"></div></div>
+      <div class="row" id="savedRow" hidden><div class="row-head"><div><div class="row-title">🔖 Mi lista</div><div class="row-subtitle">Guardados en este dispositivo</div></div></div><div class="rail" id="savedRail"></div></div>
+      <div class="row" id="resultsRow" hidden><div class="row-head"><div><div class="row-title" id="resultsTitle">Resultados</div></div><button class="row-more" onclick="volverInicio()">Volver al inicio</button></div><div class="rail results-rail" id="resultsRail"></div></div>
       <div class="row" id="featuredRow"><div class="row-head"><div><div class="row-title" id="featuredTitle">🔥 Destacados</div><div class="row-subtitle">Una selección para empezar a descubrir</div></div><button class="row-more" onclick="cargarDestacados(true)">Actualizar</button></div><div class="rail" id="featuredRail"><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div></div></div>
       <div class="row" id="recommendedRow" hidden><div class="row-head"><div><div class="row-title">✨ Para vos</div><div class="row-subtitle">Recomendaciones según lo que explorás</div></div></div><div class="rail" id="recommendedRail"></div></div>
       <div class="row" id="liveRow"><div class="row-head"><div><div class="row-title">🔴 En vivo</div><div class="row-subtitle">Señales y transmisiones</div></div><a class="row-more" href="#en-vivo">Ver todo</a></div><div class="rail" id="liveRail"></div></div>
@@ -167,31 +361,12 @@ body{touch-action:pan-y;}
   </main>
 
   <footer>
-    <div class="footer-grid"><div><div class="footer-brand" id="footerTexto">UADAVSTREAM</div><div id="footerContacto">La plataforma audiovisual de los artistas de variedades.</div></div><div class="footer-links"><a href="/index.html">Explorar</a><a href="#artistas">Artistas</a><a href="#cartelera">Cartelera</a><a href="#avisos">Novedades</a></div></div>
+    <div class="footer-grid"><div><div class="footer-brand" id="footerTexto">UADAVSTREAM</div><div id="footerContacto">La plataforma audiovisual de los artistas de variedades.</div></div><div class="footer-links"><a href="/index.html">Explorar</a><a href="#artistas" onclick="irASeccion('artists');return false">Artistas</a><a href="#cartelera" onclick="irASeccion('cartelera');return false">Cartelera</a><a href="#avisos">Novedades</a></div></div>
     <div style="margin-top:22px">© <span id="footerYear"></span> UADAVSTREAM · Todos los derechos reservados.</div>
   </footer>
 
-  <div class="overlay" id="videoModal" onclick="minimizarReproductor(event)">
-    <div class="modal" onclick="event.stopPropagation()">
-      <button class="close" aria-label="Minimizar reproductor" onclick="minimizarReproductor()">✕</button>
-      <div class="player" id="playerHost">
-        <iframe id="playerFrame" src="" title="Reproductor UADAVSTREAM" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
-      </div>
-      <div class="modal-info">
-        <h2 id="modalTitle">Video</h2><p id="modalDesc">Contenido</p>
-        <div class="modal-actions">
-          <button class="mini-btn" id="modalSaveBtn"><i class="fa-regular fa-bookmark"></i> Mi lista</button>
-          <button class="mini-btn" id="modalShareBtn"><i class="fa-solid fa-share-nodes"></i> Compartir</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="mobileMiniPlayer" class="mobile-player-mini" aria-label="Reproductor en segundo plano">
-    <div class="mini-controls">
-      <button id="miniExpandBtn" aria-label="Volver al reproductor"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
-      <button id="miniCloseBtn" aria-label="Cerrar video"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div id="miniHost" class="mini-host"></div>
+  <div class="overlay" id="videoModal" onclick="cerrarModal(event)">
+    <div class="modal" onclick="event.stopPropagation()"><div class="player-top-controls"><button class="player-mini" type="button" onclick="mostrarMiniPlayer()" aria-label="Minimizar reproductor">⌄</button><button class="close" type="button" onclick="cerrarModal()" aria-label="Cerrar reproductor">✕</button></div><div class="player"><div id="playerFrame" class="player-host" aria-label="Reproductor UADAVSTREAM"></div></div><div class="modal-info"><h2 id="modalTitle">Video</h2><p id="modalDesc">Contenido</p><div class="modal-actions"><button class="mini-btn" id="modalSaveBtn"><i class="fa-regular fa-bookmark"></i> Mi lista</button><button class="mini-btn" id="modalShareBtn"><i class="fa-solid fa-share-nodes"></i> Compartir</button></div></div></div>
   </div>
 
   <script>
@@ -205,16 +380,47 @@ body{touch-action:pan-y;}
     const $ = id => document.getElementById(id);
     const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
-    function getDiscovery(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {history:[],saved:[],categories:{}}}catch{return {history:[],saved:[],categories:{}}} }
-    function setDiscovery(d){ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}catch{} }
+    function getDiscovery(){
+      try{
+        const d=JSON.parse(localStorage.getItem(STORAGE_KEY))||{};
+        d.history=Array.isArray(d.history)?d.history:[];
+        d.saved=Array.isArray(d.saved)?d.saved:[];
+        d.categories=d.categories&&typeof d.categories==='object'?d.categories:{};
+        return d;
+      }catch{return {history:[],saved:[],categories:{}}}
+    }
+    function setDiscovery(d){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}catch{}}
     function rememberVideo(v){
       if(!v?.id)return;
       const d=getDiscovery();
-      d.history=[{id:v.id,titulo:v.titulo||'Video',descripcion:v.descripcion||v.categoria||'Contenido',thumbnail:v.thumbnail||obtenerCaratula(v.id),categoria:v.categoria||'Contenido',ts:Date.now()},...d.history.filter(x=>x.id!==v.id)].slice(0,30);
-      const cat=(v.categoria||'Contenido').toLowerCase(); d.categories[cat]=(d.categories[cat]||0)+1; setDiscovery(d); renderContinue(); renderRecommendations();
+      d.history=[{
+        id:v.id,titulo:v.titulo||'Video',
+        descripcion:v.descripcion||v.categoria||'Contenido',
+        thumbnail:v.thumbnail||obtenerCaratula(v.id),
+        categoria:v.categoria||'Contenido',ts:Date.now()
+      },...d.history.filter(x=>x.id!==v.id)].slice(0,30);
+      const cat=(v.categoria||'Contenido').toLowerCase();
+      d.categories[cat]=(d.categories[cat]||0)+1;
+      setDiscovery(d);renderContinue();try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}renderSaved();
     }
-    function isSaved(id){return getDiscovery().saved.includes(id)}
-    function toggleSaved(v){const d=getDiscovery();if(isSaved(v.id))d.saved=d.saved.filter(x=>x!==v.id);else d.saved.unshift(v.id);setDiscovery(d);return !isSaved(v.id)}
+    function savedIds(){
+      return getDiscovery().saved.map(x=>typeof x==='string'?x:x?.id).filter(Boolean);
+    }
+    function isSaved(id){return savedIds().includes(id)}
+    function toggleSaved(v){
+      const d=getDiscovery();
+      const id=v?.id;
+      if(!id)return false;
+      if(isSaved(id)) d.saved=d.saved.filter(x=>(typeof x==='string'?x:x?.id)!==id);
+      else d.saved.unshift({
+        id,titulo:v.titulo||'Video',
+        descripcion:v.descripcion||'Contenido',
+        thumbnail:v.thumbnail||obtenerCaratula(id),
+        categoria:v.categoria||'Contenido',ts:Date.now()
+      });
+      setDiscovery(d);renderSaved();
+      return isSaved(id);
+    }
 
     async function api(path, options={}){const res=await fetch(API_URL+path+(path.includes('?')?'&':'?')+'_='+Date.now(),options);if(!res.ok)throw new Error('API '+res.status);return res.json()}
 
@@ -235,48 +441,62 @@ body{touch-action:pan-y;}
     }
 
     function obtenerCaratula(id){return id&&id.length===11?`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`:FALLBACK_THUMB}
-    const SEARCH_INSTANCES=[
+    const SEARCH_INSTANCES = [
       'https://inv.nadeko.net',
       'https://invidious.nerdvpn.de',
       'https://yewtu.be',
-      'https://invidious.tiekoetter.com',
-      'https://yt.artemislena.eu',
-      'https://invidious.flokinet.to',
-      'https://invidious.privacydev.net'
+      'https://invidious.tiekoetter.com'
     ];
+
     function normalizarResultados(data){
-      const arr=Array.isArray(data)?data:(Array.isArray(data?.items)?data.items:(Array.isArray(data?.results)?data.results:[]));
-      return arr.map(v=>{
-        const id=v.id||v.videoId||v.video_id;
-        if(!id)return null;
-        const thumbs=v.videoThumbnails||v.thumbnails||[];
-        const thumb=v.thumbnail||v.thumbnailUrl||thumbs.find(t=>t.quality==='medium')?.url||thumbs[0]?.url||obtenerCaratula(id);
-        const secs=Number(v.lengthSeconds||v.duration||0);
-        return {id,titulo:v.titulo||v.title||'Video',categoria:v.categoria||'Resultado',descripcion:v.descripcion||v.author||v.authorTitle||v.channelTitle||'YouTube',duracion:v.duracion||(secs?`${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`:'HD'),thumbnail:thumb,tipo:secs&&secs<=60?'short':'video'};
+      const arr = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : (Array.isArray(data?.items) ? data.items : []));
+      return arr.map(v => {
+        const id = String(v?.id || v?.videoId || v?.video_id || v?.youtube_id || '').trim();
+        if(!id) return null;
+        const thumbs = Array.isArray(v?.videoThumbnails) ? v.videoThumbnails : (Array.isArray(v?.thumbnails) ? v.thumbnails : []);
+        const thumb = v?.thumbnail || v?.thumbnailUrl || v?.thumbnails?.high?.url || v?.thumbnails?.medium?.url || v?.thumbnails?.default?.url || thumbs.find(t=>t?.quality==='high')?.url || thumbs.find(t=>t?.quality==='medium')?.url || thumbs[0]?.url || obtenerCaratula(id);
+        const secs = Number(v?.lengthSeconds || v?.duration || 0) || 0;
+        return {
+          ...v, id,
+          titulo: v?.titulo || v?.title || 'Contenido audiovisual',
+          descripcion: v?.descripcion || v?.author || v?.channelTitle || v?.channel || 'YouTube',
+          categoria: v?.categoria || 'Resultado',
+          duracion: v?.duracion || (secs ? `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}` : 'HD'),
+          thumbnail: thumb,
+          tipo: secs && secs <= 60 ? 'short' : 'video'
+        };
       }).filter(Boolean);
     }
+
     async function buscarDirectoInvidious(query){
-      const encoded=encodeURIComponent(query);
+      const encoded = encodeURIComponent(query);
       for(const base of SEARCH_INSTANCES){
+        const controller = new AbortController();
+        const timer = setTimeout(()=>controller.abort(), 5000);
         try{
-          const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),4500);
-          const r=await fetch(`${base}/api/v1/search?q=${encoded}&type=video&fields=videoId,title,author,lengthSeconds,videoThumbnails,thumbnailUrl`,{signal:controller.signal,headers:{Accept:'application/json'}});
-          clearTimeout(timer);
-          if(!r.ok)continue;
-          const data=await r.json();const items=normalizarResultados(data);
-          if(items.length)return items;
-        }catch{}
+          const r = await fetch(`${base}/api/v1/search?q=${encoded}&type=video&page=1`, {signal:controller.signal, headers:{Accept:'application/json'}});
+          if(!r.ok) continue;
+          const items = normalizarResultados(await r.json());
+          if(items.length) return items.slice(0,24);
+        }catch(e){} finally{clearTimeout(timer);}
       }
       return [];
     }
+
     async function obtenerVideos(query){
-      const q=String(query||'').trim();if(!q)return[];
+      const q = String(query || '').trim();
+      if(!q) return [];
       try{
-        const data=await api('youtube/search?q='+encodeURIComponent(q));
-        const items=normalizarResultados(data);
-        if(items.length)return items;
-      }catch(e){console.warn('Worker search',e)}
-      return buscarDirectoInvidious(q);
+        const data = await api('youtube/search?q='+encodeURIComponent(q));
+        const items = normalizarResultados(data);
+        if(items.length) return items.slice(0,24);
+      }catch(e){ console.warn('[UADAV] Worker search:', e); }
+      // Fallback conservado con las instancias que venían funcionando.
+      try{
+        const direct = await buscarDirectoInvidious(q);
+        if(direct.length) return direct;
+      }catch(e){}
+      return [];
     }
 
     function cardHTML(v, portrait=false){
@@ -286,8 +506,142 @@ body{touch-action:pan-y;}
       const meta=v.descripcion||v.categoria||v.rubro||'UADAVSTREAM';
       return `<article class="card ${portrait?'portrait-card':''}" data-id="${safe(id)}"><img class="thumb" src="${safe(thumb)}" alt="${safe(title)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">${v.en_vivo?'<span class="badge live">● En vivo</span>':''}${v.verificado?'<span class="badge verify">✓ Verificado</span>':''}<span class="play-overlay"><i class="fa-solid fa-play"></i></span><div class="card-body"><div class="card-title">${safe(title)}</div><div class="card-meta">${safe(meta)}</div></div></article>`;
     }
-    function bindCards(container, items){container.querySelectorAll('.card').forEach((el,i)=>el.onclick=()=>{const v=items[i];if(v?.id||v?.youtube_id)reproducirVideo(v.id||v.youtube_id,v.titulo||v.nombre_artistico||v.nombre,v.descripcion||v.categoria||v.rubro,v)})}
-    function renderRail(id,items,portrait=false){const el=$(id);el.innerHTML=items.length?items.map(v=>cardHTML(v,portrait)).join(''):'<div style="padding:22px;color:#777">Todavía no hay contenido disponible.</div>';bindCards(el,items)}
+    function bindCards(container,items){
+      if(!container)return;
+      container.querySelectorAll('.card').forEach((el,index)=>{
+        let sx=0,sy=0,moved=false;
+        el.addEventListener('pointerdown',e=>{
+          sx=e.clientX;sy=e.clientY;moved=false;
+        },{passive:true});
+        el.addEventListener('pointermove',e=>{
+          if(Math.hypot(e.clientX-sx,e.clientY-sy)>9)moved=true;
+        },{passive:true});
+        el.addEventListener('click',e=>{
+          if(moved){
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          const v=items[index];
+          if(!v)return;
+          const id=v.id||v.youtube_id||v.videoId;
+          if(!id)return;
+          reproducirVideo(
+            id,
+            v.titulo||v.title||v.nombre||'Video',
+            v.descripcion||v.author||v.channelTitle||'Contenido',
+            v
+          );
+        });
+      });
+    }
+
+    function enableRailDrag(rail){
+      if(!rail || rail.classList.contains('results-rail')) return;
+      if(rail.dataset.dragReady==='1') return;
+      rail.dataset.dragReady='1';
+
+      let down=false,dragging=false;
+      let sx=0,sy=0,scrollStart=0,pointerId=null;
+
+      function stop(){
+        down=false;
+        dragging=false;
+        rail.classList.remove('dragging');
+        if(pointerId!==null){
+          try{rail.releasePointerCapture(pointerId)}catch{}
+        }
+        pointerId=null;
+      }
+
+      rail.addEventListener('pointerdown',e=>{
+        if(e.pointerType==='mouse' && e.button!==0)return;
+        if(rail.scrollWidth<=rail.clientWidth)return;
+        down=true;
+        dragging=false;
+        pointerId=e.pointerId;
+        sx=e.clientX;
+        sy=e.clientY;
+        scrollStart=rail.scrollLeft;
+      },{passive:true});
+
+      rail.addEventListener('pointermove',e=>{
+        if(!down)return;
+        const dx=e.clientX-sx;
+        const dy=e.clientY-sy;
+
+        if(!dragging){
+          if(Math.abs(dx)<7 && Math.abs(dy)<7)return;
+
+          // Vertical gesture: let the page handle it.
+          if(Math.abs(dy)>Math.abs(dx)){
+            stop();
+            return;
+          }
+
+          // Horizontal gesture: take control of the rail.
+          dragging=true;
+          rail.classList.add('dragging');
+          try{rail.setPointerCapture(e.pointerId)}catch{}
+        }
+
+        if(dragging){
+          e.preventDefault();
+          rail.scrollLeft=scrollStart-dx;
+        }
+      },{passive:false});
+
+      rail.addEventListener('pointerup',stop,{passive:true});
+      rail.addEventListener('pointercancel',stop,{passive:true});
+      rail.addEventListener('lostpointercapture',()=>{
+        down=false;dragging=false;rail.classList.remove('dragging');
+        pointerId=null;
+      },{passive:true});
+
+      // Wheel: vertical wheel over a rail becomes horizontal navigation.
+      rail.addEventListener('wheel',e=>{
+        if(rail.scrollWidth<=rail.clientWidth)return;
+        const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
+        if(!delta)return;
+        e.preventDefault();
+        rail.scrollLeft += delta;
+      },{passive:false});
+    }
+
+    function prepararRailWrappers(){
+      document.querySelectorAll('.rail:not(.results-rail)').forEach(rail=>{
+        if(rail.parentElement?.classList.contains('rail-wrap'))return;
+        const wrap=document.createElement('div');
+        wrap.className='rail-wrap';
+        rail.parentNode.insertBefore(wrap,rail);
+        wrap.appendChild(rail);
+      });
+    }
+
+    function activarArrastreCarruseles(){document.querySelectorAll('.rail:not(.results-rail)').forEach(enableRailDrag)}
+    function renderRail(id,items,portrait=false){
+      const el=$(id); if(!el)return;
+      const valid=(items||[]).filter(v=>v&&(v.id||v.youtube_id||v.videoId));
+      el.innerHTML=valid.length?valid.map(v=>cardHTML(v,portrait)).join(''):'<div style="padding:22px;color:#777">Todavía no hay contenido disponible.</div>';
+      bindCards(el,valid);
+
+      if(!el.classList.contains('results-rail')){
+        const wrap=el.closest('.rail-wrap');
+        if(wrap){
+          wrap.querySelectorAll('.rail-arrow').forEach(x=>x.remove());
+          const left=document.createElement('button');
+          left.className='rail-arrow left';left.type='button';left.setAttribute('aria-label','Anterior');
+          left.innerHTML='<i class="fa-solid fa-chevron-left"></i>';
+          left.onclick=()=>el.scrollBy({left:-Math.max(el.clientWidth*.72,320),behavior:'smooth'});
+          const right=document.createElement('button');
+          right.className='rail-arrow right';right.type='button';right.setAttribute('aria-label','Siguiente');
+          right.innerHTML='<i class="fa-solid fa-chevron-right"></i>';
+          right.onclick=()=>el.scrollBy({left:Math.max(el.clientWidth*.72,320),behavior:'smooth'});
+          wrap.append(left,right);
+        }
+      }
+      enableRailDrag(el);
+    }
 
     async function cargarDestacados(refresh=false){
       const rail=$('featuredRail');rail.innerHTML='<div style="padding:25px;color:#888"><i class="fa-solid fa-circle-notch fa-spin"></i> Descubriendo contenido...</div>';
@@ -297,7 +651,7 @@ body{touch-action:pan-y;}
       const queries=(config.palabras_clave_destacados||'artistas de variedades,teatro,circo,humor,música').split(',').map(x=>x.trim()).filter(Boolean).slice(0,4);
       if(!pool.length||refresh){for(const q of queries){const r=await obtenerVideos(q);pool.push(...r.slice(0,5).map(v=>({...v,categoria:v.categoria&&v.categoria!=='Resultado'?v.categoria:q})))} }
       const seen=new Set();allVideos=pool.filter(v=>v.id&&!seen.has(v.id)&&(seen.add(v.id))).slice(0,limite);
-      $('featuredTitle').textContent=config.titulo_destacados||'🔥 Destacados';renderRail('featuredRail',allVideos);renderRecommendations();
+      $('featuredTitle').textContent=config.titulo_destacados||'🔥 Destacados';renderRail('featuredRail',allVideos);try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}
     }
 
     async function cargarDiscover(){
@@ -307,19 +661,55 @@ body{touch-action:pan-y;}
     }
 
     function renderContinue(){const d=getDiscovery();const items=d.history||[];if(!items.length){$('continueRow').hidden=true;return}$('continueRow').hidden=false;renderRail('continueRail',items.slice(0,12))}
-    function renderRecommendations(){
-      const row=$('recommendedRow'); const rail=$('recommendedRail');
+    function renderSaved(){
+      const row=$('savedRow'),rail=$('savedRail');
       if(!row||!rail)return;
+      const raw=getDiscovery().saved||[];
+      const items=raw.map(x=>typeof x==='string'?{
+        id:x,titulo:'Video guardado',descripcion:'Contenido guardado',
+        thumbnail:obtenerCaratula(x),categoria:'Mi lista'
+      }:x).filter(x=>x&&x.id);
+      if(!items.length){row.hidden=true;rail.innerHTML='';return}
+      row.hidden=false;renderRail('savedRail',items.slice(0,30));
+    }
+
+    function renderRecommendations(){
       const d=getDiscovery();
-      const cats=Object.entries(d.categories||{}).sort((a,b)=>b[1]-a[1]).map(x=>x[0]).filter(Boolean);
-      if(!cats.length){row.hidden=true;return;}
+      const cats=Object.entries(d.categories||{})
+        .sort((a,b)=>b[1]-a[1])
+        .map(x=>x[0])
+        .filter(Boolean);
+
+      const row=$('recommendedRow');
+      const rail=$('recommendedRail');
+      const title=$('recommendedTitle');
+
+      if(!row || !rail){
+        // The recommendation rail is optional in the current skin.
+        return;
+      }
+
+      if(!cats.length){
+        row.hidden=true;
+        return;
+      }
+
       const q=cats[0];
+      row.hidden=false;
+      if(title) title.textContent=`Para vos · ${q.charAt(0).toUpperCase()+q.slice(1)}`;
+
       obtenerVideos(q).then(items=>{
-        if(!row||!rail)return;
-        const clean=Array.isArray(items)?items.filter(v=>v&&(v.id||v.youtube_id||v.videoId)):[];
-        if(clean.length){row.hidden=false;renderRail('recommendedRail',clean.slice(0,12));}
-        else row.hidden=true;
-      }).catch(()=>{if(row)row.hidden=true;});
+        const watched=new Set((d.history||[]).map(x=>x.id));
+        const filtered=(items||[]).filter(x=>x&&x.id&&!watched.has(x.id));
+        const finalItems=(filtered.length?filtered:items||[]).slice(0,12);
+        if(finalItems.length){
+          renderRail('recommendedRail',finalItems);
+        }else{
+          row.hidden=true;
+        }
+      }).catch(()=>{
+        row.hidden=true;
+      });
     }
 
     async function cargarArtistas(){
@@ -345,193 +735,250 @@ body{touch-action:pan-y;}
     async function ejecutarBusqueda(value){
       const q=String(value||'').trim();
       if(!q){volverInicio();return;}
-      const status=$('searchStatus'), resultsRow=$('resultsRow'), resultsRail=$('resultsRail');
       $('searchInput').value=q;$('navSearchInput').value=q;
-      if(status)status.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando contenido...';
-      ['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>{if($(id))$(id).hidden=true;});
-      const discoverWrap=$('discoverRail')?.parentElement?.parentElement;if(discoverWrap)discoverWrap.hidden=true;
-      if(resultsRow)resultsRow.hidden=false;
-      if(resultsRail)resultsRail.innerHTML='<div style="padding:25px;color:#888">Buscando...</div>';
+      $('searchStatus').innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando...';
+      ['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>$(id).hidden=true);
+      $('resultsRow').hidden=false;
+      const rail=$('resultsRail');
+      rail.innerHTML='<div style="grid-column:1/-1;padding:35px;text-align:center;color:#888"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando resultados...</div>';
       try{
         const results=await obtenerVideos(q);
-        const clean=Array.isArray(results)?results.filter(v=>v&&(v.id||v.youtube_id||v.videoId)):[];
-        if($('resultsTitle'))$('resultsTitle').textContent=`Resultados para “${q}”`;
-        if(status)status.textContent=clean.length?`${clean.length} resultados encontrados`:'No encontramos resultados';
-        renderRail('resultsRail',clean);
-        if(resultsRow)resultsRow.hidden=false;
-        requestAnimationFrame(()=>{
-          const target=resultsRow?.getBoundingClientRect().top+window.scrollY-64;
-          window.scrollTo({top:Math.max(0,target||0),behavior:'smooth'});
-        });
-      }catch(err){
-        console.error('Búsqueda UADAVSTREAM',err);
-        if(status)status.textContent='No pudimos completar la búsqueda. Intentá nuevamente.';
-        renderRail('resultsRail',[]);
-        if(resultsRow)resultsRow.hidden=false;
+        $('resultsTitle').textContent='Resultados para “'+q+'”';
+        $('searchStatus').textContent=results.length?results.length+' resultados encontrados':'No encontramos resultados';
+        renderRail('resultsRail',results);
+        $('resultsRow').hidden=false;
+        requestAnimationFrame(()=>{document.getElementById('resultsRow').scrollIntoView({behavior:'smooth',block:'start'});});
+      }catch(e){
+        console.error('[UADAV] búsqueda fatal:',e);
+        $('searchStatus').textContent='Error al buscar';
+        rail.innerHTML='<div style="grid-column:1/-1;padding:35px;text-align:center;color:#ff7777">No pudimos cargar los resultados. Revisá la conexión con la API.</div>';
       }
     }
-    function volverInicio(){['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>$(id).hidden=false);$('discoverRail').parentElement.parentElement.hidden=false;$('resultsRow').hidden=true;$('searchStatus').textContent='';$('searchInput').value='';$('navSearchInput').value='';window.scrollTo({top:0,behavior:'smooth'})}
+    function irASeccion(id){
+      const el=$(id);if(!el)return;
+      if($('resultsRow')&&!$('resultsRow').hidden)volverInicio();
+      setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),40);
+    }
+    function volverInicio(){
+      ['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>{if($(id))$(id).hidden=false});
+      if($('discoverRail')?.parentElement?.parentElement)$('discoverRail').parentElement.parentElement.hidden=false;
+      if($('resultsRow'))$('resultsRow').hidden=true;
+      if($('searchStatus'))$('searchStatus').textContent='';
+      if($('searchInput'))$('searchInput').value='';
+      if($('navSearchInput'))$('navSearchInput').value='';
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
 
-    let currentVideoId='';
+    let ytPlayer=null;
+    let ytApiReady=false;
+    let pendingVideoId=null;
+    let currentQueue=[];
+    let currentQueueIndex=0;
     let currentVideoData=null;
-    let playerState='closed';
 
-    function playerUrl(id){
-      const origin=encodeURIComponent(location.origin);
-      return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1&enablejsapi=1&origin=${origin}`;
-    }
-    function stopFrame(frame){
-      if(!frame)return;
-      try{frame.src='about:blank';}catch{}
-    }
-    function ensureMini(){
-      const mini=$('mobileMiniPlayer');
-      if(mini){
-        $('miniExpandBtn').onclick=restaurarReproductor;
-        $('miniCloseBtn').onclick=()=>cerrarReproductor(true);
-      }
-      return mini;
-    }
-    function moverPlayerA(host){
-      const frame=$('playerFrame');
-      if(!frame||!host)return;
-      host.appendChild(frame);
-    }
-    function mostrarModal(){
-      $('videoModal').classList.add('active');
-      document.body.style.overflow='hidden';
-      playerState='modal';
-    }
-    function ocultarModal(){
-      $('videoModal').classList.remove('active');
-      document.body.style.overflow='';
-    }
-    function minimizarReproductor(e){
-      if(e && e.target!==e.currentTarget)return;
-      const frame=$('playerFrame');
-      if(!frame || !frame.src || frame.src==='about:blank')return;
-      const mini=ensureMini();
-      moverPlayerA($('miniHost'));
-      mini.classList.add('active');
-      ocultarModal();
-      playerState='mini';
-    }
-    function restaurarReproductor(){
-      const frame=$('playerFrame');
-      if(!frame || !frame.src || frame.src==='about:blank')return;
-      moverPlayerA($('playerHost'));
-      ensureMini().classList.remove('active');
-      mostrarModal();
-    }
-    function cerrarReproductor(stop=true){
-      const frame=$('playerFrame');
-      if(stop && frame){
+    window.onYouTubeIframeAPIReady=function(){
+      ytApiReady=true;
+      if(pendingVideoId) crearOActualizarPlayer(pendingVideoId);
+    };
+
+    function crearOActualizarPlayer(id){
+      if(!id)return;
+      pendingVideoId=id;
+
+      if(!ytApiReady || !window.YT || !YT.Player)return;
+
+      const host=$('playerFrame');
+      if(!host)return;
+
+      if(ytPlayer && typeof ytPlayer.loadVideoById==='function'){
         try{
-          frame.contentWindow?.postMessage(JSON.stringify({event:'command',func:'pauseVideo',args:[]}), 'https://www.youtube-nocookie.com');
+          ytPlayer.loadVideoById({videoId:id,startSeconds:0});
+          try{ytPlayer.setPlaybackQuality('hd720')}catch{}
+          return;
         }catch{}
-        stopFrame(frame);
       }
-      ensureMini().classList.remove('active');
-      ocultarModal();
-      currentVideoId='';
-      currentVideoData=null;
-      playerState='closed';
+
+      host.innerHTML='';
+      ytPlayer=new YT.Player('playerFrame',{
+        width:'100%',
+        height:'100%',
+        videoId:id,
+        playerVars:{
+          autoplay:1,
+          controls:1,
+          rel:0,
+          playsinline:1,
+          enablejsapi:1,
+          origin:location.origin
+        },
+        events:{
+          onReady:function(e){
+            try{e.target.playVideo()}catch{}
+            try{e.target.setPlaybackQuality('hd720')}catch{}
+          },
+          onStateChange:function(e){
+            if(e.data===0) reproducirSiguiente();
+          },
+          onAutoplayBlocked:function(){
+            // The user already clicked the card, so the browser normally allows playback.
+            // If a browser still blocks it, controls remain available.
+          }
+        }
+      });
     }
-    function cerrarMiniPlayer(){cerrarReproductor(true)}
+
+    function cargarPlayerYouTube(id){
+      if(!id)return;
+      pendingVideoId=id;
+
+      if(ytApiReady && window.YT && YT.Player){
+        crearOActualizarPlayer(id);
+        return;
+      }
+
+      // Fallback while the API is still loading.
+      const host=$('playerFrame');
+      if(host){
+        host.innerHTML=`<iframe
+          src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=1&rel=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}"
+          title="Reproductor UADAVSTREAM"
+          allow="autoplay; encrypted-media; picture-in-picture; web-share"
+          allowfullscreen></iframe>`;
+      }
+    }
+
+    function prepararCola(video){
+      const base=(allVideos||[]).filter(v=>v&&v.id);
+      const pool=base.some(v=>v.id===video?.id)?base:[video,...base.filter(v=>v.id!==video?.id)];
+      currentQueue=pool;
+      currentQueueIndex=Math.max(0,currentQueue.findIndex(v=>v.id===video?.id));
+    }
+
+    function reproducirSiguiente(){
+      if(!currentQueue.length)return;
+      const next=(currentQueueIndex+1)%currentQueue.length;
+      currentQueueIndex=next;
+      const v=currentQueue[next];
+      if(!v)return;
+      currentVideoData=v;
+      rememberVideo(v);
+      $('modalTitle').textContent=v.titulo||'Video';
+      $('modalDesc').textContent=v.descripcion||'Contenido audiovisual';
+      actualizarBotonesPlayer(v);
+      cargarPlayerYouTube(v.id);
+    }
+
+    function actualizarBotonesPlayer(v){
+      $('modalSaveBtn').innerHTML=`<i class="fa-${isSaved(v.id)?'solid':'regular'} fa-bookmark"></i> ${isSaved(v.id)?'Guardado':'Mi lista'}`;
+      $('modalSaveBtn').onclick=()=>{
+        const now=toggleSaved(v);
+        $('modalSaveBtn').innerHTML=`<i class="fa-${now?'solid':'regular'} fa-bookmark"></i> ${now?'Guardado':'Mi lista'}`;
+      };
+      $('modalShareBtn').onclick=async()=>{
+        const url=`${location.origin}${location.pathname}?video=${encodeURIComponent(v.id)}`;
+        if(navigator.share){
+          try{await navigator.share({title:v.titulo||'UADAVSTREAM',text:v.descripcion||'Mirá este contenido en UADAVSTREAM',url});return}catch{}
+        }
+        try{
+          await navigator.clipboard.writeText(url);
+          $('modalShareBtn').innerHTML='<i class="fa-solid fa-check"></i> Copiado';
+          setTimeout(()=>{$('modalShareBtn').innerHTML='<i class="fa-solid fa-share-nodes"></i> Compartir'},1600);
+        }catch{window.open(url,'_blank','noopener')}
+      };
+    }
 
     function reproducirVideo(id,titulo,desc,video){
       if(!id||String(id).startsWith('event-')){
         if(video?.eventData){
-          const e=video.eventData;const link=e.link_pago||e.url||e.link||e.whatsapp;
+          const e=video.eventData;
+          const link=e.link_pago||e.url||e.link||e.whatsapp;
           if(link)window.open(link,'_blank','noopener');
         }
         return;
       }
-      const cleanId=String(id).trim();
-      // Garantía de un único reproductor: el mismo iframe se reutiliza.
-      cerrarReproductor(true);
-      currentVideoId=cleanId;
-      currentVideoData={id:cleanId,titulo,desc,video};
-      rememberVideo({id:cleanId,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(cleanId),categoria:video?.categoria||'Contenido'});
-      $('modalTitle').textContent=titulo||'Video';
-      $('modalDesc').textContent=desc||'Contenido audiovisual';
-      const frame=$('playerFrame');
-      moverPlayerA($('playerHost'));
-      frame.src=playerUrl(cleanId);
-      mostrarModal();
-      $('modalSaveBtn').innerHTML=`<i class="fa-${isSaved(cleanId)?'solid':'regular'} fa-bookmark"></i> ${isSaved(cleanId)?'Guardado':'Mi lista'}`;
-      $('modalSaveBtn').onclick=()=>{
-        const now=toggleSaved({id:cleanId,titulo,descripcion:desc,thumbnail:video?.thumbnail||obtenerCaratula(cleanId)});
-        $('modalSaveBtn').innerHTML=`<i class="fa-${now?'solid':'regular'} fa-bookmark"></i> ${now?'Guardado':'Mi lista'}`;
+
+      const v={
+        ...(video||{}),
+        id,
+        titulo:titulo||video?.titulo||'Video',
+        descripcion:desc||video?.descripcion||'Contenido audiovisual',
+        thumbnail:video?.thumbnail||obtenerCaratula(id),
+        categoria:video?.categoria||'Contenido'
       };
-      $('modalShareBtn').onclick=async()=>{
-        const url=`https://www.youtube.com/watch?v=${encodeURIComponent(cleanId)}`;
-        try{
-          if(navigator.share) await navigator.share({title:titulo||'UADAVSTREAM',text:desc||'Mirá este video',url});
-          else {await navigator.clipboard.writeText(url);$('modalShareBtn').innerHTML='<i class="fa-solid fa-check"></i> Copiado';setTimeout(()=>$('modalShareBtn').innerHTML='<i class="fa-solid fa-share-nodes"></i> Compartir',1500);}
-        }catch{}
-      };
+
+      prepararCola(v);
+      currentVideoData=v;
+      rememberVideo(v);
+      $('modalTitle').textContent=v.titulo;
+      $('modalDesc').textContent=v.descripcion;
+      $('videoModal').classList.add('active');
+      $('videoModal').classList.remove('pip-mode');
+      document.body.style.overflow='';
+      actualizarBotonesPlayer(v);
+      cargarPlayerYouTube(id);
+    }
+
+    function cerrarModal(e){
+      if(e&&e.target!==e.currentTarget)return;
+      $('videoModal').classList.remove('active','pip-mode');
+      if(ytPlayer&&typeof ytPlayer.stopVideo==='function'){try{ytPlayer.stopVideo()}catch{}}
+      pendingVideoId=null;
+      document.body.style.overflow='';
+      currentVideoData=null;
     }
 
     $('btnCaptador').addEventListener('click',async()=>{const email=$('emailInput').value.trim();if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ $('mensajeCaptador').style.color='#ff7b7b';$('mensajeCaptador').textContent='Ingresá un email válido.';return}try{const res=await fetch(API_URL+'suscriptores',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});if(!res.ok)throw new Error();$('emailInput').value='';$('mensajeCaptador').style.color='#78f0a2';$('mensajeCaptador').textContent='✓ Listo. Te avisaremos de las novedades.'}catch{$('mensajeCaptador').style.color='#ff7b7b';$('mensajeCaptador').textContent='No pudimos registrar el email. Intentá nuevamente.'}});
 
+    function mostrarMiniPlayer(){
+      const modal=$('videoModal');
+      if(!modal?.classList.contains('active'))return;
+      modal.classList.add('pip-mode');
+      document.body.style.overflow='';
+    }
+    function restaurarPlayer(){
+      const modal=$('videoModal');
+      if(!modal?.classList.contains('active'))return;
+      modal.classList.remove('pip-mode');
+    }
+    function cerrarMiniPlayer(){ cerrarModal(); }
+
+    function actualizarMiniPlayer(){
+      const modal=$('videoModal');
+      if(!modal||!modal.classList.contains('active'))return;
+      modal.classList.toggle('pip-mode',window.scrollY>180);
+    }
+    window.addEventListener('scroll',actualizarMiniPlayer,{passive:true});
     window.addEventListener('scroll',()=>{$('nav').classList.toggle('scrolled',window.scrollY>30)});
     document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarModal()});
     $('footerYear').textContent=new Date().getFullYear();
 
-    function enableRailDrag(){
-      document.querySelectorAll('.rail').forEach(rail=>{
-        if(rail.dataset.dragReady)return;
-        rail.dataset.dragReady='1';
-        let down=false,startX=0,startY=0,startScroll=0,dragging=false,pointerId=null;
-        const begin=e=>{
-          if(e.pointerType==='mouse'&&e.button!==0)return;
-          down=true;dragging=false;pointerId=e.pointerId;
-          startX=e.clientX;startY=e.clientY;startScroll=rail.scrollLeft;
-          rail.classList.remove('dragging');
-        };
-        const move=e=>{
-          if(!down)return;
-          const dx=e.clientX-startX,dy=e.clientY-startY;
-          if(!dragging && Math.abs(dx)>8 && Math.abs(dx)>Math.abs(dy)){
-            dragging=true;rail.classList.add('dragging');
-            try{rail.setPointerCapture(e.pointerId)}catch{}
-          }
-          if(dragging){
-            rail.scrollLeft=startScroll-dx;
-            e.preventDefault();
-          }
-        };
-        const end=()=>{
-          if(!down)return;
-          down=false;
-          if(dragging)rail.classList.remove('dragging');
-          dragging=false;
-          try{if(pointerId!=null)rail.releasePointerCapture(pointerId)}catch{}
-          pointerId=null;
-        };
-        rail.addEventListener('pointerdown',begin,{passive:true});
-        rail.addEventListener('pointermove',move,{passive:false});
-        rail.addEventListener('pointerup',end);
-        rail.addEventListener('pointercancel',end);
-        rail.addEventListener('lostpointercapture',end);
-        rail.addEventListener('click',e=>{
-          if(rail.classList.contains('dragging')){e.preventDefault();e.stopPropagation();}
-        },true);
-      });
-    }
-    const oldRenderRail=window.renderRail;
-    if(typeof oldRenderRail==='function'){}
-    new MutationObserver(()=>enableRailDrag()).observe(document.body,{childList:true,subtree:true});
     async function init(){
-      ensureMini();
       await cargarConfig();
+      prepararRailWrappers();
       renderContinue();
       await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarDiscover()]);
-      renderRecommendations();
-      if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('/service-worker.js')}catch(e){console.warn('SW',e)}}
+      try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}
+      prepararRailWrappers();
+      activarArrastreCarruseles();
+      if('serviceWorker' in navigator){try{
+        const SW_VERSION='uadavstream-v13';
+        if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
+          const regs=await navigator.serviceWorker.getRegistrations();
+          for(const reg of regs){try{await reg.unregister()}catch{}}
+          if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
+          localStorage.setItem('uadav_sw_version',SW_VERSION);
+        }
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=13',{updateViaCache:'none'});
+        await reg.update().catch(()=>{});
+      }catch(e){console.warn('SW',e)}}
     }
     init();
-  </script>
+  document.addEventListener('keydown',e=>{
+      if(e.key!=='Escape')return;
+      if($('videoModal')?.classList.contains('active'))cerrarModal();
+      else if($('resultsRow')&&!$('resultsRow').hidden)volverInicio();
+    });
+</script>
+<script src="https://www.youtube.com/iframe_api" async></script>
 </body>
 </html>
