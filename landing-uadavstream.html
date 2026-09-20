@@ -293,44 +293,45 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     flex-shrink:0!important;
   }
 }
-<style id="uadav-v14-ux">
-/* Navegacion tactil: el navegador conserva el scroll vertical; el rail captura solo el gesto horizontal. */
-.rail:not(.results-rail){touch-action:pan-y;overscroll-behavior-x:contain;overscroll-behavior-y:auto;}
-.rail:not(.results-rail) .card{flex:0 0 clamp(170px,18vw,245px);}
-@media (max-width:850px){
-  .rail:not(.results-rail) .card{flex-basis:190px;}
-  .rail:not(.results-rail) .portrait-card{flex-basis:128px;}
-}
-@media (max-width:520px){
-  .row{padding-left:12px;padding-right:12px;}
-  .rail:not(.results-rail){gap:10px;padding-left:2px;padding-right:2px;}
-  .rail:not(.results-rail) .card{flex-basis:168px;border-radius:8px;}
-  .rail:not(.results-rail) .card-body{padding:8px 9px 10px;}
-  .rail:not(.results-rail) .card-title{font-size:13px;}
-  .rail:not(.results-rail) .card-meta{font-size:10px;}
-  .rail:not(.results-rail) .portrait-card{flex-basis:116px;}
-}
-</style>
 </style>
 
 
-<style id="uadav-v14-2-visual">
-/* V14.2: SOLO DIMENSIONES. Base de reproducción conservada desde V13 estable. */
-.rail:not(.results-rail) .card{
-  flex:0 0 clamp(165px,16vw,205px)!important;
-  width:clamp(165px,16vw,205px)!important;
+<style id="uadav-v14-mobile-ux">
+/* V14 — navegación móvil y tarjetas */
+html,body{overscroll-behavior-x:none;}
+@media (max-width:700px){
+  body{overflow-x:hidden;touch-action:pan-y;}
+  .rail-wrap{margin-inline:-2px;}
+  .rail:not(.results-rail){
+    gap:10px!important;
+    padding:4px 12px 18px!important;
+    margin:0!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    touch-action:pan-x!important;
+    -webkit-overflow-scrolling:touch!important;
+    scroll-padding-inline:12px;
+  }
+  .rail:not(.results-rail) .card{
+    flex:0 0 68vw!important;
+    width:68vw!important;
+    max-width:280px!important;
+    min-width:220px!important;
+  }
+  .rail:not(.results-rail) .thumb{aspect-ratio:16/9!important;}
+  .rail:not(.results-rail) .card-body{padding:8px 9px 10px!important;}
+  .rail:not(.results-rail) .card-title{font-size:14px!important;line-height:1.25!important;}
+  .rail:not(.results-rail) .card-meta{font-size:11px!important;}
+  .results-rail{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  .results-rail .card{width:100%!important;min-width:0!important;}
+  .results-rail .thumb{aspect-ratio:16/9!important;}
 }
-.rail:not(.results-rail) .portrait-card{
-  flex:0 0 clamp(112px,11vw,145px)!important;
-  width:clamp(112px,11vw,145px)!important;
-}
-@media (max-width:850px){
-  .rail:not(.results-rail) .card{flex-basis:170px!important;width:170px!important}
-  .rail:not(.results-rail) .portrait-card{flex-basis:120px!important;width:120px!important}
-}
-@media (max-width:520px){
-  .rail:not(.results-rail) .card{flex-basis:158px!important;width:158px!important}
-  .rail:not(.results-rail) .portrait-card{flex-basis:112px!important;width:112px!important}
+@media (min-width:701px){
+  .rail:not(.results-rail) .card{flex-basis:clamp(210px,20vw,280px)!important;}
 }
 </style>
 </head>
@@ -478,23 +479,6 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
       if(c.nombre_app){$('brandName').textContent=c.nombre_app;$('heroEyebrow').textContent=c.nombre_app}
     }
 
-    function extraerYouTubeId(value){
-      const raw=String(value||'').trim();
-      if(!raw)return '';
-      if(/^[A-Za-z0-9_-]{11}$/.test(raw))return raw;
-      try{
-        const u=new URL(raw,location.origin);
-        if(u.hostname.includes('youtu.be')) return (u.pathname.split('/').filter(Boolean)[0]||'').slice(0,11);
-        if(u.hostname.includes('youtube.com')){
-          const v=u.searchParams.get('v'); if(v)return v.slice(0,11);
-          const parts=u.pathname.split('/').filter(Boolean);
-          const i=parts.findIndex(x=>['embed','shorts','live','v'].includes(x));
-          if(i>=0 && parts[i+1])return parts[i+1].slice(0,11);
-        }
-      }catch{}
-      return '';
-    }
-
     function obtenerCaratula(id){return id&&id.length===11?`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`:FALLBACK_THUMB}
     const SEARCH_INSTANCES = [
       'https://inv.nadeko.net',
@@ -506,7 +490,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     function normalizarResultados(data){
       const arr = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : (Array.isArray(data?.items) ? data.items : []));
       return arr.map(v => {
-        const id = extraerYouTubeId(v?.id || v?.videoId || v?.video_id || v?.youtube_id || '');
+        const id = String(v?.id || v?.videoId || v?.video_id || v?.youtube_id || '').trim();
         if(!id) return null;
         const thumbs = Array.isArray(v?.videoThumbnails) ? v.videoThumbnails : (Array.isArray(v?.thumbnails) ? v.thumbnails : []);
         const thumb = v?.thumbnail || v?.thumbnailUrl || v?.thumbnails?.high?.url || v?.thumbnails?.medium?.url || v?.thumbnails?.default?.url || thumbs.find(t=>t?.quality==='high')?.url || thumbs.find(t=>t?.quality==='medium')?.url || thumbs[0]?.url || obtenerCaratula(id);
@@ -555,7 +539,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     }
 
     function cardHTML(v, portrait=false){
-      const id=extraerYouTubeId(v.id||v.youtube_id||v.videoId); if(!id)return '';
+      const id=v.id||v.youtube_id||v.videoId; if(!id)return '';
       const thumb=v.thumbnail||v.foto||obtenerCaratula(id);
       const title=v.titulo||v.nombre_artistico||v.nombre||'Contenido';
       const meta=v.descripcion||v.categoria||v.rubro||'UADAVSTREAM';
@@ -579,7 +563,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
           }
           const v=items[index];
           if(!v)return;
-          const id=extraerYouTubeId(v.id||v.youtube_id||v.videoId);
+          const id=v.id||v.youtube_id||v.videoId;
           if(!id)return;
           reproducirVideo(
             id,
@@ -676,7 +660,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     function activarArrastreCarruseles(){document.querySelectorAll('.rail:not(.results-rail)').forEach(enableRailDrag)}
     function renderRail(id,items,portrait=false){
       const el=$(id); if(!el)return;
-      const valid=(items||[]).map(v=>{if(!v)return null; const id=extraerYouTubeId(v.id||v.youtube_id||v.videoId); return id?{...v,id}:v;}).filter(v=>v&&v.id);
+      const valid=(items||[]).filter(v=>v&&(v.id||v.youtube_id||v.videoId));
       el.innerHTML=valid.length?valid.map(v=>cardHTML(v,portrait)).join(''):'<div style="padding:22px;color:#777">Todavía no hay contenido disponible.</div>';
       bindCards(el,valid);
 
@@ -702,7 +686,7 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
       const rail=$('featuredRail');rail.innerHTML='<div style="padding:25px;color:#888"><i class="fa-solid fa-circle-notch fa-spin"></i> Descubriendo contenido...</div>';
       let pool=[];
       const limite=Number(config.limite_destacados||16);
-      if(Array.isArray(config.videos_destacados_ids)&&config.videos_destacados_ids.length){pool.push(...config.videos_destacados_ids.map(id=>({id:extraerYouTubeId(id),titulo:'Contenido destacado',categoria:'Destacado',thumbnail:obtenerCaratula(id)})))}
+      if(Array.isArray(config.videos_destacados_ids)&&config.videos_destacados_ids.length){pool.push(...config.videos_destacados_ids.map(id=>({id,titulo:'Contenido destacado',categoria:'Destacado',thumbnail:obtenerCaratula(id)})))}
       const queries=(config.palabras_clave_destacados||'artistas de variedades,teatro,circo,humor,música').split(',').map(x=>x.trim()).filter(Boolean).slice(0,4);
       if(!pool.length||refresh){for(const q of queries){const r=await obtenerVideos(q);pool.push(...r.slice(0,5).map(v=>({...v,categoria:v.categoria&&v.categoria!=='Resultado'?v.categoria:q})))} }
       const seen=new Set();allVideos=pool.filter(v=>v.id&&!seen.has(v.id)&&(seen.add(v.id))).slice(0,limite);
@@ -774,16 +758,41 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
       renderRail('artistsRail',allArtists.slice(0,18),true);
     }
 
+    function normalizarIdYoutube(valor){
+      const s=String(valor||'').trim();
+      if(!s)return '';
+      if(/^[A-Za-z0-9_-]{11}$/.test(s))return s;
+      try{
+        const u=new URL(s);
+        if(u.hostname.includes('youtu.be')) return (u.pathname.split('/').filter(Boolean)[0]||'');
+        const q=u.searchParams.get('v'); if(q)return q;
+        const parts=u.pathname.split('/').filter(Boolean);
+        const i=parts.findIndex(x=>x==='shorts'||x==='embed'||x==='live');
+        if(i>=0&&parts[i+1])return parts[i+1];
+      }catch{}
+      return '';
+    }
+
     async function cargarEventos(){
       let data=[];try{data=await api('cartelera_aprobada')}catch{}
       if(!Array.isArray(data))data=[];
-      const items=data.filter(x=>x&&x.estado!=='cancelado').slice(0,18).map(e=>({id:extraerYouTubeId(e.youtube_id||e.youtube_url||e.video_url||e.videoId)||e.id||('event-'+Math.random()),titulo:e.titulo||e.nombre||'Evento',descripcion:[e.fecha,e.lugar].filter(Boolean).join(' · ')||'Próximo espectáculo',thumbnail:e.imagen||e.poster||FALLBACK_THUMB,categoria:'Evento',eventData:e}));
+      const items=data.filter(x=>x&&x.estado!=='cancelado').slice(0,18).map(e=>{
+        const yt=normalizarIdYoutube(e.youtube_id||e.youtube||e.video_id||e.videoUrl||e.url_video);
+        return {
+          id:yt||('event-'+String(e.id||Date.now())),
+          titulo:e.titulo||e.nombre||'Evento',
+          descripcion:[e.fecha,e.lugar].filter(Boolean).join(' · ')||e.descripcion||'Próximo espectáculo',
+          thumbnail:e.imagen||e.poster||(yt?obtenerCaratula(yt):FALLBACK_THUMB),
+          categoria:'Evento',
+          eventData:e
+        };
+      });
       renderRail('eventsRail',items);
     }
 
     async function cargarLive(){
       let data=[];try{data=await api('senales')}catch{}if(!Array.isArray(data))data=[];
-      const live=data.filter(x=>x&&((x.activa!==false)&&((x.en_vivo===true)||x.tipo==='live'||x.stream_url||x.youtube_id))).slice(0,12).map(x=>({...x,id:extraerYouTubeId(x.youtube_id||x.youtube_url||x.video_url||x.videoId)||x.id,titulo:x.nombre||x.titulo||'Señal en vivo',descripcion:x.descripcion||'Transmisión',thumbnail:x.thumbnail||x.imagen||FALLBACK_THUMB,en_vivo:true}));
+      const live=data.filter(x=>x&&((x.activa!==false)&&((x.en_vivo===true)||x.tipo==='live'||x.stream_url||x.youtube_id))).slice(0,12).map(x=>({...x,id:x.youtube_id||x.id,titulo:x.nombre||x.titulo||'Señal en vivo',descripcion:x.descripcion||'Transmisión',thumbnail:x.thumbnail||x.imagen||FALLBACK_THUMB,en_vivo:true}));
       renderRail('liveRail',live);
     }
 
@@ -1016,14 +1025,14 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
       prepararRailWrappers();
       activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v14';
+        const SW_VERSION='uadavstream-v13';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=14',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=13',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
@@ -1035,5 +1044,35 @@ body:has(#videoModal.pip-mode) > *{filter:none!important;opacity:1!important}
     });
 </script>
 <script src="https://www.youtube.com/iframe_api" async></script>
+
+<script id="uadav-v14-drag-fix">
+(function(){
+  function enhanceRails(){
+    document.querySelectorAll('.rail:not(.results-rail)').forEach(function(rail){
+      if(rail.dataset.v14==='1') return; rail.dataset.v14='1';
+      let active=false,sx=0,sy=0,sl=0,pid=null;
+      rail.addEventListener('pointerdown',function(e){
+        if(e.pointerType==='mouse' && e.button!==0)return;
+        if(rail.scrollWidth<=rail.clientWidth)return;
+        active=true; sx=e.clientX; sy=e.clientY; sl=rail.scrollLeft; pid=e.pointerId;
+        try{rail.setPointerCapture(pid)}catch(_){}
+      },{passive:true});
+      rail.addEventListener('pointermove',function(e){
+        if(!active)return;
+        const dx=e.clientX-sx,dy=e.clientY-sy;
+        if(Math.abs(dx)<6 && Math.abs(dy)<6)return;
+        if(Math.abs(dy)>Math.abs(dx)){ active=false; rail.classList.remove('dragging'); try{rail.releasePointerCapture(pid)}catch(_){}; return; }
+        rail.classList.add('dragging');
+        e.preventDefault();
+        rail.scrollLeft=sl-dx;
+      },{passive:false});
+      function end(){active=false;rail.classList.remove('dragging');if(pid!==null)try{rail.releasePointerCapture(pid)}catch(_){};pid=null;}
+      rail.addEventListener('pointerup',end,{passive:true}); rail.addEventListener('pointercancel',end,{passive:true});
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhanceRails);else enhanceRails();
+  new MutationObserver(enhanceRails).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
 </body>
 </html>
