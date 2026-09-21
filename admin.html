@@ -835,6 +835,20 @@ details{margin-bottom:12px!important;background:rgba(255,255,255,.018)!important
 // CONFIGURACIÓN
 // ============================================================
 const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
+const API_FALLBACK_URL = '/api/';
+const nativeFetch = window.fetch.bind(window);
+async function uadavFetch(input, options = {}) {
+  const url = String(input);
+  try {
+    const r = await nativeFetch(url, options);
+    if (r.status !== 404 || !url.startsWith(API_URL)) return r;
+  } catch (e) {
+    if (!url.startsWith(API_URL)) throw e;
+  }
+  const path = url.slice(API_URL.length);
+  return nativeFetch(API_FALLBACK_URL + path, options);
+}
+
 const FALLBACK_THUMB = 'https://via.placeholder.com/300x200?text=UADAVSTREAM';
 
 let ADMIN_KEY = '';
@@ -873,7 +887,7 @@ function conectar() {
     mostrarToast('Ingresá la clave de administrador', 'error');
     return;
   }
-  fetch(API_URL + 'admin_check', {
+  uadavFetch(API_URL + 'admin_check', {
     headers: { 'Authorization': 'Bearer ' + ADMIN_KEY },
     mode: 'cors',
     credentials: 'omit'
@@ -901,13 +915,13 @@ function conectar() {
 async function cargarDatos() {
   try {
     const [secRes, apRes, banRes, estRes, senRes, radRes, footRes] = await Promise.all([
-      fetch(API_URL + 'secciones', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
-      fetch(API_URL + 'apariencia', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
-      fetch(API_URL + 'banners', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
-      fetch(API_URL + 'estado_sitio', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
-      fetch(API_URL + 'senales_oficiales', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
-      fetch(API_URL + 'radios', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
-      fetch(API_URL + 'footer_config', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({}))
+      uadavFetch(API_URL + 'secciones', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
+      uadavFetch(API_URL + 'apariencia', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
+      uadavFetch(API_URL + 'banners', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
+      uadavFetch(API_URL + 'estado_sitio', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
+      uadavFetch(API_URL + 'senales_oficiales', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
+      uadavFetch(API_URL + 'radios', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
+      uadavFetch(API_URL + 'footer_config', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({}))
     ]);
 
     seccionesData = Array.isArray(secRes) ? secRes : [];
@@ -975,7 +989,7 @@ async function cargarDatos() {
 // ============================================================
 async function cargarPersonalizacion() {
   try {
-    const res = await fetch(API_URL + 'config', { mode: 'cors', credentials: 'omit' });
+    const res = await uadavFetch(API_URL + 'config', { mode: 'cors', credentials: 'omit' });
     const config = await res.json();
 
     if (config.branding) {
@@ -1022,7 +1036,7 @@ async function guardarPersonalizacion() {
   };
 
   try {
-    const res = await fetch(API_URL + 'config', {
+    const res = await uadavFetch(API_URL + 'config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1345,11 +1359,11 @@ async function resolverCanalYoutube(texto) {
   try {
     let res;
     if (ref.tipo === 'id') {
-      res = await fetch(`${API_URL}youtube/channel_info?id=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
+      res = await uadavFetch(`${API_URL}youtube/channel_info?id=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
     } else if (ref.tipo === 'handle') {
-      res = await fetch(`${API_URL}youtube/channel_info?handle=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
+      res = await uadavFetch(`${API_URL}youtube/channel_info?handle=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
     } else {
-      res = await fetch(`${API_URL}youtube/search_channel?name=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
+      res = await uadavFetch(`${API_URL}youtube/search_channel?name=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
     }
     const data = await res.json();
     return (data && data.channelId) ? data : null;
@@ -1487,7 +1501,7 @@ async function generarCodigo() {
   };
 
   try {
-    const res = await fetch(API_URL + 'access/generate', {
+    const res = await uadavFetch(API_URL + 'access/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1508,7 +1522,7 @@ async function generarCodigo() {
 
 async function cargarCodigos() {
   try {
-    const res = await fetch(API_URL + 'access/codes', {
+    const res = await uadavFetch(API_URL + 'access/codes', {
       headers: { 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
       credentials: 'omit'
@@ -1550,7 +1564,7 @@ async function cargarCodigos() {
 async function revocarCodigo(codigo) {
   if (!confirm(`¿Revocar el código ${codigo}?`)) return;
   try {
-    const res = await fetch(API_URL + 'access/revoke', {
+    const res = await uadavFetch(API_URL + 'access/revoke', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1582,7 +1596,7 @@ async function importarCanal() {
   statusDiv.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i> Importando canal...</div>';
 
   try {
-    const res = await fetch(API_URL + 'admin/importar-canal', {
+    const res = await uadavFetch(API_URL + 'admin/importar-canal', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1612,7 +1626,7 @@ async function importarTendencias() {
   statusDiv.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i> Importando tendencias...</div>';
 
   try {
-    const res = await fetch(API_URL + 'admin/importar-tendencias', {
+    const res = await uadavFetch(API_URL + 'admin/importar-tendencias', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1639,7 +1653,7 @@ async function importarTendencias() {
 // ============================================================
 async function cargarEventosPendientes() {
   try {
-    const res = await fetch(API_URL + 'eventos', {
+    const res = await uadavFetch(API_URL + 'eventos', {
       headers: { 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
       credentials: 'omit'
@@ -1680,7 +1694,7 @@ async function cargarEventosPendientes() {
 async function aprobarEvento(id) {
   if (!confirm('¿Aprobar este evento?')) return;
   try {
-    const res = await fetch(API_URL + 'eventos', {
+    const res = await uadavFetch(API_URL + 'eventos', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1701,7 +1715,7 @@ async function aprobarEvento(id) {
 async function rechazarEvento(id) {
   if (!confirm('¿Rechazar este evento?')) return;
   try {
-    const res = await fetch(API_URL + 'eventos', {
+    const res = await uadavFetch(API_URL + 'eventos', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1739,7 +1753,7 @@ async function crearShow() {
   }
 
   try {
-    const res = await fetch(API_URL + 'cartelera', {
+    const res = await uadavFetch(API_URL + 'cartelera', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1767,7 +1781,7 @@ async function crearShow() {
 
 async function cargarShows() {
   try {
-    const res = await fetch(API_URL + 'cartelera', {
+    const res = await uadavFetch(API_URL + 'cartelera', {
       mode: 'cors',
       credentials: 'omit'
     });
@@ -1806,7 +1820,7 @@ async function cargarShows() {
 async function eliminarShow(id) {
   if (!confirm('¿Eliminar este show?')) return;
   try {
-    const res = await fetch(API_URL + 'cartelera', {
+    const res = await uadavFetch(API_URL + 'cartelera', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1839,7 +1853,7 @@ function guardarFooter() {
     tiktok: document.getElementById('redTiktok').value,
     whatsapp: document.getElementById('redWhatsapp').value
   };
-  fetch(API_URL + 'footer_config', {
+  uadavFetch(API_URL + 'footer_config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
     mode: 'cors',
@@ -1972,7 +1986,7 @@ async function importarPlaylistYouTube() {
   }
 
   try {
-    const res = await fetch(`${API_URL}youtube/playlist?id=${playlistId}`, { mode: 'cors', credentials: 'omit' });
+    const res = await uadavFetch(`${API_URL}youtube/playlist?id=${playlistId}`, { mode: 'cors', credentials: 'omit' });
     if (!res.ok) throw new Error('Error al obtener playlist');
     const data = await res.json();
     if (!data.items || data.items.length === 0) {
@@ -2024,7 +2038,7 @@ function recargarDatos() {
 async function actualizarVersionSecciones() {
   try {
     const version = Date.now();
-    await fetch(API_URL + 'secciones_version', {
+    await uadavFetch(API_URL + 'secciones_version', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -2041,7 +2055,7 @@ async function actualizarVersionSecciones() {
 async function guardarTodo() {
   try {
     // Guardar secciones
-    await fetch(API_URL + 'secciones', {
+    await uadavFetch(API_URL + 'secciones', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -2050,7 +2064,7 @@ async function guardarTodo() {
     });
 
     // Guardar señales
-    await fetch(API_URL + 'senales_oficiales', {
+    await uadavFetch(API_URL + 'senales_oficiales', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -2059,7 +2073,7 @@ async function guardarTodo() {
     });
 
     // Guardar radios
-    await fetch(API_URL + 'radios', {
+    await uadavFetch(API_URL + 'radios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -2086,6 +2100,14 @@ window.onload = () => {
     conectar();
   }
 };
+</script>
+
+<style id="uadav-v17-admin-polish">
+.api-status{position:fixed;right:18px;bottom:18px;z-index:9998;padding:8px 12px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(10,12,18,.72);backdrop-filter:blur(14px);font:600 12px/1 system-ui;color:#a7f3d0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+</style>
+<div id="uadavApiStatus" class="api-status">● UADAVSTREAM API</div>
+<script>
+(function(){const el=document.getElementById('uadavApiStatus'); const old=window.uadavFetch; if(!old)return; window.uadavFetch=async function(input,options){try{const r=await old(input,options); el.style.color=r.ok?'#a7f3d0':'#fbbf24'; el.textContent=(r.ok?'● API UADAVSTREAM':'● API '+r.status); return r;}catch(e){el.style.color='#fca5a5';el.textContent='● API sin conexión';throw e;}}})();
 </script>
 </body>
 </html>
