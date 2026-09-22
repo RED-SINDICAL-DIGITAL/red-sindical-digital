@@ -523,15 +523,6 @@ export default {
       if(request.method==='POST'||request.method==='PUT'){if(!esAdmin())return new Response(JSON.stringify({error:'No autorizado'}),{status:401,headers:corsHeaders});const body=await request.text();await env.UADAV_DB.put(key,body);return new Response(JSON.stringify({success:true,key_actualizada:key}),{headers:corsHeaders});}
       return new Response(JSON.stringify({error:'Método no permitido'}),{status:405,headers:corsHeaders});
     } catch(e){return new Response(JSON.stringify({error:'Error KV: '+e.message}),{status:500,headers:corsHeaders});}
-if (action === 'reject') {
-          await env.DB.prepare('UPDATE eventos SET estado = "rejected" WHERE id = ?').bind(id).run();
-          return new Response(JSON.stringify({ success: true, message: 'Evento rechazado' }), { headers: corsHeaders });
-        }
-        return new Response(JSON.stringify({ error: 'Acción inválida' }), { status: 400, headers: corsHeaders });
-      }
-      return new Response('Método no permitido', { status: 405, headers: corsHeaders });
-    }
-
     // --- ALIASES PÚBLICOS PARA EL FRONTEND ---
     if (path === '/api/cartelera_aprobada' && request.method === 'GET') {
       return new Response(JSON.stringify(await getKVArray('cartelera_aprobada')), {headers:{...corsHeaders,'Content-Type':'application/json'}});
