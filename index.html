@@ -336,14 +336,30 @@ html,body{overscroll-behavior-x:none;}
   .rail:not(.results-rail) .card{flex-basis:clamp(170px,18vw,240px)!important;}
 }
 
-.public-banner{width:100%;max-width:1400px;margin:0 auto;padding:10px 16px;box-sizing:border-box}
+.public-banner{width:100%;max-width:1320px;margin:0 auto;padding:8px 18px;box-sizing:border-box}
 .public-banner[hidden]{display:none!important}
-.public-banner-top{margin-top:8px}
-.public-banner-infeed{margin-top:4px;margin-bottom:8px}
-.public-banner-footer{margin-top:24px;margin-bottom:8px}
-.public-banner > *{max-width:100%;}
-.public-banner img{max-width:100%;height:auto;display:block;margin:auto;border-radius:10px}
-.public-banner iframe{max-width:100%;border:0;display:block;margin:auto}
+.public-banner-top{margin-top:4px;margin-bottom:4px}
+.public-banner-infeed{margin-top:2px;margin-bottom:14px}
+.public-banner-footer{margin-top:26px;margin-bottom:10px}
+.public-banner-shell{position:relative;width:100%;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.018));box-shadow:0 10px 34px rgba(0,0,0,.22);overflow:hidden;padding:10px}
+.public-banner-shell::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 0,rgba(255,255,255,.06),transparent 42%)}
+.public-banner-label{position:relative;z-index:2;display:flex;align-items:center;gap:6px;width:max-content;margin:0 auto 8px;padding:3px 9px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(0,0,0,.28);color:#8e8e98;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.public-banner-content{position:relative;z-index:1;display:flex;justify-content:center;align-items:center;min-height:0;width:100%;overflow:hidden}
+.public-banner-content > *{max-width:100%!important}
+.public-banner-content a{display:block;max-width:100%;text-decoration:none}
+.public-banner-content img{display:block;width:auto;max-width:100%;height:auto;max-height:250px;object-fit:contain;margin:auto;border-radius:10px}
+.public-banner-content picture{display:block;max-width:100%}
+.public-banner-content iframe{display:block;width:100%;max-width:100%;min-height:90px;border:0;margin:0 auto;border-radius:10px}
+.public-banner-content video{display:block;max-width:100%;height:auto;margin:auto;border-radius:10px}
+.public-banner-content div,.public-banner-content ins{max-width:100%!important;margin-inline:auto}
+@media (max-width:700px){
+  .public-banner{padding:6px 12px}
+  .public-banner-shell{border-radius:12px;padding:7px}
+  .public-banner-label{font-size:8px;margin-bottom:6px}
+  .public-banner-content img{max-height:150px;border-radius:8px}
+  .public-banner-content iframe{min-height:70px;border-radius:8px}
+  .public-banner-infeed{margin-bottom:10px}
+}
 .maintenance-shell{position:fixed;inset:0;z-index:99999;background:radial-gradient(circle at 30% 20%,rgba(0,229,255,.12),transparent 45%),#050505;color:#fff;display:grid;place-items:center;padding:24px;text-align:center}
 .maintenance-shell[hidden]{display:none!important}
 .maintenance-card{width:min(92vw,680px);padding:42px 30px;border:1px solid rgba(255,255,255,.12);border-radius:24px;background:rgba(15,15,20,.82);backdrop-filter:blur(18px);box-shadow:0 25px 80px rgba(0,0,0,.55)}
@@ -519,16 +535,17 @@ html,body{overscroll-behavior-x:none;}
       try{
         const data=await api('banners');
         const slots=[
-          ['top','bannerTopContainer'],
-          ['infeed','bannerInfeedContainer'],
-          ['footer','bannerFooterContainer']
+          ['top','bannerTopContainer','Superior'],
+          ['infeed','bannerInfeedContainer','Contenido patrocinado'],
+          ['footer','bannerFooterContainer','Publicidad']
         ];
-        slots.forEach(([slot,id])=>{
+        slots.forEach(([slot,id,label])=>{
           const el=$(id), cfg=data?.[slot];
           if(!el)return;
-          const activo=cfg && cfg.activo!==false && String(cfg.html||'').trim();
+          const html=String(cfg?.html||'').trim();
+          const activo=cfg && cfg.activo!==false && html;
           if(activo){
-            el.innerHTML=cfg.html;
+            el.innerHTML=`<div class="public-banner-shell"><div class="public-banner-label"><i class="fa-solid fa-rectangle-ad"></i>${label}</div><div class="public-banner-content">${html}</div></div>`;
             el.hidden=false;
           }else{
             el.innerHTML='';
@@ -1105,14 +1122,14 @@ html,body{overscroll-behavior-x:none;}
       prepararRailWrappers();
       activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v13';
+        const SW_VERSION='uadavstream-v18';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=13',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=18',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
