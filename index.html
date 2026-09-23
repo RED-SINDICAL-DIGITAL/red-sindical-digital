@@ -178,7 +178,7 @@
 @media(max-width:600px){.overlay.pip-mode .modal{width:min(360px,92vw)!important}.overlay.pip-mode .player{min-height:202px}}
 </style>
 
-<meta name="uadav-build" content="UADAVSTREAM V15 — APP CORE STABLE">
+<meta name="uadav-build" content="UADAVSTREAM V19 — ADMIN SECTIONS CONNECTED">
 
 <style id="uadav-v8">
 /* ===== V8 VISUAL STABILITY ===== */
@@ -336,6 +336,9 @@ html,body{overscroll-behavior-x:none;}
   .rail:not(.results-rail) .card{flex-basis:clamp(170px,18vw,240px)!important;}
 }
 
+.dynamic-sections-nav{display:inline-flex;gap:10px;align-items:center;max-width:min(48vw,620px);overflow-x:auto;scrollbar-width:none;white-space:nowrap;vertical-align:middle}.dynamic-sections-nav::-webkit-scrollbar{display:none}.dynamic-sections-nav a{opacity:.78}.dynamic-sections-nav a:hover{opacity:1}
+.admin-sections-container{display:block}.admin-dynamic-row{margin-bottom:28px}.admin-dynamic-row .row-title{display:flex;align-items:center;gap:8px}.admin-dynamic-row .row-more{border:0;background:transparent;color:#a7a7b2;cursor:pointer}.admin-section-empty{padding:22px;color:#777}
+@media(max-width:700px){.dynamic-sections-nav{max-width:58vw}.admin-dynamic-row{margin-bottom:22px}}
 .public-banner{width:100%;max-width:1320px;margin:0 auto;padding:8px 18px;box-sizing:border-box}
 .public-banner[hidden]{display:none!important}
 .public-banner-top{margin-top:4px;margin-bottom:4px}
@@ -378,7 +381,7 @@ html,body{overscroll-behavior-x:none;}
   <header class="nav" id="nav">
     <a class="brand" href="#top" aria-label="UADAVSTREAM inicio"><span class="brand-mark"><i class="fa-solid fa-play"></i></span><span id="brandName">UADAVSTREAM</span></a>
     <nav class="nav-links" aria-label="Navegación principal">
-      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#artistas" onclick="irASeccion('artists');return false">Artistas</a><a href="#en-vivo" onclick="irASeccion('en-vivo');return false">En vivo</a><a href="#cartelera" onclick="irASeccion('cartelera');return false">Cartelera</a>
+      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#artistas" onclick="irASeccion('artists');return false">Artistas</a><a href="#en-vivo" onclick="irASeccion('en-vivo');return false">En vivo</a><a href="#cartelera" onclick="irASeccion('cartelera');return false">Cartelera</a><span id="dynamicSectionsNav" class="dynamic-sections-nav" aria-label="Secciones"></span>
     </nav>
     <div class="nav-actions">
       <div class="nav-search"><i class="fa-solid fa-magnifying-glass"></i><input id="navSearchInput" aria-label="Buscar" placeholder="Buscar..." onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button aria-label="Buscar" onclick="ejecutarBusqueda(document.getElementById('navSearchInput').value)"><i class="fa-solid fa-arrow-right"></i></button></div>
@@ -412,6 +415,7 @@ html,body{overscroll-behavior-x:none;}
       <div class="row" id="savedRow" hidden><div class="row-head"><div><div class="row-title">🔖 Mi lista</div><div class="row-subtitle">Guardados en este dispositivo</div></div></div><div class="rail" id="savedRail"></div></div>
       <div class="row" id="resultsRow" hidden><div class="row-head"><div><div class="row-title" id="resultsTitle">Resultados</div></div><button class="row-more" onclick="volverInicio()">Volver al inicio</button></div><div class="rail results-rail" id="resultsRail"></div></div>
       <div class="row" id="featuredRow"><div class="row-head"><div><div class="row-title" id="featuredTitle">🔥 Destacados</div><div class="row-subtitle">Una selección para empezar a descubrir</div></div><button class="row-more" onclick="cargarDestacados(true)">Actualizar</button></div><div class="rail" id="featuredRail"><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div></div></div>
+      <div id="adminSectionsContainer" class="admin-sections-container" aria-live="polite"></div>
       <div id="bannerInfeedContainer" class="public-banner public-banner-infeed" hidden></div>
       <div class="row" id="recommendedRow" hidden><div class="row-head"><div><div class="row-title">✨ Para vos</div><div class="row-subtitle">Recomendaciones según lo que explorás</div></div></div><div class="rail" id="recommendedRail"></div></div>
       <div class="row" id="liveRow"><div class="row-head"><div><div class="row-title">🔴 En vivo</div><div class="row-subtitle">Señales y transmisiones</div></div><a class="row-more" href="#en-vivo">Ver todo</a></div><div class="rail" id="liveRail"></div></div>
@@ -776,6 +780,87 @@ html,body{overscroll-behavior-x:none;}
       enableRailDrag(el);
     }
 
+    function normalizarVideoId(valor){
+      const s=String(valor||'').trim();
+      if(!s)return '';
+      if(/^[A-Za-z0-9_-]{11}$/.test(s))return s;
+      try{
+        const u=new URL(s);
+        if(u.hostname.includes('youtu.be'))return (u.pathname.split('/').filter(Boolean)[0]||'');
+        const q=u.searchParams.get('v');if(q)return q;
+        const parts=u.pathname.split('/').filter(Boolean);
+        const i=parts.findIndex(x=>['shorts','embed','live'].includes(x));
+        if(i>=0&&parts[i+1])return parts[i+1];
+      }catch{}
+      return '';
+    }
+
+    function normalizarSeccionItem(item,sec){
+      if(!item)return null;
+      const tipo=item.tipo||sec?.tipo_contenido||'videos';
+      if(tipo==='artista'||sec?.tipo_contenido==='perfiles'){
+        const id=item.id||item.channel_id||item.youtube_id||item.canal||('artist-'+Math.random().toString(36).slice(2));
+        return {id,titulo:item.nombre||item.titulo||'Artista',descripcion:item.rubro||item.bio||item.descripcion||'Artista UADAV',thumbnail:item.foto||item.imagen||item.thumbnail||FALLBACK_THUMB,categoria:sec?.nombre||'Artistas',verificado:item.verificado};
+      }
+      if(tipo==='evento'||sec?.tipo_contenido==='eventos'){
+        const yt=normalizarVideoId(item.trailer||item.youtube_id||item.video_id||item.url_video||item.url);
+        return {id:yt||('event-'+String(item.id||item.nombre||Date.now())),titulo:item.nombre||item.titulo||'Evento',descripcion:[item.fecha,item.lugar].filter(Boolean).join(' · ')||item.descripcion||'Evento',thumbnail:item.imagen||item.poster||(yt?obtenerCaratula(yt):FALLBACK_THUMB),categoria:sec?.nombre||'Eventos',eventData:item};
+      }
+      const id=normalizarVideoId(item.url||item.id||item.videoId||item.youtube_id);
+      if(!id)return null;
+      return {id,titulo:item.titulo||item.title||'Contenido',descripcion:item.descripcion||item.author||sec?.nombre||'Contenido',thumbnail:item.imagen||item.thumbnail||item.thumbnailUrl||obtenerCaratula(id),categoria:sec?.nombre||item.categoria||'Contenido'};
+    }
+
+    async function obtenerItemsSeccion(sec){
+      const manual=Array.isArray(sec.items)?sec.items.map(x=>normalizarSeccionItem(x,sec)).filter(Boolean):[];
+      if(sec.modo==='manual' && manual.length)return manual;
+      if(manual.length && sec.modo!=='auto')return manual;
+      const q=String(sec.query||sec.nombre||'').trim();
+      if(!q)return manual;
+      try{
+        const data=await obtenerVideos(q);
+        return (data||[]).map(v=>({...v,categoria:sec.nombre||v.categoria||'Contenido'})).slice(0,18);
+      }catch{return manual}
+    }
+
+    function renderDynamicSectionRow(sec,index,items){
+      const id='adminSec_'+String(sec.id||index).replace(/[^A-Za-z0-9_-]/g,'_');
+      const portrait=sec.tipo_contenido==='perfiles';
+      let row=document.getElementById(id);
+      if(!row){
+        row=document.createElement('div');
+        row.className='row admin-dynamic-row';
+        row.id=id;
+        document.getElementById('adminSectionsContainer')?.appendChild(row);
+      }
+      row.innerHTML=`<div class="row-head"><div><div class="row-title"><i class="fa-solid ${safe(sec.icono||'fa-layer-group')}"></i>${safe(sec.nombre||'Sección')}</div><div class="row-subtitle">${safe(sec.descripcion||'Contenido seleccionado por UADAVSTREAM')}</div></div></div><div class="rail" id="${id}_rail"></div>`;
+      renderRail(`${id}_rail`,items,portrait);
+    }
+
+    async function cargarSeccionesAdministradas(){
+      const container=$('adminSectionsContainer');
+      if(!container)return;
+      container.innerHTML='<div class="admin-section-empty">Cargando secciones del Admin…</div>';
+      let data=[];
+      try{data=await api('secciones')}catch(e){container.innerHTML='';return}
+      if(!Array.isArray(data)){container.innerHTML='';return}
+      const reserved=new Set(['radios','artistas','cartelera','senales','senales_oficiales','en_vivo','live','featured','destacados','recommended','recomendados','contenido']);
+      const active=data.filter(s=>s&&s.activa!==false&&!reserved.has(String(s.id||'').toLowerCase()));
+      container.innerHTML='';
+      const nav=$('dynamicSectionsNav');if(nav)nav.innerHTML='';
+      for(let i=0;i<active.length;i++){
+        const sec=active[i];
+        const items=await obtenerItemsSeccion(sec);
+        renderDynamicSectionRow(sec,i,items);
+        if(nav){
+          const a=document.createElement('a');
+          const target='adminSec_'+String(sec.id||i).replace(/[^A-Za-z0-9_-]/g,'_');
+          a.href='#'+target;a.textContent=sec.nombre||'Sección';a.onclick=ev=>{ev.preventDefault();document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'});};
+          nav.appendChild(a);
+        }
+      }
+    }
+
     async function cargarDestacados(refresh=false){
       const rail=$('featuredRail');rail.innerHTML='<div style="padding:25px;color:#888"><i class="fa-solid fa-circle-notch fa-spin"></i> Descubriendo contenido...</div>';
       let pool=[];
@@ -1115,6 +1200,7 @@ html,body{overscroll-behavior-x:none;}
       await cargarConfig();
       if(modo==='mantenimiento') return;
       await cargarBannersPublicos();
+      await cargarSeccionesAdministradas();
       prepararRailWrappers();
       renderContinue();
       await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarDiscover()]);
@@ -1122,14 +1208,14 @@ html,body{overscroll-behavior-x:none;}
       prepararRailWrappers();
       activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v18';
+        const SW_VERSION='uadavstream-v19';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=18',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=19',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
