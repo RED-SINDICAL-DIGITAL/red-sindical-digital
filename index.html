@@ -178,7 +178,7 @@
 @media(max-width:600px){.overlay.pip-mode .modal{width:min(360px,92vw)!important}.overlay.pip-mode .player{min-height:202px}}
 </style>
 
-<meta name="uadav-build" content="UADAVSTREAM V19 — ADMIN SECTIONS CONNECTED">
+<meta name="uadav-build" content="UADAVSTREAM V20 — ADMIN SECTIONS CONNECTED">
 
 <style id="uadav-v8">
 /* ===== V8 VISUAL STABILITY ===== */
@@ -477,18 +477,69 @@ html,body{overscroll-behavior-x:none;}
       }catch{return {history:[],saved:[],categories:{}}}
     }
     function setDiscovery(d){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}catch{}}
+    const STOPWORDS=new Set(['para','como','desde','sobre','este','esta','esto','con','una','uno','los','las','del','por','que','muy','más','mas','the','and','you','your','video','official','oficial']);
+    const TOPIC_GROUPS={
+      musica:['musica','music','cancion','canciones','videoclip','cover','sintetizador','banda','album','dj'],
+      teatro:['teatro','obra','actor','actriz','escena','monologo'],
+      circo:['circo','acrobacia','malabares','trapecio','payaso'],
+      humor:['humor','comedia','comico','stand up','standup'],
+      magia:['magia','mago','ilusionismo','mentalismo'],
+      danza:['danza','baile','ballet','coreografia'],
+      variedades:['variedades','show','espectaculo','espectáculo','variete','varieté'],
+      podcast:['podcast','entrevista','radio','streaming'],
+      infantil:['infantil','niños','ninos','familia']
+    };
+    function normText(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+    function tokenize(v){return normText(v).split(/[^a-z0-9áéíóúüñ]+/i).filter(w=>w.length>=4&&!STOPWORDS.has(w)).slice(0,40)}
+    function detectTopics(v){
+      const text=normText([v?.titulo,v?.descripcion,v?.categoria,v?.author,v?.channelTitle].filter(Boolean).join(' '));
+      const out=[];
+      for(const [topic,words] of Object.entries(TOPIC_GROUPS)){if(words.some(w=>text.includes(normText(w))))out.push(topic)}
+      if(v?.categoria&&normText(v.categoria)!=='resultado')out.push(normText(v.categoria));
+      return [...new Set(out)];
+    }
+    function ensureDiscoveryShape(d){
+      d.history=Array.isArray(d.history)?d.history:[];
+      d.saved=Array.isArray(d.saved)?d.saved:[];
+      d.categories=d.categories&&typeof d.categories==='object'?d.categories:{};
+      d.terms=d.terms&&typeof d.terms==='object'?d.terms:{};
+      d.topics=d.topics&&typeof d.topics==='object'?d.topics:{};
+      d.creators=d.creators&&typeof d.creators==='object'?d.creators:{};
+      d.searches=Array.isArray(d.searches)?d.searches:[];
+      d.visitorId=d.visitorId||((crypto?.randomUUID)?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2));
+      return d;
+    }
+    function registerInterest(v,weight=1){
+      const d=ensureDiscovery(getDiscovery());
+      for(const t of tokenize([v?.titulo,v?.descripcion,v?.categoria].filter(Boolean).join(' ')))d.terms[t]=(d.terms[t]||0)+weight;
+      for(const topic of detectTopics(v))d.topics[topic]=(d.topics[topic]||0)+weight*2;
+      const creator=String(v?.author||v?.channelTitle||'').trim();
+      if(creator)d.creators[creator]=(d.creators[creator]||0)+weight;
+      setDiscovery(d);
+    }
     function rememberVideo(v){
       if(!v?.id)return;
-      const d=getDiscovery();
+      const d=ensureDiscovery(getDiscovery());
       d.history=[{
         id:v.id,titulo:v.titulo||'Video',
         descripcion:v.descripcion||v.categoria||'Contenido',
         thumbnail:v.thumbnail||obtenerCaratula(v.id),
-        categoria:v.categoria||'Contenido',ts:Date.now()
-      },...d.history.filter(x=>x.id!==v.id)].slice(0,30);
-      const cat=(v.categoria||'Contenido').toLowerCase();
-      d.categories[cat]=(d.categories[cat]||0)+1;
-      setDiscovery(d);renderContinue();try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}renderSaved();
+        categoria:v.categoria||'Contenido',
+        author:v.author||v.channelTitle||'',
+        topics:detectTopics(v),ts:Date.now()
+      },...d.history.filter(x=>x.id!==v.id)].slice(0,40);
+      const cat=normText(v.categoria||'Contenido');
+      if(cat) d.categories[cat]=(d.categories[cat]||0)+1;
+      registerInterest(v,Math.max(1,Number(v.watchWeight||1)));
+      setDiscovery(d);renderContinue();try{renderRecommendations(v)}catch(e){console.warn('Recomendaciones:',e)}renderSaved();
+    }
+    function registerSearchInterest(q){
+      const s=String(q||'').trim();if(!s)return;
+      const d=ensureDiscovery(getDiscovery());
+      d.searches=[{q:s,ts:Date.now()},...d.searches.filter(x=>normText(x.q)!==normText(s))].slice(0,20);
+      for(const t of tokenize(s))d.terms[t]=(d.terms[t]||0)+2;
+      for(const topic of detectTopics({titulo:s,categoria:s}))d.topics[topic]=(d.topics[topic]||0)+3;
+      setDiscovery(d);
     }
     function savedIds(){
       return getDiscovery().saved.map(x=>typeof x==='string'?x:x?.id).filter(Boolean);
@@ -891,49 +942,80 @@ html,body{overscroll-behavior-x:none;}
       row.hidden=false;renderRail('savedRail',items.slice(0,30));
     }
 
-    function renderRecommendations(){
-      const d=getDiscovery();
-      const cats=Object.entries(d.categories||{})
-        .sort((a,b)=>b[1]-a[1])
-        .map(x=>x[0])
-        .filter(Boolean);
+    async function renderRecommendations(contextItem=null){
+      const d=ensureDiscovery(getDiscovery());
+      const row=$('recommendedRow'),rail=$('recommendedRail');
+      if(!row||!rail)return;
 
-      const row=$('recommendedRow');
-      const rail=$('recommendedRail');
-      const title=$('recommendedTitle');
+      const watched=new Set((d.history||[]).slice(0,24).map(x=>x.id));
+      const saved=new Set((d.saved||[]).map(x=>typeof x==='string'?x:x?.id).filter(Boolean));
+      const topicRank=Object.entries(d.topics||{}).sort((a,b)=>b[1]-a[1]).slice(0,4);
+      const termRank=Object.entries(d.terms||{}).sort((a,b)=>b[1]-a[1]).slice(0,8).map(x=>x[0]);
+      const contextTopics=detectTopics(contextItem||d.history?.[0]||{});
+      const queryList=[...new Set([
+        ...contextTopics,
+        ...topicRank.map(x=>x[0]),
+        ...(termRank.length?[termRank.slice(0,4).join(' ')]:[])
+      ])].filter(Boolean).slice(0,4);
 
-      if(!row || !rail){
-        // The recommendation rail is optional in the current skin.
-        return;
+      if(!queryList.length){row.hidden=true;rail.innerHTML='';return}
+
+      let candidates=[];
+      for(const q of queryList){
+        try{
+          const items=await obtenerVideos(q);
+          candidates.push(...(items||[]).map(x=>({...x,__sourceQuery:q})));
+        }catch{}
+        if(candidates.length>=36)break;
       }
 
-      if(!cats.length){
-        row.hidden=true;
-        return;
-      }
-
-      const q=cats[0];
-      row.hidden=false;
-      if(title) title.textContent=`Para vos · ${q.charAt(0).toUpperCase()+q.slice(1)}`;
-
-      obtenerVideos(q).then(items=>{
-        const watched=new Set((d.history||[]).map(x=>x.id));
-        const filtered=(items||[]).filter(x=>x&&x.id&&!watched.has(x.id));
-        const finalItems=(filtered.length?filtered:items||[]).slice(0,12);
-        if(finalItems.length){
-          renderRail('recommendedRail',finalItems);
-        }else{
-          row.hidden=true;
-        }
-      }).catch(()=>{
-        row.hidden=true;
+      const seen=new Set();
+      candidates=candidates.filter(x=>{
+        if(!x?.id||seen.has(x.id)||watched.has(x.id))return false;
+        seen.add(x.id);return true;
       });
+
+      const scoreCandidate=(x)=>{
+        const topics=detectTopics(x);
+        const text=normText([x.titulo,x.descripcion,x.categoria,x.author,x.channelTitle].filter(Boolean).join(' '));
+        const terms=tokenize(text);
+        let score=0;
+        for(const t of topics){score+=(d.topics[t]||0)*5; if(contextTopics.includes(t))score+=12}
+        for(const t of terms){score+=(d.terms[t]||0)*1.4}
+        if(saved.has(x.id))score-=18;
+        if(x.__sourceQuery&&contextTopics.includes(normText(x.__sourceQuery)))score+=5;
+        // Small novelty/diversity bonus; never based on IP/location.
+        if(!watched.has(x.id))score+=3;
+        return score;
+      };
+
+      candidates.sort((a,b)=>scoreCandidate(b)-scoreCandidate(a));
+      const final=[];const seenTopics=new Set();
+      for(const x of candidates){
+        const xt=detectTopics(x);
+        const overlap=xt.some(t=>seenTopics.has(t));
+        if(final.length>=12)break;
+        if(overlap && final.length<6)continue;
+        final.push(x);xt.forEach(t=>seenTopics.add(t));
+      }
+      const fallback=candidates.slice(0,12);
+      const items=final.length?final:fallback;
+      if(!items.length){row.hidden=true;rail.innerHTML='';return}
+
+      row.hidden=false;
+      const lead=contextTopics[0]||topicRank[0]?.[0];
+      const title=$('recommendedTitle');
+      if(title)title.textContent=lead?`✨ Para vos · ${lead.charAt(0).toUpperCase()+lead.slice(1)}`:'✨ Para vos';
+      renderRail('recommendedRail',items.slice(0,12));
     }
 
     async function cargarArtistas(){
       let data=[];try{data=await api('artistas')}catch{}
-      if(!Array.isArray(data))data=[];allArtists=data.filter(a=>a&&((a.estado||'aprobado')==='aprobado'||a.aprobado===true));
-      if(!allArtists.length){$('artistsRail').innerHTML='<div style="padding:22px;color:#777">Los perfiles de artistas aparecerán aquí.</div>';return}
+      if(!Array.isArray(data))data=[];
+      allArtists=data.filter(a=>a&&((a.estado||'aprobado')==='aprobado'||a.aprobado===true));
+      const row=$('artists'),rail=$('artistsRail');
+      if(!allArtists.length){if(row)row.hidden=true;if(rail)rail.innerHTML='';return}
+      if(row)row.hidden=false;
       renderRail('artistsRail',allArtists.slice(0,18),true);
     }
 
@@ -957,27 +1039,25 @@ html,body{overscroll-behavior-x:none;}
       if(!Array.isArray(data))data=[];
       const items=data.filter(x=>x&&x.estado!=='cancelado').slice(0,18).map(e=>{
         const yt=normalizarIdYoutube(e.youtube_id||e.youtube||e.video_id||e.videoUrl||e.url_video);
-        return {
-          id:yt||('event-'+String(e.id||Date.now())),
-          titulo:e.titulo||e.nombre||'Evento',
-          descripcion:[e.fecha,e.lugar].filter(Boolean).join(' · ')||e.descripcion||'Próximo espectáculo',
-          thumbnail:e.imagen||e.poster||(yt?obtenerCaratula(yt):FALLBACK_THUMB),
-          categoria:'Evento',
-          eventData:e
-        };
+        return {id:yt||('event-'+String(e.id||Date.now())),titulo:e.titulo||e.nombre||'Evento',descripcion:[e.fecha,e.lugar].filter(Boolean).join(' · ')||e.descripcion||'Próximo espectáculo',thumbnail:e.imagen||e.poster||(yt?obtenerCaratula(yt):FALLBACK_THUMB),categoria:'Evento',eventData:e};
       });
-      renderRail('eventsRail',items);
+      const row=$('cartelera');if(row)row.hidden=!items.length;
+      if(items.length)renderRail('eventsRail',items);else if($('eventsRail'))$('eventsRail').innerHTML='';
     }
 
     async function cargarLive(){
-      let data=[];try{data=await api('senales')}catch{try{data=await api('senales_oficiales')}catch{}}if(!Array.isArray(data))data=[];
-      const live=data.filter(x=>x&&((x.activa!==false)&&((x.en_vivo===true)||x.tipo==='live'||x.stream_url||x.youtube_id))).slice(0,12).map(x=>({...x,id:x.youtube_id||x.id,titulo:x.nombre||x.titulo||'Señal en vivo',descripcion:x.descripcion||'Transmisión',thumbnail:x.thumbnail||x.imagen||FALLBACK_THUMB,en_vivo:true}));
-      renderRail('liveRail',live);
+      let data=[];try{data=await api('senales')}catch{try{data=await api('senales_oficiales')}catch{}}
+      if(!Array.isArray(data))data=[];
+      const live=data.filter(x=>x&&x.activa!==false&&((x.en_vivo===true)||x.tipo==='live'||x.stream_url||x.youtube_id)).slice(0,12).map(x=>({...x,id:x.youtube_id||x.id,titulo:x.nombre||x.titulo||'Señal en vivo',descripcion:x.descripcion||'Transmisión',thumbnail:x.thumbnail||x.imagen||FALLBACK_THUMB,en_vivo:true}));
+      const row=$('liveRow');if(row)row.hidden=!live.length;
+      const link=row?.querySelector('.row-more');if(link)link.hidden=!live.length;
+      if(live.length)renderRail('liveRail',live);else if($('liveRail'))$('liveRail').innerHTML='';
     }
 
     async function ejecutarBusqueda(value){
       const q=String(value||'').trim();
       if(!q){volverInicio();return;}
+      registerSearchInterest(q);
       $('searchInput').value=q;$('navSearchInput').value=q;
       $('searchStatus').innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando...';
       ['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>$(id).hidden=true);
@@ -1003,9 +1083,10 @@ html,body{overscroll-behavior-x:none;}
       setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),40);
     }
     function volverInicio(){
-      ['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>{if($(id))$(id).hidden=false});
+      if($('featuredRow'))$('featuredRow').hidden=false;
       if($('discoverRail')?.parentElement?.parentElement)$('discoverRail').parentElement.parentElement.hidden=false;
       if($('resultsRow'))$('resultsRow').hidden=true;
+      renderContinue();renderSaved();renderRecommendations().catch(()=>{});
       if($('searchStatus'))$('searchStatus').textContent='';
       if($('searchInput'))$('searchInput').value='';
       if($('navSearchInput'))$('navSearchInput').value='';
@@ -1208,14 +1289,14 @@ html,body{overscroll-behavior-x:none;}
       prepararRailWrappers();
       activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v19';
+        const SW_VERSION='uadavstream-v20';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=19',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=20',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
