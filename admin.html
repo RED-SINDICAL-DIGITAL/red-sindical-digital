@@ -551,11 +551,13 @@
         <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
           <div class="form-row">
             <div class="form-group">
-              <label>Modo Mantenimiento</label>
+              <label>Estado público de UADAVSTREAM</label>
               <select id="modoMantenimiento">
-                <option value="false">❌ Desactivado (Web visible)</option>
-                <option value="true">🔧 Activado (Mostrar Landing)</option>
+                <option value="normal">✅ Normal — mostrar la plataforma</option>
+                <option value="mantenimiento">🔧 Mantenimiento — mostrar aviso</option>
+                <option value="landing">🚪 Landing — mostrar página de presentación</option>
               </select>
+              <small style="display:block;color:var(--text-secondary);margin-top:6px;">Este selector controla la web pública. No solo guarda la apariencia.</small>
             </div>
             <div class="form-group" id="landingTituloGroup">
               <label>Título de Landing</label>
@@ -569,7 +571,17 @@
               <label>Fondo de Landing (URL)</label>
               <input id="landingFondo" placeholder="https://ejemplo.com/fondo.jpg">
             </div>
+            <div class="form-group" id="landingUrlGroup">
+              <label>URL de Landing (modo Landing)</label>
+              <input id="estadoLandingUrl" placeholder="/landing.html">
+            </div>
           </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+            <button type="button" onclick="establecerModoPublico('normal')" class="btn btn-success btn-sm">✅ Poner web normal</button>
+            <button type="button" onclick="establecerModoPublico('mantenimiento')" class="btn btn-warning btn-sm">🔧 Activar mantenimiento</button>
+            <button type="button" onclick="establecerModoPublico('landing')" class="btn btn-secondary btn-sm">🚪 Usar landing</button>
+          </div>
+          <div id="estadoSitioStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.82rem;"></div>
         </div>
 
         <div style="background:var(--bg-input); border-radius:12px; padding:16px;">
@@ -1153,8 +1165,12 @@ async function guardarBanners(){
 
 async function cargarPersonalizacion() {
   try {
-    const res = await fetch(API_URL + 'config', { mode: 'cors', credentials: 'omit' });
-    const config = await res.json();
+    const [cfgRes, estadoRes] = await Promise.all([
+      fetch(API_URL + 'config?_=' + Date.now(), { mode: 'cors', credentials: 'omit' }),
+      fetch(API_URL + 'estado_sitio?_=' + Date.now(), { mode: 'cors', credentials: 'omit' })
+    ]);
+    const config = await cfgRes.json().catch(() => ({}));
+    const estado = await estadoRes.json().catch(() => ({}));
 
     if (config.branding) {
       document.getElementById('marcaLogo').value = config.branding.logo_url || '';
@@ -1169,19 +1185,28 @@ async function cargarPersonalizacion() {
     }
 
     if (config.landing) {
-      document.getElementById('modoMantenimiento').value = config.sitio_en_construccion ? 'true' : 'false';
       document.getElementById('landingTitulo').value = config.landing.titulo || '';
       document.getElementById('landingSubtitulo').value = config.landing.subtitulo || '';
       document.getElementById('landingFondo').value = config.landing.imagen_fondo || '';
     }
+
+    const legacy = config.sitio_en_construccion ? 'mantenimiento' : 'normal';
+    const modo = estado.modo || legacy || 'normal';
+    document.getElementById('modoMantenimiento').value = ['normal','mantenimiento','landing'].includes(modo) ? modo : 'normal';
+    document.getElementById('estadoLandingUrl').value = estado.landing_url || '/landing.html';
+    const status=document.getElementById('estadoSitioStatus');
+    if(status) status.textContent = 'Estado actual: ' + modo;
   } catch (e) {
     console.warn('Error cargando personalización:', e);
+    const status=document.getElementById('estadoSitioStatus');
+    if(status) status.textContent='⚠️ No se pudo leer el estado público.';
   }
 }
 
 async function guardarPersonalizacion() {
+  const modo = document.getElementById('modoMantenimiento').value;
   const config = {
-    sitio_en_construccion: document.getElementById('modoMantenimiento').value === 'true',
+    sitio_en_construccion: modo === 'mantenimiento',
     branding: {
       logo_url: document.getElementById('marcaLogo').value,
       favicon_url: document.getElementById('marcaFavicon').value,
@@ -1198,23 +1223,38 @@ async function guardarPersonalizacion() {
       imagen_fondo: document.getElementById('landingFondo').value,
     }
   };
+  const estado = {
+    modo,
+    landing_url: document.getElementById('estadoLandingUrl').value.trim() || '/landing.html',
+    titulo: document.getElementById('landingTitulo').value.trim() || 'UADAVSTREAM',
+    mensaje: document.getElementById('landingSubtitulo').value.trim() || 'Estamos preparando novedades.'
+  };
 
   try {
-    const res = await fetch(API_URL + 'config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-      mode: 'cors',
-      credentials: 'omit',
-      body: JSON.stringify(config)
-    });
-    if (res.ok) {
-      mostrarToast('✅ Personalización guardada', 'success');
-    } else {
-      mostrarToast('Error al guardar', 'error');
-    }
+    const [cfgRes, estadoRes] = await Promise.all([
+      fetch(API_URL + 'config', {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY},
+        mode:'cors', credentials:'omit', body:JSON.stringify(config)
+      }),
+      fetch(API_URL + 'estado_sitio', {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY},
+        mode:'cors', credentials:'omit', body:JSON.stringify(estado)
+      })
+    ]);
+    if (!cfgRes.ok || !estadoRes.ok) throw new Error('No se pudo guardar toda la configuración');
+    const status=document.getElementById('estadoSitioStatus');
+    if(status) status.textContent='✅ Estado público guardado: '+modo;
+    mostrarToast('✅ Estado y personalización guardados','success');
   } catch (e) {
-    mostrarToast('Error de conexión', 'error');
+    console.error(e);
+    mostrarToast('Error al guardar estado o personalización','error');
   }
+}
+
+async function establecerModoPublico(modo){
+  const select=document.getElementById('modoMantenimiento');
+  if(select) select.value=modo;
+  await guardarPersonalizacion();
 }
 
 // ============================================================
