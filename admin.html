@@ -383,35 +383,26 @@
         right: 16px;
       }
     }
-  </style>
-
-<style id="uadav-pro-admin">
-:root{--bg-main:#07080b;--bg-card:rgba(20,22,28,.72);--bg-input:rgba(255,255,255,.055);--text-primary:#f7f9fc;--text-secondary:#9aa4b2;--accent:#19d3ff;--accent-hover:#00b8df;--border-color:rgba(255,255,255,.10);--shadow:0 18px 55px rgba(0,0,0,.42)}
-body{background:radial-gradient(circle at 15% 0%,rgba(25,211,255,.10),transparent 28%),radial-gradient(circle at 90% 10%,rgba(93,66,255,.10),transparent 30%),#07080b!important;padding:0!important}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,.025),transparent 35%);z-index:-1}
-.container{max-width:none!important;margin:0!important;padding:28px 32px 50px 312px!important}
-.header{position:fixed;left:20px;top:20px;bottom:20px;width:260px;margin:0!important;padding:22px 16px!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:18px!important;background:rgba(13,15,20,.78)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:24px!important;backdrop-filter:blur(24px)!important;box-shadow:var(--shadow)!important;z-index:100}
-.header h1{font-size:1.25rem!important;line-height:1.15!important;padding:8px 10px 16px!important;border-bottom:1px solid var(--border-color)}
-.header-actions{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;margin-top:auto!important}
-.header-actions input[type=password]{width:100%!important;background:rgba(255,255,255,.055)!important;border-color:var(--border-color)!important}
-.header-actions .btn{width:100%;justify-content:center}
-.btn{border:1px solid rgba(255,255,255,.08)!important;box-shadow:none!important}
-.btn-primary{background:linear-gradient(135deg,#12c8f2,#087fa8)!important}
-summary{background:rgba(255,255,255,.035)!important;border:1px solid rgba(255,255,255,.07)!important;border-radius:16px!important;padding:16px 18px!important;transition:.2s!important}
-summary:hover{background:rgba(255,255,255,.07)!important;border-color:rgba(25,211,255,.25)!important;transform:translateY(-1px)}
-details{margin-bottom:12px!important;background:rgba(255,255,255,.018)!important;border-radius:18px!important}
-.details-content{background:rgba(255,255,255,.018)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:0!important;border-radius:0 0 18px 18px!important}
-@media(max-width:900px){.container{padding:20px 16px 40px!important}.header{position:sticky;left:auto;top:0;bottom:auto;width:auto;min-height:auto;border-radius:0 0 20px 20px!important;margin:-20px -16px 22px!important;padding:14px!important}.header-actions{margin-top:0!important;display:grid!important;grid-template-columns:1fr 1fr!important}.header-actions input{grid-column:1/-1}.header h1{border:0;padding-bottom:8px}.container{max-width:100%!important}}
-</style>
-<style>
-#app:has(#panelContent.hidden){min-height:calc(100vh - 40px);display:flex;align-items:center;justify-content:center}
-#app:has(#panelContent.hidden) .header{width:min(520px,100%);margin:0!important;display:block;padding:30px!important;background:rgba(18,22,30,.72)!important;border:1px solid rgba(255,255,255,.10)!important;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 30px 80px rgba(0,0,0,.45)}
-#app:has(#panelContent.hidden) .header h1{text-align:center;margin-bottom:22px}
-#app:has(#panelContent.hidden) .header-actions{display:grid;grid-template-columns:1fr 120px}
-#app:has(#panelContent.hidden) .header-actions input{width:100%;grid-column:1/-1;height:48px}
-#app:has(#panelContent.hidden) .header-actions .btn-primary{height:48px;justify-content:center;grid-column:1/-1}
-#app:has(#panelContent.hidden) #btnLogout{display:none!important}
-@media(max-width:600px){#app:has(#panelContent.hidden){padding:16px}.header{border-radius:24px!important}.header-actions{grid-template-columns:1fr!important}}
+  
+    /* ===== UADAVSTREAM V19 CONSOLE ===== */
+    :root{--accent:#00e5ff;--accent-2:#7c3aed;--glass:rgba(18,18,24,.72);--glass-2:rgba(255,255,255,.045)}
+    body{padding:0;background:radial-gradient(circle at top right,rgba(0,229,255,.08),transparent 28%),radial-gradient(circle at bottom left,rgba(124,58,237,.08),transparent 30%),#050508}
+    .container{max-width:none;min-height:100vh;padding:18px 22px 90px 272px}
+    .header{position:fixed;left:18px;top:18px;bottom:18px;width:232px;max-width:232px;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;padding:22px 16px;background:linear-gradient(180deg,rgba(20,20,28,.92),rgba(11,11,16,.84));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.08);border-radius:22px;box-shadow:0 22px 70px rgba(0,0,0,.45);z-index:30;margin:0}
+    .header h1{font-size:1.45rem;line-height:1.1;margin:0 4px 18px}.header h1 span{color:var(--accent)}
+    .header-actions{display:flex;flex-direction:column;align-items:stretch;gap:10px}.header-actions input[type=password]{width:100%;background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)}
+    .header-actions:before{content:'ACCESO SEGURO';font-size:.65rem;font-weight:800;letter-spacing:.14em;color:#94a3b8;margin:0 4px 2px}
+    #apiStatus{margin:10px 4px 6px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-size:.72rem;line-height:1.35;color:#a7b0c0}
+    #apiStatus.ok{border-color:rgba(34,197,94,.28);color:#86efac}.apiDot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#64748b;margin-right:7px}.ok .apiDot{background:#22c55e;box-shadow:0 0 12px rgba(34,197,94,.65)}
+    #panelContent{min-width:0}.panel-shell{position:relative}
+    .details-nav{position:sticky;top:18px;z-index:20;display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px;padding:12px;border:1px solid rgba(255,255,255,.07);background:rgba(12,12,17,.72);backdrop-filter:blur(14px);border-radius:16px}
+    .details-nav button{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);color:#dbe5f2;border-radius:12px;padding:9px 11px;font-size:.74rem;font-weight:800;cursor:pointer}.details-nav button:hover{border-color:rgba(0,229,255,.35);color:#fff;background:rgba(0,229,255,.06)}
+    .header .btn{width:100%}
+    details{background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,.07);box-shadow:0 12px 45px rgba(0,0,0,.22)}
+    summary{padding:16px 20px}.details-content{padding:18px 20px 22px}
+    .fab{background:linear-gradient(135deg,var(--accent),#67e8f9);box-shadow:0 14px 40px rgba(0,229,255,.28)}
+    @media(max-width:900px){.container{padding:90px 14px 90px}.header{position:sticky;top:10px;left:auto;bottom:auto;width:auto;max-width:none;flex-direction:row;align-items:center;padding:14px 16px;border-radius:18px;margin-bottom:14px}.header-actions{flex-direction:row;align-items:center;flex-wrap:wrap}.header-actions:before{display:none}.header-actions input[type=password]{width:min(260px,55vw)}.header-actions .btn{width:auto}.header h1{margin:0}.details-nav{position:sticky;top:84px;overflow-x:auto;flex-wrap:nowrap;white-space:nowrap}.details-nav button{flex:0 0 auto}}
+    @media(max-width:560px){.container{padding:76px 10px 100px}.header{top:6px;padding:12px}.header h1{font-size:1.05rem}.header-actions{gap:7px}.header-actions input[type=password]{width:calc(100vw - 165px);min-width:0}.details-nav{top:74px}.fab{right:12px;bottom:12px}}
 </style>
 </head>
 <body>
@@ -421,13 +412,13 @@ details{margin-bottom:12px!important;background:rgba(255,255,255,.018)!important
   <!-- HEADER -->
   <!-- ============================================================ -->
   <header class="header">
-    <h1>UADAV <span>STREAM</span> <span style="font-size:0.7rem; color:var(--text-secondary); font-weight:400;">Centro de Control</span></h1>
+    <h1>UADAV<span>STREAM</span> <span style="font-size:0.7rem; color:var(--text-secondary); font-weight:400;">Centro de Control</span></h1>
     <div class="header-actions">
       <input type="password" id="adminKeyInput" placeholder="Clave Admin" onkeydown="if(event.key === 'Enter') conectar()">
       <button onclick="conectar()" class="btn btn-primary">Conectar</button>
       <button onclick="desconectar()" id="btnLogout" class="btn btn-secondary hidden">Salir</button>
-      <small id="apiStatus" style="width:100%;display:block;color:var(--text-secondary);font-size:.68rem;opacity:.85;">API: UADAVSTREAM</small>
     </div>
+    <div id="apiStatus"><span class="apiDot"></span><span id="apiStatusText">Comprobando API…</span></div>
   </header>
 
   <!-- ============================================================ -->
@@ -623,6 +614,103 @@ details{margin-bottom:12px!important;background:rgba(255,255,255,.018)!important
       </div>
     </details>
 
+
+
+    <!-- ============================================================ -->
+    <!-- 3. BANNERS PUBLICITARIOS -->
+    <!-- ============================================================ -->
+    <details open>
+      <summary><i class="fa-solid fa-rectangle-ad"></i> 📢 Banners Publicitarios</summary>
+      <div class="details-content">
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;">
+          <div class="card">
+            <div class="card-header">
+              <strong>Banner Superior</strong>
+              <span class="badge badge-info">TOP</span>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+              <label>Estado</label>
+              <select id="bannerTopActivo">
+                <option value="true">✅ Activo</option>
+                <option value="false">⛔ Oculto</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Código HTML / iframe / imagen</label>
+              <textarea id="bannerTopHTML" rows="7" placeholder='<a href="https://..."><img src="https://..."></a>'></textarea>
+            </div>
+            <div class="form-group">
+              <label>Vista previa</label>
+              <div id="bannerTopPreview" style="min-height:70px;border:1px dashed var(--border-color);border-radius:10px;padding:8px;background:#080808;overflow:hidden;"></div>
+            </div>
+            <button type="button" onclick="previewBanner('top')" class="btn btn-secondary btn-sm">👁 Vista previa</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <strong>Entre Secciones</strong>
+              <span class="badge badge-warning">IN-FEED</span>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+              <label>Estado</label>
+              <select id="bannerInfeedActivo">
+                <option value="true">✅ Activo</option>
+                <option value="false">⛔ Oculto</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Código HTML / iframe / imagen</label>
+              <textarea id="bannerInfeedHTML" rows="7" placeholder='<a href="https://..."><img src="https://..."></a>'></textarea>
+            </div>
+            <div class="form-group">
+              <label>Vista previa</label>
+              <div id="bannerInfeedPreview" style="min-height:70px;border:1px dashed var(--border-color);border-radius:10px;padding:8px;background:#080808;overflow:hidden;"></div>
+            </div>
+            <button type="button" onclick="previewBanner('infeed')" class="btn btn-secondary btn-sm">👁 Vista previa</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <strong>Footer</strong>
+              <span class="badge badge-success">FOOTER</span>
+            </div>
+            <div class="form-group" style="margin-top:12px;">
+              <label>Estado</label>
+              <select id="bannerFooterActivo">
+                <option value="true">✅ Activo</option>
+                <option value="false">⛔ Oculto</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Código HTML / iframe / imagen</label>
+              <textarea id="bannerFooterHTML" rows="7" placeholder='<a href="https://..."><img src="https://..."></a>'></textarea>
+            </div>
+            <div class="form-group">
+              <label>Vista previa</label>
+              <div id="bannerFooterPreview" style="min-height:70px;border:1px dashed var(--border-color);border-radius:10px;padding:8px;background:#080808;overflow:hidden;"></div>
+            </div>
+            <button type="button" onclick="previewBanner('footer')" class="btn btn-secondary btn-sm">👁 Vista previa</button>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding:14px;border:1px solid var(--border-color);border-radius:12px;background:rgba(255,255,255,.025);">
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <i class="fa-solid fa-circle-info" style="color:var(--accent);margin-top:2px;"></i>
+            <div>
+              <strong style="display:block;margin-bottom:4px;">Cómo lo vamos a usar</strong>
+              <span style="color:var(--text-secondary);font-size:.82rem;">Podés cargar una imagen enlazada, un iframe o el código provisto por una red publicitaria. UADAVSTREAM guarda el contenido en la clave <code>banners</code> de UADAV_DB. La visibilidad se controla con el interruptor de cada posición.</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+          <button onclick="guardarBanners()" class="btn btn-primary">💾 Guardar Banners</button>
+          <button onclick="cargarBanners()" class="btn btn-secondary">🔄 Recargar Banners</button>
+        </div>
+        <div id="bannersStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.82rem;"></div>
+      </div>
+    </details>
+
     <!-- ============================================================ -->
     <!-- 3. SEÑALES Y RADIOS -->
     <!-- ============================================================ -->
@@ -694,7 +782,6 @@ details{margin-bottom:12px!important;background:rgba(255,255,255,.018)!important
             <div class="form-group">
               <label>Plataforma</label>
               <select id="codePlatform">
-                <option value="uadavstream">UADAVSTREAM</option>
                 <option value="uadavstream">UADAVSTREAM</option>
               </select>
             </div>
@@ -835,20 +922,6 @@ details{margin-bottom:12px!important;background:rgba(255,255,255,.018)!important
 // CONFIGURACIÓN
 // ============================================================
 const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
-const API_FALLBACK_URL = '/api/';
-const nativeFetch = window.fetch.bind(window);
-async function uadavFetch(input, options = {}) {
-  const url = String(input);
-  try {
-    const r = await nativeFetch(url, options);
-    if (r.status !== 404 || !url.startsWith(API_URL)) return r;
-  } catch (e) {
-    if (!url.startsWith(API_URL)) throw e;
-  }
-  const path = url.slice(API_URL.length);
-  return nativeFetch(API_FALLBACK_URL + path, options);
-}
-
 const FALLBACK_THUMB = 'https://via.placeholder.com/300x200?text=UADAVSTREAM';
 
 let ADMIN_KEY = '';
@@ -878,35 +951,49 @@ function desconectar() {
   ADMIN_KEY = '';
   document.getElementById('panelContent').classList.add('hidden');
   document.getElementById('btnLogout').classList.add('hidden');
+  const input=document.getElementById('adminKeyInput');
+  if(input) input.value='';
   mostrarToast('Sesión cerrada', 'success');
 }
 
-function conectar() {
-  ADMIN_KEY = document.getElementById('adminKeyInput').value;
-  if (!ADMIN_KEY) {
-    mostrarToast('Ingresá la clave de administrador', 'error');
-    return;
+async function comprobarAPI(){
+  const box=document.getElementById('apiStatus');
+  const txt=document.getElementById('apiStatusText');
+  try{
+    const res=await fetch(API_URL+'health?_='+Date.now(),{mode:'cors',credentials:'omit'});
+    const data=await res.json().catch(()=>({}));
+    if(res.ok && data.success){
+      box.classList.add('ok');
+      txt.textContent=`API UADAVSTREAM · ${data.version||'OK'} · KV ${data.kv?'OK':'NO'}`;
+    }else{
+      box.classList.remove('ok');
+      txt.textContent='API responde, pero no confirmó el estado';
+    }
+  }catch(e){
+    box.classList.remove('ok');
+    txt.textContent='API sin conexión';
   }
-  uadavFetch(API_URL + 'admin_check', {
-    headers: { 'Authorization': 'Bearer ' + ADMIN_KEY },
-    mode: 'cors',
-    credentials: 'omit'
-  })
-  .then(async res => {
-    if (!res.ok) {
-      let detalle = '';
-      try { detalle = await res.text(); } catch (_) {}
-      console.error('admin_check', res.status, detalle);
-      mostrarToast(res.status === 404 ? 'API UADAVSTREAM no encontrada' : 'Clave incorrecta o acceso rechazado', 'error');
-      alert(res.status === 404 ? 'La API de UADAVSTREAM no responde en la dirección configurada.' : 'Clave incorrecta o acceso rechazado.');
+}
+
+async function conectar(){
+  const input=document.getElementById('adminKeyInput');
+  ADMIN_KEY=(input?.value||'').trim();
+  if(!ADMIN_KEY){mostrarToast('Ingresá la clave de administración','error');return;}
+  try{
+    const res=await fetch(API_URL+'admin_check?_='+Date.now(),{headers:{'Authorization':'Bearer '+ADMIN_KEY},mode:'cors',credentials:'omit'});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok || !data.success){
+      mostrarToast(data.error||'Clave incorrecta','error');
       return;
     }
-    localStorage.setItem('uadavstream_admin_key', ADMIN_KEY);
+    localStorage.setItem('uadavstream_admin_key',ADMIN_KEY);
     document.getElementById('panelContent').classList.remove('hidden');
     document.getElementById('btnLogout').classList.remove('hidden');
-    mostrarToast('Conectado correctamente', 'success');
-    cargarDatos();
-  });
+    mostrarToast(`Conectado · ${data.role==='admin_provincial'?'Administrador provincial':'Administrador nacional'}`,'success');
+    await cargarDatos();
+  }catch(e){
+    mostrarToast('No se pudo conectar con UADAVSTREAM','error');
+  }
 }
 
 // ============================================================
@@ -915,19 +1002,20 @@ function conectar() {
 async function cargarDatos() {
   try {
     const [secRes, apRes, banRes, estRes, senRes, radRes, footRes] = await Promise.all([
-      uadavFetch(API_URL + 'secciones', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
-      uadavFetch(API_URL + 'apariencia', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
-      uadavFetch(API_URL + 'banners', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
-      uadavFetch(API_URL + 'estado_sitio', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
-      uadavFetch(API_URL + 'senales_oficiales', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
-      uadavFetch(API_URL + 'radios', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
-      uadavFetch(API_URL + 'footer_config', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({}))
+      fetch(API_URL + 'secciones', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
+      fetch(API_URL + 'apariencia', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
+      fetch(API_URL + 'banners', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
+      fetch(API_URL + 'estado_sitio', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
+      fetch(API_URL + 'senales_oficiales', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
+      fetch(API_URL + 'radios', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
+      fetch(API_URL + 'footer_config', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({}))
     ]);
 
     seccionesData = Array.isArray(secRes) ? secRes : [];
     senalesData = Array.isArray(senRes) ? senRes : [];
     radiosData = Array.isArray(radRes) ? radRes : [];
     footerConfig = footRes || {};
+    renderBanners(banRes);
 
     // Secciones por defecto
     if (!seccionesData.find(s => s.id === 'radios')) {
@@ -987,9 +1075,85 @@ async function cargarDatos() {
 // ============================================================
 // PERSONALIZACIÓN DE LA INTERFAZ
 // ============================================================
+
+function getBannerDataFromForm(){
+  return {
+    top:{activo:document.getElementById('bannerTopActivo')?.value==='true',html:document.getElementById('bannerTopHTML')?.value||''},
+    infeed:{activo:document.getElementById('bannerInfeedActivo')?.value==='true',html:document.getElementById('bannerInfeedHTML')?.value||''},
+    footer:{activo:document.getElementById('bannerFooterActivo')?.value==='true',html:document.getElementById('bannerFooterHTML')?.value||''}
+  };
+}
+
+function renderBannerPreview(slot, html){
+  const target=document.getElementById(`banner${slot[0].toUpperCase()+slot.slice(1)}Preview`);
+  if(!target)return;
+  target.innerHTML=html||'<span style="color:var(--text-secondary);font-size:.8rem;">Sin contenido para previsualizar.</span>';
+}
+
+function previewBanner(slot){
+  const id=slot==='top'?'bannerTopHTML':slot==='infeed'?'bannerInfeedHTML':'bannerFooterHTML';
+  const html=document.getElementById(id)?.value||'';
+  renderBannerPreview(slot,html);
+}
+
+function renderBanners(data){
+  const d=data&&typeof data==='object'?data:{};
+  const top=d.top||{}, infeed=d.infeed||{}, footer=d.footer||{};
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val;};
+  set('bannerTopActivo',top.activo!==false?'true':'false');
+  set('bannerTopHTML',top.html||'');
+  set('bannerInfeedActivo',infeed.activo!==false?'true':'false');
+  set('bannerInfeedHTML',infeed.html||'');
+  set('bannerFooterActivo',footer.activo!==false?'true':'false');
+  set('bannerFooterHTML',footer.html||'');
+  renderBannerPreview('top',top.html||'');
+  renderBannerPreview('infeed',infeed.html||'');
+  renderBannerPreview('footer',footer.html||'');
+}
+
+async function cargarBanners(){
+  try{
+    const res=await fetch(API_URL+'banners?_='+Date.now(),{mode:'cors',credentials:'omit'});
+    const data=await res.json();
+    renderBanners(data);
+    const status=document.getElementById('bannersStatus');
+    if(status)status.textContent='✅ Banners cargados desde UADAV_DB';
+  }catch(e){
+    const status=document.getElementById('bannersStatus');
+    if(status)status.textContent='❌ No se pudieron cargar los banners';
+  }
+}
+
+async function guardarBanners(){
+  const data=getBannerDataFromForm();
+  try{
+    const res=await fetch(API_URL+'banners',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY},
+      mode:'cors',credentials:'omit',body:JSON.stringify(data)
+    });
+    const payload=await res.json().catch(()=>({}));
+    const status=document.getElementById('bannersStatus');
+    if(!res.ok){
+      if(status)status.textContent='❌ '+(payload.error||'No se pudieron guardar los banners');
+      mostrarToast(payload.error||'Error al guardar banners','error');
+      return false;
+    }
+    renderBanners(data);
+    if(status)status.textContent='✅ Banners guardados correctamente en UADAV_DB';
+    mostrarToast('Banners guardados','success');
+    return true;
+  }catch(e){
+    const status=document.getElementById('bannersStatus');
+    if(status)status.textContent='❌ Error de conexión';
+    mostrarToast('No se pudieron guardar los banners','error');
+    return false;
+  }
+}
+
 async function cargarPersonalizacion() {
   try {
-    const res = await uadavFetch(API_URL + 'config', { mode: 'cors', credentials: 'omit' });
+    const res = await fetch(API_URL + 'config', { mode: 'cors', credentials: 'omit' });
     const config = await res.json();
 
     if (config.branding) {
@@ -1036,7 +1200,7 @@ async function guardarPersonalizacion() {
   };
 
   try {
-    const res = await uadavFetch(API_URL + 'config', {
+    const res = await fetch(API_URL + 'config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1359,11 +1523,11 @@ async function resolverCanalYoutube(texto) {
   try {
     let res;
     if (ref.tipo === 'id') {
-      res = await uadavFetch(`${API_URL}youtube/channel_info?id=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
+      res = await fetch(`${API_URL}youtube/channel_info?id=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
     } else if (ref.tipo === 'handle') {
-      res = await uadavFetch(`${API_URL}youtube/channel_info?handle=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
+      res = await fetch(`${API_URL}youtube/channel_info?handle=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
     } else {
-      res = await uadavFetch(`${API_URL}youtube/search_channel?name=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
+      res = await fetch(`${API_URL}youtube/search_channel?name=${encodeURIComponent(ref.valor)}`, { mode: 'cors', credentials: 'omit' });
     }
     const data = await res.json();
     return (data && data.channelId) ? data : null;
@@ -1501,7 +1665,7 @@ async function generarCodigo() {
   };
 
   try {
-    const res = await uadavFetch(API_URL + 'access/generate', {
+    const res = await fetch(API_URL + 'access/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1522,7 +1686,7 @@ async function generarCodigo() {
 
 async function cargarCodigos() {
   try {
-    const res = await uadavFetch(API_URL + 'access/codes', {
+    const res = await fetch(API_URL + 'access/codes', {
       headers: { 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
       credentials: 'omit'
@@ -1564,7 +1728,7 @@ async function cargarCodigos() {
 async function revocarCodigo(codigo) {
   if (!confirm(`¿Revocar el código ${codigo}?`)) return;
   try {
-    const res = await uadavFetch(API_URL + 'access/revoke', {
+    const res = await fetch(API_URL + 'access/revoke', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1596,7 +1760,7 @@ async function importarCanal() {
   statusDiv.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i> Importando canal...</div>';
 
   try {
-    const res = await uadavFetch(API_URL + 'admin/importar-canal', {
+    const res = await fetch(API_URL + 'admin/importar-canal', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1626,7 +1790,7 @@ async function importarTendencias() {
   statusDiv.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i> Importando tendencias...</div>';
 
   try {
-    const res = await uadavFetch(API_URL + 'admin/importar-tendencias', {
+    const res = await fetch(API_URL + 'admin/importar-tendencias', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1653,7 +1817,7 @@ async function importarTendencias() {
 // ============================================================
 async function cargarEventosPendientes() {
   try {
-    const res = await uadavFetch(API_URL + 'eventos', {
+    const res = await fetch(API_URL + 'eventos', {
       headers: { 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
       credentials: 'omit'
@@ -1694,7 +1858,7 @@ async function cargarEventosPendientes() {
 async function aprobarEvento(id) {
   if (!confirm('¿Aprobar este evento?')) return;
   try {
-    const res = await uadavFetch(API_URL + 'eventos', {
+    const res = await fetch(API_URL + 'eventos', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1715,7 +1879,7 @@ async function aprobarEvento(id) {
 async function rechazarEvento(id) {
   if (!confirm('¿Rechazar este evento?')) return;
   try {
-    const res = await uadavFetch(API_URL + 'eventos', {
+    const res = await fetch(API_URL + 'eventos', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1753,7 +1917,7 @@ async function crearShow() {
   }
 
   try {
-    const res = await uadavFetch(API_URL + 'cartelera', {
+    const res = await fetch(API_URL + 'cartelera', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1781,7 +1945,7 @@ async function crearShow() {
 
 async function cargarShows() {
   try {
-    const res = await uadavFetch(API_URL + 'cartelera', {
+    const res = await fetch(API_URL + 'cartelera', {
       mode: 'cors',
       credentials: 'omit'
     });
@@ -1820,7 +1984,7 @@ async function cargarShows() {
 async function eliminarShow(id) {
   if (!confirm('¿Eliminar este show?')) return;
   try {
-    const res = await uadavFetch(API_URL + 'cartelera', {
+    const res = await fetch(API_URL + 'cartelera', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -1853,7 +2017,7 @@ function guardarFooter() {
     tiktok: document.getElementById('redTiktok').value,
     whatsapp: document.getElementById('redWhatsapp').value
   };
-  uadavFetch(API_URL + 'footer_config', {
+  fetch(API_URL + 'footer_config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
     mode: 'cors',
@@ -1986,7 +2150,7 @@ async function importarPlaylistYouTube() {
   }
 
   try {
-    const res = await uadavFetch(`${API_URL}youtube/playlist?id=${playlistId}`, { mode: 'cors', credentials: 'omit' });
+    const res = await fetch(`${API_URL}youtube/playlist?id=${playlistId}`, { mode: 'cors', credentials: 'omit' });
     if (!res.ok) throw new Error('Error al obtener playlist');
     const data = await res.json();
     if (!data.items || data.items.length === 0) {
@@ -2038,7 +2202,7 @@ function recargarDatos() {
 async function actualizarVersionSecciones() {
   try {
     const version = Date.now();
-    await uadavFetch(API_URL + 'secciones_version', {
+    await fetch(API_URL + 'secciones_version', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -2054,8 +2218,9 @@ async function actualizarVersionSecciones() {
 // ============================================================
 async function guardarTodo() {
   try {
+    await guardarBanners();
     // Guardar secciones
-    await uadavFetch(API_URL + 'secciones', {
+    await fetch(API_URL + 'secciones', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -2064,7 +2229,7 @@ async function guardarTodo() {
     });
 
     // Guardar señales
-    await uadavFetch(API_URL + 'senales_oficiales', {
+    await fetch(API_URL + 'senales_oficiales', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -2073,7 +2238,7 @@ async function guardarTodo() {
     });
 
     // Guardar radios
-    await uadavFetch(API_URL + 'radios', {
+    await fetch(API_URL + 'radios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
       mode: 'cors',
@@ -2102,12 +2267,35 @@ window.onload = () => {
 };
 </script>
 
-<style id="uadav-v17-admin-polish">
-.api-status{position:fixed;right:18px;bottom:18px;z-index:9998;padding:8px 12px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(10,12,18,.72);backdrop-filter:blur(14px);font:600 12px/1 system-ui;color:#a7f3d0;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-</style>
-<div id="uadavApiStatus" class="api-status">● UADAVSTREAM API</div>
-<script>
-(function(){const el=document.getElementById('uadavApiStatus'); const old=window.uadavFetch; if(!old)return; window.uadavFetch=async function(input,options){try{const r=await old(input,options); el.style.color=r.ok?'#a7f3d0':'#fbbf24'; el.textContent=(r.ok?'● API UADAVSTREAM':'● API '+r.status); return r;}catch(e){el.style.color='#fca5a5';el.textContent='● API sin conexión';throw e;}}})();
+<script id="uadav-v19-console">
+(function(){
+  function buildNav(){
+    const panel=document.getElementById('panelContent');
+    if(!panel || panel.dataset.navBuilt==='1') return;
+    const details=[...panel.querySelectorAll(':scope > details')];
+    if(!details.length) return;
+    panel.dataset.navBuilt='1';
+    const nav=document.createElement('div'); nav.className='details-nav';
+    details.forEach((d,i)=>{
+      const b=document.createElement('button');
+      b.type='button'; b.textContent=(d.querySelector('summary')?.innerText||`Módulo ${i+1}`).replace(/\s+/g,' ').trim();
+      b.title='Abrir '+b.textContent;
+      b.addEventListener('click',()=>{d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});});
+      nav.appendChild(b);
+    });
+    panel.insertBefore(nav,details[0]);
+  }
+  function boot(){
+    comprobarAPI();
+    buildNav();
+    const saved=localStorage.getItem('uadavstream_admin_key');
+    if(saved){
+      const input=document.getElementById('adminKeyInput'); if(input) input.value=saved;
+      conectar();
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
 </script>
 </body>
 </html>
