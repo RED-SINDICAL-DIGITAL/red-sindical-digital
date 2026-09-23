@@ -404,6 +404,17 @@
     @media(max-width:900px){.container{padding:90px 14px 90px}.header{position:sticky;top:10px;left:auto;bottom:auto;width:auto;max-width:none;flex-direction:row;align-items:center;padding:14px 16px;border-radius:18px;margin-bottom:14px}.header-actions{flex-direction:row;align-items:center;flex-wrap:wrap}.header-actions:before{display:none}.header-actions input[type=password]{width:min(260px,55vw)}.header-actions .btn{width:auto}.header h1{margin:0}.details-nav{position:sticky;top:84px;overflow-x:auto;flex-wrap:nowrap;white-space:nowrap}.details-nav button{flex:0 0 auto}}
     @media(max-width:560px){.container{padding:76px 10px 100px}.header{top:6px;padding:12px}.header h1{font-size:1.05rem}.header-actions{gap:7px}.header-actions input[type=password]{width:calc(100vw - 165px);min-width:0}.details-nav{top:74px}.fab{right:12px;bottom:12px}}
 </style>
+
+  <style id="uadav-banner-preview-v19-3">
+  .admin-banner-preview-shell{position:relative;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));padding:8px;overflow:hidden;min-height:70px}
+  .admin-banner-preview-label{width:max-content;margin:0 auto 7px;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.25);color:#8e8e98;font-size:8px;font-weight:800;letter-spacing:.12em}
+  .admin-banner-preview-content{display:flex;justify-content:center;align-items:center;overflow:hidden}
+  .admin-banner-preview-content img{display:block;max-width:100%;max-height:160px;width:auto;height:auto;object-fit:contain;margin:auto;border-radius:8px}
+  .admin-banner-preview-content iframe{display:block;width:100%;max-width:100%;min-height:70px;border:0;border-radius:8px}
+  .admin-banner-preview-content a{display:block;max-width:100%}
+  .admin-banner-preview-content *{max-width:100%!important}
+  @media(max-width:900px){.admin-banner-preview-content img{max-height:110px}}
+  </style>
 </head>
 <body>
 
@@ -1099,7 +1110,10 @@ function getBannerDataFromForm(){
 function renderBannerPreview(slot, html){
   const target=document.getElementById(`banner${slot[0].toUpperCase()+slot.slice(1)}Preview`);
   if(!target)return;
-  target.innerHTML=html||'<span style="color:var(--text-secondary);font-size:.8rem;">Sin contenido para previsualizar.</span>';
+  const value=String(html||'').trim();
+  target.innerHTML=value
+    ? `<div class="admin-banner-preview-shell"><div class="admin-banner-preview-label">PUBLICIDAD</div><div class="admin-banner-preview-content">${value}</div></div>`
+    : '<span style="color:var(--text-secondary);font-size:.8rem;">Sin contenido para previsualizar.</span>';
 }
 
 function previewBanner(slot){
