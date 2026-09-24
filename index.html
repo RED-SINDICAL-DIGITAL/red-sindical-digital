@@ -514,6 +514,10 @@ html,body{overscroll-behavior-x:none;}
       d.visitorId=d.visitorId||((crypto?.randomUUID)?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2));
       return d;
     }
+    // Compatibilidad de API interna: todas las funciones de descubrimiento usan este normalizador.
+    function ensureDiscovery(d){
+      return ensureDiscoveryShape(d || {});
+    }
     function registerInterest(v,weight=1){
       const d=ensureDiscovery(getDiscovery());
       for(const t of tokenize([v?.titulo,v?.descripcion,v?.categoria].filter(Boolean).join(' ')))d.terms[t]=(d.terms[t]||0)+weight;
@@ -1410,14 +1414,14 @@ html,body{overscroll-behavior-x:none;}
       prepararRailWrappers();
       activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v21';
+        const SW_VERSION='uadavstream-v21.1';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=21',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=21.1',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
