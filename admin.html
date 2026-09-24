@@ -416,6 +416,15 @@
   @media(max-width:900px){.admin-banner-preview-content img{max-height:110px}}
   </style>
 <style id="uadav-v20-visibility">.visibility-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.visibility-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-input);color:var(--text-primary)}.visibility-item small{display:block;color:var(--text-secondary);font-size:.72rem;margin-top:3px}@media(max-width:900px){.visibility-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.visibility-grid{grid-template-columns:1fr}}</style>
+
+<style id="uadav-integration-diagnostic">
+.integration-diag-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.integration-diag-card{border:1px solid var(--border-color);border-radius:12px;padding:12px;background:var(--bg-input)}.integration-diag-card b{display:block;color:var(--text-primary);margin-bottom:5px}.integration-diag-card small{display:block;color:var(--text-secondary);word-break:break-word}.integration-diag-card.ok{border-color:rgba(34,197,94,.35)}.integration-diag-card.warn{border-color:rgba(234,179,8,.35)}.integration-diag-card.bad{border-color:rgba(239,68,68,.35)}.diag-state{font-size:.74rem;font-weight:800;letter-spacing:.04em}.diag-state.ok{color:#86efac}.diag-state.warn{color:#fde68a}.diag-state.bad{color:#fca5a5}@media(max-width:900px){.integration-diag-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.integration-diag-grid{grid-template-columns:1fr}}
+</style>
+
+<style id="uadav-v22-home-layout">
+.home-layout-list{display:grid;gap:8px}.home-layout-item{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-input)}.home-layout-num{font-weight:900;color:var(--accent);text-align:center}.home-layout-label{min-width:0}.home-layout-label strong{display:block}.home-layout-label small{display:block;color:var(--text-secondary);margin-top:2px;font-size:.72rem}.home-layout-actions{display:flex;gap:6px;flex-wrap:wrap}.home-layout-actions button{min-width:34px}.radio-meta-help{color:var(--text-secondary);font-size:.72rem;line-height:1.4;margin-top:4px}@media(max-width:650px){.home-layout-item{grid-template-columns:30px 1fr}.home-layout-actions{grid-column:1/-1}}
+</style>
+
 </head>
 <body>
 
@@ -442,6 +451,15 @@
   <!-- PANEL DE CONTENIDO (oculto hasta conectar) -->
   <!-- ============================================================ -->
   <div id="panelContent" class="hidden">
+
+<details id="integrationDiagnostics" open>
+  <summary><i class="fa-solid fa-heart-pulse"></i> Diagnóstico de integración UADAVSTREAM</summary>
+  <div class="details-content">
+    <p style="color:var(--text-secondary);margin-top:0">Comprueba que cada módulo del Admin tenga una ruta real y responda desde el Worker activo. No modifica datos.</p>
+    <div id="integrationDiagGrid" class="integration-diag-grid"></div>
+    <button onclick="ejecutarDiagnostico()" class="btn btn-secondary">🔄 Volver a comprobar</button>
+  </div>
+</details>
 
     <!-- ============================================================ -->
     <!-- 1. SECCIONES Y CONTENIDO -->
@@ -755,6 +773,19 @@
     <!-- 4. SEÑALES Y RADIOS -->
     <!-- ============================================================ -->
     <details>
+      <summary><i class="fa-solid fa-table-columns"></i> 🧩 Constructor de la Home</summary>
+      <div class="details-content">
+        <p style="color:var(--text-secondary);font-size:.82rem;margin-bottom:14px;">Ordená los carruseles de la Home sin tocar código. Esto controla el orden dentro del catálogo principal; la visibilidad se administra arriba.</p>
+        <div id="homeLayoutList" class="home-layout-list"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+          <button onclick="guardarHomeLayout()" class="btn btn-primary">💾 Guardar orden</button>
+          <button onclick="restaurarHomeLayout()" class="btn btn-secondary">↺ Restaurar orden</button>
+        </div>
+        <div id="homeLayoutStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.8rem;"></div>
+      </div>
+    </details>
+
+    <details>
       <summary><i class="fa-solid fa-tower-broadcast"></i> 📡 Señales y Radios</summary>
       <div class="details-content">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
@@ -971,7 +1002,10 @@ let radiosData = [];
 let footerConfig = {};
 let editandoItemIndex = null;
 let resultadosImportPendientesYT = [];
-let webVisibility = {hero:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true};
+let webVisibility = {hero:true,search:true,banners:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true,footer:true};
+let homeLayout = {order:['continueRow','savedRow','featuredRow','adminSectionsContainer','recommendedRow','liveRow','radiosRow','artists','cartelera','discoverRow']};
+const HOME_LAYOUT_LABELS={continueRow:'▶ Continuar viendo',savedRow:'🔖 Mi lista',featuredRow:'🔥 Destacados',adminSectionsContainer:'🧩 Secciones del Admin',recommendedRow:'✨ Para vos',liveRow:'🔴 En vivo',radiosRow:'📻 Radios',artists:'🎭 Artistas',cartelera:'📅 Cartelera',discoverRow:'🎬 Más para descubrir'};
+
 
 // ============================================================
 // TOAST
@@ -1076,6 +1110,7 @@ async function cargarDatos() {
     actualizarFormularioYLista();
     renderSenales();
     renderRadios();
+    cargarHomeLayout();
 
     // Cargar configuración de personalización
     cargarPersonalizacion();
@@ -1297,7 +1332,7 @@ async function establecerModoPublico(modo){
 // ============================================================
 function renderWebVisibilityControls(){
   const box=document.getElementById('webVisibilityList'); if(!box)return;
-  const labels={hero:'Hero principal',continue:'Continuar viendo',saved:'Mi lista',featured:'Destacados',recommended:'Para vos',live:'En vivo / Señales',radios:'Radios',artists:'Artistas',cartelera:'Cartelera',discover:'Más para descubrir',features:'Bloque informativo',cta:'Invitación a artistas',newsletter:'Novedades / Email'};
+  const labels={hero:'Hero principal',search:'Buscador',banners:'Publicidad / Banners',continue:'Continuar viendo',saved:'Mi lista',featured:'Destacados',recommended:'Para vos',live:'En vivo / Señales',radios:'Radios',artists:'Artistas',cartelera:'Cartelera',discover:'Más para descubrir',features:'Bloque informativo',cta:'Invitación a artistas',newsletter:'Novedades / Email',footer:'Footer'};
   box.innerHTML=Object.entries(labels).map(([key,label])=>`<label class="visibility-item"><span><strong>${label}</strong><small>${webVisibility[key]===false?'Oculto para el público':'Visible para el público'}</small></span><input type="checkbox" ${webVisibility[key]!==false?'checked':''} onchange="webVisibility['${key}']=this.checked;renderWebVisibilityControls();"></label>`).join('');
 }
 function mostrarTodoWeb(){Object.keys(webVisibility).forEach(k=>webVisibility[k]=true);renderWebVisibilityControls();}
@@ -1308,6 +1343,23 @@ async function guardarWebVisibility(){
     const st=document.getElementById('webVisibilityStatus');if(st)st.textContent='✅ Visibilidad de la Home guardada.';mostrarToast('Visibilidad guardada','success');
   }catch(e){mostrarToast('No se pudo guardar la visibilidad','error')}
 }
+async function cargarHomeLayout(){
+  try{const raw=await fetch(API_URL+'home_layout?_='+Date.now()).then(r=>r.ok?r.json():null);if(raw&&Array.isArray(raw.order))homeLayout={...homeLayout,order:raw.order}}catch(e){console.warn('Home layout',e)}
+  renderHomeLayout();
+}
+function renderHomeLayout(){
+  const box=document.getElementById('homeLayoutList');if(!box)return;
+  const allowed=Object.keys(HOME_LAYOUT_LABELS);
+  const order=[...homeLayout.order.filter(id=>allowed.includes(id)),...allowed.filter(id=>!homeLayout.order.includes(id))];
+  homeLayout.order=order;
+  box.innerHTML=order.map((id,i)=>`<div class="home-layout-item"><div class="home-layout-num">${i+1}</div><div class="home-layout-label"><strong>${HOME_LAYOUT_LABELS[id]}</strong><small>${webVisibility[id.replace('Row','')]===false?'Oculto':''}</small></div><div class="home-layout-actions"><button class="btn btn-secondary btn-sm" onclick="moverHomeModulo(${i},-1)" ${i===0?'disabled':''}>↑</button><button class="btn btn-secondary btn-sm" onclick="moverHomeModulo(${i},1)" ${i===order.length-1?'disabled':''}>↓</button></div></div>`).join('');
+}
+function moverHomeModulo(index,delta){const n=index+delta;if(n<0||n>=homeLayout.order.length)return;const a=homeLayout.order;[a[index],a[n]]=[a[n],a[index]];renderHomeLayout()}
+async function guardarHomeLayout(){
+  try{const res=await fetch(API_URL+'home_layout',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY},mode:'cors',credentials:'omit',body:JSON.stringify(homeLayout)});if(!res.ok)throw new Error();document.getElementById('homeLayoutStatus').textContent='✅ Orden de Home guardado.';mostrarToast('Orden de Home guardado','success')}catch(e){mostrarToast('No se pudo guardar el orden de Home','error')}
+}
+function restaurarHomeLayout(){homeLayout.order=['continueRow','savedRow','featuredRow','adminSectionsContainer','recommendedRow','liveRow','radiosRow','artists','cartelera','discoverRow'];renderHomeLayout()}
+
 
 function renderSecciones() {
   const list = document.getElementById('seccionesList');
@@ -1717,32 +1769,32 @@ function renderSenales() {
 }
 
 function renderRadios() {
-  const l = document.getElementById('radiosList');
-  l.innerHTML = '';
-  radiosData.forEach((r, i) => {
+  const l=document.getElementById('radiosList'); l.innerHTML='';
+  radiosData.forEach((r,i)=>{
     l.innerHTML += `
-      <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-        <div style="min-width:220px;">
-          <h4 style="font-weight:700; color:var(--text-primary);">${r.nombre}</h4>
-          <p style="color:var(--text-secondary); font-size:0.8rem;">${r.stream_url}</p>
+      <div class="card">
+        <div class="card-header">
+          <div><h4 style="font-weight:700;color:var(--text-primary);">${r.nombre||'Radio'}</h4><p style="color:var(--text-secondary);font-size:.8rem;">${r.stream_url||r.url||''}</p></div>
+          <label style="font-size:.72rem;color:var(--text-secondary);"><input type="checkbox" ${r.activa!==false?'checked':''} onchange="radiosData[${i}].activa=this.checked;renderRadios();"> Visible</label>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <label style="font-size:0.7rem;color:var(--text-secondary);"><input type="checkbox" ${r.activa !== false ? 'checked' : ''} onchange="radiosData[${i}].activa=this.checked;renderRadios();"> Visible</label>
-          <button onclick="radiosData.splice(${i},1); renderRadios();" class="btn btn-danger btn-sm">Eliminar</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+          <div class="form-group"><label>Logo URL</label><input value="${r.logo||r.imagen||''}" oninput="radiosData[${i}].logo=this.value"></div>
+          <div class="form-group"><label>Metadata URL (opcional)</label><input value="${r.metadata_url||''}" placeholder="Zeno: se detecta automáticamente" oninput="radiosData[${i}].metadata_url=this.value"></div>
+          <div style="grid-column:1/-1" class="radio-meta-help">Para Zeno.FM no hace falta cargarla: UADAVSTREAM intenta derivarla del stream y mostrar canción/autor. Para otra plataforma podés indicar acá una URL JSON/SSE de metadata.</div>
         </div>
-      </div>
-    `;
+        <div style="margin-top:10px;text-align:right;"><button onclick="radiosData.splice(${i},1);renderRadios();" class="btn btn-danger btn-sm">Eliminar</button></div>
+      </div>`;
   });
   l.innerHTML += `
-    <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-top:12px;">
+    <div style="background:var(--bg-input);border-radius:12px;padding:16px;margin-top:12px;">
       <div class="form-row">
         <div class="form-group"><label>Nombre</label><input id="newRadioNombre" placeholder="Nombre"></div>
-        <div class="form-group"><label>URL Stream</label><input id="newRadioUrl" placeholder="URL Stream (Zeno, Shoutcast, etc.)"></div>
-        <div class="form-group" style="grid-column:1/-1;"><label>Logo URL (opcional)</label><input id="newRadioLogo" placeholder="https://..."></div>
+        <div class="form-group"><label>URL Stream</label><input id="newRadioUrl" placeholder="https://stream.zeno.fm/..."></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Logo URL</label><input id="newRadioLogo" placeholder="https://..."></div>
+        <div class="form-group" style="grid-column:1/-1"><label>Metadata URL (opcional)</label><input id="newRadioMetadata" placeholder="Zeno se detecta automáticamente"></div>
       </div>
-      <button onclick="radiosData.push({id:'r'+Date.now(), nombre:document.getElementById('newRadioNombre').value, stream_url:document.getElementById('newRadioUrl').value, logo:document.getElementById('newRadioLogo').value, activa:true}); renderRadios();" class="btn btn-primary w-full">Agregar Radio</button>
-    </div>
-  `;
+      <button onclick="radiosData.push({id:'r'+Date.now(),nombre:document.getElementById('newRadioNombre').value,stream_url:document.getElementById('newRadioUrl').value,logo:document.getElementById('newRadioLogo').value,metadata_url:document.getElementById('newRadioMetadata').value,activa:true});renderRadios();" class="btn btn-primary w-full">Agregar Radio</button>
+    </div>`;
 }
 
 // ============================================================
@@ -2339,6 +2391,11 @@ async function guardarTodo() {
       body: JSON.stringify(radiosData)
     });
 
+    await fetch(API_URL + 'home_layout', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY}, mode:'cors', credentials:'omit',
+      body:JSON.stringify(homeLayout)
+    });
+
     await actualizarVersionSecciones();
     mostrarToast('✅ Todo guardado en la nube', 'success');
     alert('✅ Todo guardado en la nube');
@@ -2357,6 +2414,7 @@ window.onload = () => {
     document.getElementById('adminKeyInput').value = saved;
     conectar();
   }
+  setTimeout(()=>{ if(ADMIN_KEY) ejecutarDiagnostico(); },800);
 };
 </script>
 
@@ -2389,6 +2447,56 @@ window.onload = () => {
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
+</script>
+
+<script id="uadav-integration-diagnostic-js">
+async function ejecutarDiagnostico(){
+  const grid=document.getElementById('integrationDiagGrid');
+  if(!grid)return;
+  const rutas=[
+    ['API','health',false],
+    ['Autenticación','admin_check',true],
+    ['Secciones','secciones',true],
+    ['Banners','banners',true],
+    ['Estado web','estado_sitio',true],
+    ['Visibilidad','web_visibility',true],
+    ['Señales','senales_oficiales',true],
+    ['Alias Señales','senales',true],
+    ['Radios','radios',true],
+    ['Artistas','artistas',true],
+    ['Cartelera','cartelera_aprobada',true],
+    ['Códigos Premium','access/codes',true]
+  ];
+  grid.innerHTML=rutas.map(([nombre])=>`<div class="integration-diag-card" id="diag-${nombre.replace(/[^A-Za-z0-9]/g,'')}"><b>${nombre}</b><span class="diag-state warn">COMPROBANDO…</span><small>—</small></div>`).join('');
+  for(const [nombre,path,auth] of rutas){
+    const card=document.getElementById('diag-'+nombre.replace(/[^A-Za-z0-9]/g,''));
+    const state=card?.querySelector('.diag-state'); const detail=card?.querySelector('small');
+    try{
+      const headers={};
+      if(auth && ADMIN_KEY) headers.Authorization='Bearer '+ADMIN_KEY;
+      const res=await fetch(API_URL+path+'?_='+Date.now(),{headers,mode:'cors',credentials:'omit'});
+      let body=''; try{body=await res.text()}catch{}
+      let parsed=null; try{parsed=JSON.parse(body)}catch{}
+      if(res.ok){
+        card.className='integration-diag-card ok';
+        state.className='diag-state ok'; state.textContent='OK';
+        detail.textContent=parsed ? JSON.stringify(Array.isArray(parsed)?{items:parsed.length}:parsed).slice(0,240) : body.slice(0,240);
+      }else if(res.status===401){
+        card.className='integration-diag-card warn';
+        state.className='diag-state warn'; state.textContent='PROTEGIDO';
+        detail.textContent='La ruta existe y requiere autorización.';
+      }else{
+        card.className='integration-diag-card bad';
+        state.className='diag-state bad'; state.textContent='HTTP '+res.status;
+        detail.textContent=body.slice(0,240)||'Sin detalle';
+      }
+    }catch(e){
+      card.className='integration-diag-card bad';
+      state.className='diag-state bad'; state.textContent='ERROR';
+      detail.textContent=e.message||'Error de red/CORS';
+    }
+  }
+}
 </script>
 </body>
 </html>
