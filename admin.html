@@ -415,6 +415,7 @@
   .admin-banner-preview-content *{max-width:100%!important}
   @media(max-width:900px){.admin-banner-preview-content img{max-height:110px}}
   </style>
+<style id="uadav-v20-visibility">.visibility-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.visibility-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-input);color:var(--text-primary)}.visibility-item small{display:block;color:var(--text-secondary);font-size:.72rem;margin-top:3px}@media(max-width:900px){.visibility-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.visibility-grid{grid-template-columns:1fr}}</style>
 </head>
 <body>
 
@@ -735,7 +736,23 @@
     </details>
 
     <!-- ============================================================ -->
-    <!-- 3. SEÑALES Y RADIOS -->
+    <!-- 3. VISIBILIDAD DE LA HOME -->
+    <!-- ============================================================ -->
+    <details>
+      <summary><i class="fa-solid fa-eye"></i> 👁️ Visibilidad de la Home</summary>
+      <div class="details-content">
+        <p style="color:var(--text-secondary);font-size:.82rem;margin-bottom:14px;">Controlá qué bloques aparecen en la portada. Las secciones creadas en “Secciones y Contenido” siguen usando su propia casilla ACTIVA/INACTIVA.</p>
+        <div id="webVisibilityList" class="visibility-grid"></div>
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button onclick="guardarWebVisibility()" class="btn btn-primary">💾 Guardar visibilidad</button>
+          <button onclick="mostrarTodoWeb()" class="btn btn-secondary">👁️ Mostrar todo</button>
+        </div>
+        <div id="webVisibilityStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.8rem;"></div>
+      </div>
+    </details>
+
+    <!-- ============================================================ -->
+    <!-- 4. SEÑALES Y RADIOS -->
     <!-- ============================================================ -->
     <details>
       <summary><i class="fa-solid fa-tower-broadcast"></i> 📡 Señales y Radios</summary>
@@ -954,6 +971,7 @@ let radiosData = [];
 let footerConfig = {};
 let editandoItemIndex = null;
 let resultadosImportPendientesYT = [];
+let webVisibility = {hero:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true};
 
 // ============================================================
 // TOAST
@@ -1024,20 +1042,23 @@ async function conectar(){
 // ============================================================
 async function cargarDatos() {
   try {
-    const [secRes, apRes, banRes, estRes, senRes, radRes, footRes] = await Promise.all([
+    const [secRes, apRes, banRes, estRes, senRes, radRes, footRes, visibilityRes] = await Promise.all([
       fetch(API_URL + 'secciones', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
       fetch(API_URL + 'apariencia', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
       fetch(API_URL + 'banners', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
       fetch(API_URL + 'estado_sitio', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
       fetch(API_URL + 'senales_oficiales', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
       fetch(API_URL + 'radios', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
-      fetch(API_URL + 'footer_config', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({}))
+      fetch(API_URL + 'footer_config', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
+      fetch(API_URL + 'web_visibility', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({}))
     ]);
 
     seccionesData = Array.isArray(secRes) ? secRes : [];
     senalesData = Array.isArray(senRes) ? senRes : [];
     radiosData = Array.isArray(radRes) ? radRes : [];
     footerConfig = footRes || {};
+    if(visibilityRes && typeof visibilityRes==='object' && !Array.isArray(visibilityRes)) webVisibility = {...webVisibility,...visibilityRes};
+    renderWebVisibilityControls();
     renderBanners(banRes);
 
     // Secciones por defecto
@@ -1274,6 +1295,20 @@ async function establecerModoPublico(modo){
 // ============================================================
 // SECCIONES (renderizado)
 // ============================================================
+function renderWebVisibilityControls(){
+  const box=document.getElementById('webVisibilityList'); if(!box)return;
+  const labels={hero:'Hero principal',continue:'Continuar viendo',saved:'Mi lista',featured:'Destacados',recommended:'Para vos',live:'En vivo / Señales',radios:'Radios',artists:'Artistas',cartelera:'Cartelera',discover:'Más para descubrir',features:'Bloque informativo',cta:'Invitación a artistas',newsletter:'Novedades / Email'};
+  box.innerHTML=Object.entries(labels).map(([key,label])=>`<label class="visibility-item"><span><strong>${label}</strong><small>${webVisibility[key]===false?'Oculto para el público':'Visible para el público'}</small></span><input type="checkbox" ${webVisibility[key]!==false?'checked':''} onchange="webVisibility['${key}']=this.checked;renderWebVisibilityControls();"></label>`).join('');
+}
+function mostrarTodoWeb(){Object.keys(webVisibility).forEach(k=>webVisibility[k]=true);renderWebVisibilityControls();}
+async function guardarWebVisibility(){
+  try{
+    const res=await fetch(API_URL+'web_visibility',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY},mode:'cors',credentials:'omit',body:JSON.stringify(webVisibility)});
+    if(!res.ok)throw new Error();
+    const st=document.getElementById('webVisibilityStatus');if(st)st.textContent='✅ Visibilidad de la Home guardada.';mostrarToast('Visibilidad guardada','success');
+  }catch(e){mostrarToast('No se pudo guardar la visibilidad','error')}
+}
+
 function renderSecciones() {
   const list = document.getElementById('seccionesList');
   list.innerHTML = '';
@@ -1636,7 +1671,7 @@ function renderSenales() {
           <h4 style="font-weight:700; color:var(--text-primary);">${s.nombre}</h4>
           <div style="display:flex; gap:8px; align-items:center;">
             <label style="font-size:0.7rem; color:var(--text-secondary);">
-              <input type="checkbox" ${s.principal ? 'checked' : ''} onchange="senalesData[${i}].principal = this.checked; renderSenales();"> Principal
+              <input type="checkbox" ${s.activa !== false ? 'checked' : ''} onchange="senalesData[${i}].activa = this.checked; renderSenales();"> Visible</label><label style="font-size:0.7rem;color:var(--text-secondary);"><input type="checkbox" ${s.principal ? 'checked' : ''} onchange="senalesData[${i}].principal = this.checked; renderSenales();"> Principal
             </label>
             <button onclick="senalesData.splice(${i},1); renderSenales();" class="btn btn-danger btn-sm">Eliminar</button>
           </div>
@@ -1676,7 +1711,7 @@ function renderSenales() {
           </select>
         </div>
       </div>
-      <button onclick="senalesData.push({id:'s'+Date.now(), nombre:document.getElementById('newSenalNombre').value, url:document.getElementById('newSenalUrl').value, tipo:document.getElementById('newSenalTipo').value, principal:false, imagen:'', titulo_banner:'', subtitulo_banner:''}); renderSenales();" class="btn btn-primary w-full">Agregar Señal</button>
+      <button onclick="senalesData.push({id:'s'+Date.now(), nombre:document.getElementById('newSenalNombre').value, url:document.getElementById('newSenalUrl').value, tipo:document.getElementById('newSenalTipo').value, principal:false, activa:true, en_vivo:true, imagen:'', titulo_banner:'', subtitulo_banner:''}); renderSenales();" class="btn btn-primary w-full">Agregar Señal</button>
     </div>
   `;
 }
@@ -1687,11 +1722,14 @@ function renderRadios() {
   radiosData.forEach((r, i) => {
     l.innerHTML += `
       <div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-        <div>
+        <div style="min-width:220px;">
           <h4 style="font-weight:700; color:var(--text-primary);">${r.nombre}</h4>
           <p style="color:var(--text-secondary); font-size:0.8rem;">${r.stream_url}</p>
         </div>
-        <button onclick="radiosData.splice(${i},1); renderRadios();" class="btn btn-danger btn-sm">Eliminar</button>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:0.7rem;color:var(--text-secondary);"><input type="checkbox" ${r.activa !== false ? 'checked' : ''} onchange="radiosData[${i}].activa=this.checked;renderRadios();"> Visible</label>
+          <button onclick="radiosData.splice(${i},1); renderRadios();" class="btn btn-danger btn-sm">Eliminar</button>
+        </div>
       </div>
     `;
   });
@@ -1702,7 +1740,7 @@ function renderRadios() {
         <div class="form-group"><label>URL Stream</label><input id="newRadioUrl" placeholder="URL Stream (Zeno, Shoutcast, etc.)"></div>
         <div class="form-group" style="grid-column:1/-1;"><label>Logo URL (opcional)</label><input id="newRadioLogo" placeholder="https://..."></div>
       </div>
-      <button onclick="radiosData.push({id:'r'+Date.now(), nombre:document.getElementById('newRadioNombre').value, stream_url:document.getElementById('newRadioUrl').value, logo:document.getElementById('newRadioLogo').value}); renderRadios();" class="btn btn-primary w-full">Agregar Radio</button>
+      <button onclick="radiosData.push({id:'r'+Date.now(), nombre:document.getElementById('newRadioNombre').value, stream_url:document.getElementById('newRadioUrl').value, logo:document.getElementById('newRadioLogo').value, activa:true}); renderRadios();" class="btn btn-primary w-full">Agregar Radio</button>
     </div>
   `;
 }
@@ -2273,6 +2311,7 @@ async function actualizarVersionSecciones() {
 async function guardarTodo() {
   try {
     await guardarBanners();
+    await guardarWebVisibility();
     // Guardar secciones
     await fetch(API_URL + 'secciones', {
       method: 'POST',
