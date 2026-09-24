@@ -178,7 +178,7 @@
 @media(max-width:600px){.overlay.pip-mode .modal{width:min(360px,92vw)!important}.overlay.pip-mode .player{min-height:202px}}
 </style>
 
-<meta name="uadav-build" content="UADAVSTREAM V22 — RADIO METADATA + HOME MODULES">
+<meta name="uadav-build" content="UADAVSTREAM V23 — RADIO HUB + HOME MODULES">
 
 <style id="uadav-v8">
 /* ===== V8 VISUAL STABILITY ===== */
@@ -376,6 +376,20 @@ html,body{overscroll-behavior-x:none;}
 @media(max-width:700px){.radio-card{min-width:280px}.radio-now-playing{grid-template-columns:48px 1fr 38px}.radio-now-art{width:48px;height:48px}}
 </style>
 
+
+<style id="uadav-v23-radio">
+.radio-card{min-width:320px!important;max-width:360px!important;min-height:126px!important;padding:12px!important;border-radius:18px!important;display:grid!important;grid-template-columns:72px minmax(0,1fr) 42px!important;align-items:center!important;gap:12px!important;background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.02))!important;border:1px solid rgba(255,255,255,.09)!important}
+.radio-card.is-active{border-color:rgba(0,229,255,.55)!important;box-shadow:0 0 0 1px rgba(0,229,255,.1),0 12px 40px rgba(0,229,255,.08)!important;background:linear-gradient(145deg,rgba(0,229,255,.10),rgba(255,255,255,.025))!important}
+.radio-logo{width:72px!important;height:72px!important;border-radius:14px!important}
+.radio-copy{min-width:0!important}.radio-name{font-size:15px!important}.radio-status{font-size:10px!important}
+.radio-track{margin-top:9px!important;gap:8px!important}.radio-track-art{width:38px!important;height:38px!important;border-radius:8px!important}.radio-track-title{font-size:12px!important}.radio-track-artist{font-size:10px!important}
+.radio-play{width:42px!important;height:42px!important;background:rgba(255,255,255,.09)!important}
+.radio-card.is-active .radio-play{background:var(--accent)!important;color:#001018!important}
+.radio-now-playing{position:fixed!important;left:50%!important;bottom:18px!important;transform:translateX(-50%)!important;width:min(820px,calc(100vw - 36px))!important;z-index:250!important;margin:0!important;padding:10px 12px!important;min-height:78px!important;border:1px solid rgba(255,255,255,.11)!important;background:rgba(12,12,15,.90)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;box-shadow:0 18px 60px rgba(0,0,0,.45),0 0 0 1px rgba(0,229,255,.04)!important}
+.radio-now-playing[hidden]{display:none!important}.radio-now-art{width:58px!important;height:58px!important;border-radius:11px!important}.radio-now-station{font-size:10px!important;letter-spacing:.04em;text-transform:uppercase}.radio-now-title{font-size:14px!important}.radio-now-artist{font-size:11px!important}.radio-now-pause{width:40px!important;height:40px!important}
+@media(max-width:700px){.radio-card{min-width:286px!important;max-width:330px!important;grid-template-columns:62px minmax(0,1fr) 38px!important}.radio-logo{width:62px!important;height:62px!important}.radio-now-playing{width:calc(100vw - 20px)!important;bottom:max(10px,env(safe-area-inset-bottom))!important;padding:9px 10px!important}.radio-now-art{width:50px!important;height:50px!important}}
+</style>
+
 </head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
@@ -477,6 +491,8 @@ html,body{overscroll-behavior-x:none;}
     const DEFAULT_HOME_ORDER=['continueRow','savedRow','featuredRow','adminSectionsContainer','recommendedRow','liveRow','radiosRow','artists','cartelera','discoverRow'];
     let homeLayout={order:[...DEFAULT_HOME_ORDER]};
     let activeRadio = null;
+    const radioTrackState = new Map();
+    const RADIO_COVER_CACHE_TTL = 6 * 60 * 60 * 1000;
     const radioMetaSources=new Map();
 
     const $ = id => document.getElementById(id);
@@ -1072,12 +1088,25 @@ html,body{overscroll-behavior-x:none;}
       const title=meta?.title||meta?.streamTitle||meta?.name||'Radio en vivo';
       const artist=meta?.artist||meta?.creator||'';
       const art=meta?.artwork||r.logo||r.imagen||FALLBACK_THUMB;
-      const now=$('radioNowPlaying'); if(now)now.hidden=false;
+      radioTrackState.set(r.nombre||r.stream_url||'',{title,artist,artwork:art});
+      const now=$('radioNowPlaying');if(now)now.hidden=false;
       if($('radioNowStation'))$('radioNowStation').textContent=r.nombre||'Radio UADAVSTREAM';
       if($('radioNowTitle'))$('radioNowTitle').textContent=title;
-      if($('radioNowArtist'))$('radioNowArtist').textContent=artist;
+      if($('radioNowArtist'))$('radioNowArtist').textContent=artist||'En vivo';
       if($('radioNowArt'))$('radioNowArt').src=art;
-      if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title,artist:artist||r.nombre||'UADAVSTREAM',album:r.nombre||'Radio',artwork:[{src:art,sizes:'512x512',type:'image/jpeg'}]});navigator.mediaSession.playbackState='playing';navigator.mediaSession.setActionHandler?.('play',()=>$('radioAudio')?.play());navigator.mediaSession.setActionHandler?.('pause',()=>$('radioAudio')?.pause());}catch{}}
+      const cards=[...document.querySelectorAll('.radio-card')],idx=cards.findIndex(c=>c.dataset.radioName===String(r.nombre||''));
+      if(idx>=0){
+        const card=cards[idx];card.classList.add('is-active');
+        const a=card.querySelector('.radio-track-art');if(a)a.src=art;
+        const t=card.querySelector('.radio-track-title');if(t)t.textContent=title;
+        const ar=card.querySelector('.radio-track-artist');if(ar)ar.textContent=artist||'En vivo';
+      }
+      if('mediaSession'in navigator){try{
+        navigator.mediaSession.metadata=new MediaMetadata({title,artist:artist||r.nombre||'UADAVSTREAM',album:r.nombre||'Radio en vivo',artwork:[{src:art,sizes:'512x512',type:'image/jpeg'}]});
+        navigator.mediaSession.playbackState='playing';
+        navigator.mediaSession.setActionHandler?.('play',()=>{try{$('radioAudio')?.play()}catch{}});
+        navigator.mediaSession.setActionHandler?.('pause',()=>{try{$('radioAudio')?.pause()}catch{}});
+      }catch{}}
     }
     function parseRadioTitle(meta,r){
       const raw=String(meta?.streamTitle||meta?.title||'').trim();
@@ -1085,15 +1114,37 @@ html,body{overscroll-behavior-x:none;}
       if(!artist && raw.includes(' - ')){const p=raw.split(' - ');artist=p.shift().trim();title=p.join(' - ').trim();}
       return {title:title||r.nombre||'Radio en vivo',artist};
     }
+    function deezerJsonp(url, timeoutMs=6500){
+      return new Promise((resolve,reject)=>{
+        const cb='uadavDeezer_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+        const script=document.createElement('script');
+        let finished=false;
+        const cleanup=()=>{try{script.remove()}catch{};try{delete window[cb]}catch{window[cb]=undefined}};
+        const timer=setTimeout(()=>{if(finished)return;finished=true;cleanup();reject(new Error('Deezer timeout'))},timeoutMs);
+        window[cb]=(data)=>{if(finished)return;finished=true;clearTimeout(timer);cleanup();resolve(data)};
+        script.onerror=()=>{if(finished)return;finished=true;clearTimeout(timer);cleanup();reject(new Error('Deezer JSONP error'))};
+        script.src=url+(url.includes('?')?'&':'?')+'output=jsonp&callback='+encodeURIComponent(cb);
+        document.body.appendChild(script);
+      });
+    }
+
     async function buscarCaratulaTema(artist,title,fallback){
-      if(!title)return fallback;
+      const cleanTitle=String(title||'').trim(), cleanArtist=String(artist||'').trim();
+      if(!cleanTitle)return fallback;
+      const cacheKey='uadav_deezer_cover_v23_'+(cleanArtist+'|'+cleanTitle).toLowerCase();
       try{
-        const q=encodeURIComponent([artist,title].filter(Boolean).join(' '));
-        const r=await fetch('https://api.deezer.com/search/track?limit=1&q='+q);
-        const d=await r.json();
-        const art=d?.data?.[0]?.album?.cover_medium||d?.data?.[0]?.album?.cover_big||'';
-        return art||fallback;
-      }catch{return fallback}
+        const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
+        if(cached?.cover&&Date.now()-Number(cached.ts||0)<RADIO_COVER_CACHE_TTL)return cached.cover;
+      }catch{}
+      const q=encodeURIComponent([cleanArtist,cleanTitle].filter(Boolean).join(' '));
+      let data=null;
+      try{const res=await fetch('https://api.deezer.com/search/track?limit=1&q='+q,{cache:'no-store'});if(res.ok)data=await res.json()}catch{}
+      if(!data){try{data=await deezerJsonp('https://api.deezer.com/search/track?limit=1&q='+q)}catch{}}
+      const item=data?.data?.[0];
+      const cover=item?.album?.cover_xl||item?.album?.cover_big||item?.album?.cover_medium||'';
+      const result=cover||fallback;
+      try{localStorage.setItem(cacheKey,JSON.stringify({cover:result,ts:Date.now(),title:cleanTitle,artist:cleanArtist}))}catch{}
+      return result;
     }
     function normalizarMetaUrl(r){
       if(r.metadata_url)return String(r.metadata_url).trim();
@@ -1109,34 +1160,84 @@ html,body{overscroll-behavior-x:none;}
     }
     function iniciarRadioMetadata(r){
       detenerRadioMetadata();
-      const metaUrl=normalizarMetaUrl(r); if(!metaUrl)return;
+      const metaUrl=normalizarMetaUrl(r);
+      const applyMeta=async(raw)=>{
+        const parsed=parseRadioTitle(raw,r);
+        const art=await buscarCaratulaTema(parsed.artist,parsed.title,r.logo||r.imagen||FALLBACK_THUMB);
+        setRadioMediaMetadata(r,{title:parsed.title,artist:parsed.artist,artwork:art});
+      };
+      if(!metaUrl){setRadioMediaMetadata(r,{title:'Radio en vivo',artist:'',artwork:r.logo||r.imagen||FALLBACK_THUMB});return}
       if(/^https:\/\/api\.zeno\.fm\/mounts\/metadata\/subscribe\//i.test(metaUrl)&&typeof EventSource!=='undefined'){
         try{
           const es=new EventSource(metaUrl);
-          es.onmessage=async ev=>{try{const raw=JSON.parse(ev.data||'{}');const parsed=parseRadioTitle(raw,r);const art=await buscarCaratulaTema(parsed.artist,parsed.title,r.logo||r.imagen||FALLBACK_THUMB);setRadioMediaMetadata(r,{title:parsed.title,artist:parsed.artist,artwork:art});const cards=[...document.querySelectorAll('.radio-card')];const idx=cards.findIndex(c=>c.dataset.radioName===String(r.nombre||''));if(idx>=0){const card=cards[idx];const a=card.querySelector('.radio-track-art');const t=card.querySelector('.radio-track-title');const ar=card.querySelector('.radio-track-artist');if(a)a.src=art;if(t)t.textContent=parsed.title;if(ar)ar.textContent=parsed.artist}}catch{}};
-          es.onerror=()=>{};radioMetaSources.set(r.nombre||metaUrl,es);return;
+          es.onmessage=ev=>{try{applyMeta(JSON.parse(ev.data||'{}'))}catch{}};
+          es.onerror=()=>{};
+          radioMetaSources.set(r.nombre||metaUrl,es);
+          return;
         }catch{}
       }
-      const poll=async()=>{try{const res=await fetch(metaUrl,{cache:'no-store'});const raw=await res.json();const parsed=parseRadioTitle(raw,r);const art=await buscarCaratulaTema(parsed.artist,parsed.title,r.logo||r.imagen||FALLBACK_THUMB);setRadioMediaMetadata(r,{title:parsed.title,artist:parsed.artist,artwork:art})}catch{}};
-      poll();const timer=setInterval(poll,15000);radioMetaSources.set(r.nombre||metaUrl,timer);
+      const poll=async()=>{try{
+        const res=await fetch(metaUrl,{cache:'no-store'});
+        const raw=await res.json();await applyMeta(raw);
+      }catch{
+        const cached=radioTrackState.get(r.nombre||r.stream_url||'');
+        if(!cached)setRadioMediaMetadata(r,{title:'Radio en vivo',artist:'',artwork:r.logo||r.imagen||FALLBACK_THUMB});
+      }};
+      poll();
+      const timer=setInterval(poll,15000);
+      radioMetaSources.set(r.nombre||metaUrl,timer);
     }
     function renderRadiosPublicos(items){
-      const row=$('radiosRow'), rail=$('radiosRail');
+      const row=$('radiosRow'),rail=$('radiosRail');
       if(!row||!rail)return;
       const valid=(items||[]).filter(r=>r&&r.activa!==false&&String(r.stream_url||r.url||'').trim());
       if(!valid.length){row.hidden=true;rail.innerHTML='';return}
       row.hidden=false;
       rail.innerHTML=valid.map((r,i)=>{
-        const name=safe(r.nombre||'Radio UADAVSTREAM');
-        const logo=safe(r.logo||r.imagen||FALLBACK_THUMB);
-        return `<article class="radio-card" data-radio-index="${i}" data-radio-name="${name}"><img class="radio-logo" src="${logo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="radio-copy"><div class="radio-name">${name}</div><div class="radio-status">● En vivo · escuchar ahora</div><div class="radio-track"><img class="radio-track-art" src="${logo}" alt=""><div class="radio-track-text"><div class="radio-track-title">Conectá la radio para ver qué suena</div><div class="radio-track-artist"></div></div></div></div><button type="button" class="radio-play" aria-label="Reproducir ${name}"><i class="fa-solid fa-play"></i></button></article>`;
+        const name=safe(r.nombre||'Radio UADAVSTREAM'),key=r.nombre||r.stream_url||'';
+        const saved=radioTrackState.get(key),logo=safe(saved?.artwork||r.logo||r.imagen||FALLBACK_THUMB);
+        const title=safe(saved?.title||'Seleccioná para escuchar'),artist=safe(saved?.artist||'Radio en vivo');
+        const isActive=activeRadio===String(r.stream_url||r.url||'');
+        return `<article class="radio-card${isActive?' is-active':''}" data-radio-index="${i}" data-radio-name="${name}">
+          <img class="radio-logo" src="${logo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">
+          <div class="radio-copy">
+            <div class="radio-name">${name}</div>
+            <div class="radio-status">${isActive?'● Escuchando ahora':'● En vivo · escuchar ahora'}</div>
+            <div class="radio-track"><img class="radio-track-art" src="${logo}" alt="" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="radio-track-text"><div class="radio-track-title">${title}</div><div class="radio-track-artist">${artist}</div></div></div>
+          </div>
+          <button type="button" class="radio-play" aria-label="${isActive?'Pausar':'Reproducir'} ${name}"><i class="fa-solid fa-${isActive?'pause':'play'}"></i></button>
+        </article>`;
       }).join('');
-      rail.querySelectorAll('.radio-card').forEach((el,i)=>el.addEventListener('click',ev=>{if(ev.target.closest('.radio-play')||ev.currentTarget===ev.target||ev.target.closest('.radio-card'))reproducirRadio(valid[i])}));
+      rail.querySelectorAll('.radio-card').forEach((el,i)=>el.addEventListener('click',()=>reproducirRadio(valid[i])));
     }
-    async function cargarRadios(){let data=[];try{data=await api('radios')}catch{}if(!Array.isArray(data))data=[];renderRadiosPublicos(data);}
-    function pausarRadio(){const audio=$('radioAudio');if(audio){try{audio.pause()}catch{}audio.removeAttribute('src');audio.load?.()}detenerRadioMetadata();activeRadio=null;document.querySelectorAll('.radio-play').forEach(b=>b.innerHTML='<i class="fa-solid fa-play"></i>');if('mediaSession'in navigator){try{navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState='none'}catch{}}}
-    function reproducirRadio(r){if(!r)return;const url=String(r.stream_url||r.url||'').trim();if(!url)return;const audio=$('radioAudio');if(!audio)return;if(activeRadio===url&&!audio.paused){pausarRadio();return}if(ytPlayer&&typeof ytPlayer.stopVideo==='function'){try{ytPlayer.stopVideo()}catch{}}if($('videoModal')?.classList.contains('active'))cerrarModal();audio.src=url;audio.autoplay=true;audio.play().catch(()=>{});activeRadio=url;document.querySelectorAll('.radio-play').forEach(b=>b.innerHTML='<i class="fa-solid fa-play"></i>');const cards=[...document.querySelectorAll('.radio-card')];const idx=cards.findIndex(c=>c.dataset.radioName===String(r.nombre||''));if(idx>=0)cards[idx].querySelector('.radio-play').innerHTML='<i class="fa-solid fa-pause"></i>';iniciarRadioMetadata(r);}
-
+    async function cargarRadios(){let data=[];try{data=await api('radios')}catch{}if(!Array.isArray(data))data=[];currentRadiosCache=data;renderRadiosPublicos(data);const p=$('radioNowPause');if(p)p.onclick=()=>pausarRadio();}
+    let currentRadiosCache=[];
+    function pausarRadio(){
+      const audio=$('radioAudio');
+      if(audio){try{audio.pause()}catch{}audio.removeAttribute('src');audio.load?.();}
+      detenerRadioMetadata();activeRadio=null;
+      document.querySelectorAll('.radio-card').forEach(c=>c.classList.remove('is-active'));
+      document.querySelectorAll('.radio-play').forEach(b=>{b.innerHTML='<i class="fa-solid fa-play"></i>';b.setAttribute('aria-label','Reproducir radio')});
+      if('mediaSession'in navigator){try{navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState='none'}catch{}}
+      const now=$('radioNowPlaying');if(now)now.hidden=true;
+      renderRadiosPublicos(currentRadiosCache);
+    }
+    function reproducirRadio(r){
+      if(!r)return;
+      const url=String(r.stream_url||r.url||'').trim();if(!url)return;
+      const audio=$('radioAudio');if(!audio)return;
+      if(activeRadio===url&&!audio.paused){pausarRadio();return}
+      if(ytPlayer&&typeof ytPlayer.stopVideo==='function'){try{ytPlayer.stopVideo()}catch{}}
+      if($('videoModal')?.classList.contains('active'))cerrarModal();
+      document.querySelectorAll('.radio-card').forEach(c=>c.classList.remove('is-active'));
+      document.querySelectorAll('.radio-play').forEach(b=>{b.innerHTML='<i class="fa-solid fa-play"></i>'});
+      audio.src=url;audio.autoplay=true;audio.play().catch(()=>{});
+      activeRadio=url;
+      const cards=[...document.querySelectorAll('.radio-card')],idx=cards.findIndex(c=>c.dataset.radioName===String(r.nombre||''));
+      if(idx>=0){cards[idx].classList.add('is-active');const btn=cards[idx].querySelector('.radio-play');if(btn)btn.innerHTML='<i class="fa-solid fa-pause"></i>'}
+      if($('radioNowPause'))$('radioNowPause').onclick=()=>pausarRadio();
+      iniciarRadioMetadata(r);
+    }
     async function cargarArtistas(){
       let data=[];try{data=await api('artistas')}catch{}
       if(!Array.isArray(data))data=[];
@@ -1467,14 +1568,14 @@ html,body{overscroll-behavior-x:none;}
       prepararRailWrappers();
       activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v22';
+        const SW_VERSION='uadavstream-v23';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=22',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=23',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
