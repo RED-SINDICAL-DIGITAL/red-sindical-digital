@@ -178,7 +178,7 @@
 @media(max-width:600px){.overlay.pip-mode .modal{width:min(360px,92vw)!important}.overlay.pip-mode .player{min-height:202px}}
 </style>
 
-<meta name="uadav-build" content="UADAVSTREAM V20 — ADMIN SECTIONS CONNECTED">
+<meta name="uadav-build" content="UADAVSTREAM V22 — RADIO METADATA + HOME MODULES">
 
 <style id="uadav-v8">
 /* ===== V8 VISUAL STABILITY ===== */
@@ -369,6 +369,13 @@ html,body{overscroll-behavior-x:none;}
 .maintenance-card{width:min(92vw,680px);padding:42px 30px;border:1px solid rgba(255,255,255,.12);border-radius:24px;background:rgba(15,15,20,.82);backdrop-filter:blur(18px);box-shadow:0 25px 80px rgba(0,0,0,.55)}
 .maintenance-card h1{font-size:clamp(30px,6vw,54px);margin:0 0 12px;font-weight:900}.maintenance-card p{color:#a4a4ad;font-size:16px;line-height:1.6;margin:0 auto;max-width:560px}
 </style>
+
+<style id="uadav-v22-radio-home">
+.radio-now-playing{display:grid;grid-template-columns:56px 1fr 42px;align-items:center;gap:12px;margin:0 0 12px;padding:10px 12px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(90deg,rgba(255,255,255,.045),rgba(255,255,255,.018));border-radius:14px;min-height:76px}
+.radio-now-art{width:56px;height:56px;border-radius:10px;object-fit:cover;background:#0d0d10}.radio-now-copy{min-width:0}.radio-now-station{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radio-now-title{font-size:.92rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radio-now-artist{font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radio-now-pause{width:38px;height:38px;border:0;border-radius:50%;background:var(--accent);color:#000;cursor:pointer;display:grid;place-items:center}.radio-card{position:relative;display:flex;align-items:center;gap:11px;min-width:300px;max-width:380px;padding:10px;border:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border-radius:16px;cursor:pointer;overflow:hidden}.radio-card:hover{border-color:rgba(0,229,255,.3);transform:translateY(-1px)}.radio-logo{width:58px;height:58px;border-radius:12px;object-fit:cover;flex:none;background:#0d0d10}.radio-copy{min-width:0;flex:1}.radio-name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radio-status{font-size:.72rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radio-track{display:flex;align-items:center;gap:8px;margin-top:7px;min-width:0}.radio-track-art{width:28px;height:28px;border-radius:6px;object-fit:cover;flex:none;background:#0d0d10}.radio-track-text{min-width:0}.radio-track-title{font-size:.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radio-track-artist{font-size:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radio-play{width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none}.visibility-off{display:none!important}
+@media(max-width:700px){.radio-card{min-width:280px}.radio-now-playing{grid-template-columns:48px 1fr 38px}.radio-now-art{width:48px;height:48px}}
+</style>
+
 </head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
@@ -390,7 +397,7 @@ html,body{overscroll-behavior-x:none;}
     </div>
   </header>
 
-  <div id="bannerTopContainer" class="public-banner public-banner-top" hidden></div>
+  <div id="bannerTopContainer" class="public-banner public-banner-top" data-visibility-key="banners" hidden></div>
 
   <main id="top">
     <section class="hero" id="heroSection" data-visibility-key="hero">
@@ -406,7 +413,7 @@ html,body{overscroll-behavior-x:none;}
       <div class="hero-fade"></div>
     </section>
 
-    <section class="search-wrap" aria-label="Buscador">
+    <section class="search-wrap" id="searchModule" data-visibility-key="search" aria-label="Buscador">
       <div class="big-search"><input id="searchInput" placeholder="Buscar artistas, videos, shows, música, humor..." autocomplete="off" onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button onclick="ejecutarBusqueda(document.getElementById('searchInput').value)"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button></div>
       <div id="searchStatus" class="search-status"></div>
     </section>
@@ -417,10 +424,10 @@ html,body{overscroll-behavior-x:none;}
       <div class="row" id="resultsRow" hidden><div class="row-head"><div><div class="row-title" id="resultsTitle">Resultados</div></div><button class="row-more" onclick="volverInicio()">Volver al inicio</button></div><div class="rail results-rail" id="resultsRail"></div></div>
       <div class="row" id="featuredRow"><div class="row-head"><div><div class="row-title" id="featuredTitle">🔥 Destacados</div><div class="row-subtitle">Una selección para empezar a descubrir</div></div><button class="row-more" onclick="cargarDestacados(true)">Actualizar</button></div><div class="rail" id="featuredRail"><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div></div></div>
       <div id="adminSectionsContainer" class="admin-sections-container" aria-live="polite"></div>
-      <div id="bannerInfeedContainer" class="public-banner public-banner-infeed" hidden></div>
+      <div id="bannerInfeedContainer" class="public-banner public-banner-infeed" data-visibility-key="banners" hidden></div>
       <div class="row" id="recommendedRow" hidden><div class="row-head"><div><div class="row-title">✨ Para vos</div><div class="row-subtitle">Recomendaciones según lo que explorás</div></div></div><div class="rail" id="recommendedRail"></div></div>
       <div class="row" id="liveRow"><div class="row-head"><div><div class="row-title">🔴 En vivo</div><div class="row-subtitle">Señales y transmisiones</div></div><a class="row-more" href="#en-vivo">Ver todo</a></div><div class="rail" id="liveRail"></div></div>
-      <div class="row" id="radiosRow"><div class="row-head"><div><div class="row-title">📻 Radios</div><div class="row-subtitle">Escuchá las radios configuradas desde el Admin</div></div></div><div class="rail" id="radiosRail"></div></div>
+      <div class="row" id="radiosRow"><div class="row-head"><div><div class="row-title">📻 Radios</div><div class="row-subtitle">Escuchá las radios y descubrí qué está sonando</div></div></div><div id="radioNowPlaying" class="radio-now-playing" hidden><img id="radioNowArt" src="" alt="" class="radio-now-art"><div class="radio-now-copy"><div class="radio-now-station" id="radioNowStation">Radio</div><div class="radio-now-title" id="radioNowTitle">Nada reproduciendo</div><div class="radio-now-artist" id="radioNowArtist"></div></div><button id="radioNowPause" class="radio-now-pause" type="button" aria-label="Pausar radio"><i class="fa-solid fa-pause"></i></button></div><div class="rail" id="radiosRail"></div></div>
       <div class="row" id="artists"><div class="row-head"><div><div class="row-title">🎭 Artistas</div><div class="row-subtitle">Conocé a quienes hacen posible el espectáculo</div></div><button class="row-more" onclick="cargarArtistas(true)">Ver todos</button></div><div class="rail" id="artistsRail"></div></div>
       <div class="row" id="cartelera"><div class="row-head"><div><div class="row-title">📅 Cartelera</div><div class="row-subtitle">Próximos espectáculos y eventos</div></div></div><div class="rail" id="eventsRail"></div></div>
       <div class="row" id="discoverRow"><div class="row-head"><div><div class="row-title">🎬 Más para descubrir</div><div class="row-subtitle">Explorá contenido por temática</div></div></div><div class="rail" id="discoverRail"></div></div>
@@ -447,9 +454,9 @@ html,body{overscroll-behavior-x:none;}
     </section>
   </main>
 
-  <div id="bannerFooterContainer" class="public-banner public-banner-footer" hidden></div>
+  <div id="bannerFooterContainer" class="public-banner public-banner-footer" data-visibility-key="banners" hidden></div>
 
-  <footer>
+  <footer id="siteFooter" data-visibility-key="footer">
     <div class="footer-grid"><div><div class="footer-brand" id="footerTexto">UADAVSTREAM</div><div id="footerContacto">La plataforma audiovisual de los artistas de variedades.</div></div><div class="footer-links"><a href="/index.html">Explorar</a><a href="#artistas" onclick="irASeccion('artists');return false">Artistas</a><a href="#cartelera" onclick="irASeccion('cartelera');return false">Cartelera</a><a href="#avisos">Novedades</a></div></div>
     <div style="margin-top:22px">© <span id="footerYear"></span> UADAVSTREAM · Todos los derechos reservados.</div>
   </footer>
@@ -466,8 +473,11 @@ html,body{overscroll-behavior-x:none;}
     let config = {};
     let allVideos = [];
     let allArtists = [];
-    let webVisibility = {hero:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true};
+    let webVisibility = {hero:true,search:true,banners:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true,footer:true};
+    const DEFAULT_HOME_ORDER=['continueRow','savedRow','featuredRow','adminSectionsContainer','recommendedRow','liveRow','radiosRow','artists','cartelera','discoverRow'];
+    let homeLayout={order:[...DEFAULT_HOME_ORDER]};
     let activeRadio = null;
+    const radioMetaSources=new Map();
 
     const $ = id => document.getElementById(id);
     const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -1022,6 +1032,22 @@ html,body{overscroll-behavior-x:none;}
       renderRail('recommendedRail',items.slice(0,12));
     }
 
+    async function cargarHomeLayout(){
+      try{
+        const raw=await api('home_layout');
+        if(raw && !Array.isArray(raw) && Array.isArray(raw.order)) homeLayout={...homeLayout,order:[...raw.order]};
+      }catch(e){console.warn('[UADAV] Home layout no disponible:',e)}
+      applyHomeLayout();
+    }
+    function applyHomeLayout(){
+      const content=$('contenido'); if(!content)return;
+      const allowed=new Set(DEFAULT_HOME_ORDER);
+      const order=[...homeLayout.order.filter(id=>allowed.has(id)),...DEFAULT_HOME_ORDER.filter(id=>!homeLayout.order.includes(id))];
+      const nodes=new Map();
+      order.forEach(id=>{const el=$(id);if(el)nodes.set(id,el)});
+      order.forEach(id=>{const el=nodes.get(id);if(el)content.appendChild(el)});
+    }
+
     async function cargarWebVisibility(){
       try{
         const raw=await api('web_visibility');
@@ -1031,9 +1057,9 @@ html,body{overscroll-behavior-x:none;}
     }
     function applyWebVisibility(){
       const map={
-        hero:'heroSection', continue:'continueRow', saved:'savedRow', featured:'featuredRow', recommended:'recommendedRow',
+        hero:'heroSection', search:'searchModule', banners:'bannerTopContainer', continue:'continueRow', saved:'savedRow', featured:'featuredRow', recommended:'recommendedRow',
         live:'liveRow', radios:'radiosRow', artists:'artists', cartelera:'cartelera', discover:'discoverRow',
-        features:'en-vivo', cta:'sumate', newsletter:'avisos'
+        features:'en-vivo', cta:'sumate', newsletter:'avisos', footer:'siteFooter'
       };
       Object.entries(map).forEach(([key,id])=>{
         const el=$(id); if(el) el.classList.toggle('visibility-off',webVisibility[key]===false);
@@ -1042,6 +1068,58 @@ html,body{overscroll-behavior-x:none;}
       Object.entries(navMap).forEach(([key,id])=>$(id)?.classList.toggle('visibility-off',webVisibility[key]===false));
     }
 
+    function setRadioMediaMetadata(r,meta){
+      const title=meta?.title||meta?.streamTitle||meta?.name||'Radio en vivo';
+      const artist=meta?.artist||meta?.creator||'';
+      const art=meta?.artwork||r.logo||r.imagen||FALLBACK_THUMB;
+      const now=$('radioNowPlaying'); if(now)now.hidden=false;
+      if($('radioNowStation'))$('radioNowStation').textContent=r.nombre||'Radio UADAVSTREAM';
+      if($('radioNowTitle'))$('radioNowTitle').textContent=title;
+      if($('radioNowArtist'))$('radioNowArtist').textContent=artist;
+      if($('radioNowArt'))$('radioNowArt').src=art;
+      if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title,artist:artist||r.nombre||'UADAVSTREAM',album:r.nombre||'Radio',artwork:[{src:art,sizes:'512x512',type:'image/jpeg'}]});navigator.mediaSession.playbackState='playing';navigator.mediaSession.setActionHandler?.('play',()=>$('radioAudio')?.play());navigator.mediaSession.setActionHandler?.('pause',()=>$('radioAudio')?.pause());}catch{}}
+    }
+    function parseRadioTitle(meta,r){
+      const raw=String(meta?.streamTitle||meta?.title||'').trim();
+      let title=raw,artist=String(meta?.artist||'').trim();
+      if(!artist && raw.includes(' - ')){const p=raw.split(' - ');artist=p.shift().trim();title=p.join(' - ').trim();}
+      return {title:title||r.nombre||'Radio en vivo',artist};
+    }
+    async function buscarCaratulaTema(artist,title,fallback){
+      if(!title)return fallback;
+      try{
+        const q=encodeURIComponent([artist,title].filter(Boolean).join(' '));
+        const r=await fetch('https://api.deezer.com/search/track?limit=1&q='+q);
+        const d=await r.json();
+        const art=d?.data?.[0]?.album?.cover_medium||d?.data?.[0]?.album?.cover_big||'';
+        return art||fallback;
+      }catch{return fallback}
+    }
+    function normalizarMetaUrl(r){
+      if(r.metadata_url)return String(r.metadata_url).trim();
+      const s=String(r.stream_url||r.url||'').trim();
+      const z=s.match(/stream\.zeno\.fm\/([^/?#]+)/i);
+      if(z)return `https://api.zeno.fm/mounts/metadata/subscribe/${encodeURIComponent(z[1].replace(/\/source$/i,''))}`;
+      return '';
+    }
+    function detenerRadioMetadata(){
+      for(const src of radioMetaSources.values()){try{src.close?.()}catch{};try{clearInterval(src)}catch{}}
+      radioMetaSources.clear();
+      const now=$('radioNowPlaying');if(now)now.hidden=true;
+    }
+    function iniciarRadioMetadata(r){
+      detenerRadioMetadata();
+      const metaUrl=normalizarMetaUrl(r); if(!metaUrl)return;
+      if(/^https:\/\/api\.zeno\.fm\/mounts\/metadata\/subscribe\//i.test(metaUrl)&&typeof EventSource!=='undefined'){
+        try{
+          const es=new EventSource(metaUrl);
+          es.onmessage=async ev=>{try{const raw=JSON.parse(ev.data||'{}');const parsed=parseRadioTitle(raw,r);const art=await buscarCaratulaTema(parsed.artist,parsed.title,r.logo||r.imagen||FALLBACK_THUMB);setRadioMediaMetadata(r,{title:parsed.title,artist:parsed.artist,artwork:art});const cards=[...document.querySelectorAll('.radio-card')];const idx=cards.findIndex(c=>c.dataset.radioName===String(r.nombre||''));if(idx>=0){const card=cards[idx];const a=card.querySelector('.radio-track-art');const t=card.querySelector('.radio-track-title');const ar=card.querySelector('.radio-track-artist');if(a)a.src=art;if(t)t.textContent=parsed.title;if(ar)ar.textContent=parsed.artist}}catch{}};
+          es.onerror=()=>{};radioMetaSources.set(r.nombre||metaUrl,es);return;
+        }catch{}
+      }
+      const poll=async()=>{try{const res=await fetch(metaUrl,{cache:'no-store'});const raw=await res.json();const parsed=parseRadioTitle(raw,r);const art=await buscarCaratulaTema(parsed.artist,parsed.title,r.logo||r.imagen||FALLBACK_THUMB);setRadioMediaMetadata(r,{title:parsed.title,artist:parsed.artist,artwork:art})}catch{}};
+      poll();const timer=setInterval(poll,15000);radioMetaSources.set(r.nombre||metaUrl,timer);
+    }
     function renderRadiosPublicos(items){
       const row=$('radiosRow'), rail=$('radiosRail');
       if(!row||!rail)return;
@@ -1051,39 +1129,13 @@ html,body{overscroll-behavior-x:none;}
       rail.innerHTML=valid.map((r,i)=>{
         const name=safe(r.nombre||'Radio UADAVSTREAM');
         const logo=safe(r.logo||r.imagen||FALLBACK_THUMB);
-        return `<article class="radio-card" data-radio-index="${i}"><img class="radio-logo" src="${logo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="radio-copy"><div class="radio-name">${name}</div><div class="radio-status">● Señal disponible · escuchar ahora</div></div><button type="button" class="radio-play" aria-label="Reproducir ${name}"><i class="fa-solid fa-play"></i></button></article>`;
+        return `<article class="radio-card" data-radio-index="${i}" data-radio-name="${name}"><img class="radio-logo" src="${logo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="radio-copy"><div class="radio-name">${name}</div><div class="radio-status">● En vivo · escuchar ahora</div><div class="radio-track"><img class="radio-track-art" src="${logo}" alt=""><div class="radio-track-text"><div class="radio-track-title">Conectá la radio para ver qué suena</div><div class="radio-track-artist"></div></div></div></div><button type="button" class="radio-play" aria-label="Reproducir ${name}"><i class="fa-solid fa-play"></i></button></article>`;
       }).join('');
-      rail.querySelectorAll('.radio-card').forEach((el,i)=>el.addEventListener('click',()=>reproducirRadio(valid[i])));
+      rail.querySelectorAll('.radio-card').forEach((el,i)=>el.addEventListener('click',ev=>{if(ev.target.closest('.radio-play')||ev.currentTarget===ev.target||ev.target.closest('.radio-card'))reproducirRadio(valid[i])}));
     }
-
-    async function cargarRadios(){
-      let data=[];
-      try{data=await api('radios')}catch{}
-      if(!Array.isArray(data))data=[];
-      renderRadiosPublicos(data);
-    }
-
-    function pausarRadio(){
-      const audio=$('radioAudio');
-      if(audio){try{audio.pause()}catch{} audio.removeAttribute('src');audio.load?.();}
-      activeRadio=null;
-      document.querySelectorAll('.radio-play').forEach(b=>{b.innerHTML='<i class="fa-solid fa-play"></i>';});
-      const now=$('radioNowPlaying'); if(now)now.remove();
-    }
-
-    function reproducirRadio(r){
-      if(!r)return;
-      const url=String(r.stream_url||r.url||'').trim(); if(!url)return;
-      const audio=$('radioAudio'); if(!audio)return;
-      if(activeRadio===url && !audio.paused){pausarRadio();return;}
-      // Un solo audio en todo el sistema.
-      if(ytPlayer&&typeof ytPlayer.stopVideo==='function'){try{ytPlayer.stopVideo()}catch{}}
-      if($('videoModal')?.classList.contains('active')) cerrarModal();
-      audio.src=url; audio.autoplay=true; audio.play().catch(()=>{});
-      activeRadio=url;
-      document.querySelectorAll('.radio-play').forEach(b=>b.innerHTML='<i class="fa-solid fa-play"></i>');
-      const cards=[...document.querySelectorAll('.radio-card')]; const idx=[...cards].findIndex(c=>c.querySelector('.radio-name')?.textContent===String(r.nombre||'')); if(idx>=0)cards[idx].querySelector('.radio-play').innerHTML='<i class="fa-solid fa-pause"></i>';
-    }
+    async function cargarRadios(){let data=[];try{data=await api('radios')}catch{}if(!Array.isArray(data))data=[];renderRadiosPublicos(data);}
+    function pausarRadio(){const audio=$('radioAudio');if(audio){try{audio.pause()}catch{}audio.removeAttribute('src');audio.load?.()}detenerRadioMetadata();activeRadio=null;document.querySelectorAll('.radio-play').forEach(b=>b.innerHTML='<i class="fa-solid fa-play"></i>');if('mediaSession'in navigator){try{navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState='none'}catch{}}}
+    function reproducirRadio(r){if(!r)return;const url=String(r.stream_url||r.url||'').trim();if(!url)return;const audio=$('radioAudio');if(!audio)return;if(activeRadio===url&&!audio.paused){pausarRadio();return}if(ytPlayer&&typeof ytPlayer.stopVideo==='function'){try{ytPlayer.stopVideo()}catch{}}if($('videoModal')?.classList.contains('active'))cerrarModal();audio.src=url;audio.autoplay=true;audio.play().catch(()=>{});activeRadio=url;document.querySelectorAll('.radio-play').forEach(b=>b.innerHTML='<i class="fa-solid fa-play"></i>');const cards=[...document.querySelectorAll('.radio-card')];const idx=cards.findIndex(c=>c.dataset.radioName===String(r.nombre||''));if(idx>=0)cards[idx].querySelector('.radio-play').innerHTML='<i class="fa-solid fa-pause"></i>';iniciarRadioMetadata(r);}
 
     async function cargarArtistas(){
       let data=[];try{data=await api('artistas')}catch{}
@@ -1135,7 +1187,7 @@ html,body{overscroll-behavior-x:none;}
           youtube_id:yt||x.youtube_id||'',
           titulo:x.nombre||x.titulo||'Señal en vivo',
           descripcion:x.descripcion||x.subtitulo_banner||'Transmisión en vivo',
-          thumbnail:x.thumbnail||x.imagen||FALLBACK_THUMB,
+          thumbnail:x.thumbnail||x.imagen||(yt?`https://i.ytimg.com/vi/${encodeURIComponent(yt)}/hqdefault.jpg`:FALLBACK_THUMB),
           en_vivo:true,
           isLiveSignal:true,
           liveUrl:String(x.url||x.stream_url||'').trim(),
@@ -1404,6 +1456,7 @@ html,body{overscroll-behavior-x:none;}
       await cargarConfig();
       if(modo==='mantenimiento') return;
       await cargarWebVisibility();
+      await cargarHomeLayout();
       await cargarBannersPublicos();
       await cargarSeccionesAdministradas();
       prepararRailWrappers();
@@ -1414,14 +1467,14 @@ html,body{overscroll-behavior-x:none;}
       prepararRailWrappers();
       activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v21.1';
+        const SW_VERSION='uadavstream-v22';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=21.1',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=22',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
