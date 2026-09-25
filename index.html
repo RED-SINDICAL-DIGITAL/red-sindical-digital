@@ -680,12 +680,35 @@ html,body{overscroll-behavior-x:none;}
       return ensureDiscoveryShape(d || {});
     }
     function registerInterest(v,weight=1){
+      uadavSendMetric('media_play',{content_id:v.id,title:v.titulo||'',author:v.author||v.channelTitle||'',media_type:'video',category:v.categoria||''});
       const d=ensureDiscovery(getDiscovery());
       for(const t of tokenize([v?.titulo,v?.descripcion,v?.categoria].filter(Boolean).join(' ')))d.terms[t]=(d.terms[t]||0)+weight;
       for(const topic of detectTopics(v))d.topics[topic]=(d.topics[topic]||0)+weight*2;
       const creator=String(v?.author||v?.channelTitle||'').trim();
       if(creator)d.creators[creator]=(d.creators[creator]||0)+weight;
       setDiscovery(d);
+    }
+
+    // ============================================================
+    // UADAVSTREAM V29 — Analytics + métricas internas
+    // ============================================================
+    let uadavAnalyticsLoaded=false;
+    async function uadavSendMetric(type,data={}){
+      try{await fetch(API_URL+'metrics/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,...data})});}catch{}
+    }
+    async function uadavLoadAnalytics(){
+      try{
+        await uadavSendMetric('page_view',{content_id:location.pathname});
+        const cfg=await api('analytics/config');
+        if(!cfg?.enabled||!cfg?.measurement_id)return;
+        const consentOk=cfg.consent_required!==true || localStorage.getItem('uadav_analytics_consent')==='granted';
+        if(!consentOk)return;
+        if(window.__uadavGA4Loaded)return;
+        window.__uadavGA4Loaded=true;
+        const mid=String(cfg.measurement_id).trim();
+        const s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(mid);document.head.appendChild(s);
+        window.dataLayer=window.dataLayer||[];window.gtag=function(){window.dataLayer.push(arguments)};window.gtag('js',new Date());window.gtag('config',mid,{send_page_view:true});uadavAnalyticsLoaded=true;
+      }catch{}
     }
     function rememberVideo(v){
       if(!v?.id)return;
@@ -1522,6 +1545,7 @@ html,body{overscroll-behavior-x:none;}
       if(latest)renderRadioHistory(latest);
     }
     function reproducirRadio(r){
+      uadavSendMetric('radio_play',{radio_id:r?.id||r?.nombre||'',title:r?.nombre||'Radio'});
       if(!r)return;
       const url=String(r.stream_url||r.url||'').trim();if(!url)return;
       const audio=$('radioAudio');if(!audio)return;
@@ -1549,6 +1573,7 @@ html,body{overscroll-behavior-x:none;}
       rail.querySelectorAll('.artist-card-v28').forEach((el,i)=>el.addEventListener('click',()=>abrirArtistHub(allArtists[i])));
     }
     function abrirArtistHub(a){
+      uadavSendMetric('artist_view',{artist_id:a?.id||a?.token||a?.nombre||'',title:a?.nombre||a?.nombre_artistico||''});
       if(!a)return;const overlay=$('artistHubOverlay');if(!overlay)return;const name=a.nombre||a.nombre_artistico||'Artista UADAV',photo=a.foto||a.imagen||a.thumbnail||FALLBACK_THUMB,verified=a.afiliado_verificado===true||a.sindicalizado===true;
       $('artistHubKicker').textContent=verified?'✓ ARTISTA AFILIADO UADAV':'🎭 ARTISTA UADAVSTREAM';$('artistHubTitle').textContent=name;$('artistHubBio').textContent=a.bio||a.descripcion||'Perfil artístico en UADAVSTREAM.';const media=$('artistHubMedia');media.src=photo;media.classList.add('has-media');
       const badges=$('artistHubBadges');badges.innerHTML='';if(a.rubro)badges.innerHTML+=`<span class="artist-verified-badge">${safe(a.rubro)}</span>`;if(verified)badges.innerHTML+='<span class="artist-verified-badge">✓ Afiliado verificado</span>';
@@ -1597,6 +1622,7 @@ html,body{overscroll-behavior-x:none;}
     }
 
     async function reproducirSenal(s){
+      uadavSendMetric('live_view',{content_id:s?.id||s?.youtube_id||s?.url||'',title:s?.titulo||s?.nombre||'Señal en vivo',media_type:'live'});
       const yt=normalizarIdYoutube(s?.youtube_id||s?.liveUrl||s?.url||s?.stream_url);
       if(yt){
         pausarRadio();
@@ -1901,6 +1927,7 @@ html,body{overscroll-behavior-x:none;}
     $('chatText')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviarMensajeChat()}});
 
     async function init(){
+      await uadavLoadAnalytics();
       const modo=await cargarEstadoSitio();
       await cargarConfig();
       if(modo==='mantenimiento') return;
@@ -1916,14 +1943,14 @@ html,body{overscroll-behavior-x:none;}
       prepararRailWrappers();
       activarArrastreCarruseles();
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v24';
+        const SW_VERSION='uadavstream-v29';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=23',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=29',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
