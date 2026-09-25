@@ -463,6 +463,8 @@ html,body{overscroll-behavior-x:none;}
 .info-overlay{position:fixed;inset:0;z-index:540;background:rgba(0,0,0,.70);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;padding:18px}.info-overlay.active{display:flex}.info-card{width:min(760px,96vw);max-height:88vh;overflow:auto;border-radius:22px;background:linear-gradient(145deg,#15161a,#0b0b0d);border:1px solid rgba(255,255,255,.10);box-shadow:0 30px 100px rgba(0,0,0,.72);padding:24px;position:relative}.info-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.3);color:#fff;cursor:pointer}.info-kicker{font-size:11px;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:.12em}.info-card h2{font-size:clamp(26px,4vw,44px);margin:8px 0}.info-card p{color:rgba(255,255,255,.76);line-height:1.65;white-space:pre-wrap}.info-media{width:100%;aspect-ratio:16/7;object-fit:cover;border-radius:16px;background:#111;margin:10px 0 16px;display:none}.info-media.has-media{display:block}
 @media(max-width:760px){:root{--uadav-header-offset:74px}.hero{min-height:64vh!important}.hero-content{padding-bottom:36px!important}.chat-overlay{padding:0;align-items:flex-end}.chat-panel{width:100%;height:88vh;border-radius:22px 22px 0 0}.radio-hub-meta-grid{grid-template-columns:1fr}.info-card{width:100%;border-radius:18px}.info-overlay{padding:10px;align-items:flex-end}.info-card{max-height:92vh;border-radius:20px 20px 0 0}}
 </style>
+<style id="uadav-v28-benefits">
+.radio-hub-donate-btn{border-color:rgba(255,190,0,.35)!important;background:rgba(255,190,0,.08)!important;color:#ffd76a!important}.radio-hub-meta-item span{display:block;margin-top:2px;color:rgba(255,255,255,.72);line-height:1.45}.artist-verified-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.18);color:#8ef7ff;font-size:10px;font-weight:800}.artist-card-v28{flex:0 0 190px;cursor:pointer}.artist-card-v28 img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:16px;background:#111}.artist-card-v28 .artist-card-name{margin-top:8px;font-weight:850;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.artist-card-v28 .artist-card-rubro{font-size:11px;color:var(--muted);margin-top:3px}.artist-card-v28 .artist-card-benefit{font-size:10px;color:#9ef3ff;margin-top:6px}.live-card-v28 .card-title{display:flex;align-items:center;gap:6px}.live-card-v28 .live-badge{font-size:9px;color:#ff8c8c}@media(max-width:700px){.artist-card-v28{flex-basis:150px}}</style>
 </head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
@@ -533,11 +535,12 @@ html,body{overscroll-behavior-x:none;}
         </div>
         <div class="radio-hub-actions">
           <button id="radioHubPlay" class="radio-hub-btn primary" type="button">▶ Escuchar</button>
-          <button id="radioHubShare" class="radio-hub-btn" type="button">↗ Compartir</button><button id="radioHubChat" class="radio-hub-btn radio-hub-chat-btn" type="button">💬 Chat / pedidos</button>
+          <button id="radioHubShare" class="radio-hub-btn" type="button">↗ Compartir</button><button id="radioHubChat" class="radio-hub-btn radio-hub-chat-btn" type="button">💬 Chat / pedidos</button><button id="radioHubDonate" class="radio-hub-btn radio-hub-donate-btn" type="button" hidden>💛 Apoyar</button>
         </div>
       </div>
     </div>
     <div class="radio-hub-content">
+      <div id="radioHubMeta" class="radio-hub-meta" hidden><div class="radio-hub-meta-grid"><div class="radio-hub-meta-item"><strong>Programa</strong><span id="radioHubProgram">—</span></div><div class="radio-hub-meta-item"><strong>Locutor / Conductor</strong><span id="radioHubHost">—</span></div><div class="radio-hub-meta-item"><strong>Horario</strong><span id="radioHubSchedule">—</span></div><div class="radio-hub-meta-item"><strong>Descripción</strong><span id="radioHubDescription">—</span></div></div><div id="radioHubSocials" class="radio-hub-socials"></div></div>
       <div class="radio-hub-section-title">🎵 Últimos temas</div>
       <div id="radioHubHistory" class="radio-hub-history"></div>
     </div>
@@ -578,6 +581,8 @@ html,body{overscroll-behavior-x:none;}
   </footer>
 
   <audio id="radioAudio" preload="none"></audio>
+  <div id="artistHubOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarArtistHub()"><div class="info-card" role="dialog" aria-modal="true"><button class="info-close" type="button" onclick="cerrarArtistHub()" aria-label="Cerrar">✕</button><div class="info-kicker" id="artistHubKicker">🎭 Artista UADAV</div><img id="artistHubMedia" class="info-media" src="" alt=""><h2 id="artistHubTitle">Artista</h2><p id="artistHubBio">Perfil artístico</p><div id="artistHubBadges" class="radio-hub-socials"></div><div id="artistHubActions" class="hero-actions"></div></div></div>
+
   <div id="infoOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarInfoOverlay()">
     <div class="info-card" role="dialog" aria-modal="true">
       <button class="info-close" type="button" onclick="cerrarInfoOverlay()" aria-label="Cerrar">✕</button>
@@ -816,7 +821,7 @@ html,body{overscroll-behavior-x:none;}
       if(type==='video'&&h.action_id)return reproducirVideo(h.action_id,h.title,h.description,{id:h.action_id,titulo:h.title,descripcion:h.description,thumbnail:h.image,categoria:h.category||'Destacado'});
       if(type==='live'){const s=currentLiveCache.find(x=>String(x.id)===String(h.action_id)||String(x.youtube_id)===String(h.action_id));if(s)return reproducirSenal(s)}
       if(type==='radio'){const r=currentRadiosCache.find(x=>String(x.id)===String(h.action_id)||String(x.nombre)===String(h.action_id));if(r){abrirRadioHub(r);return}}
-      if(type==='section'&&h.action_target)return irASeccion(h.action_target);
+      if(type==='section'&&(h.action_id||h.action_target))return irASeccion(h.action_id||h.action_target);
       if(type==='url'&&h.action_url)window.open(h.action_url,'_blank','noopener');
     }
 
@@ -1481,6 +1486,9 @@ html,body{overscroll-behavior-x:none;}
       const discover=$('radioHubNowDiscover');
       if(discover)discover.onclick=()=>descubrirTemaRadio(r,{title,artist,artwork:logo});
       const chat=$('radioHubChat');if(chat)chat.onclick=()=>abrirChat('radio:'+obtenerRadioHubId(r),r.nombre||'Radio UADAVSTREAM','Chat y pedidos de la emisora');
+      const donate=$('radioHubDonate');const donationUrl=String(r.donation_url||r.donacion_url||'').trim();const canDonate=r.afiliado_verificado===true&&r.donacion_activa===true&&/^https?:\/\//i.test(donationUrl);if(donate){donate.hidden=!canDonate;donate.onclick=()=>{if(canDonate)window.open(donationUrl,'_blank','noopener')}}
+      const metaBox=$('radioHubMeta');const metaValues=[r.programa,r.locutor,r.horario,r.descripcion].filter(Boolean);if(metaBox){metaBox.hidden=!metaValues.length;if($('radioHubProgram'))$('radioHubProgram').textContent=r.programa||'—';if($('radioHubHost'))$('radioHubHost').textContent=r.locutor||'—';if($('radioHubSchedule'))$('radioHubSchedule').textContent=r.horario||'—';if($('radioHubDescription'))$('radioHubDescription').textContent=r.descripcion||'—'}
+      const socials=$('radioHubSocials');if(socials){const links=Object.assign({},r.redes||{},{web:r.web});socials.innerHTML=Object.entries(links).filter(([k,v])=>/^https?:\/\//i.test(String(v||''))).map(([k,v])=>`<a href="${safe(v)}" target="_blank" rel="noopener">${safe(k==='web'?'Web':k)}</a>`).join('')}
       const share=$('radioHubShare');
       if(share)share.onclick=async()=>{
         const shareUrl=location.origin+location.pathname+'?radio='+encodeURIComponent(obtenerRadioHubId(r));
@@ -1533,12 +1541,25 @@ html,body{overscroll-behavior-x:none;}
     async function cargarArtistas(){
       let data=[];try{data=await api('artistas')}catch{}
       if(!Array.isArray(data))data=[];
-      allArtists=data.filter(a=>a&&((a.estado||'aprobado')==='aprobado'||a.aprobado===true));
-      const row=$('artists'),rail=$('artistsRail');
-      if(!allArtists.length){if(row)row.hidden=true;if(rail)rail.innerHTML='';return}
-      if(row)row.hidden=false;
-      renderRail('artistsRail',allArtists.slice(0,18),true);
+      try{const secs=await api('secciones');if(Array.isArray(secs)){for(const sec of secs){for(const item of (sec?.items||[])){if(item?.tipo==='artista'||item?.tipo==='artista_afiliado')data.push({...item,id:item.id||item.token||('artist-'+Math.random())})}}}}catch{}
+      const uniq=new Map();data.forEach(a=>{const key=String(a.id||a.token||a.nombre||'');if(key&&!uniq.has(key))uniq.set(key,a)});
+      allArtists=[...uniq.values()].filter(a=>a&&((a.estado||'aprobado')==='aprobado'||a.aprobado===true||a.afiliado_verificado===true));
+      const row=$('artists'),rail=$('artistsRail');if(!allArtists.length){if(row)row.hidden=true;if(rail)rail.innerHTML='';return}if(row)row.hidden=false;
+      rail.innerHTML=allArtists.slice(0,18).map((a,i)=>{const photo=safe(a.foto||a.imagen||a.thumbnail||FALLBACK_THUMB),name=safe(a.nombre||a.nombre_artistico||'Artista UADAV'),rubro=safe(a.rubro||'Artista de variedades'),verified=a.afiliado_verificado===true||a.sindicalizado===true;return `<article class="artist-card-v28" data-artist-index="${i}"><img src="${photo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="artist-card-name">${name}</div><div class="artist-card-rubro">${rubro}</div>${verified?'<div class="artist-card-benefit">✓ Afiliado UADAV · beneficios activos</div>':''}</article>`}).join('');
+      rail.querySelectorAll('.artist-card-v28').forEach((el,i)=>el.addEventListener('click',()=>abrirArtistHub(allArtists[i])));
     }
+    function abrirArtistHub(a){
+      if(!a)return;const overlay=$('artistHubOverlay');if(!overlay)return;const name=a.nombre||a.nombre_artistico||'Artista UADAV',photo=a.foto||a.imagen||a.thumbnail||FALLBACK_THUMB,verified=a.afiliado_verificado===true||a.sindicalizado===true;
+      $('artistHubKicker').textContent=verified?'✓ ARTISTA AFILIADO UADAV':'🎭 ARTISTA UADAVSTREAM';$('artistHubTitle').textContent=name;$('artistHubBio').textContent=a.bio||a.descripcion||'Perfil artístico en UADAVSTREAM.';const media=$('artistHubMedia');media.src=photo;media.classList.add('has-media');
+      const badges=$('artistHubBadges');badges.innerHTML='';if(a.rubro)badges.innerHTML+=`<span class="artist-verified-badge">${safe(a.rubro)}</span>`;if(verified)badges.innerHTML+='<span class="artist-verified-badge">✓ Afiliado verificado</span>';
+      const actions=$('artistHubActions');actions.innerHTML='';const live=a.live_url||a.youtube_live_url||a.transmision_url||'';
+      if(verified&&live){const b=document.createElement('button');b.className='btn btn-primary';b.innerHTML='<i class="fa-solid fa-tower-broadcast"></i> Ver transmisión';b.onclick=()=>{const yt=normalizarIdYoutube(live);if(yt)reproducirVideo(yt,name+' · En vivo',a.bio||'Transmisión del artista',{id:yt,categoria:'Artista en vivo',isLiveSignal:true});else window.open(live,'_blank','noopener')};actions.appendChild(b)}
+      if(verified&&a.donation_url){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='💛 Apoyar al artista';b.onclick=()=>window.open(a.donation_url,'_blank','noopener');actions.appendChild(b)}
+      if(a.booking_url||a.contacto||a.whatsapp){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='📅 Contratar';b.onclick=()=>window.open(a.booking_url||a.contacto||('https://wa.me/'+String(a.whatsapp||'').replace(/\D/g,'')),'_blank','noopener');actions.appendChild(b)}
+      if(verified){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='💬 Chat';b.onclick=()=>abrirChat('artist:'+String(a.id||a.token||name),name,'Chat del artista');actions.appendChild(b)}
+      overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
+    }
+    function cerrarArtistHub(){const overlay=$('artistHubOverlay');if(overlay){overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true')}if(!$('videoModal')?.classList.contains('active')&&!$('radioHubOverlay')?.classList.contains('active'))document.body.style.overflow=''}
 
     function normalizarIdYoutube(valor){
       const s=String(valor||'').trim();
@@ -1567,30 +1588,12 @@ html,body{overscroll-behavior-x:none;}
     }
 
     async function cargarLive(){
-      let data=[];
-      try{data=await api('senales')}catch{}
-      if(!Array.isArray(data)||!data.length){try{data=await api('senales_oficiales')}catch{data=[]}}
-      if(!Array.isArray(data))data=[];
-      currentLiveCache=data;
-      const live=data.filter(x=>x&&x.activa!==false&&String(x.url||x.stream_url||x.youtube_id||'').trim()).slice(0,18).map((x,i)=>{
-        const yt=normalizarIdYoutube(x.youtube_id||x.url||x.stream_url);
-        const isYt=!!yt || String(x.tipo||'').toLowerCase()==='youtube';
-        return {
-          ...x,
-          id:yt||('signal-'+String(x.id||i)),
-          youtube_id:yt||x.youtube_id||'',
-          titulo:x.nombre||x.titulo||'Señal en vivo',
-          descripcion:x.descripcion||x.subtitulo_banner||'Transmisión en vivo',
-          thumbnail:yt?`https://i.ytimg.com/vi/${encodeURIComponent(yt)}/hqdefault.jpg`:(x.imagen||x.thumbnail||FALLBACK_THUMB),
-          en_vivo:true,
-          isLiveSignal:true,
-          liveUrl:String(x.url||x.stream_url||'').trim(),
-          tipo:String(x.tipo||'').toLowerCase() || (isYt?'youtube':'generic')
-        };
-      });
-      const row=$('liveRow');if(row)row.hidden=!live.length;
-      const link=row?.querySelector('.row-more');if(link)link.hidden=!live.length;
-      if(live.length)renderRail('liveRail',live);else if($('liveRail'))$('liveRail').innerHTML='';
+      let data=[];try{data=await api('senales')}catch{}if(!Array.isArray(data)||!data.length){try{data=await api('senales_oficiales')}catch{data=[]}}if(!Array.isArray(data))data=[];
+      const live=data.filter(x=>x&&x.activa!==false&&String(x.url||x.stream_url||x.youtube_id||'').trim()).slice(0,18).map((x,i)=>{const yt=normalizarIdYoutube(x.youtube_id||x.url||x.stream_url);return {...x,id:yt||('signal-'+String(x.id||i)),youtube_id:yt||x.youtube_id||'',titulo:x.nombre||x.titulo||'Señal en vivo',descripcion:x.descripcion||x.subtitulo_banner||'Transmisión en vivo',thumbnail: x.thumbnail||x.imagen||(yt?`https://i.ytimg.com/vi/${encodeURIComponent(yt)}/hqdefault.jpg`:FALLBACK_THUMB),en_vivo:true,isLiveSignal:true,liveUrl:String(x.url||x.stream_url||'').trim(),tipo:String(x.tipo||'').toLowerCase()||'generic'}});
+      currentLiveCache=live;const row=$('liveRow');if(row)row.hidden=!live.length;const link=row?.querySelector('.row-more');if(link)link.hidden=!live.length;const rail=$('liveRail');if(!rail)return;
+      if(!live.length){rail.innerHTML='';return}
+      rail.innerHTML=live.map((s,i)=>`<article class="card live-card-v28" data-live-index="${i}" style="cursor:pointer"><div class="card-media"><img src="${safe(s.thumbnail)}" alt="${safe(s.titulo)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><span class="live-badge">● EN VIVO</span></div><div class="card-title">${safe(s.titulo)}</div><div class="card-desc">${safe(s.descripcion)}</div></article>`).join('');
+      rail.querySelectorAll('.live-card-v28').forEach((el,i)=>el.addEventListener('click',()=>reproducirSenal(live[i])));
     }
 
     async function reproducirSenal(s){
