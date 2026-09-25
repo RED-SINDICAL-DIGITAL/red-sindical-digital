@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UADAVSTREAM — Centro de Control V23</title>
+  <title>UADAVSTREAM — Centro de Control V27</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -451,6 +451,34 @@
   <!-- PANEL DE CONTENIDO (oculto hasta conectar) -->
   <!-- ============================================================ -->
   <div id="panelContent" class="hidden">
+
+    <section class="u27-dashboard" id="u27Dashboard">
+      <div class="u27-hero">
+        <div><div class="u27-kicker">UADAVSTREAM · Centro de control</div><div class="u27-title">Visión general de la plataforma</div><div class="u27-sub">Estadísticas, analítica, moderación y derechos en un mismo lugar.</div></div>
+        <div class="u27-status" id="u27ApiBadge">API · comprobando…</div>
+      </div>
+      <div class="u27-grid">
+        <div class="u27-card"><div class="u27-label">Visitas</div><div class="u27-value" id="u27Visits">—</div><div class="u27-note">Últimos 7 días</div></div>
+        <div class="u27-card"><div class="u27-label">Reproducciones</div><div class="u27-value" id="u27Plays">—</div><div class="u27-note">Videos / Shorts / Live</div></div>
+        <div class="u27-card"><div class="u27-label">Radios</div><div class="u27-value" id="u27RadioPlays">—</div><div class="u27-note">Sintonizaciones</div></div>
+        <div class="u27-card"><div class="u27-label">Perfiles</div><div class="u27-value" id="u27ArtistViews">—</div><div class="u27-note">Vistas de artistas</div></div>
+        <div class="u27-card"><div class="u27-label">Pedidos / chat</div><div class="u27-value" id="u27Chat">—</div><div class="u27-note">Interacciones registradas</div></div>
+      </div>
+      <div class="u27-actions">
+        <div class="u27-panel">
+          <h3>📈 Google Analytics 4</h3>
+          <div class="u27-form"><div><label class="u27-label">ID de medición</label><input id="u27GaId" placeholder="G-XXXXXXXXXX" autocomplete="off"></div><label class="u27-label" style="display:flex;gap:7px;align-items:center;padding-bottom:10px"><input id="u27GaEnabled" type="checkbox" style="width:auto"> Activar</label><button class="btn btn-primary" type="button" onclick="u27SaveAnalytics()">Guardar</button></div>
+          <div class="u27-note" style="margin-top:8px">La etiqueta se activará desde la Home cuando exista un ID válido y el consentimiento/configuración lo permita.</div>
+        </div>
+        <div class="u27-panel">
+          <h3>⚖️ Derechos y exportación</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary" type="button" onclick="u27ExportRights()">Exportar SADAIC / AADI-CAPIF</button><button class="btn btn-secondary" type="button" onclick="u27LoadAudit()">Ver auditoría</button></div>
+          <div class="u27-note" style="margin-top:8px">Registra metadatos declarados de reproducciones; no sustituye liquidaciones ni validaciones legales externas.</div>
+        </div>
+      </div>
+      <div class="u27-panel"><h3>🛡️ Moderación y sanciones</h3><div class="u27-form"><div><label class="u27-label">ID / token del artista</label><input id="u27SanArtist" placeholder="artista-001"></div><select id="u27SanState"><option value="observado">Observado</option><option value="suspendido">Suspendido</option><option value="bloqueado">Bloqueado</option><option value="levantado">Levantar sanción</option></select><button class="btn btn-danger" type="button" onclick="u27SanctionArtist()">Aplicar</button></div><div class="u27-note">Toda acción queda registrada en auditoría con motivo, fecha y administrador.</div><div id="u27AuditPreview" style="margin-top:12px"></div></div>
+    </section>
+
 
 <details id="integrationDiagnostics" open>
   <summary><i class="fa-solid fa-heart-pulse"></i> Diagnóstico de integración UADAVSTREAM</summary>
@@ -1092,6 +1120,7 @@ async function conectar(){
     document.getElementById('btnLogout').classList.remove('hidden');
     mostrarToast(`Conectado · ${data.role==='admin_provincial'?'Administrador provincial':'Administrador nacional'}`,'success');
     await cargarDatos();
+    await u27LoadDashboard();
   }catch(e){
     mostrarToast('No se pudo conectar con UADAVSTREAM','error');
   }
@@ -2573,6 +2602,38 @@ async function ejecutarDiagnostico(){
       detail.textContent=e.message||'Error de red/CORS';
     }
   }
+}
+
+
+// ============================================================
+// UADAVSTREAM V27 — DASHBOARD, ANALYTICS Y AUDITORIA
+// ============================================================
+async function u27LoadDashboard(){
+  try{
+    const [health,stats,ga]=await Promise.all([
+      fetch(API_URL+'health?_='+Date.now(),{mode:'cors',credentials:'omit'}).then(r=>r.json()),
+      fetch(API_URL+'admin/stats?days=7&_='+Date.now(),{headers:{Authorization:'Bearer '+ADMIN_KEY},mode:'cors',credentials:'omit'}).then(r=>r.json()),
+      fetch(API_URL+'analytics/config?_='+Date.now(),{mode:'cors',credentials:'omit'}).then(r=>r.json())
+    ]);
+    const badge=document.getElementById('u27ApiBadge'); if(badge)badge.textContent=`API · ${health.version||'OK'} · KV ${health.kv?'OK':'NO'}`;
+    const t=stats?.totals||{}; document.getElementById('u27Visits').textContent=Number(t.page_view||t.visits||0).toLocaleString('es-AR'); document.getElementById('u27Plays').textContent=Number(t.media_play||t.video_start||0).toLocaleString('es-AR'); document.getElementById('u27RadioPlays').textContent=Number(t.radio_play||0).toLocaleString('es-AR'); document.getElementById('u27ArtistViews').textContent=Number(t.artist_view||0).toLocaleString('es-AR'); document.getElementById('u27Chat').textContent=Number(t.chat_send||0).toLocaleString('es-AR');
+    document.getElementById('u27GaId').value=ga?.measurement_id||''; document.getElementById('u27GaEnabled').checked=ga?.enabled===true;
+  }catch(e){ const badge=document.getElementById('u27ApiBadge'); if(badge)badge.textContent='API · sin datos'; }
+}
+async function u27SaveAnalytics(){
+  const measurement_id=(document.getElementById('u27GaId')?.value||'').trim().toUpperCase(); const enabled=document.getElementById('u27GaEnabled')?.checked===true;
+  const res=await fetch(API_URL+'analytics/config',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY},body:JSON.stringify({enabled,measurement_id,consent_required:true})}); const d=await res.json().catch(()=>({})); mostrarToast(res.ok&&d.success?'Google Analytics guardado':'No se pudo guardar Google Analytics',res.ok&&d.success?'success':'error');
+}
+async function u27SanctionArtist(){
+  const artist_id=(document.getElementById('u27SanArtist')?.value||'').trim(); const estado=document.getElementById('u27SanState')?.value||'observado'; if(!artist_id){mostrarToast('Ingresá el ID o token del artista','error');return}
+  const motivo=prompt('Motivo de la acción:',''); if(motivo===null)return;
+  const res=await fetch(API_URL+'admin/artist-sanctions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY},body:JSON.stringify({artist_id,estado,motivo})}); const d=await res.json().catch(()=>({})); mostrarToast(res.ok&&d.success?'Acción registrada':'No se pudo registrar la acción',res.ok&&d.success?'success':'error');
+}
+async function u27ExportRights(){window.open(API_URL+'admin/rights-export?month='+new Date().toISOString().slice(0,7),'_blank');}
+async function u27LoadAudit(){
+  const res=await fetch(API_URL+'admin/audit-log?days=7',{headers:{Authorization:'Bearer '+ADMIN_KEY}}); const items=await res.json().catch(()=>[]); const box=document.getElementById('u27AuditPreview'); if(!box)return;
+  if(!Array.isArray(items)||!items.length){box.innerHTML='<div class="u27-muted">No hay acciones registradas.</div>';return}
+  box.innerHTML='<table class="u27-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th></tr></thead><tbody>'+items.slice(0,12).map(x=>`<tr><td>${new Date(x.fecha||Date.now()).toLocaleString('es-AR')}</td><td>${String(x.tipo||'')}</td><td>${String(JSON.stringify(x.detalle||{})).slice(0,220)}</td></tr>`).join('')+'</tbody></table>';
 }
 </script>
 </body>
