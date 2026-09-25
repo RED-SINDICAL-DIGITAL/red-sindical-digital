@@ -482,6 +482,10 @@
             <input id="nuevoSecIcono" placeholder="fa-guitar">
           </div>
           <div class="form-group">
+            <label>Imagen/Logo de sección URL</label>
+            <input id="nuevoSecIconUrl" placeholder="https://.../icono-o-logo.png">
+          </div>
+          <div class="form-group">
             <label>Query Auto</label>
             <input id="nuevoSecQuery" placeholder="rock argentino">
           </div>
@@ -642,7 +646,24 @@
               <input type="color" id="colorTexto" value="#94a3b8">
             </div>
           </div>
-          <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
+          
+        <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-top:16px;">
+          <h4 style="color:var(--text-primary);font-weight:800;margin-bottom:10px;">🎬 Spotlight / Hero dinámico</h4>
+          <div class="form-row">
+            <div class="form-group"><label>Activar Spotlight</label><select id="heroSpotActive"><option value="true">Sí</option><option value="false">No</option></select></div>
+            <div class="form-group"><label>Categoría</label><input id="heroSpotCategory" placeholder="En vivo · Circo · Artista · Película"></div>
+            <div class="form-group"><label>Kicker</label><input id="heroSpotKicker" placeholder="UADAVSTREAM recomienda"></div>
+            <div class="form-group"><label>Título</label><input id="heroSpotTitle" placeholder="Nombre del contenido"></div>
+            <div class="form-group" style="grid-column:1/-1"><label>Descripción</label><textarea id="heroSpotDescription" rows="3" placeholder="Descripción breve para la portada"></textarea></div>
+            <div class="form-group"><label>Imagen de fondo URL</label><input id="heroSpotImage" placeholder="https://..."></div>
+            <div class="form-group"><label>Icono/imagen de categoría URL</label><input id="heroSpotIcon" placeholder="https://..."></div>
+            <div class="form-group"><label>Acción principal</label><select id="heroSpotActionType"><option value="video">Video</option><option value="live">Señal en vivo</option><option value="radio">Radio</option><option value="section">Sección</option><option value="url">URL externa</option></select></div>
+            <div class="form-group"><label>ID / destino</label><input id="heroSpotActionId" placeholder="YouTube ID, ID señal, ID radio o target de sección"></div>
+            <div class="form-group"><label>URL externa (si corresponde)</label><input id="heroSpotActionUrl" placeholder="https://..."></div>
+          </div>
+          <small style="display:block;color:var(--text-secondary);margin-top:8px;line-height:1.45">Este bloque funciona como portada editorial de la plataforma. Puede representar un video, una señal en vivo, una radio, un artista, una obra o una sección. No reemplaza las filas: las organiza y les da una entrada visual.</small>
+        </div>
+<div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
             <button onclick="guardarPersonalizacion()" class="btn btn-primary">💾 Guardar Personalización</button>
             <button onclick="cargarPersonalizacion()" class="btn btn-secondary">🔄 Recargar Configuración</button>
           </div>
@@ -1259,6 +1280,19 @@ async function cargarPersonalizacion() {
       document.getElementById('landingSubtitulo').value = config.landing.subtitulo || '';
       document.getElementById('landingFondo').value = config.landing.imagen_fondo || '';
     }
+    if (config.hero_spotlight) {
+      const h=config.hero_spotlight;
+      document.getElementById('heroSpotActive').value=String(h.active!==false);
+      document.getElementById('heroSpotCategory').value=h.category||'';
+      document.getElementById('heroSpotKicker').value=h.kicker||'';
+      document.getElementById('heroSpotTitle').value=h.title||'';
+      document.getElementById('heroSpotDescription').value=h.description||'';
+      document.getElementById('heroSpotImage').value=h.image||'';
+      document.getElementById('heroSpotIcon').value=h.icon_url||'';
+      document.getElementById('heroSpotActionType').value=h.action_type||'video';
+      document.getElementById('heroSpotActionId').value=h.action_id||'';
+      document.getElementById('heroSpotActionUrl').value=h.action_url||'';
+    }
 
     const legacy = config.sitio_en_construccion ? 'mantenimiento' : 'normal';
     const modo = estado.modo || legacy || 'normal';
@@ -1291,6 +1325,18 @@ async function guardarPersonalizacion() {
       titulo: document.getElementById('landingTitulo').value,
       subtitulo: document.getElementById('landingSubtitulo').value,
       imagen_fondo: document.getElementById('landingFondo').value,
+    },
+    hero_spotlight: {
+      active: document.getElementById('heroSpotActive').value === 'true',
+      category: document.getElementById('heroSpotCategory').value.trim(),
+      kicker: document.getElementById('heroSpotKicker').value.trim(),
+      title: document.getElementById('heroSpotTitle').value.trim(),
+      description: document.getElementById('heroSpotDescription').value.trim(),
+      image: document.getElementById('heroSpotImage').value.trim(),
+      icon_url: document.getElementById('heroSpotIcon').value.trim(),
+      action_type: document.getElementById('heroSpotActionType').value,
+      action_id: document.getElementById('heroSpotActionId').value.trim(),
+      action_url: document.getElementById('heroSpotActionUrl').value.trim()
     }
   };
   const estado = {
@@ -1382,6 +1428,7 @@ function renderSecciones() {
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:12px; margin-top:12px;">
           <div class="form-group"><label>Nombre</label><input value="${sec.nombre}" oninput="seccionesData[${index}].nombre = this.value"></div>
           <div class="form-group"><label>Ícono</label><input value="${sec.icono || 'fa-circle'}" oninput="seccionesData[${index}].icono = this.value"></div>
+          <div class="form-group"><label>Imagen/Logo URL</label><input value="${sec.icon_url || ''}" oninput="seccionesData[${index}].icon_url = this.value"></div>
           <div class="form-group"><label>Tipo</label>
             <select onchange="seccionesData[${index}].tipo_contenido = this.value; actualizarFormularioYLista();">
               <option value="videos" ${sec.tipo_contenido === 'videos' || !sec.tipo_contenido ? 'selected' : ''}>Videos</option>
@@ -1432,6 +1479,7 @@ function agregarNuevaSeccion() {
     id,
     nombre,
     icono: document.getElementById('nuevoSecIcono').value || 'fa-circle',
+    icon_url: document.getElementById('nuevoSecIconUrl').value || '',
     activa: true,
     tipo_contenido: 'videos',
     modo_visual: 'videos',
@@ -1771,16 +1819,26 @@ function renderSenales() {
 function renderRadios() {
   const l=document.getElementById('radiosList'); l.innerHTML='';
   radiosData.forEach((r,i)=>{
+    const socials=r.redes||{};
     l.innerHTML += `
       <div class="card">
         <div class="card-header">
           <div><h4 style="font-weight:700;color:var(--text-primary);">${r.nombre||'Radio'}</h4><p style="color:var(--text-secondary);font-size:.8rem;">${r.stream_url||r.url||''}</p></div>
           <label style="font-size:.72rem;color:var(--text-secondary);"><input type="checkbox" ${r.activa!==false?'checked':''} onchange="radiosData[${i}].activa=this.checked;renderRadios();"> Visible</label>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px;">
           <div class="form-group"><label>Logo URL</label><input value="${r.logo||r.imagen||''}" oninput="radiosData[${i}].logo=this.value"></div>
-          <div class="form-group"><label>Metadata URL (opcional)</label><input value="${r.metadata_url||''}" placeholder="Zeno: se detecta automáticamente" oninput="radiosData[${i}].metadata_url=this.value"></div>
-          <div style="grid-column:1/-1" class="radio-meta-help">Para Zeno.FM no hace falta cargarla: UADAVSTREAM intenta derivarla del stream y mostrar canción/autor. Para otra plataforma podés indicar acá una URL JSON/SSE de metadata.</div>
+          <div class="form-group"><label>Metadata URL</label><input value="${r.metadata_url||''}" placeholder="Zeno se detecta automáticamente" oninput="radiosData[${i}].metadata_url=this.value"></div>
+          <div class="form-group"><label>Programa actual</label><input value="${r.programa||''}" placeholder="Buenas canciones" oninput="radiosData[${i}].programa=this.value"></div>
+          <div class="form-group"><label>Locutor / Conductor</label><input value="${r.locutor||''}" placeholder="Nombre" oninput="radiosData[${i}].locutor=this.value"></div>
+          <div class="form-group"><label>Horario</label><input value="${r.horario||''}" placeholder="Lun a Vie · 18 a 22 h" oninput="radiosData[${i}].horario=this.value"></div>
+          <div class="form-group"><label>Web</label><input value="${r.web||''}" placeholder="https://..." oninput="radiosData[${i}].web=this.value"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>Descripción</label><textarea rows="2" oninput="radiosData[${i}].descripcion=this.value">${r.descripcion||''}</textarea></div>
+          <div class="form-group"><label>Instagram</label><input value="${socials.instagram||r.instagram||''}" oninput="radiosData[${i}].redes={...(radiosData[${i}].redes||{}),instagram:this.value}"></div>
+          <div class="form-group"><label>Facebook</label><input value="${socials.facebook||r.facebook||''}" oninput="radiosData[${i}].redes={...(radiosData[${i}].redes||{}),facebook:this.value}"></div>
+          <div class="form-group"><label>X</label><input value="${socials.x||r.x||''}" oninput="radiosData[${i}].redes={...(radiosData[${i}].redes||{}),x:this.value}"></div>
+          <div class="form-group"><label>TikTok</label><input value="${socials.tiktok||r.tiktok||''}" oninput="radiosData[${i}].redes={...(radiosData[${i}].redes||{}),tiktok:this.value}"></div>
+          <div class="form-group" style="grid-column:1/-1"><label>WhatsApp</label><input value="${socials.whatsapp||r.whatsapp||''}" oninput="radiosData[${i}].redes={...(radiosData[${i}].redes||{}),whatsapp:this.value}"></div>
         </div>
         <div style="margin-top:10px;text-align:right;"><button onclick="radiosData.splice(${i},1);renderRadios();" class="btn btn-danger btn-sm">Eliminar</button></div>
       </div>`;
@@ -1793,7 +1851,7 @@ function renderRadios() {
         <div class="form-group" style="grid-column:1/-1"><label>Logo URL</label><input id="newRadioLogo" placeholder="https://..."></div>
         <div class="form-group" style="grid-column:1/-1"><label>Metadata URL (opcional)</label><input id="newRadioMetadata" placeholder="Zeno se detecta automáticamente"></div>
       </div>
-      <button onclick="radiosData.push({id:'r'+Date.now(),nombre:document.getElementById('newRadioNombre').value,stream_url:document.getElementById('newRadioUrl').value,logo:document.getElementById('newRadioLogo').value,metadata_url:document.getElementById('newRadioMetadata').value,activa:true});renderRadios();" class="btn btn-primary w-full">Agregar Radio</button>
+      <button onclick="radiosData.push({id:'r'+Date.now(),nombre:document.getElementById('newRadioNombre').value,stream_url:document.getElementById('newRadioUrl').value,logo:document.getElementById('newRadioLogo').value,metadata_url:document.getElementById('newRadioMetadata').value,activa:true,programa:'',locutor:'',horario:'',descripcion:'',web:'',redes:{}});renderRadios();" class="btn btn-primary w-full">Agregar Radio</button>
     </div>`;
 }
 
