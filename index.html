@@ -430,6 +430,39 @@ html,body{overscroll-behavior-x:none;}
 @media(max-width:760px){.radio-hub-overlay{padding:10px;align-items:flex-end}.radio-hub{width:100%;max-height:92vh;border-radius:22px 22px 0 0}.radio-hub-hero{grid-template-columns:96px minmax(0,1fr);gap:14px;padding:22px 18px 18px}.radio-hub-logo{width:96px;height:96px;border-radius:14px}.radio-hub-title{font-size:25px}.radio-hub-content{padding:4px 18px 22px}.radio-hub-history{grid-template-columns:1fr}.radio-hub-now{grid-template-columns:52px minmax(0,1fr) auto}.radio-hub-now-art{width:52px;height:52px}}
 </style>
 
+
+<style id="uadav-v27">
+/* V27 — modular hero, contextual chat, safer navigation, icon/image sections */
+:root{--uadav-header-offset:88px}
+.hero{min-height:clamp(430px,68vh,700px)!important;display:flex!important;align-items:flex-end!important}
+.hero-content{max-width:min(760px,92vw)!important;padding-bottom:clamp(44px,8vh,90px)!important;position:relative;z-index:2}
+.hero-badge-media{display:flex;align-items:center;gap:10px;margin-bottom:12px;color:rgba(255,255,255,.82);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.hero-badge-media img{width:34px;height:34px;object-fit:cover;border-radius:9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);display:none}
+.hero-badge-media.has-image img{display:block}
+.hero-badge-star{width:34px;height:34px;display:grid;place-items:center;border-radius:9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:var(--accent);font-size:15px}
+.hero .hero-title-kicker{font-size:11px;color:rgba(255,255,255,.65);letter-spacing:.14em;text-transform:uppercase;margin-bottom:7px}
+.hero .hero-description{max-width:760px;line-height:1.58}
+.hero .hero-actions .btn{min-width:128px}
+.hero .hero-more{border:0;cursor:pointer}
+.section-icon-image{width:22px;height:22px;object-fit:cover;border-radius:6px;vertical-align:-5px;margin-right:7px;box-shadow:0 2px 10px rgba(0,0,0,.24)}
+.section-icon-image + i{display:none!important}
+.dynamic-sections-nav a{white-space:nowrap}
+.chat-overlay{position:fixed;inset:0;z-index:560;background:rgba(0,0,0,.66);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;align-items:flex-end;justify-content:flex-end;padding:18px}
+.chat-overlay.active{display:flex}
+.chat-panel{width:min(440px,96vw);height:min(680px,86vh);background:linear-gradient(160deg,#15161b,#0a0a0c);border:1px solid rgba(255,255,255,.11);border-radius:22px;box-shadow:0 30px 90px rgba(0,0,0,.72);display:flex;flex-direction:column;overflow:hidden}
+.chat-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.chat-head-title{font-weight:900}.chat-head-sub{font-size:11px;color:var(--muted);margin-top:2px}.chat-close{border:0;background:rgba(255,255,255,.07);color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer}
+.chat-messages{flex:1;overflow:auto;padding:14px;display:grid;align-content:start;gap:9px}
+.chat-msg{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.055)}
+.chat-msg.is-request{background:rgba(0,229,255,.06);border-color:rgba(0,229,255,.12)}
+.chat-msg-meta{font-size:10px;color:var(--muted);margin-bottom:4px}.chat-msg-text{font-size:13px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.chat-footer{padding:12px;border-top:1px solid rgba(255,255,255,.08);display:grid;gap:8px}.chat-row{display:grid;grid-template-columns:110px 1fr;gap:8px}.chat-footer input,.chat-footer textarea,.chat-footer select{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);color:#fff;border-radius:10px;padding:10px;font:inherit}.chat-footer textarea{min-height:68px;resize:vertical}.chat-send{display:flex;justify-content:flex-end;gap:8px}.chat-status{font-size:11px;color:var(--muted);min-height:16px}
+.radio-hub-chat-btn,.live-chat-btn{margin-top:12px!important}
+.radio-hub-meta{margin-top:12px;padding:12px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}
+.radio-hub-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.radio-hub-meta-item{font-size:11px;color:var(--muted)}.radio-hub-meta-item strong{display:block;color:#fff;font-size:12px;margin-bottom:2px}.radio-hub-socials{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}.radio-hub-socials a{font-size:11px;padding:7px 9px;border-radius:999px;background:rgba(255,255,255,.05);color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.08)}
+.info-overlay{position:fixed;inset:0;z-index:540;background:rgba(0,0,0,.70);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;padding:18px}.info-overlay.active{display:flex}.info-card{width:min(760px,96vw);max-height:88vh;overflow:auto;border-radius:22px;background:linear-gradient(145deg,#15161a,#0b0b0d);border:1px solid rgba(255,255,255,.10);box-shadow:0 30px 100px rgba(0,0,0,.72);padding:24px;position:relative}.info-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.3);color:#fff;cursor:pointer}.info-kicker{font-size:11px;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:.12em}.info-card h2{font-size:clamp(26px,4vw,44px);margin:8px 0}.info-card p{color:rgba(255,255,255,.76);line-height:1.65;white-space:pre-wrap}.info-media{width:100%;aspect-ratio:16/7;object-fit:cover;border-radius:16px;background:#111;margin:10px 0 16px;display:none}.info-media.has-media{display:block}
+@media(max-width:760px){:root{--uadav-header-offset:74px}.hero{min-height:64vh!important}.hero-content{padding-bottom:36px!important}.chat-overlay{padding:0;align-items:flex-end}.chat-panel{width:100%;height:88vh;border-radius:22px 22px 0 0}.radio-hub-meta-grid{grid-template-columns:1fr}.info-card{width:100%;border-radius:18px}.info-overlay{padding:10px;align-items:flex-end}.info-card{max-height:92vh;border-radius:20px 20px 0 0}}
+</style>
 </head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
@@ -441,7 +474,7 @@ html,body{overscroll-behavior-x:none;}
     </div>
   </div>
   <header class="nav" id="nav">
-    <a class="brand" href="#top" aria-label="UADAVSTREAM inicio"><span class="brand-mark"><i class="fa-solid fa-play"></i></span><span id="brandName">UADAVSTREAM</span></a>
+    <a class="brand" href="#top" aria-label="UADAVSTREAM inicio"><span class="brand-mark"><img id="brandLogo" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px"><i id="brandLogoFallback" class="fa-solid fa-play"></i></span><span id="brandName">UADAVSTREAM</span></a>
     <nav class="nav-links" aria-label="Navegación principal">
       <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#radiosRow" id="navRadiosLink" onclick="irASeccion('radiosRow');return false">Radios</a><a href="#artists" id="navArtistsLink" onclick="irASeccion('artists');return false">Artistas</a><a href="#en-vivo" id="navLiveLink" onclick="irASeccion('en-vivo');return false">En vivo</a><a href="#cartelera" id="navCarteleraLink" onclick="irASeccion('cartelera');return false">Cartelera</a><span id="dynamicSectionsNav" class="dynamic-sections-nav" aria-label="Secciones"></span>
     </nav>
@@ -456,12 +489,13 @@ html,body{overscroll-behavior-x:none;}
   <main id="top">
     <section class="hero" id="heroSection" data-visibility-key="hero">
       <div class="hero-content">
-        <div class="eyebrow"><span class="dot"></span><span id="heroEyebrow">UADAVSTREAM</span></div>
+        <div class="hero-badge-media" id="heroBadgeMedia"><span class="hero-badge-star" id="heroBadgeStar">★</span><img id="heroBadgeIcon" src="" alt=""><span id="heroCategoria">UADAVSTREAM</span></div>
+        <div class="hero-title-kicker" id="heroKicker">UADAVSTREAM</div>
         <h1 id="heroTitulo">El arte escénico al alcance de todos.</h1>
-        <p id="heroSubtitulo">Descubrí artistas, videos, espectáculos, transmisiones y mucho más en un solo lugar.</p>
+        <p id="heroSubtitulo" class="hero-description">Descubrí artistas, videos, espectáculos, transmisiones y mucho más en un solo lugar.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#contenido"><i class="fa-solid fa-play"></i> Explorar ahora</a>
-          <a class="btn btn-secondary" href="#artistas"><i class="fa-solid fa-users"></i> Descubrir artistas</a>
+          <button class="btn btn-primary" id="heroPlayBtn" type="button"><i class="fa-solid fa-play"></i> Reproducir</button>
+          <button class="btn btn-secondary hero-more" id="heroMoreBtn" type="button"><i class="fa-solid fa-circle-info"></i> Más información</button>
         </div>
       </div>
       <div class="hero-fade"></div>
@@ -499,7 +533,7 @@ html,body{overscroll-behavior-x:none;}
         </div>
         <div class="radio-hub-actions">
           <button id="radioHubPlay" class="radio-hub-btn primary" type="button">▶ Escuchar</button>
-          <button id="radioHubShare" class="radio-hub-btn" type="button">↗ Compartir</button>
+          <button id="radioHubShare" class="radio-hub-btn" type="button">↗ Compartir</button><button id="radioHubChat" class="radio-hub-btn radio-hub-chat-btn" type="button">💬 Chat / pedidos</button>
         </div>
       </div>
     </div>
@@ -544,8 +578,33 @@ html,body{overscroll-behavior-x:none;}
   </footer>
 
   <audio id="radioAudio" preload="none"></audio>
+  <div id="infoOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarInfoOverlay()">
+    <div class="info-card" role="dialog" aria-modal="true">
+      <button class="info-close" type="button" onclick="cerrarInfoOverlay()" aria-label="Cerrar">✕</button>
+      <div class="info-kicker" id="infoKicker">UADAVSTREAM</div>
+      <img id="infoMedia" class="info-media" src="" alt="">
+      <h2 id="infoTitle">Contenido</h2>
+      <p id="infoDescription">Descripción</p>
+      <div class="hero-actions"><button class="btn btn-primary" id="infoPlayBtn" type="button"><i class="fa-solid fa-play"></i> Reproducir</button></div>
+    </div>
+  </div>
+
+  <div id="chatOverlay" class="chat-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarChat()">
+    <div class="chat-panel" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
+      <div class="chat-head"><div><div class="chat-head-title" id="chatTitle">Chat UADAVSTREAM</div><div class="chat-head-sub" id="chatSubtitle">Conversación en vivo</div></div><button class="chat-close" type="button" onclick="cerrarChat()">✕</button></div>
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-footer">
+        <div class="chat-row"><input id="chatAlias" maxlength="30" placeholder="Tu nombre"><select id="chatKind"><option value="chat">Mensaje</option><option value="pedido">Pedido</option></select></div>
+        <textarea id="chatText" maxlength="500" placeholder="Escribí un mensaje o pedido..."></textarea>
+        <div class="chat-status" id="chatStatus"></div>
+        <div class="chat-send"><button class="btn btn-primary" id="chatSendBtn" type="button">Enviar</button></div>
+      </div>
+    </div>
+  </div>
+
+
   <div class="overlay" id="videoModal" onclick="cerrarModal(event)">
-    <div class="modal" onclick="event.stopPropagation()"><div class="player-top-controls"><button class="player-mini" type="button" onclick="mostrarMiniPlayer()" aria-label="Minimizar reproductor">⌄</button><button class="close" type="button" onclick="cerrarModal()" aria-label="Cerrar reproductor">✕</button></div><div class="player"><div id="playerFrame" class="player-host" aria-label="Reproductor UADAVSTREAM"></div></div><div class="modal-info"><h2 id="modalTitle">Video</h2><p id="modalDesc">Contenido</p><div class="modal-actions"><button class="mini-btn" id="modalSaveBtn"><i class="fa-regular fa-bookmark"></i> Mi lista</button><button class="mini-btn" id="modalShareBtn"><i class="fa-solid fa-share-nodes"></i> Compartir</button></div></div></div>
+    <div class="modal" onclick="event.stopPropagation()"><div class="player-top-controls"><button class="player-mini" type="button" onclick="mostrarMiniPlayer()" aria-label="Minimizar reproductor">⌄</button><button class="close" type="button" onclick="cerrarModal()" aria-label="Cerrar reproductor">✕</button></div><div class="player"><div id="playerFrame" class="player-host" aria-label="Reproductor UADAVSTREAM"></div></div><div class="modal-info"><h2 id="modalTitle">Video</h2><p id="modalDesc">Contenido</p><div class="modal-actions"><button class="mini-btn" id="modalSaveBtn"><i class="fa-regular fa-bookmark"></i> Mi lista</button><button class="mini-btn" id="modalShareBtn"><i class="fa-solid fa-share-nodes"></i> Compartir</button><button class="mini-btn live-chat-btn" id="modalChatBtn" style="display:none"><i class="fa-regular fa-comments"></i> Chat / pedidos</button></div></div></div>
   </div>
 
   <script>
@@ -723,16 +782,55 @@ html,body{overscroll-behavior-x:none;}
     }
     function aplicarConfig(){
       const c=config||{};
-      $('heroTitulo').textContent=c.hero_titulo||'El arte escénico al alcance de todos.';
-      $('heroSubtitulo').textContent=c.hero_subtitulo||'Descubrí artistas, videos, espectáculos, transmisiones y mucho más en un solo lugar.';
       $('mensajeEspera').textContent=c.mensaje_espera||'Mostrá tu trabajo, sumate a UADAVSTREAM y ayudá a que tu público te encuentre.';
       $('btnCaptador').innerHTML='<i class="fa-solid fa-bell"></i> '+(c.texto_boton_captador||'Avisarme');
       $('footerTexto').textContent=c.footer_texto||'UADAVSTREAM';
       $('footerContacto').textContent=c.footer_contacto||'La plataforma audiovisual de los artistas de variedades.';
       document.documentElement.style.setProperty('--bg',c.color_fondo||'#070707');document.documentElement.style.setProperty('--accent',c.color_acento||'#00e5ff');document.documentElement.style.setProperty('--surface',c.color_tarjetas||'#111114');document.documentElement.style.setProperty('--text',c.color_texto_principal||'#fff');document.documentElement.style.setProperty('--muted',c.color_texto_secundario||'#a4a4ad');
-      if(c.hero_imagen){$('heroSection').style.setProperty('--hero-image',`url("${String(c.hero_imagen).replace(/"/g,'%22')}")`)}
-      if(c.nombre_app){$('brandName').textContent=c.nombre_app;$('heroEyebrow').textContent=c.nombre_app}
+      if(c.hero_imagen)$('heroSection').style.setProperty('--hero-image',`url("${String(c.hero_imagen).replace(/"/g,'%22')}")`);
+      if(c.nombre_app){$('brandName').textContent=c.nombre_app;}
+      const logo=c.branding?.logo_url||'';
+      if(logo){const img=$('heroBadgeIcon');if(img){img.src=logo;$('heroBadgeMedia').classList.add('has-image');$('heroBadgeStar').style.display='none';}const brand=$('brandLogo');if(brand){brand.src=logo;brand.style.display='block';$('brandLogoFallback').style.display='none';}}
+      heroSpotlight=c.hero_spotlight||{};
+      aplicarHeroSpotlight();
     }
+
+    function aplicarHeroSpotlight(){
+      const h=heroSpotlight||{};
+      const active=h.active===true && (h.title||h.description||h.image);
+      $('heroCategoria').textContent=h.category||'UADAVSTREAM';
+      $('heroKicker').textContent=h.kicker||'UADAVSTREAM';
+      $('heroTitulo').textContent=active?h.title:'El arte escénico al alcance de todos.';
+      $('heroSubtitulo').textContent=active?(h.description||''):'Descubrí artistas, videos, espectáculos, transmisiones y mucho más en un solo lugar.';
+      if(h.image){$('heroSection').style.setProperty('--hero-image',`url("${String(h.image).replace(/"/g,'%22')}")`)}
+      const play=$('heroPlayBtn'),more=$('heroMoreBtn');
+      if(play)play.onclick=()=>ejecutarHeroAction();
+      if(more)more.onclick=()=>abrirInfoOverlay();
+      const badge=$('heroBadgeMedia');
+      if(h.icon_url){$('heroBadgeIcon').src=h.icon_url;badge.classList.add('has-image');$('heroBadgeStar').style.display='none'}
+    }
+
+    function ejecutarHeroAction(){
+      const h=heroSpotlight||{};
+      const type=String(h.action_type||'section');
+      if(type==='video'&&h.action_id)return reproducirVideo(h.action_id,h.title,h.description,{id:h.action_id,titulo:h.title,descripcion:h.description,thumbnail:h.image,categoria:h.category||'Destacado'});
+      if(type==='live'){const s=currentLiveCache.find(x=>String(x.id)===String(h.action_id)||String(x.youtube_id)===String(h.action_id));if(s)return reproducirSenal(s)}
+      if(type==='radio'){const r=currentRadiosCache.find(x=>String(x.id)===String(h.action_id)||String(x.nombre)===String(h.action_id));if(r){abrirRadioHub(r);return}}
+      if(type==='section'&&h.action_target)return irASeccion(h.action_target);
+      if(type==='url'&&h.action_url)window.open(h.action_url,'_blank','noopener');
+    }
+
+    function abrirInfoOverlay(){
+      const h=heroSpotlight||{};
+      $('infoKicker').textContent=h.category||'UADAVSTREAM';
+      $('infoTitle').textContent=h.title||'Contenido UADAVSTREAM';
+      $('infoDescription').textContent=h.description||'Contenido disponible en UADAVSTREAM.';
+      const img=$('infoMedia');
+      if(h.image){img.src=h.image;img.classList.add('has-media')}else{img.removeAttribute('src');img.classList.remove('has-media')}
+      $('infoPlayBtn').onclick=()=>{cerrarInfoOverlay();ejecutarHeroAction()};
+      $('infoOverlay').classList.add('active');$('infoOverlay').setAttribute('aria-hidden','false');
+    }
+    function cerrarInfoOverlay(){ $('infoOverlay').classList.remove('active');$('infoOverlay').setAttribute('aria-hidden','true'); }
 
     function obtenerCaratula(id){return id&&id.length===11?`https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`:FALLBACK_THUMB}
     const SEARCH_INSTANCES = [
@@ -994,7 +1092,7 @@ html,body{overscroll-behavior-x:none;}
         row.id=id;
         document.getElementById('adminSectionsContainer')?.appendChild(row);
       }
-      row.innerHTML=`<div class="row-head"><div><div class="row-title"><i class="fa-solid ${safe(sec.icono||'fa-layer-group')}"></i>${safe(sec.nombre||'Sección')}</div><div class="row-subtitle">${safe(sec.descripcion||'Contenido seleccionado por UADAVSTREAM')}</div></div></div><div class="rail" id="${id}_rail"></div>`;
+      row.innerHTML=`<div class="row-head"><div><div class="row-title">${sec.icon_url?`<img class="section-icon-image" src="${safe(sec.icon_url)}" alt="">`:`<i class="fa-solid ${safe(sec.icono||'fa-layer-group')}"></i>`}${safe(sec.nombre||'Sección')}</div><div class="row-subtitle">${safe(sec.descripcion||'Contenido seleccionado por UADAVSTREAM')}</div></div></div><div class="rail" id="${id}_rail"></div>`;
       renderRail(`${id}_rail`,items,portrait);
     }
 
@@ -1016,7 +1114,7 @@ html,body{overscroll-behavior-x:none;}
         if(nav){
           const a=document.createElement('a');
           const target='adminSec_'+String(sec.id||i).replace(/[^A-Za-z0-9_-]/g,'_');
-          a.href='#'+target;a.textContent=sec.nombre||'Sección';a.onclick=ev=>{ev.preventDefault();document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'});};
+          a.href='#'+target;a.textContent=sec.nombre||'Sección';a.onclick=ev=>{ev.preventDefault();irASeccion(target)};
           nav.appendChild(a);
         }
       }
@@ -1382,6 +1480,7 @@ html,body{overscroll-behavior-x:none;}
       if(play){play.textContent=isActive?'⏸ Pausar':'▶ Escuchar';play.onclick=()=>{if(activeRadio===String(r.stream_url||r.url||'') && $('radioAudio') && !$('radioAudio').paused)pausarRadio();else reproducirRadio(r);renderRadioHub(r)}}
       const discover=$('radioHubNowDiscover');
       if(discover)discover.onclick=()=>descubrirTemaRadio(r,{title,artist,artwork:logo});
+      const chat=$('radioHubChat');if(chat)chat.onclick=()=>abrirChat('radio:'+obtenerRadioHubId(r),r.nombre||'Radio UADAVSTREAM','Chat y pedidos de la emisora');
       const share=$('radioHubShare');
       if(share)share.onclick=async()=>{
         const shareUrl=location.origin+location.pathname+'?radio='+encodeURIComponent(obtenerRadioHubId(r));
@@ -1472,6 +1571,7 @@ html,body{overscroll-behavior-x:none;}
       try{data=await api('senales')}catch{}
       if(!Array.isArray(data)||!data.length){try{data=await api('senales_oficiales')}catch{data=[]}}
       if(!Array.isArray(data))data=[];
+      currentLiveCache=data;
       const live=data.filter(x=>x&&x.activa!==false&&String(x.url||x.stream_url||x.youtube_id||'').trim()).slice(0,18).map((x,i)=>{
         const yt=normalizarIdYoutube(x.youtube_id||x.url||x.stream_url);
         const isYt=!!yt || String(x.tipo||'').toLowerCase()==='youtube';
@@ -1481,7 +1581,7 @@ html,body{overscroll-behavior-x:none;}
           youtube_id:yt||x.youtube_id||'',
           titulo:x.nombre||x.titulo||'Señal en vivo',
           descripcion:x.descripcion||x.subtitulo_banner||'Transmisión en vivo',
-          thumbnail:x.thumbnail||x.imagen||(yt?`https://i.ytimg.com/vi/${encodeURIComponent(yt)}/hqdefault.jpg`:FALLBACK_THUMB),
+          thumbnail:yt?`https://i.ytimg.com/vi/${encodeURIComponent(yt)}/hqdefault.jpg`:(x.imagen||x.thumbnail||FALLBACK_THUMB),
           en_vivo:true,
           isLiveSignal:true,
           liveUrl:String(x.url||x.stream_url||'').trim(),
@@ -1521,6 +1621,46 @@ html,body{overscroll-behavior-x:none;}
       host.innerHTML=`<iframe src="${safe(url)}" title="${safe(s.titulo||'Señal en vivo')}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>`;
     }
 
+
+    async function cargarChatContext(){
+      $('chatTitle').textContent=chatContext.title||'Chat UADAVSTREAM';
+      $('chatSubtitle').textContent=chatContext.subtitle||'Conversación en vivo';
+      $('chatMessages').innerHTML='<div style="padding:25px;text-align:center;color:#777">Cargando conversación…</div>';
+      try{
+        const data=await api('chat?id_stream='+encodeURIComponent(chatContext.id));
+        renderChatMessages(Array.isArray(data)?data:[]);
+      }catch(e){
+        $('chatMessages').innerHTML='<div style="padding:25px;text-align:center;color:#888">El chat todavía no está habilitado para este contenido.</div>';
+      }
+    }
+    function renderChatMessages(items){
+      const box=$('chatMessages');if(!box)return;
+      if(!items.length){box.innerHTML='<div style="padding:35px;text-align:center;color:#777">Todavía no hay mensajes. Sé el primero.</div>';return}
+      box.innerHTML=items.slice(-40).map(m=>`<div class="chat-msg${m.moderado||m.tipo==='pedido'?' is-request':''}"><div class="chat-msg-meta">${safe(m.alias||'Espectador')} · ${m.tipo==='pedido'?'Pedido':'Mensaje'}</div><div class="chat-msg-text">${safe(m.mensaje||'')}</div></div>`).join('');
+      box.scrollTop=box.scrollHeight;
+    }
+    async function enviarMensajeChat(){
+      const text=String($('chatText')?.value||'').trim();if(!text)return;
+      const alias=String($('chatAlias')?.value||'Espectador').trim().slice(0,30)||'Espectador';
+      const kind=$('chatKind')?.value||'chat';
+      $('chatSendBtn').disabled=true;$('chatStatus').textContent='Enviando…';
+      try{
+        const body={mensaje:kind==='pedido'?'[PEDIDO] '+text:text,id_stream:chatContext.id,alias};
+        const res=await fetch(API_URL+'moderar_chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if(!res.ok)throw new Error('HTTP '+res.status);
+        $('chatText').value='';$('chatStatus').textContent=kind==='pedido'?'Pedido enviado.':'Mensaje enviado.';
+        await cargarChatContext();
+      }catch(e){$('chatStatus').textContent='El chat no está disponible en este momento.'}
+      finally{$('chatSendBtn').disabled=false}
+    }
+    function abrirChat(id,title,subtitle){
+      chatContext={id:id||'general',title:title||'Chat UADAVSTREAM',subtitle:subtitle||'Conversación en vivo'};
+      $('chatOverlay').classList.add('active');$('chatOverlay').setAttribute('aria-hidden','false');
+      cargarChatContext();
+      clearInterval(chatTimer);chatTimer=setInterval(cargarChatContext,7000);
+    }
+    function cerrarChat(){clearInterval(chatTimer);chatTimer=null;$('chatOverlay').classList.remove('active');$('chatOverlay').setAttribute('aria-hidden','true')}
+
     async function ejecutarBusqueda(value){
       const q=String(value||'').trim();
       if(!q){volverInicio();return;}
@@ -1537,7 +1677,7 @@ html,body{overscroll-behavior-x:none;}
         $('searchStatus').textContent=results.length?results.length+' resultados encontrados':'No encontramos resultados';
         renderRail('resultsRail',results);
         $('resultsRow').hidden=false;
-        requestAnimationFrame(()=>{document.getElementById('resultsRow').scrollIntoView({behavior:'smooth',block:'start'});});
+        requestAnimationFrame(()=>irASeccion('resultsRow'));
       }catch(e){
         console.error('[UADAV] búsqueda fatal:',e);
         $('searchStatus').textContent='Error al buscar';
@@ -1547,7 +1687,11 @@ html,body{overscroll-behavior-x:none;}
     function irASeccion(id){
       const el=$(id);if(!el)return;
       if($('resultsRow')&&!$('resultsRow').hidden)volverInicio();
-      setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),40);
+      setTimeout(()=>{
+        const offset=(document.getElementById('nav')?.offsetHeight||70)+12;
+        const y=window.scrollY+el.getBoundingClientRect().top-offset;
+        window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+      },60);
     }
     function volverInicio(){
       if($('featuredRow'))$('featuredRow').hidden=false;
@@ -1566,6 +1710,10 @@ html,body{overscroll-behavior-x:none;}
     let currentQueue=[];
     let currentQueueIndex=0;
     let currentVideoData=null;
+    let currentLiveCache=[];
+    let heroSpotlight={active:false};
+    let chatContext={id:'general',title:'Chat UADAVSTREAM',subtitle:'Conversación en vivo'};
+    let chatTimer=null;
 
     window.onYouTubeIframeAPIReady=function(){
       ytApiReady=true;
@@ -1706,6 +1854,7 @@ html,body{overscroll-behavior-x:none;}
       $('videoModal').classList.add('active');
       $('videoModal').classList.remove('pip-mode');
       document.body.style.overflow='';
+      const chatBtn=$('modalChatBtn');if(chatBtn){const isLive=!!v.isLiveSignal||v.categoria==='En vivo';chatBtn.style.display=isLive?'inline-flex':'none';chatBtn.onclick=()=>abrirChat('signal:'+String(v.id),v.titulo||'Señal en vivo','Chat y pedidos de la transmisión');}
       actualizarBotonesPlayer(v);
       cargarPlayerYouTube(id);
     }
@@ -1742,8 +1891,11 @@ html,body{overscroll-behavior-x:none;}
     }
     window.addEventListener('scroll',actualizarMiniPlayer,{passive:true});
     window.addEventListener('scroll',()=>{$('nav').classList.toggle('scrolled',window.scrollY>30)});
-    document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('radioHubOverlay')?.classList.contains('active')){cerrarRadioHub();return}cerrarModal()});
+    document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('chatOverlay')?.classList.contains('active')){cerrarChat();return}if($('infoOverlay')?.classList.contains('active')){cerrarInfoOverlay();return}if($('radioHubOverlay')?.classList.contains('active')){cerrarRadioHub();return}cerrarModal()});
     $('footerYear').textContent=new Date().getFullYear();
+
+    $('chatSendBtn')?.addEventListener('click',enviarMensajeChat);
+    $('chatText')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviarMensajeChat()}});
 
     async function init(){
       const modo=await cargarEstadoSitio();
