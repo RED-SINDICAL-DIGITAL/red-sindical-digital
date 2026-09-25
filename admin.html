@@ -540,6 +540,11 @@
               <div class="form-group" style="grid-column: 1 / -1;"><label>Bio</label><textarea id="artBio" rows="2"></textarea></div>
               <div class="form-group"><label>Canal YouTube ID</label><input id="artCanal" placeholder="UC..."></div>
               <div class="form-group"><label>Contacto (WhatsApp)</label><input id="artContacto" placeholder="341..."></div>
+              <div class="form-group"><label>Afiliado UADAV verificado</label><select id="artAfiliado"><option value="false">No</option><option value="true">Sí</option></select></div>
+              <div class="form-group"><label>Donaciones activas</label><select id="artDonacionActiva"><option value="false">No</option><option value="true">Sí</option></select></div>
+              <div class="form-group"><label>Link de apoyo / donación</label><input id="artDonacionUrl" placeholder="https://cafecito.app/... o Mercado Pago..."></div>
+              <div class="form-group"><label>Transmisión en vivo (YouTube/URL)</label><input id="artLiveUrl" placeholder="https://youtube.com/live/... o https://..."></div>
+              <div class="form-group"><label>Link de contratación</label><input id="artBookingUrl" placeholder="https://wa.me/... o formulario..."></div>
             </div>
           </div>
 
@@ -1542,7 +1547,12 @@ function agregarItem() {
       foto: document.getElementById('artFoto').value,
       bio: document.getElementById('artBio').value,
       canal: document.getElementById('artCanal').value,
-      contacto: document.getElementById('artContacto').value
+      contacto: document.getElementById('artContacto').value,
+      afiliado_verificado: document.getElementById('artAfiliado').value === 'true',
+      donacion_activa: document.getElementById('artDonacionActiva').value === 'true',
+      donation_url: document.getElementById('artDonacionUrl').value.trim(),
+      live_url: document.getElementById('artLiveUrl').value.trim(),
+      booking_url: document.getElementById('artBookingUrl').value.trim()
     };
     if (!newItem.nombre) {
       mostrarToast('Nombre del artista requerido', 'error');
@@ -1646,6 +1656,11 @@ function editarItem(secIndex, itemIndex) {
     document.getElementById('artBio').value = item.bio;
     document.getElementById('artCanal').value = item.canal;
     document.getElementById('artContacto').value = item.contacto;
+    document.getElementById('artAfiliado').value = String(item.afiliado_verificado===true);
+    document.getElementById('artDonacionActiva').value = String(item.donacion_activa===true);
+    document.getElementById('artDonacionUrl').value = item.donation_url||item.donacion_url||'';
+    document.getElementById('artLiveUrl').value = item.live_url||'';
+    document.getElementById('artBookingUrl').value = item.booking_url||'';
   } else if (item.tipo === 'evento') {
     document.getElementById('evNombre').value = item.nombre;
     document.getElementById('evFecha').value = item.fecha;
@@ -1682,6 +1697,7 @@ function limpiarCampos() {
   document.getElementById('artBio').value = '';
   document.getElementById('artCanal').value = '';
   document.getElementById('artContacto').value = '';
+  document.getElementById('artAfiliado').value='false';document.getElementById('artDonacionActiva').value='false';document.getElementById('artDonacionUrl').value='';document.getElementById('artLiveUrl').value='';document.getElementById('artBookingUrl').value='';
   document.getElementById('evNombre').value = '';
   document.getElementById('evFecha').value = '';
   document.getElementById('evLugar').value = '';
@@ -1839,6 +1855,9 @@ function renderRadios() {
           <div class="form-group"><label>X</label><input value="${socials.x||r.x||''}" oninput="radiosData[${i}].redes={...(radiosData[${i}].redes||{}),x:this.value}"></div>
           <div class="form-group"><label>TikTok</label><input value="${socials.tiktok||r.tiktok||''}" oninput="radiosData[${i}].redes={...(radiosData[${i}].redes||{}),tiktok:this.value}"></div>
           <div class="form-group" style="grid-column:1/-1"><label>WhatsApp</label><input value="${socials.whatsapp||r.whatsapp||''}" oninput="radiosData[${i}].redes={...(radiosData[${i}].redes||{}),whatsapp:this.value}"></div>
+          <div class="form-group"><label>Afiliado UADAV verificado</label><select onchange="radiosData[${i}].afiliado_verificado=this.value==='true'"><option value="false" ${r.afiliado_verificado!==true?'selected':''}>No</option><option value="true" ${r.afiliado_verificado===true?'selected':''}>Sí</option></select></div>
+          <div class="form-group"><label>Donaciones activas</label><select onchange="radiosData[${i}].donacion_activa=this.value==='true'"><option value="false" ${r.donacion_activa!==true?'selected':''}>No</option><option value="true" ${r.donacion_activa===true?'selected':''}>Sí</option></select></div>
+          <div class="form-group"><label>Link de apoyo</label><input value="${r.donation_url||r.donacion_url||''}" placeholder="https://cafecito... / MP" oninput="radiosData[${i}].donation_url=this.value"></div>
         </div>
         <div style="margin-top:10px;text-align:right;"><button onclick="radiosData.splice(${i},1);renderRadios();" class="btn btn-danger btn-sm">Eliminar</button></div>
       </div>`;
@@ -1851,7 +1870,7 @@ function renderRadios() {
         <div class="form-group" style="grid-column:1/-1"><label>Logo URL</label><input id="newRadioLogo" placeholder="https://..."></div>
         <div class="form-group" style="grid-column:1/-1"><label>Metadata URL (opcional)</label><input id="newRadioMetadata" placeholder="Zeno se detecta automáticamente"></div>
       </div>
-      <button onclick="radiosData.push({id:'r'+Date.now(),nombre:document.getElementById('newRadioNombre').value,stream_url:document.getElementById('newRadioUrl').value,logo:document.getElementById('newRadioLogo').value,metadata_url:document.getElementById('newRadioMetadata').value,activa:true,programa:'',locutor:'',horario:'',descripcion:'',web:'',redes:{}});renderRadios();" class="btn btn-primary w-full">Agregar Radio</button>
+      <button onclick="radiosData.push({id:'r'+Date.now(),nombre:document.getElementById('newRadioNombre').value,stream_url:document.getElementById('newRadioUrl').value,logo:document.getElementById('newRadioLogo').value,metadata_url:document.getElementById('newRadioMetadata').value,activa:true,programa:'',locutor:'',horario:'',descripcion:'',web:'',redes:{},afiliado_verificado:false,donacion_activa:false,donation_url:''});renderRadios();" class="btn btn-primary w-full">Agregar Radio</button>
     </div>`;
 }
 
