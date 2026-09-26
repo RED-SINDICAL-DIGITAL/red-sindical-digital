@@ -448,8 +448,8 @@ details[open] summary{background:linear-gradient(90deg,rgba(0,229,255,.045),tran
 @media(max-width:900px){.admin-v28-nav{flex-direction:row;max-height:none;overflow-x:auto;overflow-y:hidden;margin-top:10px}.admin-v28-nav-title{display:none}.admin-v28-nav button{flex:0 0 auto;width:auto}.admin-v28-nav button span.label{display:none}.admin-v28-nav button .nav-dot{display:none}.admin-v28-mainbar{top:82px}}
 @media(max-width:560px){.admin-v28-mainbar{top:70px;align-items:flex-start}.admin-v28-main-actions .btn{padding:8px 10px}.admin-v28-mainbar .title{font-size:15px}.admin-v28-mainbar .sub{display:none}}
 </style>
-<style id="uadav-v28-admin-layout-fix">
-/* UADAVSTREAM V28.1 — navegación lateral real */
+<style id="uadav-v28-admin-layout-v28-2-fix">
+/* UADAVSTREAM V28.2 — navegación lateral real */
 .admin-v28-sidebar-shell{position:fixed;left:20px;top:100px;width:248px;height:calc(100vh - 120px);z-index:40;display:none;}
 .admin-v28-sidebar{height:100%;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:20px;background:rgba(10,12,18,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 18px 60px rgba(0,0,0,.38);display:flex;flex-direction:column;overflow:hidden;}
 .admin-v28-sidebar-brand{display:flex;align-items:center;gap:10px;padding:8px 8px 14px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:6px;}
@@ -480,7 +480,88 @@ body.admin-v28-logged #panelContent{min-width:0;}
   .admin-v28-mainbar{top:76px;border-radius:14px;padding:12px 14px}
   .admin-v28-mainbar .title{font-size:15px}.admin-v28-mainbar .sub{display:none}
 }
-</style></head>
+</style>
+<style id="uadav-v28-final-layout">
+:root{--admin-sidebar:272px;--admin-gap:22px;--admin-accent:#00e5ff;--admin-purple:#8b5cf6;--admin-bg:#071016;--admin-surface:rgba(13,18,25,.82);--admin-line:rgba(255,255,255,.08);--admin-muted:#8d9aae}
+html{scroll-behavior:smooth}
+body{background:radial-gradient(circle at 18% 8%,rgba(0,229,255,.045),transparent 28%),radial-gradient(circle at 80% 18%,rgba(139,92,246,.05),transparent 24%),#05080c!important}
+.container{max-width:none!important;width:100%!important;box-sizing:border-box;padding:18px 22px 110px!important}
+.header{position:sticky!important;top:12px!important;z-index:50!important;display:flex!important;align-items:center!important;gap:14px!important;padding:13px 16px!important;margin:0 0 18px!important;border:1px solid var(--admin-line)!important;background:rgba(6,10,15,.84)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;border-radius:18px!important;box-shadow:0 12px 35px rgba(0,0,0,.24)!important}
+.header h1{margin:0!important;font-size:20px!important;line-height:1!important;letter-spacing:-.02em!important;white-space:nowrap}
+.header-actions{margin-left:auto!important;display:flex!important;gap:8px!important;align-items:center!important;flex-wrap:wrap!important}
+.header-actions input[type=password]{width:210px!important;max-width:32vw!important;height:38px!important}
+#apiStatus{display:flex!important;align-items:center!important;gap:7px!important;white-space:nowrap!important;font-size:11px!important;color:#8ea0b4!important;padding-left:6px!important}
+#panelContent{margin-top:0!important}
+.admin-v28-mainbar{margin-left:calc(var(--admin-sidebar) + var(--admin-gap))!important;width:calc(100% - var(--admin-sidebar) - var(--admin-gap))!important;position:sticky!important;top:86px!important;z-index:35!important;padding:16px 18px!important;border-radius:18px!important;background:rgba(10,14,20,.82)!important;border:1px solid var(--admin-line)!important;box-shadow:0 14px 36px rgba(0,0,0,.22)!important}
+body:not(.admin-v28-logged) .admin-v28-mainbar{display:none!important}
+body.admin-v28-logged .admin-v28-sidebar-shell{display:block!important}
+body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(--admin-gap))!important;width:calc(100% - var(--admin-sidebar) - var(--admin-gap))!important;min-width:0!important}
+.admin-v28-sidebar-shell{position:fixed!important;left:20px!important;top:100px!important;width:var(--admin-sidebar)!important;height:calc(100vh - 120px)!important;z-index:60!important;display:none}
+.admin-v28-sidebar{height:100%!important;padding:12px!important;border-radius:20px!important;background:linear-gradient(180deg,rgba(10,15,22,.96),rgba(6,10,15,.92))!important;border:1px solid var(--admin-line)!important;box-shadow:0 20px 70px rgba(0,0,0,.34)!important;backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important}
+.admin-v28-nav{overflow:auto!important;scrollbar-width:thin!important}
+.admin-v28-nav button{min-height:41px!important}
+.admin-v28-nav button.active{background:linear-gradient(90deg,rgba(0,229,255,.14),rgba(139,92,246,.10))!important}
+
+/* Dashboard */
+.u27-dashboard{scroll-margin-top:125px!important}
+.u27-hero{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:24px 26px;border:1px solid var(--admin-line);border-radius:20px;background:linear-gradient(135deg,rgba(0,229,255,.055),rgba(139,92,246,.035) 55%,rgba(255,255,255,.02));box-shadow:0 14px 45px rgba(0,0,0,.18);margin-bottom:16px}
+.u27-kicker{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:#6e8298;font-weight:900}
+.u27-title{font-size:28px;font-weight:900;letter-spacing:-.03em;margin-top:6px;color:#fff}
+.u27-sub{color:#93a2b6;margin-top:6px;line-height:1.5}
+.u27-status{padding:8px 11px;border:1px solid rgba(0,229,255,.18);border-radius:999px;color:#9ff7ff;background:rgba(0,229,255,.06);font-size:11px;font-weight:800;white-space:nowrap}
+.u27-grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.u27-card{min-width:0;padding:18px;border:1px solid var(--admin-line);border-radius:18px;background:rgba(11,16,23,.78);box-shadow:0 10px 35px rgba(0,0,0,.18)!important;}
+.u27-label{font-size:10px!important;text-transform:uppercase;letter-spacing:.12em;color:#73869a!important;font-weight:850!important}
+.u27-value{margin-top:10px;font-size:30px!important;line-height:1;font-weight:950!important;letter-spacing:-.04em;color:#fff!important}
+.u27-note{margin-top:8px;color:#7f91a6!important;font-size:10px!important}
+.u27-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
+.u27-panel{padding:18px;border:1px solid var(--admin-line);border-radius:18px;background:rgba(10,15,21,.78);box-shadow:0 10px 35px rgba(0,0,0,.16)}
+.u27-panel h3{margin:0 0 12px;font-size:14px;color:#fff}
+.u27-form{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.u27-form>div{flex:1 1 260px}
+.u27-form input,.u27-form select{min-height:40px}
+.integration-diag-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px!important}
+.integration-diag-card{padding:14px!important;border-radius:15px!important;border:1px solid var(--admin-line)!important;background:rgba(255,255,255,.02)!important}
+
+/* Better cards / content sections */
+#panelContent>details{margin-bottom:14px!important;border-color:var(--admin-line)!important;background:rgba(10,15,21,.72)!important}
+#panelContent>details>summary{padding:16px 18px!important;font-size:14px!important}
+#panelContent>details>.details-content{padding:18px!important}
+
+@media(max-width:1180px){.u27-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.integration-diag-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:900px){
+  .container{padding:10px 10px 100px!important}
+  .header{top:6px!important;margin-bottom:10px!important;flex-wrap:wrap!important}
+  .header-actions{width:100%!important;margin-left:0!important}
+  #apiStatus{margin-left:auto}
+  .admin-v28-sidebar-shell{position:sticky!important;left:auto!important;top:70px!important;width:100%!important;height:auto!important;margin:0 0 10px!important}
+  .admin-v28-sidebar{height:auto!important;border-radius:16px!important}
+  .admin-v28-sidebar-brand,.admin-v28-sidebar-foot,.admin-v28-nav-title{display:none!important}
+  .admin-v28-nav{flex-direction:row!important;overflow-x:auto!important;overflow-y:hidden!important;gap:6px!important}
+  .admin-v28-nav button{width:auto!important;flex:0 0 auto!important;white-space:nowrap!important;padding:9px 11px!important}
+  body.admin-v28-logged .admin-v28-mainbar,body.admin-v28-logged #panelContent{margin-left:0!important;width:100%!important}
+  .admin-v28-mainbar{top:118px!important}
+  .u27-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .u27-actions{grid-template-columns:1fr}
+  .integration-diag-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .header h1{font-size:17px!important}
+  .header-actions input[type=password]{max-width:none!important;flex:1 1 160px!important;width:auto!important}
+  .admin-v28-mainbar{top:115px!important}
+  .u27-hero{padding:18px;flex-direction:column}
+  .u27-title{font-size:23px}
+  .u27-grid{grid-template-columns:1fr 1fr}
+  .u27-card{padding:14px}
+  .u27-value{font-size:25px!important}
+}
+</style>
+
+
+<style id="uadav-v28-legacy-nav-guard">
+.header > .admin-v28-nav,.header > .details-nav,.header > .admin-v28-nav-title{display:none!important}
+</style>
+</head>
 <body>
 <div class="container" id="app">
 <!-- ============================================================ -->
@@ -494,22 +575,6 @@ body.admin-v28-logged #panelContent{min-width:0;}
 <button class="btn btn-secondary hidden" id="btnLogout" onclick="desconectar()">Salir</button>
 </div>
 <div id="apiStatus"><span class="apiDot"></span><span id="apiStatusText">Comprobando API…</span></div>
-<div class="admin-v28-nav-title">NAVEGACIÓN</div>
-<nav aria-label="Secciones del panel" class="admin-v28-nav" id="adminV28Nav">
-<button data-target="integrationDiagnostics" onclick="adminV28Go('integrationDiagnostics')" type="button"><i class="fa-solid fa-stethoscope"></i><span class="label">Diagnóstico</span><span class="nav-dot"></span></button>
-<button data-target="sec-secciones" onclick="adminV28Go('sec-secciones')" type="button"><i class="fa-solid fa-layer-group"></i><span class="label">Secciones y contenido</span><span class="nav-dot"></span></button>
-<button data-target="sec-personalizacion" onclick="adminV28Go('sec-personalizacion')" type="button"><i class="fa-solid fa-palette"></i><span class="label">Apariencia</span><span class="nav-dot"></span></button>
-<button data-target="sec-banners" onclick="adminV28Go('sec-banners')" type="button"><i class="fa-solid fa-rectangle-ad"></i><span class="label">Publicidad</span><span class="nav-dot"></span></button>
-<button data-target="sec-visibilidad" onclick="adminV28Go('sec-visibilidad')" type="button"><i class="fa-solid fa-eye"></i><span class="label">Visibilidad</span><span class="nav-dot"></span></button>
-<button data-target="sec-home" onclick="adminV28Go('sec-home')" type="button"><i class="fa-solid fa-table-columns"></i><span class="label">Home / Orden</span><span class="nav-dot"></span></button>
-<button data-target="sec-streams" onclick="adminV28Go('sec-streams')" type="button"><i class="fa-solid fa-tower-broadcast"></i><span class="label">Señales y radios</span><span class="nav-dot"></span></button>
-<button data-target="sec-artistas" onclick="adminV28Go('sec-artistas')" type="button"><i class="fa-solid fa-microphone-lines"></i><span class="label">Artistas</span><span class="nav-dot"></span></button>
-<button data-target="sec-eventos" onclick="adminV28Go('sec-eventos')" type="button"><i class="fa-solid fa-calendar-days"></i><span class="label">Eventos</span><span class="nav-dot"></span></button>
-<button data-target="sec-cartelera" onclick="adminV28Go('sec-cartelera')" type="button"><i class="fa-solid fa-ticket"></i><span class="label">Cartelera</span><span class="nav-dot"></span></button>
-<button data-target="sec-premium" onclick="adminV28Go('sec-premium')" type="button"><i class="fa-solid fa-key"></i><span class="label">Premium</span><span class="nav-dot"></span></button>
-<button data-target="sec-footer" onclick="adminV28Go('sec-footer')" type="button"><i class="fa-solid fa-share-nodes"></i><span class="label">Footer y redes</span><span class="nav-dot"></span></button>
-<button data-target="sec-herramientas" onclick="adminV28Go('sec-herramientas')" type="button"><i class="fa-solid fa-toolbox"></i><span class="label">Herramientas</span><span class="nav-dot"></span></button>
-</nav>
 </header>
 <!-- ============================================================ -->
 <!-- TOAST -->
@@ -2568,36 +2633,6 @@ window.onload = () => {
   setTimeout(()=>{ if(ADMIN_KEY) ejecutarDiagnostico(); },800);
 };
 </script>
-<script id="uadav-v19-console">
-(function(){
-  function buildNav(){
-    const panel=document.getElementById('panelContent');
-    if(!panel || panel.dataset.navBuilt==='1') return;
-    const details=[...panel.querySelectorAll(':scope > details')];
-    if(!details.length) return;
-    panel.dataset.navBuilt='1';
-    const nav=document.createElement('div'); nav.className='details-nav';
-    details.forEach((d,i)=>{
-      const b=document.createElement('button');
-      b.type='button'; b.textContent=(d.querySelector('summary')?.innerText||`Módulo ${i+1}`).replace(/\s+/g,' ').trim();
-      b.title='Abrir '+b.textContent;
-      b.addEventListener('click',()=>{d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});});
-      nav.appendChild(b);
-    });
-    panel.insertBefore(nav,details[0]);
-  }
-  function boot(){
-    comprobarAPI();
-    buildNav();
-    const saved=localStorage.getItem('uadavstream_admin_key');
-    if(saved){
-      const input=document.getElementById('adminKeyInput'); if(input) input.value=saved;
-      conectar();
-    }
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
-})();
-</script>
 <script id="uadav-integration-diagnostic-js">
 async function ejecutarDiagnostico(){
   const grid=document.getElementById('integrationDiagGrid');
@@ -2718,7 +2753,7 @@ async function u27LoadAudit(){
     buildNav(); const el=(id==='sec-dashboard'?document.getElementById('u27Dashboard'):document.getElementById(id)); if(!el)return;
     if(el.tagName==='DETAILS') el.open=true;
     const shell=document.getElementById('adminV28NavShell');
-    const targetTop=el.getBoundingClientRect().top+window.scrollY-(window.innerWidth<=900?170:115);
+    const targetTop=el.getBoundingClientRect().top+window.scrollY-(window.innerWidth<=900?150:120);
     window.scrollTo({top:Math.max(0,targetTop),behavior:'smooth'});
     document.querySelectorAll('#adminV28Nav button').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
     const title=document.getElementById('adminV28CurrentTitle'); if(title)title.textContent=titles[id]||'Centro de control';
