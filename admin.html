@@ -1,12 +1,13 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UADAVSTREAM — Centro de Control V27</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>UADAVSTREAM — Centro de Control V28</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style>
     /* ====== ESTILOS BASE ====== */
     :root {
       --bg-main: #0a0a0a;
@@ -404,8 +405,7 @@
     @media(max-width:900px){.container{padding:90px 14px 90px}.header{position:sticky;top:10px;left:auto;bottom:auto;width:auto;max-width:none;flex-direction:row;align-items:center;padding:14px 16px;border-radius:18px;margin-bottom:14px}.header-actions{flex-direction:row;align-items:center;flex-wrap:wrap}.header-actions:before{display:none}.header-actions input[type=password]{width:min(260px,55vw)}.header-actions .btn{width:auto}.header h1{margin:0}.details-nav{position:sticky;top:84px;overflow-x:auto;flex-wrap:nowrap;white-space:nowrap}.details-nav button{flex:0 0 auto}}
     @media(max-width:560px){.container{padding:76px 10px 100px}.header{top:6px;padding:12px}.header h1{font-size:1.05rem}.header-actions{gap:7px}.header-actions input[type=password]{width:calc(100vw - 165px);min-width:0}.details-nav{top:74px}.fab{right:12px;bottom:12px}}
 </style>
-
-  <style id="uadav-banner-preview-v19-3">
+<style id="uadav-banner-preview-v19-3">
   .admin-banner-preview-shell{position:relative;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));padding:8px;overflow:hidden;min-height:70px}
   .admin-banner-preview-label{width:max-content;margin:0 auto 7px;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.25);color:#8e8e98;font-size:8px;font-weight:800;letter-spacing:.12em}
   .admin-banner-preview-content{display:flex;justify-content:center;align-items:center;overflow:hidden}
@@ -416,632 +416,645 @@
   @media(max-width:900px){.admin-banner-preview-content img{max-height:110px}}
   </style>
 <style id="uadav-v20-visibility">.visibility-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.visibility-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-input);color:var(--text-primary)}.visibility-item small{display:block;color:var(--text-secondary);font-size:.72rem;margin-top:3px}@media(max-width:900px){.visibility-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.visibility-grid{grid-template-columns:1fr}}</style>
-
 <style id="uadav-integration-diagnostic">
 .integration-diag-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.integration-diag-card{border:1px solid var(--border-color);border-radius:12px;padding:12px;background:var(--bg-input)}.integration-diag-card b{display:block;color:var(--text-primary);margin-bottom:5px}.integration-diag-card small{display:block;color:var(--text-secondary);word-break:break-word}.integration-diag-card.ok{border-color:rgba(34,197,94,.35)}.integration-diag-card.warn{border-color:rgba(234,179,8,.35)}.integration-diag-card.bad{border-color:rgba(239,68,68,.35)}.diag-state{font-size:.74rem;font-weight:800;letter-spacing:.04em}.diag-state.ok{color:#86efac}.diag-state.warn{color:#fde68a}.diag-state.bad{color:#fca5a5}@media(max-width:900px){.integration-diag-grid{grid-template-columns:1fr 1fr}}@media(max-width:600px){.integration-diag-grid{grid-template-columns:1fr}}
 </style>
-
 <style id="uadav-v22-home-layout">
 .home-layout-list{display:grid;gap:8px}.home-layout-item{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--border-color);border-radius:12px;background:var(--bg-input)}.home-layout-num{font-weight:900;color:var(--accent);text-align:center}.home-layout-label{min-width:0}.home-layout-label strong{display:block}.home-layout-label small{display:block;color:var(--text-secondary);margin-top:2px;font-size:.72rem}.home-layout-actions{display:flex;gap:6px;flex-wrap:wrap}.home-layout-actions button{min-width:34px}.radio-meta-help{color:var(--text-secondary);font-size:.72rem;line-height:1.4;margin-top:4px}@media(max-width:650px){.home-layout-item{grid-template-columns:30px 1fr}.home-layout-actions{grid-column:1/-1}}
-</style>
 
+/* ===== UADAVSTREAM V28 · ADMIN PROFESIONAL ===== */
+:root{
+  --admin-sidebar:252px;
+  --admin-surface:rgba(14,16,23,.78);
+  --admin-surface-2:rgba(255,255,255,.035);
+  --admin-line:rgba(255,255,255,.075);
+  --admin-muted:#8f9aab;
+  --admin-accent:#00e5ff;
+  --admin-accent-2:#8b5cf6;
+}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+.admin-v28-nav{margin:14px 2px 0;display:flex;flex-direction:column;gap:6px;max-height:calc(100vh - 290px);overflow:auto;padding-right:3px}
+.admin-v28-nav-title{font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:#64748b;font-weight:900;padding:10px 8px 5px}
+.admin-v28-nav button{appearance:none;width:100%;border:1px solid transparent;background:transparent;color:#b7c0ce;border-radius:12px;padding:10px 11px;display:flex;align-items:center;gap:10px;text-align:left;font-size:12px;font-weight:750;cursor:pointer;transition:.18s ease}
+.admin-v28-nav button i{width:18px;text-align:center;color:#7e8da2}.admin-v28-nav button:hover{background:rgba(255,255,255,.045);color:#fff}.admin-v28-nav button.active{background:linear-gradient(90deg,rgba(0,229,255,.12),rgba(139,92,246,.08));border-color:rgba(0,229,255,.15);color:#fff;box-shadow:inset 3px 0 0 var(--admin-accent)}
+.admin-v28-nav .nav-dot{margin-left:auto;width:6px;height:6px;border-radius:999px;background:#334155}.admin-v28-nav button.active .nav-dot{background:var(--admin-accent);box-shadow:0 0 10px rgba(0,229,255,.7)}
+.admin-v28-mainbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 18px;margin:0 0 16px;border:1px solid var(--admin-line);background:rgba(10,11,16,.72);backdrop-filter:blur(16px);border-radius:18px;position:sticky;top:18px;z-index:18}
+.admin-v28-mainbar .crumb{color:#64748b;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.11em}.admin-v28-mainbar .title{font-size:18px;font-weight:900;margin-top:3px}.admin-v28-mainbar .sub{color:var(--admin-muted);font-size:11px;margin-top:3px}
+.admin-v28-main-actions{display:flex;gap:8px;flex-wrap:wrap}.admin-v28-main-actions .btn{white-space:nowrap}
+.u27-dashboard{scroll-margin-top:110px}.u27-card{position:relative;overflow:hidden}.u27-card:after{content:"";position:absolute;inset:auto -35px -50px auto;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,255,.12),transparent 68%);pointer-events:none}
+details{scroll-margin-top:110px}
+details[open] summary{background:linear-gradient(90deg,rgba(0,229,255,.045),transparent)}
+.admin-v28-savebar{display:flex;justify-content:flex-end;gap:8px;margin:14px 0 0;position:sticky;bottom:14px;z-index:25;pointer-events:none}.admin-v28-savebar>*{pointer-events:auto}
+@media(max-width:900px){.admin-v28-nav{flex-direction:row;max-height:none;overflow-x:auto;overflow-y:hidden;margin-top:10px}.admin-v28-nav-title{display:none}.admin-v28-nav button{flex:0 0 auto;width:auto}.admin-v28-nav button span.label{display:none}.admin-v28-nav button .nav-dot{display:none}.admin-v28-mainbar{top:82px}}
+@media(max-width:560px){.admin-v28-mainbar{top:70px;align-items:flex-start}.admin-v28-main-actions .btn{padding:8px 10px}.admin-v28-mainbar .title{font-size:15px}.admin-v28-mainbar .sub{display:none}}
+</style>
 </head>
 <body>
-
 <div class="container" id="app">
-  <!-- ============================================================ -->
-  <!-- HEADER -->
-  <!-- ============================================================ -->
-  <header class="header">
-    <h1>UADAV<span>STREAM</span> <span style="font-size:0.7rem; color:var(--text-secondary); font-weight:400;">Centro de Control</span></h1>
-    <div class="header-actions">
-      <input type="password" id="adminKeyInput" placeholder="Clave Admin" onkeydown="if(event.key === 'Enter') conectar()">
-      <button onclick="conectar()" class="btn btn-primary">Conectar</button>
-      <button onclick="desconectar()" id="btnLogout" class="btn btn-secondary hidden">Salir</button>
-    </div>
-    <div id="apiStatus"><span class="apiDot"></span><span id="apiStatusText">Comprobando API…</span></div>
-  </header>
-
-  <!-- ============================================================ -->
-  <!-- TOAST -->
-  <!-- ============================================================ -->
-  <div id="toast" class="toast"></div>
-
-  <!-- ============================================================ -->
-  <!-- PANEL DE CONTENIDO (oculto hasta conectar) -->
-  <!-- ============================================================ -->
-  <div id="panelContent" class="hidden">
-
-    <section class="u27-dashboard" id="u27Dashboard">
-      <div class="u27-hero">
-        <div><div class="u27-kicker">UADAVSTREAM · Centro de control</div><div class="u27-title">Visión general de la plataforma</div><div class="u27-sub">Estadísticas, analítica, moderación y derechos en un mismo lugar.</div></div>
-        <div class="u27-status" id="u27ApiBadge">API · comprobando…</div>
-      </div>
-      <div class="u27-grid">
-        <div class="u27-card"><div class="u27-label">Visitas</div><div class="u27-value" id="u27Visits">—</div><div class="u27-note">Últimos 7 días</div></div>
-        <div class="u27-card"><div class="u27-label">Reproducciones</div><div class="u27-value" id="u27Plays">—</div><div class="u27-note">Videos / Shorts / Live</div></div>
-        <div class="u27-card"><div class="u27-label">Radios</div><div class="u27-value" id="u27RadioPlays">—</div><div class="u27-note">Sintonizaciones</div></div>
-        <div class="u27-card"><div class="u27-label">Perfiles</div><div class="u27-value" id="u27ArtistViews">—</div><div class="u27-note">Vistas de artistas</div></div>
-        <div class="u27-card"><div class="u27-label">Pedidos / chat</div><div class="u27-value" id="u27Chat">—</div><div class="u27-note">Interacciones registradas</div></div>
-      </div>
-      <div class="u27-actions">
-        <div class="u27-panel">
-          <h3>📈 Google Analytics 4</h3>
-          <div class="u27-form"><div><label class="u27-label">ID de medición</label><input id="u27GaId" placeholder="G-XXXXXXXXXX" autocomplete="off"></div><label class="u27-label" style="display:flex;gap:7px;align-items:center;padding-bottom:10px"><input id="u27GaEnabled" type="checkbox" style="width:auto"> Activar</label><button class="btn btn-primary" type="button" onclick="u27SaveAnalytics()">Guardar</button></div>
-          <div class="u27-note" style="margin-top:8px">La etiqueta se activará desde la Home cuando exista un ID válido y el consentimiento/configuración lo permita.</div>
-        </div>
-        <div class="u27-panel">
-          <h3>⚖️ Derechos y exportación</h3>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary" type="button" onclick="u27ExportRights()">Exportar SADAIC / AADI-CAPIF</button><button class="btn btn-secondary" type="button" onclick="u27LoadAudit()">Ver auditoría</button></div>
-          <div class="u27-note" style="margin-top:8px">Registra metadatos declarados de reproducciones; no sustituye liquidaciones ni validaciones legales externas.</div>
-        </div>
-      </div>
-      <div class="u27-panel"><h3>🛡️ Moderación y sanciones</h3><div class="u27-form"><div><label class="u27-label">ID / token del artista</label><input id="u27SanArtist" placeholder="artista-001"></div><select id="u27SanState"><option value="observado">Observado</option><option value="suspendido">Suspendido</option><option value="bloqueado">Bloqueado</option><option value="levantado">Levantar sanción</option></select><button class="btn btn-danger" type="button" onclick="u27SanctionArtist()">Aplicar</button></div><div class="u27-note">Toda acción queda registrada en auditoría con motivo, fecha y administrador.</div><div id="u27AuditPreview" style="margin-top:12px"></div></div>
-    </section>
-
-
-<details id="integrationDiagnostics" open>
-  <summary><i class="fa-solid fa-heart-pulse"></i> Diagnóstico de integración UADAVSTREAM</summary>
-  <div class="details-content">
-    <p style="color:var(--text-secondary);margin-top:0">Comprueba que cada módulo del Admin tenga una ruta real y responda desde el Worker activo. No modifica datos.</p>
-    <div id="integrationDiagGrid" class="integration-diag-grid"></div>
-    <button onclick="ejecutarDiagnostico()" class="btn btn-secondary">🔄 Volver a comprobar</button>
-  </div>
+<!-- ============================================================ -->
+<!-- HEADER -->
+<!-- ============================================================ -->
+<header class="header">
+<h1>UADAV<span>STREAM</span> <span style="font-size:0.7rem; color:var(--text-secondary); font-weight:400;">Centro de Control</span></h1>
+<div class="header-actions">
+<input id="adminKeyInput" onkeydown="if(event.key === 'Enter') conectar()" placeholder="Clave Admin" type="password"/>
+<button class="btn btn-primary" onclick="conectar()">Conectar</button>
+<button class="btn btn-secondary hidden" id="btnLogout" onclick="desconectar()">Salir</button>
+</div>
+<div id="apiStatus"><span class="apiDot"></span><span id="apiStatusText">Comprobando API…</span></div>
+<div class="admin-v28-nav-title">NAVEGACIÓN</div>
+<nav aria-label="Secciones del panel" class="admin-v28-nav" id="adminV28Nav">
+<button data-target="integrationDiagnostics" onclick="adminV28Go('integrationDiagnostics')" type="button"><i class="fa-solid fa-stethoscope"></i><span class="label">Diagnóstico</span><span class="nav-dot"></span></button>
+<button data-target="sec-secciones" onclick="adminV28Go('sec-secciones')" type="button"><i class="fa-solid fa-layer-group"></i><span class="label">Secciones y contenido</span><span class="nav-dot"></span></button>
+<button data-target="sec-personalizacion" onclick="adminV28Go('sec-personalizacion')" type="button"><i class="fa-solid fa-palette"></i><span class="label">Apariencia</span><span class="nav-dot"></span></button>
+<button data-target="sec-banners" onclick="adminV28Go('sec-banners')" type="button"><i class="fa-solid fa-rectangle-ad"></i><span class="label">Publicidad</span><span class="nav-dot"></span></button>
+<button data-target="sec-visibilidad" onclick="adminV28Go('sec-visibilidad')" type="button"><i class="fa-solid fa-eye"></i><span class="label">Visibilidad</span><span class="nav-dot"></span></button>
+<button data-target="sec-home" onclick="adminV28Go('sec-home')" type="button"><i class="fa-solid fa-table-columns"></i><span class="label">Home / Orden</span><span class="nav-dot"></span></button>
+<button data-target="sec-streams" onclick="adminV28Go('sec-streams')" type="button"><i class="fa-solid fa-tower-broadcast"></i><span class="label">Señales y radios</span><span class="nav-dot"></span></button>
+<button data-target="sec-artistas" onclick="adminV28Go('sec-artistas')" type="button"><i class="fa-solid fa-microphone-lines"></i><span class="label">Artistas</span><span class="nav-dot"></span></button>
+<button data-target="sec-eventos" onclick="adminV28Go('sec-eventos')" type="button"><i class="fa-solid fa-calendar-days"></i><span class="label">Eventos</span><span class="nav-dot"></span></button>
+<button data-target="sec-cartelera" onclick="adminV28Go('sec-cartelera')" type="button"><i class="fa-solid fa-ticket"></i><span class="label">Cartelera</span><span class="nav-dot"></span></button>
+<button data-target="sec-premium" onclick="adminV28Go('sec-premium')" type="button"><i class="fa-solid fa-key"></i><span class="label">Premium</span><span class="nav-dot"></span></button>
+<button data-target="sec-footer" onclick="adminV28Go('sec-footer')" type="button"><i class="fa-solid fa-share-nodes"></i><span class="label">Footer y redes</span><span class="nav-dot"></span></button>
+<button data-target="sec-herramientas" onclick="adminV28Go('sec-herramientas')" type="button"><i class="fa-solid fa-toolbox"></i><span class="label">Herramientas</span><span class="nav-dot"></span></button>
+</nav>
+</header>
+<!-- ============================================================ -->
+<!-- TOAST -->
+<!-- ============================================================ -->
+<div class="toast" id="toast"></div>
+<!-- ============================================================ -->
+<!-- PANEL DE CONTENIDO (oculto hasta conectar) -->
+<!-- ============================================================ -->
+<div class="admin-v28-mainbar">
+<div>
+<div class="crumb">UADAVSTREAM · OPERACIONES</div>
+<div class="title" id="adminV28CurrentTitle">Centro de control</div>
+<div class="sub">Contenido, audiencia, artistas, señales y monetización.</div>
+</div>
+<div class="admin-v28-main-actions">
+<button class="btn btn-secondary btn-sm" onclick="adminV28Go('integrationDiagnostics')" type="button"><i class="fa-solid fa-heart-pulse"></i> Estado</button>
+<button class="btn btn-primary btn-sm" onclick="adminV28TryRefresh()" type="button"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+</div>
+</div>
+<div class="hidden" id="panelContent">
+<section class="u27-dashboard" data-nav-id="sec-dashboard" id="u27Dashboard">
+<div class="u27-hero">
+<div><div class="u27-kicker">UADAVSTREAM · Centro de control</div><div class="u27-title">Visión general de la plataforma</div><div class="u27-sub">Estadísticas, analítica, moderación y derechos en un mismo lugar.</div></div>
+<div class="u27-status" id="u27ApiBadge">API · comprobando…</div>
+</div>
+<div class="u27-grid">
+<div class="u27-card"><div class="u27-label">Visitas</div><div class="u27-value" id="u27Visits">—</div><div class="u27-note">Últimos 7 días</div></div>
+<div class="u27-card"><div class="u27-label">Reproducciones</div><div class="u27-value" id="u27Plays">—</div><div class="u27-note">Videos / Shorts / Live</div></div>
+<div class="u27-card"><div class="u27-label">Radios</div><div class="u27-value" id="u27RadioPlays">—</div><div class="u27-note">Sintonizaciones</div></div>
+<div class="u27-card"><div class="u27-label">Perfiles</div><div class="u27-value" id="u27ArtistViews">—</div><div class="u27-note">Vistas de artistas</div></div>
+<div class="u27-card"><div class="u27-label">Pedidos / chat</div><div class="u27-value" id="u27Chat">—</div><div class="u27-note">Interacciones registradas</div></div>
+</div>
+<div class="u27-actions">
+<div class="u27-panel">
+<h3>📈 Google Analytics 4</h3>
+<div class="u27-form"><div><label class="u27-label">ID de medición</label><input autocomplete="off" id="u27GaId" placeholder="G-XXXXXXXXXX"/></div><label class="u27-label" style="display:flex;gap:7px;align-items:center;padding-bottom:10px"><input id="u27GaEnabled" style="width:auto" type="checkbox"/> Activar</label><button class="btn btn-primary" onclick="u27SaveAnalytics()" type="button">Guardar</button></div>
+<div class="u27-note" style="margin-top:8px">La etiqueta se activará desde la Home cuando exista un ID válido y el consentimiento/configuración lo permita.</div>
+</div>
+<div class="u27-panel">
+<h3>⚖️ Derechos y exportación</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-secondary" onclick="u27ExportRights()" type="button">Exportar SADAIC / AADI-CAPIF</button><button class="btn btn-secondary" onclick="u27LoadAudit()" type="button">Ver auditoría</button></div>
+<div class="u27-note" style="margin-top:8px">Registra metadatos declarados de reproducciones; no sustituye liquidaciones ni validaciones legales externas.</div>
+</div>
+</div>
+<div class="u27-panel"><h3>🛡️ Moderación y sanciones</h3><div class="u27-form"><div><label class="u27-label">ID / token del artista</label><input id="u27SanArtist" placeholder="artista-001"/></div><select id="u27SanState"><option value="observado">Observado</option><option value="suspendido">Suspendido</option><option value="bloqueado">Bloqueado</option><option value="levantado">Levantar sanción</option></select><button class="btn btn-danger" onclick="u27SanctionArtist()" type="button">Aplicar</button></div><div class="u27-note">Toda acción queda registrada en auditoría con motivo, fecha y administrador.</div><div id="u27AuditPreview" style="margin-top:12px"></div></div>
+</section>
+<details id="integrationDiagnostics" open="">
+<summary><i class="fa-solid fa-heart-pulse"></i> Diagnóstico de integración UADAVSTREAM</summary>
+<div class="details-content">
+<p style="color:var(--text-secondary);margin-top:0">Comprueba que cada módulo del Admin tenga una ruta real y responda desde el Worker activo. No modifica datos.</p>
+<div class="integration-diag-grid" id="integrationDiagGrid"></div>
+<button class="btn btn-secondary" onclick="ejecutarDiagnostico()">🔄 Volver a comprobar</button>
+</div>
 </details>
-
-    <!-- ============================================================ -->
-    <!-- 1. SECCIONES Y CONTENIDO -->
-    <!-- ============================================================ -->
-    <details open>
-      <summary><i class="fa-solid fa-layer-group"></i> Secciones y Contenido</summary>
-      <div class="details-content">
-        <!-- Crear Sección -->
-        <div class="form-row" style="margin-bottom:20px; background:var(--bg-input); border-radius:12px; padding:16px;">
-          <div class="form-group">
-            <label>ID (sin espacios)</label>
-            <input id="nuevoSecId" placeholder="rock">
-          </div>
-          <div class="form-group">
-            <label>Nombre</label>
-            <input id="nuevoSecNombre" placeholder="Rock Nacional">
-          </div>
-          <div class="form-group">
-            <label>Ícono</label>
-            <input id="nuevoSecIcono" placeholder="fa-guitar">
-          </div>
-          <div class="form-group">
-            <label>Imagen/Logo de sección URL</label>
-            <input id="nuevoSecIconUrl" placeholder="https://.../icono-o-logo.png">
-          </div>
-          <div class="form-group">
-            <label>Query Auto</label>
-            <input id="nuevoSecQuery" placeholder="rock argentino">
-          </div>
-          <div style="grid-column: 1 / -1;">
-            <button onclick="agregarNuevaSeccion()" class="btn btn-primary w-full">+ Agregar Sección</button>
-          </div>
-        </div>
-
-        <div id="seccionesList"></div>
-
-        <hr style="border-color:var(--border-color); margin:24px 0;">
-
-        <h3 style="color:var(--text-primary); font-weight:700; margin-bottom:12px;">🎬 Agregar Contenido a una Sección</h3>
-        <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
-          <div class="form-row">
-            <div class="form-group" style="grid-column: 1 / -1;">
-              <label>Seleccionar Sección</label>
-              <select id="selectSeccionManual" onchange="actualizarFormularioYLista()"></select>
-            </div>
-            <div class="form-group">
-              <label>Tipo de Contenido</label>
-              <select id="tipoContenido" onchange="toggleCamposDinamicos()">
-                <option value="youtube">YouTube</option>
-                <option value="vimeo">Vimeo</option>
-                <option value="dailymotion">Dailymotion</option>
-                <option value="drive">Google Drive</option>
-                <option value="okru">Ok.ru</option>
-                <option value="twitch">Twitch</option>
-                <option value="kick">Kick</option>
-                <option value="mp4">MP4 / URL Directa</option>
-                <option value="m3u8">Streaming (M3U8)</option>
-                <option value="generic">Cualquier URL (Embed)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Campos para Artistas -->
-          <div id="camposArtista" class="hidden">
-            <div class="form-row">
-              <div class="form-group" style="grid-column: 1 / -1;">
-                <label>Nombre Artista / @handle / link de canal</label>
-                <div style="display:flex; gap:8px;">
-                  <input id="artNombre" placeholder="URO" style="flex:1;">
-                  <button onclick="autocompletarArtistaYoutube()" id="btnAutocompletarArtista" class="btn btn-secondary" style="white-space:nowrap;">
-                    <i class="fa-brands fa-youtube text-red-400"></i> Autocompletar
+<!-- ============================================================ -->
+<!-- 1. SECCIONES Y CONTENIDO -->
+<!-- ============================================================ -->
+<details id="sec-secciones" open="">
+<summary><i class="fa-solid fa-layer-group"></i> Secciones y Contenido</summary>
+<div class="details-content">
+<!-- Crear Sección -->
+<div class="form-row" style="margin-bottom:20px; background:var(--bg-input); border-radius:12px; padding:16px;">
+<div class="form-group">
+<label>ID (sin espacios)</label>
+<input id="nuevoSecId" placeholder="rock"/>
+</div>
+<div class="form-group">
+<label>Nombre</label>
+<input id="nuevoSecNombre" placeholder="Rock Nacional"/>
+</div>
+<div class="form-group">
+<label>Ícono</label>
+<input id="nuevoSecIcono" placeholder="fa-guitar"/>
+</div>
+<div class="form-group">
+<label>Imagen/Logo de sección URL</label>
+<input id="nuevoSecIconUrl" placeholder="https://.../icono-o-logo.png"/>
+</div>
+<div class="form-group">
+<label>Query Auto</label>
+<input id="nuevoSecQuery" placeholder="rock argentino"/>
+</div>
+<div style="grid-column: 1 / -1;">
+<button class="btn btn-primary w-full" onclick="agregarNuevaSeccion()">+ Agregar Sección</button>
+</div>
+</div>
+<div id="seccionesList"></div>
+<hr style="border-color:var(--border-color); margin:24px 0;"/>
+<h3 style="color:var(--text-primary); font-weight:700; margin-bottom:12px;">🎬 Agregar Contenido a una Sección</h3>
+<div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
+<div class="form-row">
+<div class="form-group" style="grid-column: 1 / -1;">
+<label>Seleccionar Sección</label>
+<select id="selectSeccionManual" onchange="actualizarFormularioYLista()"></select>
+</div>
+<div class="form-group">
+<label>Tipo de Contenido</label>
+<select id="tipoContenido" onchange="toggleCamposDinamicos()">
+<option value="youtube">YouTube</option>
+<option value="vimeo">Vimeo</option>
+<option value="dailymotion">Dailymotion</option>
+<option value="drive">Google Drive</option>
+<option value="okru">Ok.ru</option>
+<option value="twitch">Twitch</option>
+<option value="kick">Kick</option>
+<option value="mp4">MP4 / URL Directa</option>
+<option value="m3u8">Streaming (M3U8)</option>
+<option value="generic">Cualquier URL (Embed)</option>
+</select>
+</div>
+</div>
+<!-- Campos para Artistas -->
+<div class="hidden" id="camposArtista">
+<div class="form-row">
+<div class="form-group" style="grid-column: 1 / -1;">
+<label>Nombre Artista / @handle / link de canal</label>
+<div style="display:flex; gap:8px;">
+<input id="artNombre" placeholder="URO" style="flex:1;"/>
+<button class="btn btn-secondary" id="btnAutocompletarArtista" onclick="autocompletarArtistaYoutube()" style="white-space:nowrap;">
+<i class="fa-brands fa-youtube text-red-400"></i> Autocompletar
                   </button>
-                </div>
-                <p style="color:var(--text-secondary); font-size:0.7rem; margin-top:4px;">Busca el canal en YouTube y completa foto, ID de canal y bio.</p>
-              </div>
-              <div class="form-group"><label>Rubro</label><input id="artRubro" placeholder="Música"></div>
-              <div class="form-group"><label>Foto URL</label><input id="artFoto" placeholder="https://..."></div>
-              <div class="form-group" style="grid-column: 1 / -1;"><label>Bio</label><textarea id="artBio" rows="2"></textarea></div>
-              <div class="form-group"><label>Canal YouTube ID</label><input id="artCanal" placeholder="UC..."></div>
-              <div class="form-group"><label>Contacto (WhatsApp)</label><input id="artContacto" placeholder="341..."></div>
-              <div class="form-group"><label>Afiliado UADAV verificado</label><select id="artAfiliado"><option value="false">No</option><option value="true">Sí</option></select></div>
-              <div class="form-group"><label>Donaciones activas</label><select id="artDonacionActiva"><option value="false">No</option><option value="true">Sí</option></select></div>
-              <div class="form-group"><label>Link de apoyo / donación</label><input id="artDonacionUrl" placeholder="https://cafecito.app/... o Mercado Pago..."></div>
-              <div class="form-group"><label>Transmisión en vivo (YouTube/URL)</label><input id="artLiveUrl" placeholder="https://youtube.com/live/... o https://..."></div>
-              <div class="form-group"><label>Link de contratación</label><input id="artBookingUrl" placeholder="https://wa.me/... o formulario..."></div>
-            </div>
-          </div>
-
-          <!-- Campos para Cartelera (Eventos) -->
-          <div id="camposCartelera" class="hidden">
-            <div class="form-row">
-              <div class="form-group"><label>Nombre Evento</label><input id="evNombre" placeholder="Obra de Teatro"></div>
-              <div class="form-group"><label>Fecha</label><input id="evFecha" placeholder="15/08/2026"></div>
-              <div class="form-group"><label>Lugar</label><input id="evLugar" placeholder="Teatro Colón"></div>
-              <div class="form-group"><label>Imagen</label><input id="evImg" placeholder="https://..."></div>
-              <div class="form-group"><label>Trailer ID (YouTube)</label><input id="evTrailer" placeholder="dQw4w9WgXcQ"></div>
-              <div class="form-group"><label>Precio</label><input id="evPrecio" placeholder="15000"></div>
-              <div class="form-group" style="grid-column: 1 / -1;"><label>Link Compra</label><input id="evLink" placeholder="https://... o wa.me/..."></div>
-              <div class="form-group" style="grid-column: 1 / -1;"><label>Descripción</label><textarea id="evDesc" rows="2"></textarea></div>
-            </div>
-          </div>
-
-          <!-- Campos para Videos Genéricos -->
-          <div id="camposVideo">
-            <div class="form-row">
-              <div class="form-group" style="grid-column: 1 / -1;"><label>URL o ID del Video</label><input id="vidUrl" placeholder="dQw4w9WgXcQ o https://..."></div>
-              <div class="form-group"><label>Título (Opcional)</label><input id="vidTitulo" placeholder="Si está vacío, usa el de YouTube"></div>
-              <div class="form-group"><label>Imagen (Opcional)</label><input id="vidImg" placeholder="https://..."></div>
-            </div>
-          </div>
-
-          <div style="display:flex; gap:8px; margin-top:12px;">
-            <button onclick="agregarItem()" id="btnAgregarItem" class="btn btn-primary" style="flex:1;">➕ Agregar Item</button>
-            <button onclick="cancelarEdicion()" id="btnCancelarEdicion" class="btn btn-danger hidden">✕ Cancelar</button>
-          </div>
-        </div>
-
-        <div id="contenidoManualList"></div>
-      </div>
-    </details>
-
-    <!-- ============================================================ -->
-    <!-- 2. PERSONALIZACIÓN DE LA INTERFAZ (NUEVO) -->
-    <!-- ============================================================ -->
-    <details>
-      <summary><i class="fa-solid fa-palette"></i> 🎨 Personalización de la Interfaz</summary>
-      <div class="details-content">
-        <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Estado público de UADAVSTREAM</label>
-              <select id="modoMantenimiento">
-                <option value="normal">✅ Normal — mostrar la plataforma</option>
-                <option value="mantenimiento">🔧 Mantenimiento — mostrar aviso</option>
-                <option value="landing">🚪 Landing — mostrar página de presentación</option>
-              </select>
-              <small style="display:block;color:var(--text-secondary);margin-top:6px;">Este selector controla la web pública. No solo guarda la apariencia.</small>
-            </div>
-            <div class="form-group" id="landingTituloGroup">
-              <label>Título de Landing</label>
-              <input id="landingTitulo" placeholder="Próximamente UADAVSTREAM">
-            </div>
-            <div class="form-group" id="landingSubtituloGroup">
-              <label>Subtítulo de Landing</label>
-              <input id="landingSubtitulo" placeholder="El Netflix musical está llegando.">
-            </div>
-            <div class="form-group" id="landingFondoGroup">
-              <label>Fondo de Landing (URL)</label>
-              <input id="landingFondo" placeholder="https://ejemplo.com/fondo.jpg">
-            </div>
-            <div class="form-group" id="landingUrlGroup">
-              <label>URL de Landing (modo Landing)</label>
-              <input id="estadoLandingUrl" placeholder="/landing.html">
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-            <button type="button" onclick="establecerModoPublico('normal')" class="btn btn-success btn-sm">✅ Poner web normal</button>
-            <button type="button" onclick="establecerModoPublico('mantenimiento')" class="btn btn-warning btn-sm">🔧 Activar mantenimiento</button>
-            <button type="button" onclick="establecerModoPublico('landing')" class="btn btn-secondary btn-sm">🚪 Usar landing</button>
-          </div>
-          <div id="estadoSitioStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.82rem;"></div>
-        </div>
-
-        <div style="background:var(--bg-input); border-radius:12px; padding:16px;">
-          <h4 style="color:var(--text-primary); font-weight:700; margin-bottom:12px;">🎨 Colores y Marca</h4>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Logo URL</label>
-              <input id="marcaLogo" placeholder="https://ejemplo.com/logo.png">
-            </div>
-            <div class="form-group">
-              <label>Favicon URL</label>
-              <input id="marcaFavicon" placeholder="https://ejemplo.com/favicon.ico">
-            </div>
-            <div class="form-group">
-              <label>Color Principal (Acento)</label>
-              <input type="color" id="colorPrincipal" value="#00e5ff">
-            </div>
-            <div class="form-group">
-              <label>Color de Fondo</label>
-              <input type="color" id="colorFondo" value="#050505">
-            </div>
-            <div class="form-group">
-              <label>Color de Tarjetas</label>
-              <input type="color" id="colorTarjetas" value="#0f0f13">
-            </div>
-            <div class="form-group">
-              <label>Color de Texto Secundario</label>
-              <input type="color" id="colorTexto" value="#94a3b8">
-            </div>
-          </div>
-          
-        <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-top:16px;">
-          <h4 style="color:var(--text-primary);font-weight:800;margin-bottom:10px;">🎬 Spotlight / Hero dinámico</h4>
-          <div class="form-row">
-            <div class="form-group"><label>Activar Spotlight</label><select id="heroSpotActive"><option value="true">Sí</option><option value="false">No</option></select></div>
-            <div class="form-group"><label>Categoría</label><input id="heroSpotCategory" placeholder="En vivo · Circo · Artista · Película"></div>
-            <div class="form-group"><label>Kicker</label><input id="heroSpotKicker" placeholder="UADAVSTREAM recomienda"></div>
-            <div class="form-group"><label>Título</label><input id="heroSpotTitle" placeholder="Nombre del contenido"></div>
-            <div class="form-group" style="grid-column:1/-1"><label>Descripción</label><textarea id="heroSpotDescription" rows="3" placeholder="Descripción breve para la portada"></textarea></div>
-            <div class="form-group"><label>Imagen de fondo URL</label><input id="heroSpotImage" placeholder="https://..."></div>
-            <div class="form-group"><label>Icono/imagen de categoría URL</label><input id="heroSpotIcon" placeholder="https://..."></div>
-            <div class="form-group"><label>Acción principal</label><select id="heroSpotActionType"><option value="video">Video</option><option value="live">Señal en vivo</option><option value="radio">Radio</option><option value="section">Sección</option><option value="url">URL externa</option></select></div>
-            <div class="form-group"><label>ID / destino</label><input id="heroSpotActionId" placeholder="YouTube ID, ID señal, ID radio o target de sección"></div>
-            <div class="form-group"><label>URL externa (si corresponde)</label><input id="heroSpotActionUrl" placeholder="https://..."></div>
-          </div>
-          <small style="display:block;color:var(--text-secondary);margin-top:8px;line-height:1.45">Este bloque funciona como portada editorial de la plataforma. Puede representar un video, una señal en vivo, una radio, un artista, una obra o una sección. No reemplaza las filas: las organiza y les da una entrada visual.</small>
-        </div>
+</div>
+<p style="color:var(--text-secondary); font-size:0.7rem; margin-top:4px;">Busca el canal en YouTube y completa foto, ID de canal y bio.</p>
+</div>
+<div class="form-group"><label>Rubro</label><input id="artRubro" placeholder="Música"/></div>
+<div class="form-group"><label>Foto URL</label><input id="artFoto" placeholder="https://..."/></div>
+<div class="form-group" style="grid-column: 1 / -1;"><label>Bio</label><textarea id="artBio" rows="2"></textarea></div>
+<div class="form-group"><label>Canal YouTube ID</label><input id="artCanal" placeholder="UC..."/></div>
+<div class="form-group"><label>Contacto (WhatsApp)</label><input id="artContacto" placeholder="341..."/></div>
+<div class="form-group"><label>Afiliado UADAV verificado</label><select id="artAfiliado"><option value="false">No</option><option value="true">Sí</option></select></div>
+<div class="form-group"><label>Donaciones activas</label><select id="artDonacionActiva"><option value="false">No</option><option value="true">Sí</option></select></div>
+<div class="form-group"><label>Link de apoyo / donación</label><input id="artDonacionUrl" placeholder="https://cafecito.app/... o Mercado Pago..."/></div>
+<div class="form-group"><label>Transmisión en vivo (YouTube/URL)</label><input id="artLiveUrl" placeholder="https://youtube.com/live/... o https://..."/></div>
+<div class="form-group"><label>Link de contratación</label><input id="artBookingUrl" placeholder="https://wa.me/... o formulario..."/></div>
+</div>
+</div>
+<!-- Campos para Cartelera (Eventos) -->
+<div class="hidden" id="camposCartelera">
+<div class="form-row">
+<div class="form-group"><label>Nombre Evento</label><input id="evNombre" placeholder="Obra de Teatro"/></div>
+<div class="form-group"><label>Fecha</label><input id="evFecha" placeholder="15/08/2026"/></div>
+<div class="form-group"><label>Lugar</label><input id="evLugar" placeholder="Teatro Colón"/></div>
+<div class="form-group"><label>Imagen</label><input id="evImg" placeholder="https://..."/></div>
+<div class="form-group"><label>Trailer ID (YouTube)</label><input id="evTrailer" placeholder="dQw4w9WgXcQ"/></div>
+<div class="form-group"><label>Precio</label><input id="evPrecio" placeholder="15000"/></div>
+<div class="form-group" style="grid-column: 1 / -1;"><label>Link Compra</label><input id="evLink" placeholder="https://... o wa.me/..."/></div>
+<div class="form-group" style="grid-column: 1 / -1;"><label>Descripción</label><textarea id="evDesc" rows="2"></textarea></div>
+</div>
+</div>
+<!-- Campos para Videos Genéricos -->
+<div id="camposVideo">
+<div class="form-row">
+<div class="form-group" style="grid-column: 1 / -1;"><label>URL o ID del Video</label><input id="vidUrl" placeholder="dQw4w9WgXcQ o https://..."/></div>
+<div class="form-group"><label>Título (Opcional)</label><input id="vidTitulo" placeholder="Si está vacío, usa el de YouTube"/></div>
+<div class="form-group"><label>Imagen (Opcional)</label><input id="vidImg" placeholder="https://..."/></div>
+</div>
+</div>
+<div style="display:flex; gap:8px; margin-top:12px;">
+<button class="btn btn-primary" id="btnAgregarItem" onclick="agregarItem()" style="flex:1;">➕ Agregar Item</button>
+<button class="btn btn-danger hidden" id="btnCancelarEdicion" onclick="cancelarEdicion()">✕ Cancelar</button>
+</div>
+</div>
+<div id="contenidoManualList"></div>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- 2. PERSONALIZACIÓN DE LA INTERFAZ (NUEVO) -->
+<!-- ============================================================ -->
+<details id="sec-personalizacion">
+<summary><i class="fa-solid fa-palette"></i> 🎨 Personalización de la Interfaz</summary>
+<div class="details-content">
+<div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
+<div class="form-row">
+<div class="form-group">
+<label>Estado público de UADAVSTREAM</label>
+<select id="modoMantenimiento">
+<option value="normal">✅ Normal — mostrar la plataforma</option>
+<option value="mantenimiento">🔧 Mantenimiento — mostrar aviso</option>
+<option value="landing">🚪 Landing — mostrar página de presentación</option>
+</select>
+<small style="display:block;color:var(--text-secondary);margin-top:6px;">Este selector controla la web pública. No solo guarda la apariencia.</small>
+</div>
+<div class="form-group" id="landingTituloGroup">
+<label>Título de Landing</label>
+<input id="landingTitulo" placeholder="Próximamente UADAVSTREAM"/>
+</div>
+<div class="form-group" id="landingSubtituloGroup">
+<label>Subtítulo de Landing</label>
+<input id="landingSubtitulo" placeholder="El Netflix musical está llegando."/>
+</div>
+<div class="form-group" id="landingFondoGroup">
+<label>Fondo de Landing (URL)</label>
+<input id="landingFondo" placeholder="https://ejemplo.com/fondo.jpg"/>
+</div>
+<div class="form-group" id="landingUrlGroup">
+<label>URL de Landing (modo Landing)</label>
+<input id="estadoLandingUrl" placeholder="/landing.html"/>
+</div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+<button class="btn btn-success btn-sm" onclick="establecerModoPublico('normal')" type="button">✅ Poner web normal</button>
+<button class="btn btn-warning btn-sm" onclick="establecerModoPublico('mantenimiento')" type="button">🔧 Activar mantenimiento</button>
+<button class="btn btn-secondary btn-sm" onclick="establecerModoPublico('landing')" type="button">🚪 Usar landing</button>
+</div>
+<div id="estadoSitioStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.82rem;"></div>
+</div>
+<div style="background:var(--bg-input); border-radius:12px; padding:16px;">
+<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:12px;">🎨 Colores y Marca</h4>
+<div class="form-row">
+<div class="form-group">
+<label>Logo URL</label>
+<input id="marcaLogo" placeholder="https://ejemplo.com/logo.png"/>
+</div>
+<div class="form-group">
+<label>Favicon URL</label>
+<input id="marcaFavicon" placeholder="https://ejemplo.com/favicon.ico"/>
+</div>
+<div class="form-group">
+<label>Color Principal (Acento)</label>
+<input id="colorPrincipal" type="color" value="#00e5ff"/>
+</div>
+<div class="form-group">
+<label>Color de Fondo</label>
+<input id="colorFondo" type="color" value="#050505"/>
+</div>
+<div class="form-group">
+<label>Color de Tarjetas</label>
+<input id="colorTarjetas" type="color" value="#0f0f13"/>
+</div>
+<div class="form-group">
+<label>Color de Texto Secundario</label>
+<input id="colorTexto" type="color" value="#94a3b8"/>
+</div>
+</div>
+<div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-top:16px;">
+<h4 style="color:var(--text-primary);font-weight:800;margin-bottom:10px;">🎬 Spotlight / Hero dinámico</h4>
+<div class="form-row">
+<div class="form-group"><label>Activar Spotlight</label><select id="heroSpotActive"><option value="true">Sí</option><option value="false">No</option></select></div>
+<div class="form-group"><label>Categoría</label><input id="heroSpotCategory" placeholder="En vivo · Circo · Artista · Película"/></div>
+<div class="form-group"><label>Kicker</label><input id="heroSpotKicker" placeholder="UADAVSTREAM recomienda"/></div>
+<div class="form-group"><label>Título</label><input id="heroSpotTitle" placeholder="Nombre del contenido"/></div>
+<div class="form-group" style="grid-column:1/-1"><label>Descripción</label><textarea id="heroSpotDescription" placeholder="Descripción breve para la portada" rows="3"></textarea></div>
+<div class="form-group"><label>Imagen de fondo URL</label><input id="heroSpotImage" placeholder="https://..."/></div>
+<div class="form-group"><label>Icono/imagen de categoría URL</label><input id="heroSpotIcon" placeholder="https://..."/></div>
+<div class="form-group"><label>Acción principal</label><select id="heroSpotActionType"><option value="video">Video</option><option value="live">Señal en vivo</option><option value="radio">Radio</option><option value="section">Sección</option><option value="url">URL externa</option></select></div>
+<div class="form-group"><label>ID / destino</label><input id="heroSpotActionId" placeholder="YouTube ID, ID señal, ID radio o target de sección"/></div>
+<div class="form-group"><label>URL externa (si corresponde)</label><input id="heroSpotActionUrl" placeholder="https://..."/></div>
+</div>
+<small style="display:block;color:var(--text-secondary);margin-top:8px;line-height:1.45">Este bloque funciona como portada editorial de la plataforma. Puede representar un video, una señal en vivo, una radio, un artista, una obra o una sección. No reemplaza las filas: las organiza y les da una entrada visual.</small>
+</div>
 <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
-            <button onclick="guardarPersonalizacion()" class="btn btn-primary">💾 Guardar Personalización</button>
-            <button onclick="cargarPersonalizacion()" class="btn btn-secondary">🔄 Recargar Configuración</button>
-          </div>
-          <div style="margin-top:12px; padding:12px; background:var(--bg-main); border-radius:8px; border:1px solid var(--border-color);">
-            <p style="color:var(--text-secondary); font-size:0.8rem;">
-              <i class="fa-solid fa-info-circle"></i> 
+<button class="btn btn-primary" onclick="guardarPersonalizacion()">💾 Guardar Personalización</button>
+<button class="btn btn-secondary" onclick="cargarPersonalizacion()">🔄 Recargar Configuración</button>
+</div>
+<div style="margin-top:12px; padding:12px; background:var(--bg-main); border-radius:8px; border:1px solid var(--border-color);">
+<p style="color:var(--text-secondary); font-size:0.8rem;">
+<i class="fa-solid fa-info-circle"></i> 
               Los cambios se aplicarán automáticamente en el frontend de UADAVSTREAM. Los usuarios verán la nueva apariencia al recargar la página.
             </p>
-          </div>
-        </div>
-      </div>
-    </details>
-
-
-
-    <!-- ============================================================ -->
-    <!-- 3. BANNERS PUBLICITARIOS -->
-    <!-- ============================================================ -->
-    <details open>
-      <summary><i class="fa-solid fa-rectangle-ad"></i> 📢 Banners Publicitarios</summary>
-      <div class="details-content">
-        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;">
-          <div class="card">
-            <div class="card-header">
-              <strong>Banner Superior</strong>
-              <span class="badge badge-info">TOP</span>
-            </div>
-            <div class="form-group" style="margin-top:12px;">
-              <label>Estado</label>
-              <select id="bannerTopActivo">
-                <option value="true">✅ Activo</option>
-                <option value="false">⛔ Oculto</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Código HTML / iframe / imagen</label>
-              <textarea id="bannerTopHTML" rows="7" placeholder='<a href="https://..."><img src="https://..."></a>'></textarea>
-            </div>
-            <div class="form-group">
-              <label>Vista previa</label>
-              <div id="bannerTopPreview" style="min-height:70px;border:1px dashed var(--border-color);border-radius:10px;padding:8px;background:#080808;overflow:hidden;"></div>
-            </div>
-            <button type="button" onclick="previewBanner('top')" class="btn btn-secondary btn-sm">👁 Vista previa</button>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <strong>Entre Secciones</strong>
-              <span class="badge badge-warning">IN-FEED</span>
-            </div>
-            <div class="form-group" style="margin-top:12px;">
-              <label>Estado</label>
-              <select id="bannerInfeedActivo">
-                <option value="true">✅ Activo</option>
-                <option value="false">⛔ Oculto</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Código HTML / iframe / imagen</label>
-              <textarea id="bannerInfeedHTML" rows="7" placeholder='<a href="https://..."><img src="https://..."></a>'></textarea>
-            </div>
-            <div class="form-group">
-              <label>Vista previa</label>
-              <div id="bannerInfeedPreview" style="min-height:70px;border:1px dashed var(--border-color);border-radius:10px;padding:8px;background:#080808;overflow:hidden;"></div>
-            </div>
-            <button type="button" onclick="previewBanner('infeed')" class="btn btn-secondary btn-sm">👁 Vista previa</button>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <strong>Footer</strong>
-              <span class="badge badge-success">FOOTER</span>
-            </div>
-            <div class="form-group" style="margin-top:12px;">
-              <label>Estado</label>
-              <select id="bannerFooterActivo">
-                <option value="true">✅ Activo</option>
-                <option value="false">⛔ Oculto</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Código HTML / iframe / imagen</label>
-              <textarea id="bannerFooterHTML" rows="7" placeholder='<a href="https://..."><img src="https://..."></a>'></textarea>
-            </div>
-            <div class="form-group">
-              <label>Vista previa</label>
-              <div id="bannerFooterPreview" style="min-height:70px;border:1px dashed var(--border-color);border-radius:10px;padding:8px;background:#080808;overflow:hidden;"></div>
-            </div>
-            <button type="button" onclick="previewBanner('footer')" class="btn btn-secondary btn-sm">👁 Vista previa</button>
-          </div>
-        </div>
-
-        <div style="margin-top:16px;padding:14px;border:1px solid var(--border-color);border-radius:12px;background:rgba(255,255,255,.025);">
-          <div style="display:flex;align-items:flex-start;gap:10px;">
-            <i class="fa-solid fa-circle-info" style="color:var(--accent);margin-top:2px;"></i>
-            <div>
-              <strong style="display:block;margin-bottom:4px;">Cómo lo vamos a usar</strong>
-              <span style="color:var(--text-secondary);font-size:.82rem;">Podés cargar una imagen enlazada, un iframe o el código provisto por una red publicitaria. UADAVSTREAM guarda el contenido en la clave <code>banners</code> de UADAV_DB. La visibilidad se controla con el interruptor de cada posición.</span>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
-          <button onclick="guardarBanners()" class="btn btn-primary">💾 Guardar Banners</button>
-          <button onclick="cargarBanners()" class="btn btn-secondary">🔄 Recargar Banners</button>
-        </div>
-        <div id="bannersStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.82rem;"></div>
-      </div>
-    </details>
-
-    <!-- ============================================================ -->
-    <!-- 3. VISIBILIDAD DE LA HOME -->
-    <!-- ============================================================ -->
-    <details>
-      <summary><i class="fa-solid fa-eye"></i> 👁️ Visibilidad de la Home</summary>
-      <div class="details-content">
-        <p style="color:var(--text-secondary);font-size:.82rem;margin-bottom:14px;">Controlá qué bloques aparecen en la portada. Las secciones creadas en “Secciones y Contenido” siguen usando su propia casilla ACTIVA/INACTIVA.</p>
-        <div id="webVisibilityList" class="visibility-grid"></div>
-        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
-          <button onclick="guardarWebVisibility()" class="btn btn-primary">💾 Guardar visibilidad</button>
-          <button onclick="mostrarTodoWeb()" class="btn btn-secondary">👁️ Mostrar todo</button>
-        </div>
-        <div id="webVisibilityStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.8rem;"></div>
-      </div>
-    </details>
-
-    <!-- ============================================================ -->
-    <!-- 4. SEÑALES Y RADIOS -->
-    <!-- ============================================================ -->
-    <details>
-      <summary><i class="fa-solid fa-table-columns"></i> 🧩 Constructor de la Home</summary>
-      <div class="details-content">
-        <p style="color:var(--text-secondary);font-size:.82rem;margin-bottom:14px;">Ordená los carruseles de la Home sin tocar código. Esto controla el orden dentro del catálogo principal; la visibilidad se administra arriba.</p>
-        <div id="homeLayoutList" class="home-layout-list"></div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
-          <button onclick="guardarHomeLayout()" class="btn btn-primary">💾 Guardar orden</button>
-          <button onclick="restaurarHomeLayout()" class="btn btn-secondary">↺ Restaurar orden</button>
-        </div>
-        <div id="homeLayoutStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.8rem;"></div>
-      </div>
-    </details>
-
-    <details>
-      <summary><i class="fa-solid fa-tower-broadcast"></i> 📡 Señales y Radios</summary>
-      <div class="details-content">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
-          <div>
-            <h3 style="color:var(--text-primary); font-weight:700; margin-bottom:12px;">Señales (Streams)</h3>
-            <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Marca una señal como <strong>Principal</strong> para que aparezca como portada.</p>
-            <div id="senalesList"></div>
-          </div>
-          <div>
-            <h3 style="color:var(--text-primary); font-weight:700; margin-bottom:12px;">Radios</h3>
-            <div id="radiosList"></div>
-          </div>
-        </div>
-      </div>
-    </details>
-
-    <!-- ============================================================ -->
-    <!-- 4. FOOTER Y REDES SOCIALES -->
-    <!-- ============================================================ -->
-    <details>
-      <summary><i class="fa-solid fa-shoe-prints"></i> 📱 Footer y Redes Sociales</summary>
-      <div class="details-content">
-        <div class="form-row">
-          <div class="form-group"><label>Título del Footer</label><input id="footerTitulo" placeholder="Disfrutá UADAVSTREAM"></div>
-          <div class="form-group"><label>Subtítulo</label><input id="footerSubtitulo" placeholder="El mejor teatro y música."></div>
-          <div class="form-group" style="grid-column:1/-1;"><label>Copyright</label><input id="footerCopyright" placeholder="© 2026 UADAVSTREAM"></div>
-        </div>
-        <hr style="border-color:var(--border-color); margin:16px 0;">
-        <div class="form-row">
-          <div class="form-group"><label>Instagram</label><input id="redInstagram"></div>
-          <div class="form-group"><label>Facebook</label><input id="redFacebook"></div>
-          <div class="form-group"><label>X (Twitter)</label><input id="redTwitter"></div>
-          <div class="form-group"><label>YouTube</label><input id="redYoutube"></div>
-          <div class="form-group"><label>TikTok</label><input id="redTiktok"></div>
-          <div class="form-group"><label>WhatsApp</label><input id="redWhatsapp"></div>
-        </div>
-        <button onclick="guardarFooter()" class="btn btn-primary mt-2">💾 Guardar Footer</button>
-      </div>
-    </details>
-
-    <!-- ============================================================ -->
-    <!-- 5. GESTIÓN DE CÓDIGOS PREMIUM -->
-    <!-- ============================================================ -->
-    <details>
-      <summary><i class="fa-solid fa-key"></i> 🔑 Códigos Premium</summary>
-      <div class="details-content">
-        <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Tipo de Código</label>
-              <select id="codeTipo">
-                <option value="PREMIUM">PREMIUM</option>
-                <option value="BASIC">BASIC</option>
-                <option value="ARTIST">ARTIST</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Fecha de Vencimiento (opcional)</label>
-              <input id="codeExpira" type="datetime-local">
-            </div>
-            <div class="form-group">
-              <label>Máx. Dispositivos</label>
-              <input id="codeMaxDispositivos" type="number" value="3">
-            </div>
-            <div class="form-group">
-              <label>Plataforma</label>
-              <select id="codePlatform">
-                <option value="uadavstream">UADAVSTREAM</option>
-              </select>
-            </div>
-          </div>
-          <button onclick="generarCodigo()" class="btn btn-primary w-full">🔑 Generar Código</button>
-        </div>
-        <div id="codigosList"></div>
-      </div>
-    </details>
-
-    <!-- ============================================================ -->
-    <!-- 6. IMPORTACIÓN DE ARTISTAS (MEJORADO) -->
-    <!-- ============================================================ -->
-    <details>
-      <summary><i class="fa-solid fa-user-plus"></i> 🎤 Importar Artistas</summary>
-      <div class="details-content">
-        <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
-          <h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">📥 Importar por ID de Canal</h4>
-          <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Pega el ID del canal de YouTube (ej: UC5OrDvL9DscpcAstz7JnQGA).</p>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <input id="importCanalId" placeholder="UC..." style="flex:1; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);">
-            <button onclick="importarCanal()" class="btn btn-primary">Importar Canal</button>
-          </div>
-        </div>
-
-        <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
-          <h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">🔥 Importar desde Tendencias</h4>
-          <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Importa los artistas más populares del momento desde Invidious.</p>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-            <select id="tendenciasRegion" style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);">
-              <option value="AR">Argentina</option>
-              <option value="US">Estados Unidos</option>
-              <option value="ES">España</option>
-              <option value="MX">México</option>
-              <option value="CO">Colombia</option>
-              <option value="CL">Chile</option>
-              <option value="PE">Perú</option>
-            </select>
-            <input id="tendenciasLimite" type="number" value="25" min="5" max="100" style="width:80px; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);">
-            <button onclick="importarTendencias()" class="btn btn-warning">🔥 Importar Tendencias</button>
-          </div>
-        </div>
-
-        <div id="importStatus" style="margin-top:12px;"></div>
-        <div id="artistasImportadosList" style="margin-top:8px;"></div>
-      </div>
-    </details>
-
-    <!-- ============================================================ -->
-    <!-- 7. EVENTOS PENDIENTES -->
-    <!-- ============================================================ -->
-    <details>
-      <summary><i class="fa-solid fa-calendar-plus"></i> 📅 Eventos Pendientes</summary>
-      <div class="details-content">
-        <div id="eventosPendientesList"></div>
-      </div>
-    </details>
-
-    <!-- ============================================================ -->
-    <!-- 8. CARTELERA DE SHOWS -->
-    <!-- ============================================================ -->
-    <details>
-      <summary><i class="fa-solid fa-ticket"></i> 🎫 Cartelera de Shows</summary>
-      <div class="details-content">
-        <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
-          <div class="form-row">
-            <div class="form-group"><label>Título del Show</label><input id="showTitulo" placeholder="Dua Lipa - Radical Optimism Tour"></div>
-            <div class="form-group"><label>Fecha</label><input id="showFecha" type="datetime-local"></div>
-            <div class="form-group"><label>Lugar</label><input id="showLugar" placeholder="Estadio River Plate"></div>
-            <div class="form-group"><label>Artista ID (opcional)</label><input id="showArtistaId" placeholder="UC..."></div>
-            <div class="form-group"><label>Precio Desde</label><input id="showPrecio" type="number" placeholder="15000"></div>
-            <div class="form-group" style="grid-column:1/-1;"><label>Link de Ticketera</label><input id="showLink" placeholder="https://ticketera.com/evento"></div>
-            <div class="form-group" style="grid-column:1/-1;"><label>Poster URL</label><input id="showPoster" placeholder="https://ejemplo.com/poster.jpg"></div>
-          </div>
-          <button onclick="crearShow()" class="btn btn-primary w-full">➕ Agregar Show a la Cartelera</button>
-        </div>
-        <div id="showsList"></div>
-      </div>
-    </details>
-
-    <!-- ============================================================ -->
-    <!-- 9. IMPORTACIONES MASIVAS Y HERRAMIENTAS -->
-    <!-- ============================================================ -->
-    <details>
-      <summary><i class="fa-solid fa-file-import"></i> 📥 Importaciones Masivas y Herramientas</summary>
-      <div class="details-content">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-          <div style="background:var(--bg-input); border-radius:12px; padding:16px;">
-            <h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;"><i class="fa-brands fa-youtube text-red-400"></i> Importar Artistas desde YouTube</h4>
-            <label style="color:var(--text-secondary); font-size:0.7rem; text-transform:uppercase; font-weight:700;">Nombres, @handles o links (uno por línea)</label>
-            <textarea id="importArtistas" rows="5" placeholder="Michael Jackson&#10;https://www.youtube.com/@u2&#10;UCq-Fj5jknLsUf-MWSy4_brA" style="width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px; color:var(--text-primary); margin:8px 0;"></textarea>
-            <label style="color:var(--text-secondary); font-size:0.7rem; text-transform:uppercase; font-weight:700;">Rubro por defecto</label>
-            <input id="importGeneros" placeholder="Música" style="width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px; color:var(--text-primary); margin:8px 0;">
-            <p style="color:var(--text-secondary); font-size:0.7rem; margin:8px 0;">💡 Los links/ID de canal son exactos y gastan menos cuota de API.</p>
-            <button onclick="buscarArtistasYoutubeMasivo()" id="btnBuscarImportYT" class="btn btn-secondary w-full"><i class="fa-solid fa-magnifying-glass"></i> Buscar en YouTube</button>
-            <div id="resultadosImportYT" style="margin-top:12px; max-height:200px; overflow-y:auto;"></div>
-            <button id="btnConfirmarImportYT" onclick="confirmarImportacionArtistasYT()" class="btn btn-primary w-full hidden mt-2">
-              <i class="fa-solid fa-check"></i> Agregar seleccionados a "Artistas"
+</div>
+</div>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- 3. BANNERS PUBLICITARIOS -->
+<!-- ============================================================ -->
+<details id="sec-banners" open="">
+<summary><i class="fa-solid fa-rectangle-ad"></i> 📢 Banners Publicitarios</summary>
+<div class="details-content">
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;">
+<div class="card">
+<div class="card-header">
+<strong>Banner Superior</strong>
+<span class="badge badge-info">TOP</span>
+</div>
+<div class="form-group" style="margin-top:12px;">
+<label>Estado</label>
+<select id="bannerTopActivo">
+<option value="true">✅ Activo</option>
+<option value="false">⛔ Oculto</option>
+</select>
+</div>
+<div class="form-group">
+<label>Código HTML / iframe / imagen</label>
+<textarea id="bannerTopHTML" placeholder='&lt;a href="https://..."&gt;&lt;img src="https://..."&gt;&lt;/a&gt;' rows="7"></textarea>
+</div>
+<div class="form-group">
+<label>Vista previa</label>
+<div id="bannerTopPreview" style="min-height:70px;border:1px dashed var(--border-color);border-radius:10px;padding:8px;background:#080808;overflow:hidden;"></div>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="previewBanner('top')" type="button">👁 Vista previa</button>
+</div>
+<div class="card">
+<div class="card-header">
+<strong>Entre Secciones</strong>
+<span class="badge badge-warning">IN-FEED</span>
+</div>
+<div class="form-group" style="margin-top:12px;">
+<label>Estado</label>
+<select id="bannerInfeedActivo">
+<option value="true">✅ Activo</option>
+<option value="false">⛔ Oculto</option>
+</select>
+</div>
+<div class="form-group">
+<label>Código HTML / iframe / imagen</label>
+<textarea id="bannerInfeedHTML" placeholder='&lt;a href="https://..."&gt;&lt;img src="https://..."&gt;&lt;/a&gt;' rows="7"></textarea>
+</div>
+<div class="form-group">
+<label>Vista previa</label>
+<div id="bannerInfeedPreview" style="min-height:70px;border:1px dashed var(--border-color);border-radius:10px;padding:8px;background:#080808;overflow:hidden;"></div>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="previewBanner('infeed')" type="button">👁 Vista previa</button>
+</div>
+<div class="card">
+<div class="card-header">
+<strong>Footer</strong>
+<span class="badge badge-success">FOOTER</span>
+</div>
+<div class="form-group" style="margin-top:12px;">
+<label>Estado</label>
+<select id="bannerFooterActivo">
+<option value="true">✅ Activo</option>
+<option value="false">⛔ Oculto</option>
+</select>
+</div>
+<div class="form-group">
+<label>Código HTML / iframe / imagen</label>
+<textarea id="bannerFooterHTML" placeholder='&lt;a href="https://..."&gt;&lt;img src="https://..."&gt;&lt;/a&gt;' rows="7"></textarea>
+</div>
+<div class="form-group">
+<label>Vista previa</label>
+<div id="bannerFooterPreview" style="min-height:70px;border:1px dashed var(--border-color);border-radius:10px;padding:8px;background:#080808;overflow:hidden;"></div>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="previewBanner('footer')" type="button">👁 Vista previa</button>
+</div>
+</div>
+<div style="margin-top:16px;padding:14px;border:1px solid var(--border-color);border-radius:12px;background:rgba(255,255,255,.025);">
+<div style="display:flex;align-items:flex-start;gap:10px;">
+<i class="fa-solid fa-circle-info" style="color:var(--accent);margin-top:2px;"></i>
+<div>
+<strong style="display:block;margin-bottom:4px;">Cómo lo vamos a usar</strong>
+<span style="color:var(--text-secondary);font-size:.82rem;">Podés cargar una imagen enlazada, un iframe o el código provisto por una red publicitaria. UADAVSTREAM guarda el contenido en la clave <code>banners</code> de UADAV_DB. La visibilidad se controla con el interruptor de cada posición.</span>
+</div>
+</div>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+<button class="btn btn-primary" onclick="guardarBanners()">💾 Guardar Banners</button>
+<button class="btn btn-secondary" onclick="cargarBanners()">🔄 Recargar Banners</button>
+</div>
+<div id="bannersStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.82rem;"></div>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- 3. VISIBILIDAD DE LA HOME -->
+<!-- ============================================================ -->
+<details id="sec-visibilidad">
+<summary><i class="fa-solid fa-eye"></i> 👁️ Visibilidad de la Home</summary>
+<div class="details-content">
+<p style="color:var(--text-secondary);font-size:.82rem;margin-bottom:14px;">Controlá qué bloques aparecen en la portada. Las secciones creadas en “Secciones y Contenido” siguen usando su propia casilla ACTIVA/INACTIVA.</p>
+<div class="visibility-grid" id="webVisibilityList"></div>
+<div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+<button class="btn btn-primary" onclick="guardarWebVisibility()">💾 Guardar visibilidad</button>
+<button class="btn btn-secondary" onclick="mostrarTodoWeb()">👁️ Mostrar todo</button>
+</div>
+<div id="webVisibilityStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.8rem;"></div>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- 4. SEÑALES Y RADIOS -->
+<!-- ============================================================ -->
+<details id="sec-home">
+<summary><i class="fa-solid fa-table-columns"></i> 🧩 Constructor de la Home</summary>
+<div class="details-content">
+<p style="color:var(--text-secondary);font-size:.82rem;margin-bottom:14px;">Ordená los carruseles de la Home sin tocar código. Esto controla el orden dentro del catálogo principal; la visibilidad se administra arriba.</p>
+<div class="home-layout-list" id="homeLayoutList"></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+<button class="btn btn-primary" onclick="guardarHomeLayout()">💾 Guardar orden</button>
+<button class="btn btn-secondary" onclick="restaurarHomeLayout()">↺ Restaurar orden</button>
+</div>
+<div id="homeLayoutStatus" style="margin-top:10px;color:var(--text-secondary);font-size:.8rem;"></div>
+</div>
+</details>
+<details id="sec-streams">
+<summary><i class="fa-solid fa-tower-broadcast"></i> 📡 Señales y Radios</summary>
+<div class="details-content">
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+<div>
+<h3 style="color:var(--text-primary); font-weight:700; margin-bottom:12px;">Señales (Streams)</h3>
+<p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Marca una señal como <strong>Principal</strong> para que aparezca como portada.</p>
+<div id="senalesList"></div>
+</div>
+<div>
+<h3 style="color:var(--text-primary); font-weight:700; margin-bottom:12px;">Radios</h3>
+<div id="radiosList"></div>
+</div>
+</div>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- 4. FOOTER Y REDES SOCIALES -->
+<!-- ============================================================ -->
+<details id="sec-footer">
+<summary><i class="fa-solid fa-shoe-prints"></i> 📱 Footer y Redes Sociales</summary>
+<div class="details-content">
+<div class="form-row">
+<div class="form-group"><label>Título del Footer</label><input id="footerTitulo" placeholder="Disfrutá UADAVSTREAM"/></div>
+<div class="form-group"><label>Subtítulo</label><input id="footerSubtitulo" placeholder="El mejor teatro y música."/></div>
+<div class="form-group" style="grid-column:1/-1;"><label>Copyright</label><input id="footerCopyright" placeholder="© 2026 UADAVSTREAM"/></div>
+</div>
+<hr style="border-color:var(--border-color); margin:16px 0;"/>
+<div class="form-row">
+<div class="form-group"><label>Instagram</label><input id="redInstagram"/></div>
+<div class="form-group"><label>Facebook</label><input id="redFacebook"/></div>
+<div class="form-group"><label>X (Twitter)</label><input id="redTwitter"/></div>
+<div class="form-group"><label>YouTube</label><input id="redYoutube"/></div>
+<div class="form-group"><label>TikTok</label><input id="redTiktok"/></div>
+<div class="form-group"><label>WhatsApp</label><input id="redWhatsapp"/></div>
+</div>
+<button class="btn btn-primary mt-2" onclick="guardarFooter()">💾 Guardar Footer</button>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- 5. GESTIÓN DE CÓDIGOS PREMIUM -->
+<!-- ============================================================ -->
+<details id="sec-premium">
+<summary><i class="fa-solid fa-key"></i> 🔑 Códigos Premium</summary>
+<div class="details-content">
+<div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
+<div class="form-row">
+<div class="form-group">
+<label>Tipo de Código</label>
+<select id="codeTipo">
+<option value="PREMIUM">PREMIUM</option>
+<option value="BASIC">BASIC</option>
+<option value="ARTIST">ARTIST</option>
+</select>
+</div>
+<div class="form-group">
+<label>Fecha de Vencimiento (opcional)</label>
+<input id="codeExpira" type="datetime-local"/>
+</div>
+<div class="form-group">
+<label>Máx. Dispositivos</label>
+<input id="codeMaxDispositivos" type="number" value="3"/>
+</div>
+<div class="form-group">
+<label>Plataforma</label>
+<select id="codePlatform">
+<option value="uadavstream">UADAVSTREAM</option>
+</select>
+</div>
+</div>
+<button class="btn btn-primary w-full" onclick="generarCodigo()">🔑 Generar Código</button>
+</div>
+<div id="codigosList"></div>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- 6. IMPORTACIÓN DE ARTISTAS (MEJORADO) -->
+<!-- ============================================================ -->
+<details id="sec-artistas">
+<summary><i class="fa-solid fa-user-plus"></i> 🎤 Importar Artistas</summary>
+<div class="details-content">
+<div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
+<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">📥 Importar por ID de Canal</h4>
+<p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Pega el ID del canal de YouTube (ej: UC5OrDvL9DscpcAstz7JnQGA).</p>
+<div style="display:flex; gap:8px; flex-wrap:wrap;">
+<input id="importCanalId" placeholder="UC..." style="flex:1; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);"/>
+<button class="btn btn-primary" onclick="importarCanal()">Importar Canal</button>
+</div>
+</div>
+<div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
+<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">🔥 Importar desde Tendencias</h4>
+<p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Importa los artistas más populares del momento desde Invidious.</p>
+<div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+<select id="tendenciasRegion" style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);">
+<option value="AR">Argentina</option>
+<option value="US">Estados Unidos</option>
+<option value="ES">España</option>
+<option value="MX">México</option>
+<option value="CO">Colombia</option>
+<option value="CL">Chile</option>
+<option value="PE">Perú</option>
+</select>
+<input id="tendenciasLimite" max="100" min="5" style="width:80px; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);" type="number" value="25"/>
+<button class="btn btn-warning" onclick="importarTendencias()">🔥 Importar Tendencias</button>
+</div>
+</div>
+<div id="importStatus" style="margin-top:12px;"></div>
+<div id="artistasImportadosList" style="margin-top:8px;"></div>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- 7. EVENTOS PENDIENTES -->
+<!-- ============================================================ -->
+<details id="sec-eventos">
+<summary><i class="fa-solid fa-calendar-plus"></i> 📅 Eventos Pendientes</summary>
+<div class="details-content">
+<div id="eventosPendientesList"></div>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- 8. CARTELERA DE SHOWS -->
+<!-- ============================================================ -->
+<details id="sec-cartelera">
+<summary><i class="fa-solid fa-ticket"></i> 🎫 Cartelera de Shows</summary>
+<div class="details-content">
+<div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
+<div class="form-row">
+<div class="form-group"><label>Título del Show</label><input id="showTitulo" placeholder="Dua Lipa - Radical Optimism Tour"/></div>
+<div class="form-group"><label>Fecha</label><input id="showFecha" type="datetime-local"/></div>
+<div class="form-group"><label>Lugar</label><input id="showLugar" placeholder="Estadio River Plate"/></div>
+<div class="form-group"><label>Artista ID (opcional)</label><input id="showArtistaId" placeholder="UC..."/></div>
+<div class="form-group"><label>Precio Desde</label><input id="showPrecio" placeholder="15000" type="number"/></div>
+<div class="form-group" style="grid-column:1/-1;"><label>Link de Ticketera</label><input id="showLink" placeholder="https://ticketera.com/evento"/></div>
+<div class="form-group" style="grid-column:1/-1;"><label>Poster URL</label><input id="showPoster" placeholder="https://ejemplo.com/poster.jpg"/></div>
+</div>
+<button class="btn btn-primary w-full" onclick="crearShow()">➕ Agregar Show a la Cartelera</button>
+</div>
+<div id="showsList"></div>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- 9. IMPORTACIONES MASIVAS Y HERRAMIENTAS -->
+<!-- ============================================================ -->
+<details id="sec-herramientas">
+<summary><i class="fa-solid fa-file-import"></i> 📥 Importaciones Masivas y Herramientas</summary>
+<div class="details-content">
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+<div style="background:var(--bg-input); border-radius:12px; padding:16px;">
+<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;"><i class="fa-brands fa-youtube text-red-400"></i> Importar Artistas desde YouTube</h4>
+<label style="color:var(--text-secondary); font-size:0.7rem; text-transform:uppercase; font-weight:700;">Nombres, @handles o links (uno por línea)</label>
+<textarea id="importArtistas" placeholder="Michael Jackson
+https://www.youtube.com/@u2
+UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px; color:var(--text-primary); margin:8px 0;"></textarea>
+<label style="color:var(--text-secondary); font-size:0.7rem; text-transform:uppercase; font-weight:700;">Rubro por defecto</label>
+<input id="importGeneros" placeholder="Música" style="width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px; color:var(--text-primary); margin:8px 0;"/>
+<p style="color:var(--text-secondary); font-size:0.7rem; margin:8px 0;">💡 Los links/ID de canal son exactos y gastan menos cuota de API.</p>
+<button class="btn btn-secondary w-full" id="btnBuscarImportYT" onclick="buscarArtistasYoutubeMasivo()"><i class="fa-solid fa-magnifying-glass"></i> Buscar en YouTube</button>
+<div id="resultadosImportYT" style="margin-top:12px; max-height:200px; overflow-y:auto;"></div>
+<button class="btn btn-primary w-full hidden mt-2" id="btnConfirmarImportYT" onclick="confirmarImportacionArtistasYT()">
+<i class="fa-solid fa-check"></i> Agregar seleccionados a "Artistas"
             </button>
-          </div>
-          <div style="background:var(--bg-input); border-radius:12px; padding:16px;">
-            <h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">Importar Playlist de YouTube</h4>
-            <label style="color:var(--text-secondary); font-size:0.7rem; text-transform:uppercase; font-weight:700;">URL o ID de la Playlist</label>
-            <input id="importPlaylistUrl" placeholder="https://www.youtube.com/playlist?list=... o PL..." style="width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px; color:var(--text-primary); margin:8px 0;">
-            <label style="color:var(--text-secondary); font-size:0.7rem; text-transform:uppercase; font-weight:700;">Sección destino</label>
-            <select id="importPlaylistSeccion" style="width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px; color:var(--text-primary); margin:8px 0;"></select>
-            <button onclick="importarPlaylistYouTube()" class="btn btn-primary w-full">📥 Importar Playlist</button>
-          </div>
-        </div>
-        <hr style="border-color:var(--border-color); margin:24px 0;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-          <div style="background:var(--bg-input); border-radius:12px; padding:16px;">
-            <h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">🧹 Limpiar Caché del Frontend</h4>
-            <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Elimina la caché de secciones, cola y playlists guardadas en el navegador de los usuarios.</p>
-            <button onclick="limpiarCacheFrontend()" class="btn btn-warning">Limpiar Caché</button>
-          </div>
-          <div style="background:var(--bg-input); border-radius:12px; padding:16px;">
-            <h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">📊 Forzar recarga de datos</h4>
-            <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Vuelve a cargar todas las secciones, radios y señales desde la API.</p>
-            <button onclick="recargarDatos()" class="btn btn-secondary">Recargar Datos</button>
-          </div>
-        </div>
-      </div>
-    </details>
-
-    <!-- ============================================================ -->
-    <!-- BOTÓN FLOTANTE GUARDAR TODO -->
-    <!-- ============================================================ -->
-    <button onclick="guardarTodo()" class="fab">
-      <i class="fa-solid fa-cloud-arrow-up"></i> GUARDAR TODO
+</div>
+<div style="background:var(--bg-input); border-radius:12px; padding:16px;">
+<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">Importar Playlist de YouTube</h4>
+<label style="color:var(--text-secondary); font-size:0.7rem; text-transform:uppercase; font-weight:700;">URL o ID de la Playlist</label>
+<input id="importPlaylistUrl" placeholder="https://www.youtube.com/playlist?list=... o PL..." style="width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px; color:var(--text-primary); margin:8px 0;"/>
+<label style="color:var(--text-secondary); font-size:0.7rem; text-transform:uppercase; font-weight:700;">Sección destino</label>
+<select id="importPlaylistSeccion" style="width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px; color:var(--text-primary); margin:8px 0;"></select>
+<button class="btn btn-primary w-full" onclick="importarPlaylistYouTube()">📥 Importar Playlist</button>
+</div>
+</div>
+<hr style="border-color:var(--border-color); margin:24px 0;"/>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+<div style="background:var(--bg-input); border-radius:12px; padding:16px;">
+<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">🧹 Limpiar Caché del Frontend</h4>
+<p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Elimina la caché de secciones, cola y playlists guardadas en el navegador de los usuarios.</p>
+<button class="btn btn-warning" onclick="limpiarCacheFrontend()">Limpiar Caché</button>
+</div>
+<div style="background:var(--bg-input); border-radius:12px; padding:16px;">
+<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">📊 Forzar recarga de datos</h4>
+<p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Vuelve a cargar todas las secciones, radios y señales desde la API.</p>
+<button class="btn btn-secondary" onclick="recargarDatos()">Recargar Datos</button>
+</div>
+</div>
+</div>
+</details>
+<!-- ============================================================ -->
+<!-- BOTÓN FLOTANTE GUARDAR TODO -->
+<!-- ============================================================ -->
+<button class="fab" onclick="guardarTodo()">
+<i class="fa-solid fa-cloud-arrow-up"></i> GUARDAR TODO
     </button>
-
-  </div> <!-- fin panelContent -->
+</div> <!-- fin panelContent -->
 </div> <!-- fin container -->
-
 <script>
 // ============================================================
 // CONFIGURACIÓN
@@ -2523,7 +2536,6 @@ window.onload = () => {
   setTimeout(()=>{ if(ADMIN_KEY) ejecutarDiagnostico(); },800);
 };
 </script>
-
 <script id="uadav-v19-console">
 (function(){
   function buildNav(){
@@ -2554,7 +2566,6 @@ window.onload = () => {
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
 </script>
-
 <script id="uadav-integration-diagnostic-js">
 async function ejecutarDiagnostico(){
   const grid=document.getElementById('integrationDiagGrid');
@@ -2606,7 +2617,7 @@ async function ejecutarDiagnostico(){
 
 
 // ============================================================
-// UADAVSTREAM V27 — DASHBOARD, ANALYTICS Y AUDITORIA
+// UADAVSTREAM V28 — DASHBOARD, ANALYTICS Y AUDITORIA
 // ============================================================
 async function u27LoadDashboard(){
   try{
@@ -2635,6 +2646,37 @@ async function u27LoadAudit(){
   if(!Array.isArray(items)||!items.length){box.innerHTML='<div class="u27-muted">No hay acciones registradas.</div>';return}
   box.innerHTML='<table class="u27-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th></tr></thead><tbody>'+items.slice(0,12).map(x=>`<tr><td>${new Date(x.fecha||Date.now()).toLocaleString('es-AR')}</td><td>${String(x.tipo||'')}</td><td>${String(JSON.stringify(x.detalle||{})).slice(0,220)}</td></tr>`).join('')+'</tbody></table>';
 }
+</script>
+<script id="uadav-v28-admin-nav">
+(function(){
+  const titles={
+    'sec-dashboard':'Resumen','integrationDiagnostics':'Diagnóstico','sec-secciones':'Secciones y contenido','sec-personalizacion':'Apariencia','sec-banners':'Publicidad','sec-visibilidad':'Visibilidad','sec-home':'Constructor de Home','sec-streams':'Señales y radios','sec-artistas':'Artistas','sec-eventos':'Eventos pendientes','sec-cartelera':'Cartelera','sec-premium':'Códigos Premium','sec-footer':'Footer y redes','sec-herramientas':'Herramientas'
+  };
+  window.adminV28Go=function(id){
+    const el=(id==='sec-dashboard'?document.getElementById('u27Dashboard'):document.getElementById(id)); if(!el)return;
+    const y=el.getBoundingClientRect().top+window.scrollY-108;
+    window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+    if(el.tagName==='DETAILS') el.open=true;
+    document.querySelectorAll('#adminV28Nav button').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    const title=document.getElementById('adminV28CurrentTitle'); if(title)title.textContent=titles[id]||'Centro de control';
+  };
+  window.adminV28TryRefresh=function(){
+    try{ if(typeof cargarDatos==='function'){cargarDatos();return;} }catch(e){}
+    location.reload();
+  };
+  const sections=Object.keys(titles).map(id=>id==='sec-dashboard'?document.getElementById('u27Dashboard'):document.getElementById(id)).filter(Boolean);
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const id=entry.target.id;
+        document.querySelectorAll('#adminV28Nav button').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+        const title=document.getElementById('adminV28CurrentTitle'); if(title)title.textContent=titles[id]||'Centro de control';
+      }
+    });
+  },{rootMargin:'-120px 0px -65% 0px',threshold:0});
+  sections.forEach(s=>obs.observe(s));
+  setTimeout(()=>{ if(document.getElementById('sec-dashboard'))adminV28Go('sec-dashboard'); },350);
+})();
 </script>
 </body>
 </html>
