@@ -448,7 +448,39 @@ details[open] summary{background:linear-gradient(90deg,rgba(0,229,255,.045),tran
 @media(max-width:900px){.admin-v28-nav{flex-direction:row;max-height:none;overflow-x:auto;overflow-y:hidden;margin-top:10px}.admin-v28-nav-title{display:none}.admin-v28-nav button{flex:0 0 auto;width:auto}.admin-v28-nav button span.label{display:none}.admin-v28-nav button .nav-dot{display:none}.admin-v28-mainbar{top:82px}}
 @media(max-width:560px){.admin-v28-mainbar{top:70px;align-items:flex-start}.admin-v28-main-actions .btn{padding:8px 10px}.admin-v28-mainbar .title{font-size:15px}.admin-v28-mainbar .sub{display:none}}
 </style>
-</head>
+<style id="uadav-v28-admin-layout-fix">
+/* UADAVSTREAM V28.1 — navegación lateral real */
+.admin-v28-sidebar-shell{position:fixed;left:20px;top:100px;width:248px;height:calc(100vh - 120px);z-index:40;display:none;}
+.admin-v28-sidebar{height:100%;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:20px;background:rgba(10,12,18,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 18px 60px rgba(0,0,0,.38);display:flex;flex-direction:column;overflow:hidden;}
+.admin-v28-sidebar-brand{display:flex;align-items:center;gap:10px;padding:8px 8px 14px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:6px;}
+.admin-v28-sidebar-brand .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#00e5ff,#8b5cf6);display:grid;place-items:center;color:#061018;font-weight:1000;box-shadow:0 0 24px rgba(0,229,255,.15)}
+.admin-v28-sidebar-brand strong{font-size:12px;letter-spacing:.06em}.admin-v28-sidebar-brand small{display:block;color:#7d889a;font-size:9px;margin-top:2px}
+.admin-v28-nav{margin:4px 0 0;display:flex;flex-direction:column;gap:5px;overflow:auto;padding:3px 2px 12px;}
+.admin-v28-nav-title{font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:#64748b;font-weight:900;padding:10px 8px 4px}
+.admin-v28-nav button{appearance:none;width:100%;border:1px solid transparent;background:transparent;color:#b7c0ce;border-radius:12px;padding:10px 10px;display:flex;align-items:center;gap:10px;text-align:left;font-size:12px;font-weight:750;cursor:pointer;transition:.18s ease}
+.admin-v28-nav button i{width:18px;text-align:center;color:#7e8da2}.admin-v28-nav button:hover{background:rgba(255,255,255,.045);color:#fff}.admin-v28-nav button.active{background:linear-gradient(90deg,rgba(0,229,255,.12),rgba(139,92,246,.08));border-color:rgba(0,229,255,.15);color:#fff;box-shadow:inset 3px 0 0 #00e5ff}.admin-v28-nav .nav-dot{margin-left:auto;width:6px;height:6px;border-radius:999px;background:#334155}.admin-v28-nav button.active .nav-dot{background:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,.7)}
+.admin-v28-sidebar-foot{margin-top:auto;border-top:1px solid rgba(255,255,255,.07);padding:10px 4px 2px;color:#68768a;font-size:9px;line-height:1.4}
+body.admin-v28-logged .admin-v28-sidebar-shell{display:block}
+body.admin-v28-logged .admin-v28-mainbar,body.admin-v28-logged #panelContent{margin-left:278px;}
+body.admin-v28-logged .admin-v28-mainbar{width:calc(100% - 278px);}
+body.admin-v28-logged #panelContent{min-width:0;}
+.admin-v28-mainbar{position:sticky;top:18px;z-index:30;}
+@media(max-width:900px){
+  .admin-v28-sidebar-shell{position:sticky;left:auto;top:8px;width:auto;height:auto;margin:0 0 10px;z-index:35;display:none;}
+  body.admin-v28-logged .admin-v28-sidebar-shell{display:block}
+  .admin-v28-sidebar{height:auto;padding:8px;border-radius:16px;}
+  .admin-v28-sidebar-brand,.admin-v28-sidebar-foot,.admin-v28-nav-title{display:none}
+  .admin-v28-nav{flex-direction:row;overflow-x:auto;overflow-y:hidden;gap:6px;margin:0;padding:0}
+  .admin-v28-nav button{flex:0 0 auto;width:auto;padding:9px 10px}.admin-v28-nav button .label{white-space:nowrap}.admin-v28-nav .nav-dot{display:none}
+  body.admin-v28-logged .admin-v28-mainbar,body.admin-v28-logged #panelContent{margin-left:0;width:auto;}
+  .admin-v28-mainbar{position:sticky;top:84px;}
+}
+@media(max-width:560px){
+  body{padding:10px!important}
+  .admin-v28-mainbar{top:76px;border-radius:14px;padding:12px 14px}
+  .admin-v28-mainbar .title{font-size:15px}.admin-v28-mainbar .sub{display:none}
+}
+</style></head>
 <body>
 <div class="container" id="app">
 <!-- ============================================================ -->
@@ -2652,30 +2684,62 @@ async function u27LoadAudit(){
   const titles={
     'sec-dashboard':'Resumen','integrationDiagnostics':'Diagnóstico','sec-secciones':'Secciones y contenido','sec-personalizacion':'Apariencia','sec-banners':'Publicidad','sec-visibilidad':'Visibilidad','sec-home':'Constructor de Home','sec-streams':'Señales y radios','sec-artistas':'Artistas','sec-eventos':'Eventos pendientes','sec-cartelera':'Cartelera','sec-premium':'Códigos Premium','sec-footer':'Footer y redes','sec-herramientas':'Herramientas'
   };
+  const items=[
+    ['sec-dashboard','fa-chart-pie','Resumen'],
+    ['integrationDiagnostics','fa-stethoscope','Diagnóstico'],
+    ['sec-secciones','fa-layer-group','Secciones y contenido'],
+    ['sec-personalizacion','fa-palette','Apariencia'],
+    ['sec-banners','fa-rectangle-ad','Publicidad'],
+    ['sec-visibilidad','fa-eye','Visibilidad'],
+    ['sec-home','fa-table-columns','Home / Orden'],
+    ['sec-streams','fa-tower-broadcast','Señales y radios'],
+    ['sec-artistas','fa-users','Artistas'],
+    ['sec-eventos','fa-calendar-days','Eventos'],
+    ['sec-cartelera','fa-ticket','Cartelera'],
+    ['sec-premium','fa-key','Códigos Premium'],
+    ['sec-footer','fa-share-nodes','Footer y redes'],
+    ['sec-herramientas','fa-screwdriver-wrench','Herramientas']
+  ];
+  function buildNav(){
+    if(document.getElementById('adminV28NavShell')) return;
+    const shell=document.createElement('aside'); shell.id='adminV28NavShell'; shell.className='admin-v28-sidebar-shell';
+    shell.innerHTML='<div class="admin-v28-sidebar"><div class="admin-v28-sidebar-brand"><div class="mark"><i class="fa-solid fa-star"></i></div><div><strong>UADAVSTREAM</strong><small>Centro de control</small></div></div><nav id="adminV28Nav" class="admin-v28-nav" aria-label="Centro de control"></nav><div class="admin-v28-sidebar-foot">Panel interno · cambios guardados en UADAV_DB</div></div>';
+    const nav=shell.querySelector('#adminV28Nav');
+    let currentGroup='';
+    items.forEach(([id,icon,label])=>{
+      const b=document.createElement('button'); b.type='button'; b.dataset.target=id;
+      b.innerHTML='<i class="fa-solid '+icon+'"></i><span class="label">'+label+'</span><span class="nav-dot"></span>';
+      b.addEventListener('click',()=>window.adminV28Go(id)); nav.appendChild(b);
+    });
+    const app=document.getElementById('app'); const header=app?.querySelector('.header');
+    if(header) header.insertAdjacentElement('afterend',shell); else document.body.prepend(shell);
+  }
   window.adminV28Go=function(id){
-    const el=(id==='sec-dashboard'?document.getElementById('u27Dashboard'):document.getElementById(id)); if(!el)return;
-    const y=el.getBoundingClientRect().top+window.scrollY-108;
-    window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+    buildNav(); const el=(id==='sec-dashboard'?document.getElementById('u27Dashboard'):document.getElementById(id)); if(!el)return;
     if(el.tagName==='DETAILS') el.open=true;
+    const shell=document.getElementById('adminV28NavShell');
+    const targetTop=el.getBoundingClientRect().top+window.scrollY-(window.innerWidth<=900?170:115);
+    window.scrollTo({top:Math.max(0,targetTop),behavior:'smooth'});
     document.querySelectorAll('#adminV28Nav button').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
     const title=document.getElementById('adminV28CurrentTitle'); if(title)title.textContent=titles[id]||'Centro de control';
   };
-  window.adminV28TryRefresh=function(){
-    try{ if(typeof cargarDatos==='function'){cargarDatos();return;} }catch(e){}
-    location.reload();
-  };
-  const sections=Object.keys(titles).map(id=>id==='sec-dashboard'?document.getElementById('u27Dashboard'):document.getElementById(id)).filter(Boolean);
-  const obs=new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{
-      if(entry.isIntersecting){
-        const id=entry.target.id;
-        document.querySelectorAll('#adminV28Nav button').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
-        const title=document.getElementById('adminV28CurrentTitle'); if(title)title.textContent=titles[id]||'Centro de control';
-      }
-    });
-  },{rootMargin:'-120px 0px -65% 0px',threshold:0});
-  sections.forEach(s=>obs.observe(s));
-  setTimeout(()=>{ if(document.getElementById('sec-dashboard'))adminV28Go('sec-dashboard'); },350);
+  window.adminV28TryRefresh=function(){try{if(typeof cargarDatos==='function'){cargarDatos();return;}}catch(e){} location.reload();};
+  function syncLogged(){
+    const panel=document.getElementById('panelContent'); const logged=panel&&!panel.classList.contains('hidden');
+    document.body.classList.toggle('admin-v28-logged',!!logged);
+    if(logged){buildNav(); if(!document.querySelector('#adminV28Nav button.active')){const first=document.querySelector('#adminV28Nav button'); if(first)first.classList.add('active')}}
+  }
+  function setupObserver(){
+    const mapIds=items.map(x=>x[0]);
+    const sections=mapIds.map(id=>id==='sec-dashboard'?document.getElementById('u27Dashboard'):document.getElementById(id)).filter(Boolean);
+    const obs=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){const id=entry.target.id;document.querySelectorAll('#adminV28Nav button').forEach(b=>b.classList.toggle('active',b.dataset.target===id));const t=document.getElementById('adminV28CurrentTitle');if(t)t.textContent=titles[id]||'Centro de control';}}),{rootMargin:'-135px 0px -60% 0px',threshold:0.01});
+    sections.forEach(s=>obs.observe(s));
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    buildNav(); setupObserver(); syncLogged();
+    const panel=document.getElementById('panelContent'); if(panel)new MutationObserver(syncLogged).observe(panel,{attributes:true,attributeFilter:['class']});
+  });
+  setTimeout(()=>{buildNav(); setupObserver(); syncLogged();},250);
 })();
 </script>
 </body>
