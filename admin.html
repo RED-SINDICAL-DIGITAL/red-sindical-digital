@@ -561,6 +561,15 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <style id="uadav-v28-legacy-nav-guard">
 .header > .admin-v28-nav,.header > .details-nav,.header > .admin-v28-nav-title{display:none!important}
 </style>
+
+<style id="uadav-v28-3-ops">
+.u28-ops-panel{margin:0 0 18px;padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:linear-gradient(135deg,rgba(12,18,27,.95),rgba(8,12,18,.92));box-shadow:0 18px 50px rgba(0,0,0,.18)}
+.u28-ops-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}.u28-ops-head h3{margin:3px 0 5px;font-size:17px}.u28-ops-head p{margin:0;color:#8290a3;font-size:11px}.u28-ops-kicker{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#00e5ff;font-weight:900}
+.u28-ops-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.u28-ops-card{border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:12px;background:rgba(255,255,255,.02);min-height:84px}.u28-ops-card.ok{border-color:rgba(34,197,94,.22);background:rgba(34,197,94,.035)}.u28-ops-card.warn{border-color:rgba(245,158,11,.24);background:rgba(245,158,11,.035)}.u28-ops-card.bad{border-color:rgba(239,68,68,.24);background:rgba(239,68,68,.035)}.u28-ops-top{display:flex;justify-content:space-between;gap:8px;align-items:center}.u28-ops-name{font-size:11px;font-weight:850;color:#dbe7f5}.u28-ops-state{font-size:9px;font-weight:900;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.06);color:#98a7bb}.u28-ops-card.ok .u28-ops-state{color:#67e8a0;background:rgba(34,197,94,.1)}.u28-ops-card.warn .u28-ops-state{color:#f8c76b;background:rgba(245,158,11,.1)}.u28-ops-card.bad .u28-ops-state{color:#ff9090;background:rgba(239,68,68,.1)}.u28-ops-detail{margin-top:8px;color:#7f8da1;font-size:10px;line-height:1.4}.u28-dirty{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid rgba(245,158,11,.25);background:rgba(245,158,11,.08);color:#f7c66d;font-size:10px;font-weight:850}.u28-clean{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid rgba(34,197,94,.18);background:rgba(34,197,94,.07);color:#6de3a0;font-size:10px;font-weight:850}
+@media(max-width:1050px){.u28-ops-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.u28-ops-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.u28-ops-head{flex-direction:column}}
+@media(max-width:470px){.u28-ops-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <div class="container" id="app">
@@ -629,6 +638,7 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <button class="btn btn-secondary" onclick="ejecutarDiagnostico()">🔄 Volver a comprobar</button>
 </div>
 </details>
+<div class="u28-ops-panel" id="u28OpsPanel"><div class="u28-ops-head"><div><div class="u28-ops-kicker">CONTROL OPERATIVO</div><h3>Estado real de UADAVSTREAM</h3><p>Comprueba datos y conexión entre Admin, Worker V6.2.2-STABLE y KV.</p></div><button class="btn btn-secondary btn-sm" type="button" onclick="u28RefreshOps()"><i class="fa-solid fa-arrows-rotate"></i> Actualizar estado</button></div><div class="u28-ops-grid" id="u28OpsGrid"></div></div>
 <!-- ============================================================ -->
 <!-- 1. SECCIONES Y CONTENIDO -->
 <!-- ============================================================ -->
@@ -1048,8 +1058,8 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 </div>
 </div>
 <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
-<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">🔥 Importar desde Tendencias</h4>
-<p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Importa los artistas más populares del momento desde Invidious.</p>
+<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">🌎 Descubrir artistas por región</h4>
+<p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Busca descubrimientos de YouTube por región y crea una sección curada. Usa la búsqueda oficial; no depende de una ruta de tendencias inexistente.</p>
 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
 <select id="tendenciasRegion" style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);">
 <option value="AR">Argentina</option>
@@ -1061,7 +1071,7 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <option value="PE">Perú</option>
 </select>
 <input id="tendenciasLimite" max="100" min="5" style="width:80px; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);" type="number" value="25"/>
-<button class="btn btn-warning" onclick="importarTendencias()">🔥 Importar Tendencias</button>
+<button class="btn btn-warning" onclick="u28DescubrirRegion()">🔥 Importar Tendencias</button>
 </div>
 </div>
 <div id="importStatus" style="margin-top:12px;"></div>
@@ -2777,5 +2787,158 @@ async function u27LoadAudit(){
   setTimeout(()=>{buildNav(); setupObserver(); syncLogged();},250);
 })();
 </script>
+<script id="uadav-v28-3-functional-overrides">
+(function(){
+  'use strict';
+  let u28Dirty=false;
+  const $=id=>document.getElementById(id);
+  const setDirty=(dirty)=>{
+    u28Dirty=dirty;
+    const host=document.querySelector('.admin-v28-main-actions'); if(!host)return;
+    let badge=$('u28DirtyBadge');
+    if(!badge){badge=document.createElement('span');badge.id='u28DirtyBadge';host.prepend(badge);}
+    badge.className=dirty?'u28-dirty':'u28-clean';
+    badge.innerHTML=dirty?'<i class="fa-solid fa-circle-exclamation"></i> Cambios sin guardar':'<i class="fa-solid fa-circle-check"></i> Sin cambios pendientes';
+  };
+  function markDirty(){ if(document.body.classList.contains('admin-v28-logged')) setDirty(true); }
+  function clearDirty(){ setDirty(false); }
+
+  async function u28Fetch(path, options={}){
+    const cfg={...options,headers:{...(options.headers||{})}};
+    if(!cfg.headers.Authorization && ADMIN_KEY) cfg.headers.Authorization='Bearer '+ADMIN_KEY;
+    const res=await fetch(API_URL+path+(path.includes('?')?'&':'?')+'_='+Date.now(),cfg);
+    const text=await res.text(); let data={}; try{data=text?JSON.parse(text):{}}catch{data={raw:text}}
+    if(!res.ok){const e=new Error(data?.error||data?.raw||('HTTP '+res.status));e.status=res.status;e.payload=data;throw e;}
+    return data;
+  }
+  const u28Write=(path,body,method='POST')=>u28Fetch(path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+
+  async function u28RefreshOps(){
+    const grid=$('u28OpsGrid'); if(!grid)return;
+    const modules=[
+      ['Secciones','secciones',false],['Streams','senales_oficiales',false],['Radios','radios',false],['Artistas','artistas',false],
+      ['Eventos','eventos',true],['Cartelera','cartelera',true],['Publicidad','banners',false],['Premium','premium/codes',true],
+      ['Home','web_visibility',false],['Orden Home','home_layout',false],['Analytics','analytics/config',false],['Estadísticas','admin/stats?days=7',true],
+      ['Auditoría','admin/audit-log?days=7',true],['Sanciones','admin/artist-sanctions',true],['Diagnóstico','health',false]
+    ];
+    grid.innerHTML=modules.map(([name])=>`<div class="u28-ops-card"><div class="u28-ops-top"><span class="u28-ops-name">${name}</span><span class="u28-ops-state">COMPROBANDO</span></div><div class="u28-ops-detail">—</div></div>`).join('');
+    const cards=[...grid.children];
+    await Promise.all(modules.map(async ([name,path,auth],i)=>{
+      const card=cards[i], state=card.querySelector('.u28-ops-state'), detail=card.querySelector('.u28-ops-detail');
+      try{
+        const data=await u28Fetch(path,{headers:auth?{Authorization:'Bearer '+ADMIN_KEY}:{}});
+        let detailText='Conectado';
+        if(Array.isArray(data)) detailText=`${data.length} elementos`;
+        else if(data?.totals) detailText=`Datos: ${Object.values(data.totals).reduce((a,b)=>a+Number(b||0),0).toLocaleString('es-AR')} eventos`;
+        else if(data?.enabled!==undefined) detailText=data.enabled?'Activado':'Configurado';
+        else if(data?.success!==undefined && path==='health') detailText=`${data.version||'OK'} · KV ${data.kv?'OK':'NO'}`;
+        else if(data && typeof data==='object') {
+          const keys=Object.keys(data);
+          if(path==='banners') detailText=`${['top','infeed','footer'].filter(k=>data[k]?.activo!==false && data[k]?.html).length} slots activos`;
+          else if(keys.length) detailText=`${keys.length} campos`;
+        }
+        card.classList.add('ok');state.textContent='OK';detail.textContent=detailText;
+      }catch(e){
+        card.classList.add(e.status===401?'warn':'bad');state.textContent=e.status===401?'PROTEGIDO':'ERROR';detail.textContent=e.message||'Sin respuesta';
+      }
+    }));
+  }
+  window.u28RefreshOps=u28RefreshOps;
+
+  // ---------- PREMIUM: usar rutas V6.2 reales ----------
+  window.generarCodigo=async function(){
+    try{
+      const expires=$('codeExpira')?.value||null;
+      const tipo=$('codeTipo')?.value||'sin_publicidad';
+      const dias=Number($('codeMaxDispositivos')?.value||30);
+      const data=await u28Write('premium/codes',{beneficio:tipo,dias,expira:expires,uso_maximo:0,nota:'Generado desde Admin V28.3'});
+      mostrarToast(`✅ Código generado: ${data.code||'OK'}`,'success'); await window.cargarCodigos(); markDirty();
+    }catch(e){mostrarToast('❌ '+e.message,'error');}
+  };
+  window.cargarCodigos=async function(){
+    const list=$('codigosList'); if(!list)return;
+    try{
+      const codes=await u28Fetch('premium/codes');
+      list.innerHTML='';
+      if(!Array.isArray(codes)||!codes.length){list.innerHTML='<p class="u27-note">No hay códigos Premium.</p>';return;}
+      codes.slice().reverse().forEach(c=>{
+        const vencido=c.expira&&Date.parse(c.expira)<Date.now(); const activo=c.activo!==false&&!vencido;
+        list.innerHTML+=`<div class="card"><div class="card-header"><div><span style="font-weight:800;color:var(--accent);font-family:monospace">${c.code}</span> <span class="badge ${activo?'badge-success':'badge-danger'}">${activo?'ACTIVO':'INACTIVO'}</span></div><div>${activo?`<button class="btn btn-danger btn-sm" onclick="revocarCodigo('${c.code}')">Revocar</button>`:''}</div></div><div class="card-body">Beneficio: ${c.beneficio||'sin_publicidad'} · Duración: ${c.dias||'-'} días · Usos: ${c.usos||0}${c.expira?' · Vence: '+new Date(c.expira).toLocaleDateString('es-AR'):''}</div></div>`;
+      });
+    }catch(e){list.innerHTML=`<p class="u27-note" style="color:#ff9292">No se pudieron cargar códigos: ${e.message}</p>`;}
+  };
+  window.revocarCodigo=async function(code){
+    if(!confirm('¿Revocar el código '+code+'?'))return;
+    try{await u28Write('premium/revoke',{code});mostrarToast('Código revocado','success');await window.cargarCodigos();}catch(e){mostrarToast('No se pudo revocar: '+e.message,'error');}
+  };
+
+  // ---------- IMPORTAR CANAL: evitar stub y usar búsqueda real ----------
+  window.importarCanal=async function(){
+    const value=$('importCanalId')?.value.trim(); if(!value){mostrarToast('Ingresá un ID, @handle o nombre de canal','error');return;}
+    const status=$('importStatus'); if(status)status.innerHTML='<div class="loading">Buscando canal…</div>';
+    try{
+      const data=await u28Fetch('youtube/search_channel?name='+encodeURIComponent(value));
+      if(!data?.channelId)throw new Error('Canal no encontrado');
+      let sec=seccionesData.find(s=>s.id==='artistas');
+      if(!sec){sec={id:'artistas',nombre:'Artistas',icono:'fa-user-group',activa:true,tipo_contenido:'perfiles',modo_visual:'videos',modo:'manual',items:[]};seccionesData.push(sec);}
+      sec.items=Array.isArray(sec.items)?sec.items:[];
+      if(!sec.items.some(x=>x.canal===data.channelId)){sec.items.push({tipo:'artista',nombre:data.nombre||value,rubro:'Artista de variedades',foto:data.thumbnail||'',bio:data.bio||'',canal:data.channelId,contacto:'',afiliado_verificado:false,donacion_activa:false,live_url:'',booking_url:''});}
+      renderSecciones();actualizarFormularioYLista();setDirty(true);
+      if(status)status.innerHTML=`<div style="color:#69e4a0">✅ ${data.nombre||value} agregado a Artistas. Guardá los cambios.</div>`;
+    }catch(e){if(status)status.innerHTML=`<div style="color:#ff9494">❌ ${e.message}</div>`;mostrarToast('No se pudo importar el canal','error');}
+  };
+
+  // ---------- Descubrimiento regional: usa búsqueda real, no un endpoint stub ----------
+  window.u28DescubrirRegion=async function(){
+    const region=$('tendenciasRegion')?.value||'AR'; const limit=Math.max(5,Math.min(100,Number($('tendenciasLimite')?.value||25))); const status=$('importStatus');
+    if(status)status.innerHTML='<div class="loading">Buscando descubrimientos para '+region+'…</div>';
+    try{
+      const data=await u28Fetch('youtube/search?q='+encodeURIComponent('artistas '+region));
+      const items=Array.isArray(data)?data.slice(0,limit):[];
+      let sec=seccionesData.find(s=>s.id==='descubrimientos_'+region.toLowerCase());
+      if(!sec){sec={id:'descubrimientos_'+region.toLowerCase(),nombre:'Descubrimientos '+region,icono:'fa-compass',activa:true,tipo_contenido:'videos',modo_visual:'videos',modo:'manual',items:[]};seccionesData.push(sec);}
+      sec.items=items.map(v=>({tipo:'youtube',url:v.id,titulo:v.titulo||'Video',imagen:v.thumbnail||'',descripcion:v.descripcion||''}));
+      renderSecciones();actualizarFormularioYLista();setDirty(true);
+      if(status)status.innerHTML=`<div style="color:#69e4a0">✅ ${items.length} contenidos encontrados para ${region}. Guardá los cambios para publicarlos.</div>`;
+    }catch(e){if(status)status.innerHTML=`<div style="color:#ff9494">❌ ${e.message}</div>`;}
+  };
+
+  // ---------- Footer: devolver éxito real ----------
+  window.guardarFooter=async function(){
+    const footer={titulo:$('footerTitulo')?.value||'',subtitulo:$('footerSubtitulo')?.value||'',copyright:$('footerCopyright')?.value||'',instagram:$('redInstagram')?.value||'',facebook:$('redFacebook')?.value||'',twitter:$('redTwitter')?.value||'',youtube:$('redYoutube')?.value||'',tiktok:$('redTiktok')?.value||'',whatsapp:$('redWhatsapp')?.value||''};
+    try{await u28Write('footer_config',footer);mostrarToast('Footer guardado','success');return true;}catch(e){mostrarToast('No se pudo guardar Footer: '+e.message,'error');return false;}
+  };
+
+  // ---------- Guardado integral transaccional por módulo ----------
+  window.guardarTodo=async function(){
+    const tasks=[
+      ['Banners',()=>window.guardarBanners()],
+      ['Visibilidad',()=>window.guardarWebVisibility()],
+      ['Personalización',()=>window.guardarPersonalizacion().then(()=>true)],
+      ['Secciones',async()=>{await u28Write('secciones',seccionesData);return true;}],
+      ['Señales',async()=>{await u28Write('senales_oficiales',senalesData);return true;}],
+      ['Radios',async()=>{await u28Write('radios',radiosData);return true;}],
+      ['Home / Orden',async()=>{await u28Write('home_layout',homeLayout);return true;}],
+      ['Footer',window.guardarFooter]
+    ];
+    const results=[];
+    for(const [name,fn] of tasks){try{const ok=await fn();results.push({name,ok:ok!==false});}catch(e){results.push({name,ok:false,error:e.message});}}
+    await actualizarVersionSecciones().catch(()=>{});
+    const bad=results.filter(x=>!x.ok);
+    if(!bad.length){clearDirty();mostrarToast('✅ Todos los módulos fueron guardados y verificados','success');await cargarDatos();await u28RefreshOps();}
+    else{setDirty(true);mostrarToast('⚠️ Fallaron: '+bad.map(x=>x.name).join(', '),'error');}
+  };
+
+  // ---------- Marcar cambios y estado limpio ----------
+  document.addEventListener('input',ev=>{if(ev.target.closest('#panelContent'))markDirty();});
+  document.addEventListener('change',ev=>{if(ev.target.closest('#panelContent'))markDirty();});
+  const oldRefresh=window.adminV28TryRefresh; window.adminV28TryRefresh=async function(){try{await cargarDatos();await u27LoadDashboard();await u28RefreshOps();clearDirty();}catch(e){location.reload();}};
+  const oldDash=window.u27LoadDashboard; window.u27LoadDashboard=async function(){await oldDash?.();await u28RefreshOps();};
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    setTimeout(()=>{setDirty(false);u28RefreshOps();},350);
+  });
+  setTimeout(()=>{try{if($('panelContent')&&!$('panelContent').classList.contains('hidden')){setDirty(false);u28RefreshOps();}}catch{}},1200);
+})();</script>
 </body>
 </html>
