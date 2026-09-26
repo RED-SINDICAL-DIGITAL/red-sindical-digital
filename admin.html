@@ -460,14 +460,16 @@ details[open] summary{background:linear-gradient(90deg,rgba(0,229,255,.045),tran
 .admin-v28-nav button{appearance:none;width:100%;border:1px solid transparent;background:transparent;color:#b7c0ce;border-radius:12px;padding:10px 10px;display:flex;align-items:center;gap:10px;text-align:left;font-size:12px;font-weight:750;cursor:pointer;transition:.18s ease}
 .admin-v28-nav button i{width:18px;text-align:center;color:#7e8da2}.admin-v28-nav button:hover{background:rgba(255,255,255,.045);color:#fff}.admin-v28-nav button.active{background:linear-gradient(90deg,rgba(0,229,255,.12),rgba(139,92,246,.08));border-color:rgba(0,229,255,.15);color:#fff;box-shadow:inset 3px 0 0 #00e5ff}.admin-v28-nav .nav-dot{margin-left:auto;width:6px;height:6px;border-radius:999px;background:#334155}.admin-v28-nav button.active .nav-dot{background:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,.7)}
 .admin-v28-sidebar-foot{margin-top:auto;border-top:1px solid rgba(255,255,255,.07);padding:10px 4px 2px;color:#68768a;font-size:9px;line-height:1.4}
-body.admin-v28-logged .admin-v28-sidebar-shell{display:block}
+body.admin-v28-logged .admin-v28-sidebar-shell{display:block}.admin-v28-account{margin-top:auto;padding:10px 4px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:8px;justify-content:space-between}.admin-v28-account span{display:block;font-size:10px;font-weight:850;color:#fff}.admin-v28-account small{display:block;font-size:8px;color:#718096;margin-top:2px}.admin-v28-logout{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);color:#cbd5e1;border-radius:10px;padding:8px 9px;font-size:10px;cursor:pointer}.admin-v28-logout:hover{border-color:rgba(255,92,92,.35);color:#ff9a9a;background:rgba(255,92,92,.07)}.admin-v28-session-role{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(0,229,255,.18);background:rgba(0,229,255,.05);color:#93f7ff;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:850}.header-actions.admin-connected #adminKeyInput,.header-actions.admin-connected #btnConnectAdmin{display:none}.header-actions.admin-connected:before{content:'🔐';font-size:12px;opacity:.8}
+
 body.admin-v28-logged .admin-v28-mainbar,body.admin-v28-logged #panelContent{margin-left:278px;}
 body.admin-v28-logged .admin-v28-mainbar{width:calc(100% - 278px);}
 body.admin-v28-logged #panelContent{min-width:0;}
 .admin-v28-mainbar{position:sticky;top:18px;z-index:30;}
 @media(max-width:900px){
   .admin-v28-sidebar-shell{position:sticky;left:auto;top:8px;width:auto;height:auto;margin:0 0 10px;z-index:35;display:none;}
-  body.admin-v28-logged .admin-v28-sidebar-shell{display:block}
+  body.admin-v28-logged .admin-v28-sidebar-shell{display:block}.admin-v28-account{margin-top:auto;padding:10px 4px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:8px;justify-content:space-between}.admin-v28-account span{display:block;font-size:10px;font-weight:850;color:#fff}.admin-v28-account small{display:block;font-size:8px;color:#718096;margin-top:2px}.admin-v28-logout{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);color:#cbd5e1;border-radius:10px;padding:8px 9px;font-size:10px;cursor:pointer}.admin-v28-logout:hover{border-color:rgba(255,92,92,.35);color:#ff9a9a;background:rgba(255,92,92,.07)}.admin-v28-session-role{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(0,229,255,.18);background:rgba(0,229,255,.05);color:#93f7ff;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:850}.header-actions.admin-connected #adminKeyInput,.header-actions.admin-connected #btnConnectAdmin{display:none}.header-actions.admin-connected:before{content:'🔐';font-size:12px;opacity:.8}
+
   .admin-v28-sidebar{height:auto;padding:8px;border-radius:16px;}
   .admin-v28-sidebar-brand,.admin-v28-sidebar-foot,.admin-v28-nav-title{display:none}
   .admin-v28-nav{flex-direction:row;overflow-x:auto;overflow-y:hidden;gap:6px;margin:0;padding:0}
@@ -641,7 +643,7 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <button class="btn btn-secondary" onclick="ejecutarDiagnostico()">🔄 Volver a comprobar</button>
 </div>
 </details>
-<div class="u28-ops-panel" id="u28OpsPanel"><div class="u28-ops-head"><div><div class="u28-ops-kicker">CONTROL OPERATIVO</div><h3>Estado real de UADAVSTREAM</h3><p>Comprueba datos y conexión entre Admin, Worker V6.2.2-STABLE y KV.</p></div><button class="btn btn-secondary btn-sm" type="button" onclick="u28RefreshOps()"><i class="fa-solid fa-arrows-rotate"></i> Actualizar estado</button></div><div class="u28-ops-grid" id="u28OpsGrid"></div></div>
+<div class="u28-ops-panel" id="u28OpsPanel"><div class="u28-ops-head"><div><div class="u28-ops-kicker">CONTROL OPERATIVO</div><h3>Estado real de UADAVSTREAM</h3><p>Comprueba datos y conexión entre Admin, Worker V6.2.2-STABLE y KV.</p></div><button class="btn btn-secondary btn-sm" type="button" onclick="u28RefreshOps()"><i class="fa-solid fa-arrows-rotate"></i> Actualizar estado</button></div><div class="u28-ops-grid" id="u28OpsGrid"></div></div><div class="u28-ops-panel" id="u28IndexConnectionsPanel"><div class="u28-ops-head"><div><div class="u28-ops-kicker">INSPECCIÓN INDEX ↔ ADMIN ↔ WORKER</div><h3>Chequeo de conexiones</h3><p>Lee las mismas rutas que consume la Home y verifica que Admin pueda verlas.</p></div><button class="btn btn-primary btn-sm" type="button" onclick="u28InspectConnections()"><i class="fa-solid fa-plug-circle-check"></i> Inspeccionar</button></div><div class="u28-ops-grid" id="u28IndexConnectionsGrid"><div class="u27-note">Presioná “Inspeccionar” para comprobar las conexiones.</div></div></div><div class="u28-search-test"><div><div class="u28-ops-kicker">PRUEBA DE BÚSQUEDA</div><h4 style="margin:4px 0 0">Comprobar resultados en tiempo real</h4><p class="u27-note" style="margin:5px 0 0">Usa la misma ruta que consume el Index y muestra la fuente y cantidad recibida.</p></div><div class="u28-search-test-row"><input id="u28SearchTestInput" placeholder="Ej.: Bon Jovi, circo, teatro…" value="Bon Jovi"><button class="btn btn-primary btn-sm" type="button" onclick="u28RunSearchTest()"><i class="fa-solid fa-magnifying-glass"></i> Probar búsqueda</button></div><div id="u28SearchTestResult" class="u28-search-test-result"></div></div>
 <!-- ============================================================ -->
 <!-- 1. SECCIONES Y CONTENIDO -->
 <!-- ============================================================ -->
@@ -1210,10 +1212,13 @@ function mostrarToast(mensaje, tipo = 'success') {
 function desconectar() {
   localStorage.removeItem('uadavstream_admin_key');
   ADMIN_KEY = '';
-  document.getElementById('panelContent').classList.add('hidden');
-  document.getElementById('btnLogout').classList.add('hidden');
-  const input=document.getElementById('adminKeyInput');
-  if(input) input.value='';
+  document.getElementById('panelContent')?.classList.add('hidden');
+  document.getElementById('btnLogout')?.classList.add('hidden');
+  const input=document.getElementById('adminKeyInput'); if(input) input.value='';
+  document.querySelector('.header-actions')?.classList.remove('admin-connected');
+  document.body.classList.remove('admin-v28-logged');
+  const roleLabel=document.getElementById('adminV28Role'); if(roleLabel) roleLabel.textContent='Sesión activa';
+  const connectBtn=document.querySelector('.header-actions button[id="btnConnectAdmin"]'); if(connectBtn) connectBtn.removeAttribute('id');
   mostrarToast('Sesión cerrada', 'success');
 }
 
@@ -1250,6 +1255,11 @@ async function conectar(){
     localStorage.setItem('uadavstream_admin_key',ADMIN_KEY);
     document.getElementById('panelContent').classList.remove('hidden');
     document.getElementById('btnLogout').classList.remove('hidden');
+    const headerActions=document.querySelector('.header-actions');
+    if(headerActions) headerActions.classList.add('admin-connected');
+    const connectBtn=headerActions?.querySelector('button[onclick="conectar()"]'); if(connectBtn) connectBtn.id='btnConnectAdmin';
+    const roleLabel=document.getElementById('adminV28Role'); if(roleLabel) roleLabel.textContent=data.role==='admin_provincial'?'Admin provincial':'Admin nacional';
+    document.body.classList.add('admin-v28-logged');
     mostrarToast(`Conectado · ${data.role==='admin_provincial'?'Administrador provincial':'Administrador nacional'}`,'success');
     await cargarDatos();
     await u27LoadDashboard();
@@ -2717,7 +2727,7 @@ async function u27LoadAudit(){
   function buildNav(){
     if(document.getElementById('adminV28NavShell')) return;
     const shell=document.createElement('aside'); shell.id='adminV28NavShell'; shell.className='admin-v28-sidebar-shell';
-    shell.innerHTML='<div class="admin-v28-sidebar"><div class="admin-v28-sidebar-brand"><div class="mark"><i class="fa-solid fa-star"></i></div><div><strong>UADAVSTREAM</strong><small>Centro de control</small></div></div><nav id="adminV28Nav" class="admin-v28-nav" aria-label="Centro de control"></nav><div class="admin-v28-sidebar-foot">Panel interno · cambios guardados en UADAV_DB</div></div>';
+    shell.innerHTML='<div class="admin-v28-sidebar"><div class="admin-v28-sidebar-brand"><div class="mark"><i class="fa-solid fa-star"></i></div><div><strong>UADAVSTREAM</strong><small>Centro de control</small></div></div><nav id="adminV28Nav" class="admin-v28-nav" aria-label="Centro de control"></nav><div class="admin-v28-account"><div><span id="adminV28Role">Sesión activa</span><small>Administrador UADAVSTREAM</small></div><button type="button" class="admin-v28-logout" onclick="desconectar()" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i> Salir</button></div><div class="admin-v28-sidebar-foot">Panel interno · UADAV_DB</div></div>';
     const nav=shell.querySelector('#adminV28Nav');
     let currentGroup='';
     items.forEach(([id,icon,label])=>{
@@ -2813,6 +2823,29 @@ async function u27LoadAudit(){
     }));
   }
   window.u28RefreshOps=u28RefreshOps;
+  window.u28InspectConnections=async function(){
+    const grid=$('u28IndexConnectionsGrid'); if(!grid)return;
+    const routes=[
+      ['Health','health',false],['Landing','landing_config',false],['Footer','footer_config',false],['Visibilidad','web_visibility',false],['Orden Home','home_layout',false],
+      ['Secciones','secciones',false],['Artistas','artistas',false],['Radios','radios',false],['Señales','senales_oficiales',false],['Cartelera','cartelera',false],['Banners','banners',false],
+      ['Chat general','chat?id_stream=general',false],['Búsqueda YouTube','youtube/search?q=UADAVSTREAM',false],['Tendencias AR','youtube/trending?region=AR&category=10&limit=5',false],
+      ['Diagnóstico búsqueda','admin/search-diagnostic?q=UADAVSTREAM',true],['Premium','premium/codes',true],['Estadísticas','admin/stats?days=7',true],['Analytics','analytics/config',true]
+    ];
+    grid.innerHTML=routes.map(([name])=>`<div class="u28-ops-card"><div class="u28-ops-top"><span class="u28-ops-name">${name}</span><span class="u28-ops-state">…</span></div><div class="u28-ops-detail">Esperando</div></div>`).join('');
+    const cards=[...grid.children];
+    await Promise.all(routes.map(async([name,path,auth],i)=>{
+      const card=cards[i], state=card.querySelector('.u28-ops-state'), detail=card.querySelector('.u28-ops-detail');
+      try{const data=await u28Fetch(path,{headers:auth?{Authorization:'Bearer '+ADMIN_KEY}:{}});
+        state.textContent='OK';card.classList.add('ok');
+        if(Array.isArray(data)) detail.textContent=`${data.length} elementos`;
+        else if(data?.items&&Array.isArray(data.items)) detail.textContent=`${data.items.length} resultados · ${data.source||'API'}`;
+        else if(data?.totals) detail.textContent='Estadísticas disponibles';
+        else if(path==='health') detail.textContent=`${data.version||'OK'} · KV ${data.kv?'OK':'NO'}`;
+        else detail.textContent='Respuesta válida';
+      }catch(e){state.textContent=e.status===401?'PROTEGIDO':'ERROR';card.classList.add(e.status===401?'warn':'bad');detail.textContent=e.message||'Sin respuesta';}
+    }));
+  };
+
 
   // ---------- PREMIUM: usar rutas V6.2 reales ----------
   window.generarCodigo=async function(){
@@ -2908,12 +2941,18 @@ async function u27LoadAudit(){
   window.renderProspectos=function(list){
     const out=$('artistasProspectosList'); if(!out)return;
     if(!Array.isArray(list)||!list.length){out.innerHTML='<div class="u27-note">Todavía no hay candidatos en prospección.</div>';return;}
-    out.innerHTML='<div style="display:grid;gap:8px">'+list.map((p,i)=>`<div class="prospect-card"><img src="${String(p.imagen||'').replace(/"/g,'%22')}" alt=""><div class="prospect-meta"><div class="prospect-name">${escapeHtml(p.nombre||'Canal')}</div><div class="prospect-sub">${escapeHtml(p.rubro||'')} · ${escapeHtml(p.region||'')} · ${escapeHtml(p.video_titulo||'')}</div></div><div class="prospect-actions"><button class="btn btn-secondary btn-sm" onclick="resolverProspecto('${String(p.id).replace(/'/g,"\'")}')">Resolver canal</button><button class="btn btn-primary btn-sm" onclick="aprobarProspecto('${String(p.id).replace(/'/g,"\'")}')">Crear perfil pendiente</button></div></div>`).join('')+'</div>';
+    out.innerHTML='<div style="display:grid;gap:8px">'+list.map((p,i)=>`<div class="prospect-card"><img src="${String(p.imagen||'').replace(/"/g,'%22')}" alt=""><div class="prospect-meta"><div class="prospect-name">${escapeHtml(p.nombre||'Canal')}</div><div class="prospect-sub">${escapeHtml(p.rubro||'')} · ${escapeHtml(p.region||'')} · ${escapeHtml(p.video_titulo||'')}</div></div><div class="prospect-actions"><button class="btn btn-secondary btn-sm" onclick="resolverProspecto('${String(p.id).replace(/'/g,"\'")}')">Resolver canal</button><button class="btn btn-secondary btn-sm" onclick="toggleProspectoPublico('${String(p.id).replace(/'/g,"\'")}')">${p.publicable===true?'Ocultar del catálogo':'Mostrar en catálogo'}</button><button class="btn btn-primary btn-sm" onclick="aprobarProspecto('${String(p.id).replace(/'/g,"\'")}')">Crear perfil pendiente</button></div></div>`).join('')+'</div>';
   };
 
   window.resolverProspecto=async function(id){
     const all=window.__uadavProspectos||[]; const p=all.find(x=>x.id===id); if(!p)return;
     try{const r=await u28Fetch('youtube/search_channel?name='+encodeURIComponent(p.nombre)); if(!r?.channelId)throw new Error('No se encontró un canal claro para '+p.nombre); p.canal=r.channelId;p.nombre=r.nombre||p.nombre;p.foto=r.thumbnail||p.imagen;p.bio=r.bio||''; await u28Write('artistas_prospectos',all);renderProspectos(all.filter(x=>x.region===p.region).slice(-50).reverse());mostrarToast('Canal resuelto','success');}catch(e){mostrarToast(e.message,'error');}
+  };
+
+  window.toggleProspectoPublico=async function(id){
+    const all=window.__uadavProspectos||[]; const p=all.find(x=>x.id===id); if(!p)return;
+    p.publicable=p.publicable!==true; p.publicado_en=p.publicable?new Date().toISOString():null;
+    try{await u28Write('artistas_prospectos',all);renderProspectos(all.filter(x=>x.region===p.region).slice(-50).reverse());mostrarToast(p.publicable?'Artista visible en catálogo de descubrimiento':'Artista ocultado del catálogo','success');}catch(e){mostrarToast('No se pudo actualizar: '+e.message,'error');}
   };
 
   window.aprobarProspecto=async function(id){
@@ -2951,6 +2990,21 @@ async function u27LoadAudit(){
     const bad=results.filter(x=>!x.ok);
     if(!bad.length){clearDirty();mostrarToast('✅ Todos los módulos fueron guardados y verificados','success');await cargarDatos();await u28RefreshOps();}
     else{setDirty(true);mostrarToast('⚠️ Fallaron: '+bad.map(x=>x.name).join(', '),'error');}
+  };
+
+  window.u28RunSearchTest=async function(){
+    const input=$('u28SearchTestInput'),out=$('u28SearchTestResult'); const q=(input?.value||'').trim(); if(!out)return;
+    if(!q){out.className='u28-search-test-result bad';out.textContent='Escribí una búsqueda.';return;}
+    out.className='u28-search-test-result'; out.textContent='Buscando…';
+    try{
+      const data=await u28Fetch('youtube/search?q='+encodeURIComponent(q));
+      const count=Array.isArray(data)?data.length:(Array.isArray(data?.items)?data.items.length:0);
+      if(count){out.className='u28-search-test-result ok';out.innerHTML='✅ '+count+' resultados recibidos. Fuente: Worker/API.';}
+      else{
+        let diag={}; try{diag=await u28Fetch('admin/search-diagnostic?q='+encodeURIComponent(q),{headers:{Authorization:'Bearer '+ADMIN_KEY}})}catch(e){diag={error:e.message}}
+        out.className='u28-search-test-result bad'; out.innerHTML='⚠️ La ruta respondió sin resultados.<pre>'+escapeHtml(JSON.stringify(diag,null,2))+'</pre>';
+      }
+    }catch(e){out.className='u28-search-test-result bad';out.textContent='❌ '+e.message;}
   };
 
   // ---------- Marcar cambios y estado limpio ----------
