@@ -570,6 +570,9 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 @media(max-width:760px){.u28-ops-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.u28-ops-head{flex-direction:column}}
 @media(max-width:470px){.u28-ops-grid{grid-template-columns:1fr}}
 </style>
+<style id="uadav-v28-4-footer-prospectos">
+.admin-footer-preview{margin-top:14px;padding:18px;border:1px solid var(--border-color);border-radius:16px;background:linear-gradient(135deg,rgba(0,229,255,.07),rgba(139,92,246,.06));min-height:110px}.footer-preview-brand{font-weight:900;font-size:18px;color:#fff}.footer-preview-text{margin-top:5px;color:#94a3b8}.footer-preview-links{margin-top:14px;color:#cbd5e1;font-size:12px}.prospect-card{display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center;background:var(--bg-input);border:1px solid var(--border-color);border-radius:14px;padding:12px}.prospect-card img{width:72px;height:52px;object-fit:cover;border-radius:10px;background:#111}.prospect-meta{min-width:0}.prospect-name{font-weight:800;color:var(--text-primary)}.prospect-sub{font-size:.76rem;color:var(--text-secondary);margin-top:3px}.prospect-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}@media(max-width:700px){.prospect-card{grid-template-columns:54px 1fr}.prospect-card img{width:54px;height:54px}.prospect-actions{grid-column:1/-1;justify-content:flex-start}}
+</style>
 </head>
 <body>
 <div class="container" id="app">
@@ -991,9 +994,15 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <summary><i class="fa-solid fa-shoe-prints"></i> 📱 Footer y Redes Sociales</summary>
 <div class="details-content">
 <div class="form-row">
-<div class="form-group"><label>Título del Footer</label><input id="footerTitulo" placeholder="Disfrutá UADAVSTREAM"/></div>
-<div class="form-group"><label>Subtítulo</label><input id="footerSubtitulo" placeholder="El mejor teatro y música."/></div>
-<div class="form-group" style="grid-column:1/-1;"><label>Copyright</label><input id="footerCopyright" placeholder="© 2026 UADAVSTREAM"/></div>
+<div class="form-group"><label>Título del Footer</label><input id="footerTitulo" placeholder="UADAVSTREAM"/></div>
+<div class="form-group"><label>Subtítulo</label><input id="footerSubtitulo" placeholder="El arte escénico al alcance de todos."/></div>
+<div class="form-group"><label>Logo / estrella</label><input id="footerLogo" placeholder="https://.../logo.png"/></div>
+<div class="form-group"><label>Contacto</label><input id="footerContacto" placeholder="contacto@uadavstream.com.ar"/></div>
+<div class="form-group"><label>WhatsApp</label><input id="footerWhatsappTexto" placeholder="+54 ..."/></div>
+<div class="form-group" style="grid-column:1/-1;"><label>Copyright</label><input id="footerCopyright" placeholder="© 2026 UADAVSTREAM · UADAV"/></div>
+<div class="form-group"><label>Privacidad · URL</label><input id="footerPrivacyUrl" placeholder="/privacidad.html"/></div>
+<div class="form-group"><label>Términos · URL</label><input id="footerTermsUrl" placeholder="/terminos.html"/></div>
+<div class="form-group"><label>Mostrar legales</label><select id="footerMostrarLegales"><option value="true">Sí</option><option value="false">No</option></select></div>
 </div>
 <hr style="border-color:var(--border-color); margin:16px 0;"/>
 <div class="form-row">
@@ -1002,8 +1011,10 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <div class="form-group"><label>X (Twitter)</label><input id="redTwitter"/></div>
 <div class="form-group"><label>YouTube</label><input id="redYoutube"/></div>
 <div class="form-group"><label>TikTok</label><input id="redTiktok"/></div>
-<div class="form-group"><label>WhatsApp</label><input id="redWhatsapp"/></div>
+<div class="form-group"><label>Mostrar redes</label><select id="footerMostrarRedes"><option value="true">Sí</option><option value="false">No</option></select></div>
+<div class="form-group"><label>Mostrar links</label><select id="footerMostrarLinks"><option value="true">Sí</option><option value="false">No</option></select></div>
 </div>
+<div class="admin-footer-preview" id="footerLivePreview"><div class="footer-preview-brand">UADAVSTREAM</div><div class="footer-preview-text">El arte escénico al alcance de todos.</div><div class="footer-preview-links">Explorar · Artistas · Cartelera</div></div>
 <button class="btn btn-primary mt-2" onclick="guardarFooter()">💾 Guardar Footer</button>
 </div>
 </details>
@@ -1058,9 +1069,10 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 </div>
 </div>
 <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
-<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">🌎 Descubrir artistas por región</h4>
-<p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Busca descubrimientos de YouTube por región y crea una sección curada. Usa la búsqueda oficial; no depende de una ruta de tendencias inexistente.</p>
+<h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">🌎 Prospección de artistas</h4>
+<p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Descubrí candidatos en YouTube por región y rubro. Primero usa el ranking popular regional de YouTube cuando el Worker V6.3 esté activo y, si no hay datos, usa búsqueda temática. <strong>No se publican como afiliados automáticamente:</strong> quedan en prospección hasta que UADAV los verifique o contacte.</p>
 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+<select id="tendenciasRubro" style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);"><option value="todos">Todos los rubros</option><option value="música">Música</option><option value="circo">Circo</option><option value="magia">Magia</option><option value="humor">Humor</option><option value="danza">Danza</option><option value="teatro">Teatro</option><option value="animación">Animación</option></select>
 <select id="tendenciasRegion" style="background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);">
 <option value="AR">Argentina</option>
 <option value="US">Estados Unidos</option>
@@ -1071,11 +1083,11 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <option value="PE">Perú</option>
 </select>
 <input id="tendenciasLimite" max="100" min="5" style="width:80px; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; color:var(--text-primary);" type="number" value="25"/>
-<button class="btn btn-warning" onclick="u28DescubrirRegion()">🔥 Importar Tendencias</button>
+<button class="btn btn-warning" onclick="u28DescubrirRegion()">🔥 Importar populares / tendencias</button>
 </div>
 </div>
 <div id="importStatus" style="margin-top:12px;"></div>
-<div id="artistasImportadosList" style="margin-top:8px;"></div>
+<div id="artistasImportadosList" style="margin-top:8px;"></div><div id="artistasProspectosList" style="margin-top:12px;"></div>
 </div>
 </details>
 <!-- ============================================================ -->
@@ -1309,6 +1321,9 @@ async function cargarDatos() {
     document.getElementById('redYoutube').value = footerConfig.youtube || '';
     document.getElementById('redTiktok').value = footerConfig.tiktok || '';
     document.getElementById('redWhatsapp').value = footerConfig.whatsapp || '';
+    const privacyEl=document.getElementById('footerPrivacyUrl'); if(privacyEl) privacyEl.value=footerConfig.privacy_url||'/privacidad.html';
+    const termsEl=document.getElementById('footerTermsUrl'); if(termsEl) termsEl.value=footerConfig.terms_url||'/terminos.html';
+    const legalEl=document.getElementById('footerMostrarLegales'); if(legalEl) legalEl.value=footerConfig.mostrar_legales===false?'false':'true';
 
     // Select de importación
     const select = document.getElementById('importPlaylistSeccion');
@@ -2153,33 +2168,7 @@ async function importarCanal() {
 }
 
 async function importarTendencias() {
-  const region = document.getElementById('tendenciasRegion').value;
-  const limit = parseInt(document.getElementById('tendenciasLimite').value) || 25;
-
-  const statusDiv = document.getElementById('importStatus');
-  statusDiv.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner"></i> Importando tendencias...</div>';
-
-  try {
-    const res = await fetch(API_URL + 'admin/importar-tendencias', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-      mode: 'cors',
-      credentials: 'omit',
-      body: JSON.stringify({ region, limit })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      statusDiv.innerHTML = `<p style="color:#22c55e;">✅ ${data.importados} artistas importados desde tendencias</p>`;
-      mostrarToast(`✅ ${data.importados} artistas importados`, 'success');
-      cargarDatos();
-    } else {
-      statusDiv.innerHTML = `<p style="color:#ef4444;">❌ ${data.error || 'Error al importar'}</p>`;
-      mostrarToast('Error al importar tendencias', 'error');
-    }
-  } catch (e) {
-    statusDiv.innerHTML = `<p style="color:#ef4444;">❌ Error de conexión</p>`;
-    mostrarToast('Error de conexión', 'error');
-  }
+  return u28DescubrirRegion();
 }
 
 // ============================================================
@@ -2375,27 +2364,7 @@ async function eliminarShow(id) {
 // ============================================================
 // FOOTER
 // ============================================================
-function guardarFooter() {
-  const footer = {
-    titulo: document.getElementById('footerTitulo').value,
-    subtitulo: document.getElementById('footerSubtitulo').value,
-    copyright: document.getElementById('footerCopyright').value,
-    instagram: document.getElementById('redInstagram').value,
-    facebook: document.getElementById('redFacebook').value,
-    twitter: document.getElementById('redTwitter').value,
-    youtube: document.getElementById('redYoutube').value,
-    tiktok: document.getElementById('redTiktok').value,
-    whatsapp: document.getElementById('redWhatsapp').value
-  };
-  fetch(API_URL + 'footer_config', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-    mode: 'cors',
-    credentials: 'omit',
-    body: JSON.stringify(footer)
-  });
-  mostrarToast('Footer guardado.', 'success');
-}
+function guardarFooter(){ return window.guardarFooter ? window.guardarFooter() : Promise.resolve(false); }
 
 // ============================================================
 // IMPORTACIONES MASIVAS (EXISTENTES)
@@ -2819,7 +2788,7 @@ async function u27LoadAudit(){
       ['Secciones','secciones',false],['Streams','senales_oficiales',false],['Radios','radios',false],['Artistas','artistas',false],
       ['Eventos','eventos',true],['Cartelera','cartelera',true],['Publicidad','banners',false],['Premium','premium/codes',true],
       ['Home','web_visibility',false],['Orden Home','home_layout',false],['Analytics','analytics/config',false],['Estadísticas','admin/stats?days=7',true],
-      ['Auditoría','admin/audit-log?days=7',true],['Sanciones','admin/artist-sanctions',true],['Diagnóstico','health',false]
+      ['Auditoría','admin/audit-log?days=7',true],['Sanciones','admin/artist-sanctions',true],['Búsqueda YouTube','admin/search-diagnostic?q=UADAVSTREAM',true],['Diagnóstico','health',false]
     ];
     grid.innerHTML=modules.map(([name])=>`<div class="u28-ops-card"><div class="u28-ops-top"><span class="u28-ops-name">${name}</span><span class="u28-ops-state">COMPROBANDO</span></div><div class="u28-ops-detail">—</div></div>`).join('');
     const cards=[...grid.children];
@@ -2851,7 +2820,7 @@ async function u27LoadAudit(){
       const expires=$('codeExpira')?.value||null;
       const tipo=$('codeTipo')?.value||'sin_publicidad';
       const dias=Number($('codeMaxDispositivos')?.value||30);
-      const data=await u28Write('premium/codes',{beneficio:tipo,dias,expira:expires,uso_maximo:0,nota:'Generado desde Admin V28.3'});
+      const data=await u28Write('premium/codes',{beneficio:tipo,dias,expira:expires,uso_maximo:0,nota:'Generado desde Admin V28.5'});
       mostrarToast(`✅ Código generado: ${data.code||'OK'}`,'success'); await window.cargarCodigos(); markDirty();
     }catch(e){mostrarToast('❌ '+e.message,'error');}
   };
@@ -2888,24 +2857,79 @@ async function u27LoadAudit(){
     }catch(e){if(status)status.innerHTML=`<div style="color:#ff9494">❌ ${e.message}</div>`;mostrarToast('No se pudo importar el canal','error');}
   };
 
-  // ---------- Descubrimiento regional: usa búsqueda real, no un endpoint stub ----------
+  // ---------- Prospección regional de artistas ----------
   window.u28DescubrirRegion=async function(){
-    const region=$('tendenciasRegion')?.value||'AR'; const limit=Math.max(5,Math.min(100,Number($('tendenciasLimite')?.value||25))); const status=$('importStatus');
-    if(status)status.innerHTML='<div class="loading">Buscando descubrimientos para '+region+'…</div>';
+    const region=$('tendenciasRegion')?.value||'AR'; const rubro=$('tendenciasRubro')?.value||'todos'; const limit=Math.max(5,Math.min(60,Number($('tendenciasLimite')?.value||25))); const status=$('importStatus'); const out=$('artistasProspectosList');
+    if(status)status.innerHTML='<div class="loading">🔎 Buscando populares / tendencias de YouTube para '+region+'…</div>';
+    if(out)out.innerHTML='';
+    const cat=(rubro==='música'||rubro==='musica')?'10':'24';
+    const rubros=rubro==='todos'?['música','circo','magia','humor','danza','teatro','animación']:[rubro];
+    const seen=new Set(), candidates=[];
     try{
-      const data=await u28Fetch('youtube/search?q='+encodeURIComponent('artistas '+region));
-      const items=Array.isArray(data)?data.slice(0,limit):[];
-      let sec=seccionesData.find(s=>s.id==='descubrimientos_'+region.toLowerCase());
-      if(!sec){sec={id:'descubrimientos_'+region.toLowerCase(),nombre:'Descubrimientos '+region,icono:'fa-compass',activa:true,tipo_contenido:'videos',modo_visual:'videos',modo:'manual',items:[]};seccionesData.push(sec);}
-      sec.items=items.map(v=>({tipo:'youtube',url:v.id,titulo:v.titulo||'Video',imagen:v.thumbnail||'',descripcion:v.descripcion||''}));
-      renderSecciones();actualizarFormularioYLista();setDirty(true);
-      if(status)status.innerHTML=`<div style="color:#69e4a0">✅ ${items.length} contenidos encontrados para ${region}. Guardá los cambios para publicarlos.</div>`;
-    }catch(e){if(status)status.innerHTML=`<div style="color:#ff9494">❌ ${e.message}</div>`;}
+      // V6.3: ranking popular regional oficial de YouTube.
+      try{
+        const trend=await u28Fetch('youtube/trending?region='+encodeURIComponent(region)+'&category='+encodeURIComponent(cat)+'&limit='+Math.min(50,limit));
+        for(const v of (Array.isArray(trend?.items)?trend.items:[])){
+          const hay=[v.channel_name,v.titulo,v.descripcion].join(' ').toLowerCase();
+          if(!hay || seen.has(String(v.channel_id||v.id))) continue;
+          const matches=rubro==='todos'||rubros.some(r=>hay.includes(r.toLowerCase()));
+          if(!matches) continue;
+          seen.add(String(v.channel_id||v.id));
+          candidates.push({id:'PROS-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),nombre:v.channel_name||'Canal por resolver',rubro:rubro==='todos'?'descubrimiento':rubro,region,video_id:v.id||'',video_titulo:v.titulo||'',imagen:v.thumbnail||'',estado:'prospecto',fuente:'youtube_mostPopular',canal:v.channel_id||'',bio:v.descripcion||'',views:v.views||0,creado:new Date().toISOString()});
+          if(candidates.length>=limit)break;
+        }
+      }catch(e){/* V6.2 fallback abajo */}
+
+      // Fallback compatible con V6.2.2: búsqueda temática.
+      if(candidates.length<Math.min(5,limit)){
+        for(const r of rubros){
+          const data=await u28Fetch('youtube/search?q='+encodeURIComponent(r+' artistas '+region));
+          for(const v of (Array.isArray(data)?data:[])){
+            const key=String(v.descripcion||v.channel_title||v.titulo||'').toLowerCase().trim();
+            if(!key || seen.has(key))continue; seen.add(key);
+            candidates.push({id:'PROS-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),nombre:v.descripcion||'Canal por resolver',rubro:r,region,video_id:v.id||'',video_titulo:v.titulo||'',imagen:v.thumbnail||'',estado:'prospecto',fuente:'youtube_search',creado:new Date().toISOString()});
+            if(candidates.length>=limit)break;
+          }
+          if(candidates.length>=limit)break;
+        }
+      }
+
+      let saved=[]; try{saved=await u28Fetch('artistas_prospectos')}catch{}
+      const merged=Array.isArray(saved)?saved:[];
+      for(const c of candidates){if(!merged.some(x=>(x.canal&&c.canal&&x.canal===c.canal)|| (String(x.nombre||'').toLowerCase()===String(c.nombre||'').toLowerCase()&&x.region===region))){merged.push(c);}}
+      await u28Write('artistas_prospectos',merged); window.__uadavProspectos=merged;
+      renderProspectos(merged.filter(x=>x.region===region).slice(-limit).reverse());
+      if(status)status.innerHTML='<div style="color:#69e4a0">✅ '+candidates.length+' candidatos encontrados. <strong>Ninguno fue publicado como afiliado.</strong></div>';
+      setDirty(false);
+    }catch(e){if(status)status.innerHTML='<div style="color:#ff9494">❌ '+e.message+'</div>';}
+  };
+
+  window.escapeHtml=function(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));};
+  window.renderProspectos=function(list){
+    const out=$('artistasProspectosList'); if(!out)return;
+    if(!Array.isArray(list)||!list.length){out.innerHTML='<div class="u27-note">Todavía no hay candidatos en prospección.</div>';return;}
+    out.innerHTML='<div style="display:grid;gap:8px">'+list.map((p,i)=>`<div class="prospect-card"><img src="${String(p.imagen||'').replace(/"/g,'%22')}" alt=""><div class="prospect-meta"><div class="prospect-name">${escapeHtml(p.nombre||'Canal')}</div><div class="prospect-sub">${escapeHtml(p.rubro||'')} · ${escapeHtml(p.region||'')} · ${escapeHtml(p.video_titulo||'')}</div></div><div class="prospect-actions"><button class="btn btn-secondary btn-sm" onclick="resolverProspecto('${String(p.id).replace(/'/g,"\'")}')">Resolver canal</button><button class="btn btn-primary btn-sm" onclick="aprobarProspecto('${String(p.id).replace(/'/g,"\'")}')">Crear perfil pendiente</button></div></div>`).join('')+'</div>';
+  };
+
+  window.resolverProspecto=async function(id){
+    const all=window.__uadavProspectos||[]; const p=all.find(x=>x.id===id); if(!p)return;
+    try{const r=await u28Fetch('youtube/search_channel?name='+encodeURIComponent(p.nombre)); if(!r?.channelId)throw new Error('No se encontró un canal claro para '+p.nombre); p.canal=r.channelId;p.nombre=r.nombre||p.nombre;p.foto=r.thumbnail||p.imagen;p.bio=r.bio||''; await u28Write('artistas_prospectos',all);renderProspectos(all.filter(x=>x.region===p.region).slice(-50).reverse());mostrarToast('Canal resuelto','success');}catch(e){mostrarToast(e.message,'error');}
+  };
+
+  window.aprobarProspecto=async function(id){
+    const all=window.__uadavProspectos||[]; const p=all.find(x=>x.id===id); if(!p)return;
+    let sec=seccionesData.find(s=>s.id==='artistas'); if(!sec){sec={id:'artistas',nombre:'Artistas',icono:'fa-user-group',activa:true,tipo_contenido:'perfiles',modo_visual:'videos',modo:'manual',items:[]};seccionesData.push(sec);} sec.items=Array.isArray(sec.items)?sec.items:[];
+    if(sec.items.some(x=>(p.canal&&x.canal===p.canal)||String(x.nombre||'').toLowerCase()===String(p.nombre||'').toLowerCase())){mostrarToast('El artista ya existe en Artistas','error');return;}
+    sec.items.push({tipo:'artista',nombre:p.nombre||'Artista',rubro:p.rubro||'Artista de variedades',foto:p.foto||p.imagen||'',bio:p.bio||'',canal:p.canal||'',contacto:'',afiliado_verificado:false,estado:'pendiente',prospecto_id:p.id,region:p.region||'',donacion_activa:false,live_url:'',booking_url:''});
+    p.estado='convertido_a_pendiente'; p.convertido_en=new Date().toISOString(); await u28Write('artistas_prospectos',all); renderSecciones();actualizarFormularioYLista();setDirty(true);renderProspectos(all.filter(x=>x.region===p.region).slice(-50).reverse());mostrarToast('Perfil pendiente creado. Revisalo antes de publicarlo.','success');
   };
 
   // ---------- Footer: devolver éxito real ----------
+  window.renderFooterPreview=function(){
+    const el=$('footerLivePreview'); if(!el)return; const logo=$('footerLogo')?.value||''; const title=$('footerTitulo')?.value||'UADAVSTREAM'; const sub=$('footerSubtitulo')?.value||''; const links=$('footerMostrarLinks')?.value!=='false'?'Explorar · Artistas · Cartelera':'Links ocultos'; const legal=$('footerMostrarLegales')?.value!=='false'?'Privacidad · Términos':'Legales ocultos'; el.innerHTML=(logo?'<img src="'+logo.replace(/"/g,'%22')+'" style="height:34px;max-width:180px;object-fit:contain;margin-bottom:8px">':'')+'<div class="footer-preview-brand">'+escapeHtml(title)+'</div><div class="footer-preview-text">'+escapeHtml(sub)+'</div><div class="footer-preview-links">'+escapeHtml(links)+' · '+escapeHtml(legal)+'</div>';
+  };
   window.guardarFooter=async function(){
-    const footer={titulo:$('footerTitulo')?.value||'',subtitulo:$('footerSubtitulo')?.value||'',copyright:$('footerCopyright')?.value||'',instagram:$('redInstagram')?.value||'',facebook:$('redFacebook')?.value||'',twitter:$('redTwitter')?.value||'',youtube:$('redYoutube')?.value||'',tiktok:$('redTiktok')?.value||'',whatsapp:$('redWhatsapp')?.value||''};
+    const footer={titulo:$('footerTitulo')?.value||'',subtitulo:$('footerSubtitulo')?.value||'',logo_url:$('footerLogo')?.value||'',contacto:$('footerContacto')?.value||'',whatsapp_texto:$('footerWhatsappTexto')?.value||'',copyright:$('footerCopyright')?.value||'',instagram:$('redInstagram')?.value||'',facebook:$('redFacebook')?.value||'',twitter:$('redTwitter')?.value||'',youtube:$('redYoutube')?.value||'',tiktok:$('redTiktok')?.value||'',whatsapp:$('redWhatsapp')?.value||'',privacy_url:$('footerPrivacyUrl')?.value||'/privacidad.html',terms_url:$('footerTermsUrl')?.value||'/terminos.html',mostrar_redes:$('footerMostrarRedes')?.value!=='false',mostrar_links:$('footerMostrarLinks')?.value!=='false',mostrar_legales:$('footerMostrarLegales')?.value!=='false'};
     try{await u28Write('footer_config',footer);mostrarToast('Footer guardado','success');return true;}catch(e){mostrarToast('No se pudo guardar Footer: '+e.message,'error');return false;}
   };
 
@@ -2935,8 +2959,31 @@ async function u27LoadAudit(){
   const oldRefresh=window.adminV28TryRefresh; window.adminV28TryRefresh=async function(){try{await cargarDatos();await u27LoadDashboard();await u28RefreshOps();clearDirty();}catch(e){location.reload();}};
   const oldDash=window.u27LoadDashboard; window.u27LoadDashboard=async function(){await oldDash?.();await u28RefreshOps();};
 
+  document.addEventListener('input',ev=>{if(['footerTitulo','footerSubtitulo','footerLogo','footerContacto','footerWhatsappTexto','footerCopyright','redInstagram','redFacebook','redTwitter','redYoutube','redTiktok','redWhatsapp','footerPrivacyUrl','footerTermsUrl','footerMostrarRedes','footerMostrarLinks','footerMostrarLegales'].includes(ev.target?.id))renderFooterPreview();});
+  document.addEventListener('change',ev=>{if(['footerMostrarRedes','footerMostrarLinks','footerMostrarLegales'].includes(ev.target?.id))renderFooterPreview();});
+  // ---------- CHEQUEADOR DE BÚSQUEDA ----------
+  window.u28RunSearchCheck=async function(){
+    const q=($('u28SearchDiagQuery')?.value||'UADAVSTREAM').trim()||'UADAVSTREAM';
+    const box=$('u28SearchDiagResult'); const btn=$('u28SearchDiagBtn');
+    if(box)box.innerHTML='<span style="color:#bbb">Comprobando YouTube + Invidious…</span>';
+    if(btn)btn.disabled=true;
+    try{
+      const d=await u28Fetch('admin/search-diagnostic?q='+encodeURIComponent(q));
+      const ok=d?.count>0;
+      if(box)box.innerHTML=`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><strong style="color:${ok?'#67e8a5':'#ff9b9b'}">${ok?'✅ BÚSQUEDA OPERATIVA':'❌ SIN RESULTADOS'}</strong><span>Fuente: ${escapeHtml(d?.source||'none')}</span><span>Resultados: ${Number(d?.count||0)}</span>${d?.instance?'<span>Instancia: '+escapeHtml(d.instance)+'</span>':''}${d?.youtube_error?'<span style="color:#ff9b9b">YouTube: '+escapeHtml(d.youtube_error)+'</span>':''}</div>`;
+    }catch(e){if(box)box.innerHTML='<span style="color:#ff9b9b">❌ '+escapeHtml(e.message)+'</span>';}
+    finally{if(btn)btn.disabled=false;}
+  };
+  function injectSearchDiagnostic(){
+    if($('u28SearchDiagnostic'))return;
+    const host=$('integrationDiagnostics')?.querySelector('.details-content'); if(!host)return;
+    const panel=document.createElement('div'); panel.id='u28SearchDiagnostic'; panel.className='u27-panel'; panel.style.marginTop='16px';
+    panel.innerHTML='<h3>🔎 Chequeador de búsquedas</h3><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="u28SearchDiagQuery" value="UADAVSTREAM" placeholder="Texto de prueba" style="flex:1;min-width:220px"><button id="u28SearchDiagBtn" class="btn btn-primary" type="button">Probar búsqueda</button></div><div id="u28SearchDiagResult" class="u27-note" style="margin-top:10px">Todavía no se ejecutó la prueba.</div><div class="u27-note" style="margin-top:8px">Prueba la ruta real del Worker y muestra si respondió YouTube o una instancia Invidious.</div>';
+    host.appendChild(panel); $('u28SearchDiagBtn').addEventListener('click',window.u28RunSearchCheck);
+  }
+
   document.addEventListener('DOMContentLoaded',()=>{
-    setTimeout(()=>{setDirty(false);u28RefreshOps();},350);
+    setTimeout(()=>{setDirty(false);u28RefreshOps();renderFooterPreview();injectSearchDiagnostic();},350);
   });
   setTimeout(()=>{try{if($('panelContent')&&!$('panelContent').classList.contains('hidden')){setDirty(false);u28RefreshOps();}}catch{}},1200);
 })();</script>
