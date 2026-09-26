@@ -61,6 +61,10 @@
     /* FOOTER */
     footer{border-top:1px solid var(--line);padding:40px clamp(18px,4vw,60px);color:var(--muted);font-size:12px}.footer-grid{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}.footer-brand{color:#fff;font-size:18px;font-weight:900}.footer-links{display:flex;gap:16px;flex-wrap:wrap}.footer-links a:hover{color:var(--accent)}
 
+
+    /* FOOTER V30 */
+    .footer-brand-row{display:flex;align-items:center;gap:12px}.footer-logo{width:42px;height:42px;object-fit:contain;border-radius:12px;background:#0f1115;padding:6px;display:none}.footer-contact{margin-top:7px;max-width:460px;line-height:1.5}.footer-socials{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.footer-socials a{width:34px;height:34px;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;color:#cfd0d7;transition:.18s}.footer-socials a:hover{color:var(--accent);border-color:var(--accent)}.footer-extra{font-size:12px;color:var(--muted);margin-top:8px}.footer-bottom{display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}.footer-legal{display:flex;gap:14px;flex-wrap:wrap}.footer-legal a{color:var(--muted)}.footer-legal a:hover{color:var(--accent)}
+
     /* MOBILE */
     @media(max-width:850px){.nav{height:62px;gap:12px}.nav-links{display:none}.brand{font-size:19px}.nav-search{width:auto;flex:1;max-width:210px}.nav-search input{font-size:13px}.hero{min-height:73vh;padding:100px 20px 60px;background-image:linear-gradient(0deg,rgba(7,7,7,1) 3%,rgba(7,7,7,.35) 70%,rgba(0,0,0,.6)),var(--hero-image);background-position:center}.hero h1{letter-spacing:-2px}.hero p{font-size:16px}.features{grid-template-columns:repeat(2,1fr)}.row{padding-left:14px;padding-right:14px}.card{flex-basis:210px}.portrait-card{flex-basis:145px}}
     @media(max-width:520px){.nav-search{display:none}.hero{min-height:68vh}.hero-actions .btn{flex:1}.search-wrap{padding:16px 14px 5px}.big-search button{padding:0 17px}.features{grid-template-columns:1fr;padding:25px 14px}.cta{margin-left:14px;margin-right:14px;padding:27px 22px}.newsletter{flex-direction:column}.newsletter button{width:100%}.row-title{font-size:19px}}
@@ -576,8 +580,18 @@ html,body{overscroll-behavior-x:none;}
   <div id="bannerFooterContainer" class="public-banner public-banner-footer" data-visibility-key="banners" hidden></div>
 
   <footer id="siteFooter" data-visibility-key="footer">
-    <div class="footer-grid"><div><div class="footer-brand" id="footerTexto">UADAVSTREAM</div><div id="footerContacto">La plataforma audiovisual de los artistas de variedades.</div></div><div class="footer-links"><a href="/index.html">Explorar</a><a href="#artistas" onclick="irASeccion('artists');return false">Artistas</a><a href="#cartelera" onclick="irASeccion('cartelera');return false">Cartelera</a><a href="#avisos">Novedades</a></div></div>
-    <div style="margin-top:22px">© <span id="footerYear"></span> UADAVSTREAM · Todos los derechos reservados.</div>
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-row"><img id="footerLogo" class="footer-logo" alt="UADAVSTREAM"><div class="footer-brand" id="footerTexto">UADAVSTREAM</div></div>
+        <div id="footerContacto" class="footer-contact">La plataforma audiovisual de los artistas de variedades.</div>
+        <div id="footerContactoExtra" class="footer-extra"></div>
+        <div id="footerSocials" class="footer-socials"></div>
+      </div>
+      <div class="footer-links" id="footerLinks">
+        <a href="/index.html">Explorar</a><a href="#artistas" onclick="irASeccion('artists');return false">Artistas</a><a href="#cartelera" onclick="irASeccion('cartelera');return false">Cartelera</a><a href="#avisos">Novedades</a>
+      </div>
+    </div>
+    <div class="footer-bottom"><div id="footerCopyright">© <span id="footerYear"></span> UADAVSTREAM · Todos los derechos reservados.</div><div class="footer-legal" id="footerLegal"><a id="footerPrivacy" href="/privacidad.html" hidden>Privacidad</a><a id="footerTerms" href="/terminos.html" hidden>Términos</a></div></div>
   </footer>
 
   <audio id="radioAudio" preload="none"></audio>
@@ -617,6 +631,7 @@ html,body{overscroll-behavior-x:none;}
     const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=900&q=80';
     const STORAGE_KEY = 'uadavstream_discovery_v1';
     let config = {};
+    let footerConfigPublic = {};
     let allVideos = [];
     let allArtists = [];
     let webVisibility = {hero:true,search:true,banners:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true,footer:true};
@@ -806,7 +821,31 @@ html,body{overscroll-behavior-x:none;}
     }
 
     async function cargarConfig(){
-      try{config=await api('landing_config');aplicarConfig()}catch(e){console.warn('No se pudo cargar configuración',e)}
+      try{
+        const results=await Promise.all([api('landing_config'),api('footer_config')]);
+        config=results[0]||{}; footerConfigPublic=results[1]||{}; aplicarConfig(); aplicarFooterConfig(footerConfigPublic);
+      }catch(e){console.warn('No se pudo cargar configuración',e)}
+    }
+
+    function normalizarWhatsApp(v){
+      const raw=String(v||'').trim(); if(!raw)return '';
+      if(/^https?:\/\//i.test(raw))return raw;
+      const digits=raw.replace(/[^0-9]/g,''); return digits?'https://wa.me/'+digits:'';
+    }
+    function aplicarFooterConfig(f){
+      const cfg=f||{};
+      const set=(id,v)=>{const el=$(id);if(el)el.textContent=v??''};
+      set('footerTexto',cfg.titulo||'UADAVSTREAM');
+      set('footerContacto',cfg.subtitulo||'La plataforma audiovisual de los artistas de variedades.');
+      const extra=[]; if(cfg.contacto)extra.push(cfg.contacto); if(cfg.whatsapp_texto)extra.push('WhatsApp: '+cfg.whatsapp_texto); set('footerContactoExtra',extra.join(' · '));
+      const logo=$('footerLogo'); if(logo){if(cfg.logo_url){logo.src=cfg.logo_url;logo.style.display='block'}else{logo.removeAttribute('src');logo.style.display='none'}}
+      const socials=$('footerSocials'); if(socials){socials.innerHTML=''; const links=[['instagram',cfg.instagram,'fa-instagram'],['facebook',cfg.facebook,'fa-facebook-f'],['twitter',cfg.twitter,'fa-x-twitter'],['youtube',cfg.youtube,'fa-youtube'],['tiktok',cfg.tiktok,'fa-tiktok']]; if(cfg.mostrar_redes!==false){for(const [key,url,icon] of links){if(url) socials.innerHTML+=`<a href="${String(url).replace(/"/g,'%22')}" target="_blank" rel="noopener" aria-label="${key}"><i class="fa-brands ${icon}"></i></a>`} const wa=normalizarWhatsApp(cfg.whatsapp||cfg.whatsapp_url||cfg.whatsapp_texto); if(wa)socials.innerHTML+=`<a href="${wa}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`; } socials.hidden=cfg.mostrar_redes===false || !socials.innerHTML;}
+      const linksBox=$('footerLinks'); if(linksBox)linksBox.hidden=cfg.mostrar_links===false;
+      const copy=$('footerCopyright'); if(copy)copy.textContent=cfg.copyright||('© '+new Date().getFullYear()+' UADAVSTREAM · Todos los derechos reservados.');
+      const legalOn=cfg.mostrar_legales!==false;
+      const privacy=$('footerPrivacy'),terms=$('footerTerms');
+      if(privacy){privacy.href=cfg.privacy_url||'/privacidad.html';privacy.hidden=!legalOn;}
+      if(terms){terms.href=cfg.terms_url||'/terminos.html';terms.hidden=!legalOn;}
     }
     function aplicarConfig(){
       const c=config||{};
