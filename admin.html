@@ -614,7 +614,7 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 .session-copy{min-width:0;flex:1}.session-copy strong{display:block;color:#f7fbff;font-size:11px}.session-copy small{display:block;color:#728096;font-size:9px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .session-logout{width:32px;height:32px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#b6c2d2;cursor:pointer}.session-logout:hover{color:#fff;background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.2)}
 /* no floating save button */
-.fab{position:static!important;right:auto!important;bottom:auto!important;margin:18px 0 4px 278px!important;border-radius:14px!important;box-shadow:none!important;width:max-content!important}
+.fab{display:none!important}
 .u27-dashboard{max-width:1180px;margin:0 auto 20px!important}.u27-hero{align-items:center!important;justify-content:center!important;text-align:center!important;min-height:210px!important}.u27-hero:before{content:'★';display:grid;place-items:center;width:68px;height:68px;border-radius:20px;margin-right:14px;background:linear-gradient(135deg,#00e5ff,#8b5cf6);color:#071018;font-size:30px;font-weight:900;box-shadow:0 12px 40px rgba(0,229,255,.14)}.u27-hero>div:first-child{text-align:left}.u27-dashboard .u27-title{font-size:30px}
 @media(max-width:900px){body.admin-v28-logged #panelContent,body.admin-v28-logged .admin-v28-mainbar{margin-left:0!important;width:auto!important}.fab{margin-left:0!important}.admin-v28-sidebar-shell{position:sticky!important;top:8px!important;height:auto!important}}
 /* Comunidad */
@@ -652,6 +652,7 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 <div class="admin-v28-main-actions">
 <button class="btn btn-secondary btn-sm" onclick="adminV28Go('integrationDiagnostics')" type="button"><i class="fa-solid fa-heart-pulse"></i> Estado</button>
 <button class="btn btn-primary btn-sm" onclick="adminV28TryRefresh()" type="button"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+<button class="btn btn-secondary btn-sm" onclick="guardarTodo()" type="button"><i class="fa-solid fa-cloud-arrow-up"></i> Guardar</button>
 </div>
 </div>
 <div class="hidden" id="panelContent">
@@ -1260,6 +1261,7 @@ UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input)
       <div class="form-group"><label>Fecha</label><input id="jobFecha" type="date"/></div>
       <div class="form-group" style="grid-column:1/-1"><label>Descripción</label><textarea id="jobDescripcion" rows="3" placeholder="Qué se busca, condiciones y datos de contacto..."></textarea></div>
       <div class="form-group"><label>Contacto</label><input id="jobContacto" placeholder="WhatsApp / email / URL"/></div>
+      <div class="form-group"><label>Artista asociado (opcional)</label><select id="jobArtistId"><option value="">Búsqueda general</option></select></div>
       <div class="form-group"><label>Publicar</label><select id="jobActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
     </div>
     <button class="btn btn-primary" type="button" onclick="guardarOfertaTrabajo()">💾 Publicar oportunidad</button>
@@ -1267,6 +1269,25 @@ UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input)
     <button class="btn btn-secondary btn-sm" type="button" onclick="cargarOfertasTrabajo()">Actualizar bolsa</button>
   </div>
 </div>
+
+<div class="community-card" style="margin-top:14px">
+  <h3>📄 Contrataciones UADAV</h3>
+  <p>Centraliza solicitudes realizadas desde el perfil del artista. La plataforma obliga a consultar el modelo de condiciones antes de enviar la solicitud.</p>
+  <div class="form-row">
+    <div class="form-group"><label>URL del modelo de contrato</label><input id="contractTemplateUrl" placeholder="https://.../modelo-contrato.pdf"></div>
+    <div class="form-group"><label>Versión / referencia</label><input id="contractTemplateVersion" placeholder="UADAV-CTR-2026-01"></div>
+    <div class="form-group" style="grid-column:1/-1"><label>Aviso de contratación</label><textarea id="contractNotice" rows="3" placeholder="Condiciones generales y pasos previos a contratar..."></textarea></div>
+  </div>
+  <button class="btn btn-primary btn-sm" type="button" onclick="guardarContratacionConfig()">💾 Guardar condiciones</button>
+  <div id="contractsAdminList" class="community-list" style="margin-top:12px"></div>
+  <button class="btn btn-secondary btn-sm" type="button" onclick="cargarContrataciones()">Actualizar contrataciones</button>
+</div>
+</div>
+
+<div class="community-card" style="margin-top:14px">
+<h3>📱 Shorts</h3><p>Publicá Shorts y después aparecerán en el modo vertical de descubrimiento.</p>
+<div class="form-row"><div class="form-group"><label>ID / URL YouTube</label><input id="shortAdminId" placeholder="https://youtu.be/... o ID"></div><div class="form-group"><label>Artista</label><input id="shortAdminArtist" placeholder="Nombre del artista"></div><div class="form-group"><label>Título</label><input id="shortAdminTitle" placeholder="Título del Short"></div><div class="form-group"><label>Miniatura (opcional)</label><input id="shortAdminThumb" placeholder="https://..."></div></div>
+<button class="btn btn-primary btn-sm" type="button" onclick="guardarShortAdmin()">📱 Publicar Short</button><div id="shortsAdminList" class="community-list"></div>
 </div>
 </details>
 
@@ -3087,7 +3108,7 @@ async function u27LoadAudit(){
     const pill=st==='afiliado'?'<span class="artist-pill ok">✓ Afiliado</span>':st==='pendiente'?'<span class="artist-pill warn">Pendiente</span>':st==='catalogo'?'<span class="artist-pill blue">Público</span>':st==='suspendido'||st==='bloqueado'?'<span class="artist-pill bad">'+esc(st)+'</span>':'<span class="artist-pill">Oculto</span>';
     const publicBtn=a.visible===true?`<button class="btn btn-secondary btn-sm" onclick="artistManagerToggleVisibility(${r.sectionIndex},${r.itemIndex},false)">Ocultar</button>`:`<button class="btn btn-secondary btn-sm" onclick="artistManagerToggleVisibility(${r.sectionIndex},${r.itemIndex},true)">Publicar</button>`;
     const verify=st==='afiliado'?'':`<button class="btn btn-primary btn-sm" onclick="artistManagerVerify(${r.sectionIndex},${r.itemIndex})">Verificar</button>`;
-    return `<div class="artist-manager-row"><img class="artist-manager-avatar" src="${esc(img)}" alt="${esc(name)}" onerror="this.src='https://via.placeholder.com/140x140?text=ART'"><div class="artist-manager-main"><div class="artist-manager-name">${esc(name)} ${pill}</div><div class="artist-manager-meta">${esc(a.rubro||'Artista de variedades')} · ${esc(r.sectionName||'Artistas')}${a.canal?' · YouTube conectado':''}</div></div><div class="artist-manager-actions"><button class="btn btn-secondary btn-sm" onclick="artistManagerEdit(${r.sectionIndex},${r.itemIndex})">Editar</button><button class="btn btn-secondary btn-sm" onclick="artistManagerView('${encodeURIComponent(a.canal||a.id||name)}')">Ver perfil</button>${publicBtn}${verify}<button class="btn btn-danger btn-sm" onclick="artistManagerSuspend(${r.sectionIndex},${r.itemIndex})">${st==='suspendido'?'Bloqueado':'Suspender'}</button></div></div>`;
+    return `<div class="artist-manager-row"><img class="artist-manager-avatar" src="${esc(img)}" alt="${esc(name)}" onerror="this.src='https://via.placeholder.com/140x140?text=ART'"><div class="artist-manager-main"><div class="artist-manager-name">${esc(name)} ${pill}</div><div class="artist-manager-meta">${esc(a.rubro||'Artista de variedades')} · ${esc(r.sectionName||'Artistas')}${a.canal?' · YouTube conectado':''}</div></div><div class="artist-manager-actions"><button class="btn btn-secondary btn-sm" onclick="artistManagerEdit(${r.sectionIndex},${r.itemIndex})">Editar</button><button class="btn btn-secondary btn-sm" onclick="artistManagerView('${encodeURIComponent(a.canal||a.id||name)}')">Ver perfil</button><button class="btn btn-secondary btn-sm" onclick="artistManagerAccess(${r.sectionIndex},${r.itemIndex})">Acceso</button>${publicBtn}${verify}<button class="btn btn-danger btn-sm" onclick="artistManagerSuspend(${r.sectionIndex},${r.itemIndex})">${st==='suspendido'?'Bloqueado':'Suspender'}</button></div></div>`;
   }
   function prospectRow(p){
     const name=p.nombre||'Canal por resolver'; const img=p.foto||p.imagen||'https://via.placeholder.com/140x140?text=YT'; const st=p.estado||'prospecto';
@@ -3149,7 +3170,30 @@ async function u27LoadAudit(){
   window.guardarOfertaTrabajo=async function(){const data={titulo:$('jobTitulo')?.value.trim(),rubro:$('jobRubro')?.value.trim(),ciudad:$('jobCiudad')?.value.trim(),fecha:$('jobFecha')?.value||'',descripcion:$('jobDescripcion')?.value.trim(),contacto:$('jobContacto')?.value.trim(),activo:$('jobActivo')?.value==='true'};if(!data.titulo||!data.descripcion){mostrarToast('Completá título y descripción','error');return}try{await apiFetch('bolsa_trabajo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});mostrarToast('Oferta publicada','success');['jobTitulo','jobRubro','jobCiudad','jobFecha','jobDescripcion','jobContacto'].forEach(id=>{if($(id))$(id).value=''});await window.cargarOfertasTrabajo();}catch(e){mostrarToast('No se pudo publicar: '+e.message,'error')}};
   window.cargarOfertasTrabajo=async function(){const box=$('jobsAdminList');if(!box)return;try{const list=await apiFetch('bolsa_trabajo');const arr=Array.isArray(list)?list:[];box.innerHTML=arr.length?arr.slice().reverse().map(x=>`<div class="community-item"><div class="community-item-thumb" style="display:grid;place-items:center;font-size:18px">💼</div><div class="community-item-main"><div class="community-item-title">${String(x.titulo||'Oportunidad')}</div><div class="community-item-meta">${String(x.rubro||'')} · ${String(x.ciudad||'')} · ${String(x.fecha||'')}</div></div><div class="community-item-actions"><button class="btn btn-secondary btn-sm" onclick="toggleJob('${String(x.id).replace(/'/g,"\'")}',${x.activo!==false})">${x.activo===false?'Publicar':'Ocultar'}</button></div></div>`).join(''):'<div class="u27-note">No hay ofertas publicadas.</div>';}catch(e){box.innerHTML='<div class="u27-note" style="color:#ff9292">No se pudieron cargar ofertas.</div>';}};
   window.toggleJob=async function(id,current){try{await apiFetch('bolsa_trabajo',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,activo:!current})});await cargarOfertasTrabajo();}catch(e){mostrarToast('No se pudo actualizar la oferta','error')}};
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{loadApps();window.cargarOfertasTrabajo();},700));
+  window.artistManagerAccess=async function(si,ii){
+    const a=seccionesData?.[si]?.items?.[ii]; if(!a){mostrarToast('Artista no encontrado','error');return;}
+    try{
+      const data=await apiFetch('artistas/access-token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({section_index:si,item_index:ii})});
+      const url=data.edit_url||(`${location.origin}${location.pathname}?artist_edit=`+encodeURIComponent(data.token||''));
+      await navigator.clipboard?.writeText(url).catch(()=>{});
+      prompt('Enlace privado de edición para el artista (guardalo y compartilo de forma segura):',url);
+      mostrarToast('Enlace de edición generado','success');
+    }catch(e){mostrarToast('No se pudo generar el acceso: '+e.message,'error')}
+  };
+  window.guardarContratacionConfig=async function(){
+    const body={template_url:$('contractTemplateUrl')?.value.trim()||'',version:$('contractTemplateVersion')?.value.trim()||'UADAV-CTR-1',notice:$('contractNotice')?.value.trim()||''};
+    try{await apiFetch('contratacion_config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});mostrarToast('Condiciones de contratación guardadas','success');}catch(e){mostrarToast('No se pudo guardar: '+e.message,'error')}
+  };
+  window.cargarContrataciones=async function(){
+    const box=$('contractsAdminList');if(!box)return;
+    try{const list=await apiFetch('contrataciones');box.innerHTML=Array.isArray(list)&&list.length?list.slice().reverse().map(x=>`<div class="community-item"><div class="community-item-thumb" style="display:grid;place-items:center;font-size:18px">📄</div><div class="community-item-main"><div class="community-item-title">${String(x.artist_name||'Artista')} · ${String(x.solicitante_nombre||'Solicitante')}</div><div class="community-item-meta">${String(x.fecha_evento||'')} · ${String(x.ciudad||'')} · ${String(x.estado||'pendiente')} · ${String(x.contract_version||'')}</div></div><div class="community-item-actions"><button class="btn btn-secondary btn-sm" onclick="actualizarContratacion('${String(x.id).replace(/'/g,"\'")}','aceptada')">Aceptar</button><button class="btn btn-danger btn-sm" onclick="actualizarContratacion('${String(x.id).replace(/'/g,"\'")}','rechazada')">Rechazar</button></div></div>`).join(''):'<div class="u27-note">No hay contrataciones.</div>'}catch(e){box.innerHTML='<div class="u27-note" style="color:#ff9292">No se pudieron cargar contrataciones: '+e.message+'</div>';}
+  };
+  window.actualizarContratacion=async function(id,estado){try{await apiFetch('contrataciones',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,estado})});await cargarContrataciones();mostrarToast('Contratación actualizada','success')}catch(e){mostrarToast('No se pudo actualizar: '+e.message,'error')}};
+  async function loadContractConfig(){try{const c=await apiFetch('contratacion_config');if($('contractTemplateUrl'))$('contractTemplateUrl').value=c.template_url||'';if($('contractTemplateVersion'))$('contractTemplateVersion').value=c.version||'';if($('contractNotice'))$('contractNotice').value=c.notice||'';}catch{}}
+  function fillJobArtistSelect(){const s=$('jobArtistId');if(!s)return;s.innerHTML='<option value="">Búsqueda general</option>';try{for(const r of (typeof allArtistRecords==='function'?allArtistRecords():[])){const a=r.item||{};s.insertAdjacentHTML('beforeend',`<option value="${String(a.id||a.canal||a.nombre||'').replace(/"/g,'&quot;')}">${String(a.nombre||a.nombre_artistico||'Artista')} · ${String(a.rubro||'')}</option>`);}}catch{}}
+  const oldGuardarOfertaTrabajo=window.guardarOfertaTrabajo;
+  window.guardarOfertaTrabajo=async function(){const data={titulo:$('jobTitulo')?.value.trim(),rubro:$('jobRubro')?.value.trim(),ciudad:$('jobCiudad')?.value.trim(),fecha:$('jobFecha')?.value||'',descripcion:$('jobDescripcion')?.value.trim(),contacto:$('jobContacto')?.value.trim(),artist_id:$('jobArtistId')?.value||'',activo:$('jobActivo')?.value==='true'};if(!data.titulo||!data.descripcion){mostrarToast('Completá título y descripción','error');return}try{await apiFetch('bolsa_trabajo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});mostrarToast('Oferta publicada','success');['jobTitulo','jobRubro','jobCiudad','jobFecha','jobDescripcion','jobContacto'].forEach(id=>{if($(id))$(id).value=''});if($('jobArtistId'))$('jobArtistId').value='';await window.cargarOfertasTrabajo();}catch(e){mostrarToast('No se pudo publicar: '+e.message,'error')}};
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{loadApps();window.cargarOfertasTrabajo();loadContractConfig();fillJobArtistSelect();cargarContrataciones();},750));
 })();
 </script>
 
