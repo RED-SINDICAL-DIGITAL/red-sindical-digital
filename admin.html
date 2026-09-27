@@ -460,16 +460,14 @@ details[open] summary{background:linear-gradient(90deg,rgba(0,229,255,.045),tran
 .admin-v28-nav button{appearance:none;width:100%;border:1px solid transparent;background:transparent;color:#b7c0ce;border-radius:12px;padding:10px 10px;display:flex;align-items:center;gap:10px;text-align:left;font-size:12px;font-weight:750;cursor:pointer;transition:.18s ease}
 .admin-v28-nav button i{width:18px;text-align:center;color:#7e8da2}.admin-v28-nav button:hover{background:rgba(255,255,255,.045);color:#fff}.admin-v28-nav button.active{background:linear-gradient(90deg,rgba(0,229,255,.12),rgba(139,92,246,.08));border-color:rgba(0,229,255,.15);color:#fff;box-shadow:inset 3px 0 0 #00e5ff}.admin-v28-nav .nav-dot{margin-left:auto;width:6px;height:6px;border-radius:999px;background:#334155}.admin-v28-nav button.active .nav-dot{background:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,.7)}
 .admin-v28-sidebar-foot{margin-top:auto;border-top:1px solid rgba(255,255,255,.07);padding:10px 4px 2px;color:#68768a;font-size:9px;line-height:1.4}
-body.admin-v28-logged .admin-v28-sidebar-shell{display:block}.admin-v28-account{margin-top:auto;padding:10px 4px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:8px;justify-content:space-between}.admin-v28-account span{display:block;font-size:10px;font-weight:850;color:#fff}.admin-v28-account small{display:block;font-size:8px;color:#718096;margin-top:2px}.admin-v28-logout{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);color:#cbd5e1;border-radius:10px;padding:8px 9px;font-size:10px;cursor:pointer}.admin-v28-logout:hover{border-color:rgba(255,92,92,.35);color:#ff9a9a;background:rgba(255,92,92,.07)}.admin-v28-session-role{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(0,229,255,.18);background:rgba(0,229,255,.05);color:#93f7ff;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:850}.header-actions.admin-connected #adminKeyInput,.header-actions.admin-connected #btnConnectAdmin{display:none}.header-actions.admin-connected:before{content:'🔐';font-size:12px;opacity:.8}
-
+body.admin-v28-logged .admin-v28-sidebar-shell{display:block}
 body.admin-v28-logged .admin-v28-mainbar,body.admin-v28-logged #panelContent{margin-left:278px;}
 body.admin-v28-logged .admin-v28-mainbar{width:calc(100% - 278px);}
 body.admin-v28-logged #panelContent{min-width:0;}
 .admin-v28-mainbar{position:sticky;top:18px;z-index:30;}
 @media(max-width:900px){
   .admin-v28-sidebar-shell{position:sticky;left:auto;top:8px;width:auto;height:auto;margin:0 0 10px;z-index:35;display:none;}
-  body.admin-v28-logged .admin-v28-sidebar-shell{display:block}.admin-v28-account{margin-top:auto;padding:10px 4px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:8px;justify-content:space-between}.admin-v28-account span{display:block;font-size:10px;font-weight:850;color:#fff}.admin-v28-account small{display:block;font-size:8px;color:#718096;margin-top:2px}.admin-v28-logout{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035);color:#cbd5e1;border-radius:10px;padding:8px 9px;font-size:10px;cursor:pointer}.admin-v28-logout:hover{border-color:rgba(255,92,92,.35);color:#ff9a9a;background:rgba(255,92,92,.07)}.admin-v28-session-role{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(0,229,255,.18);background:rgba(0,229,255,.05);color:#93f7ff;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:850}.header-actions.admin-connected #adminKeyInput,.header-actions.admin-connected #btnConnectAdmin{display:none}.header-actions.admin-connected:before{content:'🔐';font-size:12px;opacity:.8}
-
+  body.admin-v28-logged .admin-v28-sidebar-shell{display:block}
   .admin-v28-sidebar{height:auto;padding:8px;border-radius:16px;}
   .admin-v28-sidebar-brand,.admin-v28-sidebar-foot,.admin-v28-nav-title{display:none}
   .admin-v28-nav{flex-direction:row;overflow-x:auto;overflow-y:hidden;gap:6px;margin:0;padding:0}
@@ -575,6 +573,22 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <style id="uadav-v28-4-footer-prospectos">
 .admin-footer-preview{margin-top:14px;padding:18px;border:1px solid var(--border-color);border-radius:16px;background:linear-gradient(135deg,rgba(0,229,255,.07),rgba(139,92,246,.06));min-height:110px}.footer-preview-brand{font-weight:900;font-size:18px;color:#fff}.footer-preview-text{margin-top:5px;color:#94a3b8}.footer-preview-links{margin-top:14px;color:#cbd5e1;font-size:12px}.prospect-card{display:grid;grid-template-columns:72px 1fr auto;gap:14px;align-items:center;background:var(--bg-input);border:1px solid var(--border-color);border-radius:14px;padding:12px}.prospect-card img{width:72px;height:52px;object-fit:cover;border-radius:10px;background:#111}.prospect-meta{min-width:0}.prospect-name{font-weight:800;color:var(--text-primary)}.prospect-sub{font-size:.76rem;color:var(--text-secondary);margin-top:3px}.prospect-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}@media(max-width:700px){.prospect-card{grid-template-columns:54px 1fr}.prospect-card img{width:54px;height:54px}.prospect-actions{grid-column:1/-1;justify-content:flex-start}}
 </style>
+
+<style id="uadav-admin-modern-v288">
+:root{--admin-bg:#071018;--admin-panel:rgba(10,15,22,.82);--admin-line:rgba(255,255,255,.08);--admin-accent:#00e5ff;--admin-purple:#8b5cf6;}
+body{background:radial-gradient(circle at 10% 0%,rgba(0,229,255,.05),transparent 30%),radial-gradient(circle at 100% 20%,rgba(139,92,246,.05),transparent 32%),#06080d!important;color:#f5f7fb!important;}
+.admin-v28-sidebar{background:linear-gradient(180deg,rgba(8,13,20,.94),rgba(7,10,16,.91))!important;border-color:rgba(255,255,255,.09)!important;box-shadow:0 24px 80px rgba(0,0,0,.45)!important;}
+.admin-v28-sessionbox{display:flex;align-items:center;gap:9px;border-top:1px solid rgba(255,255,255,.07);margin-top:auto;padding:11px 5px 4px;}
+.session-avatar{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(0,229,255,.18),rgba(139,92,246,.22));border:1px solid rgba(255,255,255,.08);color:#9cf9ff}.session-copy{min-width:0;flex:1}.session-copy strong{display:block;font-size:11px}.session-copy small{display:block;color:#6f7d90;font-size:9px;margin-top:2px}.session-logout{width:34px;height:34px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#aeb9c8;border-radius:10px;cursor:pointer}.session-logout:hover{color:#fff;background:rgba(255,85,85,.08);border-color:rgba(255,85,85,.25)}
+.header .header-actions{gap:8px}.header .header-actions #adminKeyInput{min-width:180px}.header .header-actions #btnLogout.hidden{display:none}.header .header-actions #btnLogout:not(.hidden){display:inline-flex!important}
+.admin-v28-mainbar{background:rgba(8,12,18,.76)!important;border-color:rgba(255,255,255,.08)!important;box-shadow:0 14px 50px rgba(0,0,0,.2)}
+.u27-card,.u27-panel,.u28-ops-panel,details{background:rgba(10,14,21,.72)!important;border-color:rgba(255,255,255,.08)!important;box-shadow:0 14px 44px rgba(0,0,0,.18);}
+@media(max-width:900px){.admin-v28-sessionbox{position:sticky;left:0;bottom:0;background:rgba(7,10,16,.94);backdrop-filter:blur(14px);margin:0 -8px -4px;padding:8px}.admin-v28-sidebar{overflow:visible}.admin-v28-sidebar-foot{display:none}}
+</style>
+
+<style id="uadav-admin-group-mobile">
+@media(max-width:900px){.admin-v28-nav-title{display:none!important}.admin-v28-sidebar{overflow-x:auto}.admin-v28-nav{flex-wrap:nowrap}.admin-v28-sessionbox{min-width:220px}}
+</style>
 </head>
 <body>
 <div class="container" id="app">
@@ -643,7 +657,7 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <button class="btn btn-secondary" onclick="ejecutarDiagnostico()">🔄 Volver a comprobar</button>
 </div>
 </details>
-<div class="u28-ops-panel" id="u28OpsPanel"><div class="u28-ops-head"><div><div class="u28-ops-kicker">CONTROL OPERATIVO</div><h3>Estado real de UADAVSTREAM</h3><p>Comprueba datos y conexión entre Admin, Worker V6.2.2-STABLE y KV.</p></div><button class="btn btn-secondary btn-sm" type="button" onclick="u28RefreshOps()"><i class="fa-solid fa-arrows-rotate"></i> Actualizar estado</button></div><div class="u28-ops-grid" id="u28OpsGrid"></div></div><div class="u28-ops-panel" id="u28IndexConnectionsPanel"><div class="u28-ops-head"><div><div class="u28-ops-kicker">INSPECCIÓN INDEX ↔ ADMIN ↔ WORKER</div><h3>Chequeo de conexiones</h3><p>Lee las mismas rutas que consume la Home y verifica que Admin pueda verlas.</p></div><button class="btn btn-primary btn-sm" type="button" onclick="u28InspectConnections()"><i class="fa-solid fa-plug-circle-check"></i> Inspeccionar</button></div><div class="u28-ops-grid" id="u28IndexConnectionsGrid"><div class="u27-note">Presioná “Inspeccionar” para comprobar las conexiones.</div></div></div><div class="u28-search-test"><div><div class="u28-ops-kicker">PRUEBA DE BÚSQUEDA</div><h4 style="margin:4px 0 0">Comprobar resultados en tiempo real</h4><p class="u27-note" style="margin:5px 0 0">Usa la misma ruta que consume el Index y muestra la fuente y cantidad recibida.</p></div><div class="u28-search-test-row"><input id="u28SearchTestInput" placeholder="Ej.: Bon Jovi, circo, teatro…" value="Bon Jovi"><button class="btn btn-primary btn-sm" type="button" onclick="u28RunSearchTest()"><i class="fa-solid fa-magnifying-glass"></i> Probar búsqueda</button></div><div id="u28SearchTestResult" class="u28-search-test-result"></div></div>
+<div class="u28-ops-panel" id="u28OpsPanel"><div class="u28-ops-head"><div><div class="u28-ops-kicker">CONTROL OPERATIVO</div><h3>Estado real de UADAVSTREAM</h3><p>Comprueba datos y conexión entre Admin, Worker V6.2.2-STABLE y KV.</p></div><button class="btn btn-secondary btn-sm" type="button" onclick="u28RefreshOps()"><i class="fa-solid fa-arrows-rotate"></i> Actualizar estado</button></div><div class="u28-ops-grid" id="u28OpsGrid"></div></div>
 <!-- ============================================================ -->
 <!-- 1. SECCIONES Y CONTENIDO -->
 <!-- ============================================================ -->
@@ -720,6 +734,7 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <div class="form-group"><label>Canal YouTube ID</label><input id="artCanal" placeholder="UC..."/></div>
 <div class="form-group"><label>Contacto (WhatsApp)</label><input id="artContacto" placeholder="341..."/></div>
 <div class="form-group"><label>Afiliado UADAV verificado</label><select id="artAfiliado"><option value="false">No</option><option value="true">Sí</option></select></div>
+<div class="form-group"><label>Mostrar en catálogo público</label><select id="artCatalogo"><option value="false">No</option><option value="true">Sí</option></select></div>
 <div class="form-group"><label>Donaciones activas</label><select id="artDonacionActiva"><option value="false">No</option><option value="true">Sí</option></select></div>
 <div class="form-group"><label>Link de apoyo / donación</label><input id="artDonacionUrl" placeholder="https://cafecito.app/... o Mercado Pago..."/></div>
 <div class="form-group"><label>Transmisión en vivo (YouTube/URL)</label><input id="artLiveUrl" placeholder="https://youtube.com/live/... o https://..."/></div>
@@ -833,6 +848,7 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <div class="form-group"><label>Título</label><input id="heroSpotTitle" placeholder="Nombre del contenido"/></div>
 <div class="form-group" style="grid-column:1/-1"><label>Descripción</label><textarea id="heroSpotDescription" placeholder="Descripción breve para la portada" rows="3"></textarea></div>
 <div class="form-group"><label>Imagen de fondo URL</label><input id="heroSpotImage" placeholder="https://..."/></div>
+<div class="form-group"><label>GIF animado (opcional)</label><input id="heroSpotGif" placeholder="https://.../hero.gif"/></div>
 <div class="form-group"><label>Icono/imagen de categoría URL</label><input id="heroSpotIcon" placeholder="https://..."/></div>
 <div class="form-group"><label>Acción principal</label><select id="heroSpotActionType"><option value="video">Video</option><option value="live">Señal en vivo</option><option value="radio">Radio</option><option value="section">Sección</option><option value="url">URL externa</option></select></div>
 <div class="form-group"><label>ID / destino</label><input id="heroSpotActionId" placeholder="YouTube ID, ID señal, ID radio o target de sección"/></div>
@@ -1063,6 +1079,8 @@ body.admin-v28-logged #panelContent{margin-left:calc(var(--admin-sidebar) + var(
 <summary><i class="fa-solid fa-user-plus"></i> 🎤 Importar Artistas</summary>
 <div class="details-content">
 <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
+
+<div class="u27-panel" style="margin:14px 0"><h3>🎭 Cómo funciona Artistas</h3><div class="u27-note">• <strong>Resolver canal:</strong> busca el canal real de YouTube para vincularlo al perfil. No publica nada por sí solo.<br>• <strong>Mostrar en catálogo:</strong> hace visible un perfil público aunque todavía no sea afiliado verificado. Es descubrimiento, no afiliación.<br>• <strong>Crear perfil pendiente:</strong> crea una ficha editable que queda pendiente de revisión UADAV antes de publicarse como perfil completo.<br>• <strong>Afiliado verificado:</strong> habilita los beneficios especiales: Live, chat, donaciones y contratación.</div></div>
 <h4 style="color:var(--text-primary); font-weight:700; margin-bottom:8px;">📥 Importar por ID de Canal</h4>
 <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:12px;">Pega el ID del canal de YouTube (ej: UC5OrDvL9DscpcAstz7JnQGA).</p>
 <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -1183,7 +1201,7 @@ UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input)
 const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
 const FALLBACK_THUMB = 'https://via.placeholder.com/300x200?text=UADAVSTREAM';
 
-let ADMIN_KEY = '';
+let ADMIN_KEY = localStorage.getItem('uadavstream_admin_key') || '';
 let seccionesData = [];
 let senalesData = [];
 let radiosData = [];
@@ -1212,13 +1230,10 @@ function mostrarToast(mensaje, tipo = 'success') {
 function desconectar() {
   localStorage.removeItem('uadavstream_admin_key');
   ADMIN_KEY = '';
-  document.getElementById('panelContent')?.classList.add('hidden');
-  document.getElementById('btnLogout')?.classList.add('hidden');
-  const input=document.getElementById('adminKeyInput'); if(input) input.value='';
-  document.querySelector('.header-actions')?.classList.remove('admin-connected');
-  document.body.classList.remove('admin-v28-logged');
-  const roleLabel=document.getElementById('adminV28Role'); if(roleLabel) roleLabel.textContent='Sesión activa';
-  const connectBtn=document.querySelector('.header-actions button[id="btnConnectAdmin"]'); if(connectBtn) connectBtn.removeAttribute('id');
+  document.getElementById('panelContent').classList.add('hidden');
+  document.getElementById('btnLogout').classList.add('hidden');
+  const input=document.getElementById('adminKeyInput');
+  if(input) input.value='';
   mostrarToast('Sesión cerrada', 'success');
 }
 
@@ -1255,11 +1270,6 @@ async function conectar(){
     localStorage.setItem('uadavstream_admin_key',ADMIN_KEY);
     document.getElementById('panelContent').classList.remove('hidden');
     document.getElementById('btnLogout').classList.remove('hidden');
-    const headerActions=document.querySelector('.header-actions');
-    if(headerActions) headerActions.classList.add('admin-connected');
-    const connectBtn=headerActions?.querySelector('button[onclick="conectar()"]'); if(connectBtn) connectBtn.id='btnConnectAdmin';
-    const roleLabel=document.getElementById('adminV28Role'); if(roleLabel) roleLabel.textContent=data.role==='admin_provincial'?'Admin provincial':'Admin nacional';
-    document.body.classList.add('admin-v28-logged');
     mostrarToast(`Conectado · ${data.role==='admin_provincial'?'Administrador provincial':'Administrador nacional'}`,'success');
     await cargarDatos();
     await u27LoadDashboard();
@@ -1321,19 +1331,25 @@ async function cargarDatos() {
     // Cargar shows
     cargarShows();
 
-    // Cargar footer
-    document.getElementById('footerTitulo').value = footerConfig.titulo || '';
-    document.getElementById('footerSubtitulo').value = footerConfig.subtitulo || '';
-    document.getElementById('footerCopyright').value = footerConfig.copyright || '';
-    document.getElementById('redInstagram').value = footerConfig.instagram || '';
-    document.getElementById('redFacebook').value = footerConfig.facebook || '';
-    document.getElementById('redTwitter').value = footerConfig.twitter || '';
-    document.getElementById('redYoutube').value = footerConfig.youtube || '';
-    document.getElementById('redTiktok').value = footerConfig.tiktok || '';
-    document.getElementById('redWhatsapp').value = footerConfig.whatsapp || '';
-    const privacyEl=document.getElementById('footerPrivacyUrl'); if(privacyEl) privacyEl.value=footerConfig.privacy_url||'/privacidad.html';
-    const termsEl=document.getElementById('footerTermsUrl'); if(termsEl) termsEl.value=footerConfig.terms_url||'/terminos.html';
-    const legalEl=document.getElementById('footerMostrarLegales'); if(legalEl) legalEl.value=footerConfig.mostrar_legales===false?'false':'true';
+    // Cargar footer — todos los campos son opcionales para evitar que un cambio de UI rompa el panel.
+    const setVal=(id,value)=>{const el=document.getElementById(id);if(el)el.value=value??''};
+    setVal('footerTitulo',footerConfig.titulo);
+    setVal('footerSubtitulo',footerConfig.subtitulo);
+    setVal('footerLogo',footerConfig.logo_url);
+    setVal('footerContacto',footerConfig.contacto);
+    setVal('footerWhatsappTexto',footerConfig.whatsapp_texto || footerConfig.whatsapp);
+    setVal('footerCopyright',footerConfig.copyright);
+    setVal('redInstagram',footerConfig.instagram);
+    setVal('redFacebook',footerConfig.facebook);
+    setVal('redTwitter',footerConfig.twitter);
+    setVal('redYoutube',footerConfig.youtube);
+    setVal('redTiktok',footerConfig.tiktok);
+    setVal('redWhatsapp',footerConfig.whatsapp);
+    setVal('footerPrivacyUrl',footerConfig.privacy_url||'/privacidad.html');
+    setVal('footerTermsUrl',footerConfig.terms_url||'/terminos.html');
+    setVal('footerMostrarLegales',footerConfig.mostrar_legales===false?'false':'true');
+    setVal('footerMostrarRedes',footerConfig.mostrar_redes===false?'false':'true');
+    setVal('footerMostrarLinks',footerConfig.mostrar_links===false?'false':'true');
 
     // Select de importación
     const select = document.getElementById('importPlaylistSeccion');
@@ -1467,6 +1483,7 @@ async function cargarPersonalizacion() {
       document.getElementById('heroSpotTitle').value=h.title||'';
       document.getElementById('heroSpotDescription').value=h.description||'';
       document.getElementById('heroSpotImage').value=h.image||'';
+      document.getElementById('heroSpotGif').value=h.gif_url||'';
       document.getElementById('heroSpotIcon').value=h.icon_url||'';
       document.getElementById('heroSpotActionType').value=h.action_type||'video';
       document.getElementById('heroSpotActionId').value=h.action_id||'';
@@ -1512,6 +1529,7 @@ async function guardarPersonalizacion() {
       title: document.getElementById('heroSpotTitle').value.trim(),
       description: document.getElementById('heroSpotDescription').value.trim(),
       image: document.getElementById('heroSpotImage').value.trim(),
+      gif_url: document.getElementById('heroSpotGif').value.trim(),
       icon_url: document.getElementById('heroSpotIcon').value.trim(),
       action_type: document.getElementById('heroSpotActionType').value,
       action_id: document.getElementById('heroSpotActionId').value.trim(),
@@ -1723,6 +1741,8 @@ function agregarItem() {
       canal: document.getElementById('artCanal').value,
       contacto: document.getElementById('artContacto').value,
       afiliado_verificado: document.getElementById('artAfiliado').value === 'true',
+      visible: document.getElementById('artCatalogo').value === 'true',
+      estado: 'aprobado',
       donacion_activa: document.getElementById('artDonacionActiva').value === 'true',
       donation_url: document.getElementById('artDonacionUrl').value.trim(),
       live_url: document.getElementById('artLiveUrl').value.trim(),
@@ -1831,6 +1851,7 @@ function editarItem(secIndex, itemIndex) {
     document.getElementById('artCanal').value = item.canal;
     document.getElementById('artContacto').value = item.contacto;
     document.getElementById('artAfiliado').value = String(item.afiliado_verificado===true);
+    document.getElementById('artCatalogo').value = String(item.visible===true);
     document.getElementById('artDonacionActiva').value = String(item.donacion_activa===true);
     document.getElementById('artDonacionUrl').value = item.donation_url||item.donacion_url||'';
     document.getElementById('artLiveUrl').value = item.live_url||'';
@@ -1871,7 +1892,7 @@ function limpiarCampos() {
   document.getElementById('artBio').value = '';
   document.getElementById('artCanal').value = '';
   document.getElementById('artContacto').value = '';
-  document.getElementById('artAfiliado').value='false';document.getElementById('artDonacionActiva').value='false';document.getElementById('artDonacionUrl').value='';document.getElementById('artLiveUrl').value='';document.getElementById('artBookingUrl').value='';
+  document.getElementById('artAfiliado').value='false';if(document.getElementById('artCatalogo'))document.getElementById('artCatalogo').value='false';document.getElementById('artDonacionActiva').value='false';document.getElementById('artDonacionUrl').value='';document.getElementById('artLiveUrl').value='';document.getElementById('artBookingUrl').value='';
   document.getElementById('evNombre').value = '';
   document.getElementById('evFecha').value = '';
   document.getElementById('evLugar').value = '';
@@ -2052,93 +2073,35 @@ function renderRadios() {
 // GESTIÓN DE CÓDIGOS PREMIUM
 // ============================================================
 async function generarCodigo() {
-  const data = {
-    tipo: document.getElementById('codeTipo').value,
-    expira: document.getElementById('codeExpira').value || null,
-    max_dispositivos: parseInt(document.getElementById('codeMaxDispositivos').value) || 3,
-    platform: document.getElementById('codePlatform').value
-  };
-
-  try {
-    const res = await fetch(API_URL + 'access/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-      mode: 'cors',
-      credentials: 'omit',
-      body: JSON.stringify(data)
-    });
-    const result = await res.json();
-    if (res.ok) {
-      mostrarToast(`✅ Código generado: ${result.codigo}`, 'success');
-      cargarCodigos();
-    } else {
-      mostrarToast('❌ Error: ' + (result.error || 'Error desconocido'), 'error');
-    }
-  } catch (e) {
-    mostrarToast('Error de conexión', 'error');
-  }
+  const expires=document.getElementById('codeExpira')?.value||null;
+  const tipo=document.getElementById('codeTipo')?.value||'sin_publicidad';
+  const dias=Number(document.getElementById('codeMaxDispositivos')?.value||30);
+  try{
+    const res=await fetch(API_URL+'premium/codes',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY},mode:'cors',credentials:'omit',body:JSON.stringify({beneficio:tipo,dias,expira:expires,uso_maximo:0})});
+    const result=await res.json().catch(()=>({}));
+    if(res.ok){const code=result?.item?.code||result?.code||'GENERADO';mostrarToast('✅ Código generado: '+code,'success');cargarCodigos();}
+    else mostrarToast('❌ Error: '+(result.error||'No se pudo generar el código'),'error');
+  }catch(e){mostrarToast('Error de conexión','error');}
 }
 
 async function cargarCodigos() {
+  const list=document.getElementById('codigosList'); if(!list)return;
   try {
-    const res = await fetch(API_URL + 'access/codes', {
-      headers: { 'Authorization': 'Bearer ' + ADMIN_KEY },
-      mode: 'cors',
-      credentials: 'omit'
+    const res=await fetch(API_URL+'premium/codes?_='+Date.now(),{headers:{Authorization:'Bearer '+ADMIN_KEY},mode:'cors',credentials:'omit'});
+    const codes=await res.json().catch(()=>[]);
+    if(!res.ok) throw new Error(codes?.error||('HTTP '+res.status));
+    list.innerHTML='';
+    if(!Array.isArray(codes)||!codes.length){list.innerHTML='<p style="color:var(--text-secondary);padding:12px;border:1px dashed var(--border-color);border-radius:12px;">No hay códigos generados.</p>';return;}
+    codes.slice().reverse().forEach(c=>{
+      const activo=c.activo!==false && !(c.expira&&Date.parse(c.expira)<Date.now());
+      list.innerHTML+=`<div class="card"><div class="card-header"><div><span style="font-weight:800;color:var(--accent);font-family:monospace">${c.code||''}</span> <span class="badge ${activo?'badge-success':'badge-danger'}">${activo?'ACTIVO':'INACTIVO'}</span></div><div>${activo?`<button class="btn btn-danger btn-sm" onclick="revocarCodigo('${String(c.code||'').replace(/'/g,"\'")}')">Revocar</button>`:''}</div></div><div class="card-body">Beneficio: ${c.beneficio||'sin_publicidad'} · Duración: ${c.dias||'-'} días · Usos: ${c.usos||0}${c.expira?' · Vence: '+new Date(c.expira).toLocaleDateString('es-AR'):''}</div></div>`;
     });
-    const codes = await res.json();
-    const list = document.getElementById('codigosList');
-    list.innerHTML = '';
-    if (!Array.isArray(codes) || codes.length === 0) {
-      list.innerHTML = '<p style="color:var(--text-secondary); padding:12px; border:1px dashed var(--border-color); border-radius:12px;">No hay códigos generados.</p>';
-      return;
-    }
-    codes.forEach(c => {
-      const activo = c.activo === 1;
-      const vencido = c.expira && new Date(c.expira) < new Date();
-      list.innerHTML += `
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <span style="font-weight:700; color:var(--accent); font-size:1.1rem; font-family:monospace;">${c.codigo}</span>
-              <span class="badge ${activo && !vencido ? 'badge-success' : 'badge-danger'}">${activo && !vencido ? 'ACTIVO' : 'INACTIVO'}</span>
-              <span class="badge badge-info">${c.tipo || 'PREMIUM'}</span>
-              ${c.expira ? `<span style="color:var(--text-secondary); font-size:0.75rem;">Vence: ${new Date(c.expira).toLocaleDateString()}</span>` : ''}
-            </div>
-            <div style="display:flex; gap:8px;">
-              ${activo ? `<button onclick="revocarCodigo('${c.codigo}')" class="btn btn-danger btn-sm">Revocar</button>` : ''}
-            </div>
-          </div>
-          <div class="card-body">
-            Dispositivos: ${c.max_dispositivos || 3} | Platform: ${c.platform || 'uadavstream'}
-          </div>
-        </div>
-      `;
-    });
-  } catch (e) {
-    console.error('Error cargando códigos:', e);
-  }
+  }catch(e){list.innerHTML=`<p style="color:#ff9292">No se pudieron cargar códigos: ${e.message}</p>`;}
 }
 
 async function revocarCodigo(codigo) {
-  if (!confirm(`¿Revocar el código ${codigo}?`)) return;
-  try {
-    const res = await fetch(API_URL + 'access/revoke', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ADMIN_KEY },
-      mode: 'cors',
-      credentials: 'omit',
-      body: JSON.stringify({ codigo })
-    });
-    if (res.ok) {
-      mostrarToast('Código revocado', 'success');
-      cargarCodigos();
-    } else {
-      mostrarToast('Error al revocar', 'error');
-    }
-  } catch (e) {
-    mostrarToast('Error de conexión', 'error');
-  }
+  if(!confirm('¿Revocar el código '+codigo+'?'))return;
+  try{const res=await fetch(API_URL+'premium/revoke',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY},mode:'cors',credentials:'omit',body:JSON.stringify({code:codigo})});if(!res.ok)throw new Error((await res.json().catch(()=>({}))).error||('HTTP '+res.status));mostrarToast('Código revocado','success');cargarCodigos();}catch(e){mostrarToast('No se pudo revocar: '+e.message,'error');}
 }
 
 // ============================================================
@@ -2708,38 +2671,43 @@ async function u27LoadAudit(){
   const titles={
     'sec-dashboard':'Resumen','integrationDiagnostics':'Diagnóstico','sec-secciones':'Secciones y contenido','sec-personalizacion':'Apariencia','sec-banners':'Publicidad','sec-visibilidad':'Visibilidad','sec-home':'Constructor de Home','sec-streams':'Señales y radios','sec-artistas':'Artistas','sec-eventos':'Eventos pendientes','sec-cartelera':'Cartelera','sec-premium':'Códigos Premium','sec-footer':'Footer y redes','sec-herramientas':'Herramientas'
   };
-  const items=[
-    ['sec-dashboard','fa-chart-pie','Resumen'],
-    ['integrationDiagnostics','fa-stethoscope','Diagnóstico'],
-    ['sec-secciones','fa-layer-group','Secciones y contenido'],
-    ['sec-personalizacion','fa-palette','Apariencia'],
-    ['sec-banners','fa-rectangle-ad','Publicidad'],
-    ['sec-visibilidad','fa-eye','Visibilidad'],
-    ['sec-home','fa-table-columns','Home / Orden'],
-    ['sec-streams','fa-tower-broadcast','Señales y radios'],
-    ['sec-artistas','fa-users','Artistas'],
-    ['sec-eventos','fa-calendar-days','Eventos'],
-    ['sec-cartelera','fa-ticket','Cartelera'],
-    ['sec-premium','fa-key','Códigos Premium'],
-    ['sec-footer','fa-share-nodes','Footer y redes'],
-    ['sec-herramientas','fa-screwdriver-wrench','Herramientas']
+  const groups=[
+    ['PLATAFORMA', [['sec-dashboard','fa-chart-pie','Resumen'],['integrationDiagnostics','fa-stethoscope','Diagnóstico']]],
+    ['CONTENIDO', [['sec-secciones','fa-layer-group','Secciones y contenido'],['sec-streams','fa-tower-broadcast','Señales y radios'],['sec-artistas','fa-users','Artistas'],['sec-eventos','fa-calendar-days','Eventos'],['sec-cartelera','fa-ticket','Cartelera']]],
+    ['EXPERIENCIA', [['sec-personalizacion','fa-palette','Apariencia'],['sec-banners','fa-rectangle-ad','Publicidad'],['sec-visibilidad','fa-eye','Visibilidad'],['sec-home','fa-table-columns','Home / Orden'],['sec-footer','fa-share-nodes','Footer y redes']]],
+    ['AUDIENCIA Y NEGOCIO', [['sec-premium','fa-key','Códigos Premium']]],
+    ['SISTEMA', [['sec-herramientas','fa-screwdriver-wrench','Herramientas']]]
   ];
   function buildNav(){
     if(document.getElementById('adminV28NavShell')) return;
     const shell=document.createElement('aside'); shell.id='adminV28NavShell'; shell.className='admin-v28-sidebar-shell';
-    shell.innerHTML='<div class="admin-v28-sidebar"><div class="admin-v28-sidebar-brand"><div class="mark"><i class="fa-solid fa-star"></i></div><div><strong>UADAVSTREAM</strong><small>Centro de control</small></div></div><nav id="adminV28Nav" class="admin-v28-nav" aria-label="Centro de control"></nav><div class="admin-v28-account"><div><span id="adminV28Role">Sesión activa</span><small>Administrador UADAVSTREAM</small></div><button type="button" class="admin-v28-logout" onclick="desconectar()" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i> Salir</button></div><div class="admin-v28-sidebar-foot">Panel interno · UADAV_DB</div></div>';
+    shell.innerHTML='<div class="admin-v28-sidebar"><div class="admin-v28-sidebar-brand"><div class="mark"><i class="fa-solid fa-star"></i></div><div><strong>UADAVSTREAM</strong><small>Centro de control</small></div></div><nav id="adminV28Nav" class="admin-v28-nav" aria-label="Centro de control"></nav><div class="admin-v28-sidebar-foot">Panel interno · cambios guardados en UADAV_DB</div></div>';
     const nav=shell.querySelector('#adminV28Nav');
-    let currentGroup='';
-    items.forEach(([id,icon,label])=>{
-      const b=document.createElement('button'); b.type='button'; b.dataset.target=id;
-      b.innerHTML='<i class="fa-solid '+icon+'"></i><span class="label">'+label+'</span><span class="nav-dot"></span>';
-      b.addEventListener('click',()=>window.adminV28Go(id)); nav.appendChild(b);
+    groups.forEach(([groupName,items])=>{
+      const title=document.createElement('div'); title.className='admin-v28-nav-title'; title.textContent=groupName; nav.appendChild(title);
+      items.forEach(([id,icon,label])=>{
+        const b=document.createElement('button'); b.type='button'; b.dataset.target=id;
+        b.innerHTML='<i class="fa-solid '+icon+'"></i><span class="label">'+label+'</span><span class="nav-dot"></span>';
+        b.addEventListener('click',()=>window.adminV28Go(id)); nav.appendChild(b);
+      });
     });
     const app=document.getElementById('app'); const header=app?.querySelector('.header');
     if(header) header.insertAdjacentElement('afterend',shell); else document.body.prepend(shell);
   }
-  window.adminV28Go=function(id){
-    buildNav(); const el=(id==='sec-dashboard'?document.getElementById('u27Dashboard'):document.getElementById(id)); if(!el)return;
+
+  function ensureModernSession(){
+    const nav=document.getElementById('adminV28Nav'); if(!nav)return;
+    const sidebar=document.querySelector('.admin-v28-sidebar'); if(!sidebar)return;
+    let box=document.getElementById('adminV28SessionBox');
+    if(!box){
+      box=document.createElement('div'); box.id='adminV28SessionBox'; box.className='admin-v28-sessionbox';
+      box.innerHTML='<div class="session-avatar"><i class="fa-solid fa-shield-halved"></i></div><div class="session-copy"><strong>Administrador</strong><small>UADAVSTREAM · sesión activa</small></div><button type="button" class="session-logout" id="adminV28Logout" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>';
+      sidebar.appendChild(box);
+      box.querySelector('#adminV28Logout').addEventListener('click',()=>{ if(typeof desconectar==='function') desconectar(); });
+    }
+  }
+    window.adminV28Go=function(id){
+    buildNav(); ensureModernSession(); const el=(id==='sec-dashboard'?document.getElementById('u27Dashboard'):document.getElementById(id)); if(!el)return;
     if(el.tagName==='DETAILS') el.open=true;
     const shell=document.getElementById('adminV28NavShell');
     const targetTop=el.getBoundingClientRect().top+window.scrollY-(window.innerWidth<=900?150:120);
@@ -2763,7 +2731,7 @@ async function u27LoadAudit(){
     buildNav(); setupObserver(); syncLogged();
     const panel=document.getElementById('panelContent'); if(panel)new MutationObserver(syncLogged).observe(panel,{attributes:true,attributeFilter:['class']});
   });
-  setTimeout(()=>{buildNav(); setupObserver(); syncLogged();},250);
+  setTimeout(()=>{buildNav(); ensureModernSession(); setupObserver(); syncLogged();},250);
 })();
 </script>
 <script id="uadav-v28-3-functional-overrides">
@@ -2780,11 +2748,13 @@ async function u27LoadAudit(){
     badge.innerHTML=dirty?'<i class="fa-solid fa-circle-exclamation"></i> Cambios sin guardar':'<i class="fa-solid fa-circle-check"></i> Sin cambios pendientes';
   };
   function markDirty(){ if(document.body.classList.contains('admin-v28-logged')) setDirty(true); }
+  function restoreAdminKey(){ if(!ADMIN_KEY) ADMIN_KEY=localStorage.getItem('uadavstream_admin_key')||''; }
   function clearDirty(){ setDirty(false); }
 
   async function u28Fetch(path, options={}){
     const cfg={...options,headers:{...(options.headers||{})}};
-    if(!cfg.headers.Authorization && ADMIN_KEY) cfg.headers.Authorization='Bearer '+ADMIN_KEY;
+    const authKey=ADMIN_KEY||localStorage.getItem('uadavstream_admin_key')||'';
+    if(authKey&&!cfg.headers.Authorization) cfg.headers.Authorization='Bearer '+authKey;
     const res=await fetch(API_URL+path+(path.includes('?')?'&':'?')+'_='+Date.now(),cfg);
     const text=await res.text(); let data={}; try{data=text?JSON.parse(text):{}}catch{data={raw:text}}
     if(!res.ok){const e=new Error(data?.error||data?.raw||('HTTP '+res.status));e.status=res.status;e.payload=data;throw e;}
@@ -2792,7 +2762,7 @@ async function u27LoadAudit(){
   }
   const u28Write=(path,body,method='POST')=>u28Fetch(path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
 
-  async function u28RefreshOps(){
+  async function u28RefreshOps(){ restoreAdminKey();
     const grid=$('u28OpsGrid'); if(!grid)return;
     const modules=[
       ['Secciones','secciones',false],['Streams','senales_oficiales',false],['Radios','radios',false],['Artistas','artistas',false],
@@ -2823,29 +2793,6 @@ async function u27LoadAudit(){
     }));
   }
   window.u28RefreshOps=u28RefreshOps;
-  window.u28InspectConnections=async function(){
-    const grid=$('u28IndexConnectionsGrid'); if(!grid)return;
-    const routes=[
-      ['Health','health',false],['Landing','landing_config',false],['Footer','footer_config',false],['Visibilidad','web_visibility',false],['Orden Home','home_layout',false],
-      ['Secciones','secciones',false],['Artistas','artistas',false],['Radios','radios',false],['Señales','senales_oficiales',false],['Cartelera','cartelera',false],['Banners','banners',false],
-      ['Chat general','chat?id_stream=general',false],['Búsqueda YouTube','youtube/search?q=UADAVSTREAM',false],['Tendencias AR','youtube/trending?region=AR&category=10&limit=5',false],
-      ['Diagnóstico búsqueda','admin/search-diagnostic?q=UADAVSTREAM',true],['Premium','premium/codes',true],['Estadísticas','admin/stats?days=7',true],['Analytics','analytics/config',true]
-    ];
-    grid.innerHTML=routes.map(([name])=>`<div class="u28-ops-card"><div class="u28-ops-top"><span class="u28-ops-name">${name}</span><span class="u28-ops-state">…</span></div><div class="u28-ops-detail">Esperando</div></div>`).join('');
-    const cards=[...grid.children];
-    await Promise.all(routes.map(async([name,path,auth],i)=>{
-      const card=cards[i], state=card.querySelector('.u28-ops-state'), detail=card.querySelector('.u28-ops-detail');
-      try{const data=await u28Fetch(path,{headers:auth?{Authorization:'Bearer '+ADMIN_KEY}:{}});
-        state.textContent='OK';card.classList.add('ok');
-        if(Array.isArray(data)) detail.textContent=`${data.length} elementos`;
-        else if(data?.items&&Array.isArray(data.items)) detail.textContent=`${data.items.length} resultados · ${data.source||'API'}`;
-        else if(data?.totals) detail.textContent='Estadísticas disponibles';
-        else if(path==='health') detail.textContent=`${data.version||'OK'} · KV ${data.kv?'OK':'NO'}`;
-        else detail.textContent='Respuesta válida';
-      }catch(e){state.textContent=e.status===401?'PROTEGIDO':'ERROR';card.classList.add(e.status===401?'warn':'bad');detail.textContent=e.message||'Sin respuesta';}
-    }));
-  };
-
 
   // ---------- PREMIUM: usar rutas V6.2 reales ----------
   window.generarCodigo=async function(){
@@ -2941,18 +2888,12 @@ async function u27LoadAudit(){
   window.renderProspectos=function(list){
     const out=$('artistasProspectosList'); if(!out)return;
     if(!Array.isArray(list)||!list.length){out.innerHTML='<div class="u27-note">Todavía no hay candidatos en prospección.</div>';return;}
-    out.innerHTML='<div style="display:grid;gap:8px">'+list.map((p,i)=>`<div class="prospect-card"><img src="${String(p.imagen||'').replace(/"/g,'%22')}" alt=""><div class="prospect-meta"><div class="prospect-name">${escapeHtml(p.nombre||'Canal')}</div><div class="prospect-sub">${escapeHtml(p.rubro||'')} · ${escapeHtml(p.region||'')} · ${escapeHtml(p.video_titulo||'')}</div></div><div class="prospect-actions"><button class="btn btn-secondary btn-sm" onclick="resolverProspecto('${String(p.id).replace(/'/g,"\'")}')">Resolver canal</button><button class="btn btn-secondary btn-sm" onclick="toggleProspectoPublico('${String(p.id).replace(/'/g,"\'")}')">${p.publicable===true?'Ocultar del catálogo':'Mostrar en catálogo'}</button><button class="btn btn-primary btn-sm" onclick="aprobarProspecto('${String(p.id).replace(/'/g,"\'")}')">Crear perfil pendiente</button></div></div>`).join('')+'</div>';
+    out.innerHTML='<div style="display:grid;gap:8px">'+list.map((p,i)=>`<div class="prospect-card"><img src="${String(p.imagen||'').replace(/"/g,'%22')}" alt=""><div class="prospect-meta"><div class="prospect-name">${escapeHtml(p.nombre||'Canal')}</div><div class="prospect-sub">${escapeHtml(p.rubro||'')} · ${escapeHtml(p.region||'')} · ${escapeHtml(p.video_titulo||'')}</div></div><div class="prospect-actions"><button class="btn btn-secondary btn-sm" onclick="resolverProspecto('${String(p.id).replace(/'/g,"\'")}')">Resolver canal</button><button class="btn btn-primary btn-sm" onclick="aprobarProspecto('${String(p.id).replace(/'/g,"\'")}')">Crear perfil pendiente</button></div></div>`).join('')+'</div>';
   };
 
   window.resolverProspecto=async function(id){
     const all=window.__uadavProspectos||[]; const p=all.find(x=>x.id===id); if(!p)return;
     try{const r=await u28Fetch('youtube/search_channel?name='+encodeURIComponent(p.nombre)); if(!r?.channelId)throw new Error('No se encontró un canal claro para '+p.nombre); p.canal=r.channelId;p.nombre=r.nombre||p.nombre;p.foto=r.thumbnail||p.imagen;p.bio=r.bio||''; await u28Write('artistas_prospectos',all);renderProspectos(all.filter(x=>x.region===p.region).slice(-50).reverse());mostrarToast('Canal resuelto','success');}catch(e){mostrarToast(e.message,'error');}
-  };
-
-  window.toggleProspectoPublico=async function(id){
-    const all=window.__uadavProspectos||[]; const p=all.find(x=>x.id===id); if(!p)return;
-    p.publicable=p.publicable!==true; p.publicado_en=p.publicable?new Date().toISOString():null;
-    try{await u28Write('artistas_prospectos',all);renderProspectos(all.filter(x=>x.region===p.region).slice(-50).reverse());mostrarToast(p.publicable?'Artista visible en catálogo de descubrimiento':'Artista ocultado del catálogo','success');}catch(e){mostrarToast('No se pudo actualizar: '+e.message,'error');}
   };
 
   window.aprobarProspecto=async function(id){
@@ -2992,21 +2933,6 @@ async function u27LoadAudit(){
     else{setDirty(true);mostrarToast('⚠️ Fallaron: '+bad.map(x=>x.name).join(', '),'error');}
   };
 
-  window.u28RunSearchTest=async function(){
-    const input=$('u28SearchTestInput'),out=$('u28SearchTestResult'); const q=(input?.value||'').trim(); if(!out)return;
-    if(!q){out.className='u28-search-test-result bad';out.textContent='Escribí una búsqueda.';return;}
-    out.className='u28-search-test-result'; out.textContent='Buscando…';
-    try{
-      const data=await u28Fetch('youtube/search?q='+encodeURIComponent(q));
-      const count=Array.isArray(data)?data.length:(Array.isArray(data?.items)?data.items.length:0);
-      if(count){out.className='u28-search-test-result ok';out.innerHTML='✅ '+count+' resultados recibidos. Fuente: Worker/API.';}
-      else{
-        let diag={}; try{diag=await u28Fetch('admin/search-diagnostic?q='+encodeURIComponent(q),{headers:{Authorization:'Bearer '+ADMIN_KEY}})}catch(e){diag={error:e.message}}
-        out.className='u28-search-test-result bad'; out.innerHTML='⚠️ La ruta respondió sin resultados.<pre>'+escapeHtml(JSON.stringify(diag,null,2))+'</pre>';
-      }
-    }catch(e){out.className='u28-search-test-result bad';out.textContent='❌ '+e.message;}
-  };
-
   // ---------- Marcar cambios y estado limpio ----------
   document.addEventListener('input',ev=>{if(ev.target.closest('#panelContent'))markDirty();});
   document.addEventListener('change',ev=>{if(ev.target.closest('#panelContent'))markDirty();});
@@ -3016,7 +2942,7 @@ async function u27LoadAudit(){
   document.addEventListener('input',ev=>{if(['footerTitulo','footerSubtitulo','footerLogo','footerContacto','footerWhatsappTexto','footerCopyright','redInstagram','redFacebook','redTwitter','redYoutube','redTiktok','redWhatsapp','footerPrivacyUrl','footerTermsUrl','footerMostrarRedes','footerMostrarLinks','footerMostrarLegales'].includes(ev.target?.id))renderFooterPreview();});
   document.addEventListener('change',ev=>{if(['footerMostrarRedes','footerMostrarLinks','footerMostrarLegales'].includes(ev.target?.id))renderFooterPreview();});
   // ---------- CHEQUEADOR DE BÚSQUEDA ----------
-  window.u28RunSearchCheck=async function(){
+  window.u28RunSearchCheck=async function(){ restoreAdminKey();
     const q=($('u28SearchDiagQuery')?.value||'UADAVSTREAM').trim()||'UADAVSTREAM';
     const box=$('u28SearchDiagResult'); const btn=$('u28SearchDiagBtn');
     if(box)box.innerHTML='<span style="color:#bbb">Comprobando YouTube + Invidious…</span>';
