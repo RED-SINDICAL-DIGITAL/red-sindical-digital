@@ -473,6 +473,13 @@ html,body{overscroll-behavior-x:none;}
 <style id="uadav-v31-artist-gif-modern">
 .artist-card-v29{flex:0 0 150px;cursor:pointer;text-align:center}.artist-avatar-wrap{width:118px;height:118px;margin:0 auto;border-radius:50%;padding:3px;background:linear-gradient(135deg,rgba(0,229,255,.75),rgba(139,92,246,.7));box-shadow:0 8px 24px rgba(0,0,0,.28)}.artist-avatar{width:100%;height:100%;display:block;border-radius:50%;object-fit:cover;background:#12141a;border:3px solid #081019}.artist-card-name{margin-top:10px;font-weight:850;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.artist-card-rubro{font-size:10px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.artist-card-status{margin-top:5px;font-size:9px;font-weight:800}.artist-card-status.verified{color:#8ff9ff}.artist-card-status.discovery{color:#c8b7ff}.artist-empty-state{padding:24px;color:#7d8592}.hero{position:relative;overflow:hidden}.hero-visual-media{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:.62;filter:saturate(1.04)}.hero.has-visual-media .hero-fade{z-index:1}.hero.has-visual-media .hero-content{position:relative;z-index:2}@media(max-width:700px){.artist-card-v29{flex-basis:118px}.artist-avatar-wrap{width:88px;height:88px}.artist-card-name{font-size:12px}.artist-card-rubro{font-size:9px}}
 </style>
+
+<style id="uadav-v314-artists">
+.artist-card-v28{flex:0 0 128px!important;cursor:pointer;text-align:center}.artist-card-v28 img{width:118px!important;height:118px!important;aspect-ratio:1/1!important;border-radius:50%!important;object-fit:cover!important;border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.22)}.artist-card-v28 .artist-card-name{margin-top:9px;font-weight:850;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.artist-card-v28 .artist-card-rubro{font-size:10px;color:var(--muted);margin-top:3px}.artist-card-v28 .artist-card-benefit{font-size:9px;color:#9ef3ff;margin-top:5px}.artist-card-v28 .artist-card-discovery{font-size:9px;color:#a8b5c4;margin-top:5px}.artist-card-v28:hover img{transform:scale(1.035);transition:transform .18s ease}
+.artist-profile-grid{display:grid;grid-template-columns:132px 1fr;gap:18px;align-items:start}.artist-profile-avatar{width:128px;height:128px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,.1);box-shadow:0 14px 45px rgba(0,0,0,.3)}.artist-profile-content{min-width:0}.artist-profile-rail{display:flex;gap:12px;overflow:auto;padding:6px 0 10px;scrollbar-width:none}.artist-profile-rail::-webkit-scrollbar{display:none}.artist-profile-title{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#00e5ff;font-weight:900;margin:16px 0 8px}.artist-profile-empty{padding:15px;border:1px dashed rgba(255,255,255,.1);border-radius:14px;color:#7f8da0;font-size:11px}
+@media(max-width:680px){.artist-card-v28{flex-basis:108px!important}.artist-card-v28 img{width:96px!important;height:96px!important}.artist-profile-grid{grid-template-columns:1fr;text-align:center}.artist-profile-avatar{margin:auto}.artist-profile-content{text-align:left}}
+</style>
+
 </head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
@@ -599,7 +606,7 @@ html,body{overscroll-behavior-x:none;}
   </footer>
 
   <audio id="radioAudio" preload="none"></audio>
-  <div id="artistHubOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarArtistHub()"><div class="info-card" role="dialog" aria-modal="true"><button class="info-close" type="button" onclick="cerrarArtistHub()" aria-label="Cerrar">✕</button><div class="info-kicker" id="artistHubKicker">🎭 Artista UADAV</div><img id="artistHubMedia" class="info-media" src="" alt=""><h2 id="artistHubTitle">Artista</h2><p id="artistHubBio">Perfil artístico</p><div id="artistHubBadges" class="radio-hub-socials"></div><div id="artistHubActions" class="hero-actions"></div></div></div>
+  <div id="artistHubOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarArtistHub()"><div class="info-card" role="dialog" aria-modal="true"><button class="info-close" type="button" onclick="cerrarArtistHub()" aria-label="Cerrar">✕</button><div class="artist-profile-grid"><img id="artistHubMedia" class="artist-profile-avatar" src="" alt=""><div class="artist-profile-content"><div class="info-kicker" id="artistHubKicker">🎭 Artista UADAVSTREAM</div><h2 id="artistHubTitle">Artista</h2><p id="artistHubBio">Perfil artístico</p><div id="artistHubBadges" class="radio-hub-socials"></div><div id="artistHubActions" class="hero-actions"></div></div></div><div class="artist-profile-title">Contenido del artista</div><div id="artistHubContent" class="artist-profile-rail"></div></div></div>
 
   <div id="infoOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarInfoOverlay()">
     <div class="info-card" role="dialog" aria-modal="true">
@@ -1618,26 +1625,67 @@ html,body{overscroll-behavior-x:none;}
       iniciarRadioMetadata(r);
     }
     async function cargarArtistas(){
-      let data=[];try{data=await api('artistas')}catch{}
-      if(!Array.isArray(data))data=[];
-      try{const secs=await api('secciones');if(Array.isArray(secs)){for(const sec of secs){for(const item of (sec?.items||[])){if(item?.tipo==='artista'||item?.tipo==='artista_afiliado')data.push({...item,id:item.id||item.token||('artist-'+Math.random())})}}}}catch{}
-      const uniq=new Map();data.forEach(a=>{const key=String(a.id||a.token||a.nombre||'');if(key&&!uniq.has(key))uniq.set(key,a)});
-      allArtists=[...uniq.values()].filter(a=>a&&a.visible!==false&&String(a.estado||'aprobado')!=='bloqueado'&&String(a.estado||'aprobado')!=='suspendido');
-      const row=$('artists'),rail=$('artistsRail');if(!allArtists.length){if(row)row.hidden=false;if(rail)rail.innerHTML='<div class="artist-empty-state">Todavía estamos incorporando artistas.</div>';return}if(row)row.hidden=false;
-      rail.innerHTML=allArtists.slice(0,24).map((a,i)=>{const photo=safe(a.foto||a.imagen||a.thumbnail||FALLBACK_THUMB),name=safe(a.nombre||a.nombre_artistico||'Artista'),rubro=safe(a.rubro||'Artista de variedades'),verified=a.afiliado_verificado===true||a.sindicalizado===true;const publicOnly=!verified;return `<article class="artist-card-v29" data-artist-index="${i}"><div class="artist-avatar-wrap"><img class="artist-avatar" src="${photo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"></div><div class="artist-card-name">${name}</div><div class="artist-card-rubro">${rubro}</div><div class="artist-card-status ${verified?'verified':'discovery'}">${verified?'✓ Afiliado UADAV':'✨ Descubrimiento'}</div></article>`}).join('');
-      rail.querySelectorAll('.artist-card-v29').forEach((el,i)=>el.addEventListener('click',()=>abrirArtistHub(allArtists[i])));
+      let base=[];
+      try{base=await api('artistas')}catch{}
+      if(!Array.isArray(base))base=[];
+      try{
+        const secs=await api('secciones');
+        if(Array.isArray(secs)){
+          for(const sec of secs){
+            const isProfile=sec?.tipo_contenido==='perfiles';
+            if(!isProfile)continue;
+            for(const item of (sec.items||[])){
+              const n=normalizarSeccionItem(item,sec); if(n)base.push(n);
+            }
+          }
+        }
+      }catch{}
+      const uniq=new Map();
+      for(const a of base){
+        const key=String(a.canal||a.id||a.titulo||'').toLowerCase();
+        if(!key)continue;
+        const blocked=['suspendido','bloqueado'].includes(String(a.estado||''));
+        const publicable=!blocked && (a.visible!==false || a.afiliado_verificado===true || a.estado==='aprobado');
+        if(!publicable)continue;
+        if(!uniq.has(key))uniq.set(key,a);
+      }
+      allArtists=[...uniq.values()];
+      const row=$('artists'),rail=$('artistsRail');
+      if(!row||!rail)return;
+      row.hidden=allArtists.length===0;
+      if(!allArtists.length){rail.innerHTML='';return;}
+      rail.innerHTML=allArtists.slice(0,24).map((a,i)=>{
+        const photo=safe(a.thumbnail||a.foto||a.imagen||FALLBACK_THUMB),name=safe(a.titulo||a.nombre||a.nombre_artistico||'Artista'),rubro=safe(a.rubro||a.categoria||'Artista de variedades');
+        const verified=a.afiliado_verificado===true||a.verificado===true;
+        return `<article class="artist-card-v28" data-artist-index="${i}"><img src="${photo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="artist-card-name">${name}</div><div class="artist-card-rubro">${rubro}</div>${verified?'<div class="artist-card-benefit">✓ Afiliado UADAV</div>':'<div class="artist-card-discovery">✨ Descubrimiento</div>'}</article>`;
+      }).join('');
+      rail.querySelectorAll('.artist-card-v28').forEach((el,i)=>el.addEventListener('click',()=>abrirArtistHub(allArtists[i])));
     }
-    function abrirArtistHub(a){
-      uadavSendMetric('artist_view',{artist_id:a?.id||a?.token||a?.nombre||'',title:a?.nombre||a?.nombre_artistico||''});
-      if(!a)return;const overlay=$('artistHubOverlay');if(!overlay)return;const name=a.nombre||a.nombre_artistico||'Artista UADAV',photo=a.foto||a.imagen||a.thumbnail||FALLBACK_THUMB,verified=a.afiliado_verificado===true||a.sindicalizado===true;
-      $('artistHubKicker').textContent=verified?'✓ ARTISTA AFILIADO UADAV':'🎭 ARTISTA UADAVSTREAM';$('artistHubTitle').textContent=name;$('artistHubBio').textContent=a.bio||a.descripcion||'Perfil artístico en UADAVSTREAM.';const media=$('artistHubMedia');media.src=photo;media.classList.add('has-media');
-      const badges=$('artistHubBadges');badges.innerHTML='';if(a.rubro)badges.innerHTML+=`<span class="artist-verified-badge">${safe(a.rubro)}</span>`;if(verified)badges.innerHTML+='<span class="artist-verified-badge">✓ Afiliado verificado</span>';
-      const actions=$('artistHubActions');actions.innerHTML='';const live=a.live_url||a.youtube_live_url||a.transmision_url||'';
-      if(verified&&live){const b=document.createElement('button');b.className='btn btn-primary';b.innerHTML='<i class="fa-solid fa-tower-broadcast"></i> Ver transmisión';b.onclick=()=>{const yt=normalizarIdYoutube(live);if(yt)reproducirVideo(yt,name+' · En vivo',a.bio||'Transmisión del artista',{id:yt,categoria:'Artista en vivo',isLiveSignal:true});else window.open(live,'_blank','noopener')};actions.appendChild(b)}
-      if(verified&&a.donation_url){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='💛 Apoyar al artista';b.onclick=()=>window.open(a.donation_url,'_blank','noopener');actions.appendChild(b)}
+    async function abrirArtistHub(a){
+      if(!a)return;
+      uadavSendMetric('artist_view',{artist_id:a?.id||a?.canal||a?.titulo||'',title:a?.titulo||a?.nombre||''});
+      const overlay=$('artistHubOverlay');if(!overlay)return;
+      const name=a.titulo||a.nombre||a.nombre_artistico||'Artista';
+      const photo=a.thumbnail||a.foto||a.imagen||FALLBACK_THUMB;
+      const verified=a.afiliado_verificado===true||a.verificado===true;
+      $('artistHubKicker').textContent=verified?'✓ ARTISTA AFILIADO UADAV':'✨ ARTISTA EN UADAVSTREAM';
+      $('artistHubTitle').textContent=name;
+      $('artistHubBio').textContent=a.descripcion||'Perfil artístico en UADAVSTREAM.';
+      const media=$('artistHubMedia');media.src=photo;media.classList.add('has-media');
+      const badges=$('artistHubBadges');badges.innerHTML='';
+      if(a.rubro)badges.innerHTML+=`<span class="artist-verified-badge">${safe(a.rubro)}</span>`;
+      badges.innerHTML+=verified?'<span class="artist-verified-badge">✓ Afiliado verificado</span>':'<span class="artist-verified-badge">✨ Descubrimiento</span>';
+      const actions=$('artistHubActions');actions.innerHTML='';
+      const live=a.live_url||a.youtube_live_url||a.transmision_url||'';
+      if(verified&&live){const b=document.createElement('button');b.className='btn btn-primary';b.innerHTML='<i class="fa-solid fa-tower-broadcast"></i> Ver transmisión';b.onclick=()=>{const yt=normalizarIdYoutube(live);if(yt)reproducirVideo(yt,name+' · En vivo',a.descripcion||'Transmisión del artista',{id:yt,categoria:'Artista en vivo',isLiveSignal:true});else window.open(live,'_blank','noopener')};actions.appendChild(b)}
+      if(verified&&(a.donation_url||a.donacion_url)){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='💛 Apoyar al artista';b.onclick=()=>window.open(a.donation_url||a.donacion_url,'_blank','noopener');actions.appendChild(b)}
       if(a.booking_url||a.contacto||a.whatsapp){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='📅 Contratar';b.onclick=()=>window.open(a.booking_url||a.contacto||('https://wa.me/'+String(a.whatsapp||'').replace(/\D/g,'')),'_blank','noopener');actions.appendChild(b)}
-      if(verified){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='💬 Chat';b.onclick=()=>abrirChat('artist:'+String(a.id||a.token||name),name,'Chat del artista');actions.appendChild(b)}
+      if(verified){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='💬 Chat';b.onclick=()=>abrirChat('artist:'+String(a.id||a.canal||name),name,'Chat del artista');actions.appendChild(b)}
+      const yt=a.canal?`https://www.youtube.com/channel/${encodeURIComponent(a.canal)}`:'';if(yt){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='<i class="fa-brands fa-youtube"></i> YouTube';b.onclick=()=>window.open(yt,'_blank','noopener');actions.appendChild(b)}
+      const content=$('artistHubContent');
+      if(content){content.innerHTML='<div class="artist-profile-empty">Cargando contenido…</div>';try{const results=await obtenerVideos(name);content.innerHTML=results.length?results.slice(0,12).map(v=>`<article class="card" data-artist-content-id="${safe(v.id)}" style="min-width:220px;flex:0 0 220px"><img class="thumb" src="${safe(v.thumbnail||obtenerCaratula(v.id))}" alt="${safe(v.titulo||'Contenido')}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="card-body"><div class="card-title">${safe(v.titulo||'Contenido')}</div><div class="card-meta">${safe(v.descripcion||'YouTube')}</div></div></article>`).join(''):'<div class="artist-profile-empty">Todavía no encontramos videos públicos asociados a este artista.</div>';content.querySelectorAll('[data-artist-content-id]').forEach((el,i)=>el.addEventListener('click',()=>{const cards=content.querySelectorAll('[data-artist-content-id]');const id=cards[i]?.dataset.artistContentId;if(id)reproducirVideo(id,name+' · Contenido',a.descripcion||'',{id,categoria:'Artista'});}));}catch{content.innerHTML='<div class="artist-profile-empty">No pudimos cargar contenido en este momento.</div>';}}
       overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
+      try{history.replaceState(null,'',location.pathname+'?artist='+encodeURIComponent(a.canal||a.id||name))}catch{}
     }
     function cerrarArtistHub(){const overlay=$('artistHubOverlay');if(overlay){overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true')}if(!$('videoModal')?.classList.contains('active')&&!$('radioHubOverlay')?.classList.contains('active'))document.body.style.overflow=''}
 
@@ -2016,7 +2064,8 @@ html,body{overscroll-behavior-x:none;}
     }
     init().then(()=>{
       try{
-        const rid=new URLSearchParams(location.search).get('radio');
+        const params=new URLSearchParams(location.search); const rid=params.get('radio'); const aid=params.get('artist');
+        if(aid && allArtists.length){ const key=decodeURIComponent(aid).toLowerCase(); const a=allArtists.find(x=>String(x.canal||x.id||x.titulo||'').toLowerCase()===key || String(x.titulo||x.nombre||'').toLowerCase()===key); if(a)abrirArtistHub(a); }
         if(rid && currentRadiosCache.length){
           const r=currentRadiosCache.find(x=>obtenerRadioHubId(x)===rid||String(x.nombre||'')===rid);
           if(r)abrirRadioHub(r);
