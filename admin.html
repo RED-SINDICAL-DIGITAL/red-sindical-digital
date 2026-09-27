@@ -601,6 +601,26 @@ body{background:radial-gradient(circle at 10% 0%,rgba(0,229,255,.05),transparent
 </style>
 
 <style>.admin-logout-strong{min-width:88px!important;display:inline-flex!important;justify-content:center!important;font-weight:800!important}.artist-advanced>summary{cursor:pointer}</style>
+
+<style id="uadav-v28-10-professional-layout">
+/* V28.10 — panel profesional: navegación izquierda fija, contenido a la derecha */
+.admin-v28-mainbar{position:static!important;top:auto!important;margin:0 0 18px!important;border-radius:18px!important;box-shadow:none!important}
+body.admin-v28-logged #panelContent{margin-left:278px!important}
+body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!important}
+.admin-v28-sidebar-shell{top:96px!important;height:calc(100vh - 112px)!important}
+.admin-v28-sidebar{background:linear-gradient(180deg,rgba(9,14,22,.96),rgba(6,10,16,.96))!important;border-color:rgba(255,255,255,.08)!important}
+.admin-v28-sessionbox{display:flex;align-items:center;gap:9px;padding:10px 6px 2px;margin-top:auto;border-top:1px solid rgba(255,255,255,.07)}
+.session-avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:rgba(0,229,255,.10);border:1px solid rgba(0,229,255,.18);color:#85f7ff;font-size:12px}
+.session-copy{min-width:0;flex:1}.session-copy strong{display:block;color:#f7fbff;font-size:11px}.session-copy small{display:block;color:#728096;font-size:9px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.session-logout{width:32px;height:32px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#b6c2d2;cursor:pointer}.session-logout:hover{color:#fff;background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.2)}
+/* no floating save button */
+.fab{position:static!important;right:auto!important;bottom:auto!important;margin:18px 0 4px 278px!important;border-radius:14px!important;box-shadow:none!important;width:max-content!important}
+.u27-dashboard{max-width:1180px;margin:0 auto 20px!important}.u27-hero{align-items:center!important;justify-content:center!important;text-align:center!important;min-height:210px!important}.u27-hero:before{content:'★';display:grid;place-items:center;width:68px;height:68px;border-radius:20px;margin-right:14px;background:linear-gradient(135deg,#00e5ff,#8b5cf6);color:#071018;font-size:30px;font-weight:900;box-shadow:0 12px 40px rgba(0,229,255,.14)}.u27-hero>div:first-child{text-align:left}.u27-dashboard .u27-title{font-size:30px}
+@media(max-width:900px){body.admin-v28-logged #panelContent,body.admin-v28-logged .admin-v28-mainbar{margin-left:0!important;width:auto!important}.fab{margin-left:0!important}.admin-v28-sidebar-shell{position:sticky!important;top:8px!important;height:auto!important}}
+/* Comunidad */
+.community-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.community-card{border:1px solid var(--admin-line);background:rgba(255,255,255,.018);border-radius:16px;padding:16px}.community-card h3{margin:0 0 8px;font-size:14px}.community-card p{color:#8290a3;font-size:11px;line-height:1.45;margin:0 0 12px}.community-list{display:grid;gap:8px;margin-top:12px}.community-item{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:9px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(255,255,255,.02)}.community-item-thumb{width:52px;height:52px;border-radius:10px;object-fit:cover;background:#091018}.community-item-main{min-width:0}.community-item-title{font-weight:850;color:#f4f8fb;font-size:11px}.community-item-meta{font-size:9px;color:#718095;margin-top:3px}.community-item-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.community-status{font-size:9px;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.05);color:#9aacbf}.community-status.ok{color:#6de3a0;background:rgba(34,197,94,.08)}.community-status.warn{color:#f7c66d;background:rgba(245,158,11,.08)}
+@media(max-width:760px){.community-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <div class="container" id="app">
@@ -1218,6 +1238,38 @@ UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input)
 </div>
 </div>
 </details>
+
+<!-- COMUNIDAD / BOLSA DE TRABAJO -->
+<details id="sec-comunidad">
+<summary><i class="fa-solid fa-users-gear"></i> 🤝 Comunidad y Bolsa de Trabajo</summary>
+<div class="details-content">
+<div class="community-grid">
+  <div class="community-card">
+    <h3>🎭 Postulaciones de artistas</h3>
+    <p>Recibí postulaciones del formulario público, revisá la información y creá el perfil pendiente sin duplicar formularios.</p>
+    <div id="artistApplicationsList" class="community-list"></div>
+    <button class="btn btn-secondary btn-sm" type="button" onclick="cargarPostulacionesArtistas()">Actualizar postulaciones</button>
+  </div>
+  <div class="community-card">
+    <h3>💼 Bolsa de trabajo</h3>
+    <p>Publicá oportunidades para artistas y recibí postulaciones desde la web pública.</p>
+    <div class="form-row">
+      <div class="form-group"><label>Título</label><input id="jobTitulo" placeholder="Se busca artista para evento"/></div>
+      <div class="form-group"><label>Rubro</label><input id="jobRubro" placeholder="Humor · Circo · Música"/></div>
+      <div class="form-group"><label>Ciudad</label><input id="jobCiudad" placeholder="Rosario, Santa Fe"/></div>
+      <div class="form-group"><label>Fecha</label><input id="jobFecha" type="date"/></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Descripción</label><textarea id="jobDescripcion" rows="3" placeholder="Qué se busca, condiciones y datos de contacto..."></textarea></div>
+      <div class="form-group"><label>Contacto</label><input id="jobContacto" placeholder="WhatsApp / email / URL"/></div>
+      <div class="form-group"><label>Publicar</label><select id="jobActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
+    </div>
+    <button class="btn btn-primary" type="button" onclick="guardarOfertaTrabajo()">💾 Publicar oportunidad</button>
+    <div id="jobsAdminList" class="community-list"></div>
+    <button class="btn btn-secondary btn-sm" type="button" onclick="cargarOfertasTrabajo()">Actualizar bolsa</button>
+  </div>
+</div>
+</div>
+</details>
+
 <!-- ============================================================ -->
 <!-- BOTÓN FLOTANTE GUARDAR TODO -->
 <!-- ============================================================ -->
@@ -2701,13 +2753,13 @@ async function u27LoadAudit(){
 <script id="uadav-v28-admin-nav">
 (function(){
   const titles={
-    'sec-dashboard':'Resumen','integrationDiagnostics':'Diagnóstico','sec-secciones':'Secciones y contenido','sec-personalizacion':'Apariencia','sec-banners':'Publicidad','sec-visibilidad':'Visibilidad','sec-home':'Constructor de Home','sec-streams':'Señales y radios','sec-artistas':'Artistas','sec-eventos':'Eventos pendientes','sec-cartelera':'Cartelera','sec-premium':'Códigos Premium','sec-footer':'Footer y redes','sec-herramientas':'Herramientas'
+    'sec-dashboard':'Resumen','integrationDiagnostics':'Diagnóstico','sec-secciones':'Secciones y contenido','sec-personalizacion':'Apariencia','sec-banners':'Publicidad','sec-visibilidad':'Visibilidad','sec-home':'Constructor de Home','sec-streams':'Señales y radios','sec-artistas':'Artistas','sec-eventos':'Eventos pendientes','sec-cartelera':'Cartelera','sec-premium':'Códigos Premium','sec-footer':'Footer y redes','sec-comunidad':'Comunidad y Bolsa','sec-herramientas':'Herramientas'
   };
   const groups=[
     ['PLATAFORMA', [['sec-dashboard','fa-chart-pie','Resumen'],['integrationDiagnostics','fa-stethoscope','Diagnóstico']]],
     ['CONTENIDO', [['sec-secciones','fa-layer-group','Secciones y contenido'],['sec-streams','fa-tower-broadcast','Señales y radios'],['sec-artistas','fa-users','Artistas'],['sec-eventos','fa-calendar-days','Eventos'],['sec-cartelera','fa-ticket','Cartelera']]],
     ['EXPERIENCIA', [['sec-personalizacion','fa-palette','Apariencia'],['sec-banners','fa-rectangle-ad','Publicidad'],['sec-visibilidad','fa-eye','Visibilidad'],['sec-home','fa-table-columns','Home / Orden'],['sec-footer','fa-share-nodes','Footer y redes']]],
-    ['AUDIENCIA Y NEGOCIO', [['sec-premium','fa-key','Códigos Premium']]],
+    ['AUDIENCIA Y NEGOCIO', [['sec-premium','fa-key','Códigos Premium'],['sec-comunidad','fa-users-gear','Comunidad y Bolsa']]],
     ['SISTEMA', [['sec-herramientas','fa-screwdriver-wrench','Herramientas']]]
   ];
   function buildNav(){
@@ -2754,7 +2806,7 @@ async function u27LoadAudit(){
     if(logged){buildNav(); if(!document.querySelector('#adminV28Nav button.active')){const first=document.querySelector('#adminV28Nav button'); if(first)first.classList.add('active')}}
   }
   function setupObserver(){
-    const mapIds=items.map(x=>x[0]);
+    const mapIds=groups.flatMap(g=>g[1].map(x=>x[0]));
     const sections=mapIds.map(id=>id==='sec-dashboard'?document.getElementById('u27Dashboard'):document.getElementById(id)).filter(Boolean);
     const obs=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){const id=entry.target.id;document.querySelectorAll('#adminV28Nav button').forEach(b=>b.classList.toggle('active',b.dataset.target===id));const t=document.getElementById('adminV28CurrentTitle');if(t)t.textContent=titles[id]||'Centro de control';}}),{rootMargin:'-135px 0px -60% 0px',threshold:0.01});
     sections.forEach(s=>obs.observe(s));
@@ -2807,6 +2859,8 @@ async function u27LoadAudit(){
     await Promise.all(modules.map(async ([name,path,auth],i)=>{
       const card=cards[i], state=card.querySelector('.u28-ops-state'), detail=card.querySelector('.u28-ops-detail');
       try{
+        if(auth && !(ADMIN_KEY||localStorage.getItem('uadavstream_admin_key'))){throw Object.assign(new Error('Requiere sesión'),{status:401});}
+        restoreAdminKey();
         const data=await u28Fetch(path,{headers:auth?{Authorization:'Bearer '+ADMIN_KEY}:{}});
         let detailText='Conectado';
         if(Array.isArray(data)) detailText=`${data.length} elementos`;
@@ -3085,5 +3139,22 @@ async function u27LoadAudit(){
 </script>
 
 <script>(function(){document.addEventListener("DOMContentLoaded",()=>{const h=document.querySelector(".header-actions");const btn=document.getElementById("btnLogout");if(h&&btn){btn.classList.add("admin-logout-strong")}})})();</script>
+
+<script id="uadav-v28-10-community">
+(function(){
+  const $=id=>document.getElementById(id); const apiFetch=(path,opt={})=>{const k=ADMIN_KEY||localStorage.getItem('uadavstream_admin_key')||'';const o={...opt,headers:{...(opt.headers||{}),...(k?{Authorization:'Bearer '+k}:{})}};return fetch(API_URL+path+(path.includes('?')?'&':'?')+'_='+Date.now(),o).then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(d.error||('HTTP '+r.status));e.status=r.status;throw e;}return d;});};
+  async function loadApps(){const box=$('artistApplicationsList');if(!box)return;try{const data=await apiFetch('postulaciones_artista');const list=Array.isArray(data)?data:[];box.innerHTML=list.length?list.slice().reverse().map(x=>`<div class="community-item"><img class="community-item-thumb" src="${x.foto||'https://via.placeholder.com/120x120?text=ART'}" alt=""><div class="community-item-main"><div class="community-item-title">${String(x.nombre||'Artista')}</div><div class="community-item-meta">${String(x.rubro||'')} · ${String(x.ciudad||'')} · ${String(x.estado||'pendiente')}</div></div><div class="community-item-actions"><span class="community-status ${x.estado==='aprobado'?'ok':'warn'}">${x.estado==='aprobado'?'APROBADO':'PENDIENTE'}</span><button class="btn btn-primary btn-sm" onclick="convertirPostulacionArtista('${String(x.id).replace(/'/g,"\'")}')">Crear perfil</button></div></div>`).join(''):'<div class="u27-note">No hay postulaciones.</div>';}catch(e){box.innerHTML='<div class="u27-note" style="color:#ff9292">No se pudieron cargar postulaciones: '+e.message+'</div>';}}
+  window.cargarPostulacionesArtistas=loadApps;
+  window.convertirPostulacionArtista=async function(id){try{const list=await apiFetch('postulaciones_artista');const p=(list||[]).find(x=>String(x.id)===String(id));if(!p)return;let sec=seccionesData.find(s=>s.id==='artistas');if(!sec){sec={id:'artistas',nombre:'Artistas',icono:'fa-user-group',activa:true,tipo_contenido:'perfiles',modo_visual:'perfiles',modo:'manual',items:[]};seccionesData.push(sec);}sec.items=Array.isArray(sec.items)?sec.items:[];sec.items.push({tipo:'artista',nombre:p.nombre||'Artista',nombre_artistico:p.nombre_artistico||p.nombre||'Artista',rubro:p.rubro||'Artista de variedades',foto:p.foto||'',bio:p.bio_uadav||'',youtube_bio:p.youtube_bio||'',canal:p.canal||'',contacto:p.whatsapp||p.email||'',email:p.email||'',ciudad:p.ciudad||'',afiliado_verificado:false,visible:false,estado:'pendiente',donacion_activa:false,live_url:'',booking_url:'',postulacion_id:p.id});await fetch(API_URL+'secciones',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(ADMIN_KEY||localStorage.getItem('uadavstream_admin_key')||'')},body:JSON.stringify(seccionesData)});await apiFetch('postulaciones_artista',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:p.id,estado:'aprobado'})});if(typeof renderArtistManager==='function')renderArtistManager();loadApps();mostrarToast('Perfil pendiente creado','success');if(typeof adminV28Go==='function')adminV28Go('sec-artistas');}catch(e){mostrarToast('No se pudo crear el perfil: '+e.message,'error')}};
+  window.guardarOfertaTrabajo=async function(){const data={titulo:$('jobTitulo')?.value.trim(),rubro:$('jobRubro')?.value.trim(),ciudad:$('jobCiudad')?.value.trim(),fecha:$('jobFecha')?.value||'',descripcion:$('jobDescripcion')?.value.trim(),contacto:$('jobContacto')?.value.trim(),activo:$('jobActivo')?.value==='true'};if(!data.titulo||!data.descripcion){mostrarToast('Completá título y descripción','error');return}try{await apiFetch('bolsa_trabajo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});mostrarToast('Oferta publicada','success');['jobTitulo','jobRubro','jobCiudad','jobFecha','jobDescripcion','jobContacto'].forEach(id=>{if($(id))$(id).value=''});await window.cargarOfertasTrabajo();}catch(e){mostrarToast('No se pudo publicar: '+e.message,'error')}};
+  window.cargarOfertasTrabajo=async function(){const box=$('jobsAdminList');if(!box)return;try{const list=await apiFetch('bolsa_trabajo');const arr=Array.isArray(list)?list:[];box.innerHTML=arr.length?arr.slice().reverse().map(x=>`<div class="community-item"><div class="community-item-thumb" style="display:grid;place-items:center;font-size:18px">💼</div><div class="community-item-main"><div class="community-item-title">${String(x.titulo||'Oportunidad')}</div><div class="community-item-meta">${String(x.rubro||'')} · ${String(x.ciudad||'')} · ${String(x.fecha||'')}</div></div><div class="community-item-actions"><button class="btn btn-secondary btn-sm" onclick="toggleJob('${String(x.id).replace(/'/g,"\'")}',${x.activo!==false})">${x.activo===false?'Publicar':'Ocultar'}</button></div></div>`).join(''):'<div class="u27-note">No hay ofertas publicadas.</div>';}catch(e){box.innerHTML='<div class="u27-note" style="color:#ff9292">No se pudieron cargar ofertas.</div>';}};
+  window.toggleJob=async function(id,current){try{await apiFetch('bolsa_trabajo',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,activo:!current})});await cargarOfertasTrabajo();}catch(e){mostrarToast('No se pudo actualizar la oferta','error')}};
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{loadApps();window.cargarOfertasTrabajo();},700));
+})();
+</script>
+
+<script id="uadav-v28-10-shorts">
+(function(){const $=id=>document.getElementById(id);async function f(p,o={}){const k=ADMIN_KEY||localStorage.getItem('uadavstream_admin_key')||'';const res=await fetch(API_URL+p+(p.includes('?')?'&':'?')+'_='+Date.now(),{...o,headers:{...(o.headers||{}),Authorization:'Bearer '+k}});const d=await res.json().catch(()=>({}));if(!res.ok)throw new Error(d.error||('HTTP '+res.status));return d}window.guardarShortAdmin=async()=>{const id=($('shortAdminId')?.value||'').trim();const m=id.match(/[?&]v=([\w-]{11})/);const vid=m?m[1]:id; if(!vid){mostrarToast('Ingresá un ID o URL de YouTube','error');return}try{await f('shorts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:vid,titulo:$('shortAdminTitle')?.value||'Short',artista:$('shortAdminArtist')?.value||'',thumbnail:$('shortAdminThumb')?.value||''})});mostrarToast('Short publicado','success');await cargarShortsAdmin();}catch(e){mostrarToast(e.message,'error')}};window.cargarShortsAdmin=async()=>{const box=$('shortsAdminList');if(!box)return;try{const a=await f('shorts');box.innerHTML=a.length?a.map(x=>`<div class="community-item"><img class="community-item-thumb" src="${x.thumbnail||'https://i.ytimg.com/vi/'+x.id+'/hqdefault.jpg'}"><div class="community-item-main"><div class="community-item-title">${x.titulo||'Short'}</div><div class="community-item-meta">${x.artista||''}</div></div></div>`).join(''):'<div class="u27-note">No hay Shorts publicados.</div>'}catch{box.innerHTML='<div class="u27-note">No se pudieron cargar Shorts.</div>'}};document.addEventListener('DOMContentLoaded',()=>setTimeout(cargarShortsAdmin,900))})();
+</script>
 </body>
 </html>
