@@ -589,6 +589,18 @@ body{background:radial-gradient(circle at 10% 0%,rgba(0,229,255,.05),transparent
 <style id="uadav-admin-group-mobile">
 @media(max-width:900px){.admin-v28-nav-title{display:none!important}.admin-v28-sidebar{overflow-x:auto}.admin-v28-nav{flex-wrap:nowrap}.admin-v28-sessionbox{min-width:220px}}
 </style>
+
+<style id="uadav-v289-artist-manager">
+.artist-manager{padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:20px;background:linear-gradient(180deg,rgba(11,17,25,.86),rgba(7,11,17,.82));box-shadow:0 20px 70px rgba(0,0,0,.16)}
+.artist-manager-hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.artist-manager-kicker{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#00e5ff;font-weight:900}.artist-manager h3{margin:5px 0 6px;font-size:21px}.artist-manager p{margin:0;color:#8796a9;line-height:1.5;font-size:12px;max-width:760px}
+.artist-manager-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:16px 0}.artist-manager-stat{padding:12px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(255,255,255,.025)}.artist-manager-stat strong{display:block;font-size:22px;color:#fff}.artist-manager-stat span{display:block;color:#7f8da0;font-size:9px;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.artist-manager-toolbar{display:flex;gap:8px;align-items:center;margin:0 0 12px;flex-wrap:wrap}.artist-manager-search{flex:1 1 320px;min-height:40px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(0,0,0,.18)}.artist-manager-search input{border:0!important;background:transparent!important;outline:none!important;padding:9px 0!important;width:100%}.artist-manager-list{display:grid;gap:9px}.artist-manager-row{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:13px;align-items:center;padding:11px;border:1px solid rgba(255,255,255,.07);border-radius:15px;background:rgba(255,255,255,.018)}.artist-manager-avatar{width:62px;height:62px;border-radius:50%;object-fit:cover;background:#0b0f15;border:1px solid rgba(255,255,255,.1)}.artist-manager-main{min-width:0}.artist-manager-name{font-weight:900;color:#f5f8fb;display:flex;align-items:center;gap:7px;flex-wrap:wrap}.artist-manager-meta{margin-top:4px;color:#7f8ea2;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.artist-manager-actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}.artist-pill{font-size:9px;font-weight:900;padding:4px 7px;border-radius:999px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#b7c3d2}.artist-pill.ok{color:#6de3a0;background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.18)}.artist-pill.warn{color:#f7c66d;background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.18)}.artist-pill.bad{color:#ff9292;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.18)}.artist-pill.blue{color:#90f7ff;background:rgba(0,229,255,.08);border-color:rgba(0,229,255,.18)}
+.artist-advanced{margin-top:14px;border:1px solid rgba(255,255,255,.07)!important;border-radius:16px!important;background:rgba(255,255,255,.018)!important}.artist-advanced>summary{font-weight:800}
+.artist-gif-note{margin-top:6px;color:#7c8b9e;font-size:10px}.artist-manager-empty{padding:22px;border:1px dashed rgba(255,255,255,.1);border-radius:14px;color:#7f8da0;text-align:center}
+@media(max-width:900px){.artist-manager-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:620px){.artist-manager-hero{flex-direction:column}.artist-manager-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.artist-manager-row{grid-template-columns:52px 1fr}.artist-manager-avatar{width:52px;height:52px}.artist-manager-actions{grid-column:1/-1;justify-content:flex-start}}
+</style>
+
+<style>.admin-logout-strong{min-width:88px!important;display:inline-flex!important;justify-content:center!important;font-weight:800!important}.artist-advanced>summary{cursor:pointer}</style>
 </head>
 <body>
 <div class="container" id="app">
@@ -847,7 +859,7 @@ body{background:radial-gradient(circle at 10% 0%,rgba(0,229,255,.05),transparent
 <div class="form-group"><label>Kicker</label><input id="heroSpotKicker" placeholder="UADAVSTREAM recomienda"/></div>
 <div class="form-group"><label>Título</label><input id="heroSpotTitle" placeholder="Nombre del contenido"/></div>
 <div class="form-group" style="grid-column:1/-1"><label>Descripción</label><textarea id="heroSpotDescription" placeholder="Descripción breve para la portada" rows="3"></textarea></div>
-<div class="form-group"><label>Imagen de fondo URL</label><input id="heroSpotImage" placeholder="https://..."/></div>
+<div class="form-group"><label>Imagen / GIF de fondo URL</label><input id="heroSpotImage" placeholder="https://..."/></div>
 <div class="form-group"><label>GIF animado (opcional)</label><input id="heroSpotGif" placeholder="https://.../hero.gif"/></div>
 <div class="form-group"><label>Icono/imagen de categoría URL</label><input id="heroSpotIcon" placeholder="https://..."/></div>
 <div class="form-group"><label>Acción principal</label><select id="heroSpotActionType"><option value="video">Video</option><option value="live">Señal en vivo</option><option value="radio">Radio</option><option value="section">Sección</option><option value="url">URL externa</option></select></div>
@@ -1076,8 +1088,25 @@ body{background:radial-gradient(circle at 10% 0%,rgba(0,229,255,.05),transparent
 <!-- 6. IMPORTACIÓN DE ARTISTAS (MEJORADO) -->
 <!-- ============================================================ -->
 <details id="sec-artistas">
-<summary><i class="fa-solid fa-user-plus"></i> 🎤 Importar Artistas</summary>
+<summary><i class="fa-solid fa-user-plus"></i> 🎭 Artistas · Centro de gestión</summary>
 <div class="details-content">
+<div id="artistManager" class="artist-manager">
+  <div class="artist-manager-hero">
+    <div><div class="artist-manager-kicker">CENTRO DE ARTISTAS</div><h3>Un solo lugar para descubrir, editar, publicar y verificar</h3><p>El catálogo público y los afiliados se gestionan desde acá. Los candidatos de YouTube permanecen separados hasta que UADAV los revise.</p></div>
+    <button class="btn btn-primary" type="button" onclick="artistManagerNewArtist()"><i class="fa-solid fa-user-plus"></i> Nuevo perfil</button>
+  </div>
+  <div class="artist-manager-stats" id="artistManagerStats"></div>
+  <div class="artist-manager-toolbar">
+    <div class="artist-manager-search"><i class="fa-solid fa-magnifying-glass"></i><input id="artistManagerSearch" placeholder="Buscar artista, rubro o sección…" autocomplete="off"></div>
+    <select id="artistManagerFilter"><option value="todos">Todos</option><option value="catalogo">Catálogo público</option><option value="pendiente">Pendiente</option><option value="afiliado">Afiliado verificado</option><option value="oculto">Oculto</option><option value="suspendido">Suspendido</option><option value="prospecto">Prospección</option></select>
+    <button class="btn btn-secondary btn-sm" type="button" onclick="renderArtistManager()"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+  </div>
+  <div class="artist-manager-list" id="artistManagerList"></div>
+</div>
+<details class="artist-advanced" id="artistAdvancedTools">
+  <summary><i class="fa-solid fa-sliders"></i> Herramientas avanzadas e importaciones</summary>
+  <div class="details-content">
+  
 <div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-bottom:16px;">
 
 <div class="u27-panel" style="margin:14px 0"><h3>🎭 Cómo funciona Artistas</h3><div class="u27-note">• <strong>Resolver canal:</strong> busca el canal real de YouTube para vincularlo al perfil. No publica nada por sí solo.<br>• <strong>Mostrar en catálogo:</strong> hace visible un perfil público aunque todavía no sea afiliado verificado. Es descubrimiento, no afiliación.<br>• <strong>Crear perfil pendiente:</strong> crea una ficha editable que queda pendiente de revisión UADAV antes de publicarse como perfil completo.<br>• <strong>Afiliado verificado:</strong> habilita los beneficios especiales: Live, chat, donaciones y contratación.</div></div>
@@ -1108,6 +1137,9 @@ body{background:radial-gradient(circle at 10% 0%,rgba(0,229,255,.05),transparent
 </div>
 <div id="importStatus" style="margin-top:12px;"></div>
 <div id="artistasImportadosList" style="margin-top:8px;"></div><div id="artistasProspectosList" style="margin-top:12px;"></div>
+
+  </div>
+</details>
 </div>
 </details>
 <!-- ============================================================ -->
@@ -2967,5 +2999,91 @@ async function u27LoadAudit(){
   });
   setTimeout(()=>{try{if($('panelContent')&&!$('panelContent').classList.contains('hidden')){setDirty(false);u28RefreshOps();}}catch{}},1200);
 })();</script>
+
+<script id="uadav-v289-unified-artist-manager">
+(function(){
+  'use strict';
+  const A=window;
+  const q=id=>document.getElementById(id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const statusOf=item=>{
+    if(!item) return 'oculto';
+    if(item.afiliado_verificado===true) return 'afiliado';
+    if(['suspendido','bloqueado'].includes(String(item.estado||''))) return String(item.estado);
+    if(item.estado==='pendiente') return 'pendiente';
+    if(item.visible===true) return 'catalogo';
+    return 'oculto';
+  };
+  const allArtistRecords=()=>{
+    const out=[];
+    (seccionesData||[]).forEach((sec,si)=>{
+      const isProfile=sec?.tipo_contenido==='perfiles' || Array.isArray(sec?.items)&&sec.items.some(x=>['artista','artista_afiliado'].includes(x?.tipo));
+      if(!isProfile)return;
+      (sec.items||[]).forEach((item,ii)=>{
+        if(!item)return;
+        out.push({kind:'catalog',sectionIndex:si,itemIndex:ii,sectionId:sec.id,sectionName:sec.nombre||sec.id,item});
+      });
+    });
+    return out;
+  };
+  const allProspects=()=>Array.isArray(window.__uadavProspectos)?window.__uadavProspectos:[];
+  function stats(records,prospects){return {catalog:records.filter(r=>statusOf(r.item)==='catalogo').length,pending:records.filter(r=>statusOf(r.item)==='pendiente').length,verified:records.filter(r=>statusOf(r.item)==='afiliado').length,hidden:records.filter(r=>statusOf(r.item)==='oculto').length,suspended:records.filter(r=>['suspendido','bloqueado'].includes(statusOf(r.item))).length,prospects:prospects.length};}
+  function artistRow(r){
+    const a=r.item||{}; const st=statusOf(a); const name=a.nombre||a.nombre_artistico||'Artista'; const img=a.foto||a.imagen||a.thumbnail||'https://via.placeholder.com/140x140?text=ART';
+    const pill=st==='afiliado'?'<span class="artist-pill ok">✓ Afiliado</span>':st==='pendiente'?'<span class="artist-pill warn">Pendiente</span>':st==='catalogo'?'<span class="artist-pill blue">Público</span>':st==='suspendido'||st==='bloqueado'?'<span class="artist-pill bad">'+esc(st)+'</span>':'<span class="artist-pill">Oculto</span>';
+    const publicBtn=a.visible===true?`<button class="btn btn-secondary btn-sm" onclick="artistManagerToggleVisibility(${r.sectionIndex},${r.itemIndex},false)">Ocultar</button>`:`<button class="btn btn-secondary btn-sm" onclick="artistManagerToggleVisibility(${r.sectionIndex},${r.itemIndex},true)">Publicar</button>`;
+    const verify=st==='afiliado'?'':`<button class="btn btn-primary btn-sm" onclick="artistManagerVerify(${r.sectionIndex},${r.itemIndex})">Verificar</button>`;
+    return `<div class="artist-manager-row"><img class="artist-manager-avatar" src="${esc(img)}" alt="${esc(name)}" onerror="this.src='https://via.placeholder.com/140x140?text=ART'"><div class="artist-manager-main"><div class="artist-manager-name">${esc(name)} ${pill}</div><div class="artist-manager-meta">${esc(a.rubro||'Artista de variedades')} · ${esc(r.sectionName||'Artistas')}${a.canal?' · YouTube conectado':''}</div></div><div class="artist-manager-actions"><button class="btn btn-secondary btn-sm" onclick="artistManagerEdit(${r.sectionIndex},${r.itemIndex})">Editar</button><button class="btn btn-secondary btn-sm" onclick="artistManagerView('${encodeURIComponent(a.canal||a.id||name)}')">Ver perfil</button>${publicBtn}${verify}<button class="btn btn-danger btn-sm" onclick="artistManagerSuspend(${r.sectionIndex},${r.itemIndex})">${st==='suspendido'?'Bloqueado':'Suspender'}</button></div></div>`;
+  }
+  function prospectRow(p){
+    const name=p.nombre||'Canal por resolver'; const img=p.foto||p.imagen||'https://via.placeholder.com/140x140?text=YT'; const st=p.estado||'prospecto';
+    const pill=st==='convertido_a_pendiente'?'<span class="artist-pill warn">Perfil pendiente</span>':'<span class="artist-pill">Prospecto</span>';
+    return `<div class="artist-manager-row"><img class="artist-manager-avatar" src="${esc(img)}" alt="${esc(name)}" onerror="this.src='https://via.placeholder.com/140x140?text=YT'"><div class="artist-manager-main"><div class="artist-manager-name">${esc(name)} ${pill}</div><div class="artist-manager-meta">${esc(p.rubro||'')} · ${esc(p.region||'')} · ${p.canal?'Canal resuelto':'Canal pendiente'}${p.youtube_bio?' · Bio YouTube disponible':''}</div></div><div class="artist-manager-actions"><button class="btn btn-secondary btn-sm" onclick="resolverProspecto('${String(p.id).replace(/'/g,"\\'")}')">Resolver</button><button class="btn btn-primary btn-sm" onclick="aprobarProspecto('${String(p.id).replace(/'/g,"\\'")}')">Perfil pendiente</button><button class="btn btn-secondary btn-sm" onclick="publicarProspecto('${String(p.id).replace(/'/g,"\\'")}')">Publicar catálogo</button></div></div>`;
+  }
+  A.renderArtistManager=function(){
+    const list=q('artistManagerList'); if(!list)return;
+    const records=allArtistRecords(); const prospects=allProspects(); const s=stats(records,prospects);
+    const st=q('artistManagerStats'); if(st)st.innerHTML=[['catalog',s.catalog,'PÚBLICOS'],['pending',s.pending,'PENDIENTES'],['verified',s.verified,'AFILIADOS'],['hidden',s.hidden,'OCULTOS'],['suspended',s.suspended,'SUSPENDIDOS'],['prospects',s.prospects,'PROSPECTOS']].map(x=>`<div class="artist-manager-stat"><strong>${x[0]?s[x[0]]:0}</strong><span>${x[1]}</span></div>`).join('');
+    const term=(q('artistManagerSearch')?.value||'').trim().toLowerCase(); const filter=q('artistManagerFilter')?.value||'todos';
+    const matches=a=>{const text=[a.item?.nombre,a.item?.rubro,a.sectionName,a.item?.bio].join(' ').toLowerCase();const st=statusOf(a.item);return (!term||text.includes(term))&&(filter==='todos'||filter===st)};
+    const cat=records.filter(matches);
+    const prospectMatches=filter==='todos'||filter==='prospecto';
+    let html=cat.slice(0,100).map(artistRow).join(''); if(prospectMatches){const ps=prospects.filter(p=>!term||[p.nombre,p.rubro,p.region,p.video_titulo].join(' ').toLowerCase().includes(term)).slice(0,50);html+=ps.map(prospectRow).join('')}
+    list.innerHTML=html||'<div class="artist-manager-empty">No hay artistas que coincidan con el filtro.</div>';
+  };
+  A.artistManagerEdit=function(si,ii){
+    const sel=q('selectSeccionManual'); if(sel){sel.value=String(si);if(typeof actualizarFormularioYLista==='function')actualizarFormularioYLista();}
+    if(typeof editarItem==='function')editarItem(si,ii);
+    const det=q('sec-secciones');if(det)det.open=true;
+    if(typeof adminV28Go==='function')adminV28Go('sec-secciones');
+    window.scrollTo({top:0,behavior:'smooth'});
+    mostrarToast?.('Perfil cargado en el editor de Secciones','success');
+  };
+  A.artistManagerNewArtist=function(){
+    const det=q('sec-secciones');if(det)det.open=true;if(typeof adminV28Go==='function')adminV28Go('sec-secciones');
+    const sec=seccionesData.find(s=>s.id==='artistas'); if(sec){const si=seccionesData.indexOf(sec);const sel=q('selectSeccionManual');if(sel){sel.value=String(si);if(typeof actualizarFormularioYLista==='function')actualizarFormularioYLista();}if(typeof limpiarCampos==='function')limpiarCampos();document.getElementById('camposArtista')?.classList.remove('hidden');document.getElementById('tipoContenido')?.setAttribute('value','youtube');}
+  };
+  async function saveSections(){await u28Write('secciones',seccionesData);}
+  A.artistManagerToggleVisibility=async function(si,ii,visible){const a=seccionesData[si]?.items?.[ii];if(!a)return;a.visible=!!visible;if(visible&&a.estado==='pendiente')a.estado='aprobado';if(!visible&&a.estado==='aprobado'&&!a.afiliado_verificado)a.estado='catalogo_oculto';try{await saveSections();renderArtistManager();mostrarToast(visible?'Perfil publicado en catálogo':'Perfil ocultado','success');}catch(e){mostrarToast('No se pudo guardar: '+e.message,'error');}};
+  A.artistManagerVerify=async function(si,ii){const a=seccionesData[si]?.items?.[ii];if(!a)return;a.afiliado_verificado=true;a.visible=true;a.estado='aprobado';try{await saveSections();renderArtistManager();mostrarToast('Afiliación verificada: beneficios habilitados','success');}catch(e){mostrarToast('No se pudo verificar: '+e.message,'error');}};
+  A.artistManagerSuspend=async function(si,ii){const a=seccionesData[si]?.items?.[ii];if(!a)return;const next=String(a.estado)==='suspendido'?'aprobado':'suspendido';a.estado=next;if(next!=='aprobado')a.visible=false;try{await saveSections();renderArtistManager();mostrarToast(next==='suspendido'?'Perfil suspendido':'Perfil rehabilitado','success');}catch(e){mostrarToast('No se pudo guardar: '+e.message,'error');}};
+  A.artistManagerView=function(token){const u='/index.html?artist='+token;window.open(u,'_blank','noopener');};
+  A.publicarProspecto=async function(id){const all=allProspects();const p=all.find(x=>x.id===id);if(!p)return;let sec=seccionesData.find(s=>s.id==='artistas');if(!sec){sec={id:'artistas',nombre:'Artistas',icono:'fa-user-group',activa:true,tipo_contenido:'perfiles',modo_visual:'perfiles',modo:'manual',items:[]};seccionesData.push(sec);}sec.items=Array.isArray(sec.items)?sec.items:[];let a=sec.items.find(x=>(p.canal&&x.canal===p.canal)||String(x.nombre||'').toLowerCase()===String(p.nombre||'').toLowerCase());if(!a){a={tipo:'artista',nombre:p.nombre||'Artista',rubro:p.rubro||'Artista de variedades',foto:p.foto||p.imagen||'',bio:'',youtube_bio:p.bio||p.youtube_bio||'',canal:p.canal||'',contacto:'',afiliado_verificado:false,visible:true,estado:'aprobado',prospecto_id:p.id,region:p.region||'',donacion_activa:false,live_url:'',booking_url:''};sec.items.push(a);}else{a.visible=true;a.estado='aprobado';}p.estado='catalogo';await u28Write('artistas_prospectos',all);await saveSections();renderArtistManager();if(typeof renderSecciones==='function')renderSecciones();mostrarToast('Artista publicado en el catálogo','success');};
+  // Keep old helper, but separate YouTube bio from public UADAV bio.
+  const oldResolver=A.resolverProspecto;
+  A.resolverProspecto=async function(id){const all=allProspects();const p=all.find(x=>x.id===id);if(!p)return;try{const r=await u28Fetch('youtube/search_channel?name='+encodeURIComponent(p.nombre));if(!r?.channelId)throw new Error('No se encontró un canal claro');p.canal=r.channelId;p.nombre=r.nombre||p.nombre;p.foto=r.thumbnail||p.imagen;p.youtube_bio=r.bio||p.youtube_bio||'';p.bio=p.bio_uadav||'';await u28Write('artistas_prospectos',all);renderArtistManager();mostrarToast('Canal resuelto. La descripción de YouTube queda como fuente, no como bio pública.','success');}catch(e){mostrarToast(e.message,'error')}};
+  const oldApprove=A.aprobarProspecto;
+  A.aprobarProspecto=async function(id){const all=allProspects();const p=all.find(x=>x.id===id);if(!p)return;let sec=seccionesData.find(s=>s.id==='artistas');if(!sec){sec={id:'artistas',nombre:'Artistas',icono:'fa-user-group',activa:true,tipo_contenido:'perfiles',modo_visual:'perfiles',modo:'manual',items:[]};seccionesData.push(sec);}sec.items=Array.isArray(sec.items)?sec.items:[];if(sec.items.some(x=>(p.canal&&x.canal===p.canal)||String(x.nombre||'').toLowerCase()===String(p.nombre||'').toLowerCase())){mostrarToast('El artista ya existe en el catálogo de Artistas','error');return;}sec.items.push({tipo:'artista',nombre:p.nombre||'Artista',rubro:p.rubro||'Artista de variedades',foto:p.foto||p.imagen||'',bio:'',youtube_bio:p.youtube_bio||p.bio||'',canal:p.canal||'',contacto:'',afiliado_verificado:false,visible:false,estado:'pendiente',prospecto_id:p.id,region:p.region||'',donacion_activa:false,live_url:'',booking_url:''});p.estado='convertido_a_pendiente';p.convertido_en=new Date().toISOString();await u28Write('artistas_prospectos',all);await saveSections();renderArtistManager();if(typeof renderSecciones==='function')renderSecciones();mostrarToast('Perfil pendiente creado. Editalo desde el centro de artistas.','success');};
+  // Override the old load function so the modern center always refreshes after the initial data load.
+  const originalCargarDatos=A.cargarDatos;
+  if(originalCargarDatos){A.cargarDatos=async function(){await originalCargarDatos();try{const ps=await u28Fetch('artistas_prospectos');window.__uadavProspectos=Array.isArray(ps)?ps:[]}catch{window.__uadavProspectos=[]}renderArtistManager();};}
+  const oldCargarCodigos=A.cargarCodigos;
+  A.cargarCodigos=async function(){const list=q('codigosList');if(!list)return;try{const codes=await u28Fetch('premium/codes');list.innerHTML='';if(!Array.isArray(codes)||!codes.length){list.innerHTML='<p class="u27-note">No hay códigos Premium.</p>';return;}list.innerHTML=codes.slice().reverse().map(c=>{const vencido=c.expira&&Date.parse(c.expira)<Date.now();const activo=c.activo!==false&&!vencido;return `<div class="card"><div class="card-header"><div><span style="font-weight:800;color:var(--accent);font-family:monospace">${esc(c.code)}</span> <span class="badge ${activo?'badge-success':'badge-danger'}">${activo?'ACTIVO':'INACTIVO'}</span></div><div>${activo?`<button class="btn btn-danger btn-sm" onclick="revocarCodigo('${String(c.code).replace(/'/g,"\\'")}')">Revocar</button>`:''}</div></div><div class="card-body">Beneficio: ${esc(c.beneficio||'sin_publicidad')} · Duración: ${esc(c.dias||'-')} días · Usos: ${esc(c.usos||0)}${c.expira?' · Vence: '+new Date(c.expira).toLocaleDateString('es-AR'):''}</div></div>`}).join('');}catch(e){list.innerHTML='<p class="u27-note" style="color:#ff9292">No se pudieron cargar códigos: '+esc(e.message)+'</p>';}};
+  function bindManager(){q('artistManagerSearch')?.addEventListener('input',renderArtistManager);q('artistManagerFilter')?.addEventListener('change',renderArtistManager);renderArtistManager();const gif=q('heroSpotImage');if(gif&&gif.parentElement&&!q('artistGifNote')){const p=document.createElement('div');p.id='artistGifNote';p.className='artist-gif-note';p.textContent='La portada acepta JPG, PNG, WEBP y GIF animado por URL.';gif.parentElement.appendChild(p);}}
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(bindManager,450));
+})();
+</script>
+
+<script>(function(){document.addEventListener("DOMContentLoaded",()=>{const h=document.querySelector(".header-actions");const btn=document.getElementById("btnLogout");if(h&&btn){btn.classList.add("admin-logout-strong")}})})();</script>
 </body>
 </html>
