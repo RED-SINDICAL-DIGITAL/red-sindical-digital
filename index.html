@@ -1,3 +1,4 @@
+<!-- UADAVSTREAM INDEX V31.9 · Hero rotativo + búsqueda unificada · base V31.8 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -487,10 +488,83 @@ html,body{overscroll-behavior-x:none;}
 .job-card-v31{flex:0 0 280px;width:280px;padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035);cursor:pointer}.job-card-v31 .job-kicker{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:#00e5ff;font-weight:900}.job-card-v31 h3{font-size:15px;margin:7px 0}.job-card-v31 p{font-size:10px;color:#8592a5;line-height:1.45;margin:0}.job-card-v31 .job-meta{font-size:9px;color:#b2bfce;margin-top:9px}.artist-public-form{max-width:980px;margin:0 auto;padding:24px;border-radius:22px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(10,16,24,.86),rgba(7,11,17,.82));box-shadow:0 20px 60px rgba(0,0,0,.18)}.artist-public-form .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.artist-public-form label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#8b9ab0;font-weight:800}.artist-public-form input,.artist-public-form textarea,.artist-public-form select{width:100%;margin-top:5px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff;border-radius:12px;padding:11px}.artist-public-form .wide{grid-column:1/-1}.artist-public-status{margin-top:10px;font-size:11px}.artist-profile-grid{align-items:flex-start}.artist-profile-avatar{width:180px!important;height:180px!important;border-radius:50%!important;object-fit:cover!important}.artist-profile-rail{display:flex;gap:12px;overflow-x:auto;padding:10px 0 6px}.artist-profile-title{margin-top:20px;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:#8e9db0}.info-card.artist-profile-card{max-width:980px}
 @media(max-width:680px){.artist-public-form .form-grid{grid-template-columns:1fr}.artist-public-form .wide{grid-column:auto}.artist-profile-avatar{width:120px!important;height:120px!important}.short-card-v31,.short-card-v31 .short-thumb{width:145px}.short-card-v31 .short-thumb{height:240px}}
 </style>
-
-<style id="uadav-v31-5-new-features">
-.artist-profile-section-title{font-weight:900;font-size:13px;margin:16px 0 9px}.artist-profile-rail{display:flex;gap:10px;overflow:auto;padding-bottom:6px}.short-mini{flex:0 0 130px}.short-mini img{width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:14px;background:#0b0f15}.short-mini strong{display:block;font-size:10px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.artist-job-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.short-viewer-overlay{position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center}.short-viewer-overlay.active{display:flex}.short-viewer-close{position:absolute;right:18px;top:18px;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;z-index:2}.short-viewer-stage{width:min(88vw,430px);height:min(88vh,760px);position:relative;display:flex;flex-direction:column;gap:10px;justify-content:center}.short-viewer-stage iframe{width:100%;height:100%;border:0;border-radius:20px;background:#000}.short-viewer-meta{position:absolute;left:14px;right:14px;bottom:14px;background:linear-gradient(transparent,rgba(0,0,0,.82));padding:42px 12px 12px;color:#fff}.short-viewer-meta span{display:block;color:#c5ced8;font-size:11px;margin-top:4px}.short-viewer-nav{position:absolute;right:16px;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:#fff;z-index:2;font-size:22px}.short-viewer-nav.up{top:50%;margin-top:-55px}.short-viewer-nav.down{top:50%;margin-top:10px}@media(max-width:700px){.artist-job-list{grid-template-columns:1fr 1fr}}@media(max-width:480px){.artist-job-list{grid-template-columns:1fr}}.uadav-premium-active .public-banner{display:none!important}
+<style id="uadav-v31-9-home">
+.hero-rotation{position:absolute;left:0;right:0;bottom:18px;display:flex;justify-content:center;align-items:center;gap:10px;z-index:4;pointer-events:none}.hero-rot-btn{pointer-events:auto;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.32);backdrop-filter:blur(10px);color:#fff;font-size:25px;line-height:1;cursor:pointer}.hero-rot-btn:hover{background:rgba(255,255,255,.12)}.hero-dots{display:flex;gap:6px;align-items:center;pointer-events:auto}.hero-dot{width:7px;height:7px;border:0;padding:0;border-radius:999px;background:rgba(255,255,255,.34);cursor:pointer;transition:.2s}.hero-dot.active{width:22px;background:#fff}.hero-rot-btn:focus-visible,.hero-dot:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.hero-editorial-row{padding-top:6px}.hero-editorial-rail{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;padding:4px clamp(18px,4vw,60px) 12px}.hero-editorial-card{position:relative;min-height:150px;border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#111;cursor:pointer}.hero-editorial-card img{width:100%;height:100%;min-height:150px;object-fit:cover;display:block;opacity:.68}.hero-editorial-card:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.86),rgba(0,0,0,.18))}.hero-editorial-copy{position:absolute;left:18px;right:18px;bottom:16px;z-index:2}.hero-editorial-kicker{font-size:10px;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:1.4px}.hero-editorial-title{font-size:20px;font-weight:900;margin-top:5px}.hero-editorial-meta{font-size:11px;color:#c9c9d0;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.search-group{grid-column:1/-1;padding:12px 0 2px}.search-group h3{margin:0 0 10px;font-size:16px}.search-group-sub{color:var(--muted);font-size:11px;margin:-5px 0 10px}.search-group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}.search-entity-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;cursor:pointer;transition:.2s}.search-entity-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.2)}.search-entity-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#1a1a1d}.search-entity-card.artist img,.search-entity-card.radio img{aspect-ratio:1/1}.search-entity-body{padding:10px}.search-entity-title{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.search-entity-meta{font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.search-results-empty{grid-column:1/-1;padding:40px 20px;text-align:center;color:#999}
+@media(max-width:700px){.hero-rotation{bottom:12px}.hero-editorial-rail{grid-template-columns:1fr;padding-left:14px;padding-right:14px}.search-group-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+@media(prefers-reduced-motion:reduce){.hero-rot-btn,.hero-dot,.hero-editorial-card{transition:none}}
 </style>
+<style id="uadav-public-experience">body.uadav-density-compact .row{margin-block:12px}body.uadav-density-cinematic .row-title{font-size:22px}body.uadav-mode-landing .search-wrap{max-width:900px;margin-inline:auto}body.uadav-mode-landing .content{padding-top:8px}body.uadav-nav-complete .nav{opacity:1}</style>
+<style id="uadav-v31-8-tv-audience">
+.nav-icon{display:inline-grid;place-items:center;width:38px;height:38px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);border-radius:12px;color:#fff;text-decoration:none}.nav-icon:hover{border-color:rgba(0,229,255,.4);color:#aef7ff}.artist-card-v28{cursor:pointer}.artist-card-v28:hover{transform:translateY(-2px)}
+@media(min-width:1200px){body.uadav-tv-mode .nav{height:76px}.uadav-tv-mode .nav-search{width:300px}.uadav-tv-mode .hero{min-height:80vh}.uadav-tv-mode .hero h1{font-size:clamp(58px,5.6vw,92px)}.uadav-tv-mode .card{flex-basis:260px!important}.uadav-tv-mode .portrait-card{flex-basis:180px!important}.uadav-tv-mode .btn{padding:15px 24px;font-size:15px}}
+</style>
+<style id="uadav-tv-navigation-v31-9">
+/* Navegación remota para Smart TV / TV Box: foco grande y navegación por flechas */
+body.uadav-tv-mode{scroll-behavior:smooth}
+body.uadav-tv-mode :focus-visible{outline:3px solid var(--accent)!important;outline-offset:4px!important;box-shadow:0 0 0 6px rgba(0,229,255,.12)!important}
+body.uadav-tv-mode .card,
+body.uadav-tv-mode .radio-card,
+body.uadav-tv-mode .artist-card-v28,
+body.uadav-tv-mode .artist-card-v29,
+body.uadav-tv-mode .hero-editorial-card,
+body.uadav-tv-mode .search-entity-card{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+body.uadav-tv-mode .card:focus-visible,
+body.uadav-tv-mode .radio-card:focus-visible,
+body.uadav-tv-mode .artist-card-v28:focus-visible,
+body.uadav-tv-mode .artist-card-v29:focus-visible,
+body.uadav-tv-mode .hero-editorial-card:focus-visible,
+body.uadav-tv-mode .search-entity-card:focus-visible{transform:scale(1.045);border-color:var(--accent)!important}
+@media(min-width:1200px){body.uadav-tv-mode .nav-links a,body.uadav-tv-mode .nav-icon,body.uadav-tv-mode .nav-search input,body.uadav-tv-mode .btn{font-size:15px}}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  try{
+    const tv=new URLSearchParams(location.search).get('tv')==='1';
+    if(!tv)return;
+    document.body.classList.add('uadav-tv-mode');
+    const makeFocusable=()=>{
+      const selectors=['.nav a','.nav button','.nav input','.hero button','.row-more','.card','.radio-card','.artist-card-v28','.artist-card-v29','.hero-editorial-card','.search-entity-card','.result-chip','.chat-close','.chat-send button','.info-close'];
+      document.querySelectorAll(selectors.join(',')).forEach(el=>{
+        if(el.getAttribute('tabindex')===null) el.setAttribute('tabindex','0');
+      });
+    };
+    makeFocusable();
+    new MutationObserver(makeFocusable).observe(document.body,{subtree:true,childList:true});
+    document.addEventListener('keydown',e=>{
+      if(!document.body.classList.contains('uadav-tv-mode'))return;
+      const active=document.activeElement;
+      if(['INPUT','TEXTAREA'].includes(active?.tagName)){
+        if(e.key==='Escape'){active.blur();return;}
+        if(e.key!=='ArrowDown'&&e.key!=='ArrowUp'&&e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+      }
+      const container=active?.closest('.rail,.search-group-grid,.nav-links,.hero-actions,.nav-actions');
+      const items=container?[...container.querySelectorAll('a,button,input,.card,.radio-card,.artist-card-v28,.artist-card-v29,.hero-editorial-card,.search-entity-card,.result-chip')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&!el.disabled}):[];
+      const index=items.indexOf(active);
+      if((e.key==='ArrowRight'||e.key==='ArrowLeft')&&items.length>1&&index>=0){
+        e.preventDefault();
+        const next=e.key==='ArrowRight'?index+1:index-1;
+        items[(next+items.length)%items.length].focus({preventScroll:false});
+        return;
+      }
+      if((e.key==='ArrowDown'||e.key==='ArrowUp')&&active){
+        e.preventDefault();
+        const rows=[...document.querySelectorAll('#heroSection,.row,.search-wrap,.features,.cta,footer')].filter(el=>{const r=el.getBoundingClientRect();return r.height>0});
+        if(!rows.length)return;
+        const y=window.scrollY+active.getBoundingClientRect().top;
+        let target=-1;
+        if(e.key==='ArrowDown') target=rows.findIndex(el=>el.offsetTop>y+40);
+        else {for(let i=rows.length-1;i>=0;i--){if(rows[i].offsetTop<y-40){target=i;break;}}}
+        if(target>=0){rows[target].scrollIntoView({behavior:'smooth',block:'center'});}
+        return;
+      }
+      if(e.key==='Home'){e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});document.querySelector('.brand')?.focus();}
+      if(e.key==='End'){e.preventDefault();window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});}
+      if(e.key==='Enter'&&active && !['INPUT','TEXTAREA'].includes(active.tagName)){active.click();}
+    });
+  }catch(err){console.warn('TV navigation init',err)}
+});
+</script>
 </head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
@@ -508,7 +582,7 @@ html,body{overscroll-behavior-x:none;}
     </nav>
     <div class="nav-actions">
       <div class="nav-search"><i class="fa-solid fa-magnifying-glass"></i><input id="navSearchInput" aria-label="Buscar" placeholder="Buscar..." onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button aria-label="Buscar" onclick="ejecutarBusqueda(document.getElementById('navSearchInput').value)"><i class="fa-solid fa-arrow-right"></i></button></div>
-      <button class="nav-icon" title="Buscar" onclick="document.getElementById('searchInput').focus()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <button class="nav-icon" title="Buscar" onclick="document.getElementById('searchInput').focus()"><i class="fa-solid fa-magnifying-glass"></i></button><a class="nav-icon" id="navAudienceProfile" title="Mi UADAVSTREAM" href="/mi-uadavstream.html"><i class="fa-solid fa-user"></i></a>
     </div>
   </header>
 
@@ -527,6 +601,11 @@ html,body{overscroll-behavior-x:none;}
         </div>
       </div>
       <div class="hero-fade"></div>
+      <div class="hero-rotation" id="heroRotation" aria-label="Destacados del Hero" hidden>
+        <button class="hero-rot-btn" id="heroPrevBtn" type="button" aria-label="Destacado anterior">‹</button>
+        <div class="hero-dots" id="heroDots"></div>
+        <button class="hero-rot-btn" id="heroNextBtn" type="button" aria-label="Siguiente destacado">›</button>
+      </div>
     </section>
 
     <section class="search-wrap" id="searchModule" data-visibility-key="search" aria-label="Buscador">
@@ -539,6 +618,10 @@ html,body{overscroll-behavior-x:none;}
       <div class="row" id="savedRow" hidden><div class="row-head"><div><div class="row-title">🔖 Mi lista</div><div class="row-subtitle">Guardados en este dispositivo</div></div></div><div class="rail" id="savedRail"></div></div>
       <div class="row" id="resultsRow" hidden><div class="row-head"><div><div class="row-title" id="resultsTitle">Resultados</div></div><button class="row-more" onclick="volverInicio()">Volver al inicio</button></div><div class="rail results-rail" id="resultsRail"></div></div>
       <div class="row" id="featuredRow"><div class="row-head"><div><div class="row-title" id="featuredTitle">🔥 Destacados</div><div class="row-subtitle">Una selección para empezar a descubrir</div></div><button class="row-more" onclick="cargarDestacados(true)">Actualizar</button></div><div class="rail" id="featuredRail"><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div></div></div>
+      <div class="row hero-editorial-row" id="heroEditorialRow" hidden data-visibility-key="hero">
+        <div class="row-head"><div><div class="row-title">✨ También destacado</div><div class="row-subtitle">Más de lo que UADAVSTREAM quiere que descubras</div></div></div>
+        <div class="hero-editorial-rail" id="heroEditorialRail"></div>
+      </div>
       <div id="adminSectionsContainer" class="admin-sections-container" aria-live="polite"></div>
       <div id="bannerInfeedContainer" class="public-banner public-banner-infeed" data-visibility-key="banners" hidden></div>
       <div class="row" id="recommendedRow" hidden><div class="row-head"><div><div class="row-title">✨ Para vos</div><div class="row-subtitle">Recomendaciones según lo que explorás</div></div></div><div class="rail" id="recommendedRail"></div></div>
@@ -561,7 +644,7 @@ html,body{overscroll-behavior-x:none;}
         </div>
         <div class="radio-hub-actions">
           <button id="radioHubPlay" class="radio-hub-btn primary" type="button">▶ Escuchar</button>
-          <button id="radioHubShare" class="radio-hub-btn" type="button">↗ Compartir</button><button id="radioHubChat" class="radio-hub-btn radio-hub-chat-btn" type="button">💬 Chat / pedidos</button><button id="radioHubDonate" class="radio-hub-btn radio-hub-donate-btn" type="button" hidden>💛 Apoyar</button>
+          <button id="radioHubProfile" class="radio-hub-btn" type="button">▣ Perfil completo</button><button id="radioHubShare" class="radio-hub-btn" type="button">↗ Compartir</button><button id="radioHubChat" class="radio-hub-btn radio-hub-chat-btn" type="button">💬 Chat / pedidos</button><button id="radioHubDonate" class="radio-hub-btn radio-hub-donate-btn" type="button" hidden>💛 Apoyar</button>
         </div>
       </div>
     </div>
@@ -589,28 +672,11 @@ html,body{overscroll-behavior-x:none;}
     </section>
 
     <section class="cta" id="sumate" data-visibility-key="cta">
-      <h2>¿Sos artista de variedades?</h2>
-      <p id="mensajeEspera">Mostrá tu trabajo, sumate a UADAVSTREAM y ayudá a que tu público te encuentre.</p>
-      <div class="hero-actions"><a class="btn btn-primary" href="/index.html#postular"><i class="fa-solid fa-star"></i> Quiero sumarme</a><a class="btn btn-secondary" href="/index.html"><i class="fa-solid fa-play"></i> Entrar a UADAVSTREAM</a></div>
-    </section>
-
-    
-    <section class="cta" id="postular" data-visibility-key="cta">
-      <div class="artist-public-form">
-        <div class="row-title">🎭 Sumate como artista</div>
-        <p>Completá tus datos y UADAV podrá revisar tu postulación, ayudarte a crear tu perfil y, si corresponde, activar los beneficios del artista afiliado.</p>
-        <div class="form-grid">
-          <div><label>Nombre / nombre artístico</label><input id="artistApplyName" placeholder="Ej. Floripop"></div>
-          <div><label>Rubro</label><select id="artistApplyRubro"><option>Música</option><option>Circo</option><option>Magia</option><option>Humor</option><option>Danza</option><option>Teatro</option><option>Animación</option><option>Locución / conducción</option><option>Otro</option></select></div>
-          <div><label>Ciudad</label><input id="artistApplyCity" placeholder="Rosario, Santa Fe"></div>
-          <div><label>Email</label><input id="artistApplyEmail" type="email" placeholder="tu@email.com"></div>
-          <div><label>WhatsApp</label><input id="artistApplyWhatsapp" placeholder="+54..."></div>
-          <div><label>YouTube / canal</label><input id="artistApplyYoutube" placeholder="https://youtube.com/@..."></div>
-          <div class="wide"><label>Foto / imagen de perfil</label><input id="artistApplyPhoto" placeholder="https://..."></div>
-          <div class="wide"><label>Contanos sobre tu trabajo</label><textarea id="artistApplyBio" rows="4" placeholder="Qué hacés, trayectoria, espectáculos, links importantes..."></textarea></div>
-        </div>
-        <button class="btn btn-primary" type="button" onclick="enviarPostulacionArtista()" style="margin-top:14px">Enviar postulación</button>
-        <div id="artistApplyStatus" class="artist-public-status"></div>
+      <div class="artist-invite-card">
+        <div class="info-kicker">🎭 COMUNIDAD UADAVSTREAM</div>
+        <h2>¿Sos artista de variedades?</h2>
+        <p>Creá tu presencia en UADAVSTREAM, mostrale al público tu trabajo y empezá a construir tu perfil. La afiliación UADAV habilita beneficios gremiales adicionales.</p>
+        <div class="hero-actions"><a class="btn btn-primary" href="/sumate-artista.html"><i class="fa-solid fa-star"></i> Sumate como artista</a><a class="btn btn-secondary" href="/bolsa-trabajo.html"><i class="fa-solid fa-briefcase"></i> Ver oportunidades</a></div>
       </div>
     </section>
 
@@ -632,9 +698,7 @@ html,body{overscroll-behavior-x:none;}
         <div id="footerContactoExtra" class="footer-extra"></div>
         <div id="footerSocials" class="footer-socials"></div>
       </div>
-      <div class="footer-links" id="footerLinks">
-        <a href="/index.html">Explorar</a><a href="#artistas" onclick="irASeccion('artists');return false">Artistas</a><a href="#cartelera" onclick="irASeccion('cartelera');return false">Cartelera</a><a href="#avisos">Novedades</a>
-      </div>
+      <div class="footer-links" id="footerLinks"></div>
     </div>
     <div class="footer-bottom"><div id="footerCopyright">© <span id="footerYear"></span> UADAVSTREAM · Todos los derechos reservados.</div><div class="footer-legal" id="footerLegal"><a id="footerPrivacy" href="/privacidad.html" hidden>Privacidad</a><a id="footerTerms" href="/terminos.html" hidden>Términos</a></div></div>
   </footer>
@@ -677,9 +741,10 @@ html,body{overscroll-behavior-x:none;}
     const STORAGE_KEY = 'uadavstream_discovery_v1';
     let config = {};
     let footerConfigPublic = {};
+    function renderDynamicFooterLinks(){ const box=$('footerLinks'); if(!box)return; const base=(footerConfigPublic?.links||[]); const defaults=[{label:'Explorar',url:'/index.html'},{label:'Artistas',url:'#artists'},{label:'Cartelera',url:'#cartelera'},{label:'Sumate como artista',url:'/sumate-artista.html'},{label:'Bolsa de trabajo',url:'/bolsa-trabajo.html'}]; const links=base.length?base:defaults; if(footerConfigPublic?.mostrar_links===false){box.innerHTML='';return;} box.innerHTML=links.filter(x=>x&&x.visible!==false).map(x=>{const u=String(x.url||'#');const onclick=u==='#artists'?" onclick=\"irASeccion('artists');return false\"":'';return '<a href=\"'+safe(u)+'\"'+onclick+'>'+safe(x.label||'Enlace')+'</a>'}).join(''); }
     let allVideos = [];
     let allArtists = [];
-    let webVisibility = {hero:true,search:true,banners:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true,footer:true};
+    let webVisibility = {hero:true,search:true,banners:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,shorts:true,jobs:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true,footer:true};
     const DEFAULT_HOME_ORDER=['continueRow','savedRow','featuredRow','adminSectionsContainer','recommendedRow','liveRow','radiosRow','artists','shortsRow','jobsRow','cartelera','discoverRow'];
     let homeLayout={order:[...DEFAULT_HOME_ORDER]};
     let activeRadio = null;
@@ -841,6 +906,7 @@ html,body{overscroll-behavior-x:none;}
 
     async function cargarBannersPublicos(){
       try{
+        try{const p=JSON.parse(localStorage.getItem('uadavstream_audience_profile_v1')||'{}'); if(p.premium&&p.premium.expires&&Date.now()<Date.parse(p.premium.expires)){ ['bannerTopContainer','bannerInfeedContainer','bannerFooterContainer'].forEach(id=>{if($(id)){ $(id).innerHTML=''; $(id).hidden=true; }}); return; }}catch{}
         const data=await api('banners');
         const slots=[
           ['top','bannerTopContainer','Superior'],
@@ -892,6 +958,11 @@ html,body{overscroll-behavior-x:none;}
       if(privacy){privacy.href=cfg.privacy_url||'/privacidad.html';privacy.hidden=!legalOn;}
       if(terms){terms.href=cfg.terms_url||'/terminos.html';terms.hidden=!legalOn;}
     }
+    let heroSpotlights=[];
+    let heroSpotlightIndex=0;
+    let heroRotationTimer=null;
+    let heroRotationPaused=false;
+
     function aplicarConfig(){
       const c=config||{};
       $('mensajeEspera').textContent=c.mensaje_espera||'Mostrá tu trabajo, sumate a UADAVSTREAM y ayudá a que tu público te encuentre.';
@@ -904,32 +975,68 @@ html,body{overscroll-behavior-x:none;}
       if(c.nombre_app){$('brandName').textContent=c.nombre_app;}
       const logo=c.branding?.logo_url||'';
       if(logo){const img=$('heroBadgeIcon');if(img){img.src=logo;$('heroBadgeMedia').classList.add('has-image');$('heroBadgeStar').style.display='none';}const brand=$('brandLogo');if(brand){brand.src=logo;brand.style.display='block';$('brandLogoFallback').style.display='none';}}
-      heroSpotlight=c.hero_spotlight||{};
+      const incoming=Array.isArray(c.hero_spotlights)?c.hero_spotlights:[c.hero_spotlight].filter(Boolean);
+      heroSpotlights=incoming.filter(h=>h&&h.active!==false&&((h.title||h.description||h.image||h.gif_url)));
+      if(!heroSpotlights.length)heroSpotlights=[{active:true,category:'UADAVSTREAM',kicker:'UADAVSTREAM',title:'El arte escénico al alcance de todos.',description:'Descubrí artistas, videos, espectáculos, transmisiones y mucho más en un solo lugar.',action_type:'section',action_target:'contenido'}];
+      heroSpotlightIndex=Math.min(heroSpotlightIndex,heroSpotlights.length-1);
+      iniciarHeroRotacion();
+      renderHeroEditorial();
       aplicarHeroSpotlight();
     }
 
-
     function aplicarHeroMedia(h){
       const hero=document.getElementById('heroSection'); if(!hero)return;
-      const src=h?.hero_gif||h?.hero_imagen||''; if(!src)return;
+      const src=h?.hero_gif||h?.hero_imagen||'';
       let img=document.getElementById('heroVisualMedia');
+      if(!src){if(img)img.hidden=true;hero.classList.remove('has-visual-media');return;}
       if(!img){img=document.createElement('img');img.id='heroVisualMedia';img.alt='';img.className='hero-visual-media';hero.insertBefore(img,hero.firstChild);}
       img.src=src; img.hidden=false;
       hero.classList.add('has-visual-media');
     }
+    function renderHeroDots(){
+      const wrap=$('heroRotation'),dots=$('heroDots');if(!wrap||!dots)return;
+      if(heroSpotlights.length<=1){wrap.hidden=true;dots.innerHTML='';return;}
+      wrap.hidden=false;
+      dots.innerHTML=heroSpotlights.map((_,i)=>`<button class="hero-dot${i===heroSpotlightIndex?' active':''}" type="button" aria-label="Destacado ${i+1}" data-hero-dot="${i}"></button>`).join('');
+      dots.querySelectorAll('[data-hero-dot]').forEach(b=>b.addEventListener('click',()=>{heroSpotlightIndex=Number(b.dataset.heroDot)||0;aplicarHeroSpotlight();reiniciarHeroTimer()}));
+    }
+    function cambiarHero(delta){if(heroSpotlights.length<=1)return;heroSpotlightIndex=(heroSpotlightIndex+delta+heroSpotlights.length)%heroSpotlights.length;aplicarHeroSpotlight();reiniciarHeroTimer()}
+    function reiniciarHeroTimer(){clearInterval(heroRotationTimer);heroRotationTimer=null;if(heroSpotlights.length<=1||heroRotationPaused||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;heroRotationTimer=setInterval(()=>cambiarHero(1),7000)}
+    function iniciarHeroRotacion(){
+      const hero=$('heroSection');if(!hero)return;
+      hero.onmouseenter=()=>{heroRotationPaused=true;clearInterval(heroRotationTimer);heroRotationTimer=null};
+      hero.onmouseleave=()=>{heroRotationPaused=false;reiniciarHeroTimer()};
+      hero.onfocusin=()=>{heroRotationPaused=true;clearInterval(heroRotationTimer);heroRotationTimer=null};
+      hero.onfocusout=()=>{heroRotationPaused=false;reiniciarHeroTimer()};
+      if(hero.dataset.rotationReady!=='1'){ $('heroPrevBtn')?.addEventListener('click',()=>cambiarHero(-1)); $('heroNextBtn')?.addEventListener('click',()=>cambiarHero(1)); hero.dataset.rotationReady='1'; }
+    }
+    function renderHeroEditorial(){
+      const row=$('heroEditorialRow'),rail=$('heroEditorialRail');if(!row||!rail)return;
+      const items=heroSpotlights.slice(1);
+      if(items.length<2){row.hidden=true;rail.innerHTML='';return;}
+      row.hidden=false;
+      rail.innerHTML=items.map((h,i)=>{
+        const title=safe(h.title||'Destacado'),meta=safe(h.category||h.kicker||'UADAVSTREAM'),img=safe(h.image||h.hero_imagen||h.gif_url||FALLBACK_THUMB);
+        return `<article class="hero-editorial-card" data-hero-editorial="${i+1}"><img src="${img}" alt="${title}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="hero-editorial-copy"><div class="hero-editorial-kicker">${meta}</div><div class="hero-editorial-title">${title}</div><div class="hero-editorial-meta">${safe(h.description||'Descubrilo en UADAVSTREAM')}</div></div></article>`;
+      }).join('');
+      rail.querySelectorAll('[data-hero-editorial]').forEach(el=>el.addEventListener('click',()=>{heroSpotlightIndex=Number(el.dataset.heroEditorial)||0;aplicarHeroSpotlight();reiniciarHeroTimer();$('heroSection')?.scrollIntoView({behavior:'smooth',block:'start'})}));
+    }
     function aplicarHeroSpotlight(){
-      const h=heroSpotlight||{};
-      const active=h.active===true && (h.title||h.description||h.image);
+      const h=heroSpotlights[heroSpotlightIndex]||{};
+      heroSpotlight=h;
+      const active=h.active!==false && (h.title||h.description||h.image);
       $('heroCategoria').textContent=h.category||'UADAVSTREAM';
       $('heroKicker').textContent=h.kicker||'UADAVSTREAM';
       $('heroTitulo').textContent=active?h.title:'El arte escénico al alcance de todos.';
       $('heroSubtitulo').textContent=active?(h.description||''):'Descubrí artistas, videos, espectáculos, transmisiones y mucho más en un solo lugar.';
-      if(h.image){$('heroSection').style.setProperty('--hero-image',`url("${String(h.image).replace(/"/g,'%22')}")`)}
+      if(h.image)$('heroSection').style.setProperty('--hero-image',`url("${String(h.image).replace(/"/g,'%22')}")`);
       const play=$('heroPlayBtn'),more=$('heroMoreBtn');
       if(play)play.onclick=()=>ejecutarHeroAction();
       if(more)more.onclick=()=>abrirInfoOverlay();
       const badge=$('heroBadgeMedia');
       if(h.icon_url){$('heroBadgeIcon').src=h.icon_url;badge.classList.add('has-image');$('heroBadgeStar').style.display='none'}
+      aplicarHeroMedia(h);
+      renderHeroDots();
     }
 
     function ejecutarHeroAction(){
@@ -1367,8 +1474,8 @@ html,body{overscroll-behavior-x:none;}
     function applyWebVisibility(){
       const map={
         hero:'heroSection', search:'searchModule', banners:'bannerTopContainer', continue:'continueRow', saved:'savedRow', featured:'featuredRow', recommended:'recommendedRow',
-        live:'liveRow', radios:'radiosRow', artists:'artists', cartelera:'cartelera', discover:'discoverRow',
-        features:'en-vivo', cta:'sumate', newsletter:'avisos', footer:'siteFooter'
+        live:'liveRow', radios:'radiosRow', artists:'artists', cartelera:'cartelera', discover:'discoverRow', shorts:'shortsRow', jobs:'jobsRow',
+        features:'en-vivo', cta:'sumate', newsletter:'avisos', footer:'siteFooter', info:'en-vivo'
       };
       Object.entries(map).forEach(([key,id])=>{
         const el=$(id); if(el) el.classList.toggle('visibility-off',webVisibility[key]===false);
@@ -1608,6 +1715,7 @@ html,body{overscroll-behavior-x:none;}
       const donate=$('radioHubDonate');const donationUrl=String(r.donation_url||r.donacion_url||'').trim();const canDonate=r.afiliado_verificado===true&&r.donacion_activa===true&&/^https?:\/\//i.test(donationUrl);if(donate){donate.hidden=!canDonate;donate.onclick=()=>{if(canDonate)window.open(donationUrl,'_blank','noopener')}}
       const metaBox=$('radioHubMeta');const metaValues=[r.programa,r.locutor,r.horario,r.descripcion].filter(Boolean);if(metaBox){metaBox.hidden=!metaValues.length;if($('radioHubProgram'))$('radioHubProgram').textContent=r.programa||'—';if($('radioHubHost'))$('radioHubHost').textContent=r.locutor||'—';if($('radioHubSchedule'))$('radioHubSchedule').textContent=r.horario||'—';if($('radioHubDescription'))$('radioHubDescription').textContent=r.descripcion||'—'}
       const socials=$('radioHubSocials');if(socials){const links=Object.assign({},r.redes||{},{web:r.web});socials.innerHTML=Object.entries(links).filter(([k,v])=>/^https?:\/\//i.test(String(v||''))).map(([k,v])=>`<a href="${safe(v)}" target="_blank" rel="noopener">${safe(k==='web'?'Web':k)}</a>`).join('')}
+      const profile=$('radioHubProfile');if(profile)profile.onclick=()=>{location.href='/radio.html?id='+encodeURIComponent(obtenerRadioHubId(r))};
       const share=$('radioHubShare');
       if(share)share.onclick=async()=>{
         const shareUrl=location.origin+location.pathname+'?radio='+encodeURIComponent(obtenerRadioHubId(r));
@@ -1693,7 +1801,7 @@ html,body{overscroll-behavior-x:none;}
         const verified=a.afiliado_verificado===true||a.verificado===true;
         return `<article class="artist-card-v28" data-artist-index="${i}"><img src="${photo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="artist-card-name">${name}</div><div class="artist-card-rubro">${rubro}</div>${verified?'<div class="artist-card-benefit">✓ Afiliado UADAV</div>':'<div class="artist-card-discovery">✨ Descubrimiento</div>'}</article>`;
       }).join('');
-      rail.querySelectorAll('.artist-card-v28').forEach((el,i)=>el.addEventListener('click',()=>abrirArtistHub(allArtists[i])));
+      rail.querySelectorAll('.artist-card-v28').forEach((el,i)=>el.addEventListener('click',()=>{const a=allArtists[i];const id=a?.id||a?.canal||a?.nombre||'';if(id)location.href='/artista.html?id='+encodeURIComponent(id);}));
     }
     async function abrirArtistHub(a){
       if(!a)return;
@@ -1709,10 +1817,10 @@ html,body{overscroll-behavior-x:none;}
       const share=document.createElement('button');share.className='btn btn-secondary';share.innerHTML='↗ Compartir';share.onclick=async()=>{try{if(navigator.share)await navigator.share({title:name,text:`Perfil de ${name} en UADAVSTREAM`,url:publicUrl});else{await navigator.clipboard.writeText(publicUrl);mostrarToastPublico('Enlace copiado');}}catch{}};actions.appendChild(share);
       const live=a.live_url||a.youtube_live_url||a.transmision_url||'';if(verified&&live){const b=document.createElement('button');b.className='btn btn-primary';b.innerHTML='<i class="fa-solid fa-tower-broadcast"></i> Ver transmisión';b.onclick=()=>{const yt=normalizarIdYoutube(live);if(yt)reproducirVideo(yt,name+' · En vivo',a.bio||'Transmisión del artista',{id:yt,categoria:'Artista en vivo',isLiveSignal:true});else window.open(live,'_blank','noopener')};actions.appendChild(b)}
       if(verified&&(a.donation_url||a.donacion_url)){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='💛 Apoyar';b.onclick=()=>window.open(a.donation_url||a.donacion_url,'_blank','noopener');actions.appendChild(b)}
-      if(verified){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='📅 Contratar';b.onclick=()=>abrirContract(a);actions.appendChild(b)}
+      if(a.booking_url||a.contacto||a.whatsapp){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='📅 Contratar';b.onclick=()=>window.open(a.booking_url||a.contacto||('https://wa.me/'+String(a.whatsapp||'').replace(/\D/g,'')),'_blank','noopener');actions.appendChild(b)}
       if(verified){const b=document.createElement('button');b.className='btn btn-secondary';b.innerHTML='💬 Chat';b.onclick=()=>abrirChat('artist:'+String(a.id||a.canal||name),name,'Chat del artista');actions.appendChild(b)}
       const content=$('artistHubContent');
-      if(content){content.innerHTML='<div class="artist-profile-empty">Cargando contenido…</div>';try{const q=String(a.nombre||a.nombre_artistico||'').trim();const results=q?await obtenerVideos(q):[];const shorts=(window.__uadavShorts||[]).filter(s=>String(s.artista||'').toLowerCase().includes(name.toLowerCase())||String(s.artista||'').toLowerCase().includes(String(a.rubro||'').toLowerCase()));let jobs=[];try{jobs=(await publicApi('bolsa_trabajo')).filter(j=>j.activo!==false&&(String(j.artist_id||'')==String(a.id||a.canal||name)||!j.artist_id)&&(!j.rubro||!a.rubro||String(j.rubro).toLowerCase()===String(a.rubro).toLowerCase())).slice(0,6)}catch{};let html='';html+=`<div class="artist-profile-section-title">Videos</div><div class="artist-profile-rail">${results.length?results.slice(0,12).map(v=>`<article class="card" data-artist-content-id="${safe(v.id)}" style="min-width:220px;flex:0 0 220px"><img class="thumb" src="${safe(v.thumbnail||obtenerCaratula(v.id))}" alt="${safe(v.titulo||'Contenido')}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="card-body"><div class="card-title">${safe(v.titulo||'Contenido')}</div><div class="card-meta">${safe(v.descripcion||'YouTube')}</div></div></article>`).join(''):'<div class="artist-profile-empty">Todavía no encontramos contenido público asociado.</div>'}</div>`;html+=`<div class="artist-profile-section-title">Shorts</div><div class="artist-profile-rail">${shorts.length?shorts.slice(0,8).map((s,i)=>`<article class="short-mini" data-artist-short="${i}"><img src="${safe(s.thumbnail||window.uadavFixedYouTubeThumb?.(s.id)||'')}" alt=""><strong>${safe(s.titulo||'Short')}</strong></article>`).join(''):'<div class="artist-profile-empty">Todavía no hay Shorts propios.</div>'}</div>`;if(verified)html+=`<div class="artist-profile-section-title">💼 Oportunidades compatibles</div><div class="artist-job-list">${jobs.length?jobs.map(j=>`<article class="job-card-v31"><strong>${safe(j.titulo||'Oportunidad')}</strong><div>${safe(j.ciudad||'')} ${j.fecha?'· '+safe(j.fecha):''}</div></article>`).join(''):'<div class="artist-profile-empty">No hay oportunidades publicadas para este perfil.</div>'}</div>`;content.innerHTML=html;content.querySelectorAll('[data-artist-content-id]').forEach((el,i)=>el.addEventListener('click',()=>{const cards=content.querySelectorAll('[data-artist-content-id]');const id=cards[i]?.dataset.artistContentId;if(id)reproducirVideo(id,name+' · Contenido',a.bio||'',{id,categoria:'Artista'});}));}catch{content.innerHTML='<div class="artist-profile-empty">No pudimos cargar contenido en este momento.</div>';}}
+      if(content){content.innerHTML='<div class="artist-profile-empty">Cargando contenido…</div>';try{const q=String(a.nombre||a.nombre_artistico||'').trim();const results=q?await obtenerVideos(q):[];content.innerHTML=results.length?results.slice(0,12).map(v=>`<article class="card" data-artist-content-id="${safe(v.id)}" style="min-width:220px;flex:0 0 220px"><img class="thumb" src="${safe(v.thumbnail||obtenerCaratula(v.id))}" alt="${safe(v.titulo||'Contenido')}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="card-body"><div class="card-title">${safe(v.titulo||'Contenido')}</div><div class="card-meta">${safe(v.descripcion||'YouTube')}</div></div></article>`).join(''):'<div class="artist-profile-empty">Todavía no encontramos contenido público asociado.</div>';content.querySelectorAll('[data-artist-content-id]').forEach((el,i)=>el.addEventListener('click',()=>{const cards=content.querySelectorAll('[data-artist-content-id]');const id=cards[i]?.dataset.artistContentId;if(id)reproducirVideo(id,name+' · Contenido',a.bio||'',{id,categoria:'Artista'});}));}catch{content.innerHTML='<div class="artist-profile-empty">No pudimos cargar contenido en este momento.</div>';}}
       overlay.classList.add('active');overlay.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
     }
     function cerrarArtistHub(){const overlay=$('artistHubOverlay');if(overlay){overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true')}if(!$('videoModal')?.classList.contains('active')&&!$('radioHubOverlay')?.classList.contains('active'))document.body.style.overflow=''}
@@ -1821,31 +1929,62 @@ html,body{overscroll-behavior-x:none;}
     }
     function cerrarChat(){clearInterval(chatTimer);chatTimer=null;$('chatOverlay').classList.remove('active');$('chatOverlay').setAttribute('aria-hidden','true')}
 
+    function coincideBusquedaLocal(text,q){
+      const hay=normText(text),query=normText(q);
+      if(!query)return true;
+      if(hay.includes(query))return true;
+      const terms=tokenize(q);
+      return terms.length?terms.every(t=>hay.includes(normText(t))):false;
+    }
+    function construirEntidadBusqueda(tipo,item){
+      const isArtist=tipo==='artist', isRadio=tipo==='radio';
+      const id=safe(item?.id||item?.nombre||item?.stream_url||'');
+      const title=safe(item?.nombre||item?.titulo||'Sin nombre');
+      const meta=safe(isArtist?(item?.rubro||item?.categoria||'Artista'):(item?.programa||item?.horario||'Radio en vivo'));
+      const img=safe(isArtist?(item?.foto||item?.imagen||item?.thumbnail||FALLBACK_THUMB):(item?.logo||item?.imagen||FALLBACK_THUMB));
+      return `<article class="search-entity-card ${isArtist?'artist':'radio'}" data-search-entity="${tipo}" data-search-id="${id}"><img src="${img}" alt="${title}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="search-entity-body"><div class="search-entity-title">${title}</div><div class="search-entity-meta">${meta}</div></div></article>`;
+    }
+    function pintarResultadosCatalogo(q,videos,artists,radios){
+      const rail=$('resultsRail');if(!rail)return;
+      const groups=[];
+      if(artists.length)groups.push(`<section class="search-group"><h3>🎭 Artistas</h3><div class="search-group-sub">Perfiles encontrados en UADAVSTREAM</div><div class="search-group-grid">${artists.slice(0,8).map(x=>construirEntidadBusqueda('artist',x)).join('')}</div></section>`);
+      if(radios.length)groups.push(`<section class="search-group"><h3>📻 Radios</h3><div class="search-group-sub">Emisoras disponibles para escuchar ahora</div><div class="search-group-grid">${radios.slice(0,8).map(x=>construirEntidadBusqueda('radio',x)).join('')}</div></section>`);
+      if(videos.length)groups.push(`<section class="search-group"><h3>🎬 Videos</h3><div class="search-group-sub">Resultados de video encontrados en las fuentes disponibles</div><div id="searchVideosRail" class="search-group-grid"></div></section>`);
+      rail.innerHTML=groups.length?groups.join(''):`<div class="search-results-empty"><div style="font-size:30px;margin-bottom:8px">🔎</div><div style="font-weight:800;color:#fff">No encontramos resultados</div><div style="margin-top:6px">Probamos el catálogo de UADAVSTREAM y las fuentes de video disponibles.</div><button class="row-more" style="margin-top:12px" onclick="ejecutarBusqueda(document.getElementById('searchInput').value)">Reintentar</button></div>`;
+      const videoRail=$('searchVideosRail');
+      if(videoRail){videoRail.innerHTML=videos.map(v=>cardHTML(v,false)).join('');bindCards(videoRail,videos);}
+      rail.querySelectorAll('[data-search-entity]').forEach(el=>el.addEventListener('click',()=>{
+        const type=el.dataset.searchEntity,id=el.dataset.searchId;
+        if(type==='artist'){const a=artists.find(x=>String(x.id||x.nombre)===String(id));if(a)abrirArtistHub(a);}
+        if(type==='radio'){const r=radios.find(x=>String(x.id||x.nombre||x.stream_url)===String(id));if(r)abrirRadioHub(r);}
+      }));
+    }
+
     async function ejecutarBusqueda(value){
       const q=String(value||'').trim();
       if(!q){volverInicio();return;}
       registerSearchInterest(q);
       $('searchInput').value=q;$('navSearchInput').value=q;
       $('searchStatus').innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando...';
-      ['featuredRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>$(id).hidden=true);
+      ['featuredRow','heroEditorialRow','recommendedRow','liveRow','artists','cartelera'].forEach(id=>{if($(id))$(id).hidden=true});
       $('resultsRow').hidden=false;
       const rail=$('resultsRail');
-      rail.innerHTML='<div style="grid-column:1/-1;padding:35px;text-align:center;color:#888"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando resultados...</div>';
+      rail.innerHTML='<div class="search-results-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando resultados...</div>';
       try{
-        const results=await obtenerVideos(q);
+        const [videos] = await Promise.all([obtenerVideos(q)]);
+        const nq=normText(q);
+        const artists=(allArtists||[]).filter(a=>coincideBusquedaLocal([a.nombre,a.nombre_artistico,a.rubro,a.ciudad,a.bio,a.titulo].filter(Boolean).join(' '),q)).slice(0,8);
+        const radios=(currentRadiosCache||[]).filter(r=>r&&r.activa!==false&&coincideBusquedaLocal([r.nombre,r.descripcion,r.programa,r.locutor,r.horario].filter(Boolean).join(' '),q)).slice(0,8);
+        pintarResultadosCatalogo(q,videos,artists,radios);
+        const total=artists.length+radios.length+videos.length;
         $('resultsTitle').textContent='Resultados para “'+q+'”';
-        $('searchStatus').textContent=results.length?results.length+' resultados encontrados':'No encontramos resultados en las fuentes disponibles';
-        renderRail('resultsRail',results);
-        if(!results.length){
-          const empty=$('resultsRail');
-          if(empty) empty.innerHTML='<div style="grid-column:1/-1;padding:35px;text-align:center;color:#999"><div style="font-size:30px;margin-bottom:8px">🔎</div><div style="font-weight:800;color:#fff">No encontramos resultados</div><div style="margin-top:6px">El buscador probó YouTube e instancias de respaldo.</div><button class="row-more" style="margin-top:12px" onclick="ejecutarBusqueda(document.getElementById(\'searchInput\').value)">Reintentar</button></div>';
-        }
+        $('searchStatus').textContent=total?total+' resultados encontrados':'No encontramos resultados en las fuentes disponibles';
         $('resultsRow').hidden=false;
         requestAnimationFrame(()=>irASeccion('resultsRow'));
       }catch(e){
         console.error('[UADAV] búsqueda fatal:',e);
         $('searchStatus').textContent='Error al buscar';
-        rail.innerHTML='<div style="grid-column:1/-1;padding:35px;text-align:center;color:#ff7777">No pudimos cargar los resultados. Revisá la conexión con la API.</div>';
+        rail.innerHTML='<div class="search-results-empty" style="color:#ff7777">No pudimos cargar los resultados. Revisá la conexión con la API.</div>';
       }
     }
     function irASeccion(id){
@@ -1860,6 +1999,7 @@ html,body{overscroll-behavior-x:none;}
     }
     function volverInicio(){
       if($('featuredRow'))$('featuredRow').hidden=false;
+      if($('heroEditorialRow')){renderHeroEditorial();$('heroEditorialRow').hidden=heroSpotlights.length<3;}
       if($('discoverRail')?.parentElement?.parentElement)$('discoverRail').parentElement.parentElement.hidden=false;
       if($('resultsRow'))$('resultsRow').hidden=true;
       renderContinue();renderSaved();renderRecommendations().catch(()=>{});
@@ -2062,6 +2202,7 @@ html,body{overscroll-behavior-x:none;}
     $('chatSendBtn')?.addEventListener('click',enviarMensajeChat);
     $('chatText')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviarMensajeChat()}});
 
+    function applyPublicExperience(cfg){try{const p=cfg?.public_experience||{};document.body.classList.toggle('uadav-mode-landing',p.mode==='landing');document.body.classList.toggle('uadav-density-compact',p.density==='compact');document.body.classList.toggle('uadav-density-cinematic',p.density==='cinematic');document.body.classList.toggle('uadav-nav-complete',p.nav==='complete'); const ap=document.getElementById('navAudienceProfile'); if(ap) ap.hidden=p.audience_profile===false;}catch{}}
     async function init(){
       await uadavLoadAnalytics();
       const modo=await cargarEstadoSitio();
@@ -2106,24 +2247,6 @@ html,body{overscroll-behavior-x:none;}
       else if($('resultsRow')&&!$('resultsRow').hidden)volverInicio();
     });
 </script>
-
-<script id="uadav-v31-5-artist-contracts-premium">
-(function(){
- const $=id=>document.getElementById(id); const pub=window.publicApi||((path,opt={})=>fetch(API_URL+path,{...opt}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error||('HTTP '+r.status));return d;}));
- let currentArtistEditToken=''; let currentContractArtist=null; let shortIndex=0;
- function show(el){if(el){el.classList.add('active');el.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}} function hide(el){if(el){el.classList.remove('active');el.setAttribute('aria-hidden','true');document.body.style.overflow=''}}
- window.abrirContract=async function(a){currentContractArtist=a;const overlay=$('contractOverlay');if(!overlay)return; $('contractArtistName').textContent='Contratar a '+(a.nombre||a.nombre_artistico||'Artista');$('contractStatus').textContent='';['contractRequester','contractEmail','contractWhatsapp','contractDate','contractCity','contractFee','contractDetails'].forEach(id=>{if($(id))$(id).value=''});if($('contractAck'))$('contractAck').checked=false;try{const c=await pub('contratacion_config');$('contractNoticePublic').textContent=c.notice||'Antes de enviar la solicitud revisá el modelo de condiciones de contratación.';const l=$('contractTemplateLink');if(l&&c.template_url){l.href=c.template_url;l.hidden=false}else if(l){l.hidden=true}}catch{}show(overlay)};
- window.cerrarContract=()=>hide($('contractOverlay'));
- window.enviarContratacion=async function(){const a=currentContractArtist||{};const ack=$('contractAck')?.checked===true;if(!ack){$('contractStatus').textContent='Debés leer el modelo y aceptar antes de continuar.';return}const body={artist_id:a.id||a.canal||a.nombre,artist_name:a.nombre||a.nombre_artistico||'Artista',solicitante_nombre:($('contractRequester')?.value||'').trim(),email:($('contractEmail')?.value||'').trim(),whatsapp:($('contractWhatsapp')?.value||'').trim(),fecha_evento:$('contractDate')?.value||'',ciudad:($('contractCity')?.value||'').trim(),honorario:($('contractFee')?.value||'').trim(),detalles:($('contractDetails')?.value||'').trim(),contract_ack:true};if(!body.solicitante_nombre||!body.email||!body.fecha_evento){$('contractStatus').textContent='Completá nombre, email y fecha del evento.';return}try{const r=await pub('contrataciones',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});$('contractStatus').innerHTML='<span style="color:#71e1a5">✓ Solicitud enviada. UADAV revisará y dará seguimiento.</span>';setTimeout(cerrarContract,1600)}catch(e){$('contractStatus').textContent='No pudimos enviar la contratación: '+e.message}};
- window.abrirArtistEdit=async function(token){currentArtistEditToken=token;try{const a=await pub('artistas/profile?token='+encodeURIComponent(token));if(!a?.success)throw new Error(a?.error||'Perfil no encontrado');const f={'artistEditName':a.item.nombre||a.item.nombre_artistico,'artistEditRubro':a.item.rubro,'artistEditCity':a.item.ciudad,'artistEditEmail':a.item.email,'artistEditWhatsapp':a.item.whatsapp||a.item.contacto,'artistEditYoutube':a.item.youtube||a.item.canal,'artistEditPhoto':a.item.foto,'artistEditBio':a.item.bio||'','artistEditLive':a.item.live_url,'artistEditBooking':a.item.booking_url,'artistEditPrice':a.item.honorario_desde,'artistEditAvailability':a.item.disponibilidad,'artistEditDonationActive':String(a.item.donacion_activa===true),'artistEditDonationUrl':a.item.donation_url||a.item.donacion_url||''};for(const [id,val] of Object.entries(f)){if($(id))$(id).value=val||''}show($('artistEditOverlay'));}catch(e){alert('No se pudo abrir el perfil: '+e.message)}};window.cerrarArtistEdit=()=>hide($('artistEditOverlay'));
- window.guardarArtistEdit=async function(){if(!currentArtistEditToken)return;const body={nombre:($('artistEditName')?.value||'').trim(),rubro:($('artistEditRubro')?.value||'').trim(),ciudad:($('artistEditCity')?.value||'').trim(),email:($('artistEditEmail')?.value||'').trim(),whatsapp:($('artistEditWhatsapp')?.value||'').trim(),youtube:($('artistEditYoutube')?.value||'').trim(),foto:($('artistEditPhoto')?.value||'').trim(),bio:($('artistEditBio')?.value||'').trim(),live_url:($('artistEditLive')?.value||'').trim(),booking_url:($('artistEditBooking')?.value||'').trim(),honorario_desde:($('artistEditPrice')?.value||'').trim(),disponibilidad:($('artistEditAvailability')?.value||'').trim(),donacion_activa:$('artistEditDonationActive')?.value==='true',donation_url:($('artistEditDonationUrl')?.value||'').trim()};try{const r=await pub('artistas/profile?token='+encodeURIComponent(currentArtistEditToken),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});$('artistEditStatus').innerHTML='<span style="color:#71e1a5">✓ '+(r.message||'Perfil actualizado')+'</span>';}catch(e){$('artistEditStatus').textContent='No se pudo guardar: '+e.message}};
- window.activarPremium=async function(){const code=($('premiumCodeInput')?.value||'').trim().toUpperCase();if(!code)return;try{const r=await pub('premium/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});if(!r.valid)throw new Error(r.error||'Código inválido');localStorage.setItem('uadav_premium_expires',r.expires||String(Date.now()+86400000));$('premiumStatus').innerHTML='<span style="color:#71e1a5">✓ Premium activado hasta '+(r.expires?new Date(r.expires).toLocaleDateString('es-AR'):'nuevo aviso')+'</span>';aplicarPremium();}catch(e){$('premiumStatus').textContent=e.message}};window.cerrarPremium=()=>hide($('premiumOverlay'));
- window.abrirPremium=()=>show($('premiumOverlay')); function premiumActivo(){const v=localStorage.getItem('uadav_premium_expires');return v && ((/^\d+$/.test(v)?Number(v):Date.parse(v))>Date.now())} function aplicarPremium(){if(!premiumActivo())return;document.documentElement.classList.add('uadav-premium-active');['bannerTopContainer','bannerInfeedContainer','bannerFooterContainer'].forEach(id=>{if($(id)){ $(id).hidden=true; }});} window.uadavPremiumActivo=premiumActivo;
- window.abrirShortViewer=function(i){const list=window.__uadavShorts||[];if(!list.length)return;shortIndex=Math.max(0,Math.min(i,list.length-1));const v=list[shortIndex];const id=v.id||v.youtube_id||'';const frame=$('shortViewerFrame');if(frame)frame.src='https://www.youtube.com/embed/'+encodeURIComponent(id)+'?autoplay=1&rel=0&playsinline=1';if($('shortViewerTitle'))$('shortViewerTitle').textContent=v.titulo||'Short';if($('shortViewerArtist'))$('shortViewerArtist').textContent=v.artista||'';show($('shortViewerOverlay'));};window.moverShort=function(delta){abrirShortViewer(shortIndex+delta)};window.cerrarShortViewer=function(){const f=$('shortViewerFrame');if(f)f.src='';hide($('shortViewerOverlay'))};
- (function(){let sy=0;document.addEventListener('touchstart',e=>{if(!$('shortViewerOverlay')?.classList.contains('active'))return;sy=e.touches[0].clientY},{passive:true});document.addEventListener('touchend',e=>{if(!$('shortViewerOverlay')?.classList.contains('active'))return;const dy=sy-e.changedTouches[0].clientY;if(Math.abs(dy)>55)moverShort(dy>0?1:-1)},{passive:true});})();
- document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{aplicarPremium();const l=document.createElement('button');l.className='btn btn-secondary btn-sm';l.type='button';l.textContent='🎟 Premium';l.onclick=abrirPremium;const dest=document.querySelector('#siteFooter .footer-links');if(dest)dest.appendChild(l);const p=new URLSearchParams(location.search);const token=p.get('artist_edit');if(token)abrirArtistEdit(token)},1200)});
-})();
-</script>
 <script src="https://www.youtube.com/iframe_api" async></script>
 
 
@@ -2150,7 +2273,7 @@ html,body{overscroll-behavior-x:none;}
   const $=id=>document.getElementById(id);
   async function publicApi(path,opt={}){const res=await fetch(API_URL+path+(path.includes('?')?'&':'?')+'_='+Date.now(),opt);const d=await res.json().catch(()=>({}));if(!res.ok)throw new Error(d.error||('HTTP '+res.status));return d;}
   window.enviarPostulacionArtista=async function(){const body={nombre:($('artistApplyName')?.value||'').trim(),rubro:$('artistApplyRubro')?.value||'',ciudad:($('artistApplyCity')?.value||'').trim(),email:($('artistApplyEmail')?.value||'').trim(),whatsapp:($('artistApplyWhatsapp')?.value||'').trim(),youtube:($('artistApplyYoutube')?.value||'').trim(),foto:($('artistApplyPhoto')?.value||'').trim(),bio:($('artistApplyBio')?.value||'').trim()};const st=$('artistApplyStatus');if(!body.nombre||!body.email){if(st)st.textContent='Completá nombre y email.';return}try{await publicApi('postulaciones_artista',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(st)st.innerHTML='<span style="color:#71e1a5">✓ Recibimos tu postulación. UADAVSTREAM la revisará.</span>';['artistApplyName','artistApplyCity','artistApplyEmail','artistApplyWhatsapp','artistApplyYoutube','artistApplyPhoto','artistApplyBio'].forEach(id=>{if($(id))$(id).value=''})}catch(e){if(st)st.innerHTML='<span style="color:#ff9393">No pudimos enviar la postulación. Intentá nuevamente.</span>';}};
-  window.cargarShorts=async function(){const row=$('shortsRow'),rail=$('shortsRail');if(!rail)return;try{const arr=await publicApi('shorts');const list=Array.isArray(arr)?arr:[];window.__uadavShorts=list;row.hidden=false;rail.innerHTML=list.length?list.slice(0,18).map((v,i)=>`<article class="short-card-v31" data-short-index="${i}"><img class="short-thumb" src="${safe(v.thumbnail||window.uadavFixedYouTubeThumb?.(v.id||v.youtube_id)||obtenerCaratula(v.id||v.youtube_id||''))}" alt="${safe(v.titulo||'Short')}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="short-title">${safe(v.titulo||'Short')}</div><div class="short-meta">${safe(v.artista||v.descripcion||'UADAVSTREAM')}</div></article>`).join(''):'<div class="artist-section-empty">Todavía no hay Shorts publicados.</div>';rail.querySelectorAll('[data-short-index]').forEach((el,i)=>el.onclick=()=>abrirShortViewer(i));}catch{row.hidden=false;rail.innerHTML='<div class="artist-section-empty">Shorts no disponibles en este momento.</div>';}};
+  window.cargarShorts=async function(){const row=$('shortsRow'),rail=$('shortsRail');if(!rail)return;try{const arr=await publicApi('shorts');const list=Array.isArray(arr)?arr:[];row.hidden=false;rail.innerHTML=list.length?list.slice(0,18).map((v,i)=>`<article class="short-card-v31" data-short-id="${safe(v.id||v.youtube_id||'')}"><img class="short-thumb" src="${safe(v.thumbnail||obtenerCaratula(v.id||v.youtube_id||''))}" alt="${safe(v.titulo||'Short')}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="short-title">${safe(v.titulo||'Short')}</div><div class="short-meta">${safe(v.artista||v.descripcion||'UADAVSTREAM')}</div></article>`).join(''):'<div class="artist-section-empty">Todavía no hay Shorts publicados.</div>';rail.querySelectorAll('[data-short-id]').forEach((el,i)=>el.onclick=()=>{const v=list[i];if(v?.id||v?.youtube_id)reproducirVideo(v.id||v.youtube_id,v.titulo||'Short',v.descripcion||v.artista||'UADAVSTREAM',{...v,tipo:'short',categoria:'Shorts'})});}catch{row.hidden=false;rail.innerHTML='<div class="artist-section-empty">Shorts no disponibles en este momento.</div>';}};
   window.cargarOfertasPublicas=async function(){const row=$('jobsRow'),rail=$('jobsRail');if(!rail)return;try{const list=await publicApi('bolsa_trabajo');row.hidden=false;rail.innerHTML=Array.isArray(list)&&list.length?list.filter(x=>x.activo!==false).slice(0,16).map((x,i)=>`<article class="job-card-v31"><div class="job-kicker">💼 ${safe(x.rubro||'Oportunidad')}</div><h3>${safe(x.titulo||'Oportunidad')}</h3><p>${safe(x.descripcion||'')}</p><div class="job-meta">${safe(x.ciudad||'')} ${x.fecha?'· '+safe(x.fecha):''}</div><button class="btn btn-secondary btn-sm" type="button" style="margin-top:10px" onclick='abrirJobApply(${JSON.stringify(x).replace(/</g,'\u003c')})'>Postularme</button></article>`).join(''):'<div class="artist-section-empty">Todavía no hay ofertas en la bolsa de trabajo.</div>';}catch{row.hidden=false;rail.innerHTML='<div class="artist-section-empty">Bolsa de trabajo no disponible.</div>';}};
   window.abrirJobApply=function(job){$('jobApplyTitle').textContent=job.titulo||'Postularme';$('jobApplyDesc').textContent=[job.rubro,job.ciudad,job.descripcion].filter(Boolean).join(' · ');window.__jobApply=job;$('jobApplyOverlay').classList.add('active');$('jobApplyOverlay').setAttribute('aria-hidden','false');document.body.style.overflow='hidden'};
   window.cerrarJobApply=function(){$('jobApplyOverlay').classList.remove('active');$('jobApplyOverlay').setAttribute('aria-hidden','true');document.body.style.overflow=''};
@@ -2159,17 +2282,13 @@ html,body{overscroll-behavior-x:none;}
   document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{window.cargarShorts();window.cargarOfertasPublicas();},900));
 })();
 </script>
-
-<script id="uadav-v31-5-media-normalization">
+<script id="uadav-v31-7-public-artist">
 (function(){
-  function fixedCaratula(v){const s=String(v||'').trim();let id='';if(/^[A-Za-z0-9_-]{11}$/.test(s))id=s;else{try{const u=new URL(s);if(u.hostname.includes('youtu.be'))id=u.pathname.split('/').filter(Boolean)[0]||'';else{id=u.searchParams.get('v')||'';if(!id){const p=u.pathname.split('/').filter(Boolean);const i=p.findIndex(x=>['shorts','embed','live'].includes(x));if(i>=0)id=p[i+1]||'';}}}catch{}}return id?`https://i.ytimg.com/vi/${id}/hqdefault.jpg`:'';}
-  window.uadavFixedYouTubeThumb=fixedCaratula;
+ const $=id=>document.getElementById(id);
+ async function loadPublicArtistFromApi(){const p=new URLSearchParams(location.search);const id=p.get('artist');if(!id)return;try{const res=await fetch(API_URL+'public/artista?id='+encodeURIComponent(id));if(!res.ok)return;const a=await res.json();if(typeof abrirArtistHub==='function')abrirArtistHub({...a,titulo:a.nombre});}catch{}}
+ window.openArtistPublic=function(id){location.href='/artista.html?id='+encodeURIComponent(id)};
+ loadPublicArtistFromApi();
 })();
 </script>
-
-<div id="artistEditOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarArtistEdit()"><div class="info-card" role="dialog" aria-modal="true"><button class="info-close" type="button" onclick="cerrarArtistEdit()">✕</button><div class="info-kicker">🔐 Gestión de perfil</div><h2 id="artistEditTitle">Editar mi perfil</h2><p>Los cambios editoriales pueden publicarse; cambios sensibles pueden quedar pendientes de revisión UADAV.</p><div class="form-grid"><div><label>Nombre artístico</label><input id="artistEditName"></div><div><label>Rubro</label><input id="artistEditRubro"></div><div><label>Ciudad</label><input id="artistEditCity"></div><div><label>Email</label><input id="artistEditEmail"></div><div><label>WhatsApp</label><input id="artistEditWhatsapp"></div><div><label>YouTube</label><input id="artistEditYoutube"></div><div class="wide"><label>Foto URL</label><input id="artistEditPhoto"></div><div class="wide"><label>Bio pública UADAV</label><textarea id="artistEditBio" rows="4"></textarea></div><div><label>Live URL</label><input id="artistEditLive"></div><div><label>Booking URL</label><input id="artistEditBooking"></div><div><label>Honorario desde</label><input id="artistEditPrice" placeholder="$"></div><div><label>Disponibilidad</label><input id="artistEditAvailability" placeholder="Eventos · empresas · hoteles..."></div><div><label>Donaciones</label><select id="artistEditDonationActive"><option value="false">No</option><option value="true">Sí</option></select></div><div><label>Link apoyo</label><input id="artistEditDonationUrl"></div></div><button class="btn btn-primary" style="margin-top:14px" onclick="guardarArtistEdit()">Guardar cambios</button><div id="artistEditStatus" class="artist-public-status"></div></div></div>
-<div id="contractOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarContract()"><div class="info-card" role="dialog" aria-modal="true"><button class="info-close" type="button" onclick="cerrarContract()">✕</button><div class="info-kicker">💼 Contratación UADAV</div><h2 id="contractArtistName">Contratar artista</h2><p id="contractNoticePublic">Antes de enviar la solicitud revisá las condiciones de contratación.</p><div class="contract-template-actions"><a id="contractTemplateLink" class="btn btn-secondary" href="#" target="_blank" rel="noopener">📄 Ver / descargar modelo</a></div><div class="form-grid" style="margin-top:14px"><div><label>Nombre / productora</label><input id="contractRequester"></div><div><label>Email</label><input id="contractEmail" type="email"></div><div><label>WhatsApp</label><input id="contractWhatsapp"></div><div><label>Fecha del evento</label><input id="contractDate" type="date"></div><div><label>Ciudad</label><input id="contractCity"></div><div><label>Honorario acordado</label><input id="contractFee" placeholder="$"></div><div class="wide"><label>Detalles</label><textarea id="contractDetails" rows="4"></textarea></div></div><label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px"><input id="contractAck" type="checkbox" style="width:auto;margin-top:4px"><span>Declaro haber leído el modelo de condiciones de contratación y deseo enviar una solicitud formal a UADAV.</span></label><button class="btn btn-primary" style="margin-top:14px" onclick="enviarContratacion()">Enviar solicitud de contratación</button><div id="contractStatus" class="artist-public-status"></div></div></div>
-<div id="premiumOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarPremium()"><div class="info-card" role="dialog" aria-modal="true"><button class="info-close" type="button" onclick="cerrarPremium()">✕</button><div class="info-kicker">🎟 UADAVSTREAM PREMIUM</div><h2>Activar código Premium</h2><p>Ingresá un código para quitar la publicidad propia de UADAVSTREAM durante su vigencia.</p><input id="premiumCodeInput" placeholder="UADAV-P-XXXXXX" style="width:100%"><button class="btn btn-primary" style="margin-top:12px" onclick="activarPremium()">Activar código</button><div id="premiumStatus" class="artist-public-status"></div></div></div>
-<div id="shortViewerOverlay" class="short-viewer-overlay" aria-hidden="true"><button class="short-viewer-close" onclick="cerrarShortViewer()">✕</button><button class="short-viewer-nav up" onclick="moverShort(-1)">⌃</button><div class="short-viewer-stage"><iframe id="shortViewerFrame" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="UADAVSTREAM Short"></iframe><div class="short-viewer-meta"><strong id="shortViewerTitle"></strong><span id="shortViewerArtist"></span></div></div><button class="short-viewer-nav down" onclick="moverShort(1)">⌄</button></div>
 </body>
 </html>
