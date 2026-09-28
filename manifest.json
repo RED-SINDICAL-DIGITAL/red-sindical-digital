@@ -1,24 +1,13 @@
 {
-  "name": "UADAV STREAM - Entretenimiento Global",
-  "short_name": "UADAV",
-  "description": "Plataforma oficial del sindicato de artistas. Señales en vivo, radios, teatros, circos y música 24/7.",
-  "start_url": "/",
+  "name": "UADAVSTREAM",
+  "short_name": "UADAVSTREAM",
+  "description": "Plataforma audiovisual de artistas, radios, eventos y transmisiones.",
+  "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0f0f0f",
-  "theme_color": "#e50914",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "https://uadavstream.com.ar/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://uadavstream.com.ar/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+  "background_color": "#070707",
+  "theme_color": "#070707",
+  "orientation": "any",
+  "lang": "es-AR",
+  "categories": ["entertainment", "music", "video"]
 }
