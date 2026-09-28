@@ -1,62 +1,50 @@
-// ============================================================
-// SERVICE WORKER - UADAV STREAM (Motor de App Nativa y Caché)
-// ============================================================
-
-const CACHE_NAME = 'uadav-cache-v2.0'; // Versión 2.0 (Se actualiza sola cuando cambies cosas)
-
-// Archivos que se guardan en el celular para abrir al instante
-const urlsToCache = [
+const CACHE = 'uadavstream-v31-10-shell';
+const APP_SHELL = [
   '/',
   '/index.html',
+  '/radio.html',
+  '/artista.html',
+  '/gestionar-artista.html',
+  '/sumate-artista.html',
+  '/bolsa-trabajo.html',
+  '/contratar-artista.html',
+  '/mi-uadavstream.html',
   '/manifest.json'
 ];
 
-// 1. INSTALACIÓN: Guarda los archivos base en el celular
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('✅ Cache abierto: Instalando archivos base');
-        return cache.addAll(urlsToCache);
-      })
-      .catch(err => console.log('⚠️ Error cacheando:', err))
+    caches.open(CACHE)
+      .then(cache => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting(); // Fuerza la activación inmediata
 });
 
-// 2. ACTIVACIÓN: Borra cachés viejos para liberar espacio en el celular
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('🗑️ Borrando caché vieja:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim(); // Toma control inmediato de todas las pestañas
 });
 
-// 3. NAVEGACIÓN: Intercepta las peticiones para ahorrar datos
 self.addEventListener('fetch', event => {
-  // No cachear peticiones de la API (siempre deben ser frescas)
-  if (event.request.url.includes('/api/')) {
-    return; 
-  }
+  const request = event.request;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/api/')) return;
 
   event.respondWith(
-    caches.match(event.request)
+    fetch(request)
       .then(response => {
-        // Si está en caché, lo muestra al instante
-        if (response) {
-          return response;
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then(cache => cache.put(request, copy)).catch(() => {});
         }
-        // Si no, lo baja de internet
-        return fetch(event.request);
+        return response;
       })
+      .catch(() => caches.match(request).then(cached => cached || caches.match('/index.html')))
   );
 });
