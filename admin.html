@@ -1,3 +1,4 @@
+<!-- UADAVSTREAM ADMIN V28.14 · Gestión centralizada de Hero rotativo · base V28.13 -->
 <!DOCTYPE html>
 
 <html lang="es">
@@ -614,14 +615,14 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 .session-copy{min-width:0;flex:1}.session-copy strong{display:block;color:#f7fbff;font-size:11px}.session-copy small{display:block;color:#728096;font-size:9px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .session-logout{width:32px;height:32px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#b6c2d2;cursor:pointer}.session-logout:hover{color:#fff;background:rgba(239,68,68,.10);border-color:rgba(239,68,68,.2)}
 /* no floating save button */
-.fab{display:none!important}
+.fab{position:static!important;right:auto!important;bottom:auto!important;margin:18px 0 4px 278px!important;border-radius:14px!important;box-shadow:none!important;width:max-content!important}
 .u27-dashboard{max-width:1180px;margin:0 auto 20px!important}.u27-hero{align-items:center!important;justify-content:center!important;text-align:center!important;min-height:210px!important}.u27-hero:before{content:'★';display:grid;place-items:center;width:68px;height:68px;border-radius:20px;margin-right:14px;background:linear-gradient(135deg,#00e5ff,#8b5cf6);color:#071018;font-size:30px;font-weight:900;box-shadow:0 12px 40px rgba(0,229,255,.14)}.u27-hero>div:first-child{text-align:left}.u27-dashboard .u27-title{font-size:30px}
 @media(max-width:900px){body.admin-v28-logged #panelContent,body.admin-v28-logged .admin-v28-mainbar{margin-left:0!important;width:auto!important}.fab{margin-left:0!important}.admin-v28-sidebar-shell{position:sticky!important;top:8px!important;height:auto!important}}
 /* Comunidad */
 .community-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.community-card{border:1px solid var(--admin-line);background:rgba(255,255,255,.018);border-radius:16px;padding:16px}.community-card h3{margin:0 0 8px;font-size:14px}.community-card p{color:#8290a3;font-size:11px;line-height:1.45;margin:0 0 12px}.community-list{display:grid;gap:8px;margin-top:12px}.community-item{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:9px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(255,255,255,.02)}.community-item-thumb{width:52px;height:52px;border-radius:10px;object-fit:cover;background:#091018}.community-item-main{min-width:0}.community-item-title{font-weight:850;color:#f4f8fb;font-size:11px}.community-item-meta{font-size:9px;color:#718095;margin-top:3px}.community-item-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.community-status{font-size:9px;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.05);color:#9aacbf}.community-status.ok{color:#6de3a0;background:rgba(34,197,94,.08)}.community-status.warn{color:#f7c66d;background:rgba(245,158,11,.08)}
 @media(max-width:760px){.community-grid{grid-template-columns:1fr}}
 </style>
-</head>
+<style id="uadav-v28-13-rights-modal">.admin-rights-modal{position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px)}.admin-rights-dialog{width:min(720px,96vw);max-height:90vh;overflow:auto;background:#0b1017;border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:22px;box-shadow:0 30px 100px rgba(0,0,0,.5)}.admin-rights-close{float:right;border:0;background:rgba(255,255,255,.05);color:#fff;border-radius:10px;width:34px;height:34px;cursor:pointer}.u28-note{min-height:20px;color:#8fa1b6;font-size:12px;margin:10px 0}</style></head>
 <body>
 <div class="container" id="app">
 <!-- ============================================================ -->
@@ -652,7 +653,6 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 <div class="admin-v28-main-actions">
 <button class="btn btn-secondary btn-sm" onclick="adminV28Go('integrationDiagnostics')" type="button"><i class="fa-solid fa-heart-pulse"></i> Estado</button>
 <button class="btn btn-primary btn-sm" onclick="adminV28TryRefresh()" type="button"><i class="fa-solid fa-rotate"></i> Actualizar</button>
-<button class="btn btn-secondary btn-sm" onclick="guardarTodo()" type="button"><i class="fa-solid fa-cloud-arrow-up"></i> Guardar</button>
 </div>
 </div>
 <div class="hidden" id="panelContent">
@@ -887,7 +887,30 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 <div class="form-group"><label>ID / destino</label><input id="heroSpotActionId" placeholder="YouTube ID, ID señal, ID radio o target de sección"/></div>
 <div class="form-group"><label>URL externa (si corresponde)</label><input id="heroSpotActionUrl" placeholder="https://..."/></div>
 </div>
-<small style="display:block;color:var(--text-secondary);margin-top:8px;line-height:1.45">Este bloque funciona como portada editorial de la plataforma. Puede representar un video, una señal en vivo, una radio, un artista, una obra o una sección. No reemplaza las filas: las organiza y les da una entrada visual.</small>
+<small style="display:block;color:var(--text-secondary);margin-top:8px;line-height:1.45">El Hero funciona como portada editorial. Podés tener varios destacados y la Home los rota automáticamente. No reemplaza las filas: las organiza y les da una entrada visual.</small>
+<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-color);">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+    <strong style="color:var(--text-primary);">🎞️ Destacados configurados</strong>
+    <button class="btn btn-secondary btn-sm" type="button" onclick="nuevoHeroSpotlightAdmin()">＋ Nuevo destacado</button>
+  </div>
+  <div id="heroSpotlightAdminList" style="display:grid;gap:8px;"></div>
+  <div id="heroSpotlightAdminStatus" style="margin-top:9px;color:var(--text-secondary);font-size:.8rem;"></div>
+</div>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+  <button class="btn btn-secondary btn-sm" type="button" onclick="guardarHeroSpotlightActual()">💾 Guardar destacado seleccionado</button>
+  <button class="btn btn-secondary btn-sm" type="button" onclick="eliminarHeroSpotlightActual()">🗑️ Eliminar destacado</button>
+</div>
+</div>
+<div style="background:var(--bg-input); border-radius:12px; padding:16px; margin-top:16px; border:1px solid var(--border-color);">
+<h4 style="color:var(--text-primary);font-weight:800;margin-bottom:10px;">🖥️ Experiencia pública</h4>
+<div class="form-row">
+<div class="form-group"><label>Modo</label><select id="publicMode"><option value="platform">Plataforma</option><option value="landing">Landing de presentación</option></select></div>
+<div class="form-group"><label>Densidad</label><select id="publicDensity"><option value="comfortable">Cómoda</option><option value="compact">Compacta</option><option value="cinematic">Cinemática</option></select></div>
+<div class="form-group"><label>Navegación</label><select id="publicNav"><option value="minimal">Minimalista</option><option value="complete">Completa</option></select></div>
+<div class="form-group"><label>Perfil público</label><select id="publicProfile"><option value="true">Mostrar</option><option value="false">Ocultar</option></select></div>
+<div class="form-group"><label>Mi UADAVSTREAM</label><select id="publicAudienceProfile"><option value="true">Mostrar</option><option value="false">Ocultar</option></select></div>
+</div>
 </div>
 <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
 <button class="btn btn-primary" onclick="guardarPersonalizacion()">💾 Guardar Personalización</button>
@@ -1261,7 +1284,6 @@ UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input)
       <div class="form-group"><label>Fecha</label><input id="jobFecha" type="date"/></div>
       <div class="form-group" style="grid-column:1/-1"><label>Descripción</label><textarea id="jobDescripcion" rows="3" placeholder="Qué se busca, condiciones y datos de contacto..."></textarea></div>
       <div class="form-group"><label>Contacto</label><input id="jobContacto" placeholder="WhatsApp / email / URL"/></div>
-      <div class="form-group"><label>Artista asociado (opcional)</label><select id="jobArtistId"><option value="">Búsqueda general</option></select></div>
       <div class="form-group"><label>Publicar</label><select id="jobActivo"><option value="true">Sí</option><option value="false">No</option></select></div>
     </div>
     <button class="btn btn-primary" type="button" onclick="guardarOfertaTrabajo()">💾 Publicar oportunidad</button>
@@ -1269,25 +1291,6 @@ UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input)
     <button class="btn btn-secondary btn-sm" type="button" onclick="cargarOfertasTrabajo()">Actualizar bolsa</button>
   </div>
 </div>
-
-<div class="community-card" style="margin-top:14px">
-  <h3>📄 Contrataciones UADAV</h3>
-  <p>Centraliza solicitudes realizadas desde el perfil del artista. La plataforma obliga a consultar el modelo de condiciones antes de enviar la solicitud.</p>
-  <div class="form-row">
-    <div class="form-group"><label>URL del modelo de contrato</label><input id="contractTemplateUrl" placeholder="https://.../modelo-contrato.pdf"></div>
-    <div class="form-group"><label>Versión / referencia</label><input id="contractTemplateVersion" placeholder="UADAV-CTR-2026-01"></div>
-    <div class="form-group" style="grid-column:1/-1"><label>Aviso de contratación</label><textarea id="contractNotice" rows="3" placeholder="Condiciones generales y pasos previos a contratar..."></textarea></div>
-  </div>
-  <button class="btn btn-primary btn-sm" type="button" onclick="guardarContratacionConfig()">💾 Guardar condiciones</button>
-  <div id="contractsAdminList" class="community-list" style="margin-top:12px"></div>
-  <button class="btn btn-secondary btn-sm" type="button" onclick="cargarContrataciones()">Actualizar contrataciones</button>
-</div>
-</div>
-
-<div class="community-card" style="margin-top:14px">
-<h3>📱 Shorts</h3><p>Publicá Shorts y después aparecerán en el modo vertical de descubrimiento.</p>
-<div class="form-row"><div class="form-group"><label>ID / URL YouTube</label><input id="shortAdminId" placeholder="https://youtu.be/... o ID"></div><div class="form-group"><label>Artista</label><input id="shortAdminArtist" placeholder="Nombre del artista"></div><div class="form-group"><label>Título</label><input id="shortAdminTitle" placeholder="Título del Short"></div><div class="form-group"><label>Miniatura (opcional)</label><input id="shortAdminThumb" placeholder="https://..."></div></div>
-<button class="btn btn-primary btn-sm" type="button" onclick="guardarShortAdmin()">📱 Publicar Short</button><div id="shortsAdminList" class="community-list"></div>
 </div>
 </details>
 
@@ -1311,6 +1314,8 @@ let seccionesData = [];
 let senalesData = [];
 let radiosData = [];
 let footerConfig = {};
+let heroSpotlightsAdmin = [];
+let heroSpotlightAdminIndex = 0;
 let editandoItemIndex = null;
 let resultadosImportPendientesYT = [];
 let webVisibility = {hero:true,search:true,banners:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true,footer:true};
@@ -1554,6 +1559,71 @@ async function guardarBanners(){
   }
 }
 
+function obtenerHeroSpotlightDesdeFormulario(){
+  return {
+    active: document.getElementById('heroSpotActive').value === 'true',
+    category: document.getElementById('heroSpotCategory').value.trim(),
+    kicker: document.getElementById('heroSpotKicker').value.trim(),
+    title: document.getElementById('heroSpotTitle').value.trim(),
+    description: document.getElementById('heroSpotDescription').value.trim(),
+    image: document.getElementById('heroSpotImage').value.trim(),
+    gif_url: document.getElementById('heroSpotGif').value.trim(),
+    icon_url: document.getElementById('heroSpotIcon').value.trim(),
+    action_type: document.getElementById('heroSpotActionType').value,
+    action_id: document.getElementById('heroSpotActionId').value.trim(),
+    action_url: document.getElementById('heroSpotActionUrl').value.trim()
+  };
+}
+function cargarHeroSpotlightEnFormulario(h){
+  const x=h||{};
+  document.getElementById('heroSpotActive').value=String(x.active!==false);
+  document.getElementById('heroSpotCategory').value=x.category||'';
+  document.getElementById('heroSpotKicker').value=x.kicker||'';
+  document.getElementById('heroSpotTitle').value=x.title||'';
+  document.getElementById('heroSpotDescription').value=x.description||'';
+  document.getElementById('heroSpotImage').value=x.image||'';
+  document.getElementById('heroSpotGif').value=x.gif_url||'';
+  document.getElementById('heroSpotIcon').value=x.icon_url||'';
+  document.getElementById('heroSpotActionType').value=x.action_type||'video';
+  document.getElementById('heroSpotActionId').value=x.action_id||'';
+  document.getElementById('heroSpotActionUrl').value=x.action_url||'';
+}
+function renderHeroSpotlightsAdmin(){
+  const box=document.getElementById('heroSpotlightAdminList');if(!box)return;
+  if(!heroSpotlightsAdmin.length){box.innerHTML='<div style="padding:12px;border:1px dashed var(--border-color);border-radius:10px;color:var(--text-secondary);">No hay destacados cargados. Creá el primero con “Nuevo destacado”.</div>';return;}
+  box.innerHTML=heroSpotlightsAdmin.map((h,i)=>{
+    const active=h.active!==false;
+    return `<div style="display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid ${i===heroSpotlightAdminIndex?'var(--accent)':'var(--border-color)'};border-radius:10px;background:${i===heroSpotlightAdminIndex?'rgba(0,229,255,.06)':'rgba(255,255,255,.02)'};">
+      <div style="width:46px;height:32px;border-radius:7px;overflow:hidden;background:#080808;border:1px solid var(--border-color);">${h.image?`<img src="${String(h.image).replace(/"/g,'&quot;')}" alt="" style="width:100%;height:100%;object-fit:cover;">`:'<div style="display:grid;place-items:center;height:100%;font-size:12px;">★</div>'}</div>
+      <div style="min-width:0;"><strong style="display:block;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${String(h.title||'Sin título').replace(/[&<>]/g,'')}</strong><small style="color:var(--text-secondary);">${String(h.category||h.kicker||'UADAVSTREAM').replace(/[&<>]/g,'')} · ${active?'Activo':'Oculto'}</small></div>
+      <button class="btn btn-secondary btn-sm" type="button" onclick="seleccionarHeroSpotlightAdmin(${i})">Editar</button>
+    </div>`;
+  }).join('');
+}
+function seleccionarHeroSpotlightAdmin(i){
+  if(i<0||i>=heroSpotlightsAdmin.length)return;
+  heroSpotlightAdminIndex=i;cargarHeroSpotlightEnFormulario(heroSpotlightsAdmin[i]);renderHeroSpotlightsAdmin();
+  const st=document.getElementById('heroSpotlightAdminStatus');if(st)st.textContent='Editando destacado '+(i+1)+' de '+heroSpotlightsAdmin.length+'.';
+}
+function nuevoHeroSpotlightAdmin(){
+  heroSpotlightsAdmin.push({active:true,category:'UADAVSTREAM',kicker:'UADAVSTREAM recomienda',title:'',description:'',image:'',gif_url:'',icon_url:'',action_type:'video',action_id:'',action_url:''});
+  heroSpotlightAdminIndex=heroSpotlightsAdmin.length-1;cargarHeroSpotlightEnFormulario(heroSpotlightsAdmin[heroSpotlightAdminIndex]);renderHeroSpotlightsAdmin();
+  const st=document.getElementById('heroSpotlightAdminStatus');if(st)st.textContent='Nuevo destacado creado. Completá el formulario y guardalo.';
+}
+function guardarHeroSpotlightActual(){
+  const item=obtenerHeroSpotlightDesdeFormulario();
+  if(!heroSpotlightsAdmin.length)heroSpotlightsAdmin=[item];else heroSpotlightsAdmin[heroSpotlightAdminIndex]=item;
+  renderHeroSpotlightsAdmin();
+  const st=document.getElementById('heroSpotlightAdminStatus');if(st)st.textContent='✅ Destacado actualizado. Recordá guardar la personalización completa.';
+}
+function eliminarHeroSpotlightActual(){
+  if(!heroSpotlightsAdmin.length)return;
+  heroSpotlightsAdmin.splice(heroSpotlightAdminIndex,1);
+  heroSpotlightAdminIndex=Math.max(0,Math.min(heroSpotlightAdminIndex,heroSpotlightsAdmin.length-1));
+  cargarHeroSpotlightEnFormulario(heroSpotlightsAdmin[heroSpotlightAdminIndex]||{});renderHeroSpotlightsAdmin();
+  const st=document.getElementById('heroSpotlightAdminStatus');if(st)st.textContent='Destacado eliminado. Guardá la personalización para confirmar.';
+}
+
 async function cargarPersonalizacion() {
   try {
     const [cfgRes, estadoRes] = await Promise.all([
@@ -1580,21 +1650,13 @@ async function cargarPersonalizacion() {
       document.getElementById('landingSubtitulo').value = config.landing.subtitulo || '';
       document.getElementById('landingFondo').value = config.landing.imagen_fondo || '';
     }
-    if (config.hero_spotlight) {
-      const h=config.hero_spotlight;
-      document.getElementById('heroSpotActive').value=String(h.active!==false);
-      document.getElementById('heroSpotCategory').value=h.category||'';
-      document.getElementById('heroSpotKicker').value=h.kicker||'';
-      document.getElementById('heroSpotTitle').value=h.title||'';
-      document.getElementById('heroSpotDescription').value=h.description||'';
-      document.getElementById('heroSpotImage').value=h.image||'';
-      document.getElementById('heroSpotGif').value=h.gif_url||'';
-      document.getElementById('heroSpotIcon').value=h.icon_url||'';
-      document.getElementById('heroSpotActionType').value=h.action_type||'video';
-      document.getElementById('heroSpotActionId').value=h.action_id||'';
-      document.getElementById('heroSpotActionUrl').value=h.action_url||'';
-    }
+    heroSpotlightsAdmin=Array.isArray(config.hero_spotlights)?config.hero_spotlights.slice():[];
+    if(!heroSpotlightsAdmin.length&&config.hero_spotlight)heroSpotlightsAdmin=[config.hero_spotlight];
+    heroSpotlightAdminIndex=0;
+    cargarHeroSpotlightEnFormulario(heroSpotlightsAdmin[0]||{active:true,category:'UADAVSTREAM',kicker:'UADAVSTREAM recomienda',action_type:'video'});
+    renderHeroSpotlightsAdmin();
 
+    const pe=config.public_experience||{}; document.getElementById('publicMode').value=pe.mode||'platform'; document.getElementById('publicDensity').value=pe.density||'comfortable'; document.getElementById('publicNav').value=pe.nav||'minimal'; document.getElementById('publicProfile').value=String(pe.artist_profile!==false); document.getElementById('publicAudienceProfile').value=String(pe.audience_profile!==false);
     const legacy = config.sitio_en_construccion ? 'mantenimiento' : 'normal';
     const modo = estado.modo || legacy || 'normal';
     document.getElementById('modoMantenimiento').value = ['normal','mantenimiento','landing'].includes(modo) ? modo : 'normal';
@@ -1627,19 +1689,16 @@ async function guardarPersonalizacion() {
       subtitulo: document.getElementById('landingSubtitulo').value,
       imagen_fondo: document.getElementById('landingFondo').value,
     },
-    hero_spotlight: {
-      active: document.getElementById('heroSpotActive').value === 'true',
-      category: document.getElementById('heroSpotCategory').value.trim(),
-      kicker: document.getElementById('heroSpotKicker').value.trim(),
-      title: document.getElementById('heroSpotTitle').value.trim(),
-      description: document.getElementById('heroSpotDescription').value.trim(),
-      image: document.getElementById('heroSpotImage').value.trim(),
-      gif_url: document.getElementById('heroSpotGif').value.trim(),
-      icon_url: document.getElementById('heroSpotIcon').value.trim(),
-      action_type: document.getElementById('heroSpotActionType').value,
-      action_id: document.getElementById('heroSpotActionId').value.trim(),
-      action_url: document.getElementById('heroSpotActionUrl').value.trim()
-    }
+    hero_spotlights: (function(){
+      const current=obtenerHeroSpotlightDesdeFormulario();
+      const arr=Array.isArray(heroSpotlightsAdmin)?heroSpotlightsAdmin.slice():[];
+      if(!arr.length)arr.push(current);else arr[heroSpotlightAdminIndex]=current;
+      return arr;
+    })(),
+    hero_spotlight: (function(){
+      const current=obtenerHeroSpotlightDesdeFormulario();
+      return current;
+    })()
   };
   const estado = {
     modo,
@@ -3108,7 +3167,7 @@ async function u27LoadAudit(){
     const pill=st==='afiliado'?'<span class="artist-pill ok">✓ Afiliado</span>':st==='pendiente'?'<span class="artist-pill warn">Pendiente</span>':st==='catalogo'?'<span class="artist-pill blue">Público</span>':st==='suspendido'||st==='bloqueado'?'<span class="artist-pill bad">'+esc(st)+'</span>':'<span class="artist-pill">Oculto</span>';
     const publicBtn=a.visible===true?`<button class="btn btn-secondary btn-sm" onclick="artistManagerToggleVisibility(${r.sectionIndex},${r.itemIndex},false)">Ocultar</button>`:`<button class="btn btn-secondary btn-sm" onclick="artistManagerToggleVisibility(${r.sectionIndex},${r.itemIndex},true)">Publicar</button>`;
     const verify=st==='afiliado'?'':`<button class="btn btn-primary btn-sm" onclick="artistManagerVerify(${r.sectionIndex},${r.itemIndex})">Verificar</button>`;
-    return `<div class="artist-manager-row"><img class="artist-manager-avatar" src="${esc(img)}" alt="${esc(name)}" onerror="this.src='https://via.placeholder.com/140x140?text=ART'"><div class="artist-manager-main"><div class="artist-manager-name">${esc(name)} ${pill}</div><div class="artist-manager-meta">${esc(a.rubro||'Artista de variedades')} · ${esc(r.sectionName||'Artistas')}${a.canal?' · YouTube conectado':''}</div></div><div class="artist-manager-actions"><button class="btn btn-secondary btn-sm" onclick="artistManagerEdit(${r.sectionIndex},${r.itemIndex})">Editar</button><button class="btn btn-secondary btn-sm" onclick="artistManagerView('${encodeURIComponent(a.canal||a.id||name)}')">Ver perfil</button><button class="btn btn-secondary btn-sm" onclick="artistManagerAccess(${r.sectionIndex},${r.itemIndex})">Acceso</button>${publicBtn}${verify}<button class="btn btn-danger btn-sm" onclick="artistManagerSuspend(${r.sectionIndex},${r.itemIndex})">${st==='suspendido'?'Bloqueado':'Suspender'}</button></div></div>`;
+    return `<div class="artist-manager-row"><img class="artist-manager-avatar" src="${esc(img)}" alt="${esc(name)}" onerror="this.src='https://via.placeholder.com/140x140?text=ART'"><div class="artist-manager-main"><div class="artist-manager-name">${esc(name)} ${pill}</div><div class="artist-manager-meta">${esc(a.rubro||'Artista de variedades')} · ${esc(r.sectionName||'Artistas')}${a.canal?' · YouTube conectado':''}</div></div><div class="artist-manager-actions"><button class="btn btn-secondary btn-sm" onclick="artistManagerEdit(${r.sectionIndex},${r.itemIndex})">Editar</button><button class="btn btn-secondary btn-sm" onclick="artistManagerView('${encodeURIComponent(a.canal||a.id||name)}')">Ver perfil</button><button class="btn btn-secondary btn-sm" onclick="artistManagerRights('${encodeURIComponent(a.id||a.canal||name)}')">Derechos</button>${publicBtn}${verify}<button class="btn btn-danger btn-sm" onclick="artistManagerSuspend(${r.sectionIndex},${r.itemIndex})">${st==='suspendido'?'Bloqueado':'Suspender'}</button></div></div>`;
   }
   function prospectRow(p){
     const name=p.nombre||'Canal por resolver'; const img=p.foto||p.imagen||'https://via.placeholder.com/140x140?text=YT'; const st=p.estado||'prospecto';
@@ -3134,6 +3193,10 @@ async function u27LoadAudit(){
     window.scrollTo({top:0,behavior:'smooth'});
     mostrarToast?.('Perfil cargado en el editor de Secciones','success');
   };
+  A.artistManagerRights=async function(id){try{const d=await u28Fetch('admin/artista-rights?artist_id='+encodeURIComponent(id)); const r=d.rights||{}; let m=document.getElementById('u28RightsModal'); if(!m){m=document.createElement('div');m.id='u28RightsModal';m.className='admin-rights-modal';document.body.appendChild(m);}
+    m.innerHTML='<div class="admin-rights-dialog"><button class="admin-rights-close" type="button">✕</button><div class="admin-v28-nav-title">ARTISTA · DERECHOS Y DOCUMENTACIÓN</div><h3>'+esc(d.artist?.nombre||d.artist?.nombre_artistico||'Artista')+'</h3><div class="form-row"><div class="form-group"><label>SADAIC</label><input id="u28rSadaic"></div><div class="form-group"><label>AADI</label><input id="u28rAadi"></div><div class="form-group"><label>CAPIF</label><input id="u28rCapif"></div><div class="form-group"><label>Estado</label><select id="u28rEstado"><option value="pendiente">Pendiente</option><option value="en_revision">En revisión</option><option value="completo">Completo</option></select></div><div class="form-group" style="grid-column:1/-1"><label>Documentos (URL, uno por línea)</label><textarea id="u28rDocs" rows="4"></textarea></div><div class="form-group" style="grid-column:1/-1"><label>Notas</label><textarea id="u28rNotas" rows="4"></textarea></div></div><div id="u28rStatus" class="u28-note"></div><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-secondary" id="u28rCancel">Cancelar</button><button class="btn btn-primary" id="u28rSave">Guardar</button></div></div>';
+    m.style.display='grid';document.getElementById('u28rSadaic').value=r.sadaic||'';document.getElementById('u28rAadi').value=r.aadi||'';document.getElementById('u28rCapif').value=r.capif||'';document.getElementById('u28rEstado').value=r.estado||'pendiente';document.getElementById('u28rDocs').value=(r.documentos||[]).join('\n');document.getElementById('u28rNotas').value=r.notas||'';const close=()=>m.style.display='none';m.querySelector('.admin-rights-close').onclick=close;document.getElementById('u28rCancel').onclick=close;document.getElementById('u28rSave').onclick=async()=>{try{const body={artist_id:id,sadaic:document.getElementById('u28rSadaic').value,aadi:document.getElementById('u28rAadi').value,capif:document.getElementById('u28rCapif').value,estado:document.getElementById('u28rEstado').value,documentos:document.getElementById('u28rDocs').value.split(/\n+/).map(x=>x.trim()).filter(Boolean),notas:document.getElementById('u28rNotas').value};await u28Write('admin/artista-rights',body);document.getElementById('u28rStatus').textContent='✓ Guardado';setTimeout(close,700)}catch(e){document.getElementById('u28rStatus').textContent=e.message}};
+  }catch(e){mostrarToast('No se pudieron cargar los derechos: '+e.message,'error')}};
   A.artistManagerNewArtist=function(){
     const det=q('sec-secciones');if(det)det.open=true;if(typeof adminV28Go==='function')adminV28Go('sec-secciones');
     const sec=seccionesData.find(s=>s.id==='artistas'); if(sec){const si=seccionesData.indexOf(sec);const sel=q('selectSeccionManual');if(sel){sel.value=String(si);if(typeof actualizarFormularioYLista==='function')actualizarFormularioYLista();}if(typeof limpiarCampos==='function')limpiarCampos();document.getElementById('camposArtista')?.classList.remove('hidden');document.getElementById('tipoContenido')?.setAttribute('value','youtube');}
@@ -3170,30 +3233,7 @@ async function u27LoadAudit(){
   window.guardarOfertaTrabajo=async function(){const data={titulo:$('jobTitulo')?.value.trim(),rubro:$('jobRubro')?.value.trim(),ciudad:$('jobCiudad')?.value.trim(),fecha:$('jobFecha')?.value||'',descripcion:$('jobDescripcion')?.value.trim(),contacto:$('jobContacto')?.value.trim(),activo:$('jobActivo')?.value==='true'};if(!data.titulo||!data.descripcion){mostrarToast('Completá título y descripción','error');return}try{await apiFetch('bolsa_trabajo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});mostrarToast('Oferta publicada','success');['jobTitulo','jobRubro','jobCiudad','jobFecha','jobDescripcion','jobContacto'].forEach(id=>{if($(id))$(id).value=''});await window.cargarOfertasTrabajo();}catch(e){mostrarToast('No se pudo publicar: '+e.message,'error')}};
   window.cargarOfertasTrabajo=async function(){const box=$('jobsAdminList');if(!box)return;try{const list=await apiFetch('bolsa_trabajo');const arr=Array.isArray(list)?list:[];box.innerHTML=arr.length?arr.slice().reverse().map(x=>`<div class="community-item"><div class="community-item-thumb" style="display:grid;place-items:center;font-size:18px">💼</div><div class="community-item-main"><div class="community-item-title">${String(x.titulo||'Oportunidad')}</div><div class="community-item-meta">${String(x.rubro||'')} · ${String(x.ciudad||'')} · ${String(x.fecha||'')}</div></div><div class="community-item-actions"><button class="btn btn-secondary btn-sm" onclick="toggleJob('${String(x.id).replace(/'/g,"\'")}',${x.activo!==false})">${x.activo===false?'Publicar':'Ocultar'}</button></div></div>`).join(''):'<div class="u27-note">No hay ofertas publicadas.</div>';}catch(e){box.innerHTML='<div class="u27-note" style="color:#ff9292">No se pudieron cargar ofertas.</div>';}};
   window.toggleJob=async function(id,current){try{await apiFetch('bolsa_trabajo',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,activo:!current})});await cargarOfertasTrabajo();}catch(e){mostrarToast('No se pudo actualizar la oferta','error')}};
-  window.artistManagerAccess=async function(si,ii){
-    const a=seccionesData?.[si]?.items?.[ii]; if(!a){mostrarToast('Artista no encontrado','error');return;}
-    try{
-      const data=await apiFetch('artistas/access-token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({section_index:si,item_index:ii})});
-      const url=data.edit_url||(`${location.origin}${location.pathname}?artist_edit=`+encodeURIComponent(data.token||''));
-      await navigator.clipboard?.writeText(url).catch(()=>{});
-      prompt('Enlace privado de edición para el artista (guardalo y compartilo de forma segura):',url);
-      mostrarToast('Enlace de edición generado','success');
-    }catch(e){mostrarToast('No se pudo generar el acceso: '+e.message,'error')}
-  };
-  window.guardarContratacionConfig=async function(){
-    const body={template_url:$('contractTemplateUrl')?.value.trim()||'',version:$('contractTemplateVersion')?.value.trim()||'UADAV-CTR-1',notice:$('contractNotice')?.value.trim()||''};
-    try{await apiFetch('contratacion_config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});mostrarToast('Condiciones de contratación guardadas','success');}catch(e){mostrarToast('No se pudo guardar: '+e.message,'error')}
-  };
-  window.cargarContrataciones=async function(){
-    const box=$('contractsAdminList');if(!box)return;
-    try{const list=await apiFetch('contrataciones');box.innerHTML=Array.isArray(list)&&list.length?list.slice().reverse().map(x=>`<div class="community-item"><div class="community-item-thumb" style="display:grid;place-items:center;font-size:18px">📄</div><div class="community-item-main"><div class="community-item-title">${String(x.artist_name||'Artista')} · ${String(x.solicitante_nombre||'Solicitante')}</div><div class="community-item-meta">${String(x.fecha_evento||'')} · ${String(x.ciudad||'')} · ${String(x.estado||'pendiente')} · ${String(x.contract_version||'')}</div></div><div class="community-item-actions"><button class="btn btn-secondary btn-sm" onclick="actualizarContratacion('${String(x.id).replace(/'/g,"\'")}','aceptada')">Aceptar</button><button class="btn btn-danger btn-sm" onclick="actualizarContratacion('${String(x.id).replace(/'/g,"\'")}','rechazada')">Rechazar</button></div></div>`).join(''):'<div class="u27-note">No hay contrataciones.</div>'}catch(e){box.innerHTML='<div class="u27-note" style="color:#ff9292">No se pudieron cargar contrataciones: '+e.message+'</div>';}
-  };
-  window.actualizarContratacion=async function(id,estado){try{await apiFetch('contrataciones',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,estado})});await cargarContrataciones();mostrarToast('Contratación actualizada','success')}catch(e){mostrarToast('No se pudo actualizar: '+e.message,'error')}};
-  async function loadContractConfig(){try{const c=await apiFetch('contratacion_config');if($('contractTemplateUrl'))$('contractTemplateUrl').value=c.template_url||'';if($('contractTemplateVersion'))$('contractTemplateVersion').value=c.version||'';if($('contractNotice'))$('contractNotice').value=c.notice||'';}catch{}}
-  function fillJobArtistSelect(){const s=$('jobArtistId');if(!s)return;s.innerHTML='<option value="">Búsqueda general</option>';try{for(const r of (typeof allArtistRecords==='function'?allArtistRecords():[])){const a=r.item||{};s.insertAdjacentHTML('beforeend',`<option value="${String(a.id||a.canal||a.nombre||'').replace(/"/g,'&quot;')}">${String(a.nombre||a.nombre_artistico||'Artista')} · ${String(a.rubro||'')}</option>`);}}catch{}}
-  const oldGuardarOfertaTrabajo=window.guardarOfertaTrabajo;
-  window.guardarOfertaTrabajo=async function(){const data={titulo:$('jobTitulo')?.value.trim(),rubro:$('jobRubro')?.value.trim(),ciudad:$('jobCiudad')?.value.trim(),fecha:$('jobFecha')?.value||'',descripcion:$('jobDescripcion')?.value.trim(),contacto:$('jobContacto')?.value.trim(),artist_id:$('jobArtistId')?.value||'',activo:$('jobActivo')?.value==='true'};if(!data.titulo||!data.descripcion){mostrarToast('Completá título y descripción','error');return}try{await apiFetch('bolsa_trabajo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});mostrarToast('Oferta publicada','success');['jobTitulo','jobRubro','jobCiudad','jobFecha','jobDescripcion','jobContacto'].forEach(id=>{if($(id))$(id).value=''});if($('jobArtistId'))$('jobArtistId').value='';await window.cargarOfertasTrabajo();}catch(e){mostrarToast('No se pudo publicar: '+e.message,'error')}};
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{loadApps();window.cargarOfertasTrabajo();loadContractConfig();fillJobArtistSelect();cargarContrataciones();},750));
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{loadApps();window.cargarOfertasTrabajo();},700));
 })();
 </script>
 
