@@ -1,0 +1,38 @@
+name = "uadavstream"
+main = "worker.js"
+compatibility_date = "2026-09-28"
+
+# Mantiene KV actual.
+[[kv_namespaces]]
+binding = "UADAV_DB"
+id = "PEGAR_KV_NAMESPACE_ID"
+
+# Nueva base central.
+[[d1_databases]]
+binding = "DB"
+database_name = "uadavstream"
+database_id = "PEGAR_D1_DATABASE_ID"
+
+# Secrets en Cloudflare Workers:
+# ADMIN_KEY
+# YOUTUBE_API_KEY
+# GEMINI_API_KEY
+# GROQ_API_KEY
+# EMAIL_AUTOMATION_URL   (Google Apps Script Web App)
+# EMAIL_AUTOMATION_SECRET
+# GEMINI_MODEL (opcional, default gemini-2.5-flash-lite)
+# GROQ_MODEL (opcional, fallback)
+
+# Cola opcional para notificaciones
+# Queue opcional: si no creás la cola todavía, el Worker usa D1 + Cron para reintentar notificaciones.
+# [[queues.producers]]
+# binding = "UADAV_NOTIFY"
+# queue = "uadavstream-notify"
+#
+# [[queues.consumers]]
+# queue = "uadavstream-notify"
+# max_batch_size = 20
+# max_batch_timeout = 10
+
+[triggers]
+crons = ["*/10 * * * *"]

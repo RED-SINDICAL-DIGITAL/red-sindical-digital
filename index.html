@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>UADAVSTREAM — Plataforma de artistas, entretenimiento y cultura</title>
+  <title>★ UADAV STREAM — Plataforma de artistas, entretenimiento y cultura</title>
   <meta name="description" content="UADAVSTREAM: descubrí artistas, videos, espectáculos, transmisiones y cartelera de variedades.">
   <meta name="theme-color" content="#070707">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="UADAVSTREAM — Arte, entretenimiento y artistas">
+  <meta property="og:title" content="★ UADAV STREAM — Arte, entretenimiento y artistas">
   <meta property="og:description" content="Descubrí artistas, videos, espectáculos, transmisiones y cartelera.">
   <meta property="og:image" content="https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj">
   <link rel="manifest" href="/manifest.json">
@@ -531,6 +531,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     };
     makeFocusable();
     new MutationObserver(makeFocusable).observe(document.body,{subtree:true,childList:true});
+    document.addEventListener('DOMContentLoaded',()=>{
+      $('radioPlayerToggle')?.addEventListener('click',()=>{const a=$('radioAudio');if(!a)return;if(a.paused)a.play().catch(()=>{});else pausarRadio()});$('radioPlayerClose')?.addEventListener('click',()=>pausarRadio());$('radioPlayerDiscover')?.addEventListener('click',()=>{const r=currentRadiosCache.find(x=>String(x.stream_url||x.url||'')===String(activeRadio||''));const st=r?radioTrackState.get(r.nombre||r.stream_url||''):null;if(r&&st)descubrirTemaRadio(r,st)});$('radioPlayerVolume')?.addEventListener('input',e=>{const a=$('radioAudio');if(a)a.volume=Number(e.target.value)});$('radioAudio')?.addEventListener('play',()=>{if($('radioPlayerToggle'))$('radioPlayerToggle').textContent='❚❚';if($('radioPlayerStatus'))$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>REPRODUCIENDO'});$('radioAudio')?.addEventListener('pause',()=>{if($('radioPlayerToggle'))$('radioPlayerToggle').textContent='▶';if($('radioPlayerStatus'))$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>PAUSADO'});
+    });
     document.addEventListener('keydown',e=>{
       if(!document.body.classList.contains('uadav-tv-mode'))return;
       const active=document.activeElement;
@@ -565,6 +568,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   }catch(err){console.warn('TV navigation init',err)}
 });
 </script>
+<style id="uadav-radio-pro-v31-11">.radio-player-pro{margin:0 28px 0;display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;border:1px solid rgba(0,229,255,.15);border-radius:22px;background:linear-gradient(180deg,rgba(14,21,30,.97),rgba(8,13,19,.96));box-shadow:0 20px 55px rgba(0,0,0,.28);backdrop-filter:blur(18px)}.radio-player-cover{width:92px;height:92px;border-radius:16px;object-fit:cover;background:#0e141c;border:1px solid rgba(255,255,255,.08)}.radio-player-main{min-width:0}.radio-player-kicker{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#79e8f4;font-weight:900}.radio-player-title{font-size:20px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px}.radio-player-artist{font-size:12px;color:#8ea1b6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.radio-player-status{display:flex;align-items:center;gap:7px;color:#7de8b0;font-size:10px;font-weight:800;margin-top:9px}.radio-player-actions{display:flex;gap:8px;align-items:center}.radio-player-btn{min-width:44px;height:44px;padding:0 13px;border-radius:999px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-weight:900}.radio-player-btn.primary{background:#fff;color:#061018;border-color:#fff}.radio-player-volume{width:100px}@media(max-width:700px){.radio-player-pro{grid-template-columns:60px minmax(0,1fr);margin:0 14px;padding:11px}.radio-player-cover{width:60px;height:60px}.radio-player-actions{grid-column:1/-1}.radio-player-volume{display:none}.radio-player-btn{flex:1}.radio-player-title{font-size:16px}}</style><style id="uadav-search-v31-11">.search-catalog-toolbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 0 8px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:4px}.search-catalog-title{font-size:22px;font-weight:900}.search-catalog-sub{font-size:11px;color:var(--muted);margin-top:3px}.search-catalog-filters{display:flex;gap:7px;flex-wrap:wrap}.search-catalog-filter{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#b7c4d3;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:800;cursor:pointer}.search-catalog-filter.active{background:#fff;color:#061018;border-color:#fff}.search-catalog-count{opacity:.68;margin-left:4px}.search-filter-hidden{display:none!important}</style><link rel="stylesheet" href="/uadav-design-v7.2.css">
+<script src="/uadav-brand-v7.2.js" defer></script>
 </head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
@@ -572,17 +577,17 @@ document.addEventListener('DOMContentLoaded',()=>{
       <div style="font-size:44px;margin-bottom:16px">🔧</div>
       <h1 id="maintenanceTitle">UADAVSTREAM</h1>
       <p id="maintenanceMessage">Estamos realizando tareas de actualización. Volvemos enseguida.</p>
-      <div style="margin-top:24px;font-size:12px;color:#707078">UADAVSTREAM · Plataforma audiovisual</div>
+      <div style="margin-top:24px;font-size:12px;color:#707078">★ UADAV STREAM · Plataforma audiovisual</div>
     </div>
   </div>
   <header class="nav" id="nav">
-    <a class="brand" href="#top" aria-label="UADAVSTREAM inicio"><span class="brand-mark"><img id="brandLogo" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px"><i id="brandLogoFallback" class="fa-solid fa-play"></i></span><span id="brandName">UADAVSTREAM</span></a>
+    <a class="brand" href="#top" aria-label="UADAVSTREAM inicio"><span class="brand-mark"><img id="brandLogo" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px"><i id="brandLogoFallback" class="fa-solid fa-star"></i></span><span id="brandName">UADAV STREAM</span></a>
     <nav class="nav-links" aria-label="Navegación principal">
-      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#radiosRow" id="navRadiosLink" onclick="irASeccion('radiosRow');return false">Radios</a><a href="#artists" id="navArtistsLink" onclick="irASeccion('artists');return false">Artistas</a><a href="#en-vivo" id="navLiveLink" onclick="irASeccion('en-vivo');return false">En vivo</a><a href="#cartelera" id="navCarteleraLink" onclick="irASeccion('cartelera');return false">Cartelera</a><span id="dynamicSectionsNav" class="dynamic-sections-nav" aria-label="Secciones"></span>
+      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#radiosRow" id="navRadiosLink" onclick="irASeccion('radiosRow');return false">Radios</a><a href="#artists" id="navArtistsLink" onclick="irASeccion('artists');return false">Artistas</a><a href="#liveRow" id="navLiveLink" onclick="irASeccion('liveRow');return false">En vivo</a><a href="/cartelera.html" id="navCarteleraLink">Cartelera</a><span id="dynamicSectionsNav" class="dynamic-sections-nav" aria-label="Secciones"></span>
     </nav>
     <div class="nav-actions">
       <div class="nav-search"><i class="fa-solid fa-magnifying-glass"></i><input id="navSearchInput" aria-label="Buscar" placeholder="Buscar..." onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button aria-label="Buscar" onclick="ejecutarBusqueda(document.getElementById('navSearchInput').value)"><i class="fa-solid fa-arrow-right"></i></button></div>
-      <button class="nav-icon" title="Buscar" onclick="document.getElementById('searchInput').focus()"><i class="fa-solid fa-magnifying-glass"></i></button><a class="nav-icon" id="navAudienceProfile" title="Mi UADAVSTREAM" href="/mi-uadavstream.html"><i class="fa-solid fa-user"></i></a>
+      <button class="nav-icon" title="Buscar" onclick="document.getElementById('searchInput').focus()"><i class="fa-solid fa-magnifying-glass"></i></button><a class="nav-icon" id="navAudienceProfile" title="Mi perfil" href="/mi-perfil.html"><i class="fa-solid fa-user"></i></a>
     </div>
   </header>
 
@@ -656,11 +661,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   </div>
 </div>
 
-      <div class="row" id="artists"><div class="row-head"><div><div class="row-title">🎭 Artistas</div><div class="row-subtitle">Conocé a quienes hacen posible el espectáculo</div></div><button class="row-more" onclick="cargarArtistas(true)">Ver todos</button></div><div class="rail" id="artistsRail"></div></div>
+      <div class="row" id="artists"><div class="row-head"><div><div class="row-title">🎭 Artistas</div><div class="row-subtitle">Conocé a quienes hacen posible el espectáculo</div></div><a class="row-more" href="/artistas.html">Ver todos</a></div><div class="rail" id="artistsRail"></div></div>
       <div class="row" id="shortsRow"><div class="row-head"><div><div class="row-title">📱 Shorts</div><div class="row-subtitle">Descubrí artistas en formato vertical</div></div><button class="row-more" type="button" onclick="cargarShorts(true)">Actualizar</button></div><div class="rail" id="shortsRail"></div></div>
       <div class="row" id="jobsRow"><div class="row-head"><div><div class="row-title">💼 Bolsa de Trabajo</div><div class="row-subtitle">Oportunidades para artistas y productores</div></div><button class="row-more" type="button" onclick="cargarOfertasPublicas(true)">Actualizar</button></div><div class="rail" id="jobsRail"></div></div>
 
-      <div class="row" id="cartelera"><div class="row-head"><div><div class="row-title">📅 Cartelera</div><div class="row-subtitle">Próximos espectáculos y eventos</div></div></div><div class="rail" id="eventsRail"></div></div>
+      <div class="row" id="cartelera"><div class="row-head"><div><div class="row-title">📅 Cartelera</div><div class="row-subtitle">Próximos espectáculos y eventos</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="row-more" href="/cartelera.html">Ver cartelera completa</a><a class="row-more" href="/publicar-evento.html">Publicá tu evento</a></div></div><div class="rail" id="eventsRail"></div></div>
       <div class="row" id="discoverRow"><div class="row-head"><div><div class="row-title">🎬 Más para descubrir</div><div class="row-subtitle">Explorá contenido por temática</div></div></div><div class="rail" id="discoverRail"></div></div>
     </section>
 
@@ -700,10 +705,10 @@ document.addEventListener('DOMContentLoaded',()=>{
       </div>
       <div class="footer-links" id="footerLinks"></div>
     </div>
-    <div class="footer-bottom"><div id="footerCopyright">© <span id="footerYear"></span> UADAVSTREAM · Todos los derechos reservados.</div><div class="footer-legal" id="footerLegal"><a id="footerPrivacy" href="/privacidad.html" hidden>Privacidad</a><a id="footerTerms" href="/terminos.html" hidden>Términos</a></div></div>
+    <div class="footer-bottom"><div id="footerCopyright">© <span id="footerYear"></span> ★ UADAV STREAM · Todos los derechos reservados.</div><div class="footer-legal" id="footerLegal"><a id="footerPrivacy" href="/privacidad.html" hidden>Privacidad</a><a id="footerTerms" href="/terminos.html" hidden>Términos</a></div></div>
   </footer>
 
-  <audio id="radioAudio" preload="none"></audio>
+  <div id="radioPlayerDock" class="radio-player-pro" hidden><img id="radioPlayerCover" class="radio-player-cover" src="" alt=""><div class="radio-player-main"><div class="radio-player-kicker">RADIO ★ UADAV STREAM · AHORA SUENA</div><div id="radioPlayerTitle" class="radio-player-title">Radio en vivo</div><div id="radioPlayerArtist" class="radio-player-artist">Seleccioná una radio</div><div id="radioPlayerStatus" class="radio-player-status"><span class="live-dot"></span>LISTO</div></div><div class="radio-player-actions"><input id="radioPlayerVolume" class="radio-player-volume" type="range" min="0" max="1" step="0.05" value="1"><button id="radioPlayerDiscover" class="radio-player-btn" type="button">⌕</button><button id="radioPlayerToggle" class="radio-player-btn primary" type="button">▶</button><button id="radioPlayerClose" class="radio-player-btn" type="button">✕</button></div></div><audio id="radioAudio" preload="none"></audio>
   <div id="artistHubOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarArtistHub()"><div class="info-card" role="dialog" aria-modal="true"><button class="info-close" type="button" onclick="cerrarArtistHub()" aria-label="Cerrar">✕</button><div class="artist-profile-grid"><img id="artistHubMedia" class="artist-profile-avatar" src="" alt=""><div class="artist-profile-content"><div class="info-kicker" id="artistHubKicker">🎭 Artista UADAVSTREAM</div><h2 id="artistHubTitle">Artista</h2><p id="artistHubBio">Perfil artístico</p><div id="artistHubBadges" class="radio-hub-socials"></div><div id="artistHubActions" class="hero-actions"></div></div></div><div class="artist-profile-title">Contenido del artista</div><div id="artistHubContent" class="artist-profile-rail"></div></div></div>
 
   <div id="infoOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarInfoOverlay()">
@@ -741,7 +746,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const STORAGE_KEY = 'uadavstream_discovery_v1';
     let config = {};
     let footerConfigPublic = {};
-    function renderDynamicFooterLinks(){ const box=$('footerLinks'); if(!box)return; const base=(footerConfigPublic?.links||[]); const defaults=[{label:'Explorar',url:'/index.html'},{label:'Artistas',url:'#artists'},{label:'Cartelera',url:'#cartelera'},{label:'Sumate como artista',url:'/sumate-artista.html'},{label:'Bolsa de trabajo',url:'/bolsa-trabajo.html'}]; const links=base.length?base:defaults; if(footerConfigPublic?.mostrar_links===false){box.innerHTML='';return;} box.innerHTML=links.filter(x=>x&&x.visible!==false).map(x=>{const u=String(x.url||'#');const onclick=u==='#artists'?" onclick=\"irASeccion('artists');return false\"":'';return '<a href=\"'+safe(u)+'\"'+onclick+'>'+safe(x.label||'Enlace')+'</a>'}).join(''); }
+    function renderDynamicFooterLinks(){ const box=$('footerLinks'); if(!box)return; const base=(footerConfigPublic?.links||[]); const defaults=[{label:'Explorar',url:'/index.html'},{label:'Artistas',url:'#artists'},{label:'Cartelera',url:'/cartelera.html'},{label:'Sumate como artista',url:'/sumate-artista.html'},{label:'Bolsa de trabajo',url:'/bolsa-trabajo.html'}]; const links=base.length?base:defaults; if(footerConfigPublic?.mostrar_links===false){box.innerHTML='';return;} box.innerHTML=links.filter(x=>x&&x.visible!==false).map(x=>{const u=String(x.url||'#');const onclick=u==='#artists'?" onclick=\"irASeccion('artists');return false\"":'';return '<a href=\"'+safe(u)+'\"'+onclick+'>'+safe(x.label||'Enlace')+'</a>'}).join(''); }
     let allVideos = [];
     let allArtists = [];
     let webVisibility = {hero:true,search:true,banners:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,shorts:true,jobs:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true,footer:true};
@@ -952,7 +957,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       const logo=$('footerLogo'); if(logo){if(cfg.logo_url){logo.src=cfg.logo_url;logo.style.display='block'}else{logo.removeAttribute('src');logo.style.display='none'}}
       const socials=$('footerSocials'); if(socials){socials.innerHTML=''; const links=[['instagram',cfg.instagram,'fa-instagram'],['facebook',cfg.facebook,'fa-facebook-f'],['twitter',cfg.twitter,'fa-x-twitter'],['youtube',cfg.youtube,'fa-youtube'],['tiktok',cfg.tiktok,'fa-tiktok']]; if(cfg.mostrar_redes!==false){for(const [key,url,icon] of links){if(url) socials.innerHTML+=`<a href="${String(url).replace(/"/g,'%22')}" target="_blank" rel="noopener" aria-label="${key}"><i class="fa-brands ${icon}"></i></a>`} const wa=normalizarWhatsApp(cfg.whatsapp||cfg.whatsapp_url||cfg.whatsapp_texto); if(wa)socials.innerHTML+=`<a href="${wa}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`; } socials.hidden=cfg.mostrar_redes===false || !socials.innerHTML;}
       const linksBox=$('footerLinks'); if(linksBox)linksBox.hidden=cfg.mostrar_links===false;
-      const copy=$('footerCopyright'); if(copy)copy.textContent=cfg.copyright||('© '+new Date().getFullYear()+' UADAVSTREAM · Todos los derechos reservados.');
+      const copy=$('footerCopyright'); if(copy)copy.textContent=cfg.copyright||('© '+new Date().getFullYear()+' ★ UADAV STREAM · Todos los derechos reservados.');
       const legalOn=cfg.mostrar_legales!==false;
       const privacy=$('footerPrivacy'),terms=$('footerTerms');
       if(privacy){privacy.href=cfg.privacy_url||'/privacidad.html';privacy.hidden=!legalOn;}
@@ -1556,6 +1561,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       if($('radioNowArtist'))$('radioNowArtist').textContent=artist||'En vivo';
       if($('radioNowArt'))$('radioNowArt').src=art;
       if($('radioNowDiscover'))$('radioNowDiscover').onclick=()=>descubrirTemaRadio(r,{title,artist,artwork:art});
+      const dock=$('radioPlayerDock');if(dock){dock.hidden=false;$('radioPlayerCover').src=art;$('radioPlayerTitle').textContent=title;$('radioPlayerArtist').textContent=artist||r.nombre||'Radio en vivo';}
       const cards=[...document.querySelectorAll('.radio-card')],idx=cards.findIndex(c=>c.dataset.radioName===String(r.nombre||''));
       if(idx>=0){
         const card=cards[idx];card.classList.add('is-active');
@@ -1572,10 +1578,12 @@ document.addEventListener('DOMContentLoaded',()=>{
       if(selectedRadioHub && obtenerRadioHubId(selectedRadioHub)===obtenerRadioHubId(r)) renderRadioHub(r);
     }
     function parseRadioTitle(meta,r){
-      const raw=String(meta?.streamTitle||meta?.title||'').trim();
-      let title=raw,artist=String(meta?.artist||'').trim();
+      const src=meta?.data||meta?.metadata||meta?.now_playing||meta||{};
+      const raw=String(src?.streamTitle||src?.title||src?.song||src?.track||src?.songtitle||src?.currentSong||'').trim();
+      let title=raw,artist=String(src?.artist||src?.author||src?.artistName||src?.artist_name||'').trim();
       if(!artist && raw.includes(' - ')){const p=raw.split(' - ');artist=p.shift().trim();title=p.join(' - ').trim();}
-      return {title:title||r.nombre||'Radio en vivo',artist};
+      const artwork=String(src?.artwork||src?.cover||src?.album_art||src?.image||'').trim();
+      return {title:title||r.nombre||'Radio en vivo',artist,artwork};
     }
     function deezerJsonp(url, timeoutMs=6500){
       return new Promise((resolve,reject)=>{
@@ -1626,7 +1634,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       const metaUrl=normalizarMetaUrl(r);
       const applyMeta=async(raw)=>{
         const parsed=parseRadioTitle(raw,r);
-        const art=await buscarCaratulaTema(parsed.artist,parsed.title,r.logo||r.imagen||FALLBACK_THUMB);
+        const art=parsed.artwork||await buscarCaratulaTema(parsed.artist,parsed.title,r.logo||r.imagen||FALLBACK_THUMB);
         setRadioMediaMetadata(r,{title:parsed.title,artist:parsed.artist,artwork:art});
       };
       if(!metaUrl){setRadioMediaMetadata(r,{title:'Radio en vivo',artist:'',artwork:r.logo||r.imagen||FALLBACK_THUMB});return}
@@ -1743,7 +1751,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       document.querySelectorAll('.radio-card').forEach(c=>c.classList.remove('is-active'));
       document.querySelectorAll('.radio-play').forEach(b=>{b.innerHTML='<i class="fa-solid fa-play"></i>';b.setAttribute('aria-label','Reproducir radio')});
       if('mediaSession'in navigator){try{navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState='none'}catch{}}
-      const now=$('radioNowPlaying');if(now)now.hidden=true;
+      const now=$('radioNowPlaying');if(now)now.hidden=true;const dock=$('radioPlayerDock');if(dock)dock.hidden=true;
       renderRadiosPublicos(currentRadiosCache);
       const latest=currentRadiosCache.find(r=>getRadioHistoryFor(r).length);
       if(latest)renderRadioHistory(latest);
@@ -1762,9 +1770,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       activeRadio=url;
       const cards=[...document.querySelectorAll('.radio-card')],idx=cards.findIndex(c=>c.dataset.radioName===String(r.nombre||''));
       if(idx>=0){cards[idx].classList.add('is-active');const btn=cards[idx].querySelector('.radio-play');if(btn)btn.innerHTML='<i class="fa-solid fa-pause"></i>'}
-      if($('radioNowPause'))$('radioNowPause').onclick=()=>pausarRadio();
-      renderRadioHistory(r);
-      iniciarRadioMetadata(r);
+      if($('radioNowPause'))$('radioNowPause').onclick=()=>pausarRadio();const dock=$('radioPlayerDock');if(dock){dock.hidden=false;$('radioPlayerToggle').textContent='❚❚';$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>REPRODUCIENDO';}renderRadioHistory(r);iniciarRadioMetadata(r);
     }
     async function cargarArtistas(){
       let base=[];
@@ -1845,10 +1851,19 @@ document.addEventListener('DOMContentLoaded',()=>{
       if(!Array.isArray(data))data=[];
       const items=data.filter(x=>x&&x.estado!=='cancelado').slice(0,18).map(e=>{
         const yt=normalizarIdYoutube(e.youtube_id||e.youtube||e.video_id||e.videoUrl||e.url_video);
-        return {id:yt||('event-'+String(e.id||Date.now())),titulo:e.titulo||e.nombre||'Evento',descripcion:[e.fecha,e.lugar].filter(Boolean).join(' · ')||e.descripcion||'Próximo espectáculo',thumbnail:e.imagen||e.poster||(yt?obtenerCaratula(yt):FALLBACK_THUMB),categoria:'Evento',eventData:e};
+        return {id:yt||('event-'+String(e.id||Date.now())),titulo:e.titulo||e.nombre||'Evento',descripcion:[e.fecha,e.lugar,e.ciudad].filter(Boolean).join(' · ')||e.descripcion||'Próximo espectáculo',thumbnail:e.imagen||e.poster||(yt?obtenerCaratula(yt):FALLBACK_THUMB),categoria:'Evento',eventData:e,isEvent:true};
       });
-      const row=$('cartelera');if(row)row.hidden=!items.length;
-      if(items.length)renderRail('eventsRail',items);else if($('eventsRail'))$('eventsRail').innerHTML='';
+      const row=$('cartelera');if(row)row.hidden=!items.length; const rail=$('eventsRail');if(!rail)return;
+      if(!items.length){rail.innerHTML='';return}
+      rail.innerHTML=items.map((v,i)=>`<article class="card event-card-v31" data-event-index="${i}" style="cursor:pointer"><div class="card-media"><img class="thumb" src="${safe(v.thumbnail)}" alt="${safe(v.titulo)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">${v.eventData?.destacado_pagado?'<span class="badge live">★ DESTACADO</span>':''}</div><div class="card-body"><div class="card-title">${safe(v.titulo)}</div><div class="card-meta">${safe(v.descripcion)}</div></div></article>`).join('');
+      rail.querySelectorAll('.event-card-v31').forEach((el,i)=>el.addEventListener('click',()=>abrirEventoDetalle(items[i]?.eventData||{})));
+      const paid=data.filter(e=>e&&e.destacado_pagado===true&&e.estado!=='cancelado').slice(0,5);
+      if(paid.length){const additions=paid.map(e=>({active:true,category:'★ EVENTO DESTACADO',kicker:'CARTELERA UADAVSTREAM',title:e.titulo||e.nombre||'Evento destacado',description:e.descripcion||[e.fecha,e.lugar].filter(Boolean).join(' · '),image:e.imagen||e.poster||'',action_type:'url',action_url:'/evento.html?id='+encodeURIComponent(e.id||''),evento_id:e.id}));const existingIds=new Set(heroSpotlights.map(h=>h.evento_id).filter(Boolean));heroSpotlights=[...additions.filter(h=>!existingIds.has(h.evento_id)),...heroSpotlights];heroSpotlightIndex=Math.min(heroSpotlightIndex,heroSpotlights.length-1);renderHeroEditorial();aplicarHeroSpotlight();reiniciarHeroTimer()}
+    }
+    function abrirEventoDetalle(e){
+      $('infoKicker').textContent='📅 CARTELERA UADAVSTREAM';$('infoTitle').textContent=e.titulo||e.nombre||'Evento';$('infoDescription').textContent=[e.fecha,e.lugar,e.ciudad,e.precio?('Entrada: '+e.precio):'',e.descripcion].filter(Boolean).join('\n\n')||'Información del evento.';
+      const img=$('infoMedia'),src=e.imagen||e.poster||'';if(src){img.src=src;img.classList.add('has-media')}else{img.removeAttribute('src');img.classList.remove('has-media')}
+      const b=$('infoPlayBtn');b.textContent='🎟 Ver entradas / información';b.onclick=()=>{if(e.link_compra)window.open(e.link_compra,'_blank','noopener');else cerrarInfoOverlay()};$('infoOverlay').classList.add('active');$('infoOverlay').setAttribute('aria-hidden','false');
     }
 
     async function cargarLive(){
@@ -1946,11 +1961,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
     function pintarResultadosCatalogo(q,videos,artists,radios){
       const rail=$('resultsRail');if(!rail)return;
+      const total=artists.length+radios.length+videos.length;
       const groups=[];
-      if(artists.length)groups.push(`<section class="search-group"><h3>🎭 Artistas</h3><div class="search-group-sub">Perfiles encontrados en UADAVSTREAM</div><div class="search-group-grid">${artists.slice(0,8).map(x=>construirEntidadBusqueda('artist',x)).join('')}</div></section>`);
-      if(radios.length)groups.push(`<section class="search-group"><h3>📻 Radios</h3><div class="search-group-sub">Emisoras disponibles para escuchar ahora</div><div class="search-group-grid">${radios.slice(0,8).map(x=>construirEntidadBusqueda('radio',x)).join('')}</div></section>`);
-      if(videos.length)groups.push(`<section class="search-group"><h3>🎬 Videos</h3><div class="search-group-sub">Resultados de video encontrados en las fuentes disponibles</div><div id="searchVideosRail" class="search-group-grid"></div></section>`);
-      rail.innerHTML=groups.length?groups.join(''):`<div class="search-results-empty"><div style="font-size:30px;margin-bottom:8px">🔎</div><div style="font-weight:800;color:#fff">No encontramos resultados</div><div style="margin-top:6px">Probamos el catálogo de UADAVSTREAM y las fuentes de video disponibles.</div><button class="row-more" style="margin-top:12px" onclick="ejecutarBusqueda(document.getElementById('searchInput').value)">Reintentar</button></div>`;
+      groups.push(`<div class="search-catalog-toolbar"><div><div class="search-catalog-title">Resultados para “${safe(q)}”</div><div class="search-catalog-sub">Catálogo UADAVSTREAM + fuentes de video disponibles</div></div><div class="search-catalog-filters"><button class="search-catalog-filter active" data-filter="all">Todos <span class="search-catalog-count">${total}</span></button><button class="search-catalog-filter" data-filter="video">Videos <span class="search-catalog-count">${videos.length}</span></button><button class="search-catalog-filter" data-filter="artist">Artistas <span class="search-catalog-count">${artists.length}</span></button><button class="search-catalog-filter" data-filter="radio">Radios <span class="search-catalog-count">${radios.length}</span></button></div></div>`);
+      if(artists.length)groups.push(`<section class="search-group" data-search-group="artist"><h3>🎭 Artistas</h3><div class="search-group-sub">Perfiles encontrados en UADAVSTREAM</div><div class="search-group-grid">${artists.slice(0,8).map(x=>construirEntidadBusqueda('artist',x)).join('')}</div></section>`);
+      if(radios.length)groups.push(`<section class="search-group" data-search-group="radio"><h3>📻 Radios</h3><div class="search-group-sub">Emisoras disponibles para escuchar ahora</div><div class="search-group-grid">${radios.slice(0,8).map(x=>construirEntidadBusqueda('radio',x)).join('')}</div></section>`);
+      if(videos.length)groups.push(`<section class="search-group" data-search-group="video"><h3>🎬 Videos</h3><div class="search-group-sub">Resultados de video encontrados en las fuentes disponibles</div><div id="searchVideosRail" class="search-group-grid"></div></section>`);
+      rail.innerHTML=groups.length>1?groups.join(''):`<div class="search-results-empty"><div style="font-size:30px;margin-bottom:8px">🔎</div><div style="font-weight:800;color:#fff">No encontramos resultados</div><div style="margin-top:6px">Probamos el catálogo de UADAVSTREAM y las fuentes de video disponibles.</div><button class="row-more" style="margin-top:12px" onclick="ejecutarBusqueda(document.getElementById('searchInput').value)">Reintentar</button></div>`;
+      rail.querySelectorAll('.search-catalog-filter').forEach(btn=>btn.addEventListener('click',()=>filtrarResultadosCatalogo(btn.dataset.filter)));
+
       const videoRail=$('searchVideosRail');
       if(videoRail){videoRail.innerHTML=videos.map(v=>cardHTML(v,false)).join('');bindCards(videoRail,videos);}
       rail.querySelectorAll('[data-search-entity]').forEach(el=>el.addEventListener('click',()=>{
@@ -1960,6 +1979,10 @@ document.addEventListener('DOMContentLoaded',()=>{
       }));
     }
 
+    function filtrarResultadosCatalogo(filter){
+      document.querySelectorAll('.search-catalog-filter').forEach(b=>b.classList.toggle('active',b.dataset.filter===filter));
+      document.querySelectorAll('#resultsRail [data-search-group]').forEach(g=>{g.classList.toggle('search-filter-hidden',filter!=='all'&&g.dataset.searchGroup!==filter)});
+    }
     async function ejecutarBusqueda(value){
       const q=String(value||'').trim();
       if(!q){volverInicio();return;}
@@ -1989,13 +2012,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
     function irASeccion(id){
       const el=$(id);if(!el)return;
-      // No cierres los resultados cuando precisamente estamos navegando hacia ellos.
-      if(id!=='resultsRow' && $('resultsRow') && !$('resultsRow').hidden) volverInicio();
-      setTimeout(()=>{
-        const offset=(document.getElementById('nav')?.offsetHeight||70)+12;
-        const y=window.scrollY+el.getBoundingClientRect().top-offset;
-        window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
-      },60);
+      const hadResults=id!=='resultsRow'&&$('resultsRow')&&!$('resultsRow').hidden;
+      if(hadResults)cerrarResultadosSinScroll();
+      setTimeout(()=>{const offset=(document.getElementById('nav')?.offsetHeight||70)+18;const y=window.scrollY+el.getBoundingClientRect().top-offset;window.scrollTo({top:Math.max(0,y),behavior:'smooth'});},hadResults?120:20);
+    }
+    function cerrarResultadosSinScroll(){
+      if($('resultsRow'))$('resultsRow').hidden=true;if($('featuredRow'))$('featuredRow').hidden=false;if($('heroEditorialRow'))$('heroEditorialRow').hidden=heroSpotlights.length<3;['liveRow','radiosRow','artists','cartelera','shortsRow','jobsRow','discoverRow','recommendedRow'].forEach(id=>{if($(id))$(id).hidden=false});renderContinue();renderSaved();renderRecommendations().catch(()=>{});if($('searchStatus'))$('searchStatus').textContent='';if($('searchInput'))$('searchInput').value='';if($('navSearchInput'))$('navSearchInput').value='';
     }
     function volverInicio(){
       if($('featuredRow'))$('featuredRow').hidden=false;
@@ -2290,5 +2312,6 @@ document.addEventListener('DOMContentLoaded',()=>{
  loadPublicArtistFromApi();
 })();
 </script>
+<nav id="uadavMobileNav" class="uadav-mobile-nav" aria-label="Navegación móvil"><a class="active" href="#contenido"><i class="fa-solid fa-house"></i><span>Inicio</span></a><a href="#radiosRow" onclick="irASeccion('radiosRow');return false"><i class="fa-solid fa-radio"></i><span>Radios</span></a><a href="#artists" onclick="irASeccion('artists');return false"><i class="fa-solid fa-users"></i><span>Artistas</span></a><a href="/cartelera.html"><i class="fa-solid fa-calendar-days"></i><span>Eventos</span></a><a href="/mi-perfil.html"><i class="fa-solid fa-user"></i><span>Mi perfil</span></a></nav>
 </body>
 </html>

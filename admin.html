@@ -5,7 +5,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>UADAVSTREAM — Centro de Control V28</title>
+<title>★ UADAV STREAM — Centro de Control V28</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
 <style>
@@ -622,8 +622,23 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 .community-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.community-card{border:1px solid var(--admin-line);background:rgba(255,255,255,.018);border-radius:16px;padding:16px}.community-card h3{margin:0 0 8px;font-size:14px}.community-card p{color:#8290a3;font-size:11px;line-height:1.45;margin:0 0 12px}.community-list{display:grid;gap:8px;margin-top:12px}.community-item{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:9px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(255,255,255,.02)}.community-item-thumb{width:52px;height:52px;border-radius:10px;object-fit:cover;background:#091018}.community-item-main{min-width:0}.community-item-title{font-weight:850;color:#f4f8fb;font-size:11px}.community-item-meta{font-size:9px;color:#718095;margin-top:3px}.community-item-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.community-status{font-size:9px;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.05);color:#9aacbf}.community-status.ok{color:#6de3a0;background:rgba(34,197,94,.08)}.community-status.warn{color:#f7c66d;background:rgba(245,158,11,.08)}
 @media(max-width:760px){.community-grid{grid-template-columns:1fr}}
 </style>
-<style id="uadav-v28-13-rights-modal">.admin-rights-modal{position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px)}.admin-rights-dialog{width:min(720px,96vw);max-height:90vh;overflow:auto;background:#0b1017;border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:22px;box-shadow:0 30px 100px rgba(0,0,0,.5)}.admin-rights-close{float:right;border:0;background:rgba(255,255,255,.05);color:#fff;border-radius:10px;width:34px;height:34px;cursor:pointer}.u28-note{min-height:20px;color:#8fa1b6;font-size:12px;margin:10px 0}</style></head>
+<style id="uadav-v28-13-rights-modal">.admin-rights-modal{position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px)}.admin-rights-dialog{width:min(720px,96vw);max-height:90vh;overflow:auto;background:#0b1017;border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:22px;box-shadow:0 30px 100px rgba(0,0,0,.5)}.admin-rights-close{float:right;border:0;background:rgba(255,255,255,.05);color:#fff;border-radius:10px;width:34px;height:34px;cursor:pointer}.u28-note{min-height:20px;color:#8fa1b6;font-size:12px;margin:10px 0}</style>
+<style id="uadav-v28-15-final-auth-layout">
+:root{--admin-sidebar-final:292px;--admin-content-gap:24px}
+body.admin-v28-logged .header{margin-left:calc(var(--admin-sidebar-final) + var(--admin-content-gap))!important;width:calc(100% - var(--admin-sidebar-final) - var(--admin-content-gap))!important}
+body.admin-v28-logged #panelContent,body.admin-v28-logged .admin-v28-mainbar{margin-left:calc(var(--admin-sidebar-final) + var(--admin-content-gap))!important;width:calc(100% - var(--admin-sidebar-final) - var(--admin-content-gap))!important;max-width:none!important}
+body.admin-v28-logged .admin-v28-sidebar-shell{left:18px!important;top:96px!important;width:var(--admin-sidebar-final)!important;height:calc(100vh - 112px)!important;z-index:1000!important}
+body:not(.admin-v28-logged) .admin-v28-sidebar-shell,body:not(.admin-v28-logged) .admin-v28-mainbar,body:not(.admin-v28-logged) #panelContent{display:none!important}
+body:not(.admin-v28-logged) .header{margin-left:0!important;width:100%!important}
+.admin-auth-gate{position:fixed;inset:0;z-index:5000;display:none;place-items:center;padding:24px;background:radial-gradient(circle at 50% 20%,rgba(0,229,255,.08),transparent 28%),rgba(2,5,9,.94);backdrop-filter:blur(12px)}
+body:not(.admin-v28-logged) .admin-auth-gate{display:grid}.admin-auth-card{width:min(430px,94vw);padding:28px;border:1px solid rgba(255,255,255,.1);border-radius:26px;background:linear-gradient(180deg,rgba(14,21,30,.97),rgba(7,11,17,.97));box-shadow:0 30px 120px rgba(0,0,0,.55);text-align:center}.admin-auth-mark{width:58px;height:58px;margin:0 auto 12px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(135deg,#00e5ff,#8b5cf6);color:#061018;font-size:26px;font-weight:900}.admin-auth-card h2{margin:0;font-size:25px}.admin-auth-card p{color:#8290a3;line-height:1.5;font-size:12px}.admin-auth-card .auth-row{display:flex;gap:8px;margin-top:16px}.admin-auth-card input{flex:1;min-width:0;height:46px}.admin-auth-card button{height:46px}.site-pages-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.site-page-card{border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:15px;background:rgba(255,255,255,.02)}.site-page-card h4{margin:0 0 4px;font-size:13px}.site-page-card small{color:#6f7d90;font-size:9px}.site-page-card .form-group{margin-top:9px}.site-page-card textarea{min-height:84px}.site-page-note{color:#7d8a9d;font-size:10px;line-height:1.45;margin-top:8px}.site-pages-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+@media(max-width:900px){body.admin-v28-logged .header,body.admin-v28-logged #panelContent,body.admin-v28-logged .admin-v28-mainbar{margin-left:0!important;width:100%!important}.admin-v28-sidebar-shell{position:sticky!important;left:auto!important;top:8px!important;width:100%!important;height:auto!important;margin:0 0 10px!important}.admin-v28-sidebar{height:auto!important}.site-pages-grid{grid-template-columns:1fr}body.admin-v28-logged .header{top:6px!important}}
+</style>
+<link rel="stylesheet" href="/uadav-design-v7.2.css">
+<script src="/uadav-brand-v7.2.js" defer></script>
+</head>
 <body>
+<div id="adminAuthGate" class="admin-auth-gate" aria-live="polite"><div class="admin-auth-card"><div class="admin-auth-mark">★</div><div class="u28-ops-kicker">ACCESO SEGURO</div><h2>UADAVSTREAM</h2><p>Ingresá la clave de administración para acceder al Centro de Control.</p><div class="auth-row"><input id="adminGateKey" type="password" placeholder="Clave de administración" autocomplete="current-password"><button class="btn btn-primary" type="button" id="adminGateConnect">Conectar</button></div><div id="adminGateStatus" class="u28-note"></div></div></div>
 <div class="container" id="app">
 <!-- ============================================================ -->
 <!-- HEADER -->
@@ -646,7 +661,7 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 <!-- ============================================================ -->
 <div class="admin-v28-mainbar">
 <div>
-<div class="crumb">UADAVSTREAM · OPERACIONES</div>
+<div class="crumb">★ UADAV STREAM · OPERACIONES</div>
 <div class="title" id="adminV28CurrentTitle">Centro de control</div>
 <div class="sub">Contenido, audiencia, artistas, señales y monetización.</div>
 </div>
@@ -658,7 +673,7 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 <div class="hidden" id="panelContent">
 <section class="u27-dashboard" data-nav-id="sec-dashboard" id="u27Dashboard">
 <div class="u27-hero">
-<div><div class="u27-kicker">UADAVSTREAM · Centro de control</div><div class="u27-title">Visión general de la plataforma</div><div class="u27-sub">Estadísticas, analítica, moderación y derechos en un mismo lugar.</div></div>
+<div><div class="u27-kicker">★ UADAV STREAM · Centro de control</div><div class="u27-title">Visión general de la plataforma</div><div class="u27-sub">Estadísticas, analítica, moderación y derechos en un mismo lugar.</div></div>
 <div class="u27-status" id="u27ApiBadge">API · comprobando…</div>
 </div>
 <div class="u27-grid">
@@ -909,7 +924,7 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 <div class="form-group"><label>Densidad</label><select id="publicDensity"><option value="comfortable">Cómoda</option><option value="compact">Compacta</option><option value="cinematic">Cinemática</option></select></div>
 <div class="form-group"><label>Navegación</label><select id="publicNav"><option value="minimal">Minimalista</option><option value="complete">Completa</option></select></div>
 <div class="form-group"><label>Perfil público</label><select id="publicProfile"><option value="true">Mostrar</option><option value="false">Ocultar</option></select></div>
-<div class="form-group"><label>Mi UADAVSTREAM</label><select id="publicAudienceProfile"><option value="true">Mostrar</option><option value="false">Ocultar</option></select></div>
+<div class="form-group"><label>Mi perfil</label><select id="publicAudienceProfile"><option value="true">Mostrar</option><option value="false">Ocultar</option></select></div>
 </div>
 </div>
 <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
@@ -1073,7 +1088,7 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 <div class="form-group"><label>Logo / estrella</label><input id="footerLogo" placeholder="https://.../logo.png"/></div>
 <div class="form-group"><label>Contacto</label><input id="footerContacto" placeholder="contacto@uadavstream.com.ar"/></div>
 <div class="form-group"><label>WhatsApp</label><input id="footerWhatsappTexto" placeholder="+54 ..."/></div>
-<div class="form-group" style="grid-column:1/-1;"><label>Copyright</label><input id="footerCopyright" placeholder="© 2026 UADAVSTREAM · UADAV"/></div>
+<div class="form-group" style="grid-column:1/-1;"><label>Copyright</label><input id="footerCopyright" placeholder="© 2026 ★ UADAV STREAM · UADAV"/></div>
 <div class="form-group"><label>Privacidad · URL</label><input id="footerPrivacyUrl" placeholder="/privacidad.html"/></div>
 <div class="form-group"><label>Términos · URL</label><input id="footerTermsUrl" placeholder="/terminos.html"/></div>
 <div class="form-group"><label>Mostrar legales</label><select id="footerMostrarLegales"><option value="true">Sí</option><option value="false">No</option></select></div>
@@ -1208,7 +1223,7 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 <div class="form-group"><label>Lugar</label><input id="showLugar" placeholder="Estadio River Plate"/></div>
 <div class="form-group"><label>Artista ID (opcional)</label><input id="showArtistaId" placeholder="UC..."/></div>
 <div class="form-group"><label>Precio Desde</label><input id="showPrecio" placeholder="15000" type="number"/></div>
-<div class="form-group" style="grid-column:1/-1;"><label>Link de Ticketera</label><input id="showLink" placeholder="https://ticketera.com/evento"/></div>
+<div class="form-group" style="grid-column:1/-1;"><label>Link de Ticketera / información</label><input id="showLink" placeholder="https://..."/></div><div class="form-group" style="grid-column:1/-1;"><label>Descripción</label><textarea id="showDescripcion" rows="3" placeholder="Información del espectáculo, artistas y entradas"></textarea></div>
 <div class="form-group" style="grid-column:1/-1;"><label>Poster URL</label><input id="showPoster" placeholder="https://ejemplo.com/poster.jpg"/></div>
 </div>
 <button class="btn btn-primary w-full" onclick="crearShow()">➕ Agregar Show a la Cartelera</button>
@@ -1219,6 +1234,41 @@ body.admin-v28-logged .admin-v28-mainbar{margin-left:278px!important;width:auto!
 <!-- ============================================================ -->
 <!-- 9. IMPORTACIONES MASIVAS Y HERRAMIENTAS -->
 <!-- ============================================================ -->
+<details id="sec-prospeccion">
+<summary><i class="fa-solid fa-magnifying-glass-chart"></i> 🇦🇷 Prospección de artistas y restricciones</summary>
+<div class="details-content">
+  <div class="u27-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="u27-card"><div class="u27-label">D1</div><div class="u27-value" id="d1Status">—</div><div class="u27-note">Estado de la base central</div></div>
+    <div class="u27-card"><div class="u27-label">IA</div><div class="u27-value">Gemini → Groq</div><div class="u27-note">Normalización y clasificación</div></div>
+    <div class="u27-card"><div class="u27-label">YouTube + Invidious</div><div class="u27-value" id="ytStatus">—</div><div class="u27-note">Prospección con doble proveedor</div></div>
+  </div>
+  <div class="u27-panel" style="margin-top:14px">
+    <h3>🔎 Buscar artistas de Argentina</h3>
+    <p class="u27-note">Busca candidatos públicos en YouTube sin publicarlos automáticamente. Se guardan como prospectos para revisión UADAV.</p>
+    <div class="form-row">
+      <div class="form-group"><label>Rubro / tipo</label><select id="prospectCategory"><option value="all">Todas las disciplinas</option><option value="solista">Solistas</option><option value="banda">Bandas / grupos</option><option value="circo">Circo</option><option value="teatro">Teatro</option><option value="danza">Danza</option><option value="magia">Magia</option><option value="humor">Humor</option><option value="animacion">Animación</option><option value="locucion">Locución / conducción</option><option value="grupo">Compañías / elencos</option><option value="sala">Salas / espacios</option><option value="productora">Productoras</option><option value="creador">Creadores / YouTubers</option></select></div>
+      <div class="form-group"><label>Provincia / ciudad opcional</label><input id="prospectRegion" placeholder="Rosario, Santa Fe"></div>
+      <div class="form-group"><label>Búsqueda adicional</label><input id="prospectQuery" placeholder="Ej.: artistas de variedades Argentina"></div>
+      <div class="form-group"><label>Mostrar CTA público</label><select id="prospectPublicButton"><option value="false">No</option><option value="true">Sí</option></select></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-primary" type="button" onclick="u73Prospectar()">🔎 Buscar candidatos</button><button class="btn btn-secondary" type="button" onclick="u73GuardarProspectConfig()">💾 Guardar configuración</button><button class="btn btn-secondary" type="button" onclick="u73D1Init()">🗄️ Inicializar D1</button><button class="btn btn-secondary" type="button" onclick="u73D1Status()">↻ Ver estado D1</button><button class="btn btn-secondary" type="button" onclick="u73InvidiousHealth()">🌐 Probar Invidious</button></div><div id="invidiousHealth" class="u28-note" style="margin-top:10px"></div>
+    <div id="prospectStatus" class="u28-note" style="margin-top:12px"></div>
+    <div id="prospectResults" class="community-list" style="margin-top:12px"></div>
+  </div>
+  <div class="u27-panel" style="margin-top:14px">
+    <h3>🚫 Restricciones de búsqueda</h3>
+    <p class="u27-note">La restricción se aplica antes de mostrar prospectos. Podés bloquear términos, canales, artistas o URLs. Esto no modifica YouTube ni elimina contenido externo.</p>
+    <div class="form-row">
+      <div class="form-group"><label>Tipo</label><select id="restrictionKind"><option value="term">Término</option><option value="channel">Canal</option><option value="artist">Artista</option><option value="url">URL / dominio</option></select></div>
+      <div class="form-group"><label>Valor</label><input id="restrictionValue" placeholder="Ej.: palabra, @canal, nombre o dominio"></div>
+      <div class="form-group"><label>Motivo</label><input id="restrictionReason" placeholder="Motivo interno"></div>
+    </div>
+    <button class="btn btn-primary" type="button" onclick="u73AddRestriction()">➕ Agregar restricción</button>
+    <div id="restrictionsList" class="community-list" style="margin-top:12px"></div>
+  </div>
+</div>
+</details>
+
 <details id="sec-herramientas">
 <summary><i class="fa-solid fa-file-import"></i> 📥 Importaciones Masivas y Herramientas</summary>
 <div class="details-content">
@@ -1263,6 +1313,16 @@ UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input)
 </div>
 </details>
 
+<details id="sec-pages">
+<summary><i class="fa-solid fa-file-pen"></i> 📝 Páginas públicas</summary>
+<div class="details-content">
+  <p style="color:var(--text-secondary);font-size:.8rem">Editá textos generales de las nuevas páginas sin tocar el código. Los perfiles dinámicos (artistas y radios) conservan sus datos propios.</p>
+  <div id="sitePagesEditor" class="site-pages-grid"></div>
+  <div class="site-pages-actions"><button class="btn btn-secondary" type="button" onclick="cargarPaginasPublicasAdmin()">↻ Recargar</button><button class="btn btn-primary" type="button" onclick="guardarPaginasPublicasAdmin()">💾 Guardar páginas</button></div>
+  <div id="sitePagesStatus" class="u28-note"></div>
+</div>
+</details>
+
 <!-- COMUNIDAD / BOLSA DE TRABAJO -->
 <details id="sec-comunidad">
 <summary><i class="fa-solid fa-users-gear"></i> 🤝 Comunidad y Bolsa de Trabajo</summary>
@@ -1295,6 +1355,39 @@ UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input)
 </details>
 
 <!-- ============================================================ -->
+
+
+<!-- ============================================================ -->
+<!-- V7 · NÚCLEO D1 + IA + AUTOMATIZACIÓN -->
+<!-- ============================================================ -->
+<details class="admin-section" open>
+  <summary>🧠 V7 · Núcleo, IA, D1 y automatización</summary>
+  <div class="community-card" style="margin-top:14px">
+    <h3>★ Centro inteligente UADAV STREAM</h3>
+    <p class="small">D1 es la nueva base estructurada. KV sigue funcionando como compatibilidad. La IA propone: vos decidís las acciones sensibles.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+      <button class="btn btn-primary btn-sm" type="button" onclick="v7Health()">🔎 Diagnóstico V7</button>
+      <button class="btn btn-secondary btn-sm" type="button" onclick="v7Migrate()">⬆️ Migrar KV → D1</button>
+      <button class="btn btn-secondary btn-sm" type="button" onclick="v7Export()">📦 Exportar D1</button>
+    </div>
+    <div id="v7HealthStatus" class="status"></div>
+  </div>
+  <div class="community-card" style="margin-top:14px">
+    <h3>🎭 Reclamos de perfiles de artistas</h3>
+    <p class="small">Artistas encontrados en el catálogo pueden reclamar su perfil. La aprobación siempre queda bajo control nacional.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+      <button class="btn btn-secondary btn-sm" type="button" onclick="v71LoadClaims()">🔄 Actualizar reclamos</button>
+    </div>
+    <div id="v71ClaimsList" class="community-list"><div class="small">Todavía no cargados.</div></div>
+  </div>
+  <div class="community-card" style="margin-top:14px">
+    <h3>🤖 Asistente UADAV STREAM</h3>
+    <textarea id="v7AiQuestion" rows="4" placeholder="Ejemplo: ¿Qué artistas de Santa Fe fueron incorporados durante los últimos 30 días?"></textarea>
+    <button class="btn btn-primary btn-sm" style="margin-top:10px" type="button" onclick="v7AskAI()">🤖 Analizar</button>
+    <pre id="v7AiResult" style="margin-top:12px;white-space:pre-wrap;background:rgba(0,0,0,.22);padding:12px;border-radius:12px;max-height:320px;overflow:auto"></pre>
+  </div>
+</details>
+
 <!-- BOTÓN FLOTANTE GUARDAR TODO -->
 <!-- ============================================================ -->
 <button class="fab" onclick="guardarTodo()">
@@ -1309,7 +1402,7 @@ UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input)
 const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
 const FALLBACK_THUMB = 'https://via.placeholder.com/300x200?text=UADAVSTREAM';
 
-let ADMIN_KEY = localStorage.getItem('uadavstream_admin_key') || '';
+let ADMIN_KEY = '';
 let seccionesData = [];
 let senalesData = [];
 let radiosData = [];
@@ -1355,7 +1448,7 @@ async function comprobarAPI(){
     const data=await res.json().catch(()=>({}));
     if(res.ok && data.success){
       box.classList.add('ok');
-      txt.textContent=`API UADAVSTREAM · ${data.version||'OK'} · KV ${data.kv?'OK':'NO'}`;
+      txt.textContent=`API ★ UADAV STREAM · ${data.version||'OK'} · KV ${data.kv?'OK':'NO'}`;
     }else{
       box.classList.remove('ok');
       txt.textContent='API responde, pero no confirmó el estado';
@@ -1377,7 +1470,6 @@ async function conectar(){
       mostrarToast(data.error||'Clave incorrecta','error');
       return;
     }
-    localStorage.setItem('uadavstream_admin_key',ADMIN_KEY);
     document.getElementById('panelContent').classList.remove('hidden');
     document.getElementById('btnLogout').classList.remove('hidden');
     mostrarToast(`Conectado · ${data.role==='admin_provincial'?'Administrador provincial':'Administrador nacional'}`,'success');
@@ -2332,11 +2424,11 @@ async function cargarEventosPendientes() {
             <div>
               <strong style="color:var(--text-primary);">${e.titulo || e.nombre}</strong>
               <span class="badge badge-warning">PENDIENTE</span>
-              ${e.creado_por === 'admin' ? '<span class="badge badge-info">Admin</span>' : '<span class="badge">Público</span>'}
+              ${e.creado_por === 'admin' ? '<span class="badge badge-info">Admin</span>' : '<span class="badge">Público</span>'}${e.destacado_solicitado===true ? '<span class="badge badge-warning">★ SOLICITA DESTACADO</span>' : ''}
             </div>
             <div style="display:flex; gap:8px;">
-              <button onclick="aprobarEvento(${e.id})" class="btn btn-success btn-sm">✅ Aprobar</button>
-              <button onclick="rechazarEvento(${e.id})" class="btn btn-danger btn-sm">❌ Rechazar</button>
+              <button onclick='aprobarEvento(${JSON.stringify(e.id)})' class="btn btn-success btn-sm">✅ Aprobar</button>
+              <button onclick='rechazarEvento(${JSON.stringify(e.id)})' class="btn btn-danger btn-sm">❌ Rechazar</button>
             </div>
           </div>
           <div class="card-body">
@@ -2404,6 +2496,7 @@ async function crearShow() {
     lugar: document.getElementById('showLugar').value.trim(),
     precio_desde: parseFloat(document.getElementById('showPrecio').value) || null,
     link_ticketera: document.getElementById('showLink').value.trim(),
+    descripcion: document.getElementById('showDescripcion')?.value.trim()||'',
     poster: document.getElementById('showPoster').value.trim()
   };
 
@@ -2427,6 +2520,7 @@ async function crearShow() {
       document.getElementById('showLugar').value = '';
       document.getElementById('showPrecio').value = '';
       document.getElementById('showLink').value = '';
+      if(document.getElementById('showDescripcion'))document.getElementById('showDescripcion').value = '';
       document.getElementById('showPoster').value = '';
       document.getElementById('showArtistaId').value = '';
       cargarShows();
@@ -2458,10 +2552,12 @@ async function cargarShows() {
           <div class="card-header">
             <div>
               <strong style="color:var(--text-primary);">${s.titulo}</strong>
-              <span class="badge badge-success">APROBADO</span>
+              <span class="badge badge-success">PUBLICADO</span>
+              ${s.destacado_pagado===true ? '<span class="badge badge-info">★ DESTACADO</span>' : ''}
             </div>
-            <div style="display:flex; gap:8px;">
-              <button onclick="eliminarShow(${s.id})" class="btn btn-danger btn-sm">Eliminar</button>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button onclick='toggleShowFeatured(${JSON.stringify(s.id)},${s.destacado_pagado===true})' class="btn ${s.destacado_pagado===true?'btn-secondary':'btn-warning'} btn-sm">${s.destacado_pagado===true?'Quitar destacado':'Marcar pago / destacar'}</button>
+              <button onclick='eliminarShow(${JSON.stringify(s.id)})' class="btn btn-danger btn-sm">Eliminar</button>
             </div>
           </div>
           <div class="card-body">
@@ -2475,6 +2571,19 @@ async function cargarShows() {
   } catch (e) {
     console.error('Error cargando shows:', e);
   }
+}
+
+async function toggleShowFeatured(id,current){
+  const action = !current;
+  if(action && !confirm('Confirmar pago y activar destacado para este evento?')) return;
+  if(!action && !confirm('Quitar destacado de este evento?')) return;
+  try{
+    const res=await fetch(API_URL+'cartelera',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ADMIN_KEY},body:JSON.stringify({id,destacado_pagado:action,destacado_estado:action?'pagado':'cancelado',destacado_desde:action?new Date().toISOString():null})});
+    const d=await res.json().catch(()=>({}));
+    if(!res.ok)throw new Error(d.error||'No se pudo actualizar');
+    mostrarToast(action?'Evento destacado activado':'Destacado quitado','success');
+    await cargarShows();
+  }catch(e){mostrarToast('No se pudo actualizar destacado: '+e.message,'error')}
 }
 
 async function eliminarShow(id) {
@@ -2833,12 +2942,12 @@ async function u27LoadAudit(){
 <script id="uadav-v28-admin-nav">
 (function(){
   const titles={
-    'sec-dashboard':'Resumen','integrationDiagnostics':'Diagnóstico','sec-secciones':'Secciones y contenido','sec-personalizacion':'Apariencia','sec-banners':'Publicidad','sec-visibilidad':'Visibilidad','sec-home':'Constructor de Home','sec-streams':'Señales y radios','sec-artistas':'Artistas','sec-eventos':'Eventos pendientes','sec-cartelera':'Cartelera','sec-premium':'Códigos Premium','sec-footer':'Footer y redes','sec-comunidad':'Comunidad y Bolsa','sec-herramientas':'Herramientas'
+    'sec-dashboard':'Resumen','integrationDiagnostics':'Diagnóstico','sec-secciones':'Secciones y contenido','sec-personalizacion':'Apariencia','sec-banners':'Publicidad','sec-visibilidad':'Visibilidad','sec-home':'Constructor de Home','sec-streams':'Señales y radios','sec-artistas':'Artistas','sec-eventos':'Eventos pendientes','sec-cartelera':'Cartelera','sec-premium':'Códigos Premium','sec-footer':'Footer y redes','sec-pages':'Páginas públicas','sec-comunidad':'Comunidad y Bolsa','sec-herramientas':'Herramientas'
   };
   const groups=[
     ['PLATAFORMA', [['sec-dashboard','fa-chart-pie','Resumen'],['integrationDiagnostics','fa-stethoscope','Diagnóstico']]],
-    ['CONTENIDO', [['sec-secciones','fa-layer-group','Secciones y contenido'],['sec-streams','fa-tower-broadcast','Señales y radios'],['sec-artistas','fa-users','Artistas'],['sec-eventos','fa-calendar-days','Eventos'],['sec-cartelera','fa-ticket','Cartelera']]],
-    ['EXPERIENCIA', [['sec-personalizacion','fa-palette','Apariencia'],['sec-banners','fa-rectangle-ad','Publicidad'],['sec-visibilidad','fa-eye','Visibilidad'],['sec-home','fa-table-columns','Home / Orden'],['sec-footer','fa-share-nodes','Footer y redes']]],
+    ['CONTENIDO', [['sec-secciones','fa-layer-group','Secciones y contenido'],['sec-streams','fa-tower-broadcast','Señales y radios'],['sec-artistas','fa-users','Artistas'],['sec-prospeccion','fa-magnifying-glass-chart','Prospección'],['sec-eventos','fa-calendar-days','Eventos'],['sec-cartelera','fa-ticket','Cartelera']]],
+    ['EXPERIENCIA', [['sec-personalizacion','fa-palette','Apariencia'],['sec-banners','fa-rectangle-ad','Publicidad'],['sec-visibilidad','fa-eye','Visibilidad'],['sec-home','fa-table-columns','Home / Orden'],['sec-pages','fa-file-pen','Páginas públicas'],['sec-footer','fa-share-nodes','Footer y redes']]],
     ['AUDIENCIA Y NEGOCIO', [['sec-premium','fa-key','Códigos Premium'],['sec-comunidad','fa-users-gear','Comunidad y Bolsa']]],
     ['SISTEMA', [['sec-herramientas','fa-screwdriver-wrench','Herramientas']]]
   ];
@@ -2865,7 +2974,7 @@ async function u27LoadAudit(){
     let box=document.getElementById('adminV28SessionBox');
     if(!box){
       box=document.createElement('div'); box.id='adminV28SessionBox'; box.className='admin-v28-sessionbox';
-      box.innerHTML='<div class="session-avatar"><i class="fa-solid fa-shield-halved"></i></div><div class="session-copy"><strong>Administrador</strong><small>UADAVSTREAM · sesión activa</small></div><button type="button" class="session-logout" id="adminV28Logout" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>';
+      box.innerHTML='<div class="session-avatar"><i class="fa-solid fa-shield-halved"></i></div><div class="session-copy"><strong>Administrador</strong><small>★ UADAV STREAM · sesión activa</small></div><button type="button" class="session-logout" id="adminV28Logout" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>';
       sidebar.appendChild(box);
       box.querySelector('#adminV28Logout').addEventListener('click',()=>{ if(typeof desconectar==='function') desconectar(); });
     }
@@ -2912,7 +3021,7 @@ async function u27LoadAudit(){
     badge.innerHTML=dirty?'<i class="fa-solid fa-circle-exclamation"></i> Cambios sin guardar':'<i class="fa-solid fa-circle-check"></i> Sin cambios pendientes';
   };
   function markDirty(){ if(document.body.classList.contains('admin-v28-logged')) setDirty(true); }
-  function restoreAdminKey(){ if(!ADMIN_KEY) ADMIN_KEY=localStorage.getItem('uadavstream_admin_key')||''; }
+  function restoreAdminKey(){ ADMIN_KEY=''; }
   function clearDirty(){ setDirty(false); }
 
   async function u28Fetch(path, options={}){
@@ -2925,6 +3034,7 @@ async function u27LoadAudit(){
     return data;
   }
   const u28Write=(path,body,method='POST')=>u28Fetch(path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  window.u28Fetch=u28Fetch; window.u28Write=u28Write;
 
   async function u28RefreshOps(){ restoreAdminKey();
     const grid=$('u28OpsGrid'); if(!grid)return;
@@ -3240,5 +3350,119 @@ async function u27LoadAudit(){
 <script id="uadav-v28-10-shorts">
 (function(){const $=id=>document.getElementById(id);async function f(p,o={}){const k=ADMIN_KEY||localStorage.getItem('uadavstream_admin_key')||'';const res=await fetch(API_URL+p+(p.includes('?')?'&':'?')+'_='+Date.now(),{...o,headers:{...(o.headers||{}),Authorization:'Bearer '+k}});const d=await res.json().catch(()=>({}));if(!res.ok)throw new Error(d.error||('HTTP '+res.status));return d}window.guardarShortAdmin=async()=>{const id=($('shortAdminId')?.value||'').trim();const m=id.match(/[?&]v=([\w-]{11})/);const vid=m?m[1]:id; if(!vid){mostrarToast('Ingresá un ID o URL de YouTube','error');return}try{await f('shorts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:vid,titulo:$('shortAdminTitle')?.value||'Short',artista:$('shortAdminArtist')?.value||'',thumbnail:$('shortAdminThumb')?.value||''})});mostrarToast('Short publicado','success');await cargarShortsAdmin();}catch(e){mostrarToast(e.message,'error')}};window.cargarShortsAdmin=async()=>{const box=$('shortsAdminList');if(!box)return;try{const a=await f('shorts');box.innerHTML=a.length?a.map(x=>`<div class="community-item"><img class="community-item-thumb" src="${x.thumbnail||'https://i.ytimg.com/vi/'+x.id+'/hqdefault.jpg'}"><div class="community-item-main"><div class="community-item-title">${x.titulo||'Short'}</div><div class="community-item-meta">${x.artista||''}</div></div></div>`).join(''):'<div class="u27-note">No hay Shorts publicados.</div>'}catch{box.innerHTML='<div class="u27-note">No se pudieron cargar Shorts.</div>'}};document.addEventListener('DOMContentLoaded',()=>setTimeout(cargarShortsAdmin,900))})();
 </script>
-</body>
+
+<script id="uadav-v28-15-auth-pages">
+(function(){
+  const pageDefs=[
+    ['artistas','Directorio de artistas','Explorá, buscá y reclamá perfiles de artistas de ★ UADAV STREAM.','artistas.html'],
+    ['artista','Perfil de artista','Perfil visual del artista, música, videos, clips, eventos y datos públicos.','artista.html'],
+    ['sumate','Sumate como artista','Presentá tu trabajo y creá tu espacio en UADAVSTREAM.','sumate-artista.html'],
+    ['bolsa','Bolsa de trabajo','Oportunidades para artistas y propuestas de productoras, empresas y particulares.','bolsa-trabajo.html'],
+    ['contratar','Contratar artista','Solicitá una contratación y revisá las condiciones antes de enviar la propuesta.','contratar-artista.html'],
+    ['gestionar','Mi espacio de artista','Administrá tu perfil, contenido y beneficios desde un enlace privado.','gestionar-artista.html'],
+    ['mi','Mi perfil','Personalizá tu experiencia sin crear una cuenta obligatoria.','mi-perfil.html'],
+    ['radio','Perfil de radio','Experiencia pública de una emisora: vivo, ahora suena, historial y comunidad.','radio.html'],
+    ['terminos','Términos y condiciones','Condiciones de uso y participación de UADAVSTREAM.','terminos.html'],
+    ['privacidad','Política de privacidad','Información sobre datos, preferencias y funcionamiento de la plataforma.','privacidad.html'],
+    ['publicar-evento','Publicar evento','Formulario público para proponer espectáculos y eventos.','publicar-evento.html'],
+    ['cartelera','Cartelera','Agenda completa con búsqueda por fechas, categorías, ciudades y destacados.','cartelera.html'],
+    ['evento','Ficha de evento','Página individual del evento, entradas, lugar y datos de la función.','evento.html']
+  ];
+  const defaults=Object.fromEntries(pageDefs.map(([k,title,desc])=>[k,{title,description:desc,browser_title:title+' · ★ UADAV STREAM',enabled:true}]));
+defaults.terminos.content_html='<h2>1. Naturaleza del servicio</h2><p>UADAVSTREAM organiza y presenta información, perfiles, enlaces, señales y contenido audiovisual provisto o enlazado desde servicios de terceros.</p><h2>2. Publicaciones</h2><p>Quien publica información declara que cuenta con autorización y responde por la exactitud del material.</p><h2>3. Artistas</h2><p>La presencia en el catálogo no equivale por sí sola a afiliación sindical ni habilita beneficios reservados.</p><h2>4. Bolsa y contrataciones</h2><p>La plataforma facilita contactos y solicitudes; las partes deben verificar sus propios acuerdos y obligaciones.</p><h2>5. Moderación</h2><p>UADAVSTREAM puede ocultar o retirar material que infrinja reglas, derechos de terceros o estas condiciones.</p>';
+defaults.privacidad.content_html='<h2>1. Datos</h2><p>Podemos recibir los datos que las personas envían voluntariamente en formularios y solicitudes.</p><h2>2. Preferencias</h2><p>Mi perfil puede guardar preferencias en el almacenamiento local del dispositivo.</p><h2>3. Servicios externos</h2><p>Las funciones que enlazan servicios como YouTube, streaming o ticketera se rigen también por sus propias políticas.</p><h2>4. Administración</h2><p>Los datos enviados se conservan en la infraestructura de UADAVSTREAM para gestionar publicaciones y operaciones.</p>';
+
+  window.__sitePagesData={};
+  function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+  window.cargarPaginasPublicasAdmin=async function(){const box=document.getElementById('sitePagesEditor');if(!box)return;try{const data=await u28Fetch('site_pages');window.__sitePagesData=Object.assign({},defaults,Array.isArray(data)?{}:data||{});box.innerHTML=pageDefs.map(([key,title,desc,file])=>{const d=window.__sitePagesData[key]||defaults[key];return `<article class="site-page-card"><h4>${esc(title)}</h4><small>/${file}</small><div class="form-group"><label>Habilitada</label><select data-page="${key}" data-field="enabled"><option value="true" ${d.enabled!==false?'selected':''}>Sí</option><option value="false" ${d.enabled===false?'selected':''}>No</option></select></div><div class="form-group"><label>Título</label><input data-page="${key}" data-field="title" value="${esc(d.title||title)}"></div><div class="form-group"><label>Descripción</label><textarea data-page="${key}" data-field="description">${esc(d.description||desc)}</textarea></div><div class="form-group"><label>Título del navegador</label><input data-page="${key}" data-field="browser_title" value="${esc(d.browser_title||((d.title||title)+' · UADAVSTREAM'))}"></div>${key==='terminos'||key==='privacidad'?`<div class="form-group"><label>Contenido legal (HTML simple)</label><textarea data-page="${key}" data-field="content_html">${esc(d.content_html||'')}</textarea></div>`:''}<div class="site-page-note">Los cambios de texto se aplican al abrir nuevamente la página.</div></article>`}).join('');document.getElementById('sitePagesStatus').textContent='✓ Configuración cargada';}catch(e){document.getElementById('sitePagesStatus').textContent='No se pudo cargar: '+e.message}}
+  window.guardarPaginasPublicasAdmin=async function(){try{const out={...window.__sitePagesData};document.querySelectorAll('#sitePagesEditor [data-page]').forEach(el=>{const k=el.dataset.page,f=el.dataset.field;out[k]=out[k]||{};out[k][f]=f==='enabled'?el.value==='true':el.value});await u28Write('site_pages',out);window.__sitePagesData=out;document.getElementById('sitePagesStatus').textContent='✓ Páginas guardadas';mostrarToast('Páginas públicas guardadas','success')}catch(e){mostrarToast('No se pudo guardar páginas: '+e.message,'error')}}
+  function addPagesNav(){const nav=document.getElementById('adminV28Nav');if(!nav||nav.querySelector('[data-target="sec-pages"]'))return;const b=document.createElement('button');b.type='button';b.dataset.target='sec-pages';b.innerHTML='<i class="fa-solid fa-file-pen"></i><span class="label">Páginas públicas</span><span class="nav-dot"></span>';b.onclick=()=>{const el=document.getElementById('sec-pages');if(el){el.open=true;if(id==='sec-pages')setTimeout(()=>window.cargarPaginasPublicasAdmin?.(),40);window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-110,behavior:'smooth'})};document.querySelectorAll('#adminV28Nav button').forEach(x=>x.classList.toggle('active',x===b))};nav.appendChild(b)}
+  function syncGate(){const logged=document.body.classList.contains('admin-v28-logged');const gate=document.getElementById('adminAuthGate');if(gate)gate.setAttribute('aria-hidden',String(logged));}
+  document.addEventListener('DOMContentLoaded',()=>{try{localStorage.removeItem('uadavstream_admin_key')}catch{}ADMIN_KEY='';const gateKey=document.getElementById('adminGateKey');const gateBtn=document.getElementById('adminGateConnect');if(gateBtn)gateBtn.onclick=async()=>{const top=document.getElementById('adminKeyInput');if(top)top.value=gateKey?.value||'';await conectar();if(document.body.classList.contains('admin-v28-logged')){if(gateKey)gateKey.value='';}};if(gateKey)gateKey.addEventListener('keydown',e=>{if(e.key==='Enter')gateBtn.click()});setTimeout(()=>{addPagesNav();syncGate();},350)});
+  const obs=new MutationObserver(syncGate);obs.observe(document.body,{attributes:true,attributeFilter:['class']});
+})();
+
+
+// ============================================================
+// V7 · D1 / IA / EXPORTACIÓN
+// ============================================================
+async function v7Health(){
+  const box=document.getElementById('v7HealthStatus');
+  if(box) box.textContent='Consultando...';
+  try{
+    const r=await fetch(API_URL+'v7/health?_='+Date.now(),{headers:{'Authorization':'Bearer '+ADMIN_KEY}});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||'No disponible');
+    if(box) box.textContent='✅ D1: '+(d.d1?'conectado':'no configurado')+' · Gemini: '+(d.ai?.gemini?'sí':'no')+' · Groq: '+(d.ai?.groq?'sí':'no')+' · Automatización: '+(d.automation?.email?'email':'sin email')+(d.automation?.queue?' · cola':'');
+  }catch(e){ if(box) box.textContent='❌ '+e.message; }
+}
+async function v7Migrate(){
+  const box=document.getElementById('v7HealthStatus');
+  if(!confirm('Migrar ahora los registros compatibles de KV a D1?')) return;
+  if(box) box.textContent='Migrando...';
+  try{
+    const r=await fetch(API_URL+'v7/migrate_kv',{method:'POST',headers:{'Authorization':'Bearer '+ADMIN_KEY,'Content-Type':'application/json'}});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||'Falló la migración');
+    if(box) box.textContent='✅ '+(d.message||'Migración completada');
+  }catch(e){ if(box) box.textContent='❌ '+e.message; }
+}
+async function v7Export(){
+  try{
+    const r=await fetch(API_URL+'v7/export',{headers:{'Authorization':'Bearer '+ADMIN_KEY}});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||'No se pudo exportar');
+    const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='UADAVSTREAM-D1-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);
+    mostrarToast('✅ Exportación D1 descargada','success');
+  }catch(e){mostrarToast('❌ '+e.message,'error')}
+}
+async function v71LoadClaims(){
+  const box=document.getElementById('v71ClaimsList'); if(!box)return; box.innerHTML='<div class="small">Cargando...</div>';
+  try{
+    const r=await fetch(API_URL+'admin/artist-claims?_='+Date.now(),{headers:{'Authorization':'Bearer '+ADMIN_KEY}});
+    const d=await r.json().catch(()=>[]); if(!r.ok)throw new Error(d.error||'No disponible');
+    if(!Array.isArray(d)||!d.length){box.innerHTML='<div class="small">No hay reclamos pendientes.</div>';return;}
+    box.innerHTML=d.map(x=>`<div class="job" style="margin-top:8px"><strong>${esc(x.name||'Solicitante')}</strong><p>${esc(x.email||'')} · Artista: ${esc(x.artist_id||'')} · Estado: ${esc(x.status||'pending')}</p><p>${esc(x.proof_url||'')} ${x.social_url?' · '+esc(x.social_url):''}</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" type="button" onclick="v71ReviewClaim('${String(x.id).replace(/'/g,"\\'")}','approved')">✓ Aprobar</button><button class="btn btn-secondary btn-sm" type="button" onclick="v71ReviewClaim('${String(x.id).replace(/'/g,"\\'")}','rejected')">✕ Rechazar</button></div></div>`).join('');
+  }catch(e){box.innerHTML='<div class="small">❌ '+esc(e.message)+'</div>';}
+}
+async function v71ReviewClaim(id,status){
+  try{
+    const note=status==='approved'?'Aprobado por administración':'Solicitud no aprobada';
+    const r=await fetch(API_URL+'admin/artist-claims',{method:'PUT',headers:{'Authorization':'Bearer '+ADMIN_KEY,'Content-Type':'application/json'},body:JSON.stringify({id,status,review_note:note,base_url:location.origin})});
+    const d=await r.json().catch(()=>({})); if(!r.ok)throw new Error(d.error||'No se pudo actualizar');
+    if(d.profileUrl) prompt('Enlace privado para el artista',d.profileUrl);
+    mostrarToast(status==='approved'?'✅ Perfil reclamado y acceso generado':'✅ Reclamo actualizado','success');
+    v71LoadClaims();
+  }catch(e){mostrarToast('❌ '+e.message,'error');}
+}
+
+async function v7AskAI(){
+  const q=(document.getElementById('v7AiQuestion')?.value||'').trim();
+  const out=document.getElementById('v7AiResult'); if(!q)return; out.textContent='Analizando...';
+  try{
+    const r=await fetch(API_URL+'v7/ai/assistant',{method:'POST',headers:{'Authorization':'Bearer '+ADMIN_KEY,'Content-Type':'application/json'},body:JSON.stringify({question:q,context:{pantalla:'admin'}})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||'IA no disponible');
+    out.textContent=JSON.stringify(d,null,2);
+  }catch(e){out.textContent='❌ '+e.message}
+}
+
+</script>
+<script id="uadav-v7-3-prospecting-tools">
+(function(){
+  const $=id=>document.getElementById(id);
+  async function fetchAdmin(path,options={}){const headers={...(options.headers||{}),Authorization:'Bearer '+(window.ADMIN_KEY||localStorage.getItem('uadavstream_admin_key')||'')};const r=await fetch((window.API_URL||'https://uadav-api.uadavstream.workers.dev/api/')+path,{...options,headers});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Error de API');return d;}
+  window.u73D1Status=async()=>{try{const d=await fetchAdmin('admin/d1/status');$('d1Status').textContent=d.configured?'OK':'NO';}catch(e){$('d1Status').textContent='ERROR';if(window.mostrarToast)mostrarToast(e.message,'error')}};
+  window.u73D1Init=async()=>{try{const d=await fetchAdmin('admin/d1/init',{method:'POST'});$('d1Status').textContent='OK';if(window.mostrarToast)mostrarToast('D1 inicializada: '+(d.queries||0)+' consultas','success')}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
+  window.u73InvidiousHealth=async()=>{try{const d=await fetchAdmin('admin/invidious/health');const ok=(d.instances||[]).filter(x=>x.ok).length; $('invidiousHealth').textContent=`Invidious: ${ok}/${(d.instances||[]).length} instancias respondieron. ${((d.instances||[]).map(x=>x.ok?'✅':'❌').join(' '))}`; }catch(e){$('invidiousHealth').textContent='❌ No se pudo comprobar Invidious'; if(window.mostrarToast)mostrarToast(e.message,'error')}};
+  window.u73GuardarProspectConfig=async()=>{try{await fetchAdmin('admin/prospecting/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:true,public_button:$('prospectPublicButton').value==='true',default_category:$('prospectCategory').value})});if(window.mostrarToast)mostrarToast('Configuración de prospección guardada','success');}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
+  function renderRestrictions(list){$('restrictionsList').innerHTML=list.length?list.map(x=>`<div class="community-card" style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><strong>${String(x.kind||'term')}</strong> · ${String(x.value||'')}<small style="display:block;color:var(--text-secondary)">${String(x.reason||'')}</small></div><button class="btn btn-danger btn-sm" onclick="u73DeleteRestriction(${JSON.stringify(String(x.id||''))})">Eliminar</button></div>`).join(''):'<div class="u28-note">Sin restricciones.</div>'}
+  window.u73LoadRestrictions=async()=>{try{const d=await fetchAdmin('admin/prospecting/restrictions');renderRestrictions(Array.isArray(d)?d:[])}catch(e){}}
+  window.u73AddRestriction=async()=>{try{const body={kind:$('restrictionKind').value,value:$('restrictionValue').value.trim(),reason:$('restrictionReason').value.trim()};if(!body.value)throw new Error('Ingresá un valor');await fetchAdmin('admin/prospecting/restrictions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});$('restrictionValue').value='';$('restrictionReason').value='';await u73LoadRestrictions();if(window.mostrarToast)mostrarToast('Restricción agregada','success')}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
+  window.u73DeleteRestriction=async id=>{if(!id)return;try{await fetchAdmin('admin/prospecting/restrictions?id='+encodeURIComponent(id),{method:'DELETE'});await u73LoadRestrictions();}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
+  window.u73Prospectar=async()=>{const st=$('prospectStatus'),box=$('prospectResults');st.textContent='Buscando candidatos…';box.innerHTML='';try{const p=new URLSearchParams({category:$('prospectCategory').value,region:$('prospectRegion').value.trim(),q:$('prospectQuery').value.trim(),type:'channel,video',limit:'20'});const d=await fetchAdmin('admin/prospecting/search?'+p.toString());const arr=d.results||[];st.textContent=`${arr.length} candidatos luego de aplicar restricciones.`;box.innerHTML=arr.length?arr.map((x,i)=>`<div class="community-card"><div style="display:flex;gap:12px;align-items:center"><img src="${String(x.thumbnail||'').replace(/"/g,'%22')}" alt="" style="width:70px;height:48px;border-radius:8px;object-fit:cover;background:#111"><div style="min-width:0"><strong>${String(x.title||'Sin título')}</strong><small style="display:block;color:var(--text-secondary)">${String(x.channel_name||'')} · ${String(x.category||'')}</small><small style="display:block;color:var(--text-secondary)">${String(x.resource_type||'')} · ${String(x.source||'youtube')}</small></div></div><div style="margin-top:8px"><a class="btn btn-secondary btn-sm" target="_blank" rel="noopener" href="${String(x.url||'#').replace(/"/g,'%22')}">Ver fuente</a></div></div>`).join(''):'<div class="u28-note">No encontramos candidatos con estos criterios.</div>'}catch(e){st.textContent='No se pudo completar la búsqueda: '+e.message}}
+  document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{u73D1Status();u73LoadRestrictions();fetchAdmin('prospecting/config').then(c=>{$('prospectPublicButton').value=c.public_button?'true':'false';$('prospectCategory').value=c.default_category||'all'}).catch(()=>{});},500)});
+})();
+</script></body>
 </html>

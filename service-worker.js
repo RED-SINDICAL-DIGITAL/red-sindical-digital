@@ -1,14 +1,18 @@
-const CACHE = 'uadavstream-v31-10-shell';
+const CACHE = 'uadavstream-v7-1-shell';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/radio.html',
   '/artista.html',
+  '/artistas.html',
   '/gestionar-artista.html',
   '/sumate-artista.html',
   '/bolsa-trabajo.html',
   '/contratar-artista.html',
   '/mi-uadavstream.html',
+  '/publicar-evento.html',
+  '/terminos.html',
+  '/privacidad.html',
   '/manifest.json'
 ];
 

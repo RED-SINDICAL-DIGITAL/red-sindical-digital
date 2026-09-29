@@ -1,6 +1,6 @@
 # UADAVSTREAM — paquete consolidado
 
-Paquete de trabajo consolidado para la versión audiovisual actual.
+Paquete de trabajo consolidado para la versión audiovisual actual, con ronda de reparación integral.
 
 ## Componentes principales
 
@@ -12,9 +12,12 @@ Paquete de trabajo consolidado para la versión audiovisual actual.
 - `bolsa-trabajo.html` — Bolsa de Trabajo con acceso/postulación para afiliados verificados.
 - `contratar-artista.html` — contratación con aceptación previa de condiciones.
 - `mi-uadavstream.html` — experiencia pública personalizada sin registro obligatorio + Premium por código.
-- `admin.html` — Centro de Control Admin V28.14.
-- `worker.js` — candidato Worker V6.4.2 con compatibilidad ampliada.
-- `manifest.json` / `service-worker.js` — base PWA.
+- `publicar-evento.html` — alta pública de eventos con solicitud opcional de destacado y posterior confirmación manual.
+- `terminos.html` / `privacidad.html` — páginas legales editables desde Admin.
+- `site-page-config.js` — aplica configuración editable a las páginas públicas.
+- `admin.html` — Centro de Control Admin V28.15.
+- `worker.js` — Worker V6.4.3 candidato con compatibilidad ampliada y sincronización de artistas/eventos/bolsa.
+- `manifest.json` / `service-worker.js` — base PWA, caché V31.11.
 
 ## Worker
 
@@ -36,12 +39,25 @@ Las interfaces actuales apuntan al API configurado en:
 
 `https://uadav-api.uadavstream.workers.dev/api/`
 
+## Reparaciones incluidas en esta ronda
+
+- Radio: `metadata_url`/Zeno, carátulas desde metadata/Deezer, reproductor profesional, volumen, mute y ecualizador visual.
+- Index: player de radio persistente, navegación Live/Artistas/Cartelera corregida, búsqueda en modo catálogo con filtros y contador por tipo, Hero de eventos destacados.
+- Artistas: API pública canónica y sincronización `secciones` → `artistas`; endpoint de prospectos explícito.
+- Admin: acceso cerrado hasta autenticar, sesión no persistida en `localStorage`, layout lateral con espacio real para contenido, `u28Write` expuesto correctamente, páginas públicas editables, gestión de eventos/destacados y bolsa.
+- Eventos: formulario público, aprobación, cartelera y destacado pago confirmado manualmente.
+- Bolsa: publicación pública de oportunidades; gestión administrativa; postulación restringida a artistas afiliados verificados.
+- Legales: `terminos.html` y `privacidad.html`, editables desde Admin.
+
 ## Importante antes de producción
 
 1. Probar el Worker candidato en Cloudflare antes de reemplazar V6.4.1.
 2. Verificar las variables/bindings y permisos de KV.
 3. Confirmar las páginas legales definitivas (`terminos.html` y `privacidad.html`) si se van a publicar los enlaces legales del footer.
 4. Probar PC, móvil, Smart TV/TV Box, Admin, KV y reproducción de radios.
+5. Confirmar el circuito real de cobro para eventos destacados antes de automatizar pagos.
+6. Revisar legalmente los textos de Términos y Privacidad antes de publicarlos como versión definitiva.
+7. Reemplazar V6.4.1 solo después de validar V6.4.3-candidate en Cloudflare.
 
 ## Validación estática realizada
 

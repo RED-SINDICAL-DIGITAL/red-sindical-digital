@@ -1,0 +1,3 @@
+/* ★ UADAV STREAM V7.2 shared compatibility layer */
+:root{--uadav-bg:#07090d;--uadav-surface:#10151d;--uadav-accent:#00e5ff;--uadav-muted:#95a3b6;--uadav-line:rgba(255,255,255,.09)}
+.uadav-focus:focus-visible{outline:2px solid var(--uadav-accent);outline-offset:2px}
