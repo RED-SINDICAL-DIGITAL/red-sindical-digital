@@ -1,3 +1,6 @@
-/* ★ UADAV STREAM V7.2 shared compatibility layer */
-:root{--uadav-bg:#07090d;--uadav-surface:#10151d;--uadav-accent:#00e5ff;--uadav-muted:#95a3b6;--uadav-line:rgba(255,255,255,.09)}
-.uadav-focus:focus-visible{outline:2px solid var(--uadav-accent);outline-offset:2px}
+:root{--uadav-bg:#070b10;--uadav-surface:#0e151e;--uadav-surface2:#141c27;--uadav-line:rgba(255,255,255,.09);--uadav-text:#f7fbff;--uadav-muted:#91a1b5;--uadav-accent:#00e5ff;--uadav-purple:#8b5cf6;--uadav-radius:18px;--uadav-shadow:0 20px 60px rgba(0,0,0,.32)}
+html{color-scheme:dark}body{background-color:var(--uadav-bg)}
+.uadav-brand-star{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--uadav-accent),var(--uadav-purple));color:#061018;font-weight:1000}
+.uadav-mobile-safe{padding-bottom:max(12px,env(safe-area-inset-bottom))}
+@media(max-width:700px){button,a,input,select,textarea{font-size:16px}.btn{min-height:42px}.shell,.wrap,.main{max-width:100%;overflow-x:hidden}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}

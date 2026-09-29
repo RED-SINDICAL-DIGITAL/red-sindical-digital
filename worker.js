@@ -74,13 +74,14 @@ export default {
     const makeId = (prefix='ID') => prefix+'-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
     const hasD1 = () => !!env.DB;
     async function youtubeApiEnabled(){
-      const v = await getJSON('youtube_api_enabled', false);
-      return v === true || String(v).toLowerCase() === 'true';
+      const v = await getJSON('youtube_api_enabled', null);
+      if (v === false || String(v).toLowerCase() === 'false') return false;
+      return !!env.YOUTUBE_API_KEY;
     }
 
     // Invidious is a permanent provider in UADAV STREAM: used as the default source
     // for public discovery so the official YouTube quota is not consumed unless
-    // the administrator explicitly enables it.
+    // Invidious succeeds. The official API remains enabled only as last fallback.
 
     // for global search, artist prospecting and channel resolution. Instances are ordered
     // by the current public list from the Invidious documentation, with yewtu.be retained
@@ -126,7 +127,7 @@ export default {
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try{
-          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/7.4.1'}});
+          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/7.4.2'}});
           if(!r.ok)continue; const d=await r.json();
           if(d?.authorId||d?.author){
             return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),source:'invidious'};
@@ -547,7 +548,7 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_status ON prospecting_results
 CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_results(category);
 `;
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V7.4.1', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V7.4.2', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:'UADAVSTREAM', architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -714,6 +715,7 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_resul
 
     async function eventsFromD1(filters={}) {
       if(!hasD1()) return null;
+      try {
       const where=[`lower(COALESCE(status,'published'))='published'`]; const binds=[];
       const q=normalizeSearchText(filters.q); const category=normalizeSearchText(filters.category); const city=normalizeSearchText(filters.city); const country=normalizeSearchText(filters.country);
       if(q){const v=`%${q}%`; where.push(`(lower(title) LIKE ? OR lower(COALESCE(venue,'')) LIKE ? OR lower(COALESCE(city,'')) LIKE ? OR lower(COALESCE(province,'')) LIKE ? OR lower(COALESCE(country,'')) LIKE ? OR lower(COALESCE(category,'')) LIKE ?)`); binds.push(v,v,v,v,v,v);}
@@ -725,6 +727,9 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_resul
       if(filters.featured==='true')where.push(`featured=1`);
       const r=await env.DB.prepare(`SELECT * FROM events WHERE ${where.join(' AND ')} ORDER BY featured DESC, start_date ASC LIMIT 1000`).bind(...binds).all();
       return (r.results||[]).map(x=>({...safeJSON(x.data_json,{}),id:x.id,titulo:x.title||'Evento',nombre:x.title||'Evento',categoria:x.category||'',ciudad:x.city||'',provincia:x.province||'',pais:x.country||'Argentina',lugar:x.venue||'',fecha_inicio:x.start_date||'',fecha_fin:x.end_date||'',estado:x.status||'published',destacado_pagado:Boolean(x.featured),destacado_estado:x.payment_status||''}));
+      } catch (_) {
+        return null;
+      }
     }
 
     if (path === '/api/cartelera') {
@@ -779,6 +784,12 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_resul
 
     if (path === '/api/evento' && request.method === 'GET') {
       const id=String(url.searchParams.get('id')||'').trim(); if(!id)return json({error:'ID requerido'},400);
+      if(hasD1()){
+        try{
+          const r=await env.DB.prepare(`SELECT * FROM events WHERE id=? AND lower(COALESCE(status,'published'))='published' LIMIT 1`).bind(id).first();
+          if(r) return json({...safeJSON(r.data_json,{}),id:r.id,titulo:r.title||'Evento',nombre:r.title||'Evento',categoria:r.category||'',ciudad:r.city||'',provincia:r.province||'',pais:r.country||'Argentina',lugar:r.venue||'',fecha_inicio:r.start_date||'',fecha_fin:r.end_date||'',estado:r.status||'published',destacado_pagado:Boolean(r.featured),destacado_estado:r.payment_status||''});
+        }catch(_){ }
+      }
       const all=[...(await getArray('eventos_publicados')),...(await getArray('cartelera_aprobada'))];
       const item=all.find(x=>String(x.id)===id && String(x.estado||'published')==='published');
       return item?json(item):json({error:'Evento no encontrado'},404);
@@ -830,29 +841,29 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_resul
       if(hasD1()) await env.DB.prepare(`INSERT INTO prospecting_runs(id,country,region,category,query,resource_type,provider,status,result_count,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)`).bind(run.id,run.country,run.region,run.category,run.query,run.resource_type,run.provider,run.status,0,run.created_at).run();
       const restrictions=await getSearchRestrictions();
       const raw=[];
-      // Official YouTube API is optional and OFF by default. Invidious is always first.
-      if(ytEnabled && env.YOUTUBE_API_KEY){
-        try{
-          const params=new URLSearchParams({part:'snippet',maxResults:String(limit),q:q,type:'video',regionCode:'AR',order:'relevance',key:env.YOUTUBE_API_KEY});
-          if(type.includes('channel')) params.set('type','video');
-          const res=await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
-          const data=await res.json();
-          if(res.ok&&!data?.error) raw.push(...(Array.isArray(data.items)?data.items.map(x=>({...x,__source:'youtube'})):[]));
-        }catch(_){}
-        if(type.includes('channel')){
-          try{
-            const params=new URLSearchParams({part:'snippet',maxResults:String(Math.min(10,limit)),q:q,type:'channel',regionCode:'AR',order:'relevance',key:env.YOUTUBE_API_KEY});
-            const res=await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`); const data=await res.json();
-            if(res.ok&&!data?.error) raw.push(...(Array.isArray(data.items)?data.items.map(x=>({...x,__source:'youtube'})):[]));
-          }catch(_){}
-        }
-      }
-      // Invidious is always part of the prospecting pipeline: supplement or fallback.
+      // Invidious is ALWAYS first. The official YouTube API is only the last fallback.
       const ivVideo=await invidiousSearch(q,'video',limit);
       const ivChannel=type.includes('channel')?await invidiousSearch(q,'channel',Math.min(10,limit)):[];
       for(const x of ivVideo) raw.push({...x,__source:'invidious'});
       for(const x of ivChannel) raw.push({...x,__source:'invidious'});
 
+      // Spend official quota only when Invidious did not provide enough usable candidates.
+      if(raw.length < Math.min(5,limit) && ytEnabled && env.YOUTUBE_API_KEY){
+        try{
+          const params=new URLSearchParams({part:'snippet',maxResults:String(limit),q:q,type:'video',regionCode:'AR',order:'relevance',key:env.YOUTUBE_API_KEY});
+          const res=await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
+          const data=await res.json();
+          if(res.ok&&!data?.error) raw.push(...(Array.isArray(data.items)?data.items.map(x=>({...x,__source:'youtube'})):[]));
+        }catch(_){ }
+        if(type.includes('channel')){
+          try{
+            const params=new URLSearchParams({part:'snippet',maxResults:String(Math.min(10,limit)),q:q,type:'channel',regionCode:'AR',order:'relevance',key:env.YOUTUBE_API_KEY});
+            const res=await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
+            const data=await res.json();
+            if(res.ok&&!data?.error) raw.push(...(Array.isArray(data.items)?data.items.map(x=>({...x,__source:'youtube'})):[]));
+          }catch(_){ }
+        }
+      }
       const seen=new Set();
       const results=raw.map(x=>{
         const ytChannel=!!x.id?.channelId;
@@ -951,18 +962,20 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_resul
 
     if (path === '/api/admin/importar-canal' && request.method === 'POST') {
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
-      const body = await request.json().catch(() => ({}));
-      const channelId = String(body?.channel_id || '').trim();
-      if (!channelId) return json({ error: 'channel_id requerido' }, 400);
-      let meta=await invidiousChannelInfo(channelId);
-      if(!meta && await youtubeApiEnabled() && env.YOUTUBE_API_KEY){
-        const qs = new URLSearchParams({part:'snippet,brandingSettings',id:channelId,key:env.YOUTUBE_API_KEY});
-        const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?${qs.toString()}`);
-        const data = await res.json(); const ch = data?.items?.[0];
-        if(ch) meta={channelId,nombre:ch.snippet?.title||'Artista',thumbnail:ch.snippet?.thumbnails?.high?.url||ch.snippet?.thumbnails?.medium?.url||'',bio:ch.snippet?.description||'',source:'youtube_api'};
-      }
-      if(!meta) return json({error:'Canal no encontrado. Invidious no pudo resolverlo y la API oficial está desactivada.'},404);
-      const artista = {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const channelId = String(body?.channel_id || '').trim();
+        if (!channelId) return json({ error: 'channel_id requerido' }, 400);
+        let meta = await invidiousChannelInfo(channelId);
+        if (!meta && await youtubeApiEnabled() && env.YOUTUBE_API_KEY) {
+          const qs = new URLSearchParams({part:'snippet,brandingSettings',id:channelId,key:env.YOUTUBE_API_KEY});
+          const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?${qs.toString()}`);
+          const data = await res.json();
+          const ch = data?.items?.[0];
+          if (ch) meta = {channelId,nombre:ch.snippet?.title||'Artista',thumbnail:ch.snippet?.thumbnails?.high?.url||ch.snippet?.thumbnails?.medium?.url||'',bio:ch.snippet?.description||'',source:'youtube_api'};
+        }
+        if (!meta) return json({error:'Canal no encontrado mediante Invidious ni mediante el fallback oficial de YouTube.'},404);
+        const artista = {
           id:'ART-'+channelId,
           tipo:'artista',
           nombre:meta.nombre || 'Artista',
@@ -982,8 +995,12 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_resul
         const i = arr.findIndex(x => String(x?.canal || x?.youtube_id || '') === channelId);
         if(i>=0) arr[i] = {...arr[i], ...artista}; else arr.push(artista);
         await putJSON('artistas',arr);
-        return json({ success:true, artista:publicArtistFromItem(artista) });
-      } catch(e) { return json({ error:String(e?.message || e) },502); }
+        if (hasD1()) await syncArtistsD1(arr);
+        await audit('import_channel','artist',artista.id,{channelId,source:meta.source||'unknown'});
+        return json({ success:true, artista:publicArtistFromItem(artista), source:meta.source||'unknown' });
+      } catch(e) {
+        return json({ error:String(e?.message || e) },502);
+      }
     }
 
     if (path === '/api/apariencia') {
@@ -1136,7 +1153,7 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_resul
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try {
           const u=new URL(base+'/api/v1/trending'); u.searchParams.set('region',region); u.searchParams.set('type',category?'music':'default'); u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/7.4.1'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/7.4.2'}});
           if(!r.ok)continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){const items=arr.slice(0,limit).map(x=>({id:x.videoId||'',channel_id:x.authorId||'',channel_name:x.author||'',titulo:x.title||'',descripcion:x.description||'',thumbnail:x.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||x.videoThumbnails?.[0]?.url||'',views:Number(x.viewCount||0),published_at:x.publishedText||'',category_id:category||''})).filter(x=>x.id); if(items.length){const payload={source:'invidious_trending',region,category:category||null,items};const out=JSON.stringify(payload);await env.UADAV_DB.put(cacheKey,out,{expirationTtl:1800});return new Response(out,{headers:{...cors,'X-UADAV-Search-Source':'invidious_trending'}});}}
         } catch {} finally {clearTimeout(timer)}
@@ -1186,7 +1203,7 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_resul
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 5000);
         try {
-          const r = await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`, {signal: controller.signal, headers: {Accept:'application/json','User-Agent':'UADAVSTREAM/7.4.1'}});
+          const r = await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`, {signal: controller.signal, headers: {Accept:'application/json','User-Agent':'UADAVSTREAM/7.4.2'}});
           if (!r.ok) continue;
           const raw = await r.json();
           const arr = Array.isArray(raw) ? raw : [];
@@ -1277,21 +1294,21 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_resul
         const cached = await env.UADAV_DB.get(result.cache_key);
         if (cached) { const arr=JSON.parse(cached); if(Array.isArray(arr)&&arr.length){ result.source='cache'; result.count=arr.length; return json(result); } }
       } catch {}
+      for (const base of INVIDIOUS_INSTANCES) {
+        const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),4000);
+        try {
+          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/7.4.2'}});
+          if(!r.ok) continue; const arr=await r.json();
+          if(Array.isArray(arr)&&arr.length){result.source='invidious';result.instance=base;result.count=Math.min(arr.length,24);return json(result);}
+        } catch {} finally { clearTimeout(timer); }
+      }
       if (await youtubeApiEnabled() && env.YOUTUBE_API_KEY) {
         try {
           const res=await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=${encodeURIComponent(q)}&type=video&key=${env.YOUTUBE_API_KEY}`);
           const data=await res.json();
-          if(res.ok && !data.error && Array.isArray(data.items) && data.items.length){ result.source='youtube_api'; result.count=data.items.length; return json(result); }
+          if(res.ok && !data.error && Array.isArray(data.items) && data.items.length){ result.source='youtube_api_fallback'; result.count=data.items.length; return json(result); }
           result.youtube_error=data?.error?.message || `HTTP ${res.status}`;
         } catch(e){ result.youtube_error=String(e?.message || e); }
-      }
-      for (const base of ['https://invidious.nerdvpn.de','https://yewtu.be','https://invidious.tiekoetter.com']) {
-        const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),4000);
-        try {
-          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1`,{signal:controller.signal,headers:{Accept:'application/json'}});
-          if(!r.ok) continue; const arr=await r.json();
-          if(Array.isArray(arr)&&arr.length){result.source='invidious';result.instance=base;result.count=Math.min(arr.length,24);return json(result);}
-        } catch {} finally { clearTimeout(timer); }
       }
       result.status='ERROR';
       return json(result, 200);
@@ -1569,7 +1586,7 @@ CREATE INDEX IF NOT EXISTS idx_prospecting_results_category ON prospecting_resul
     }
 
     if (path === '/api/platform_info') {
-      return json({ service: 'UADAVSTREAM', version: 'V7.1', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board'] });
+      return json({ service: 'UADAVSTREAM', version: 'V7.4.2', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board'] });
     }
 
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.

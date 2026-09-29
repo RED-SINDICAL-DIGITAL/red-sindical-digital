@@ -655,6 +655,45 @@ body:not(.admin-v28-logged) .admin-auth-gate{display:grid}.admin-auth-card{width
 </style>
 <link rel="stylesheet" href="/uadav-design-v7.2.css">
 <script src="/uadav-brand-v7.2.js" defer></script>
+
+<style id="uadav-admin-v7-4-2-final-layout">
+:root{--admin-sidebar-final:264px;--admin-gap-final:18px}
+body.admin-v28-logged #app{
+  width:100%!important;max-width:none!important;margin:0!important;padding:16px 18px 28px!important;
+  display:grid!important;grid-template-columns:var(--admin-sidebar-final) minmax(0,1fr)!important;
+  grid-template-areas:"header header" "sidebar mainbar" "sidebar content"!important;gap:14px var(--admin-gap-final)!important;align-items:start!important;
+}
+body.admin-v28-logged .header{grid-area:header!important;position:sticky!important;top:8px!important;z-index:50!important;margin:0!important;width:100%!important}
+body.admin-v28-logged #adminV28NavShell{grid-area:sidebar!important;position:sticky!important;left:auto!important;top:92px!important;width:100%!important;height:calc(100vh - 110px)!important;margin:0!important;display:block!important;z-index:20!important}
+body.admin-v28-logged #adminV28NavShell .admin-v28-sidebar{height:100%!important;width:100%!important;position:relative!important;overflow:hidden!important}
+body.admin-v28-logged #adminV28Nav{overflow-y:auto!important;overflow-x:hidden!important;min-height:0!important;flex:1 1 auto!important;padding-right:4px!important}
+body.admin-v28-logged .admin-v28-mainbar{grid-area:mainbar!important;position:sticky!important;top:92px!important;z-index:18!important;margin:0!important;width:100%!important;max-width:none!important}
+body.admin-v28-logged #panelContent{grid-area:content!important;margin:0!important;width:100%!important;max-width:none!important;min-width:0!important;padding-bottom:120px!important}
+body.admin-v28-logged .fab{left:auto!important;right:24px!important;bottom:22px!important;margin:0!important;z-index:60!important}
+body.admin-v28-logged .header-actions #adminKeyInput,body.admin-v28-logged .header-actions button[onclick="conectar()"]{display:none!important}
+body:not(.admin-v28-logged) #adminV28NavShell,body:not(.admin-v28-logged) .admin-v28-mainbar,body:not(.admin-v28-logged) #panelContent,body:not(.admin-v28-logged) .fab{display:none!important}
+.admin-v28-sessionbox{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;flex:0 0 auto!important;margin-top:8px!important}
+@media(max-width:980px){
+ body.admin-v28-logged #app{display:block!important;padding:10px 10px 100px!important}
+ body.admin-v28-logged .header{position:sticky!important;top:6px!important;margin-bottom:8px!important}
+ body.admin-v28-logged #adminV28NavShell{position:sticky!important;top:76px!important;height:auto!important;width:100%!important;margin:0 0 8px!important;z-index:35!important}
+ body.admin-v28-logged #adminV28NavShell .admin-v28-sidebar{height:auto!important;padding:8px!important}
+ body.admin-v28-logged #adminV28Nav{display:flex!important;flex-direction:row!important;overflow-x:auto!important;overflow-y:hidden!important;gap:6px!important;padding-bottom:2px!important}
+ body.admin-v28-logged #adminV28Nav button{flex:0 0 auto!important;width:auto!important;min-width:44px!important;padding:10px 12px!important}
+ body.admin-v28-logged #adminV28Nav button .label{display:inline!important}
+ body.admin-v28-logged .admin-v28-nav-title,.admin-v28-sidebar-brand,.admin-v28-sidebar-foot,.admin-v28-sessionbox{display:none!important}
+ body.admin-v28-logged .admin-v28-mainbar{position:sticky!important;top:142px!important;margin:0 0 10px!important;width:100%!important;z-index:25!important}
+ body.admin-v28-logged #panelContent{margin:0!important;width:100%!important}
+ .u27-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:620px){
+ body.admin-v28-logged #adminV28Nav button .label{display:none!important}
+ body.admin-v28-logged .admin-v28-mainbar{top:132px!important;padding:11px 12px!important}
+ .u27-grid,.integration-diag-grid,.visibility-grid,.form-row,.site-pages-grid{grid-template-columns:1fr!important}
+ .u27-actions{grid-template-columns:1fr!important}
+ .header{padding:10px!important}.header h1{font-size:1rem!important}.admin-v28-mainbar .title{font-size:14px!important}
+}
+</style>
 </head>
 <body>
 <div id="adminAuthGate" class="admin-auth-gate" aria-live="polite"><div class="admin-auth-card"><div class="admin-auth-mark">★</div><div class="u28-ops-kicker">ACCESO SEGURO</div><h2>UADAVSTREAM</h2><p>Ingresá la clave de administración para acceder al Centro de Control.</p><div class="auth-row"><input id="adminGateKey" type="password" placeholder="Clave de administración" autocomplete="current-password"><button class="btn btn-primary" type="button" id="adminGateConnect">Conectar</button></div><div id="adminGateStatus" class="u28-note"></div></div></div>
@@ -1420,6 +1459,15 @@ UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input)
 // ============================================================
 const API_URL = 'https://uadav-api.uadavstream.workers.dev/api/';
 const FALLBACK_THUMB = 'https://via.placeholder.com/300x200?text=UADAVSTREAM';
+function uadavExtractYoutubeId(value){
+  const v=String(value||'').trim();
+  if(/^[A-Za-z0-9_-]{11}$/.test(v))return v;
+  const patterns=[/[?&]v=([A-Za-z0-9_-]{11})/,/youtu\.be\/([A-Za-z0-9_-]{11})/,/youtube\.com\/(?:shorts|embed|live)\/([A-Za-z0-9_-]{11})/];
+  for(const re of patterns){const m=v.match(re);if(m)return m[1]}
+  return '';
+}
+function uadavYoutubeThumb(value){const id=uadavExtractYoutubeId(value);return id?`https://i.ytimg.com/vi/${id}/hqdefault.jpg`:FALLBACK_THUMB}
+
 
 let ADMIN_KEY = '';
 let seccionesData = [];
@@ -1452,6 +1500,7 @@ function mostrarToast(mensaje, tipo = 'success') {
 function desconectar() {
   localStorage.removeItem('uadavstream_admin_key');
   ADMIN_KEY = '';
+  document.body.classList.remove('admin-v28-logged');
   document.getElementById('panelContent').classList.add('hidden');
   document.getElementById('btnLogout').classList.add('hidden');
   const input=document.getElementById('adminKeyInput');
@@ -1490,11 +1539,13 @@ async function conectar(){
       return;
     }
     localStorage.setItem('uadavstream_admin_key', ADMIN_KEY);
+    document.body.classList.add('admin-v28-logged');
     document.getElementById('panelContent').classList.remove('hidden');
     document.getElementById('btnLogout').classList.remove('hidden');
     mostrarToast(`Conectado · ${data.role==='admin_provincial'?'Administrador provincial':'Administrador nacional'}`,'success');
     await cargarDatos();
     await u27LoadDashboard();
+    if (typeof window.u74LoadProtectedTools === 'function') await window.u74LoadProtectedTools();
   }catch(e){
     mostrarToast('No se pudo conectar con UADAVSTREAM','error');
   }
@@ -2086,7 +2137,7 @@ function renderLista() {
         titulo = '';
       if (item.tipo === 'artista') { img = item.foto;
         titulo = item.nombre; } else if (item.tipo === 'evento') { img = item.imagen || 'https://via.placeholder.com/150';
-        titulo = `${item.nombre} - ${item.fecha || ''}`; } else { img = item.imagen || `https://i.ytimg.com/vi/${item.url}/mqdefault.jpg`;
+        titulo = `${item.nombre} - ${item.fecha || ''}`; } else { img = item.imagen || uadavYoutubeThumb(item.url||item.id||'');
         titulo = item.titulo; }
       list.innerHTML += `
         <div class="card" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
@@ -3396,7 +3447,7 @@ defaults.privacidad.content_html='<h2>1. Datos</h2><p>Podemos recibir los datos 
   function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
   window.cargarPaginasPublicasAdmin=async function(){const box=document.getElementById('sitePagesEditor');if(!box)return;try{const data=await u28Fetch('site_pages');window.__sitePagesData=Object.assign({},defaults,Array.isArray(data)?{}:data||{});box.innerHTML=pageDefs.map(([key,title,desc,file])=>{const d=window.__sitePagesData[key]||defaults[key];return `<article class="site-page-card"><h4>${esc(title)}</h4><small>/${file}</small><div class="form-group"><label>Habilitada</label><select data-page="${key}" data-field="enabled"><option value="true" ${d.enabled!==false?'selected':''}>Sí</option><option value="false" ${d.enabled===false?'selected':''}>No</option></select></div><div class="form-group"><label>Título</label><input data-page="${key}" data-field="title" value="${esc(d.title||title)}"></div><div class="form-group"><label>Descripción</label><textarea data-page="${key}" data-field="description">${esc(d.description||desc)}</textarea></div><div class="form-group"><label>Título del navegador</label><input data-page="${key}" data-field="browser_title" value="${esc(d.browser_title||((d.title||title)+' · UADAVSTREAM'))}"></div>${key==='terminos'||key==='privacidad'?`<div class="form-group"><label>Contenido legal (HTML simple)</label><textarea data-page="${key}" data-field="content_html">${esc(d.content_html||'')}</textarea></div>`:''}<div class="site-page-note">Los cambios de texto se aplican al abrir nuevamente la página.</div></article>`}).join('');document.getElementById('sitePagesStatus').textContent='✓ Configuración cargada';}catch(e){document.getElementById('sitePagesStatus').textContent='No se pudo cargar: '+e.message}}
   window.guardarPaginasPublicasAdmin=async function(){try{const out={...window.__sitePagesData};document.querySelectorAll('#sitePagesEditor [data-page]').forEach(el=>{const k=el.dataset.page,f=el.dataset.field;out[k]=out[k]||{};out[k][f]=f==='enabled'?el.value==='true':el.value});await u28Write('site_pages',out);window.__sitePagesData=out;document.getElementById('sitePagesStatus').textContent='✓ Páginas guardadas';mostrarToast('Páginas públicas guardadas','success')}catch(e){mostrarToast('No se pudo guardar páginas: '+e.message,'error')}}
-  function addPagesNav(){const nav=document.getElementById('adminV28Nav');if(!nav||nav.querySelector('[data-target="sec-pages"]'))return;const b=document.createElement('button');b.type='button';b.dataset.target='sec-pages';b.innerHTML='<i class="fa-solid fa-file-pen"></i><span class="label">Páginas públicas</span><span class="nav-dot"></span>';b.onclick=()=>{const el=document.getElementById('sec-pages');if(el){el.open=true;if(id==='sec-pages')setTimeout(()=>window.cargarPaginasPublicasAdmin?.(),40);window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-110,behavior:'smooth'})};document.querySelectorAll('#adminV28Nav button').forEach(x=>x.classList.toggle('active',x===b))};nav.appendChild(b)}
+  function addPagesNav(){const nav=document.getElementById('adminV28Nav');if(!nav||nav.querySelector('[data-target="sec-pages"]'))return;const b=document.createElement('button');b.type='button';b.dataset.target='sec-pages';b.innerHTML='<i class="fa-solid fa-file-pen"></i><span class="label">Páginas públicas</span><span class="nav-dot"></span>';b.onclick=()=>{const el=document.getElementById('sec-pages');if(el){el.open=true;setTimeout(()=>window.cargarPaginasPublicasAdmin?.(),40);window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-110,behavior:'smooth'})};document.querySelectorAll('#adminV28Nav button').forEach(x=>x.classList.toggle('active',x===b))};nav.appendChild(b)}
   function syncGate(){const logged=document.body.classList.contains('admin-v28-logged');const gate=document.getElementById('adminAuthGate');if(gate)gate.setAttribute('aria-hidden',String(logged));}
   document.addEventListener('DOMContentLoaded',()=>{try{ADMIN_KEY=localStorage.getItem('uadavstream_admin_key')||''}catch{ADMIN_KEY=''}const gateKey=document.getElementById('adminGateKey');const gateBtn=document.getElementById('adminGateConnect');if(gateBtn)gateBtn.onclick=async()=>{const top=document.getElementById('adminKeyInput');if(top)top.value=gateKey?.value||'';await conectar();if(document.body.classList.contains('admin-v28-logged')){if(gateKey)gateKey.value='';}};if(gateKey)gateKey.addEventListener('keydown',e=>{if(e.key==='Enter')gateBtn.click()});setTimeout(()=>{addPagesNav();syncGate();},350)});
   const obs=new MutationObserver(syncGate);obs.observe(document.body,{attributes:true,attributeFilter:['class']});
@@ -3476,7 +3527,7 @@ async function v7AskAI(){
   window.u73D1Status=async()=>{try{const d=await fetchAdmin('admin/d1/status');$('d1Status').textContent=d.configured?'OK':'NO';}catch(e){$('d1Status').textContent='ERROR';if(window.mostrarToast)mostrarToast(e.message,'error')}};
   window.u73D1Init=async()=>{try{const d=await fetchAdmin('admin/d1/init',{method:'POST'});$('d1Status').textContent='OK';if(window.mostrarToast)mostrarToast('D1 inicializada: '+(d.queries||0)+' consultas','success')}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
   window.u73InvidiousHealth=async()=>{try{const d=await fetchAdmin('admin/invidious/health');const ok=(d.instances||[]).filter(x=>x.ok).length; $('invidiousHealth').textContent=`Invidious: ${ok}/${(d.instances||[]).length} instancias respondieron. ${((d.instances||[]).map(x=>x.ok?'✅':'❌').join(' '))}`; }catch(e){$('invidiousHealth').textContent='❌ No se pudo comprobar Invidious'; if(window.mostrarToast)mostrarToast(e.message,'error')}};
-  window.u73LoadYoutubeApiMode=async()=>{try{const d=await fetchAdmin('admin/youtube-provider');const el=$('youtubeApiMode');const note=$('youtubeApiModeNote');if(el){el.textContent=d.enabled?'⚠️ API oficial ACTIVADA':'✅ Invidious primero · API oficial apagada';el.className='community-status '+(d.enabled?'warn':'ok')}if(note)note.textContent=d.key_present?(d.enabled?'Hay una API key configurada y puede consumirse como fallback.':'Hay una API key configurada, pero no se consume mientras este modo permanezca apagado.'):'No hay API key configurada.';}catch(e){if($('youtubeApiMode'))$('youtubeApiMode').textContent='❌ No disponible';}};
+  window.u73LoadYoutubeApiMode=async()=>{try{const d=await fetchAdmin('admin/youtube-provider');const el=$('youtubeApiMode');const note=$('youtubeApiModeNote');if(el){el.textContent=d.enabled?'✅ Invidious primero · YouTube habilitado solo como último fallback':'⚠️ YouTube fallback desactivado';el.className='community-status '+(d.enabled?'warn':'ok')}if(note)note.textContent=d.key_present?(d.enabled?'La API key está disponible, pero solo se usa si Invidious falla o no devuelve resultados suficientes.':'La API key existe, pero el fallback oficial está desactivado.'):'No hay API key configurada.';}catch(e){if($('youtubeApiMode'))$('youtubeApiMode').textContent='❌ No disponible';}};
   window.u73ToggleYoutubeApi=async()=>{try{const cur=await fetchAdmin('admin/youtube-provider');const next=!(cur.enabled===true);const d=await fetchAdmin('admin/youtube-provider',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:next})});await u73LoadYoutubeApiMode();if(window.mostrarToast)mostrarToast(d.enabled?'API oficial de YouTube ACTIVADA':'Modo ahorro activado: Invidious primero','success');}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
   window.u73GuardarProspectConfig=async()=>{try{await fetchAdmin('admin/prospecting/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:true,public_button:$('prospectPublicButton').value==='true',default_category:$('prospectCategory').value})});if(window.mostrarToast)mostrarToast('Configuración de prospección guardada','success');}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
   function renderRestrictions(list){$('restrictionsList').innerHTML=list.length?list.map(x=>`<div class="community-card" style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><strong>${String(x.kind||'term')}</strong> · ${String(x.value||'')}<small style="display:block;color:var(--text-secondary)">${String(x.reason||'')}</small></div><button class="btn btn-danger btn-sm" onclick="u73DeleteRestriction(${JSON.stringify(String(x.id||''))})">Eliminar</button></div>`).join(''):'<div class="u28-note">Sin restricciones.</div>'}
@@ -3484,7 +3535,11 @@ async function v7AskAI(){
   window.u73AddRestriction=async()=>{try{const body={kind:$('restrictionKind').value,value:$('restrictionValue').value.trim(),reason:$('restrictionReason').value.trim()};if(!body.value)throw new Error('Ingresá un valor');await fetchAdmin('admin/prospecting/restrictions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});$('restrictionValue').value='';$('restrictionReason').value='';await u73LoadRestrictions();if(window.mostrarToast)mostrarToast('Restricción agregada','success')}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
   window.u73DeleteRestriction=async id=>{if(!id)return;try{await fetchAdmin('admin/prospecting/restrictions?id='+encodeURIComponent(id),{method:'DELETE'});await u73LoadRestrictions();}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
   window.u73Prospectar=async()=>{const st=$('prospectStatus'),box=$('prospectResults');st.textContent='Buscando candidatos…';box.innerHTML='';try{const p=new URLSearchParams({category:$('prospectCategory').value,region:$('prospectRegion').value.trim(),q:$('prospectQuery').value.trim(),type:'channel,video',limit:'20'});const d=await fetchAdmin('admin/prospecting/search?'+p.toString());const arr=d.results||[];st.textContent=`${arr.length} candidatos luego de aplicar restricciones.`;box.innerHTML=arr.length?arr.map((x,i)=>`<div class="community-card"><div style="display:flex;gap:12px;align-items:center"><img src="${String(x.thumbnail||'').replace(/"/g,'%22')}" alt="" style="width:70px;height:48px;border-radius:8px;object-fit:cover;background:#111"><div style="min-width:0"><strong>${String(x.title||'Sin título')}</strong><small style="display:block;color:var(--text-secondary)">${String(x.channel_name||'')} · ${String(x.category||'')}</small><small style="display:block;color:var(--text-secondary)">${String(x.resource_type||'')} · ${String(x.source||'youtube')}</small></div></div><div style="margin-top:8px"><a class="btn btn-secondary btn-sm" target="_blank" rel="noopener" href="${String(x.url||'#').replace(/"/g,'%22')}">Ver fuente</a></div></div>`).join(''):'<div class="u28-note">No encontramos candidatos con estos criterios.</div>'}catch(e){st.textContent='No se pudo completar la búsqueda: '+e.message}}
-  document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{u73D1Status();u73LoadRestrictions();u73LoadYoutubeApiMode();fetchAdmin('prospecting/config').then(c=>{$('prospectPublicButton').value=c.public_button?'true':'false';$('prospectCategory').value=c.default_category||'all'}).catch(()=>{});},500)});
+  window.u74LoadProtectedTools=async()=>{
+    if(!(window.ADMIN_KEY||localStorage.getItem('uadavstream_admin_key')||'')) return;
+    await Promise.allSettled([u73D1Status(),u73LoadRestrictions(),u73LoadYoutubeApiMode(),fetchAdmin('prospecting/config').then(c=>{if($('prospectPublicButton'))$('prospectPublicButton').value=c.public_button?'true':'false';if($('prospectCategory'))$('prospectCategory').value=c.default_category||'all';})]);
+  };
+  document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{if(document.body.classList.contains('admin-v28-logged'))window.u74LoadProtectedTools();},700)});
 })();
 </script></body>
 </html>

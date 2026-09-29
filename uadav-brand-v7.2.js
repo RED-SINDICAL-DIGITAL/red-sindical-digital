@@ -1,4 +1,1 @@
-(function(){
-  const apply=()=>{document.querySelectorAll('[data-uadav-brand],.uadav-brand-name').forEach(el=>{el.textContent='UADAV STREAM'});};
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);else apply();
-})();
+(()=>{const API='https://uadav-api.uadavstream.workers.dev/api/';async function boot(){try{const r=await fetch(API+'config?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const c=await r.json();const b=c?.branding||c?.brand||{};const name=(b.nombre||b.name||c?.platform_name||'UADAV STREAM').trim();const icon=(b.icono||b.icon||'★').trim();document.querySelectorAll('[data-uadav-brand-name]').forEach(x=>x.textContent=name);document.querySelectorAll('[data-uadav-brand-icon]').forEach(x=>x.textContent=icon);if(b.favicon_url){let l=document.querySelector('link[rel="icon"]');if(!l){l=document.createElement('link');l.rel='icon';document.head.appendChild(l)}l.href=b.favicon_url}}catch{}}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot()})();

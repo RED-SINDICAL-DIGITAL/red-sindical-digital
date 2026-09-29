@@ -570,6 +570,23 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 <style id="uadav-radio-pro-v31-11">.radio-player-pro{margin:0 28px 0;display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;border:1px solid rgba(0,229,255,.15);border-radius:22px;background:linear-gradient(180deg,rgba(14,21,30,.97),rgba(8,13,19,.96));box-shadow:0 20px 55px rgba(0,0,0,.28);backdrop-filter:blur(18px)}.radio-player-cover{width:92px;height:92px;border-radius:16px;object-fit:cover;background:#0e141c;border:1px solid rgba(255,255,255,.08)}.radio-player-main{min-width:0}.radio-player-kicker{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#79e8f4;font-weight:900}.radio-player-title{font-size:20px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:5px}.radio-player-artist{font-size:12px;color:#8ea1b6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.radio-player-status{display:flex;align-items:center;gap:7px;color:#7de8b0;font-size:10px;font-weight:800;margin-top:9px}.radio-player-actions{display:flex;gap:8px;align-items:center}.radio-player-btn{min-width:44px;height:44px;padding:0 13px;border-radius:999px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-weight:900}.radio-player-btn.primary{background:#fff;color:#061018;border-color:#fff}.radio-player-volume{width:100px}@media(max-width:700px){.radio-player-pro{grid-template-columns:60px minmax(0,1fr);margin:0 14px;padding:11px}.radio-player-cover{width:60px;height:60px}.radio-player-actions{grid-column:1/-1}.radio-player-volume{display:none}.radio-player-btn{flex:1}.radio-player-title{font-size:16px}}</style><style id="uadav-search-v31-11">.search-catalog-toolbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 0 8px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:4px}.search-catalog-title{font-size:22px;font-weight:900}.search-catalog-sub{font-size:11px;color:var(--muted);margin-top:3px}.search-catalog-filters{display:flex;gap:7px;flex-wrap:wrap}.search-catalog-filter{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#b7c4d3;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:800;cursor:pointer}.search-catalog-filter.active{background:#fff;color:#061018;border-color:#fff}.search-catalog-count{opacity:.68;margin-left:4px}.search-filter-hidden{display:none!important}</style><link rel="stylesheet" href="/uadav-design-v7.2.css">
 <script src="/uadav-brand-v7.2.js" defer></script>
+
+<style id="uadav-v7-4-2-index-final-fix">
+/* Radio dock: never occupies normal document flow. */
+.radio-player-pro[hidden]{display:none!important}
+#radioPlayerDock.radio-player-pro{position:fixed!important;left:50%!important;bottom:18px!important;transform:translateX(-50%)!important;width:min(980px,calc(100vw - 36px))!important;margin:0!important;z-index:1200!important;box-shadow:0 28px 90px rgba(0,0,0,.58)!important}
+body{padding-bottom:0}
+@media(max-width:760px){
+  #radioPlayerDock.radio-player-pro{bottom:76px!important;width:calc(100vw - 20px)!important;grid-template-columns:54px minmax(0,1fr)!important;gap:10px!important;border-radius:18px!important}
+  .radio-player-cover{width:54px!important;height:54px!important;border-radius:12px!important}
+  .radio-player-actions{grid-column:1/-1!important;display:grid!important;grid-template-columns:repeat(3,1fr)!important}
+  .radio-player-btn{min-height:42px!important}
+  .radio-player-kicker{font-size:8px!important}.radio-player-title{font-size:15px!important}.radio-player-artist{font-size:11px!important}
+  .bottom-nav,.mobile-bottom-nav{z-index:1300!important}
+}
+/* Safer card imagery on small screens */
+@media(max-width:600px){.rail{gap:10px!important}.card{min-width:168px}.portrait-card{min-width:142px}.hero{min-height:58vh}.hero-content{padding-left:18px!important;padding-right:18px!important}.section{padding-left:14px!important;padding-right:14px!important}}
+</style>
 </head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
