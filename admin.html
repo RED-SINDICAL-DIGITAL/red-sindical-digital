@@ -634,6 +634,25 @@ body:not(.admin-v28-logged) .header{margin-left:0!important;width:100%!important
 body:not(.admin-v28-logged) .admin-auth-gate{display:grid}.admin-auth-card{width:min(430px,94vw);padding:28px;border:1px solid rgba(255,255,255,.1);border-radius:26px;background:linear-gradient(180deg,rgba(14,21,30,.97),rgba(7,11,17,.97));box-shadow:0 30px 120px rgba(0,0,0,.55);text-align:center}.admin-auth-mark{width:58px;height:58px;margin:0 auto 12px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(135deg,#00e5ff,#8b5cf6);color:#061018;font-size:26px;font-weight:900}.admin-auth-card h2{margin:0;font-size:25px}.admin-auth-card p{color:#8290a3;line-height:1.5;font-size:12px}.admin-auth-card .auth-row{display:flex;gap:8px;margin-top:16px}.admin-auth-card input{flex:1;min-width:0;height:46px}.admin-auth-card button{height:46px}.site-pages-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.site-page-card{border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:15px;background:rgba(255,255,255,.02)}.site-page-card h4{margin:0 0 4px;font-size:13px}.site-page-card small{color:#6f7d90;font-size:9px}.site-page-card .form-group{margin-top:9px}.site-page-card textarea{min-height:84px}.site-page-note{color:#7d8a9d;font-size:10px;line-height:1.45;margin-top:8px}.site-pages-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
 @media(max-width:900px){body.admin-v28-logged .header,body.admin-v28-logged #panelContent,body.admin-v28-logged .admin-v28-mainbar{margin-left:0!important;width:100%!important}.admin-v28-sidebar-shell{position:sticky!important;left:auto!important;top:8px!important;width:100%!important;height:auto!important;margin:0 0 10px!important}.admin-v28-sidebar{height:auto!important}.site-pages-grid{grid-template-columns:1fr}body.admin-v28-logged .header{top:6px!important}}
 </style>
+<style id="uadav-admin-v74-stable-layout">
+/* V7.4.1 — sidebar ocupa una columna real y nunca tapa el contenido */
+@media(min-width:901px){
+  body.admin-v28-logged #app{width:100%!important;max-width:none!important;margin:0!important;padding:0 24px 110px!important;display:grid!important;grid-template-columns:292px minmax(0,1fr)!important;column-gap:24px!important;grid-template-areas:"header header" "sidebar mainbar" "sidebar content" "sidebar fab"!important;align-items:start!important;}
+  body.admin-v28-logged #app>.header{grid-area:header!important;margin:0 0 18px!important;width:100%!important;position:relative!important;top:auto!important;left:auto!important;}
+  body.admin-v28-logged #adminV28NavShell{grid-area:sidebar!important;position:sticky!important;left:auto!important;top:18px!important;width:292px!important;height:calc(100vh - 36px)!important;margin:0!important;z-index:10!important;display:block!important;}
+  body.admin-v28-logged #adminV28NavShell .admin-v28-sidebar{height:100%!important;position:relative!important;}
+  body.admin-v28-logged .admin-v28-mainbar{grid-area:mainbar!important;margin:0 0 18px!important;width:100%!important;position:sticky!important;top:18px!important;z-index:9!important;}
+  body.admin-v28-logged #panelContent{grid-area:content!important;margin:0!important;width:100%!important;min-width:0!important;max-width:none!important;}
+  body.admin-v28-logged .fab{grid-area:fab!important;margin:0!important;justify-self:start!important;}
+}
+@media(max-width:900px){
+  body.admin-v28-logged #app{display:block!important;max-width:none!important;padding:0 10px 100px!important;margin:0!important;}
+  body.admin-v28-logged #adminV28NavShell{position:sticky!important;left:auto!important;top:8px!important;width:100%!important;height:auto!important;margin:0 0 10px!important;z-index:20!important;}
+  body.admin-v28-logged #adminV28NavShell .admin-v28-sidebar{height:auto!important;}
+  body.admin-v28-logged .admin-v28-mainbar,body.admin-v28-logged #panelContent{margin:0!important;width:100%!important;}
+  body.admin-v28-logged .admin-v28-mainbar{position:sticky!important;top:8px!important;z-index:19!important;}
+}
+</style>
 <link rel="stylesheet" href="/uadav-design-v7.2.css">
 <script src="/uadav-brand-v7.2.js" defer></script>
 </head>
@@ -1240,18 +1259,18 @@ body:not(.admin-v28-logged) .admin-auth-gate{display:grid}.admin-auth-card{width
   <div class="u27-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
     <div class="u27-card"><div class="u27-label">D1</div><div class="u27-value" id="d1Status">—</div><div class="u27-note">Estado de la base central</div></div>
     <div class="u27-card"><div class="u27-label">IA</div><div class="u27-value">Gemini → Groq</div><div class="u27-note">Normalización y clasificación</div></div>
-    <div class="u27-card"><div class="u27-label">YouTube + Invidious</div><div class="u27-value" id="ytStatus">—</div><div class="u27-note">Prospección con doble proveedor</div></div>
+    <div class="u27-card"><div class="u27-label">Fuentes públicas</div><div class="u27-value" id="ytStatus">Invidious → YouTube opcional</div><div class="u27-note">Modo ahorro de cuota: API oficial apagada por defecto</div></div>
   </div>
   <div class="u27-panel" style="margin-top:14px">
     <h3>🔎 Buscar artistas de Argentina</h3>
-    <p class="u27-note">Busca candidatos públicos en YouTube sin publicarlos automáticamente. Se guardan como prospectos para revisión UADAV.</p>
+    <p class="u27-note">Busca candidatos en fuentes públicas, priorizando Invidious. La API oficial de YouTube no se usa salvo que la habilites explícitamente. Se guardan como prospectos para revisión UADAV.</p>
     <div class="form-row">
       <div class="form-group"><label>Rubro / tipo</label><select id="prospectCategory"><option value="all">Todas las disciplinas</option><option value="solista">Solistas</option><option value="banda">Bandas / grupos</option><option value="circo">Circo</option><option value="teatro">Teatro</option><option value="danza">Danza</option><option value="magia">Magia</option><option value="humor">Humor</option><option value="animacion">Animación</option><option value="locucion">Locución / conducción</option><option value="grupo">Compañías / elencos</option><option value="sala">Salas / espacios</option><option value="productora">Productoras</option><option value="creador">Creadores / YouTubers</option></select></div>
       <div class="form-group"><label>Provincia / ciudad opcional</label><input id="prospectRegion" placeholder="Rosario, Santa Fe"></div>
       <div class="form-group"><label>Búsqueda adicional</label><input id="prospectQuery" placeholder="Ej.: artistas de variedades Argentina"></div>
       <div class="form-group"><label>Mostrar CTA público</label><select id="prospectPublicButton"><option value="false">No</option><option value="true">Sí</option></select></div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-primary" type="button" onclick="u73Prospectar()">🔎 Buscar candidatos</button><button class="btn btn-secondary" type="button" onclick="u73GuardarProspectConfig()">💾 Guardar configuración</button><button class="btn btn-secondary" type="button" onclick="u73D1Init()">🗄️ Inicializar D1</button><button class="btn btn-secondary" type="button" onclick="u73D1Status()">↻ Ver estado D1</button><button class="btn btn-secondary" type="button" onclick="u73InvidiousHealth()">🌐 Probar Invidious</button></div><div id="invidiousHealth" class="u28-note" style="margin-top:10px"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn btn-primary" type="button" onclick="u73Prospectar()">🔎 Buscar candidatos</button><button class="btn btn-secondary" type="button" onclick="u73GuardarProspectConfig()">💾 Guardar configuración</button><button class="btn btn-secondary" type="button" onclick="u73D1Init()">🗄️ Inicializar D1</button><button class="btn btn-secondary" type="button" onclick="u73D1Status()">↻ Ver estado D1</button><button class="btn btn-secondary" type="button" onclick="u73InvidiousHealth()">🌐 Probar Invidious</button></div><div id="invidiousHealth" class="u28-note" style="margin-top:10px"></div><div class="u27-panel" style="margin-top:14px"><h3>🛡️ Protección de cuota YouTube</h3><div class="u27-note">Por defecto UADAV STREAM trabaja con Invidious. La API oficial de YouTube solo se usa si vos la activás.</div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px"><span id="youtubeApiMode" class="community-status warn">Cargando…</span><button class="btn btn-secondary btn-sm" type="button" onclick="u73ToggleYoutubeApi()">Cambiar</button></div><div id="youtubeApiModeNote" class="u27-note" style="margin-top:8px"></div></div>
     <div id="prospectStatus" class="u28-note" style="margin-top:12px"></div>
     <div id="prospectResults" class="community-list" style="margin-top:12px"></div>
   </div>
@@ -1281,8 +1300,8 @@ https://www.youtube.com/@u2
 UCq-Fj5jknLsUf-MWSy4_brA" rows="5" style="width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px; color:var(--text-primary); margin:8px 0;"></textarea>
 <label style="color:var(--text-secondary); font-size:0.7rem; text-transform:uppercase; font-weight:700;">Rubro por defecto</label>
 <input id="importGeneros" placeholder="Música" style="width:100%; background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px; color:var(--text-primary); margin:8px 0;"/>
-<p style="color:var(--text-secondary); font-size:0.7rem; margin:8px 0;">💡 Los links/ID de canal son exactos y gastan menos cuota de API.</p>
-<button class="btn btn-secondary w-full" id="btnBuscarImportYT" onclick="buscarArtistasYoutubeMasivo()"><i class="fa-solid fa-magnifying-glass"></i> Buscar en YouTube</button>
+<p style="color:var(--text-secondary); font-size:0.7rem; margin:8px 0;">💡 Modo ahorro: Invidious primero. La API oficial de YouTube queda desactivada por defecto.</p>
+<button class="btn btn-secondary w-full" id="btnBuscarImportYT" onclick="buscarArtistasYoutubeMasivo()"><i class="fa-solid fa-magnifying-glass"></i> Buscar en fuentes públicas</button>
 <div id="resultadosImportYT" style="margin-top:12px; max-height:200px; overflow-y:auto;"></div>
 <button class="btn btn-primary w-full hidden mt-2" id="btnConfirmarImportYT" onclick="confirmarImportacionArtistasYT()">
 <i class="fa-solid fa-check"></i> Agregar seleccionados a "Artistas"
@@ -1470,6 +1489,7 @@ async function conectar(){
       mostrarToast(data.error||'Clave incorrecta','error');
       return;
     }
+    localStorage.setItem('uadavstream_admin_key', ADMIN_KEY);
     document.getElementById('panelContent').classList.remove('hidden');
     document.getElementById('btnLogout').classList.remove('hidden');
     mostrarToast(`Conectado · ${data.role==='admin_provincial'?'Administrador provincial':'Administrador nacional'}`,'success');
@@ -1485,15 +1505,22 @@ async function conectar(){
 // ============================================================
 async function cargarDatos() {
   try {
+    const adminFetch = window.u28Fetch || (async (path, options={}) => {
+      const key=ADMIN_KEY||localStorage.getItem('uadavstream_admin_key')||'';
+      const res=await fetch(API_URL+path,{...options,headers:{...(options.headers||{}),Authorization:'Bearer '+key}});
+      const d=await res.json().catch(()=>({}));
+      if(!res.ok) throw new Error(d.error||('HTTP '+res.status));
+      return d;
+    });
     const [secRes, apRes, banRes, estRes, senRes, radRes, footRes, visibilityRes] = await Promise.all([
-      fetch(API_URL + 'secciones', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
-      fetch(API_URL + 'apariencia', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
-      fetch(API_URL + 'banners', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
-      fetch(API_URL + 'estado_sitio', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
-      fetch(API_URL + 'senales_oficiales', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
-      fetch(API_URL + 'radios', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => []),
-      fetch(API_URL + 'footer_config', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({})),
-      fetch(API_URL + 'web_visibility', { mode: 'cors', credentials: 'omit' }).then(r => r.json()).catch(() => ({}))
+      adminFetch('secciones').catch(() => []),
+      adminFetch('apariencia').catch(() => ({})),
+      adminFetch('banners').catch(() => ({})),
+      adminFetch('estado_sitio').catch(() => ({})),
+      adminFetch('senales_oficiales').catch(() => []),
+      adminFetch('radios').catch(() => []),
+      adminFetch('footer_config').catch(() => ({})),
+      adminFetch('web_visibility').catch(() => ({}))
     ]);
 
     seccionesData = Array.isArray(secRes) ? secRes : [];
@@ -1613,8 +1640,7 @@ function renderBanners(data){
 
 async function cargarBanners(){
   try{
-    const res=await fetch(API_URL+'banners?_='+Date.now(),{mode:'cors',credentials:'omit'});
-    const data=await res.json();
+    const data=await (window.u28Fetch?window.u28Fetch('banners'):Promise.reject(new Error('Sesión administrativa no disponible')));
     renderBanners(data);
     const status=document.getElementById('bannersStatus');
     if(status)status.textContent='✅ Banners cargados desde UADAV_DB';
@@ -1718,12 +1744,10 @@ function eliminarHeroSpotlightActual(){
 
 async function cargarPersonalizacion() {
   try {
-    const [cfgRes, estadoRes] = await Promise.all([
-      fetch(API_URL + 'config?_=' + Date.now(), { mode: 'cors', credentials: 'omit' }),
-      fetch(API_URL + 'estado_sitio?_=' + Date.now(), { mode: 'cors', credentials: 'omit' })
+    const [config, estado] = await Promise.all([
+      (window.u28Fetch?window.u28Fetch('config'):Promise.reject(new Error('Sesión administrativa no disponible'))),
+      (window.u28Fetch?window.u28Fetch('estado_sitio'):Promise.reject(new Error('Sesión administrativa no disponible')))
     ]);
-    const config = await cfgRes.json().catch(() => ({}));
-    const estado = await estadoRes.json().catch(() => ({}));
 
     if (config.branding) {
       document.getElementById('marcaLogo').value = config.branding.logo_url || '';
@@ -1843,7 +1867,7 @@ async function guardarWebVisibility(){
   }catch(e){mostrarToast('No se pudo guardar la visibilidad','error')}
 }
 async function cargarHomeLayout(){
-  try{const raw=await fetch(API_URL+'home_layout?_='+Date.now()).then(r=>r.ok?r.json():null);if(raw&&Array.isArray(raw.order))homeLayout={...homeLayout,order:raw.order}}catch(e){console.warn('Home layout',e)}
+  try{const raw=window.u28Fetch?await window.u28Fetch('home_layout'):null;if(raw&&Array.isArray(raw.order))homeLayout={...homeLayout,order:raw.order}}catch(e){console.warn('Home layout',e)}
   renderHomeLayout();
 }
 function renderHomeLayout(){
@@ -2535,11 +2559,7 @@ async function crearShow() {
 
 async function cargarShows() {
   try {
-    const res = await fetch(API_URL + 'cartelera', {
-      mode: 'cors',
-      credentials: 'omit'
-    });
-    const shows = await res.json();
+    const shows = await (window.u28Fetch ? window.u28Fetch('cartelera') : Promise.reject(new Error('Sesión administrativa no disponible')));
     const list = document.getElementById('showsList');
     list.innerHTML = '';
     if (!Array.isArray(shows) || shows.length === 0) {
@@ -3021,7 +3041,7 @@ async function u27LoadAudit(){
     badge.innerHTML=dirty?'<i class="fa-solid fa-circle-exclamation"></i> Cambios sin guardar':'<i class="fa-solid fa-circle-check"></i> Sin cambios pendientes';
   };
   function markDirty(){ if(document.body.classList.contains('admin-v28-logged')) setDirty(true); }
-  function restoreAdminKey(){ ADMIN_KEY=''; }
+  function restoreAdminKey(){ ADMIN_KEY=ADMIN_KEY||localStorage.getItem('uadavstream_admin_key')||''; return ADMIN_KEY; }
   function clearDirty(){ setDirty(false); }
 
   async function u28Fetch(path, options={}){
@@ -3378,7 +3398,7 @@ defaults.privacidad.content_html='<h2>1. Datos</h2><p>Podemos recibir los datos 
   window.guardarPaginasPublicasAdmin=async function(){try{const out={...window.__sitePagesData};document.querySelectorAll('#sitePagesEditor [data-page]').forEach(el=>{const k=el.dataset.page,f=el.dataset.field;out[k]=out[k]||{};out[k][f]=f==='enabled'?el.value==='true':el.value});await u28Write('site_pages',out);window.__sitePagesData=out;document.getElementById('sitePagesStatus').textContent='✓ Páginas guardadas';mostrarToast('Páginas públicas guardadas','success')}catch(e){mostrarToast('No se pudo guardar páginas: '+e.message,'error')}}
   function addPagesNav(){const nav=document.getElementById('adminV28Nav');if(!nav||nav.querySelector('[data-target="sec-pages"]'))return;const b=document.createElement('button');b.type='button';b.dataset.target='sec-pages';b.innerHTML='<i class="fa-solid fa-file-pen"></i><span class="label">Páginas públicas</span><span class="nav-dot"></span>';b.onclick=()=>{const el=document.getElementById('sec-pages');if(el){el.open=true;if(id==='sec-pages')setTimeout(()=>window.cargarPaginasPublicasAdmin?.(),40);window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-110,behavior:'smooth'})};document.querySelectorAll('#adminV28Nav button').forEach(x=>x.classList.toggle('active',x===b))};nav.appendChild(b)}
   function syncGate(){const logged=document.body.classList.contains('admin-v28-logged');const gate=document.getElementById('adminAuthGate');if(gate)gate.setAttribute('aria-hidden',String(logged));}
-  document.addEventListener('DOMContentLoaded',()=>{try{localStorage.removeItem('uadavstream_admin_key')}catch{}ADMIN_KEY='';const gateKey=document.getElementById('adminGateKey');const gateBtn=document.getElementById('adminGateConnect');if(gateBtn)gateBtn.onclick=async()=>{const top=document.getElementById('adminKeyInput');if(top)top.value=gateKey?.value||'';await conectar();if(document.body.classList.contains('admin-v28-logged')){if(gateKey)gateKey.value='';}};if(gateKey)gateKey.addEventListener('keydown',e=>{if(e.key==='Enter')gateBtn.click()});setTimeout(()=>{addPagesNav();syncGate();},350)});
+  document.addEventListener('DOMContentLoaded',()=>{try{ADMIN_KEY=localStorage.getItem('uadavstream_admin_key')||''}catch{ADMIN_KEY=''}const gateKey=document.getElementById('adminGateKey');const gateBtn=document.getElementById('adminGateConnect');if(gateBtn)gateBtn.onclick=async()=>{const top=document.getElementById('adminKeyInput');if(top)top.value=gateKey?.value||'';await conectar();if(document.body.classList.contains('admin-v28-logged')){if(gateKey)gateKey.value='';}};if(gateKey)gateKey.addEventListener('keydown',e=>{if(e.key==='Enter')gateBtn.click()});setTimeout(()=>{addPagesNav();syncGate();},350)});
   const obs=new MutationObserver(syncGate);obs.observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 
@@ -3456,13 +3476,15 @@ async function v7AskAI(){
   window.u73D1Status=async()=>{try{const d=await fetchAdmin('admin/d1/status');$('d1Status').textContent=d.configured?'OK':'NO';}catch(e){$('d1Status').textContent='ERROR';if(window.mostrarToast)mostrarToast(e.message,'error')}};
   window.u73D1Init=async()=>{try{const d=await fetchAdmin('admin/d1/init',{method:'POST'});$('d1Status').textContent='OK';if(window.mostrarToast)mostrarToast('D1 inicializada: '+(d.queries||0)+' consultas','success')}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
   window.u73InvidiousHealth=async()=>{try{const d=await fetchAdmin('admin/invidious/health');const ok=(d.instances||[]).filter(x=>x.ok).length; $('invidiousHealth').textContent=`Invidious: ${ok}/${(d.instances||[]).length} instancias respondieron. ${((d.instances||[]).map(x=>x.ok?'✅':'❌').join(' '))}`; }catch(e){$('invidiousHealth').textContent='❌ No se pudo comprobar Invidious'; if(window.mostrarToast)mostrarToast(e.message,'error')}};
+  window.u73LoadYoutubeApiMode=async()=>{try{const d=await fetchAdmin('admin/youtube-provider');const el=$('youtubeApiMode');const note=$('youtubeApiModeNote');if(el){el.textContent=d.enabled?'⚠️ API oficial ACTIVADA':'✅ Invidious primero · API oficial apagada';el.className='community-status '+(d.enabled?'warn':'ok')}if(note)note.textContent=d.key_present?(d.enabled?'Hay una API key configurada y puede consumirse como fallback.':'Hay una API key configurada, pero no se consume mientras este modo permanezca apagado.'):'No hay API key configurada.';}catch(e){if($('youtubeApiMode'))$('youtubeApiMode').textContent='❌ No disponible';}};
+  window.u73ToggleYoutubeApi=async()=>{try{const cur=await fetchAdmin('admin/youtube-provider');const next=!(cur.enabled===true);const d=await fetchAdmin('admin/youtube-provider',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:next})});await u73LoadYoutubeApiMode();if(window.mostrarToast)mostrarToast(d.enabled?'API oficial de YouTube ACTIVADA':'Modo ahorro activado: Invidious primero','success');}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
   window.u73GuardarProspectConfig=async()=>{try{await fetchAdmin('admin/prospecting/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:true,public_button:$('prospectPublicButton').value==='true',default_category:$('prospectCategory').value})});if(window.mostrarToast)mostrarToast('Configuración de prospección guardada','success');}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
   function renderRestrictions(list){$('restrictionsList').innerHTML=list.length?list.map(x=>`<div class="community-card" style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><strong>${String(x.kind||'term')}</strong> · ${String(x.value||'')}<small style="display:block;color:var(--text-secondary)">${String(x.reason||'')}</small></div><button class="btn btn-danger btn-sm" onclick="u73DeleteRestriction(${JSON.stringify(String(x.id||''))})">Eliminar</button></div>`).join(''):'<div class="u28-note">Sin restricciones.</div>'}
   window.u73LoadRestrictions=async()=>{try{const d=await fetchAdmin('admin/prospecting/restrictions');renderRestrictions(Array.isArray(d)?d:[])}catch(e){}}
   window.u73AddRestriction=async()=>{try{const body={kind:$('restrictionKind').value,value:$('restrictionValue').value.trim(),reason:$('restrictionReason').value.trim()};if(!body.value)throw new Error('Ingresá un valor');await fetchAdmin('admin/prospecting/restrictions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});$('restrictionValue').value='';$('restrictionReason').value='';await u73LoadRestrictions();if(window.mostrarToast)mostrarToast('Restricción agregada','success')}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
   window.u73DeleteRestriction=async id=>{if(!id)return;try{await fetchAdmin('admin/prospecting/restrictions?id='+encodeURIComponent(id),{method:'DELETE'});await u73LoadRestrictions();}catch(e){if(window.mostrarToast)mostrarToast(e.message,'error')}};
   window.u73Prospectar=async()=>{const st=$('prospectStatus'),box=$('prospectResults');st.textContent='Buscando candidatos…';box.innerHTML='';try{const p=new URLSearchParams({category:$('prospectCategory').value,region:$('prospectRegion').value.trim(),q:$('prospectQuery').value.trim(),type:'channel,video',limit:'20'});const d=await fetchAdmin('admin/prospecting/search?'+p.toString());const arr=d.results||[];st.textContent=`${arr.length} candidatos luego de aplicar restricciones.`;box.innerHTML=arr.length?arr.map((x,i)=>`<div class="community-card"><div style="display:flex;gap:12px;align-items:center"><img src="${String(x.thumbnail||'').replace(/"/g,'%22')}" alt="" style="width:70px;height:48px;border-radius:8px;object-fit:cover;background:#111"><div style="min-width:0"><strong>${String(x.title||'Sin título')}</strong><small style="display:block;color:var(--text-secondary)">${String(x.channel_name||'')} · ${String(x.category||'')}</small><small style="display:block;color:var(--text-secondary)">${String(x.resource_type||'')} · ${String(x.source||'youtube')}</small></div></div><div style="margin-top:8px"><a class="btn btn-secondary btn-sm" target="_blank" rel="noopener" href="${String(x.url||'#').replace(/"/g,'%22')}">Ver fuente</a></div></div>`).join(''):'<div class="u28-note">No encontramos candidatos con estos criterios.</div>'}catch(e){st.textContent='No se pudo completar la búsqueda: '+e.message}}
-  document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{u73D1Status();u73LoadRestrictions();fetchAdmin('prospecting/config').then(c=>{$('prospectPublicButton').value=c.public_button?'true':'false';$('prospectCategory').value=c.default_category||'all'}).catch(()=>{});},500)});
+  document.addEventListener('DOMContentLoaded',()=>{setTimeout(()=>{u73D1Status();u73LoadRestrictions();u73LoadYoutubeApiMode();fetchAdmin('prospecting/config').then(c=>{$('prospectPublicButton').value=c.public_button?'true':'false';$('prospectCategory').value=c.default_category||'all'}).catch(()=>{});},500)});
 })();
 </script></body>
 </html>
