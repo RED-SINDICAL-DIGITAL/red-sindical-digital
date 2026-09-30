@@ -33,6 +33,11 @@
       "name": "Mi perfil",
       "short_name": "Mi perfil",
       "url": "/mi-perfil.html"
+    },
+    {
+      "name": "Contratar artistas",
+      "short_name": "Marketplace",
+      "url": "/marketplace.html"
     }
   ]
 }
