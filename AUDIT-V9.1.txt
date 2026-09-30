@@ -1,0 +1,22 @@
+UADAV STREAM V9.1 - Auditoría local
+Fecha: 2026-09-30
+
+- Worker: sintaxis OK
+- Service Worker: sintaxis OK
+- Player universal: sintaxis OK
+- HTML: 27
+- Scripts inline validados: 26
+- Errores JavaScript sintácticos: 0
+- IDs HTML duplicados: 0
+- Referencias locales faltantes: 0
+- Assets compartidos restaurados: SI
+- Service Worker V9.1: solo cachea recursos same-origin; no intercepta APIs/streams externos
+- Reparación de contenido legado: /api/admin/content/repair-links
+- Búsqueda YouTube/Invidious: resultados normalizados con provider, external_id y url
+- Hero institucional: disponible y configurable
+- Visibilidad por módulo: Radio, Podcast, Playlists, Cine & Historias y demás módulos en Admin
+- Podcast: vista explícita en Admin
+
+Notas:
+- Un contenido cuyo proveedor prohíba embedding no puede ser forzado. En ese caso UADAV STREAM ofrece abrir la fuente original.
+- Invidious continúa como proveedor prioritario de descubrimiento; YouTube oficial queda como fallback.

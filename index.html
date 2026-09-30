@@ -600,7 +600,7 @@ body{padding-bottom:0}
 }
 </style>
 <script src="/uadav-api-config.js"></script>
-<link rel="stylesheet" href="/uadav-ui-v8.4.css"></head>
+<link rel="stylesheet" href="/uadav-ui-v8.4.css"><link rel="stylesheet" href="/uadav-v9.css"></head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
     <div class="maintenance-card">
@@ -613,7 +613,7 @@ body{padding-bottom:0}
   <header class="nav" id="nav">
     <a class="brand" href="#top" aria-label="UADAV STREAM inicio"><span class="brand-mark"><img id="brandLogo" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px"><i id="brandLogoFallback" class="fa-solid fa-star"></i></span><span id="brandName">UADAV STREAM</span></a>
     <nav class="nav-links" aria-label="Navegación principal">
-      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#discoverRow" onclick="irASeccion('discoverRow');return false">Explorar</a><a href="#artists" id="navArtistsLink" onclick="irASeccion('artists');return false">Artistas</a><a href="#radiosRow" id="navRadiosLink" onclick="irASeccion('radiosRow');return false">Radio</a><a href="/cartelera.html" id="navCarteleraLink">Cartelera</a><a href="/peliculas-series.html" id="navMediaLink">Cine & Series</a><a href="#liveRow" id="navLiveLink" onclick="irASeccion('liveRow');return false">En vivo</a><details class="nav-more"><summary>Más ▾</summary><div class="nav-more-menu"><a href="/shorts.html">Shorts</a><a href="/playlists.html">Playlists</a><a href="/podcasts.html">Podcast</a><a href="/marketplace.html">Contratar artistas</a><span id="dynamicSectionsNav" class="dynamic-sections-nav" aria-label="Secciones"></span></div></details>
+      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#discoverRow" onclick="irASeccion('discoverRow');return false">Explorar</a><a href="#artists" id="navArtistsLink" onclick="irASeccion('artists');return false">Artistas</a><a href="/trabajo.html">Trabajo</a><a href="#radiosRow" id="navRadiosLink" onclick="irASeccion('radiosRow');return false">Radio</a><a href="/cartelera.html" id="navCarteleraLink">Cartelera</a><a href="/peliculas-series.html" id="navMediaLink">Cine & Historias</a><a href="#liveRow" id="navLiveLink" onclick="irASeccion('liveRow');return false">En vivo</a><details class="nav-more"><summary>Más ▾</summary><div class="nav-more-menu"><a id="navShortsLink" href="/shorts.html">Shorts</a><a id="navPlaylistsLink" href="/playlists.html">Playlists</a><a id="navPodcastsLink" href="/podcasts.html">Podcast</a><a href="/marketplace.html">Marketplace / Contratar</a><a href="/stream-plus.html">UADAV STREAM+</a><span id="dynamicSectionsNav" class="dynamic-sections-nav" aria-label="Secciones"></span></div></details>
     </nav>
     <div class="nav-actions">
       <div class="nav-search"><i class="fa-solid fa-magnifying-glass"></i><input id="navSearchInput" aria-label="Buscar" placeholder="Buscar..." onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button aria-label="Buscar" onclick="ejecutarBusqueda(document.getElementById('navSearchInput').value)"><i class="fa-solid fa-arrow-right"></i></button></div>
@@ -651,7 +651,7 @@ body{padding-bottom:0}
     <section class="content" id="contenido">
       <div class="row" id="continueRow" hidden><div class="row-head"><div><div class="row-title">▶ Continuar viendo</div><div class="row-subtitle">Contenido que empezaste a disfrutar</div></div></div><div class="rail" id="continueRail"></div></div>
       <div class="row" id="savedRow" hidden><div class="row-head"><div><div class="row-title">🔖 Mi lista</div><div class="row-subtitle">Guardados en este dispositivo</div></div></div><div class="rail" id="savedRail"></div></div>
-      <div class="row" id="resultsRow" hidden><div class="row-head"><div><div class="row-title" id="resultsTitle">Resultados</div></div><button class="row-more" onclick="volverInicio()">Volver al inicio</button></div><div class="rail results-rail" id="resultsRail"></div></div>
+      <section class="v9-engines" aria-label="Ecosistema UADAV STREAM"><a href="#discoverRow" onclick="irASeccion('discoverRow');return false"><b>▶ Entretenimiento</b><span>Descubrí contenido, radio, historias y eventos</span></a><a href="#artists" onclick="irASeccion('artists');return false"><b>★ Artistas</b><span>Perfiles, contenido, agenda y Press Kit</span></a><a href="/trabajo.html"><b>✦ Trabajo</b><span>Bolsa, contratación, marketplace y derechos</span></a><a href="/mi-perfil.html"><b>◎ Comunidad</b><span>Seguir, guardar, apoyar y volver</span></a><a href="/stream-plus.html"><b>◆ Sostener</b><span>STREAM+ y apoyo al ecosistema</span></a></section><div class="row" id="resultsRow" hidden><div class="row-head"><div><div class="row-title" id="resultsTitle">Resultados</div></div><button class="row-more" onclick="volverInicio()">Volver al inicio</button></div><div class="rail results-rail" id="resultsRail"></div></div>
       <div class="row" id="featuredRow"><div class="row-head"><div><div class="row-title" id="featuredTitle">🔥 Destacados</div><div class="row-subtitle">Una selección para empezar a descubrir</div></div><button class="row-more" onclick="cargarDestacados(true)">Actualizar</button></div><div class="rail" id="featuredRail"><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div><div class="card"><div class="thumb"></div></div></div></div>
       <div class="row hero-editorial-row" id="heroEditorialRow" hidden data-visibility-key="hero">
         <div class="row-head"><div><div class="row-title">✨ También destacado</div><div class="row-subtitle">Más de lo que UADAV STREAM quiere que descubras</div></div></div>
@@ -784,7 +784,7 @@ body{padding-bottom:0}
     function renderDynamicFooterLinks(){ const box=$('footerLinks'); if(!box)return; const base=(footerConfigPublic?.links||[]); const defaults=[{label:'Explorar',url:'/index.html'},{label:'Artistas',url:'#artists'},{label:'Cartelera',url:'/cartelera.html'},{label:'Sumate como artista',url:'/sumate-artista.html'},{label:'Bolsa de trabajo',url:'/bolsa-trabajo.html'}]; const links=base.length?base:defaults; if(footerConfigPublic?.mostrar_links===false){box.innerHTML='';return;} box.innerHTML=links.filter(x=>x&&x.visible!==false).map(x=>{const u=String(x.url||'#');const onclick=u==='#artists'?" onclick=\"irASeccion('artists');return false\"":'';return '<a href=\"'+safe(u)+'\"'+onclick+'>'+safe(x.label||'Enlace')+'</a>'}).join(''); }
     let allVideos = [];
     let allArtists = [];
-    let webVisibility = {hero:true,search:true,banners:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,shorts:true,jobs:true,cartelera:true,discover:true,features:true,cta:true,newsletter:true,footer:true};
+    let webVisibility = {hero:true,search:true,banners:true,continue:true,saved:true,featured:true,recommended:true,live:true,radios:true,artists:true,shorts:true,jobs:true,cartelera:true,media:true,playlists:true,podcasts:true,discover:true,features:true,cta:true,newsletter:true,footer:true};
     const DEFAULT_HOME_ORDER=['continueRow','savedRow','featuredRow','adminSectionsContainer','recommendedRow','liveRow','radiosRow','artists','shortsRow','jobsRow','cartelera','discoverRow'];
     let homeLayout={order:[...DEFAULT_HOME_ORDER]};
     let activeRadio = null;
@@ -1032,8 +1032,10 @@ body{padding-bottom:0}
       const logo=c.branding?.logo_url||'';
       if(logo){const img=$('heroBadgeIcon');const media=$('heroBadgeMedia'),star=$('heroBadgeStar');if(img){img.src=logo;if(media)media.classList.add('has-image');if(star)star.style.display='none';}const brand=$('brandLogo'),fallback=$('brandLogoFallback');if(brand){brand.src=logo;brand.style.display='block';if(fallback)fallback.style.display='none';}}
       const incoming=Array.isArray(c.hero_spotlights)?c.hero_spotlights:[c.hero_spotlight].filter(Boolean);
-      heroSpotlights=incoming.filter(h=>h&&h.active!==false&&((h.title||h.description||h.image||h.gif_url)));
-      if(!heroSpotlights.length)heroSpotlights=[{active:true,category:'UADAV STREAM',kicker:'UADAV STREAM',title:'El arte escénico al alcance de todos.',description:'Descubrí artistas, videos, espectáculos, transmisiones y mucho más en un solo lugar.',action_type:'section',action_target:'contenido'}];
+      const brandHero={active:true,__brand:true,category:'★ UADAV STREAM',kicker:'UADAV STREAM',title:c.brand_hero_title||'El arte escénico al alcance de todos.',description:c.brand_hero_description||'Descubrí artistas, videos, espectáculos, transmisiones y mucho más en un solo lugar.',image:c.brand_hero_image||c.hero_imagen||'',action_type:'section',action_target:'contenido'};
+      const dynamicHeroes=incoming.filter(h=>h&&h.active!==false&&((h.title||h.description||h.image||h.gif_url)));
+      heroSpotlights=(c.brand_hero_enabled===false?[]:[brandHero]).concat(dynamicHeroes.filter(h=>String(h.title||'').trim().toLowerCase()!==String(brandHero.title).trim().toLowerCase()));
+      if(!heroSpotlights.length)heroSpotlights=[brandHero];
       heroSpotlightIndex=Math.min(heroSpotlightIndex,heroSpotlights.length-1);
       iniciarHeroRotacion();renderHeroEditorial();aplicarHeroSpotlight();
     }
@@ -1175,12 +1177,16 @@ body{padding-bottom:0}
         const secs = Number(v?.lengthSeconds || v?.duration || 0) || 0;
         return {
           ...v, id,
+          external_id:v?.external_id||id,
+          provider:v?.provider||'youtube',
+          url:v?.url||`https://www.youtube.com/watch?v=${encodeURIComponent(v?.external_id||id)}`,
           titulo: decodeEntities(v?.titulo || v?.title || 'Contenido audiovisual'),
           descripcion: decodeEntities(v?.descripcion || v?.author || v?.channelTitle || v?.channel || 'YouTube'),
           categoria: v?.categoria || 'Resultado',
           duracion: v?.duracion || (secs ? `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}` : 'HD'),
           thumbnail: thumb,
-          tipo: secs && secs <= 60 ? 'short' : 'video'
+          tipo: secs && secs <= 60 ? 'short' : 'video',
+          content_type: secs && secs <= 60 ? 'short' : 'video'
         };
       }).filter(Boolean);
     }
@@ -1606,7 +1612,7 @@ body{padding-bottom:0}
       Object.entries(map).forEach(([key,id])=>{
         const el=$(id); if(el) el.classList.toggle('visibility-off',webVisibility[key]===false);
       });
-      const navMap={radios:'navRadiosLink',artists:'navArtistsLink',live:'navLiveLink',cartelera:'navCarteleraLink',media:'navMediaLink'};
+      const navMap={radios:'navRadiosLink',artists:'navArtistsLink',live:'navLiveLink',cartelera:'navCarteleraLink',media:'navMediaLink',shorts:'navShortsLink',playlists:'navPlaylistsLink',podcasts:'navPodcastsLink'};
       Object.entries(navMap).forEach(([key,id])=>$(id)?.classList.toggle('visibility-off',webVisibility[key]===false));
     }
 
@@ -1953,9 +1959,12 @@ body{padding-bottom:0}
       return '';
     }
 
+    function universalMediaInfo(x){const raw=x||{};let provider=String(raw.provider||'').toLowerCase(),url=String(raw.url||'').trim(),external=String(raw.external_id||raw.youtube_id||raw.videoId||'').trim(),type=String(raw.content_type||raw.tipo||'').toLowerCase();if(provider==='invidious')provider='youtube';if(!external&&provider==='youtube'&&/^[A-Za-z0-9_-]{11}$/.test(String(raw.id||'')))external=String(raw.id);if(!url&&external&&(provider==='youtube'||!provider))url='https://www.youtube.com/watch?v='+external;if(!provider){if(/youtu\.be|youtube\.com/i.test(url))provider='youtube';else if(/spotify\.com/i.test(url))provider='spotify';else if(/vimeo\.com/i.test(url))provider='vimeo';else if(/soundcloud\.com/i.test(url))provider='soundcloud';else if(/drive\.google\.com/i.test(url))provider='drive';else if(/ok\.ru/i.test(url))provider='okru';}return{provider,url,external,type}}
+    function reproducirUniversal(x){const m=universalMediaInfo(x);if(m.provider==='youtube'){let id=m.external;try{const u=new URL(m.url);id=id||u.searchParams.get('v')||(u.hostname.includes('youtu.be')?u.pathname.slice(1):(u.pathname.match(/\/(?:shorts|embed|live)\/([^/?]+)/)||[])[1]||'');const list=u.searchParams.get('list')||((m.type==='playlist')?m.external:'');if(list){pausarRadio();const modal=$('videoModal'),host=$('playerFrame');modal.classList.add('active');host.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(list)}&autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;$('modalTitle').textContent=x.titulo||'Playlist';$('modalDesc').textContent=x.descripcion||'YouTube';return}}catch{}if(id){reproducirVideo(id,x.titulo||'Video',x.descripcion||'YouTube',{...x,id});return}}
+      pausarRadio();const modal=$('videoModal'),host=$('playerFrame');if(!modal||!host)return;modal.classList.add('active');modal.classList.remove('pip-mode');$('modalTitle').textContent=x.titulo||x.title||'Contenido';$('modalDesc').textContent=x.descripcion||x.provider||'';let html='';if(m.provider==='spotify'){const z=m.url.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([^?]+)/);if(z)html=`<iframe src="https://open.spotify.com/embed/${z[1]}/${z[2]}" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`}else if(m.provider==='vimeo'){const id=(m.url.match(/vimeo\.com\/(?:video\/)?(\d+)/)||[])[1];if(id)html=`<iframe src="https://player.vimeo.com/video/${id}?autoplay=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`}else if(m.provider==='soundcloud')html=`<iframe src="https://w.soundcloud.com/player/?url=${encodeURIComponent(m.url)}&auto_play=true" allow="autoplay"></iframe>`;else if(m.provider==='drive'){const id=(m.url.match(/\/d\/([^/]+)/)||[])[1];if(id)html=`<iframe src="https://drive.google.com/file/d/${encodeURIComponent(id)}/preview" allow="autoplay"></iframe>`}else if(/\.(mp3|m4a|aac)(?:\?|$)/i.test(m.url))html=`<audio controls autoplay style="width:min(760px,90%)" src="${safe(m.url)}"></audio>`;else if(/\.(mp4|webm)(?:\?|$)/i.test(m.url))html=`<video controls autoplay playsinline style="width:100%;height:100%" src="${safe(m.url)}"></video>`;host.innerHTML=html||`<div style="display:grid;place-items:center;height:100%;padding:30px;text-align:center;color:#fff"><div><h3>Este proveedor no permite reproducción integrada</h3><p><a class="btn btn-primary" href="${safe(m.url||'#')}" target="_blank" rel="noopener">Abrir fuente original</a></p></div></div>`}
     function renderSimpleMediaRail(items,railId,rowId,kind){
       const rail=$(railId),row=$(rowId);if(!rail||!row)return;const list=(items||[]).filter(Boolean).slice(0,16);if(!list.length){row.hidden=true;rail.innerHTML='';return}row.hidden=false;
-      rail.innerHTML=list.map(x=>{const img=safe(x.poster||x.thumbnail||x.imagen||FALLBACK_THUMB),title=safe(x.titulo||x.title||'Contenido'),meta=safe(kind==='media'?[x.media_type==='series'?'Serie':'Película',x.year].filter(Boolean).join(' · '):(x.provider||x.categoria||''));const href=kind==='media'?'/media.html?id='+encodeURIComponent(x.id):(x.url||'#');return `<article class="card" tabindex="0"><a href="${safe(href)}" ${kind==='media'?'':'target="_blank" rel="noopener"'}><img src="${img}" alt="${title}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="card-body"><div class="card-title">${title}</div><div class="card-meta">${meta}</div></div></a></article>`}).join('');
+      rail.innerHTML=list.map((x,i)=>{const img=safe(x.poster||x.thumbnail||x.imagen||FALLBACK_THUMB),title=safe(x.titulo||x.title||'Contenido'),meta=safe(kind==='media'?[x.media_type==='series'?'Serie':'Película',x.year].filter(Boolean).join(' · '):(x.provider||x.categoria||''));return `<article class="card" tabindex="0" data-simple-media="${i}" style="cursor:pointer"><img src="${img}" alt="${title}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="card-body"><div class="card-title">${title}</div><div class="card-meta">${meta}</div></div></article>`}).join('');rail.querySelectorAll('[data-simple-media]').forEach(el=>el.addEventListener('click',()=>{const x=list[Number(el.dataset.simpleMedia)||0];if(kind==='media')location.href='/media.html?id='+encodeURIComponent(x.id);else reproducirUniversal(x)}));
     }
     async function cargarMedia(){try{const a=await api('media');renderSimpleMediaRail(Array.isArray(a)?a:[],'mediaRail','mediaRow','media')}catch{const r=$('mediaRow');if(r)r.hidden=true}}
     async function cargarPlaylists(){try{const a=await api('content');renderSimpleMediaRail((Array.isArray(a)?a:[]).filter(x=>String(x.content_type||x.tipo||'').toLowerCase()==='playlist'),'playlistsRail','playlistsRow','playlist')}catch{const r=$('playlistsRow');if(r)r.hidden=true}}
@@ -2308,14 +2317,14 @@ body{padding-bottom:0}
       else setTimeout(deferred,500);
 
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v85';
+        const SW_VERSION='uadavstream-v91';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=85',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=91',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }

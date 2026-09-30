@@ -95,6 +95,104 @@ export default {
       producers: 'productora espectaculos Argentina'
     };
     const categoryLabel = (key) => ({all:'Artistas',solista:'Solistas',banda:'Bandas / Grupos',circo:'Circo',teatro:'Teatro',danza:'Danza',magia:'Magia',humor:'Humor',animacion:'Animación',locucion:'Locución / Conducción',grupo:'Compañías / Elencos',sala:'Salas / Espacios',productora:'Productoras',creador:'Creadores / YouTubers',music:'Música',rock:'Rock',pop:'Pop',tropical:'Tropical / Cumbia',folklore:'Folklore',tango:'Tango',urbano:'Urbano',dj:'DJ',theatre:'Teatro',circus:'Circo',dance:'Danza',magic:'Magia',creators:'Creadores / YouTubers',venues:'Salas / Espacios',producers:'Productoras'}[key] || 'Artistas');
+    // ============================================================
+    // V9 · CCT 340/75 · clasificación, orientación y fiscalización
+    // Las denominaciones se conservan para mapear el texto del convenio.
+    // Las escalas monetarias históricas NO se usan como valores actuales:
+    // UADAV carga las escalas vigentes desde Admin.
+    // ============================================================
+    const CCT_CATEGORIES = [
+      {code:'cantante_vocal',group:'Música y voz',label:'Cantante / ejecutante vocal',cct:'Cantantes de arte mayor y menor y todo otro ejecutante vocal'},
+      {code:'musico_variedades',group:'Música y voz',label:'Músico / integrante de conjunto musical de variedades',cct:'Músicos e integrantes de conjuntos de música en todas sus denominaciones'},
+      {code:'dj',group:'Música y voz',label:'Disc-Jockey',cct:'Disc-Jockeys'},
+      {code:'sonidista',group:'Música y voz',label:'Sonidista',cct:'Sonidistas'},
+      {code:'difusor_musica',group:'Música y voz',label:'Coordinador / difusor de música',cct:'Coordinadores y difusores de música mecánica, magnetofónica o electrónica'},
+      {code:'bailarin',group:'Danza',label:'Bailarín/a / integrante de conjunto de baile',cct:'Bailarines/as y conjuntos de bailes folklóricos y modernos'},
+      {code:'ballet',group:'Danza',label:'Ballet / conjunto de danza',cct:'Ballet constituido / especialidades inherentes a la danza'},
+      {code:'bailarina_sala',group:'Danza',label:'Bailarina de sala / alternador(a)',cct:'Bailarinas de sala con o sin alternación con el público y alternadores/as'},
+      {code:'transformista',group:'Escena',label:'Artista transformista',cct:'Categoría histórica del texto: “travestis”'},
+      {code:'maestro_ceremonias',group:'Escena',label:'Maestro/a de ceremonias / presentador/a',cct:'Maestros de ceremonias o presentadores'},
+      {code:'animador',group:'Escena',label:'Animador/a',cct:'Animadores'},
+      {code:'monologuista',group:'Escena',label:'Monologuista',cct:'Monologuistas'},
+      {code:'recitador',group:'Escena',label:'Recitador/a',cct:'Recitadores'},
+      {code:'imitador',group:'Escena',label:'Imitador/a',cct:'Imitadores'},
+      {code:'fonomimico',group:'Escena',label:'Fonomímico/a',cct:'Fonomímicos'},
+      {code:'mimico',group:'Escena',label:'Mímico/a',cct:'Mímicos'},
+      {code:'ventrilocuo',group:'Escena',label:'Ventrílocuo/a',cct:'Ventrílocuos'},
+      {code:'prestidigitador',group:'Escena',label:'Prestidigitador/a / mago/a',cct:'Prestidigitadores'},
+      {code:'malabarista',group:'Circo y variedades',label:'Malabarista',cct:'Malabaristas'},
+      {code:'acrobata',group:'Circo y variedades',label:'Acróbata',cct:'Acróbatas'},
+      {code:'adiestrador',group:'Circo y variedades',label:'Adiestrador/a de animales',cct:'Adiestradores de animales'},
+      {code:'pantomima_lucha',group:'Circo y variedades',label:'Parodia / pantomima de lucha',cct:'Parodia y pantomima de lucha'},
+      {code:'ballet_patines',group:'Circo y variedades',label:'Ballet sobre patines',cct:'Ballet sobre patines'},
+      {code:'doma_folklore',group:'Circo y variedades',label:'Espectáculo de doma / folklore',cct:'Espectáculos de doma y folklore'},
+      {code:'artista_circense',group:'Circo y variedades',label:'Artista circense / bailarín acrobático',cct:'Artistas circenses en locales con espectáculo'},
+      {code:'catch',group:'Circo y variedades',label:'Catch / luchador de espectáculo',cct:'Catch'},
+      {code:'coreografo',group:'Danza',label:'Coreógrafo/a',cct:'Coreógrafo'},
+      {code:'ayudante_coreografo',group:'Danza',label:'Ayudante de coreógrafo/a',cct:'Ayudante de coreógrafo'},
+      {code:'ayudante_figura',group:'Escena',label:'Ayudante de figura principal',cct:'Ayudantes de figuras principales'},
+      {code:'otro_analogo',group:'Otros',label:'Otra actividad análoga comprendida',cct:'Enumeración meramente ejemplificativa; actividades de igual naturaleza o características'}
+    ];
+    const CCT_VENUES = [
+      {code:'musica_canto',label:'Local con música y/o canto',standard_weekday:2,standard_weekend:2,extra_formula:'art5_music'},
+      {code:'casa_baile_cafe_concert_cabaret',label:'Casa de baile / café concert / cabaret / similar',standard_weekday:null,standard_weekend:null},
+      {code:'confiteria_espectaculos',label:'Confitería con espectáculos',standard_weekday:2,standard_weekend:3},
+      {code:'balneario_parque_club_aire_libre',label:'Balneario / parque / club / aire libre / embarcación',standard_weekday:3,standard_weekend:3},
+      {code:'casino_restaurante_hotel',label:'Casino / restaurante / cantina / hotel',standard_weekday:null,standard_weekend:null,max_hours:4},
+      {code:'otro',label:'Otro establecimiento / modalidad',standard_weekday:null,standard_weekend:null}
+    ];
+    const cctCategory = code => CCT_CATEGORIES.find(x=>x.code===String(code||'')) || CCT_CATEGORIES.at(-1);
+    const cctVenue = code => CCT_VENUES.find(x=>x.code===String(code||'')) || CCT_VENUES.at(-1);
+    async function cctScales(){
+      if(hasD1()){
+        try{const st=await ensureD1Schema();if(st.ready){const r=await env.DB.prepare(`SELECT * FROM cct_scales WHERE active=1 ORDER BY effective_from DESC, updated_at DESC`).all();return r.results||[];}}catch(_){}
+      }
+      return await getArray('cct_scales');
+    }
+    function bool(v){return v===true||v===1||String(v).toLowerCase()==='true'||String(v).toLowerCase()==='si'||String(v).toLowerCase()==='sí'}
+    function money(v){const n=Number(String(v??'').replace(/[^0-9,.-]/g,'').replace(',','.'));return Number.isFinite(n)?n:0}
+    function resolveCct340(input, scales=[], financialConfig={}){
+      const cat=cctCategory(input.category_code),venue=cctVenue(input.venue_type);
+      const day=String(input.day_type||'weekday'); const functions=Math.max(1,Number(input.functions||1));
+      const contractAmount=money(input.contract_amount), perFunction=money(input.base_function_amount);
+      const venueCategory=String(input.venue_category||'general'), exclusivity=bool(input.exclusive)?'exclusive':'nonexclusive';
+      const standard=day==='weekend_holiday'?venue.standard_weekend:venue.standard_weekday;
+      const alerts=[],actions=[],contractChecks=[],rights=[]; let extraFunctionsAmount=0;
+      if(standard && functions>standard){
+        if(venue.extra_formula==='art5_music'){
+          if(perFunction>0){if(functions>=3)extraFunctionsAmount+=perFunction*1.5;if(functions>=4)extraFunctionsAmount+=perFunction*2;if(functions>4)alerts.push('Más de cuatro funciones: requiere revisión gremial específica.');}
+          else actions.push('Ingresar el valor contractual de una función para estimar la 3.ª (+50%) y 4.ª (+100%) función previstas para locales con música/canto.');
+        } else alerts.push(`Se informan ${functions} funciones frente a ${standard} habituales para esta modalidad. Revisar liquidación con UADAV.`);
+      }
+      if(venue.max_hours && Number(input.hours||0)>venue.max_hours) alerts.push(`La permanencia informada (${Number(input.hours)} h) supera la referencia de ${venue.max_hours} h para esta modalidad del CCT.`);
+      if(!bool(input.uadav_registered_artist))actions.push('Verificar inscripción/habilitación del artista en UADAV para la contratación.');
+      if(!bool(input.contract_registered))actions.push('Registrar/verificar el contrato artístico ante UADAV antes de la actuación.');
+      if(!bool(input.contract_has_days_hours))contractChecks.push('Faltan o deben verificarse días y horarios de actuación.');
+      if(!bool(input.contract_has_compensation))contractChecks.push('Falta o debe verificarse la contraprestación/remuneración.');
+      if(!bool(input.contract_has_place))contractChecks.push('Falta o debe verificarse el lugar de presentación.');
+      if(bool(input.recording_or_retransmission)&&!bool(input.recording_clause))contractChecks.push('Hay grabación/retransmisión prevista pero no consta una cláusula específica.');
+      if(bool(input.third_party_contract))alerts.push('Interviene un tercero/contratista: revisar responsabilidad solidaria con quien utiliza la prestación artística.');
+      const distance=Math.max(0,Number(input.distance_km||0)); if(distance>70)actions.push('Verificar pasajes de ida y vuelta y gastos de traslado conforme al CCT y a la normativa/criterio vigente.');
+      if(bool(input.is_tour)&&distance>410)actions.push('Gira con traslado superior a 410 km: revisión sindical de transporte, instrumentos y gastos de traslado.');
+      const scale=scales.find(x=>String(x.category_code)===cat.code && (!x.venue_category||String(x.venue_category)===venueCategory) && (!x.exclusivity||String(x.exclusivity)===exclusivity));
+      const minAmount=scale?money(scale.amount):0;
+      if(scale && contractAmount>0 && minAmount>0 && contractAmount<minAmount)alerts.push(`El monto informado está por debajo de la escala vigente cargada en UADAV (${scale.currency||'ARS'} ${minAmount}).`);
+      if(!scale)actions.push('No hay una escala vigente cargada para esta combinación; validar el mínimo actual antes de cerrar el contrato.');
+      const totalEstimated=Math.max(0,contractAmount)+extraFunctionsAmount;
+      const unionContribution=totalEstimated>0?Math.round(totalEstimated*0.03*100)/100:0;
+      const regMode=String(financialConfig.registration_fee_mode||'manual');const regPct=money(financialConfig.registration_fee_pct);const regFixed=money(financialConfig.registration_fee_fixed);let registrationFee=null;if(regMode==='percent'&&contractAmount>0&&regPct>0)registrationFee=Math.round(contractAmount*regPct)/100;else if(regMode==='fixed'&&regFixed>0)registrationFee=regFixed;
+      if(totalEstimated>0)rights.push({channel:'UADAV / CCT 340/75',concept:'Trabajo artístico en vivo',gross_estimate:totalEstimated,union_contribution_3pct:unionContribution,note:'Estimación operativa; validar escala y liquidación vigente.'});
+      if(bool(input.is_composer)){
+        const todo=[];if(!bool(input.sadaic_registered))todo.push('Regularizar/confirmar registro como autor/compositor en SADAIC.');if(!bool(input.sadaic_setlist))todo.push('Preparar/verificar planilla de ejecución con las obras interpretadas.');rights.push({channel:'SADAIC',concept:'Derechos de autor/composición',status:todo.length?'pendiente':'checklist completo',actions:todo});
+      }
+      if(bool(input.is_recorded_performer)){
+        const todo=[];if(!bool(input.aadi_registered))todo.push('Regularizar/confirmar alta como intérprete en AADI.');if(!bool(input.phonograms_declared))todo.push('Declarar/verificar los fonogramas donde participa como intérprete.');rights.push({channel:'AADI / AADI-CAPIF',concept:'Derechos de intérprete sobre música grabada',status:todo.length?'pendiente':'checklist completo',actions:todo});
+      }
+      const scoreChecks=[bool(input.uadav_registered_artist),bool(input.contract_registered),bool(input.contract_has_days_hours),bool(input.contract_has_compensation),bool(input.contract_has_place),!(bool(input.recording_or_retransmission)&&!bool(input.recording_clause))];
+      const complianceScore=Math.round(scoreChecks.filter(Boolean).length/scoreChecks.length*100);
+      return {version:'CCT340-ASSIST-V9',orientation_only:true,category:cat,venue:{...venue,standard_functions:standard},inputs:{functions,day_type:day,contract_amount:contractAmount,base_function_amount:perFunction,venue_category:venueCategory,exclusivity},calculation:{contract_amount:contractAmount,extra_functions_amount:extraFunctionsAmount,total_estimated:totalEstimated,union_contribution_pct:3,union_contribution_estimated:unionContribution,registration_fee_estimated:registrationFee,registration_fee_mode:regMode,current_scale:scale||null},contract_checks:contractChecks,alerts,actions,rights,compliance_score:complianceScore,source_articles:['Art. 4 - personal comprendido','Art. 5 - condiciones generales / funciones','Arts. 8-12 - modalidades y contenido contractual','Arts. 17, 19 y 20 - responsabilidad y registro','Arts. 28-29 - traslados/giras','Art. 35 - inspecciones','Art. 40 - aporte sindical 3%'],generated_at:isoNow()};
+    }
+
     const makeId = (prefix='ID') => prefix+'-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
     const hasD1 = () => !!env.DB;
     async function youtubeApiEnabled(){
@@ -129,7 +227,7 @@ export default {
           u.searchParams.set('type',type);
           u.searchParams.set('page','1');
           u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.1'}});
           if(!r.ok)throw new Error('HTTP '+r.status);
           const arr=await r.json();
           if(!Array.isArray(arr)||!arr.length)throw new Error('empty');
@@ -154,7 +252,7 @@ export default {
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try{
-          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});
+          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.1'}});
           if(!r.ok)continue; const d=await r.json();
           if(d?.authorId||d?.author){
             return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),subscribers:Number(d.subCount||0),total_views:Number(d.totalViews||0),latestVideos:Array.isArray(d.latestVideos)?d.latestVideos.slice(0,24):[],source:'invidious'};
@@ -164,7 +262,7 @@ export default {
       return null;
     }
     async function invidiousVideoInfo(videoId){
-      const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
+      const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.1'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
     }
     async function resolveChannelReference(ref){
       let raw=String(ref||'').trim();if(!raw)return null;if(/^UC[A-Za-z0-9_-]{10,}$/.test(raw))return raw;
@@ -173,11 +271,11 @@ export default {
     }
     async function invidiousChannelVideos(channelId, limit=50){
       const id=String(channelId||'').trim(),max=Math.min(200,Math.max(1,Number(limit||50)));if(!id)return [];
-      for(const base of INVIDIOUS_INSTANCES){const out=[];for(let page=1;page<=Math.min(6,Math.ceil(max/30));page++){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/videos?page=${page}&sort_by=newest`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});if(!r.ok)break;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.videos)?d.videos:[]);if(!items.length)break;out.push(...items);if(out.length>=max)break}catch(_){break}finally{clearTimeout(timer)}}if(out.length)return out.slice(0,max)}return [];
+      for(const base of INVIDIOUS_INSTANCES){const out=[];for(let page=1;page<=Math.min(6,Math.ceil(max/30));page++){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/videos?page=${page}&sort_by=newest`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.1'}});if(!r.ok)break;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.videos)?d.videos:[]);if(!items.length)break;out.push(...items);if(out.length>=max)break}catch(_){break}finally{clearTimeout(timer)}}if(out.length)return out.slice(0,max)}return [];
     }
     async function invidiousChannelPlaylists(channelId, limit=30){
       const id=String(channelId||'').trim();if(!id)return [];
-      for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/playlists`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});if(!r.ok)continue;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.playlists)?d.playlists:[]);if(items.length)return items.slice(0,Math.min(60,Number(limit||30)))}catch(_){}finally{clearTimeout(timer)}}return [];
+      for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/playlists`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.1'}});if(!r.ok)continue;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.playlists)?d.playlists:[]);if(items.length)return items.slice(0,Math.min(60,Number(limit||30)))}catch(_){}finally{clearTimeout(timer)}}return [];
     }
     let d1SchemaReady = false;
     async function recordD1SyncError(label,error){
@@ -216,7 +314,7 @@ export default {
       if(!hasD1())return {configured:false,ready:false};
       if(d1SchemaReady)return {configured:true,ready:true};
       try{
-        const row=await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='artist_audience_messages' LIMIT 1`).first();
+        const row=await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='cct_assessments' LIMIT 1`).first();
         if(!row) await runD1Bootstrap();
         d1SchemaReady=true;
         return {configured:true,ready:true,auto_initialized:!row};
@@ -883,11 +981,56 @@ CREATE TABLE IF NOT EXISTS monetization_campaigns (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(status,payment_status);
+
+CREATE TABLE IF NOT EXISTS cct_scales (
+  id TEXT PRIMARY KEY,
+  category_code TEXT NOT NULL,
+  venue_category TEXT,
+  exclusivity TEXT,
+  amount REAL,
+  currency TEXT NOT NULL DEFAULT 'ARS',
+  effective_from TEXT,
+  effective_to TEXT,
+  active INTEGER NOT NULL DEFAULT 1,
+  note TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_cct_scales_lookup ON cct_scales(category_code,venue_category,exclusivity,active,effective_from);
+
+CREATE TABLE IF NOT EXISTS cct_assessments (
+  id TEXT PRIMARY KEY,
+  artist_id TEXT,
+  category_code TEXT,
+  venue_type TEXT,
+  status TEXT NOT NULL DEFAULT 'draft',
+  created_by TEXT,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  result_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_cct_assessments_artist ON cct_assessments(artist_id,created_at DESC);
+
+CREATE TABLE IF NOT EXISTS cct_contract_records (
+  id TEXT PRIMARY KEY,
+  artist_id TEXT,
+  event_id TEXT,
+  employer_name TEXT,
+  contract_amount REAL,
+  union_contribution REAL,
+  registration_status TEXT,
+  inspection_status TEXT,
+  data_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_records(artist_id,created_at DESC);
 `;
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V8.5.0', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V9.1.0', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:'UADAVSTREAM', architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -897,7 +1040,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       const out=[];
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),3500); const t=Date.now();
-        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
+        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.1'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
         catch(e){out.push({instance:base,ok:false,error:String(e?.message||e)});} finally{clearTimeout(timer);}
       }
       return json({checked_at:isoNow(),instances:out});
@@ -919,7 +1062,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       await syncContentD1(await getArray('content_items'));
       await syncCollectionsD1(await getArray('collections'));
       await syncSectionsV2D1(await getArray('secciones'));
-      await upsertSetting('migration_completed',{at:isoNow(),version:'V8.3'});
+      await upsertSetting('migration_completed',{at:isoNow(),version:'V9.0'});
       await audit('kv_to_d1_migration','system','migration',{ok:true});
       return json({success:true,message:'Migración KV → D1 completada para los registros soportados'});
     }
@@ -949,9 +1092,51 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
     if (path === '/api/v7/export' && request.method === 'GET') {
       if (!isAdmin()) return json({error:'No autorizado'},401);
       if (!hasD1()) return json({error:'D1 no configurado'},503);
-      const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns']; const out={generated_at:isoNow(),tables:{}};
+      const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records']; const out={generated_at:isoNow(),tables:{}};
       for(const t of tables){const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[];}
       return json(out);
+    }
+
+    // ============================================================
+    // V9 · CCT 340/75 · Asistente sindical / fiscalización
+    // ============================================================
+    if(path==='/api/cct/categories' && request.method==='GET'){
+      return json({categories:CCT_CATEGORIES,venues:CCT_VENUES,notes:['Las escalas monetarias de 1975 no se usan como valores actuales.','Los mínimos vigentes se cargan desde Admin.','El resultado es orientativo y debe validarse sindicalmente.']});
+    }
+    if(path==='/api/admin/cct/config'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(request.method==='GET')return json({union_contribution_pct:3,registration_fee_mode:'manual',registration_fee_pct:0,registration_fee_fixed:0,currency:'ARS',note:'Actualizar según criterio vigente UADAV',...(await getJSON('cct_financial_config',{}))});
+      if(request.method==='POST'){const b=await request.json().catch(()=>({}));const cfg={union_contribution_pct:3,registration_fee_mode:['manual','percent','fixed'].includes(String(b.registration_fee_mode))?String(b.registration_fee_mode):'manual',registration_fee_pct:money(b.registration_fee_pct),registration_fee_fixed:money(b.registration_fee_fixed),currency:String(b.currency||'ARS'),note:String(b.note||'').slice(0,800),updated_at:isoNow()};await putJSON('cct_financial_config',cfg);await audit('cct_financial_config','system','cct',{mode:cfg.registration_fee_mode});return json({success:true,...cfg});}
+    }
+    if(path==='/api/admin/cct/scales'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(request.method==='GET')return json(await cctScales());
+      if(request.method==='POST'){
+        const b=await request.json().catch(()=>({}));if(!b.category_code)return json({error:'category_code requerido'},400);
+        const item={id:String(b.id||makeId('CCT-SCALE')),category_code:String(b.category_code),venue_category:String(b.venue_category||'general'),exclusivity:String(b.exclusivity||''),amount:money(b.amount),currency:String(b.currency||'ARS'),effective_from:String(b.effective_from||''),effective_to:String(b.effective_to||''),active:b.active!==false,note:String(b.note||'').slice(0,500),created_at:String(b.created_at||isoNow()),updated_at:isoNow()};
+        if(hasD1())await safeD1('cct_scale_upsert',()=>env.DB.prepare(`INSERT INTO cct_scales(id,category_code,venue_category,exclusivity,amount,currency,effective_from,effective_to,active,note,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET category_code=excluded.category_code,venue_category=excluded.venue_category,exclusivity=excluded.exclusivity,amount=excluded.amount,currency=excluded.currency,effective_from=excluded.effective_from,effective_to=excluded.effective_to,active=excluded.active,note=excluded.note,updated_at=excluded.updated_at`).bind(item.id,item.category_code,item.venue_category,item.exclusivity,item.amount,item.currency,item.effective_from,item.effective_to,item.active?1:0,item.note,item.created_at,item.updated_at).run());
+        const list=await getArray('cct_scales');const i=list.findIndex(x=>String(x.id)===item.id);if(i>=0)list[i]=item;else list.push(item);await putJSON('cct_scales',list);await audit('cct_scale_saved','cct_scale',item.id,{category:item.category_code});return json({success:true,item});
+      }
+      if(request.method==='DELETE'){
+        const b=await request.json().catch(()=>({}));const id=String(b.id||url.searchParams.get('id')||'');if(!id)return json({error:'id requerido'},400);if(hasD1())await safeD1('cct_scale_delete',()=>env.DB.prepare(`UPDATE cct_scales SET active=0,updated_at=? WHERE id=?`).bind(isoNow(),id).run());const list=await getArray('cct_scales');const x=list.find(v=>String(v.id)===id);if(x){x.active=false;x.updated_at=isoNow();await putJSON('cct_scales',list)}return json({success:true});
+      }
+    }
+    if(path==='/api/admin/cct/resolve' && request.method==='POST'){
+      if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));const result=resolveCct340(b,await cctScales(),await getJSON('cct_financial_config',{}));let saved=null;
+      if(b.save!==false){const item={id:makeId('CCT'),artist_id:String(b.artist_id||''),category_code:String(b.category_code||''),venue_type:String(b.venue_type||''),status:String(b.status||'review'),created_by:'admin',payload_json:JSON.stringify(b),result_json:JSON.stringify(result),created_at:isoNow(),updated_at:isoNow()};if(hasD1())await safeD1('cct_assessment_admin',()=>env.DB.prepare(`INSERT INTO cct_assessments(id,artist_id,category_code,venue_type,status,created_by,payload_json,result_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)`).bind(item.id,item.artist_id,item.category_code,item.venue_type,item.status,item.created_by,item.payload_json,item.result_json,item.created_at,item.updated_at).run());const list=await getArray('cct_assessments');list.unshift({...item,payload:b,result});await putJSON('cct_assessments',list.slice(0,3000));saved=item.id;await audit('cct_assessment','artist',item.artist_id||'sin-artista',{assessment_id:item.id});if(bool(b.create_contract_record)){const rec={id:makeId('CCT-REG'),artist_id:item.artist_id,event_id:String(b.event_id||''),employer_name:String(b.employer_name||'').slice(0,180),contract_amount:money(b.contract_amount),union_contribution:money(result.calculation?.union_contribution_estimated),registration_status:bool(b.contract_registered)?'registrado':'pendiente',inspection_status:String(b.inspection_status||'pendiente'),data_json:JSON.stringify({assessment_id:item.id,registration_fee_estimated:result.calculation?.registration_fee_estimated??null,category_code:item.category_code,venue_type:item.venue_type}),created_at:isoNow(),updated_at:isoNow()};if(hasD1())await safeD1('cct_contract_record',()=>env.DB.prepare(`INSERT INTO cct_contract_records(id,artist_id,event_id,employer_name,contract_amount,union_contribution,registration_status,inspection_status,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)`).bind(rec.id,rec.artist_id,rec.event_id,rec.employer_name,rec.contract_amount,rec.union_contribution,rec.registration_status,rec.inspection_status,rec.data_json,rec.created_at,rec.updated_at).run());const regs=await getArray('cct_contract_records');regs.unshift(rec);await putJSON('cct_contract_records',regs.slice(0,5000));await audit('cct_contract_record','contract',rec.id,{artist_id:rec.artist_id,contribution:rec.union_contribution});}}
+      return json({success:true,result,assessment_id:saved});
+    }
+    if(path==='/api/admin/cct/contracts' && request.method==='GET'){
+      if(!isAdmin())return json({error:'No autorizado'},401);if(hasD1()){try{const r=await env.DB.prepare(`SELECT * FROM cct_contract_records ORDER BY created_at DESC LIMIT 500`).all();return json((r.results||[]).map(x=>({...x,data:safeJSON(x.data_json,{})})));}catch(_){}}return json(await getArray('cct_contract_records'));
+    }
+    if(path==='/api/admin/cct/assessments' && request.method==='GET'){
+      if(!isAdmin())return json({error:'No autorizado'},401);if(hasD1()){try{const r=await env.DB.prepare(`SELECT * FROM cct_assessments ORDER BY created_at DESC LIMIT 500`).all();return json((r.results||[]).map(x=>({...x,payload:safeJSON(x.payload_json,{}),result:safeJSON(x.result_json,{})})));}catch(_){}}return json(await getArray('cct_assessments'));
+    }
+    if(path==='/api/artist/cct/resolve' && request.method==='POST'){
+      const b=await request.json().catch(()=>({}));const token=String(b.token||'').trim();if(!token)return json({error:'Token requerido'},400);const raw=await env.UADAV_DB.get(artistTokenKey(token));if(!raw)return json({error:'Acceso inválido'},401);let access;try{access=JSON.parse(raw)}catch{return json({error:'Acceso inválido'},401)};const artist=await artistFromD1(access.artist_id)||(await allCanonicalArtists()).find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id));const p=artist?publicArtistFromItem(artist):null;if(!p||!p.afiliado_verificado)return json({error:'El Asistente CCT es un beneficio para afiliados UADAV verificados.'},403);b.artist_id=p.id;b.uadav_registered_artist=true;const result=resolveCct340(b,await cctScales(),await getJSON('cct_financial_config',{}));const item={id:makeId('CCT'),artist_id:p.id,category_code:String(b.category_code||''),venue_type:String(b.venue_type||''),status:'artist_review',created_by:'artist',payload_json:JSON.stringify(b),result_json:JSON.stringify(result),created_at:isoNow(),updated_at:isoNow()};if(hasD1())await safeD1('cct_assessment_artist',()=>env.DB.prepare(`INSERT INTO cct_assessments(id,artist_id,category_code,venue_type,status,created_by,payload_json,result_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)`).bind(item.id,item.artist_id,item.category_code,item.venue_type,item.status,item.created_by,item.payload_json,item.result_json,item.created_at,item.updated_at).run());const list=await getArray('cct_assessments');list.unshift({...item,payload:b,result});await putJSON('cct_assessments',list.slice(0,3000));return json({success:true,result,assessment_id:item.id});
+    }
+    if(path==='/api/artist/cct/history' && request.method==='GET'){
+      const token=String(url.searchParams.get('token')||'').trim();if(!token)return json({error:'Token requerido'},400);const raw=await env.UADAV_DB.get(artistTokenKey(token));if(!raw)return json({error:'Acceso inválido'},401);let access;try{access=JSON.parse(raw)}catch{return json({error:'Acceso inválido'},401)};if(hasD1()){try{const r=await env.DB.prepare(`SELECT id,category_code,venue_type,status,result_json,created_at FROM cct_assessments WHERE artist_id=? ORDER BY created_at DESC LIMIT 50`).bind(String(access.artist_id)).all();return json((r.results||[]).map(x=>({...x,result:safeJSON(x.result_json,{})})));}catch(_){}}return json((await getArray('cct_assessments')).filter(x=>String(x.artist_id)===String(access.artist_id)).slice(0,50));
     }
 
     if (path === '/api/admin_check') {
@@ -1639,7 +1824,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try {
           const u=new URL(base+'/api/v1/trending'); u.searchParams.set('region',region); u.searchParams.set('type',category?'music':'default'); u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.1'}});
           if(!r.ok)continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){const items=arr.slice(0,limit).map(x=>({id:x.videoId||'',channel_id:x.authorId||'',channel_name:x.author||'',titulo:x.title||'',descripcion:x.description||'',thumbnail:x.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||x.videoThumbnails?.[0]?.url||'',views:Number(x.viewCount||0),published_at:x.publishedText||'',category_id:category||''})).filter(x=>x.id); if(items.length){const payload={source:'invidious_trending',region,category:category||null,items};const out=JSON.stringify(payload);await env.UADAV_DB.put(cacheKey,out,{expirationTtl:1800});return new Response(out,{headers:{...cors,'X-UADAV-Search-Source':'invidious_trending'}});}}
         } catch {} finally {clearTimeout(timer)}
@@ -1675,7 +1860,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
     if (path === '/api/youtube/search') {
       const q = String(url.searchParams.get('q') || '').trim();
       if (!q) return json([]);
-      const cacheKey = `search_v631_${q.toLowerCase().replace(/\s+/g, '_').slice(0, 120)}`;
+      const cacheKey = `search_v910_${q.toLowerCase().replace(/\s+/g, '_').slice(0, 120)}`;
       const cached = await env.UADAV_DB.get(cacheKey);
       if (cached) {
         try {
@@ -1687,15 +1872,22 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       // 1) Invidious first: zero official YouTube quota in normal operation.
       const ivRaw=await invidiousSearch(q,'video',24);
       if(ivRaw.length){
-        const items=ivRaw.map(v => ({
-          id:String(v.videoId||v.id||'').trim(),
-          titulo:v.title||'Video',
-          descripcion:v.author||v.authorId||'YouTube',
-          thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.find?.(t=>t?.quality==='medium')?.url||v.videoThumbnails?.[0]?.url||'',
-          categoria:'Resultado',
-          duracion:Number(v.lengthSeconds||0),
-          tipo:'video'
-        })).filter(x=>x.id);
+        const items=ivRaw.map(v => {
+          const id=String(v.videoId||v.id||'').trim();
+          return {
+            id,
+            external_id:id,
+            provider:'youtube',
+            url:id?`https://www.youtube.com/watch?v=${id}`:'',
+            titulo:v.title||'Video',
+            descripcion:v.author||v.authorId||'YouTube',
+            thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.find?.(t=>t?.quality==='medium')?.url||v.videoThumbnails?.[0]?.url||'',
+            categoria:'Resultado',
+            duracion:Number(v.lengthSeconds||0),
+            tipo:'video',
+            content_type:'video'
+          };
+        }).filter(x=>x.id);
         if(items.length){ await env.UADAV_DB.put(cacheKey,JSON.stringify(items),{expirationTtl:21600}); return new Response(JSON.stringify(items),{headers:{...cors,'X-UADAV-Search-Source':'invidious'}}); }
       }
 
@@ -1705,14 +1897,21 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
           const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=24&q=${encodeURIComponent(q)}&type=video&key=${env.YOUTUBE_API_KEY}`);
           const data = await res.json();
           if (res.ok && !data.error) {
-            const items = (data.items || []).map(x => ({
-              id: x.id?.videoId,
-              titulo: x.snippet?.title || 'Video',
-              descripcion: x.snippet?.channelTitle || 'YouTube',
-              thumbnail: x.snippet?.thumbnails?.high?.url || x.snippet?.thumbnails?.medium?.url || x.snippet?.thumbnails?.default?.url || '',
-              categoria: 'Resultado',
-              tipo:'video'
-            })).filter(x => x.id);
+            const items = (data.items || []).map(x => {
+              const id=String(x.id?.videoId||'').trim();
+              return {
+                id,
+                external_id:id,
+                provider:'youtube',
+                url:id?`https://www.youtube.com/watch?v=${id}`:'',
+                titulo: x.snippet?.title || 'Video',
+                descripcion: x.snippet?.channelTitle || 'YouTube',
+                thumbnail: x.snippet?.thumbnails?.high?.url || x.snippet?.thumbnails?.medium?.url || x.snippet?.thumbnails?.default?.url || '',
+                categoria: 'Resultado',
+                tipo:'video',
+                content_type:'video'
+              };
+            }).filter(x => x.id);
             if (items.length) {
               await env.UADAV_DB.put(cacheKey, JSON.stringify(items), { expirationTtl: 86400 });
               return new Response(JSON.stringify(items), { headers: { ...cors, 'X-UADAV-Search-Source':'youtube_api' } });
@@ -1776,7 +1975,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       for (const base of INVIDIOUS_INSTANCES) {
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),4000);
         try {
-          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});
+          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.1'}});
           if(!r.ok) continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){result.source='invidious';result.instance=base;result.count=Math.min(arr.length,24);return json(result);}
         } catch {} finally { clearTimeout(timer); }
@@ -2046,10 +2245,10 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       await putJSON('artistas',arr); return json({success:true,review_required:true,artist:publicArtistFromItem(a)});
     }
     if(path==='/api/artista/content' && request.method==='GET'){
-      const id=String(url.searchParams.get('artist_id')||''); const list=await getArray('artista_contenido'); return json(list.filter(x=>String(x.artist_id)===id && x.estado==='publicado'));
+      const id=String(url.searchParams.get('artist_id')||''); const list=await getArray('artista_contenido'); return json(list.filter(x=>String(x.artist_id)===id && x.estado==='publicado').map(normalizeContentItem));
     }
     if(path==='/api/artista/content' && request.method==='POST'){
-      const b=await request.json().catch(()=>({})); const token=String(b.token||''); const raw=await env.UADAV_DB.get(artistTokenKey(token)); if(!raw)return json({error:'Acceso inválido'},401); const access=JSON.parse(raw); const item={id:'AC-'+crypto.randomUUID().slice(0,8),artist_id:String(access.artist_id),titulo:String(b.titulo||'Contenido'),tipo:String(b.tipo||'video'),url:String(b.url||''),thumbnail:String(b.thumbnail||''),descripcion:String(b.descripcion||''),estado:'pendiente',creado:new Date().toISOString()}; if(!item.url)return json({error:'URL requerida'},400); const list=await getArray('artista_contenido'); list.push(item); await putJSON('artista_contenido',list); return json({success:true,item});
+      const b=await request.json().catch(()=>({})); const token=String(b.token||''); const raw=await env.UADAV_DB.get(artistTokenKey(token)); if(!raw)return json({error:'Acceso inválido'},401); const access=JSON.parse(raw); const det=detectProvider(b.url); const item={id:'AC-'+crypto.randomUUID().slice(0,8),artist_id:String(access.artist_id),titulo:String(b.titulo||'Contenido'),tipo:String(b.tipo||det.content_type||'video'),content_type:String(b.content_type||b.tipo||det.content_type||'video'),provider:String(b.provider||det.provider||'custom'),external_id:String(b.external_id||det.external_id||''),url:String(b.url||''),thumbnail:String(b.thumbnail||''),descripcion:String(b.descripcion||''),estado:'pendiente',creado:new Date().toISOString()}; if(!item.url)return json({error:'URL requerida'},400); const list=await getArray('artista_contenido'); list.push(item); await putJSON('artista_contenido',list); return json({success:true,item:normalizeContentItem(item)});
     }
     if(path==='/api/contrataciones' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); if(!b.artist_id||!b.nombre||!b.email)return json({error:'Artista, nombre y email son obligatorios'},400); if(b.acepta_contrato!==true)return json({error:'Debe aceptar el contrato/condiciones para continuar'},400);
@@ -2107,6 +2306,23 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       }catch(_){}
       return {provider,content_type,external_id,url:value};
     }
+    function normalizeContentItem(raw){
+      const x={...(raw||{})};
+      let provider=String(x.provider||'').trim().toLowerCase();
+      let urlv=String(x.url||'').trim();
+      let external=String(x.external_id||x.youtube_id||x.videoId||x.video_id||'').trim();
+      const type=String(x.content_type||x.tipo||'').trim().toLowerCase();
+      const id=String(x.id||'').trim();
+      if(provider==='invidious')provider='youtube';
+      if(!external && provider==='youtube' && /^[A-Za-z0-9_-]{11}$/.test(id))external=id;
+      if(!external && !urlv && /^(video|short|music|musica|clip)?$/.test(type) && /^[A-Za-z0-9_-]{11}$/.test(id))external=id;
+      if(!urlv && external && (provider==='youtube'||!provider||provider==='custom')) urlv=`https://www.youtube.com/watch?v=${external}`;
+      const det=detectProvider(urlv);
+      if(!provider || provider==='custom') provider=det.provider||provider||'custom';
+      if(!external) external=det.external_id||'';
+      const contentType=String(x.content_type||x.tipo||det.content_type||(provider==='youtube'?'video':'link'));
+      return {...x,provider,external_id:external,url:urlv,content_type:contentType,tipo:x.tipo||contentType};
+    }
     async function saveEntityVersion(type,id,data){
       if(!hasD1())return;
       await safeD1('entity_version',async()=>{
@@ -2120,11 +2336,24 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       if(info.provider==='youtube'&&info.external_id){try{const iv=(await invidiousSearch(info.external_id,'video',1))[0];if(iv){info.title=iv.title||'';info.thumbnail=iv.videoThumbnails?.[0]?.url||'';info.author=iv.author||'';}}catch(_){} }
       return json({success:true,...info});
     }
+    if(path==='/api/admin/content/repair-links' && request.method==='POST'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      const universal=await getArray('content_items');
+      const legacy=await getArray('artista_contenido');
+      let repaired=0;
+      const fix=list=>list.map(row=>{const before=JSON.stringify(row||{}),after=normalizeContentItem(row);if(JSON.stringify(after)!==before)repaired++;return after});
+      const fixedUniversal=fix(universal),fixedLegacy=fix(legacy);
+      await putJSON('content_items',fixedUniversal);
+      await putJSON('artista_contenido',fixedLegacy);
+      await safeD1('repair_content_links',()=>syncContentD1(fixedUniversal));
+      await audit('repair_content_links','content',null,{repaired,universal:fixedUniversal.length,legacy:fixedLegacy.length});
+      return json({success:true,repaired,content_items:fixedUniversal.length,artist_content:fixedLegacy.length});
+    }
     if(path==='/api/content'){
       const kv=await getArray('content_items');
       if(request.method==='GET'){
         const artistId=String(url.searchParams.get('artist_id')||''); const provider=String(url.searchParams.get('provider')||''); const showAll=url.searchParams.get('all')==='true'&&isAdmin();
-        return json(kv.filter(x=>x&&(showAll||x.visible!==false)&&(!artistId||String(x.artist_id)===artistId)&&(!provider||String(x.provider)===provider)));
+        return json(kv.map(normalizeContentItem).filter(x=>x&&(showAll||x.visible!==false)&&(!artistId||String(x.artist_id)===artistId)&&(!provider||String(x.provider)===provider)));
       }
       if(!isAdmin())return json({error:'No autorizado'},401);
       const b=await request.json().catch(()=>({}));
@@ -2210,7 +2439,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       const key='radio_cover_'+normalizeSearchText(artist+'|'+title).slice(0,180);
       try{const cached=await env.UADAV_DB.get(key);if(cached)return json({artwork:cached,source:'cache'});}catch{}
       let artwork='';
-      try{const q=encodeURIComponent([artist,title].filter(Boolean).join(' '));const r=await fetch('https://api.deezer.com/search/track?limit=1&q='+q,{headers:{'User-Agent':'UADAVSTREAM/8.5'}});if(r.ok){const d=await r.json();artwork=d?.data?.[0]?.album?.cover_xl||d?.data?.[0]?.album?.cover_big||d?.data?.[0]?.album?.cover_medium||'';}}catch{}
+      try{const q=encodeURIComponent([artist,title].filter(Boolean).join(' '));const r=await fetch('https://api.deezer.com/search/track?limit=1&q='+q,{headers:{'User-Agent':'UADAVSTREAM/9.1'}});if(r.ok){const d=await r.json();artwork=d?.data?.[0]?.album?.cover_xl||d?.data?.[0]?.album?.cover_big||d?.data?.[0]?.album?.cover_medium||'';}}catch{}
       artwork=artwork||fallback||''; if(artwork){try{await env.UADAV_DB.put(key,artwork,{expirationTtl:60*60*24*30})}catch{}}
       return json({artwork,source:artwork===fallback?'fallback':'provider'});
     }
@@ -2330,7 +2559,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
     }
 
     if (path === '/api/platform_info') {
-      return json({ service: 'UADAVSTREAM', version: 'V8.5.0', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2','affiliate-growth-suite','artist-audience-chat','artist-support','presskit','ticketing-foundation','marketplace-foundation','radio-cover-cache'] });
+      return json({ service: 'UADAVSTREAM', version: 'V9.1.0', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2','affiliate-growth-suite','artist-audience-chat','artist-support','presskit','ticketing-foundation','marketplace-foundation','radio-cover-cache','cct340-assistant','cct-current-scales','cct-fiscalization','uadav-tickets-preagreement'] });
     }
 
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.

@@ -10,9 +10,6 @@
   window.UADAVShell={
     playRadio(radio){try{parent.postMessage({type:'uadav:radio-play',radio},location.origin)}catch{}},
     pauseRadio(){try{parent.postMessage({type:'uadav:radio-pause'},location.origin)}catch{}},
-    closeRadio(){try{parent.postMessage({type:'uadav:radio-close'},location.origin)}catch{}},
-    setRadioVolume(value){try{parent.postMessage({type:'uadav:radio-volume',value:Number(value)},location.origin)}catch{}},
-    muteRadio(value){try{parent.postMessage({type:'uadav:radio-mute',value},location.origin)}catch{}},
     meta(meta){try{parent.postMessage({type:'uadav:radio-meta',...meta},location.origin)}catch{}},
     navigate(href){try{parent.postMessage({type:'uadav:navigate',href},location.origin)}catch{}}
   };
@@ -22,7 +19,7 @@
 (()=>{
   const path=location.pathname.toLowerCase();
   const parents={
-    '/artista.html':'/artistas.html','/presskit.html':'/artista.html','/marketplace.html':'/index.html','/radio.html':'/index.html','/evento.html':'/cartelera.html','/media.html':'/peliculas-series.html',
+    '/artista.html':'/artistas.html','/radio.html':'/index.html','/evento.html':'/cartelera.html','/media.html':'/peliculas-series.html',
     '/contratar-artista.html':'/artista.html','/gestionar-artista.html':'/artistas.html','/publicar-evento.html':'/cartelera.html','/sumate-artista.html':'/artistas.html'
   };
   if(!parents[path]||document.querySelector('[data-uadav-back]')||document.querySelector('.back-btn,.top-back'))return;
