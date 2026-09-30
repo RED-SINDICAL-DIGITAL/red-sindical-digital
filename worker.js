@@ -129,7 +129,7 @@ export default {
           u.searchParams.set('type',type);
           u.searchParams.set('page','1');
           u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});
           if(!r.ok)throw new Error('HTTP '+r.status);
           const arr=await r.json();
           if(!Array.isArray(arr)||!arr.length)throw new Error('empty');
@@ -154,7 +154,7 @@ export default {
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try{
-          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});
+          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});
           if(!r.ok)continue; const d=await r.json();
           if(d?.authorId||d?.author){
             return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),subscribers:Number(d.subCount||0),total_views:Number(d.totalViews||0),latestVideos:Array.isArray(d.latestVideos)?d.latestVideos.slice(0,24):[],source:'invidious'};
@@ -164,7 +164,7 @@ export default {
       return null;
     }
     async function invidiousVideoInfo(videoId){
-      const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
+      const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
     }
     async function resolveChannelReference(ref){
       let raw=String(ref||'').trim();if(!raw)return null;if(/^UC[A-Za-z0-9_-]{10,}$/.test(raw))return raw;
@@ -173,11 +173,11 @@ export default {
     }
     async function invidiousChannelVideos(channelId, limit=50){
       const id=String(channelId||'').trim(),max=Math.min(200,Math.max(1,Number(limit||50)));if(!id)return [];
-      for(const base of INVIDIOUS_INSTANCES){const out=[];for(let page=1;page<=Math.min(6,Math.ceil(max/30));page++){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/videos?page=${page}&sort_by=newest`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});if(!r.ok)break;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.videos)?d.videos:[]);if(!items.length)break;out.push(...items);if(out.length>=max)break}catch(_){break}finally{clearTimeout(timer)}}if(out.length)return out.slice(0,max)}return [];
+      for(const base of INVIDIOUS_INSTANCES){const out=[];for(let page=1;page<=Math.min(6,Math.ceil(max/30));page++){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/videos?page=${page}&sort_by=newest`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});if(!r.ok)break;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.videos)?d.videos:[]);if(!items.length)break;out.push(...items);if(out.length>=max)break}catch(_){break}finally{clearTimeout(timer)}}if(out.length)return out.slice(0,max)}return [];
     }
     async function invidiousChannelPlaylists(channelId, limit=30){
       const id=String(channelId||'').trim();if(!id)return [];
-      for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/playlists`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});if(!r.ok)continue;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.playlists)?d.playlists:[]);if(items.length)return items.slice(0,Math.min(60,Number(limit||30)))}catch(_){}finally{clearTimeout(timer)}}return [];
+      for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/playlists`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});if(!r.ok)continue;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.playlists)?d.playlists:[]);if(items.length)return items.slice(0,Math.min(60,Number(limit||30)))}catch(_){}finally{clearTimeout(timer)}}return [];
     }
     let d1SchemaReady = false;
     async function recordD1SyncError(label,error){
@@ -216,7 +216,7 @@ export default {
       if(!hasD1())return {configured:false,ready:false};
       if(d1SchemaReady)return {configured:true,ready:true};
       try{
-        const row=await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='monetization_campaigns' LIMIT 1`).first();
+        const row=await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='artist_audience_messages' LIMIT 1`).first();
         if(!row) await runD1Bootstrap();
         d1SchemaReady=true;
         return {configured:true,ready:true,auto_initialized:!row};
@@ -818,6 +818,46 @@ CREATE TABLE IF NOT EXISTS media_episodes (
   updated_at TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS idx_media_episodes_title ON media_episodes(title_id,season_number,episode_number);
 
+CREATE TABLE IF NOT EXISTS artist_audience_messages (
+  id TEXT PRIMARY KEY,
+  artist_id TEXT NOT NULL,
+  alias TEXT NOT NULL,
+  message TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'visible',
+  created_at TEXT NOT NULL,
+  data_json TEXT NOT NULL DEFAULT '{}');
+CREATE INDEX IF NOT EXISTS idx_artist_audience_messages ON artist_audience_messages(artist_id,status,created_at DESC);
+
+CREATE TABLE IF NOT EXISTS ticket_orders (
+  id TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL,
+  buyer_name TEXT,
+  buyer_email TEXT,
+  buyer_phone TEXT,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  amount_label TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  payment_status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  data_json TEXT NOT NULL DEFAULT '{}');
+CREATE INDEX IF NOT EXISTS idx_ticket_orders_event ON ticket_orders(event_id,status,created_at DESC);
+
+CREATE TABLE IF NOT EXISTS marketplace_requests (
+  id TEXT PRIMARY KEY,
+  artist_id TEXT NOT NULL,
+  requester_name TEXT,
+  requester_email TEXT,
+  requester_phone TEXT,
+  event_date TEXT,
+  city TEXT,
+  message TEXT,
+  status TEXT NOT NULL DEFAULT 'new',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  data_json TEXT NOT NULL DEFAULT '{}');
+CREATE INDEX IF NOT EXISTS idx_marketplace_requests_artist ON marketplace_requests(artist_id,status,created_at DESC);
+
 CREATE TABLE IF NOT EXISTS monetization_products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -847,7 +887,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V8.4.0', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V8.5.0', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:'UADAVSTREAM', architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -857,7 +897,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       const out=[];
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),3500); const t=Date.now();
-        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
+        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
         catch(e){out.push({instance:base,ok:false,error:String(e?.message||e)});} finally{clearTimeout(timer);}
       }
       return json({checked_at:isoNow(),instances:out});
@@ -909,7 +949,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
     if (path === '/api/v7/export' && request.method === 'GET') {
       if (!isAdmin()) return json({error:'No autorizado'},401);
       if (!hasD1()) return json({error:'D1 no configurado'},503);
-      const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','monetization_products','monetization_campaigns']; const out={generated_at:isoNow(),tables:{}};
+      const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns']; const out={generated_at:isoNow(),tables:{}};
       for(const t of tables){const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[];}
       return json(out);
     }
@@ -1354,6 +1394,15 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       }catch(e){return json({error:String(e?.message||e)},502)}
     }
 
+    if (path === '/api/admin/artists/publish' && request.method === 'POST') {
+      if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
+      const b=await request.json().catch(()=>({})); const artistId=String(b.artist_id||b.id||'').trim(); if(!artistId)return json({error:'artist_id requerido'},400);
+      const arr=await getArray('artistas'); const i=arr.findIndex(a=>String(publicArtistFromItem(a).id)===artistId); if(i<0)return json({error:'Artista no encontrado'},404);
+      arr[i]={...arr[i],estado:b.publish===false?'oculto':'publicado',visible:b.publish===false?false:true,actualizado:isoNow()};
+      await putJSON('artistas',arr); await safeD1('publish_artist',()=>syncArtistsD1(arr)); await audit(b.publish===false?'unpublish_artist':'publish_artist','artist',artistId,{});
+      return json({success:true,artist:publicArtistFromItem(arr[i])});
+    }
+
     if (path === '/api/admin/importar-canal' && request.method === 'POST') {
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
       try {
@@ -1590,7 +1639,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try {
           const u=new URL(base+'/api/v1/trending'); u.searchParams.set('region',region); u.searchParams.set('type',category?'music':'default'); u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});
           if(!r.ok)continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){const items=arr.slice(0,limit).map(x=>({id:x.videoId||'',channel_id:x.authorId||'',channel_name:x.author||'',titulo:x.title||'',descripcion:x.description||'',thumbnail:x.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||x.videoThumbnails?.[0]?.url||'',views:Number(x.viewCount||0),published_at:x.publishedText||'',category_id:category||''})).filter(x=>x.id); if(items.length){const payload={source:'invidious_trending',region,category:category||null,items};const out=JSON.stringify(payload);await env.UADAV_DB.put(cacheKey,out,{expirationTtl:1800});return new Response(out,{headers:{...cors,'X-UADAV-Search-Source':'invidious_trending'}});}}
         } catch {} finally {clearTimeout(timer)}
@@ -1727,7 +1776,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       for (const base of INVIDIOUS_INSTANCES) {
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),4000);
         try {
-          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});
+          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.5'}});
           if(!r.ok) continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){result.source='invidious';result.instance=base;result.count=Math.min(arr.length,24);return json(result);}
         } catch {} finally { clearTimeout(timer); }
@@ -1758,7 +1807,18 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       if(request.method==='GET') return json(list);
       if(request.method==='PUT'){
         const b=await request.json().catch(()=>({})); const i=list.findIndex(x=>String(x.id)===String(b.id)); if(i<0)return json({error:'No encontrado'},404);
-        if(b.estado) list[i].estado=String(b.estado); list[i].revisado=new Date().toISOString(); await putJSON('postulaciones_artista',list); return json({success:true,item:list[i]});
+        if(b.estado) list[i].estado=String(b.estado); list[i].revisado=new Date().toISOString(); await putJSON('postulaciones_artista',list);
+        let published_artist=null;
+        if(String(b.estado||'').toLowerCase()==='aprobado' || String(b.estado||'').toLowerCase()==='publicado') {
+          const postsItem=list[i]; const artists=await getArray('artistas');
+          const existing=artists.findIndex(a=>String(a.email||'').toLowerCase()===String(postsItem.email||'').toLowerCase() || String(a.id||'')===String(postsItem.id||''));
+          const base=existing>=0?artists[existing]:{};
+          const artist={...base,id:base.id||postsItem.id||makeId('ART'),nombre:postsItem.nombre||base.nombre||'Artista',nombre_artistico:postsItem.nombre||base.nombre_artistico||base.nombre||'Artista',rubro:postsItem.rubro||base.rubro||'Artista de variedades',ciudad:postsItem.ciudad||base.ciudad||'',email:postsItem.email||base.email||'',whatsapp:postsItem.whatsapp||base.whatsapp||'',canal:postsItem.youtube||base.canal||'',foto:postsItem.foto||base.foto||'',bio:postsItem.bio||base.bio||'',estado:'publicado',visible:true,origen:base.origen||'autoregistro',actualizado:isoNow()};
+          if(existing>=0)artists[existing]=artist;else artists.unshift(artist);
+          await putJSON('artistas',artists); await safeD1('publish_artist_post',()=>syncArtistsD1(artists)); published_artist=publicArtistFromItem(artist);
+          await audit('publish_artist_from_application','artist',artist.id,{application_id:postsItem.id});
+        }
+        return json({success:true,item:list[i],artist:published_artist});
       }
     }
 
@@ -1859,7 +1919,13 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       contenido:a.contenido||[],
       bolsa_activa:a.afiliado_verificado===true,
       claimed:a.claimed===true,
-      claim_status:a.claim_status||'none'
+      claim_status:a.claim_status||'none',
+      support_enabled:a.afiliado_verificado===true && a.support_enabled!==false,
+      support_links:Array.isArray(a.support_links)?a.support_links.filter(x=>x&&x.url&&x.active!==false).slice(0,12):[],
+      audience_chat_enabled:a.afiliado_verificado===true && a.audience_chat_enabled===true,
+      presskit_enabled:a.afiliado_verificado===true && a.presskit_enabled!==false,
+      marketplace_enabled:a.afiliado_verificado===true && a.marketplace_enabled!==false,
+      ticketing_enabled:a.afiliado_verificado===true && a.ticketing_enabled===true
     }); }
     async function artistsFromD1(params={}) {
       if(!hasD1()) return null;
@@ -1974,7 +2040,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       const arr=await getArray('artistas'); let i=arr.findIndex(a=>String(publicArtistFromItem(a).id)===String(access.artist_id));
       if(i<0){ const all=await allCanonicalArtists(); const found=all.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id)); if(!found)return json({error:'Perfil no encontrado'},404); arr.push(found); i=arr.length-1; }
       const a=arr[i];
-      const allowed=['nombre','nombre_artistico','rubro','ciudad','foto','bio','canal','live_url','booking_url','donation_url','donacion_url','honorario_desde','disponibilidad','redes','web'];
+      const allowed=['nombre','nombre_artistico','rubro','ciudad','foto','bio','canal','live_url','booking_url','donation_url','donacion_url','honorario_desde','disponibilidad','redes','web','support_enabled','support_links','audience_chat_enabled','presskit_enabled','marketplace_enabled','ticketing_enabled'];
       for(const k of allowed) if(Object.prototype.hasOwnProperty.call(b,k)) a[k]=b[k];
       a.self_managed=true; a.ultima_edicion_artista=new Date().toISOString(); a.cambios_pendientes=true; a.estado=a.estado==='aprobado'?'aprobado':(a.estado||'pendiente');
       await putJSON('artistas',arr); return json({success:true,review_required:true,artist:publicArtistFromItem(a)});
@@ -2138,6 +2204,17 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
     }
 
     // --- V8.3 · RADIO HISTORIAL / PEDIDOS ---
+    if(path==='/api/radio/cover' && request.method==='GET'){
+      const artist=String(url.searchParams.get('artist')||'').trim(); const title=String(url.searchParams.get('title')||'').trim(); const fallback=String(url.searchParams.get('fallback')||'').trim();
+      if(!artist&&!title)return json({artwork:fallback||''});
+      const key='radio_cover_'+normalizeSearchText(artist+'|'+title).slice(0,180);
+      try{const cached=await env.UADAV_DB.get(key);if(cached)return json({artwork:cached,source:'cache'});}catch{}
+      let artwork='';
+      try{const q=encodeURIComponent([artist,title].filter(Boolean).join(' '));const r=await fetch('https://api.deezer.com/search/track?limit=1&q='+q,{headers:{'User-Agent':'UADAVSTREAM/8.5'}});if(r.ok){const d=await r.json();artwork=d?.data?.[0]?.album?.cover_xl||d?.data?.[0]?.album?.cover_big||d?.data?.[0]?.album?.cover_medium||'';}}catch{}
+      artwork=artwork||fallback||''; if(artwork){try{await env.UADAV_DB.put(key,artwork,{expirationTtl:60*60*24*30})}catch{}}
+      return json({artwork,source:artwork===fallback?'fallback':'provider'});
+    }
+
     if(path==='/api/radio/history'){
       const radioId=String(url.searchParams.get('radio_id')||'').trim();
       if(request.method==='GET'){
@@ -2197,6 +2274,44 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
     }
 
     // --- V8.3 · MONETIZACIÓN ---
+    if(path==='/api/artist/audience-chat'){
+      const artistId=String(url.searchParams.get('artist_id')||'').trim();
+      if(request.method==='GET'){
+        if(!artistId)return json({error:'artist_id requerido'},400);
+        if(hasD1()){try{const st=await ensureD1Schema();if(st.ready){const r=await env.DB.prepare(`SELECT id,artist_id,alias,message,status,created_at FROM artist_audience_messages WHERE artist_id=? AND status='visible' ORDER BY created_at DESC LIMIT 80`).bind(artistId).all();return json((r.results||[]).reverse());}}catch{}}
+        return json((await getArray('artist_audience_'+artistId)).filter(x=>x.status!=='hidden').slice(-80));
+      }
+      if(request.method==='POST'){
+        const b=await request.json().catch(()=>({})); const id=String(b.artist_id||artistId||'').trim(); const alias=String(b.alias||'Espectador').trim().slice(0,60); const message=String(b.message||b.mensaje||'').trim().slice(0,800); if(!id||!message)return json({error:'artist_id y mensaje requeridos'},400);
+        const artist=await artistFromD1(id)||(await allCanonicalArtists()).find(a=>String(publicArtistFromItem(a).id)===id); const p=artist?publicArtistFromItem(artist):null; if(!p||!p.afiliado_verificado||!p.audience_chat_enabled)return json({error:'Chat no disponible para este artista'},403);
+        const ip=String(request.headers.get('CF-Connecting-IP')||'anon'); const rl='artist_chat_rl_'+id+'_'+ip; try{const n=Number(await env.UADAV_DB.get(rl)||0);if(n>=12)return json({error:'Demasiados mensajes. Intentá más tarde.'},429);await env.UADAV_DB.put(rl,String(n+1),{expirationTtl:600})}catch{}
+        const item={id:makeId('MSG'),artist_id:id,alias,message,status:'visible',created_at:isoNow()};
+        let stored=false;if(hasD1()){const rr=await safeD1('artist_audience_insert',()=>env.DB.prepare(`INSERT INTO artist_audience_messages(id,artist_id,alias,message,status,created_at,data_json) VALUES(?,?,?,?,?,?,?)`).bind(item.id,id,alias,message,'visible',item.created_at,'{}').run());stored=rr.ok===true;}
+        if(!stored){const list=await getArray('artist_audience_'+id);list.push(item);await putJSON('artist_audience_'+id,list.slice(-300));}
+        return json({success:true,item});
+      }
+    }
+    if(path==='/api/admin/artist-audience-chat'){
+      if(!isAdmin())return json({error:'No autorizado'},401); const b=request.method==='GET'?{}:await request.json().catch(()=>({})); const artistId=String(url.searchParams.get('artist_id')||b.artist_id||'').trim();
+      if(request.method==='GET'){if(hasD1()){const q=artistId?`SELECT * FROM artist_audience_messages WHERE artist_id=? ORDER BY created_at DESC LIMIT 300`:`SELECT * FROM artist_audience_messages ORDER BY created_at DESC LIMIT 300`;const r=artistId?await env.DB.prepare(q).bind(artistId).all():await env.DB.prepare(q).all();return json(r.results||[]);}return json([]);}
+      if(request.method==='PUT'){const id=String(b.id||'');const status=String(b.status||'visible');if(hasD1())await env.DB.prepare(`UPDATE artist_audience_messages SET status=? WHERE id=?`).bind(status,id).run();return json({success:true});}
+    }
+
+    if(path==='/api/marketplace/request' && request.method==='POST'){
+      const b=await request.json().catch(()=>({})); const artistId=String(b.artist_id||'').trim(); if(!artistId||!b.requester_name||!b.requester_email)return json({error:'Artista, nombre y email son obligatorios'},400);
+      const artist=await artistFromD1(artistId)||(await allCanonicalArtists()).find(a=>String(publicArtistFromItem(a).id)===artistId); const p=artist?publicArtistFromItem(artist):null; if(!p||!p.afiliado_verificado||!p.marketplace_enabled)return json({error:'Este artista no recibe solicitudes por marketplace'},403);
+      const item={id:makeId('MKT'),artist_id:artistId,requester_name:String(b.requester_name).slice(0,120),requester_email:String(b.requester_email).slice(0,180),requester_phone:String(b.requester_phone||'').slice(0,60),event_date:String(b.event_date||'').slice(0,40),city:String(b.city||'').slice(0,120),message:String(b.message||'').slice(0,1600),status:'new',created_at:isoNow(),updated_at:isoNow()};
+      if(hasD1())await safeD1('marketplace_request',()=>env.DB.prepare(`INSERT INTO marketplace_requests(id,artist_id,requester_name,requester_email,requester_phone,event_date,city,message,status,created_at,updated_at,data_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`).bind(item.id,item.artist_id,item.requester_name,item.requester_email,item.requester_phone,item.event_date,item.city,item.message,item.status,item.created_at,item.updated_at,'{}').run());
+      const list=await getArray('marketplace_requests');list.unshift(item);await putJSON('marketplace_requests',list.slice(0,2000)); await audit('marketplace_request','artist',artistId,{request_id:item.id}); return json({success:true,id:item.id});
+    }
+    if(path==='/api/admin/marketplace/requests'){if(!isAdmin())return json({error:'No autorizado'},401);if(request.method==='GET')return json(await getArray('marketplace_requests'));const b=await request.json().catch(()=>({}));const list=await getArray('marketplace_requests');const i=list.findIndex(x=>String(x.id)===String(b.id));if(i>=0){list[i]={...list[i],status:String(b.status||list[i].status),updated_at:isoNow()};await putJSON('marketplace_requests',list);}return json({success:true,item:i>=0?list[i]:null});}
+
+    if(path==='/api/ticketing/orders'){
+      if(request.method==='POST'){const b=await request.json().catch(()=>({}));if(!b.event_id||!b.buyer_name||!b.buyer_email)return json({error:'Evento, nombre y email son obligatorios'},400);const item={id:makeId('TKT'),event_id:String(b.event_id),buyer_name:String(b.buyer_name).slice(0,120),buyer_email:String(b.buyer_email).slice(0,180),buyer_phone:String(b.buyer_phone||'').slice(0,60),quantity:Math.max(1,Math.min(20,Number(b.quantity||1))),amount_label:String(b.amount_label||''),status:'pending',payment_status:'pending',created_at:isoNow(),updated_at:isoNow()};const list=await getArray('ticket_orders');list.unshift(item);await putJSON('ticket_orders',list.slice(0,5000));if(hasD1())await safeD1('ticket_order',()=>env.DB.prepare(`INSERT INTO ticket_orders(id,event_id,buyer_name,buyer_email,buyer_phone,quantity,amount_label,status,payment_status,created_at,updated_at,data_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`).bind(item.id,item.event_id,item.buyer_name,item.buyer_email,item.buyer_phone,item.quantity,item.amount_label,item.status,item.payment_status,item.created_at,item.updated_at,'{}').run());return json({success:true,id:item.id,status:item.status});}
+      if(request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await getArray('ticket_orders'));}
+      if(request.method==='PUT'){if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));const list=await getArray('ticket_orders');const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Orden no encontrada'},404);list[i]={...list[i],status:String(b.status||list[i].status),payment_status:String(b.payment_status||list[i].payment_status),updated_at:isoNow()};await putJSON('ticket_orders',list);return json({success:true,item:list[i]});}
+    }
+
     if(path==='/api/monetization/products'){
       const list=await getArray('monetization_products');if(request.method==='GET')return json(list);if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));
       if(request.method==='POST'){const item={id:String(b.id||makeId('PROD')),name:String(b.name||'Producto'),entity_type:String(b.entity_type||'event'),placement:String(b.placement||'featured'),duration_days:Number(b.duration_days||7),price_label:String(b.price_label||'A convenir'),active:b.active!==false,created_at:isoNow(),updated_at:isoNow()};list.push(item);await putJSON('monetization_products',list);return json({success:true,item});}
@@ -2215,7 +2330,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
     }
 
     if (path === '/api/platform_info') {
-      return json({ service: 'UADAVSTREAM', version: 'V8.4.0', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2'] });
+      return json({ service: 'UADAVSTREAM', version: 'V8.5.0', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2','affiliate-growth-suite','artist-audience-chat','artist-support','presskit','ticketing-foundation','marketplace-foundation','radio-cover-cache'] });
     }
 
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.

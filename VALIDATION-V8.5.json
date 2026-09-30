@@ -1,0 +1,11 @@
+{
+  "html_files": 25,
+  "script_errors": [],
+  "missing_assets": [],
+  "d1_statements": 90,
+  "new_tables": {
+    "artist_audience_messages": true,
+    "ticket_orders": true,
+    "marketplace_requests": true
+  }
+}
