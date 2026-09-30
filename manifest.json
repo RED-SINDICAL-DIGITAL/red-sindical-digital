@@ -7,5 +7,32 @@
   "theme_color": "#070b10",
   "description": "Plataforma audiovisual, artistas, radios, eventos y oportunidades de ★ UADAV STREAM",
   "icons": [],
-  "scope": "/"
+  "scope": "/",
+  "shortcuts": [
+    {
+      "name": "Radio",
+      "short_name": "Radio",
+      "url": "/index.html#radios"
+    },
+    {
+      "name": "Cartelera",
+      "short_name": "Cartelera",
+      "url": "/cartelera.html"
+    },
+    {
+      "name": "Shorts",
+      "short_name": "Shorts",
+      "url": "/shorts.html"
+    },
+    {
+      "name": "Cine y Series",
+      "short_name": "Cine",
+      "url": "/peliculas-series.html"
+    },
+    {
+      "name": "Mi perfil",
+      "short_name": "Mi perfil",
+      "url": "/mi-perfil.html"
+    }
+  ]
 }

@@ -532,7 +532,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     makeFocusable();
     new MutationObserver(makeFocusable).observe(document.body,{subtree:true,childList:true});
     document.addEventListener('DOMContentLoaded',()=>{
-      $('radioPlayerToggle')?.addEventListener('click',()=>{const a=$('radioAudio');if(!a)return;if(a.paused)a.play().catch(()=>{});else pausarRadio()});$('radioPlayerClose')?.addEventListener('click',()=>pausarRadio());$('radioPlayerDiscover')?.addEventListener('click',()=>{const r=currentRadiosCache.find(x=>String(x.stream_url||x.url||'')===String(activeRadio||''));const st=r?radioTrackState.get(r.nombre||r.stream_url||''):null;if(r&&st)descubrirTemaRadio(r,st)});$('radioPlayerVolume')?.addEventListener('input',e=>{const a=$('radioAudio');if(a)a.volume=Number(e.target.value)});$('radioAudio')?.addEventListener('play',()=>{if($('radioPlayerToggle'))$('radioPlayerToggle').textContent='❚❚';if($('radioPlayerStatus'))$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>REPRODUCIENDO'});$('radioAudio')?.addEventListener('pause',()=>{if($('radioPlayerToggle'))$('radioPlayerToggle').textContent='▶';if($('radioPlayerStatus'))$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>PAUSADO'});
+      $('radioPlayerToggle')?.addEventListener('click',()=>{const a=$('radioAudio');if(!a)return;if(a.paused)a.play().catch(()=>{});else pausarRadio()});$('radioPlayerClose')?.addEventListener('click',()=>{pausarRadio();const d=$('radioPlayerDock');if(d)d.hidden=true});$('radioPlayerMute')?.addEventListener('click',()=>{const a=$('radioAudio');if(!a)return;a.muted=!a.muted;$('radioPlayerMute').textContent=a.muted?'🔇':'🔊'});$('radioPlayerDiscover')?.addEventListener('click',()=>{const r=currentRadiosCache.find(x=>String(x.stream_url||x.url||'')===String(activeRadio||''));const st=r?radioTrackState.get(r.nombre||r.stream_url||''):null;if(r&&st)descubrirTemaRadio(r,st)});$('radioPlayerVolume')?.addEventListener('input',e=>{const a=$('radioAudio');if(a){a.volume=Math.max(0,Math.min(1,Number(e.target.value)));a.muted=false;if($('radioPlayerMute'))$('radioPlayerMute').textContent='🔊'}});$('radioPlayerVolume')?.addEventListener('change',e=>{const a=$('radioAudio');if(a)a.volume=Number(e.target.value)});$('radioAudio')?.addEventListener('play',()=>{if($('radioPlayerToggle'))$('radioPlayerToggle').textContent='❚❚';if($('radioPlayerStatus'))$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>REPRODUCIENDO'});$('radioAudio')?.addEventListener('pause',()=>{if($('radioPlayerToggle'))$('radioPlayerToggle').textContent='▶';if($('radioPlayerStatus'))$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>PAUSADO'});
     });
     document.addEventListener('keydown',e=>{
       if(!document.body.classList.contains('uadav-tv-mode'))return;
@@ -600,7 +600,7 @@ body{padding-bottom:0}
 }
 </style>
 <script src="/uadav-api-config.js"></script>
-</head>
+<link rel="stylesheet" href="/uadav-ui-v8.4.css"></head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
     <div class="maintenance-card">
@@ -613,7 +613,7 @@ body{padding-bottom:0}
   <header class="nav" id="nav">
     <a class="brand" href="#top" aria-label="UADAV STREAM inicio"><span class="brand-mark"><img id="brandLogo" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px"><i id="brandLogoFallback" class="fa-solid fa-star"></i></span><span id="brandName">UADAV STREAM</span></a>
     <nav class="nav-links" aria-label="Navegación principal">
-      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#radiosRow" id="navRadiosLink" onclick="irASeccion('radiosRow');return false">Radios</a><a href="#artists" id="navArtistsLink" onclick="irASeccion('artists');return false">Artistas</a><a href="#liveRow" id="navLiveLink" onclick="irASeccion('liveRow');return false">En vivo</a><a href="/cartelera.html" id="navCarteleraLink">Cartelera</a><a href="/peliculas-series.html" id="navMediaLink">Películas/Series</a><a href="/playlists.html">Playlists</a><a href="/podcasts.html">Podcast</a><span id="dynamicSectionsNav" class="dynamic-sections-nav" aria-label="Secciones"></span>
+      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#discoverRow" onclick="irASeccion('discoverRow');return false">Explorar</a><a href="#artists" id="navArtistsLink" onclick="irASeccion('artists');return false">Artistas</a><a href="#radiosRow" id="navRadiosLink" onclick="irASeccion('radiosRow');return false">Radio</a><a href="/cartelera.html" id="navCarteleraLink">Cartelera</a><a href="/peliculas-series.html" id="navMediaLink">Cine & Series</a><a href="#liveRow" id="navLiveLink" onclick="irASeccion('liveRow');return false">En vivo</a><details class="nav-more"><summary>Más ▾</summary><div class="nav-more-menu"><a href="/shorts.html">Shorts</a><a href="/playlists.html">Playlists</a><a href="/podcasts.html">Podcast</a><span id="dynamicSectionsNav" class="dynamic-sections-nav" aria-label="Secciones"></span></div></details>
     </nav>
     <div class="nav-actions">
       <div class="nav-search"><i class="fa-solid fa-magnifying-glass"></i><input id="navSearchInput" aria-label="Buscar" placeholder="Buscar..." onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button aria-label="Buscar" onclick="ejecutarBusqueda(document.getElementById('navSearchInput').value)"><i class="fa-solid fa-arrow-right"></i></button></div>
@@ -692,7 +692,7 @@ body{padding-bottom:0}
 </div>
 
       <div class="row" id="artists"><div class="row-head"><div><div class="row-title">🎭 Artistas</div><div class="row-subtitle">Conocé a quienes hacen posible el espectáculo</div></div><a class="row-more" href="/artistas.html">Ver todos</a></div><div class="rail" id="artistsRail"></div></div>
-      <div class="row" id="shortsRow"><div class="row-head"><div><div class="row-title">📱 Shorts</div><div class="row-subtitle">Descubrí artistas en formato vertical</div></div><button class="row-more" type="button" onclick="cargarShorts(true)">Actualizar</button></div><div class="rail" id="shortsRail"></div></div>
+      <div class="row" id="shortsRow"><div class="row-head"><div><div class="row-title">📱 Shorts</div><div class="row-subtitle">Descubrí artistas en formato vertical</div></div><a class="row-more" href="/shorts.html">Ver Shorts</a></div><div class="rail" id="shortsRail"></div></div>
       <div class="row" id="jobsRow"><div class="row-head"><div><div class="row-title">💼 Bolsa de Trabajo</div><div class="row-subtitle">Oportunidades para artistas y productores</div></div><button class="row-more" type="button" onclick="cargarOfertasPublicas(true)">Actualizar</button></div><div class="rail" id="jobsRail"></div></div>
 
       <div class="row" id="mediaRow" hidden><div class="row-head"><div><div class="row-title">🎞️ Películas y Series</div><div class="row-subtitle">Catálogo audiovisual con temporadas y episodios</div></div><a class="row-more" href="/peliculas-series.html">Ver catálogo</a></div><div class="rail" id="mediaRail"></div></div>
@@ -741,7 +741,7 @@ body{padding-bottom:0}
     <div class="footer-bottom"><div id="footerCopyright">© <span id="footerYear"></span> ★ UADAV STREAM · Todos los derechos reservados.</div><div class="footer-legal" id="footerLegal"><a id="footerPrivacy" href="/privacidad.html" hidden>Privacidad</a><a id="footerTerms" href="/terminos.html" hidden>Términos</a></div></div>
   </footer>
 
-  <div id="radioPlayerDock" class="radio-player-pro" hidden><img id="radioPlayerCover" class="radio-player-cover" src="" alt=""><div class="radio-player-main"><div class="radio-player-kicker">RADIO ★ UADAV STREAM · AHORA SUENA</div><div id="radioPlayerTitle" class="radio-player-title">Radio en vivo</div><div id="radioPlayerArtist" class="radio-player-artist">Seleccioná una radio</div><div id="radioPlayerStatus" class="radio-player-status"><span class="live-dot"></span>LISTO</div></div><div class="radio-player-actions"><input id="radioPlayerVolume" class="radio-player-volume" type="range" min="0" max="1" step="0.05" value="1"><button id="radioPlayerDiscover" class="radio-player-btn" type="button">⌕</button><button id="radioPlayerToggle" class="radio-player-btn primary" type="button">▶</button><button id="radioPlayerClose" class="radio-player-btn" type="button">✕</button></div></div><audio id="radioAudio" preload="none"></audio>
+  <div id="radioPlayerDock" class="radio-player-pro" hidden><img id="radioPlayerCover" class="radio-player-cover" src="" alt=""><div class="radio-player-main"><div class="radio-player-kicker">RADIO ★ UADAV STREAM · AHORA SUENA</div><div id="radioPlayerTitle" class="radio-player-title">Radio en vivo</div><div id="radioPlayerArtist" class="radio-player-artist">Seleccioná una radio</div><div id="radioPlayerStatus" class="radio-player-status"><span class="live-dot"></span>LISTO</div></div><div class="radio-player-actions"><button id="radioPlayerMute" class="radio-player-btn" type="button" title="Silenciar">🔊</button><input id="radioPlayerVolume" class="radio-player-volume" type="range" min="0" max="1" step="0.05" value="1"><button id="radioPlayerDiscover" class="radio-player-btn" type="button">⌕</button><button id="radioPlayerToggle" class="radio-player-btn primary" type="button">▶</button><button id="radioPlayerClose" class="radio-player-btn" type="button">✕</button></div></div><audio id="radioAudio" preload="none"></audio>
   <div id="artistHubOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarArtistHub()"><div class="info-card" role="dialog" aria-modal="true"><button class="info-close" type="button" onclick="cerrarArtistHub()" aria-label="Cerrar">✕</button><div class="artist-profile-grid"><img id="artistHubMedia" class="artist-profile-avatar" src="" alt=""><div class="artist-profile-content"><div class="info-kicker" id="artistHubKicker">🎭 Artista UADAV STREAM</div><h2 id="artistHubTitle">Artista</h2><p id="artistHubBio">Perfil artístico</p><div id="artistHubBadges" class="radio-hub-socials"></div><div id="artistHubActions" class="hero-actions"></div></div></div><div class="artist-profile-title">Contenido del artista</div><div id="artistHubContent" class="artist-profile-rail"></div></div></div>
 
   <div id="infoOverlay" class="info-overlay" aria-hidden="true" onclick="if(event.target===this)cerrarInfoOverlay()">
@@ -1791,15 +1791,7 @@ body{padding-bottom:0}
         const saved=radioTrackState.get(key),logo=safe(saved?.artwork||r.logo||r.imagen||FALLBACK_THUMB);
         const title=safe(saved?.title||'Seleccioná para escuchar'),artist=safe(saved?.artist||'Radio en vivo');
         const isActive=activeRadio===String(r.stream_url||r.url||'');
-        return `<article class="radio-card${isActive?' is-active':''}" data-radio-index="${i}" data-radio-name="${name}">
-          <img class="radio-logo" src="${logo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">
-          <div class="radio-copy">
-            <div class="radio-name">${name}</div>
-            <div class="radio-status">${isActive?'● Escuchando ahora':'● En vivo · escuchar ahora'}</div>
-            <div class="radio-track"><img class="radio-track-art" src="${logo}" alt="" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="radio-track-text"><div class="radio-track-title">${title}</div><div class="radio-track-artist">${artist}</div></div></div>
-          </div>
-          <button type="button" class="radio-play" aria-label="${isActive?'Pausar':'Reproducir'} ${name}"><i class="fa-solid fa-${isActive?'pause':'play'}"></i></button>
-        </article>`;
+        return `<article class="radio-card${isActive?' is-active':''}" data-radio-index="${i}" data-radio-name="${name}" tabindex="0"><img class="radio-logo" src="${logo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><button type="button" class="radio-play" aria-label="${isActive?'Pausar':'Reproducir'} ${name}"><i class="fa-solid fa-${isActive?'pause':'play'}"></i></button><div class="radio-copy"><div class="radio-name">${name}</div><div class="radio-status">${isActive?'● Escuchando ahora':'● EN VIVO'}</div><div class="radio-track"><img class="radio-track-art" src="${logo}" alt="" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="radio-track-text"><div class="radio-track-title">${title}</div><div class="radio-track-artist">${artist}</div></div></div></div></article>`;
       }).join('');
       rail.querySelectorAll('.radio-card').forEach((el,i)=>{
         el.addEventListener('click',()=>abrirRadioHub(valid[i]));
@@ -2396,5 +2388,5 @@ body{padding-bottom:0}
 })();
 </script>
 <nav id="uadavMobileNav" class="uadav-mobile-nav" aria-label="Navegación móvil"><a class="active" href="#contenido"><i class="fa-solid fa-house"></i><span>Inicio</span></a><a href="#radiosRow" onclick="irASeccion('radiosRow');return false"><i class="fa-solid fa-radio"></i><span>Radios</span></a><a href="#artists" onclick="irASeccion('artists');return false"><i class="fa-solid fa-users"></i><span>Artistas</span></a><a href="/cartelera.html"><i class="fa-solid fa-calendar-days"></i><span>Eventos</span></a><a href="/mi-perfil.html"><i class="fa-solid fa-user"></i><span>Mi perfil</span></a></nav>
-<script src="/uadav-shell-bridge.js"></script></body>
+<script src="/uadav-shell-bridge.js"></script><script src="/uadav-ui-v8.4.js"></script></body>
 </html>

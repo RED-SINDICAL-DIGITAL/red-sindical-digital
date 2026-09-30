@@ -129,7 +129,7 @@ export default {
           u.searchParams.set('type',type);
           u.searchParams.set('page','1');
           u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.3'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});
           if(!r.ok)throw new Error('HTTP '+r.status);
           const arr=await r.json();
           if(!Array.isArray(arr)||!arr.length)throw new Error('empty');
@@ -154,7 +154,7 @@ export default {
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try{
-          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.3'}});
+          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});
           if(!r.ok)continue; const d=await r.json();
           if(d?.authorId||d?.author){
             return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),subscribers:Number(d.subCount||0),total_views:Number(d.totalViews||0),latestVideos:Array.isArray(d.latestVideos)?d.latestVideos.slice(0,24):[],source:'invidious'};
@@ -162,6 +162,22 @@ export default {
         }catch(_){ } finally{clearTimeout(timer)}
       }
       return null;
+    }
+    async function invidiousVideoInfo(videoId){
+      const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
+    }
+    async function resolveChannelReference(ref){
+      let raw=String(ref||'').trim();if(!raw)return null;if(/^UC[A-Za-z0-9_-]{10,}$/.test(raw))return raw;
+      try{const u=new URL(raw);const parts=u.pathname.split('/').filter(Boolean);if(parts[0]==='channel'&&parts[1])return parts[1];if(parts[0]?.startsWith('@')){const found=await invidiousChannelSearch(parts[0]);return found?.channelId||null}const vid=u.searchParams.get('v')||(u.hostname.includes('youtu.be')?parts[0]:(['shorts','live','embed'].includes(parts[0])?parts[1]:''));if(vid){const v=await invidiousVideoInfo(vid);if(v?.channelId)return v.channelId}if(parts[0]){const found=await invidiousChannelSearch(parts.at(-1));return found?.channelId||null}}catch(_){}
+      const found=await invidiousChannelSearch(raw.replace(/^@/,''));return found?.channelId||null;
+    }
+    async function invidiousChannelVideos(channelId, limit=50){
+      const id=String(channelId||'').trim(),max=Math.min(200,Math.max(1,Number(limit||50)));if(!id)return [];
+      for(const base of INVIDIOUS_INSTANCES){const out=[];for(let page=1;page<=Math.min(6,Math.ceil(max/30));page++){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/videos?page=${page}&sort_by=newest`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});if(!r.ok)break;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.videos)?d.videos:[]);if(!items.length)break;out.push(...items);if(out.length>=max)break}catch(_){break}finally{clearTimeout(timer)}}if(out.length)return out.slice(0,max)}return [];
+    }
+    async function invidiousChannelPlaylists(channelId, limit=30){
+      const id=String(channelId||'').trim();if(!id)return [];
+      for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/playlists`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});if(!r.ok)continue;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.playlists)?d.playlists:[]);if(items.length)return items.slice(0,Math.min(60,Number(limit||30)))}catch(_){}finally{clearTimeout(timer)}}return [];
     }
     let d1SchemaReady = false;
     async function recordD1SyncError(label,error){
@@ -831,7 +847,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V8.3.0', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V8.4.0', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:'UADAVSTREAM', architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -841,7 +857,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       const out=[];
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),3500); const t=Date.now();
-        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.3'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
+        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
         catch(e){out.push({instance:base,ok:false,error:String(e?.message||e)});} finally{clearTimeout(timer);}
       }
       return json({checked_at:isoNow(),instances:out});
@@ -1293,12 +1309,59 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       }
     }
 
+    if (path === '/api/admin/artists/repair-identity' && request.method === 'POST') {
+      if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
+      try {
+        const body=await request.json().catch(()=>({}));
+        const artistId=String(body?.artist_id||'').trim();
+        if(!artistId)return json({error:'artist_id requerido'},400);
+        const arr=await getArray('artistas');
+        const idx=arr.findIndex(a=>String(publicArtistFromItem(a).id)===artistId);
+        if(idx<0)return json({error:'Artista no encontrado en catálogo central'},404);
+        const current=arr[idx];
+        let channelId=await resolveChannelReference(current.canal||current.youtube_id||'');
+        const lib=await getArray('content_items');
+        const related=lib.filter(x=>String(x.artist_id||'')===artistId && String(x.provider||'').toLowerCase()==='youtube');
+        if(!channelId){
+          for(const item of related){
+            let vid=String(item.external_id||'').trim();
+            if(!vid){const m=String(item.url||'').match(/(?:[?&]v=|youtu\.be\/|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);vid=m?.[1]||'';}
+            if(!vid)continue;
+            const info=await invidiousVideoInfo(vid);
+            if(info?.channelId){channelId=info.channelId;break;}
+          }
+        }
+        if(!channelId){
+          const q=String(current.nombre_artistico||current.nombre||'').replace(/&quot;|&amp;|videoclip oficial|video oficial|official video|lyric video/gi,' ').replace(/\s+/g,' ').trim();
+          const found=await invidiousChannelSearch(q);
+          channelId=found?.channelId||null;
+        }
+        if(!channelId)return json({error:'No pudimos identificar un canal real. Vinculá al menos un canal o un video YouTube al perfil.'},404);
+        let meta=await invidiousChannelInfo(channelId);
+        if(!meta && await youtubeApiEnabled() && env.YOUTUBE_API_KEY){
+          const qs=new URLSearchParams({part:'snippet,brandingSettings,statistics',id:channelId,key:env.YOUTUBE_API_KEY});
+          const res=await fetch(`https://www.googleapis.com/youtube/v3/channels?${qs.toString()}`);
+          const data=await res.json();const ch=data?.items?.[0];
+          if(ch)meta={channelId,nombre:ch.snippet?.title||'Artista',thumbnail:ch.snippet?.thumbnails?.high?.url||'',banner:ch.brandingSettings?.image?.bannerExternalUrl||'',bio:ch.snippet?.description||'',subscribers:Number(ch.statistics?.subscriberCount||0),total_views:Number(ch.statistics?.viewCount||0),source:'youtube_api'};
+        }
+        if(!meta)return json({error:'Canal identificado, pero no pudimos obtener sus metadatos.'},502);
+        const previousName=String(current.nombre_artistico||current.nombre||'').trim();
+        const aliases=Array.from(new Set([...(Array.isArray(current.aliases)?current.aliases:[]),previousName].filter(Boolean))).slice(-20);
+        const updated={...current,nombre:meta.nombre||previousName,nombre_artistico:meta.nombre||previousName,canal:channelId,youtube_id:channelId,foto:meta.thumbnail||current.foto||current.imagen||'',portada:meta.banner||current.portada||current.banner||'',bio:meta.bio||current.bio||'',youtube_bio:meta.bio||current.youtube_bio||'',redes:{...(current.redes||{}),youtube:`https://www.youtube.com/channel/${channelId}`},stats:{...(current.stats||{}),youtube_subscribers:Number(meta.subscribers||current.stats?.youtube_subscribers||0),youtube_views:Number(meta.total_views||current.stats?.youtube_views||0)},aliases,identity_repaired_at:isoNow(),identity_repair_source:meta.source||'invidious',actualizado:isoNow()};
+        arr[idx]=updated;await putJSON('artistas',arr);await safeD1('repair_artist_identity',()=>syncArtistsD1([updated]));
+        await audit('repair_artist_identity','artist',artistId,{previous_name:previousName,new_name:updated.nombre,channelId,source:meta.source||'invidious'});
+        return json({success:true,artist:publicArtistFromItem(updated),previous_name:previousName,channel_id:channelId,source:meta.source||'invidious'});
+      }catch(e){return json({error:String(e?.message||e)},502)}
+    }
+
     if (path === '/api/admin/importar-canal' && request.method === 'POST') {
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
       try {
         const body = await request.json().catch(() => ({}));
-        const channelId = String(body?.channel_id || '').trim();
-        if (!channelId) return json({ error: 'channel_id requerido' }, 400);
+        const channelRef = String(body?.channel_id || body?.channel || body?.url || '').trim();
+        if (!channelRef) return json({ error: 'channel_id o URL requerido' }, 400);
+        const channelId = await resolveChannelReference(channelRef);
+        if (!channelId) return json({ error: 'No pudimos resolver el canal. Pegá un ID UC..., URL de canal, @handle o URL de video.' }, 404);
         let meta = await invidiousChannelInfo(channelId);
         if (!meta && await youtubeApiEnabled() && env.YOUTUBE_API_KEY) {
           const qs = new URLSearchParams({part:'snippet,brandingSettings,statistics',id:channelId,key:env.YOUTUBE_API_KEY});
@@ -1335,8 +1398,10 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
         await putJSON('artistas',arr);
         await safeD1('import_channel_artist',()=>syncArtistsD1([artista]));
 
-        const latest=Array.isArray(meta.latestVideos)?meta.latestVideos.slice(0,16):[];
-        let importedContent=0;
+        const requestedLimit=Math.min(200,Math.max(1,Number(body?.content_limit||24)));
+        let latest=Array.isArray(meta.latestVideos)?meta.latestVideos.slice(0,requestedLimit):[];
+        if(requestedLimit>latest.length){const extended=await invidiousChannelVideos(channelId,requestedLimit);if(extended.length)latest=extended;}
+        let importedContent=0,importedPlaylists=0;
         if(latest.length){
           const lib=await getArray('content_items');
           const known=new Set(lib.map(x=>String(x.url||x.external_id||'')));
@@ -1347,11 +1412,12 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
             lib.unshift({id:makeId('CNT'),artist_id:artistId,provider:'youtube',content_type:Number(v.lengthSeconds||0)<=60?'short':'video',external_id:vid,url,titulo:String(v.title||'Video'),descripcion:meta.nombre||'',thumbnail:String(v.videoThumbnails?.find?.(t=>t.quality==='medium')?.url||v.videoThumbnails?.[0]?.url||''),categoria:'YouTube',estado:'published',visible:true,creado:isoNow(),actualizado:isoNow()});
             importedContent++;
           }
-          await putJSON('content_items',lib.slice(0,5000));
-          await safeD1('import_channel_content',()=>syncContentD1(lib.slice(0,5000)));
+          if(body?.include_playlists!==false){const pls=await invidiousChannelPlaylists(channelId,30);for(const pl of pls){const pid=String(pl.playlistId||pl.id||'').trim();if(!pid)continue;const url='https://www.youtube.com/playlist?list='+pid;if(known.has(url)||known.has(pid))continue;lib.unshift({id:makeId('CNT'),artist_id:artistId,provider:'youtube',content_type:'playlist',external_id:pid,url,titulo:String(pl.title||'Playlist'),descripcion:meta.nombre||'',thumbnail:String(pl.playlistThumbnail||pl.videoThumbnails?.[0]?.url||''),categoria:'Playlist',estado:'published',visible:true,creado:isoNow(),actualizado:isoNow()});importedPlaylists++;}}
+          await putJSON('content_items',lib.slice(0,20000));
+          await safeD1('import_channel_content',()=>syncContentD1(lib.slice(0,20000)));
         }
-        await audit('import_channel','artist',artista.id,{channelId,source:meta.source||'unknown',imported_content:importedContent});
-        return json({ success:true, artista:publicArtistFromItem(artista), source:meta.source||'unknown', imported_content:importedContent });
+        await audit('import_channel','artist',artista.id,{channelId,source:meta.source||'unknown',imported_content:importedContent,imported_playlists:importedPlaylists});
+        return json({ success:true, artista:publicArtistFromItem(artista), source:meta.source||'unknown', imported_content:importedContent, imported_playlists:importedPlaylists, requested_limit:requestedLimit });
       } catch(e) {
         return json({ error:String(e?.message || e) },502);
       }
@@ -1524,7 +1590,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try {
           const u=new URL(base+'/api/v1/trending'); u.searchParams.set('region',region); u.searchParams.set('type',category?'music':'default'); u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.3'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});
           if(!r.ok)continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){const items=arr.slice(0,limit).map(x=>({id:x.videoId||'',channel_id:x.authorId||'',channel_name:x.author||'',titulo:x.title||'',descripcion:x.description||'',thumbnail:x.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||x.videoThumbnails?.[0]?.url||'',views:Number(x.viewCount||0),published_at:x.publishedText||'',category_id:category||''})).filter(x=>x.id); if(items.length){const payload={source:'invidious_trending',region,category:category||null,items};const out=JSON.stringify(payload);await env.UADAV_DB.put(cacheKey,out,{expirationTtl:1800});return new Response(out,{headers:{...cors,'X-UADAV-Search-Source':'invidious_trending'}});}}
         } catch {} finally {clearTimeout(timer)}
@@ -1661,7 +1727,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
       for (const base of INVIDIOUS_INSTANCES) {
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),4000);
         try {
-          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.3'}});
+          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.4'}});
           if(!r.ok) continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){result.source='invidious';result.instance=base;result.count=Math.min(arr.length,24);return json(result);}
         } catch {} finally { clearTimeout(timer); }
@@ -2054,6 +2120,20 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
         for(const r of rows){const title=String(r.titulo||r.title||'').trim();if(!title)continue;const item={...r,id:String(r.id||makeId('JOB')),titulo:title,rubro:String(r.rubro||''),tipo:String(r.tipo||'busqueda_artista'),empresa:String(r.empresa||r.entidad||''),modalidad:String(r.modalidad||'presencial'),ciudad:String(r.ciudad||''),provincia:String(r.provincia||''),pais:String(r.pais||'Argentina'),fecha:String(r.fecha||''),fecha_limite:String(r.fecha_limite||''),remuneracion:String(r.remuneracion||'a_convenir'),descripcion:String(r.descripcion||''),requisitos:String(r.requisitos||''),contacto:String(r.contacto||r.email||r.whatsapp||''),contacto_email:String(r.contacto_email||r.email||''),whatsapp:String(r.whatsapp||''),activo:r.activo!==false,creado:String(r.creado||isoNow()),origen:String(r.origen||'Importación Admin')};if(!item.descripcion)item.descripcion='Oportunidad importada';if(!item.contacto)item.contacto='Administración UADAV STREAM';const k=String(r.id||'')||normalizeSearchText(title)+'|'+normalizeSearchText(item.ciudad)+'|'+item.fecha;if(map.has(k)){const i=map.get(k);list[i]={...list[i],...item,id:list[i].id};updated++;}else{map.set(k,list.length);list.push(item);created++;}}
         await putJSON('bolsa_trabajo',list.slice(-5000));const d1sync=await safeD1('import_jobs',()=>syncJobsD1(list));await audit('bulk_import','jobs',null,{created,updated,total:rows.length});return json({success:true,entity,created,updated,total:rows.length,d1_sync:d1sync});
       }
+      if(entity==='playlists'||entity==='podcasts'){
+        const list=await getArray('content_items'),map=new Map(list.map((x,i)=>[String(x.url||'').trim().toLowerCase(),i]));let created=0,updated=0;const forced=entity==='playlists'?'playlist':'podcast';
+        for(const r of rows){const urlv=String(r.url||r.URL||r.link||'').trim();if(!urlv)continue;const det=detectProvider(urlv),item={...r,id:String(r.id||makeId('CNT')),url:urlv,provider:String(r.provider||det.provider),content_type:forced,external_id:String(r.external_id||det.external_id||''),titulo:String(r.titulo||r.title||forced),descripcion:String(r.descripcion||''),thumbnail:String(r.thumbnail||r.imagen||''),categoria:String(r.categoria||forced),artist_id:String(r.artist_id||''),visible:r.visible!==false,estado:'published',actualizado:isoNow(),creado:String(r.creado||isoNow())},k=urlv.toLowerCase();if(map.has(k)){const i=map.get(k);list[i]={...list[i],...item,id:list[i].id};updated++;}else{map.set(k,list.length);list.push(item);created++;}}
+        await putJSON('content_items',list.slice(-20000));const d1sync=await safeD1('import_'+entity,()=>syncContentD1(list.slice(-20000)));await audit('bulk_import',entity,null,{created,updated,total:rows.length});return json({success:true,entity,created,updated,total:rows.length,d1_sync:d1sync});
+      }
+      if(entity==='collections'){
+        const list=await getArray('collections'),map=new Map(list.map((x,i)=>[String(x.id||normalizeSearchText(x.titulo)),i]));let created=0,updated=0;for(const r of rows){const title=String(r.titulo||r.title||'').trim();if(!title)continue;const item={...r,id:String(r.id||makeId('COL')),titulo:title,descripcion:String(r.descripcion||''),imagen:String(r.imagen||''),layout:String(r.layout||'landscape'),active:r.active!==false,orden:Number(r.orden||0),items:Array.isArray(r.items)?r.items:[],actualizado:isoNow()};const k=String(r.id||normalizeSearchText(title));if(map.has(k)){const i=map.get(k);list[i]={...list[i],...item,id:list[i].id};updated++;}else{map.set(k,list.length);list.push(item);created++;}}await putJSON('collections',list);const d1sync=await safeD1('import_collections',()=>syncCollectionsD1(list));return json({success:true,entity,created,updated,total:rows.length,d1_sync:d1sync});
+      }
+      if(entity==='seasons'||entity==='episodes'){
+        const key=entity==='seasons'?'media_seasons':'media_episodes',list=await getArray(key);let created=0,updated=0;for(const r of rows){const id=String(r.id||makeId(entity==='seasons'?'SEA':'EP')),i=list.findIndex(x=>String(x.id)===id);const item={...r,id,created_at:String(r.created_at||isoNow()),updated_at:isoNow()};if(i>=0){list[i]={...list[i],...item,id:list[i].id};updated++;}else{list.push(item);created++;}}await putJSON(key,list);for(const item of list.slice(-5000)){if(entity==='seasons')await safeD1('import_season',()=>env.DB.prepare(`INSERT INTO media_seasons(id,title_id,season_number,title,poster,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title_id=excluded.title_id,season_number=excluded.season_number,title=excluded.title,poster=excluded.poster,data_json=excluded.data_json,updated_at=excluded.updated_at`).bind(item.id,item.title_id,Number(item.season_number||1),item.titulo||item.title||'',item.poster||'',JSON.stringify(item),item.created_at,item.updated_at).run());else await safeD1('import_episode',()=>env.DB.prepare(`INSERT INTO media_episodes(id,title_id,season_id,season_number,episode_number,title,thumbnail,provider,url,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title_id=excluded.title_id,season_id=excluded.season_id,season_number=excluded.season_number,episode_number=excluded.episode_number,title=excluded.title,thumbnail=excluded.thumbnail,provider=excluded.provider,url=excluded.url,data_json=excluded.data_json,updated_at=excluded.updated_at`).bind(item.id,item.title_id,item.season_id||'',Number(item.season_number||1),Number(item.episode_number||1),item.titulo||item.title||'',item.thumbnail||'',detectProvider(item.url||'').provider,item.url||'',JSON.stringify(item),item.created_at,item.updated_at).run())}return json({success:true,entity,created,updated,total:rows.length});
+      }
+      if(entity==='sections'){
+        const list=await getArray('secciones');let created=0,updated=0;for(const r of rows){const id=String(r.id||makeId('SEC')),i=list.findIndex(x=>String(x.id)===id),item={...r,id,nombre:String(r.nombre||r.titulo||'Sección'),activa:r.activa!==false,actualizado:isoNow()};if(i>=0){list[i]={...list[i],...item,id:list[i].id};updated++;}else{list.push(item);created++;}}await putJSON('secciones',list);return json({success:true,entity,created,updated,total:rows.length});
+      }
       return json({error:'Entidad de importación no soportada'},400);
     }
 
@@ -2135,7 +2215,7 @@ CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(
     }
 
     if (path === '/api/platform_info') {
-      return json({ service: 'UADAVSTREAM', version: 'V8.3.0', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2'] });
+      return json({ service: 'UADAVSTREAM', version: 'V8.4.0', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2'] });
     }
 
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.

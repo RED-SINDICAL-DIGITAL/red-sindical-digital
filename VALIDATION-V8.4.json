@@ -1,0 +1,29 @@
+{
+  "version": "V8.4",
+  "html_files": 23,
+  "script_blocks_checked": 24,
+  "javascript_errors": [],
+  "duplicate_ids": {},
+  "missing_local_assets": {},
+  "d1_bootstrap": {
+    "found": true,
+    "ok": true,
+    "tables": 37,
+    "create_table_statements": 30
+  },
+  "features": {
+    "version_v8_4": true,
+    "repair_artist_identity": true,
+    "invidious_video_info": true,
+    "channel_import_200": true,
+    "radio_requests": true,
+    "media_titles": true,
+    "monetization": true,
+    "shorts_page": true,
+    "manual_page": true,
+    "master_template": true,
+    "seccional_template": true,
+    "productora_template": true
+  },
+  "ok": true
+}
