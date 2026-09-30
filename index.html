@@ -613,7 +613,7 @@ body{padding-bottom:0}
   <header class="nav" id="nav">
     <a class="brand" href="#top" aria-label="UADAV STREAM inicio"><span class="brand-mark"><img id="brandLogo" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px"><i id="brandLogoFallback" class="fa-solid fa-star"></i></span><span id="brandName">UADAV STREAM</span></a>
     <nav class="nav-links" aria-label="Navegación principal">
-      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#radiosRow" id="navRadiosLink" onclick="irASeccion('radiosRow');return false">Radios</a><a href="#artists" id="navArtistsLink" onclick="irASeccion('artists');return false">Artistas</a><a href="#liveRow" id="navLiveLink" onclick="irASeccion('liveRow');return false">En vivo</a><a href="/cartelera.html" id="navCarteleraLink">Cartelera</a><span id="dynamicSectionsNav" class="dynamic-sections-nav" aria-label="Secciones"></span>
+      <a href="#contenido" onclick="irASeccion('contenido');return false">Inicio</a><a href="#radiosRow" id="navRadiosLink" onclick="irASeccion('radiosRow');return false">Radios</a><a href="#artists" id="navArtistsLink" onclick="irASeccion('artists');return false">Artistas</a><a href="#liveRow" id="navLiveLink" onclick="irASeccion('liveRow');return false">En vivo</a><a href="/cartelera.html" id="navCarteleraLink">Cartelera</a><a href="/peliculas-series.html" id="navMediaLink">Películas/Series</a><a href="/playlists.html">Playlists</a><a href="/podcasts.html">Podcast</a><span id="dynamicSectionsNav" class="dynamic-sections-nav" aria-label="Secciones"></span>
     </nav>
     <div class="nav-actions">
       <div class="nav-search"><i class="fa-solid fa-magnifying-glass"></i><input id="navSearchInput" aria-label="Buscar" placeholder="Buscar..." onkeydown="if(event.key==='Enter') ejecutarBusqueda(this.value)"><button aria-label="Buscar" onclick="ejecutarBusqueda(document.getElementById('navSearchInput').value)"><i class="fa-solid fa-arrow-right"></i></button></div>
@@ -695,6 +695,9 @@ body{padding-bottom:0}
       <div class="row" id="shortsRow"><div class="row-head"><div><div class="row-title">📱 Shorts</div><div class="row-subtitle">Descubrí artistas en formato vertical</div></div><button class="row-more" type="button" onclick="cargarShorts(true)">Actualizar</button></div><div class="rail" id="shortsRail"></div></div>
       <div class="row" id="jobsRow"><div class="row-head"><div><div class="row-title">💼 Bolsa de Trabajo</div><div class="row-subtitle">Oportunidades para artistas y productores</div></div><button class="row-more" type="button" onclick="cargarOfertasPublicas(true)">Actualizar</button></div><div class="rail" id="jobsRail"></div></div>
 
+      <div class="row" id="mediaRow" hidden><div class="row-head"><div><div class="row-title">🎞️ Películas y Series</div><div class="row-subtitle">Catálogo audiovisual con temporadas y episodios</div></div><a class="row-more" href="/peliculas-series.html">Ver catálogo</a></div><div class="rail" id="mediaRail"></div></div>
+      <div class="row" id="playlistsRow" hidden><div class="row-head"><div><div class="row-title">🎶 Playlists</div><div class="row-subtitle">Listas de artistas y colecciones</div></div><a class="row-more" href="/playlists.html">Ver todas</a></div><div class="rail" id="playlistsRail"></div></div>
+      <div class="row" id="podcastsRow" hidden><div class="row-head"><div><div class="row-title">🎙️ Podcast</div><div class="row-subtitle">Programas y episodios</div></div><a class="row-more" href="/podcasts.html">Ver todos</a></div><div class="rail" id="podcastsRail"></div></div>
       <div class="row" id="cartelera"><div class="row-head"><div><div class="row-title">📅 Cartelera</div><div class="row-subtitle">Próximos espectáculos y eventos</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="row-more" href="/cartelera.html">Ver cartelera completa</a><a class="row-more" href="/publicar-evento.html">Publicá tu evento</a></div></div><div class="rail" id="eventsRail"></div></div>
       <div class="row" id="discoverRow"><div class="row-head"><div><div class="row-title">🎬 Más para descubrir</div><div class="row-subtitle">Explorá contenido por temática</div></div></div><div class="rail" id="discoverRail"></div></div>
     </section>
@@ -1597,13 +1600,13 @@ body{padding-bottom:0}
     function applyWebVisibility(){
       const map={
         hero:'heroSection', search:'searchModule', banners:'bannerTopContainer', continue:'continueRow', saved:'savedRow', featured:'featuredRow', recommended:'recommendedRow',
-        live:'liveRow', radios:'radiosRow', artists:'artists', cartelera:'cartelera', discover:'discoverRow', shorts:'shortsRow', jobs:'jobsRow',
+        live:'liveRow', radios:'radiosRow', artists:'artists', cartelera:'cartelera', media:'mediaRow', playlists:'playlistsRow', podcasts:'podcastsRow', discover:'discoverRow', shorts:'shortsRow', jobs:'jobsRow',
         features:'en-vivo', cta:'sumate', newsletter:'avisos', footer:'siteFooter', info:'en-vivo'
       };
       Object.entries(map).forEach(([key,id])=>{
         const el=$(id); if(el) el.classList.toggle('visibility-off',webVisibility[key]===false);
       });
-      const navMap={radios:'navRadiosLink',artists:'navArtistsLink',live:'navLiveLink',cartelera:'navCarteleraLink'};
+      const navMap={radios:'navRadiosLink',artists:'navArtistsLink',live:'navLiveLink',cartelera:'navCarteleraLink',media:'navMediaLink'};
       Object.entries(navMap).forEach(([key,id])=>$(id)?.classList.toggle('visibility-off',webVisibility[key]===false));
     }
 
@@ -1631,6 +1634,7 @@ body{padding-bottom:0}
         ...list.filter(x=>(String(x?.artist||'')+'|'+String(x?.title||'')).toLowerCase()!==sig)].slice(0,RADIO_HISTORY_LIMIT);
       saveRadioHistory(all);
       renderRadioHistory(r);
+      if(window.parent!==window){try{window.parent.postMessage({type:'uadav:radio-meta',title,artist,artwork:art,station:r.nombre||'Radio'},location.origin)}catch{}}
       if(selectedRadioHub && obtenerRadioHubId(selectedRadioHub)===obtenerRadioHubId(r)) renderRadioHub(r);
     }
     function renderRadioHistory(r){
@@ -1863,6 +1867,7 @@ body{padding-bottom:0}
     async function cargarRadios(){let data=[];try{data=await api('radios')}catch{}if(!Array.isArray(data))data=[];currentRadiosCache=data;renderRadiosPublicos(data);const p=$('radioNowPause');if(p)p.onclick=()=>pausarRadio();const active=data.find(r=>String(r.stream_url||r.url||'')===String(activeRadio||''));if(active)renderRadioHistory(active);else{const latest=data.find(r=>getRadioHistoryFor(r).length);if(latest)renderRadioHistory(latest);}}
     let currentRadiosCache=[];
     function pausarRadio(){
+      if(window.parent!==window){try{window.parent.postMessage({type:'uadav:radio-pause'},location.origin)}catch{};activeRadio=null;renderRadiosPublicos(currentRadiosCache);return}
       const audio=$('radioAudio');
       if(audio){try{audio.pause()}catch{}audio.removeAttribute('src');audio.load?.();}
       detenerRadioMetadata();activeRadio=null;
@@ -1878,6 +1883,7 @@ body{padding-bottom:0}
       uadavSendMetric('radio_play',{radio_id:r?.id||r?.nombre||'',title:r?.nombre||'Radio'});
       if(!r)return;
       const url=String(r.stream_url||r.url||'').trim();if(!url)return;
+      if(window.parent!==window){activeRadio=url;try{window.parent.postMessage({type:'uadav:radio-play',radio:{id:r.id||r.nombre||url,name:r.nombre||'Radio',stream_url:url,logo:r.logo||r.imagen||'',metadata_url:r.metadata_url||r.meta_url||''}},location.origin)}catch{};renderRadiosPublicos(currentRadiosCache);iniciarRadioMetadata(r);return}
       const audio=$('radioAudio');if(!audio)return;
       if(activeRadio===url&&!audio.paused){pausarRadio();return}
 
@@ -1963,6 +1969,14 @@ body{padding-bottom:0}
       }catch{}
       return '';
     }
+
+    function renderSimpleMediaRail(items,railId,rowId,kind){
+      const rail=$(railId),row=$(rowId);if(!rail||!row)return;const list=(items||[]).filter(Boolean).slice(0,16);if(!list.length){row.hidden=true;rail.innerHTML='';return}row.hidden=false;
+      rail.innerHTML=list.map(x=>{const img=safe(x.poster||x.thumbnail||x.imagen||FALLBACK_THUMB),title=safe(x.titulo||x.title||'Contenido'),meta=safe(kind==='media'?[x.media_type==='series'?'Serie':'Película',x.year].filter(Boolean).join(' · '):(x.provider||x.categoria||''));const href=kind==='media'?'/media.html?id='+encodeURIComponent(x.id):(x.url||'#');return `<article class="card" tabindex="0"><a href="${safe(href)}" ${kind==='media'?'':'target="_blank" rel="noopener"'}><img src="${img}" alt="${title}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="card-body"><div class="card-title">${title}</div><div class="card-meta">${meta}</div></div></a></article>`}).join('');
+    }
+    async function cargarMedia(){try{const a=await api('media');renderSimpleMediaRail(Array.isArray(a)?a:[],'mediaRail','mediaRow','media')}catch{const r=$('mediaRow');if(r)r.hidden=true}}
+    async function cargarPlaylists(){try{const a=await api('content');renderSimpleMediaRail((Array.isArray(a)?a:[]).filter(x=>String(x.content_type||x.tipo||'').toLowerCase()==='playlist'),'playlistsRail','playlistsRow','playlist')}catch{const r=$('playlistsRow');if(r)r.hidden=true}}
+    async function cargarPodcasts(){try{const a=await api('content');renderSimpleMediaRail((Array.isArray(a)?a:[]).filter(x=>/podcast|episode|rss/i.test(String(x.content_type||x.tipo||x.categoria||''))),'podcastsRail','podcastsRow','podcast')}catch{const r=$('podcastsRow');if(r)r.hidden=true}}
 
     async function cargarEventos(){
       let data=[];try{data=await api('cartelera')}catch{}
@@ -2293,7 +2307,7 @@ body{padding-bottom:0}
       if(modo==='mantenimiento') return;
       prepararRailWrappers();
       renderContinue();
-      await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarRadios()]);
+      await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarRadios(),cargarMedia()]);
       applyWebVisibility();
       try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}
       prepararRailWrappers();
@@ -2304,19 +2318,21 @@ body{padding-bottom:0}
       const deferred=()=>{
         cargarSeccionesAdministradas().then(()=>{applyWebVisibility();prepararRailWrappers();activarArrastreCarruseles()}).catch(()=>{});
         cargarDiscover().catch(()=>{});
+        cargarPlaylists().catch(()=>{});
+        cargarPodcasts().catch(()=>{});
       };
       if('requestIdleCallback' in window) requestIdleCallback(deferred,{timeout:1400});
       else setTimeout(deferred,500);
 
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v82';
+        const SW_VERSION='uadavstream-v83';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=82',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=83',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
@@ -2380,5 +2396,5 @@ body{padding-bottom:0}
 })();
 </script>
 <nav id="uadavMobileNav" class="uadav-mobile-nav" aria-label="Navegación móvil"><a class="active" href="#contenido"><i class="fa-solid fa-house"></i><span>Inicio</span></a><a href="#radiosRow" onclick="irASeccion('radiosRow');return false"><i class="fa-solid fa-radio"></i><span>Radios</span></a><a href="#artists" onclick="irASeccion('artists');return false"><i class="fa-solid fa-users"></i><span>Artistas</span></a><a href="/cartelera.html"><i class="fa-solid fa-calendar-days"></i><span>Eventos</span></a><a href="/mi-perfil.html"><i class="fa-solid fa-user"></i><span>Mi perfil</span></a></nav>
-</body>
+<script src="/uadav-shell-bridge.js"></script></body>
 </html>

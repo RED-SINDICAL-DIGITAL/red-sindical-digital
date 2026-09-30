@@ -36,6 +36,8 @@ export default {
     const getObject = (key) => getJSON(key, {});
     const isoNow = () => new Date().toISOString();
     const normalizeSearchText = (v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+    const arrSafe = v => Array.isArray(v)?v:[];
+    const hashText = v => {let h=0;for(const c of String(v||''))h=((h<<5)-h)+c.charCodeAt(0)|0;return h;};
     async function getSearchRestrictions() {
       if (hasD1()) {
         try {
@@ -127,7 +129,7 @@ export default {
           u.searchParams.set('type',type);
           u.searchParams.set('page','1');
           u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.2'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.3'}});
           if(!r.ok)throw new Error('HTTP '+r.status);
           const arr=await r.json();
           if(!Array.isArray(arr)||!arr.length)throw new Error('empty');
@@ -152,7 +154,7 @@ export default {
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try{
-          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.2'}});
+          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.3'}});
           if(!r.ok)continue; const d=await r.json();
           if(d?.authorId||d?.author){
             return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),subscribers:Number(d.subCount||0),total_views:Number(d.totalViews||0),latestVideos:Array.isArray(d.latestVideos)?d.latestVideos.slice(0,24):[],source:'invidious'};
@@ -198,7 +200,7 @@ export default {
       if(!hasD1())return {configured:false,ready:false};
       if(d1SchemaReady)return {configured:true,ready:true};
       try{
-        const row=await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='artists' LIMIT 1`).first();
+        const row=await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='monetization_campaigns' LIMIT 1`).first();
         if(!row) await runD1Bootstrap();
         d1SchemaReady=true;
         return {configured:true,ready:true,auto_initialized:!row};
@@ -730,11 +732,106 @@ CREATE TABLE IF NOT EXISTS entity_versions (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_type,entity_id,version);
+
+CREATE TABLE IF NOT EXISTS radio_tracks (
+  id TEXT PRIMARY KEY,
+  radio_id TEXT NOT NULL,
+  artist TEXT,
+  title TEXT NOT NULL,
+  artwork TEXT,
+  played_at TEXT NOT NULL,
+  data_json TEXT NOT NULL DEFAULT '{}') ;
+CREATE INDEX IF NOT EXISTS idx_radio_tracks_radio ON radio_tracks(radio_id,played_at DESC);
+
+CREATE TABLE IF NOT EXISTS radio_requests (
+  id TEXT PRIMARY KEY,
+  radio_id TEXT NOT NULL,
+  listener_name TEXT,
+  artist TEXT,
+  title TEXT NOT NULL,
+  dedication TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  data_json TEXT NOT NULL DEFAULT '{}');
+CREATE INDEX IF NOT EXISTS idx_radio_requests_radio ON radio_requests(radio_id,status,created_at DESC);
+
+CREATE TABLE IF NOT EXISTS media_titles (
+  id TEXT PRIMARY KEY,
+  media_type TEXT NOT NULL DEFAULT 'movie',
+  title TEXT NOT NULL,
+  year INTEGER,
+  genres TEXT,
+  poster TEXT,
+  backdrop TEXT,
+  provider TEXT,
+  source_url TEXT,
+  featured INTEGER NOT NULL DEFAULT 0,
+  visible INTEGER NOT NULL DEFAULT 1,
+  data_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_media_titles_type ON media_titles(media_type,visible);
+CREATE INDEX IF NOT EXISTS idx_media_titles_featured ON media_titles(featured,updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS media_seasons (
+  id TEXT PRIMARY KEY,
+  title_id TEXT NOT NULL,
+  season_number INTEGER NOT NULL,
+  title TEXT,
+  poster TEXT,
+  description TEXT,
+  data_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_media_seasons_title ON media_seasons(title_id,season_number);
+
+CREATE TABLE IF NOT EXISTS media_episodes (
+  id TEXT PRIMARY KEY,
+  title_id TEXT NOT NULL,
+  season_id TEXT,
+  season_number INTEGER NOT NULL DEFAULT 1,
+  episode_number INTEGER NOT NULL DEFAULT 1,
+  title TEXT NOT NULL,
+  provider TEXT,
+  url TEXT,
+  thumbnail TEXT,
+  visible INTEGER NOT NULL DEFAULT 1,
+  data_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_media_episodes_title ON media_episodes(title_id,season_number,episode_number);
+
+CREATE TABLE IF NOT EXISTS monetization_products (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  entity_type TEXT NOT NULL,
+  placement TEXT NOT NULL,
+  duration_days INTEGER NOT NULL DEFAULT 7,
+  active INTEGER NOT NULL DEFAULT 1,
+  data_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL);
+
+CREATE TABLE IF NOT EXISTS monetization_campaigns (
+  id TEXT PRIMARY KEY,
+  product_id TEXT,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  placement TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  payment_status TEXT NOT NULL DEFAULT 'pending',
+  starts_at TEXT,
+  ends_at TEXT,
+  data_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_monet_campaigns_status ON monetization_campaigns(status,payment_status);
 `;
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V8.2.0', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V8.3.0', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:'UADAVSTREAM', architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -744,7 +841,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       const out=[];
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),3500); const t=Date.now();
-        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.2'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
+        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.3'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
         catch(e){out.push({instance:base,ok:false,error:String(e?.message||e)});} finally{clearTimeout(timer);}
       }
       return json({checked_at:isoNow(),instances:out});
@@ -766,7 +863,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       await syncContentD1(await getArray('content_items'));
       await syncCollectionsD1(await getArray('collections'));
       await syncSectionsV2D1(await getArray('secciones'));
-      await upsertSetting('migration_completed',{at:isoNow(),version:'V8.2'});
+      await upsertSetting('migration_completed',{at:isoNow(),version:'V8.3'});
       await audit('kv_to_d1_migration','system','migration',{ok:true});
       return json({success:true,message:'Migración KV → D1 completada para los registros soportados'});
     }
@@ -796,7 +893,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
     if (path === '/api/v7/export' && request.method === 'GET') {
       if (!isAdmin()) return json({error:'No autorizado'},401);
       if (!hasD1()) return json({error:'D1 no configurado'},503);
-      const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings']; const out={generated_at:isoNow(),tables:{}};
+      const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','monetization_products','monetization_campaigns']; const out={generated_at:isoNow(),tables:{}};
       for(const t of tables){const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[];}
       return json(out);
     }
@@ -1427,7 +1524,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try {
           const u=new URL(base+'/api/v1/trending'); u.searchParams.set('region',region); u.searchParams.set('type',category?'music':'default'); u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.2'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.3'}});
           if(!r.ok)continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){const items=arr.slice(0,limit).map(x=>({id:x.videoId||'',channel_id:x.authorId||'',channel_name:x.author||'',titulo:x.title||'',descripcion:x.description||'',thumbnail:x.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||x.videoThumbnails?.[0]?.url||'',views:Number(x.viewCount||0),published_at:x.publishedText||'',category_id:category||''})).filter(x=>x.id); if(items.length){const payload={source:'invidious_trending',region,category:category||null,items};const out=JSON.stringify(payload);await env.UADAV_DB.put(cacheKey,out,{expirationTtl:1800});return new Response(out,{headers:{...cors,'X-UADAV-Search-Source':'invidious_trending'}});}}
         } catch {} finally {clearTimeout(timer)}
@@ -1564,7 +1661,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       for (const base of INVIDIOUS_INSTANCES) {
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),4000);
         try {
-          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.2'}});
+          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.3'}});
           if(!r.ok) continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){result.source='invidious';result.instance=base;result.count=Math.min(arr.length,24);return json(result);}
         } catch {} finally { clearTimeout(timer); }
@@ -1947,6 +2044,11 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
         for(const r of rows){const title=String(r.titulo||r.nombre||r.title||'').trim();if(!title)continue;const item={...r,id:String(r.id||makeId('EV')),titulo:title,nombre:String(r.nombre||title),categoria:String(r.categoria||'Eventos'),fecha:String(r.fecha||r.fecha_inicio||''),fecha_inicio:String(r.fecha_inicio||r.fecha||''),fecha_fin:String(r.fecha_fin||''),lugar:String(r.lugar||''),direccion:String(r.direccion||''),ciudad:String(r.ciudad||''),provincia:String(r.provincia||''),pais:String(r.pais||'Argentina'),descripcion:String(r.descripcion||''),descripcion_corta:String(r.descripcion_corta||''),imagen:String(r.imagen||r.poster||''),portada:String(r.portada||''),estado:'published',destacado_pagado:r.destacado_pagado===true,creado_por:'importacion',actualizado:isoNow()};const k=String(r.id||'')||normalizeSearchText(title)+'|'+item.fecha_inicio+'|'+normalizeSearchText(item.ciudad);if(map.has(k)){const i=map.get(k);list[i]={...list[i],...item,id:list[i].id};updated++;}else{map.set(k,list.length);list.push(item);created++;}}
         await putJSON('cartelera_aprobada',list.slice(-10000));await putJSON('eventos_publicados',list.slice(-10000));const d1sync=await safeD1('import_events',()=>syncEventsD1(list));await audit('bulk_import','events',null,{created,updated,total:rows.length});return json({success:true,entity,created,updated,total:rows.length,d1_sync:d1sync});
       }
+      if(entity==='media'){
+        const list=await getArray('media_titles');const map=new Map(list.map((x,i)=>[(String(x.id||'')||normalizeSearchText(x.titulo||x.title)+'|'+String(x.year||'')),i]));let created=0,updated=0;
+        for(const r of rows){const title=String(r.titulo||r.title||r.Nombre||'').trim();if(!title)continue;const item={...r,id:String(r.id||makeId('MEDIA')),titulo:title,media_type:String(r.media_type||r.tipo||'movie')==='series'?'series':'movie',year:Number(r.year||r.anio||0)||null,generos:Array.isArray(r.generos)?r.generos:String(r.generos||r.categoria||'').split(',').map(x=>x.trim()).filter(Boolean),poster:String(r.poster||r.imagen||''),backdrop:String(r.backdrop||r.portada||''),source_url:String(r.source_url||r.url||''),trailer_url:String(r.trailer_url||''),sinopsis:String(r.sinopsis||r.descripcion||''),featured:r.featured===true,visible:r.visible!==false,rights_status:String(r.rights_status||'review'),actualizado:isoNow(),creado:String(r.creado||isoNow())};const k=String(r.id||'')||normalizeSearchText(title)+'|'+String(item.year||'');if(map.has(k)){const i=map.get(k);list[i]={...list[i],...item,id:list[i].id};updated++;}else{map.set(k,list.length);list.push(item);created++;}}
+        await putJSON('media_titles',list.slice(-5000));for(const item of list.slice(-5000)){await safeD1('import_media',()=>env.DB.prepare(`INSERT INTO media_titles(id,media_type,title,year,genres,poster,backdrop,provider,source_url,featured,visible,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET media_type=excluded.media_type,title=excluded.title,year=excluded.year,genres=excluded.genres,poster=excluded.poster,backdrop=excluded.backdrop,provider=excluded.provider,source_url=excluded.source_url,featured=excluded.featured,visible=excluded.visible,data_json=excluded.data_json,updated_at=excluded.updated_at`).bind(item.id,item.media_type,item.titulo,item.year,JSON.stringify(item.generos||[]),item.poster||'',item.backdrop||'',item.provider||detectProvider(item.source_url||'').provider,item.source_url||'',item.featured?1:0,item.visible===false?0:1,JSON.stringify(item),item.creado||isoNow(),item.actualizado||isoNow()).run())}await audit('bulk_import','media',null,{created,updated,total:rows.length});return json({success:true,entity,created,updated,total:rows.length});
+      }
       if(entity==='jobs'){
         const list=await getArray('bolsa_trabajo');const map=new Map(list.map((x,i)=>[(String(x.id||'')||normalizeSearchText(x.titulo)+'|'+normalizeSearchText(x.ciudad)+'|'+String(x.fecha||'')),i]));let created=0,updated=0;
         for(const r of rows){const title=String(r.titulo||r.title||'').trim();if(!title)continue;const item={...r,id:String(r.id||makeId('JOB')),titulo:title,rubro:String(r.rubro||''),tipo:String(r.tipo||'busqueda_artista'),empresa:String(r.empresa||r.entidad||''),modalidad:String(r.modalidad||'presencial'),ciudad:String(r.ciudad||''),provincia:String(r.provincia||''),pais:String(r.pais||'Argentina'),fecha:String(r.fecha||''),fecha_limite:String(r.fecha_limite||''),remuneracion:String(r.remuneracion||'a_convenir'),descripcion:String(r.descripcion||''),requisitos:String(r.requisitos||''),contacto:String(r.contacto||r.email||r.whatsapp||''),contacto_email:String(r.contacto_email||r.email||''),whatsapp:String(r.whatsapp||''),activo:r.activo!==false,creado:String(r.creado||isoNow()),origen:String(r.origen||'Importación Admin')};if(!item.descripcion)item.descripcion='Oportunidad importada';if(!item.contacto)item.contacto='Administración UADAV STREAM';const k=String(r.id||'')||normalizeSearchText(title)+'|'+normalizeSearchText(item.ciudad)+'|'+item.fecha;if(map.has(k)){const i=map.get(k);list[i]={...list[i],...item,id:list[i].id};updated++;}else{map.set(k,list.length);list.push(item);created++;}}
@@ -1955,12 +2057,85 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       return json({error:'Entidad de importación no soportada'},400);
     }
 
+    // --- V8.3 · RADIO HISTORIAL / PEDIDOS ---
+    if(path==='/api/radio/history'){
+      const radioId=String(url.searchParams.get('radio_id')||'').trim();
+      if(request.method==='GET'){
+        if(!radioId)return json([]);
+        if(hasD1()){
+          try{const state=await ensureD1Schema();if(state.ready){const r=await env.DB.prepare(`SELECT id,radio_id,artist,title,artwork,played_at,data_json FROM radio_tracks WHERE radio_id=? ORDER BY played_at DESC LIMIT 50`).bind(radioId).all();if(r.results?.length)return json(r.results.map(x=>({...safeJSON(x.data_json,{}),id:x.id,radio_id:x.radio_id,artist:x.artist,title:x.title,artwork:x.artwork,played_at:x.played_at})));}}catch(_){ }
+        }
+        const all=await getObject('radio_history');return json(arrSafe(all[radioId]).slice(0,50));
+      }
+      if(request.method==='POST'){
+        const b=await request.json().catch(()=>({}));const rid=String(b.radio_id||radioId||'').trim(),title=String(b.title||'').trim(),artist=String(b.artist||'').trim();if(!rid||!title)return json({error:'radio_id y título requeridos'},400);
+        const radios=await getArray('radios');if(!radios.some(r=>String(r.id||r.nombre||r.stream_url)===rid))return json({error:'Radio no registrada'},404);
+        const id='RTRACK-'+rid.replace(/[^a-z0-9_-]/gi,'').slice(0,40)+'-'+Math.abs(hashText((artist+'|'+title).toLowerCase())).toString(36);const item={id,radio_id:rid,artist,title,artwork:String(b.artwork||''),played_at:String(b.played_at||isoNow())};
+        const all=await getObject('radio_history');const list=Array.isArray(all[rid])?all[rid]:[];all[rid]=[item,...list.filter(x=>String(x.id)!==id)].slice(0,50);await putJSON('radio_history',all);
+        await safeD1('radio_track',()=>env.DB.prepare(`INSERT INTO radio_tracks(id,radio_id,artist,title,artwork,played_at,data_json) VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET artwork=excluded.artwork,played_at=excluded.played_at,data_json=excluded.data_json`).bind(id,rid,artist,title,item.artwork,item.played_at,JSON.stringify(item)).run());
+        return json({success:true,item});
+      }
+    }
+    if(path==='/api/radio/requests'){
+      if(request.method==='GET'){
+        if(!isAdmin())return json({error:'No autorizado'},401);const rid=String(url.searchParams.get('radio_id')||'');
+        if(hasD1()){try{const st=await ensureD1Schema();if(st.ready){const q=rid?`SELECT * FROM radio_requests WHERE radio_id=? ORDER BY created_at DESC LIMIT 500`:`SELECT * FROM radio_requests ORDER BY created_at DESC LIMIT 500`;const r=rid?await env.DB.prepare(q).bind(rid).all():await env.DB.prepare(q).all();return json((r.results||[]).map(x=>({...safeJSON(x.data_json,{}),id:x.id,radio_id:x.radio_id,listener_name:x.listener_name,artist:x.artist,title:x.title,dedication:x.dedication,status:x.status,created_at:x.created_at,updated_at:x.updated_at})));}}catch(_){ }}return json(await getArray('radio_requests'));
+      }
+      const b=await request.json().catch(()=>({}));
+      if(request.method==='POST'){
+        const item={id:String(b.id||makeId('REQ')),radio_id:String(b.radio_id||'').trim(),listener_name:String(b.listener_name||b.nombre||'Oyente').slice(0,120),artist:String(b.artist||'').slice(0,180),title:String(b.title||b.cancion||'').slice(0,180),dedication:String(b.dedication||b.dedicatoria||'').slice(0,600),status:'pending',created_at:isoNow(),updated_at:isoNow()};if(!item.radio_id||!item.title)return json({error:'Radio y canción requeridas'},400);
+        const list=await getArray('radio_requests');list.unshift(item);await putJSON('radio_requests',list.slice(0,3000));await safeD1('radio_request',()=>env.DB.prepare(`INSERT INTO radio_requests(id,radio_id,listener_name,artist,title,dedication,status,created_at,updated_at,data_json) VALUES(?,?,?,?,?,?,?,?,?,?)`).bind(item.id,item.radio_id,item.listener_name,item.artist,item.title,item.dedication,item.status,item.created_at,item.updated_at,JSON.stringify(item)).run());return json({success:true,item});
+      }
+      if(request.method==='PUT'){
+        if(!isAdmin())return json({error:'No autorizado'},401);const id=String(b.id||''),status=String(b.status||'pending');const list=await getArray('radio_requests');const i=list.findIndex(x=>String(x.id)===id);if(i>=0){list[i]={...list[i],status,updated_at:isoNow()};await putJSON('radio_requests',list);}await safeD1('radio_request_update',()=>env.DB.prepare(`UPDATE radio_requests SET status=?,updated_at=? WHERE id=?`).bind(status,isoNow(),id).run());return json({success:true});
+      }
+    }
+
+    // --- V8.3 · PELÍCULAS / SERIES / TEMPORADAS / EPISODIOS ---
+    if(path==='/api/media'){
+      const list=await getArray('media_titles');
+      if(request.method==='GET'){const type=String(url.searchParams.get('type')||''),all=url.searchParams.get('all')==='true'&&isAdmin();return json(list.filter(x=>x&&(all||x.visible!==false)&&(!type||String(x.media_type||x.tipo)===type)));}
+      if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));
+      if(request.method==='POST'){const item={id:String(b.id||makeId('MEDIA')),media_type:String(b.media_type||b.tipo||'movie'),titulo:String(b.titulo||b.title||'Sin título'),sinopsis:String(b.sinopsis||b.descripcion||''),year:Number(b.year||b.anio||0)||null,generos:Array.isArray(b.generos)?b.generos:String(b.generos||'').split(',').map(x=>x.trim()).filter(Boolean),poster:String(b.poster||b.imagen||''),backdrop:String(b.backdrop||b.portada||''),trailer_url:String(b.trailer_url||''),source_url:String(b.source_url||b.url||''),provider:String(b.provider||detectProvider(b.source_url||b.url||'').provider||'custom'),featured:b.featured===true,visible:b.visible!==false,rights_status:String(b.rights_status||'review'),creado:isoNow(),actualizado:isoNow()};list.unshift(item);await putJSON('media_titles',list.slice(0,5000));await safeD1('media_insert',()=>env.DB.prepare(`INSERT INTO media_titles(id,media_type,title,year,genres,poster,backdrop,provider,source_url,featured,visible,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(item.id,item.media_type,item.titulo,item.year,JSON.stringify(item.generos),item.poster,item.backdrop,item.provider,item.source_url,item.featured?1:0,item.visible?1:0,JSON.stringify(item),item.creado,item.actualizado).run());return json({success:true,item});}
+      if(request.method==='PUT'){const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Título no encontrado'},404);list[i]={...list[i],...b,id:list[i].id,actualizado:isoNow()};await putJSON('media_titles',list);await safeD1('media_update',()=>env.DB.prepare(`UPDATE media_titles SET media_type=?,title=?,year=?,genres=?,poster=?,backdrop=?,provider=?,source_url=?,featured=?,visible=?,data_json=?,updated_at=? WHERE id=?`).bind(String(list[i].media_type||'movie'),String(list[i].titulo||list[i].title||''),Number(list[i].year||0)||null,JSON.stringify(list[i].generos||[]),String(list[i].poster||''),String(list[i].backdrop||''),String(list[i].provider||''),String(list[i].source_url||''),list[i].featured?1:0,list[i].visible===false?0:1,JSON.stringify(list[i]),isoNow(),list[i].id).run());return json({success:true,item:list[i]});}
+      if(request.method==='DELETE'){const id=String(b.id||'');await putJSON('media_titles',list.filter(x=>String(x.id)!==id));await safeD1('media_delete',async()=>{await env.DB.prepare(`DELETE FROM media_episodes WHERE title_id=?`).bind(id).run();await env.DB.prepare(`DELETE FROM media_seasons WHERE title_id=?`).bind(id).run();return env.DB.prepare(`DELETE FROM media_titles WHERE id=?`).bind(id).run()});return json({success:true});}
+    }
+    if(path==='/api/media/title' && request.method==='GET'){
+      const id=String(url.searchParams.get('id')||'');const title=(await getArray('media_titles')).find(x=>String(x.id)===id);if(!title)return json({error:'Título no encontrado'},404);const seasons=(await getArray('media_seasons')).filter(x=>String(x.title_id)===id).sort((a,b)=>Number(a.season_number||0)-Number(b.season_number||0));const episodes=(await getArray('media_episodes')).filter(x=>String(x.title_id)===id&&x.visible!==false).sort((a,b)=>Number(a.season_number||0)-Number(b.season_number||0)||Number(a.episode_number||0)-Number(b.episode_number||0));return json({title,seasons,episodes});
+    }
+    if(path==='/api/media/seasons'){
+      const list=await getArray('media_seasons');if(request.method==='GET'){const tid=String(url.searchParams.get('title_id')||'');return json(list.filter(x=>!tid||String(x.title_id)===tid));}if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));
+      if(request.method==='POST'){const item={id:String(b.id||makeId('SEASON')),title_id:String(b.title_id||''),season_number:Number(b.season_number||1),titulo:String(b.titulo||`Temporada ${Number(b.season_number||1)}`),poster:String(b.poster||''),descripcion:String(b.descripcion||''),creado:isoNow(),actualizado:isoNow()};if(!item.title_id)return json({error:'title_id requerido'},400);list.push(item);await putJSON('media_seasons',list);await safeD1('season_insert',()=>env.DB.prepare(`INSERT INTO media_seasons(id,title_id,season_number,title,poster,description,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)`).bind(item.id,item.title_id,item.season_number,item.titulo,item.poster,item.descripcion,JSON.stringify(item),item.creado,item.actualizado).run());return json({success:true,item});}
+      if(request.method==='PUT'){const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Temporada no encontrada'},404);list[i]={...list[i],...b,id:list[i].id,actualizado:isoNow()};await putJSON('media_seasons',list);return json({success:true,item:list[i]});}
+      if(request.method==='DELETE'){await putJSON('media_seasons',list.filter(x=>String(x.id)!==String(b.id)));await safeD1('season_delete',()=>env.DB.prepare(`DELETE FROM media_seasons WHERE id=?`).bind(String(b.id||'')).run());return json({success:true});}
+    }
+    if(path==='/api/media/episodes'){
+      const list=await getArray('media_episodes');if(request.method==='GET'){const tid=String(url.searchParams.get('title_id')||'');return json(list.filter(x=>(!tid||String(x.title_id)===tid)&&x.visible!==false));}if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));
+      if(request.method==='POST'){const det=detectProvider(b.url);const item={id:String(b.id||makeId('EP')),title_id:String(b.title_id||''),season_id:String(b.season_id||''),season_number:Number(b.season_number||1),episode_number:Number(b.episode_number||1),titulo:String(b.titulo||`Episodio ${Number(b.episode_number||1)}`),sinopsis:String(b.sinopsis||''),provider:String(b.provider||det.provider),url:String(b.url||''),thumbnail:String(b.thumbnail||''),duracion:String(b.duracion||''),visible:b.visible!==false,creado:isoNow(),actualizado:isoNow()};if(!item.title_id)return json({error:'title_id requerido'},400);list.push(item);await putJSON('media_episodes',list);await safeD1('episode_insert',()=>env.DB.prepare(`INSERT INTO media_episodes(id,title_id,season_id,season_number,episode_number,title,provider,url,thumbnail,visible,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(item.id,item.title_id,item.season_id||null,item.season_number,item.episode_number,item.titulo,item.provider,item.url,item.thumbnail,item.visible?1:0,JSON.stringify(item),item.creado,item.actualizado).run());return json({success:true,item});}
+      if(request.method==='PUT'){const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Episodio no encontrado'},404);list[i]={...list[i],...b,id:list[i].id,actualizado:isoNow()};await putJSON('media_episodes',list);return json({success:true,item:list[i]});}
+      if(request.method==='DELETE'){await putJSON('media_episodes',list.filter(x=>String(x.id)!==String(b.id)));await safeD1('episode_delete',()=>env.DB.prepare(`DELETE FROM media_episodes WHERE id=?`).bind(String(b.id||'')).run());return json({success:true});}
+    }
+
+    // --- V8.3 · MONETIZACIÓN ---
+    if(path==='/api/monetization/products'){
+      const list=await getArray('monetization_products');if(request.method==='GET')return json(list);if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));
+      if(request.method==='POST'){const item={id:String(b.id||makeId('PROD')),name:String(b.name||'Producto'),entity_type:String(b.entity_type||'event'),placement:String(b.placement||'featured'),duration_days:Number(b.duration_days||7),price_label:String(b.price_label||'A convenir'),active:b.active!==false,created_at:isoNow(),updated_at:isoNow()};list.push(item);await putJSON('monetization_products',list);return json({success:true,item});}
+      if(request.method==='PUT'){const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Producto no encontrado'},404);list[i]={...list[i],...b,id:list[i].id,updated_at:isoNow()};await putJSON('monetization_products',list);return json({success:true,item:list[i]});}
+      if(request.method==='DELETE'){await putJSON('monetization_products',list.filter(x=>String(x.id)!==String(b.id)));return json({success:true});}
+    }
+    if(path==='/api/monetization/campaigns'){
+      const list=await getArray('monetization_campaigns');if(request.method==='GET'){const pub=url.searchParams.get('public')==='true';if(pub)return json(list.filter(x=>x.status==='active'&&x.payment_status==='paid'));if(!isAdmin())return json({error:'No autorizado'},401);return json(list);}if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));
+      if(request.method==='POST'){const item={id:String(b.id||makeId('CAMP')),product_id:String(b.product_id||''),entity_type:String(b.entity_type||'event'),entity_id:String(b.entity_id||''),placement:String(b.placement||'featured'),status:String(b.status||'pending'),payment_status:String(b.payment_status||'pending'),starts_at:String(b.starts_at||''),ends_at:String(b.ends_at||''),notes:String(b.notes||''),created_at:isoNow(),updated_at:isoNow()};list.unshift(item);await putJSON('monetization_campaigns',list);return json({success:true,item});}
+      if(request.method==='PUT'){const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Campaña no encontrada'},404);list[i]={...list[i],...b,id:list[i].id,updated_at:isoNow()};await putJSON('monetization_campaigns',list);return json({success:true,item:list[i]});}
+      if(request.method==='DELETE'){await putJSON('monetization_campaigns',list.filter(x=>String(x.id)!==String(b.id)));return json({success:true});}
+    }
+
     if(path==='/api/admin/d1/errors' && request.method==='GET'){
       if(!isAdmin())return json({error:'No autorizado'},401); return json(await getArray('d1_sync_errors'));
     }
 
     if (path === '/api/platform_info') {
-      return json({ service: 'UADAVSTREAM', version: 'V8.2.0', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning'] });
+      return json({ service: 'UADAVSTREAM', version: 'V8.3.0', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2'] });
     }
 
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.

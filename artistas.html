@@ -42,4 +42,4 @@ document.getElementById('searchForm').addEventListener('submit',e=>{e.preventDef
 async function loadProspectingCTA(){try{const c=await apiFetch('prospecting/config');document.getElementById('prospectingCta').style.display=c.public_button===true?'block':'none'}catch{}}
 renderFilters();loadProspectingCTA();load();
 </script>
-</body></html>
+<script src="/uadav-shell-bridge.js"></script></body></html>

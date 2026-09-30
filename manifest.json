@@ -1,1 +1,11 @@
-{"name":"★ UADAV STREAM","short_name":"UADAV STREAM","start_url":"/index.html","display":"standalone","background_color":"#070b10","theme_color":"#070b10","description":"Plataforma audiovisual, artistas, radios, eventos y oportunidades de ★ UADAV STREAM","icons":[]}
+{
+  "name": "★ UADAV STREAM",
+  "short_name": "UADAV STREAM",
+  "start_url": "/app.html",
+  "display": "standalone",
+  "background_color": "#070b10",
+  "theme_color": "#070b10",
+  "description": "Plataforma audiovisual, artistas, radios, eventos y oportunidades de ★ UADAV STREAM",
+  "icons": [],
+  "scope": "/"
+}
