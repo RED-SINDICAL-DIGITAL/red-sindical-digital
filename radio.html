@@ -21,6 +21,7 @@ body.tv-mode{font-size:1.15rem}.tv-mode .shell{width:min(1600px,100%)}.tv-mode .
 </style>
 <link rel="stylesheet" href="/uadav-design-v7.2.css">
 <script src="/uadav-brand-v7.2.js" defer></script>
+<script src="/uadav-api-config.js"></script>
 </head>
 <body>
 <div class="shell">
@@ -32,9 +33,9 @@ body.tv-mode{font-size:1.15rem}.tv-mode .shell{width:min(1600px,100%)}.tv-mode .
 <footer><span>★ UADAV STREAM · Radio</span><span class="tv-hint">Experiencia adaptable a PC · móvil · Smart TV</span></footer>
 </div>
 <script>
-const API_REMOTE='https://uadav-api.uadavstream.workers.dev/api/',API_LOCAL=location.origin+'/api/';
-async function apiJson(path,opt={}){let err;for(const base of [...new Set([API_LOCAL,API_REMOTE])]){try{const r=await fetch(base+path,{cache:'no-store',...opt});const ct=r.headers.get('content-type')||'';if(!r.ok||!ct.includes('json')){err=new Error('API '+r.status);continue}return await r.json()}catch(e){err=e}}throw err||new Error('API no disponible')}
-async function apiRaw(path,opt={}){let err;for(const base of [...new Set([API_LOCAL,API_REMOTE])]){try{const r=await fetch(base+path,opt);if(!r.ok){err=new Error('API '+r.status);continue}return r}catch(e){err=e}}throw err||new Error('API no disponible')}
+const API_REMOTE=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/',API_LOCAL=location.origin+'/api/';
+async function apiJson(path,opt={}){let err;for(const base of [...new Set([API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[API_LOCAL]:[])])]){try{const r=await fetch(base+path,{cache:'no-store',...opt});const ct=r.headers.get('content-type')||'';if(!r.ok||!ct.includes('json')){err=new Error('API '+r.status);continue}return await r.json()}catch(e){err=e}}throw err||new Error('API no disponible')}
+async function apiRaw(path,opt={}){let err;for(const base of [...new Set([API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[API_LOCAL]:[])])]){try{const r=await fetch(base+path,opt);if(!r.ok){err=new Error('API '+r.status);continue}return r}catch(e){err=e}}throw err||new Error('API no disponible')}
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const params=new URLSearchParams(location.search);const wanted=params.get('id')||'';if(params.get('tv')==='1')document.body.classList.add('tv-mode');
 const app=document.getElementById('app');let radio=null,audio=null,history=[],metaTimer=null,metaSource=null,isPlaying=false;

@@ -103,7 +103,7 @@ export default {
 
     // Invidious is a permanent provider in UADAV STREAM: used as the default source
     // for public discovery so the official YouTube quota is not consumed unless
-    // Invidious succeeds. The official API remains enabled only as last fallback.
+    // Invidious fails. The official API remains enabled only as last fallback.
 
     // for global search, artist prospecting and channel resolution. Instances are ordered
     // by the current public list from the Invidious documentation, with yewtu.be retained
@@ -116,24 +116,27 @@ export default {
       'https://yewtu.be'
     ];
     async function invidiousSearch(query, type='video', limit=20) {
-      const q=String(query||'').trim(); if(!q) return [];
+      const q=String(query||'').trim(); if(!q)return [];
       const max=Math.min(25,Math.max(1,Number(limit||20)));
-      for (const base of INVIDIOUS_INSTANCES) {
+      const requestOne=async(base)=>{
         const controller=new AbortController();
-        const timer=setTimeout(()=>controller.abort(),5000);
-        try {
+        const timer=setTimeout(()=>controller.abort(),3200);
+        try{
           const u=new URL(base+'/api/v1/search');
           u.searchParams.set('q',q);
           u.searchParams.set('type',type);
           u.searchParams.set('page','1');
           u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.1'}});
-          if(!r.ok) continue;
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.2'}});
+          if(!r.ok)throw new Error('HTTP '+r.status);
           const arr=await r.json();
-          if(Array.isArray(arr)&&arr.length) return arr.slice(0,max);
-        } catch (_) {} finally { clearTimeout(timer); }
-      }
-      return [];
+          if(!Array.isArray(arr)||!arr.length)throw new Error('empty');
+          return arr.slice(0,max);
+        } finally { clearTimeout(timer); }
+      };
+      try{
+        return await Promise.any(INVIDIOUS_INSTANCES.map(base=>requestOne(base)));
+      }catch(_){ return []; }
     }
 
     async function invidiousChannelSearch(name) {
@@ -149,10 +152,10 @@ export default {
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try{
-          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.1'}});
+          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.2'}});
           if(!r.ok)continue; const d=await r.json();
           if(d?.authorId||d?.author){
-            return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),source:'invidious'};
+            return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),subscribers:Number(d.subCount||0),total_views:Number(d.totalViews||0),latestVideos:Array.isArray(d.latestVideos)?d.latestVideos.slice(0,24):[],source:'invidious'};
           }
         }catch(_){ } finally{clearTimeout(timer)}
       }
@@ -167,12 +170,36 @@ export default {
         await putJSON('d1_sync_errors',list);
       }catch(_){}
     }
+    async function runD1Bootstrap(){
+      if(!hasD1())return {count:0,warnings:['D1 no configurada']};
+      const statements=D1_BOOTSTRAP_SQL
+        .replace(/\r/g,'')
+        .split(/;\s*(?:\n|$)/)
+        .map(s=>s.trim())
+        .filter(Boolean);
+      let count=0; const warnings=[];
+      for(const stmt of statements){
+        try{
+          await env.DB.prepare(stmt).run();
+          count++;
+        }catch(e){
+          const msg=String(e?.message||e);
+          if(/CREATE\s+VIRTUAL\s+TABLE/i.test(stmt) && /fts|virtual/i.test(msg)){
+            warnings.push('FTS opcional: '+msg);
+            continue;
+          }
+          throw e;
+        }
+      }
+      d1SchemaReady=true;
+      return {count,warnings};
+    }
     async function ensureD1Schema(){
       if(!hasD1())return {configured:false,ready:false};
       if(d1SchemaReady)return {configured:true,ready:true};
       try{
         const row=await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='artists' LIMIT 1`).first();
-        if(!row) await env.DB.exec(D1_BOOTSTRAP_SQL);
+        if(!row) await runD1Bootstrap();
         d1SchemaReady=true;
         return {configured:true,ready:true,auto_initialized:!row};
       }catch(e){
@@ -271,7 +298,7 @@ export default {
     }
     async function emitNotification(payload) {
       const item = { id: 'N-'+Date.now().toString(36).toUpperCase(), channel:String(payload.channel||'email'), template:String(payload.template||payload.event||'generic'), recipient:String(payload.to||payload.recipient||''), status:'queued', payload, created_at:isoNow() };
-      if (hasD1()) await env.DB.prepare(`INSERT INTO notifications(id,channel,template,recipient,status,payload_json,created_at) VALUES(?,?,?,?,?,?,?)`).bind(item.id,item.channel,item.template,item.recipient,item.status,JSON.stringify(payload),item.created_at).run();
+      if (hasD1()) await safeD1('notification_queue',()=>env.DB.prepare(`INSERT INTO notifications(id,channel,template,recipient,status,payload_json,created_at) VALUES(?,?,?,?,?,?,?)`).bind(item.id,item.channel,item.template,item.recipient,item.status,JSON.stringify(payload),item.created_at).run());
       if (env.UADAV_NOTIFY) {
         try { await env.UADAV_NOTIFY.send(JSON.stringify({notification_id:item.id,...payload})); return item; } catch (_) {}
       }
@@ -343,9 +370,7 @@ export default {
       const statements=(Array.isArray(list)?list:[]).filter(x=>x&&x.id).map((x,i)=>env.DB.prepare(`INSERT INTO sections_v2(id,title,description,mode,content_type,layout,query,max_items,active,sort_order,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,description=excluded.description,mode=excluded.mode,content_type=excluded.content_type,layout=excluded.layout,query=excluded.query,max_items=excluded.max_items,active=excluded.active,sort_order=excluded.sort_order,data_json=excluded.data_json,updated_at=excluded.updated_at`).bind(String(x.id),String(x.nombre||x.title||'Sección'),String(x.descripcion||''),String(x.modo||'manual'),String(x.tipo_contenido||x.content_type||'videos'),String(x.layout||'landscape'),String(x.query||''),Math.max(1,Number(x.max_items||18)),x.activa===false?0:1,Number(x.orden??i),JSON.stringify(x),String(x.creado||isoNow()),isoNow()));
       return d1Batch(statements);
     }
-    const D1_BOOTSTRAP_SQL = `PRAGMA foreign_keys = ON;
-
-CREATE TABLE IF NOT EXISTS sources (
+    const D1_BOOTSTRAP_SQL = `CREATE TABLE IF NOT EXISTS sources (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   province TEXT,
@@ -709,7 +734,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V8.1.0', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V8.2.0', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:'UADAVSTREAM', architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -719,7 +744,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       const out=[];
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),3500); const t=Date.now();
-        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.1'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
+        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.2'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
         catch(e){out.push({instance:base,ok:false,error:String(e?.message||e)});} finally{clearTimeout(timer);}
       }
       return json({checked_at:isoNow(),instances:out});
@@ -728,6 +753,8 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
     if (path === '/api/v7/migrate_kv' && request.method === 'POST') {
       if (!isAdmin()) return json({error:'No autorizado'},401);
       if (!hasD1()) return json({error:'D1 no configurado en el Worker'},503);
+      const schemaState=await ensureD1Schema();
+      if(!schemaState.ready) return json({error:'D1 todavía no está lista',detail:schemaState.error||'Inicialización pendiente'},503);
       await syncSourcesD1(await getArray('sources'));
       await syncArtistsD1(await getArray('artistas'));
       await syncProducersD1(await getArray('productoras'));
@@ -739,7 +766,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       await syncContentD1(await getArray('content_items'));
       await syncCollectionsD1(await getArray('collections'));
       await syncSectionsV2D1(await getArray('secciones'));
-      await upsertSetting('migration_completed',{at:isoNow(),version:'V8.1'});
+      await upsertSetting('migration_completed',{at:isoNow(),version:'V8.2'});
       await audit('kv_to_d1_migration','system','migration',{ok:true});
       return json({success:true,message:'Migración KV → D1 completada para los registros soportados'});
     }
@@ -854,24 +881,29 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
         const item = {
           id:'EV-'+Date.now().toString(36).toUpperCase(), nombre:String(body?.nombre||body?.titulo||'Evento').slice(0,180), titulo:String(body?.titulo||body?.nombre||'Evento').slice(0,180), categoria:String(body?.categoria||body?.category||'Eventos').slice(0,80), subcategoria:String(body?.subcategoria||'').slice(0,80), organizador:String(body?.organizador||body?.productora||'').slice(0,180), productora_id:String(body?.productora_id||'').slice(0,120), fecha:String(body?.fecha||'').slice(0,80), fecha_inicio:String(body?.fecha_inicio||body?.fecha||'').slice(0,80), fecha_fin:String(body?.fecha_fin||'').slice(0,80), lugar:String(body?.lugar||'').slice(0,180), direccion:String(body?.direccion||'').slice(0,220), ciudad:String(body?.ciudad||'').slice(0,120), provincia:String(body?.provincia||'').slice(0,120), pais:String(body?.pais||'Argentina').slice(0,80), imagen:String(body?.imagen||body?.poster||'').slice(0,500), trailer:String(body?.trailer||body?.youtube_id||'').slice(0,500), youtube_id:String(body?.youtube_id||body?.trailer||'').slice(0,80), precio:String(body?.precio||body?.precio_desde||'').slice(0,80), precio_desde:String(body?.precio_desde||body?.precio||'').slice(0,80), precio_hasta:String(body?.precio_hasta||'').slice(0,80), moneda:String(body?.moneda||'ARS').slice(0,12), es_gratuito:body?.es_gratuito===true, link_compra:String(body?.link_compra||body?.link_ticketera||'').slice(0,500), ticketera:String(body?.ticketera||'').slice(0,120), descripcion_corta:String(body?.descripcion_corta||'').slice(0,300), descripcion:String(body?.descripcion||'').slice(0,2500), contacto_email:String(body?.contacto_email||body?.email||'').slice(0,160), contacto:String(body?.contacto||body?.whatsapp||'').slice(0,200), whatsapp:String(body?.whatsapp||'').slice(0,60), instagram:String(body?.instagram||'').slice(0,300), facebook:String(body?.facebook||'').slice(0,300), web:String(body?.web||'').slice(0,300), galeria:Array.isArray(body?.galeria)?body.galeria.slice(0,20):[], funciones:Array.isArray(body?.funciones)?body.funciones.slice(0,50):[], creado_por:String(body?.creado_por||'publico').slice(0,40), estado:'pending', destacado_solicitado:body?.destacado_solicitado===true, destacado_pagado:false, destacado_estado:body?.destacado_solicitado===true?'pendiente_revision':'no_solicitado', pago_referencia:String(body?.pago_referencia||'').slice(0,160), fecha_creacion:new Date().toISOString()
         };
-        if (item.destacado_solicitado===true) {
-          const list=await getArray('eventos_pendientes'); list.push(item); await putJSON('eventos_pendientes',list.slice(-1000));
-          await emitNotification({event:'featured_requested',template:'event_featured_requested',to:item.contacto_email||'',subject:'Solicitud de destacado recibida · ★ UADAV STREAM',payload:{id:item.id,titulo:item.titulo,fecha:item.fecha,lugar:item.lugar}});
-          return json({success:true,id:item.id,item,mode:'review_featured'});
-        }
+        // Every valid event is published automatically. If the organizer asked
+        // for a paid highlight, only the PREMIUM PLACEMENT goes to review.
         item.estado='published'; item.publicado_en=isoNow();
         const pub=await getArray('eventos_publicados'); pub.push(item); await putJSON('eventos_publicados',pub.slice(-2000));
         const cat=await getArray('cartelera_aprobada'); cat.push(item); await putJSON('cartelera_aprobada',cat.slice(-2000));
         await safeD1('sync_event_publish',()=>syncEventsD1([item]));
         await emitNotification({event:'event_published',template:'event_published',to:item.contacto_email||'',subject:'Tu evento ya está publicado · ★ UADAV STREAM',payload:{id:item.id,titulo:item.titulo,fecha:item.fecha,lugar:item.lugar}});
+        if (item.destacado_solicitado===true) {
+          const list=await getArray('eventos_pendientes');
+          const pi=list.findIndex(x=>String(x.id)===String(item.id));
+          if(pi>=0)list[pi]={...list[pi],...item};else list.push(item);
+          await putJSON('eventos_pendientes',list.slice(-1000));
+          await emitNotification({event:'featured_requested',template:'event_featured_requested',to:item.contacto_email||'',subject:'Solicitud de destacado recibida · ★ UADAV STREAM',payload:{id:item.id,titulo:item.titulo,fecha:item.fecha,lugar:item.lugar}});
+          return json({success:true,id:item.id,item,mode:'auto_published_feature_review'});
+        }
         return json({success:true,id:item.id,item,mode:'auto_published'});
       }
       if (request.method === 'GET') { if(!isAdmin())return json({error:'No autorizado'},401); return json(await getArray('eventos_pendientes')); }
       if (request.method === 'PUT') {
         if(!isAdmin())return json({error:'No autorizado'},401); const body=await request.json().catch(()=>({})); const list=await getArray('eventos_pendientes'); const i=list.findIndex(x=>String(x?.id)===String(body?.id)); if(i<0)return json({error:'Evento no encontrado'},404); const item={...list[i]};
-        if(body?.action==='approve'){ item.estado='published'; item.publicado_en=new Date().toISOString(); const pub=await getArray('eventos_publicados'); const pi=pub.findIndex(x=>String(x.id)===String(item.id)); if(pi>=0)pub[pi]=item;else pub.push(item); await putJSON('eventos_publicados',pub); const cat=await getArray('cartelera_aprobada'); const ci=cat.findIndex(x=>String(x.id)===String(item.id)); if(ci>=0)cat[ci]=item;else cat.push(item); await putJSON('cartelera_aprobada',cat); list.splice(i,1); await putJSON('eventos_pendientes',list); await safeD1('sync_event_approve',()=>syncEventsD1([item])); return json({success:true,item});}
-        if(body?.action==='reject'){ item.estado='rejected'; item.rechazado_en=new Date().toISOString(); list.splice(i,1); await putJSON('eventos_pendientes',list); const rej=await getArray('eventos_rechazados'); rej.push(item); await putJSON('eventos_rechazados',rej.slice(-1000)); return json({success:true,item});}
-        if(body?.action==='feature_paid'){ const paid=body?.destacado_pagado===true; item.destacado_pagado=paid; item.destacado_estado=paid?'pagado':'cancelado'; item.destacado_desde=paid?new Date().toISOString():null; item.destacado_hasta=String(body?.destacado_hasta||'').slice(0,40); const pub=await getArray('eventos_publicados'); const pi=pub.findIndex(x=>String(x.id)===String(item.id)); if(pi>=0)pub[pi]={...pub[pi],...item}; await putJSON('eventos_publicados',pub); const cat=await getArray('cartelera_aprobada'); const ci=cat.findIndex(x=>String(x.id)===String(item.id)); if(ci>=0)cat[ci]={...cat[ci],...item}; await putJSON('cartelera_aprobada',cat); await safeD1('sync_event_feature',()=>syncEventsD1([{...item,estado:'published'}])); return json({success:true,item});}
+        if(body?.action==='approve'){ item.estado='published'; item.publicado_en=item.publicado_en||new Date().toISOString(); const pub=await getArray('eventos_publicados'); const pi=pub.findIndex(x=>String(x.id)===String(item.id)); if(pi>=0)pub[pi]={...pub[pi],...item};else pub.push(item); await putJSON('eventos_publicados',pub); const cat=await getArray('cartelera_aprobada'); const ci=cat.findIndex(x=>String(x.id)===String(item.id)); if(ci>=0)cat[ci]={...cat[ci],...item};else cat.push(item); await putJSON('cartelera_aprobada',cat); list.splice(i,1); await putJSON('eventos_pendientes',list); await safeD1('sync_event_approve',()=>syncEventsD1([item])); return json({success:true,item});}
+        if(body?.action==='reject' || body?.action==='reject_feature'){ item.destacado_pagado=false; item.destacado_estado='rechazado'; item.destacado_solicitado=false; item.destacado_revision_en=isoNow(); list.splice(i,1); await putJSON('eventos_pendientes',list); const pub=await getArray('eventos_publicados'); const pi=pub.findIndex(x=>String(x.id)===String(item.id)); if(pi>=0)pub[pi]={...pub[pi],...item,estado:'published'}; await putJSON('eventos_publicados',pub); const cat=await getArray('cartelera_aprobada'); const ci=cat.findIndex(x=>String(x.id)===String(item.id)); if(ci>=0)cat[ci]={...cat[ci],...item,estado:'published'}; await putJSON('cartelera_aprobada',cat); await safeD1('sync_event_feature_reject',()=>syncEventsD1([{...item,estado:'published'}])); return json({success:true,item:{...item,estado:'published'}});}
+        if(body?.action==='feature_paid'){ const paid=body?.destacado_pagado===true; item.destacado_pagado=paid; item.destacado_estado=paid?'pagado':'cancelado'; item.destacado_solicitado=false; item.destacado_desde=paid?new Date().toISOString():null; item.destacado_hasta=String(body?.destacado_hasta||'').slice(0,40); const pub=await getArray('eventos_publicados'); const pi=pub.findIndex(x=>String(x.id)===String(item.id)); if(pi>=0)pub[pi]={...pub[pi],...item,estado:'published'};else pub.push({...item,estado:'published'}); await putJSON('eventos_publicados',pub); const cat=await getArray('cartelera_aprobada'); const ci=cat.findIndex(x=>String(x.id)===String(item.id)); if(ci>=0)cat[ci]={...cat[ci],...item,estado:'published'};else cat.push({...item,estado:'published'}); await putJSON('cartelera_aprobada',cat); list.splice(i,1); await putJSON('eventos_pendientes',list); await safeD1('sync_event_feature',()=>syncEventsD1([{...item,estado:'published'}])); return json({success:true,item:{...item,estado:'published'}});}
         return json({error:'Acción no reconocida'},400);
       }
       return json({error:'Método no permitido'},405);
@@ -1023,7 +1055,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       for(const x of ivChannel) raw.push({...x,__source:'invidious'});
 
       // Spend official quota only when Invidious did not provide enough usable candidates.
-      if(raw.length < Math.min(5,limit) && ytEnabled && env.YOUTUBE_API_KEY){
+      if(raw.length === 0 && ytEnabled && env.YOUTUBE_API_KEY){
         try{
           const params=new URLSearchParams({part:'snippet',maxResults:String(limit),q:q,type:'video',regionCode:'AR',order:'relevance',key:env.YOUTUBE_API_KEY});
           const res=await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
@@ -1045,10 +1077,11 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
         const isInvidious=String(x.__source||'')==='invidious';
         const isChannel=isInvidious ? String(x.type||'')==='channel' || !!x.authorId && !x.videoId : ytChannel;
         const external=isChannel ? String(x.id?.channelId||x.authorId||x.channelId||x.ucid||x.id||'') : String(x.id?.videoId||x.videoId||'');
+        const channelId=String(isChannel?external:(x.snippet?.channelId||x.authorId||x.channelId||x.ucid||''));
         const title=isChannel ? String(x.snippet?.title||x.author||x.title||'') : String(x.snippet?.title||x.title||'');
         const channelName=String(x.snippet?.channelTitle||x.author||x.channel_name||title);
         const thumbnail=String(x.snippet?.thumbnails?.high?.url||x.snippet?.thumbnails?.medium?.url||x.snippet?.thumbnails?.default?.url||x.videoThumbnails?.find?.(t=>t.quality==='medium')?.url||x.videoThumbnails?.[0]?.url||x.authorThumbnails?.[0]?.url||'');
-        const item={id:makeId('PRES'),run_id:run.id,resource_type:isChannel?'channel':'video',external_id:external,title,channel_name:channelName,category:categoryLabel(key),country:'Argentina',thumbnail,url:isChannel?`https://www.youtube.com/channel/${external}`:`https://www.youtube.com/watch?v=${external}`,status:'candidate',source:isInvidious?'invidious':'youtube',raw_json:x,created_at:isoNow(),updated_at:isoNow()};
+        const item={id:makeId('PRES'),run_id:run.id,resource_type:isChannel?'channel':'video',external_id:external,channel_id:channelId,title,channel_name:channelName,category:categoryLabel(key),country:'Argentina',thumbnail,url:isChannel?`https://www.youtube.com/channel/${external}`:`https://www.youtube.com/watch?v=${external}`,status:'candidate',source:isInvidious?'invidious':'youtube',provider:isInvidious?'invidious':'youtube',raw_json:x,created_at:isoNow(),updated_at:isoNow()};
         return item;
       }).filter(x=>x.external_id && !restrictedProspect(x,restrictions)).filter(x=>{const k=x.resource_type+':'+x.external_id;if(seen.has(k))return false;seen.add(k);return true;}).slice(0,limit);
       run.status='completed'; run.result_count=results.length;
@@ -1058,6 +1091,26 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       } else { await putJSON('prospecting_last_run',{...run,results}); }
       await audit('prospecting_search','prospecting_run',run.id,{query:q,category:key,count:results.length,providers:ytEnabled?['invidious','youtube']:['invidious']});
       return json({success:true,run,results,providers:{youtube:ytEnabled && !!env.YOUTUBE_API_KEY,invidious:true}});
+    }
+
+    if (path === '/api/admin/prospecting/enrich' && request.method === 'GET') {
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      const channelId=String(url.searchParams.get('channel_id')||'').trim();
+      if(!channelId)return json({error:'channel_id requerido'},400);
+      let meta=await invidiousChannelInfo(channelId);
+      if(!meta && await youtubeApiEnabled() && env.YOUTUBE_API_KEY){
+        try{
+          const qs=new URLSearchParams({part:'snippet,brandingSettings,statistics',id:channelId,key:env.YOUTUBE_API_KEY});
+          const r=await fetch(`https://www.googleapis.com/youtube/v3/channels?${qs}`);
+          const d=await r.json(); const ch=d?.items?.[0];
+          if(ch)meta={channelId:ch.id,nombre:ch.snippet?.title||'Artista',thumbnail:ch.snippet?.thumbnails?.high?.url||'',banner:ch.brandingSettings?.image?.bannerExternalUrl||'',bio:ch.snippet?.description||'',subscribers:Number(ch.statistics?.subscriberCount||0),total_views:Number(ch.statistics?.viewCount||0),latestVideos:[],source:'youtube_api'};
+        }catch(_){}
+      }
+      if(!meta)return json({error:'No se pudo resolver el canal'},404);
+      const videos=(Array.isArray(meta.latestVideos)?meta.latestVideos:[]).slice(0,16).map(v=>({
+        id:String(v.videoId||v.id||''),title:String(v.title||''),thumbnail:String(v.videoThumbnails?.find?.(t=>t.quality==='medium')?.url||v.videoThumbnails?.[0]?.url||''),published:Number(v.published||0),length:Number(v.lengthSeconds||0)
+      })).filter(v=>v.id);
+      return json({success:true,profile:{channel_id:meta.channelId,nombre:meta.nombre,foto:meta.thumbnail,portada:meta.banner,bio:meta.bio,subscribers:meta.subscribers||0,total_views:meta.total_views||0,source:meta.source||'invidious'},videos});
     }
 
     if (path === '/api/admin/maintenance' && request.method === 'POST') { if(!isAdmin()) return json({error:'No autorizado'},401); return json({success:true,...await uadavMaintenance(env)}); }
@@ -1074,7 +1127,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
 
     if (path === '/api/admin/d1/init' && request.method === 'POST') {
       if(!isAdmin())return json({error:'No autorizado'},401); if(!hasD1())return json({error:'D1 no configurado en el Worker'},503);
-      try{const out=await env.DB.exec(D1_BOOTSTRAP_SQL); d1SchemaReady=true; await audit('d1_bootstrap','database','DB',{queries:out?.count||0}); return json({success:true,queries:out?.count||0});}catch(e){return json({error:String(e?.message||e)},500)}
+      try{const out=await runD1Bootstrap(); await audit('d1_bootstrap','database','DB',{queries:out.count||0,warnings:out.warnings||[]}); return json({success:true,queries:out.count||0,warnings:out.warnings||[]});}catch(e){return json({error:String(e?.message||e)},500)}
     }
 
     if (path === '/api/premium/revoke' && request.method === 'POST') {
@@ -1151,25 +1204,30 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
         if (!channelId) return json({ error: 'channel_id requerido' }, 400);
         let meta = await invidiousChannelInfo(channelId);
         if (!meta && await youtubeApiEnabled() && env.YOUTUBE_API_KEY) {
-          const qs = new URLSearchParams({part:'snippet,brandingSettings',id:channelId,key:env.YOUTUBE_API_KEY});
+          const qs = new URLSearchParams({part:'snippet,brandingSettings,statistics',id:channelId,key:env.YOUTUBE_API_KEY});
           const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?${qs.toString()}`);
           const data = await res.json();
           const ch = data?.items?.[0];
-          if (ch) meta = {channelId,nombre:ch.snippet?.title||'Artista',thumbnail:ch.snippet?.thumbnails?.high?.url||ch.snippet?.thumbnails?.medium?.url||'',bio:ch.snippet?.description||'',source:'youtube_api'};
+          if (ch) meta = {channelId,nombre:ch.snippet?.title||'Artista',thumbnail:ch.snippet?.thumbnails?.high?.url||ch.snippet?.thumbnails?.medium?.url||'',banner:ch.brandingSettings?.image?.bannerExternalUrl||'',bio:ch.snippet?.description||'',subscribers:Number(ch.statistics?.subscriberCount||0),total_views:Number(ch.statistics?.viewCount||0),latestVideos:[],source:'youtube_api'};
         }
         if (!meta) return json({error:'Canal no encontrado mediante Invidious ni mediante el fallback oficial de YouTube.'},404);
+        const artistId='ART-'+channelId;
         const artista = {
-          id:'ART-'+channelId,
+          id:artistId,
           tipo:'artista',
           nombre:meta.nombre || 'Artista',
           nombre_artistico:meta.nombre || 'Artista',
-          rubro:'Artista de variedades',
+          rubro:String(body?.rubro||'Artista de variedades'),
           foto:meta.thumbnail || '',
+          portada:meta.banner || '',
           bio:meta.bio || '',
           canal:channelId,
           youtube_id:channelId,
           youtube_bio:meta.bio || '',
-          visible:false,
+          redes:{youtube:`https://www.youtube.com/channel/${channelId}`},
+          stats:{youtube_subscribers:Number(meta.subscribers||0),youtube_views:Number(meta.total_views||0)},
+          origen:meta.source||'invidious',
+          visible:body?.visible===true,
           estado:'catalogo',
           afiliado_verificado:false,
           actualizado:new Date().toISOString()
@@ -1178,9 +1236,25 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
         const i = arr.findIndex(x => String(x?.canal || x?.youtube_id || '') === channelId);
         if(i>=0) arr[i] = {...arr[i], ...artista}; else arr.push(artista);
         await putJSON('artistas',arr);
-        if (hasD1()) await syncArtistsD1(arr);
-        await audit('import_channel','artist',artista.id,{channelId,source:meta.source||'unknown'});
-        return json({ success:true, artista:publicArtistFromItem(artista), source:meta.source||'unknown' });
+        await safeD1('import_channel_artist',()=>syncArtistsD1([artista]));
+
+        const latest=Array.isArray(meta.latestVideos)?meta.latestVideos.slice(0,16):[];
+        let importedContent=0;
+        if(latest.length){
+          const lib=await getArray('content_items');
+          const known=new Set(lib.map(x=>String(x.url||x.external_id||'')));
+          for(const v of latest){
+            const vid=String(v.videoId||v.id||'').trim(); if(!vid)continue;
+            const url=`https://www.youtube.com/watch?v=${vid}`;
+            if(known.has(url)||known.has(vid))continue;
+            lib.unshift({id:makeId('CNT'),artist_id:artistId,provider:'youtube',content_type:Number(v.lengthSeconds||0)<=60?'short':'video',external_id:vid,url,titulo:String(v.title||'Video'),descripcion:meta.nombre||'',thumbnail:String(v.videoThumbnails?.find?.(t=>t.quality==='medium')?.url||v.videoThumbnails?.[0]?.url||''),categoria:'YouTube',estado:'published',visible:true,creado:isoNow(),actualizado:isoNow()});
+            importedContent++;
+          }
+          await putJSON('content_items',lib.slice(0,5000));
+          await safeD1('import_channel_content',()=>syncContentD1(lib.slice(0,5000)));
+        }
+        await audit('import_channel','artist',artista.id,{channelId,source:meta.source||'unknown',imported_content:importedContent});
+        return json({ success:true, artista:publicArtistFromItem(artista), source:meta.source||'unknown', imported_content:importedContent });
       } catch(e) {
         return json({ error:String(e?.message || e) },502);
       }
@@ -1220,6 +1294,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
             const pos=seen.get(key); if(pos===undefined){seen.set(key,merged.length);merged.push(normalized)} else merged[pos]={...merged[pos],...normalized};
           }
           await putJSON('artistas',merged);
+          await safeD1('sync_artists_from_sections',()=>syncArtistsD1(merged));
         }
       } catch {}
       const sectionSync=await safeD1('sync_sections',()=>syncSectionsV2D1(safeJSON(raw,[])));
@@ -1231,6 +1306,20 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
       await env.UADAV_DB.put('banners', await request.text());
       return json({ success: true });
+    }
+
+    if (path === '/api/productoras') {
+      if (request.method === 'GET') return json(await getArray('productoras'));
+      if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
+      if (request.method === 'POST' || request.method === 'PUT') {
+        const body = await request.json().catch(() => null);
+        if (!Array.isArray(body)) return json({ error: 'Se esperaba un arreglo de productoras' }, 400);
+        await putJSON('productoras', body);
+        const d1sync = await safeD1('sync_productoras', () => syncProducersD1(body));
+        await audit('replace_producers','producers',null,{count:body.length});
+        return json({ success:true, count:body.length, d1_sync:d1sync });
+      }
+      return json({ error:'Método no permitido' },405);
     }
 
     if (path === '/api/radios') {
@@ -1271,7 +1360,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       if (request.method === 'GET') { const arr=await allCanonicalArtists(); return json(isAdmin()?arr:arr.filter(x=>x&&publicArtistFromItem(x).visible!==false)); }
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
       const body=await request.json().catch(()=>null); if(!Array.isArray(body))return json({error:'Se esperaba un arreglo de artistas'},400);
-      await putJSON('artistas',body); await syncArtistsD1(body); await audit('replace_artists','artists',null,{count:body.length}); return json({success:true,count:body.length});
+      await putJSON('artistas',body); const d1sync=await safeD1('sync_artists',()=>syncArtistsD1(body)); await audit('replace_artists','artists',null,{count:body.length}); return json({success:true,count:body.length,d1_sync:d1sync});
     }
 
     if (path === '/api/estado_sitio') {
@@ -1338,7 +1427,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try {
           const u=new URL(base+'/api/v1/trending'); u.searchParams.set('region',region); u.searchParams.set('type',category?'music':'default'); u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.1'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.2'}});
           if(!r.ok)continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){const items=arr.slice(0,limit).map(x=>({id:x.videoId||'',channel_id:x.authorId||'',channel_name:x.author||'',titulo:x.title||'',descripcion:x.description||'',thumbnail:x.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||x.videoThumbnails?.[0]?.url||'',views:Number(x.viewCount||0),published_at:x.publishedText||'',category_id:category||''})).filter(x=>x.id); if(items.length){const payload={source:'invidious_trending',region,category:category||null,items};const out=JSON.stringify(payload);await env.UADAV_DB.put(cacheKey,out,{expirationTtl:1800});return new Response(out,{headers:{...cors,'X-UADAV-Search-Source':'invidious_trending'}});}}
         } catch {} finally {clearTimeout(timer)}
@@ -1384,25 +1473,18 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       }
 
       // 1) Invidious first: zero official YouTube quota in normal operation.
-      for (const base of INVIDIOUS_INSTANCES) {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 5000);
-        try {
-          const r = await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`, {signal: controller.signal, headers: {Accept:'application/json','User-Agent':'UADAVSTREAM/8.1'}});
-          if (!r.ok) continue;
-          const raw = await r.json();
-          const arr = Array.isArray(raw) ? raw : [];
-          const items = arr.map(v => ({
-            id:String(v.videoId||v.id||'').trim(),
-            titulo:v.title||'Video',
-            descripcion:v.author||v.authorId||'YouTube',
-            thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.find?.(t=>t?.quality==='medium')?.url||v.videoThumbnails?.[0]?.url||'',
-            categoria:'Resultado',
-            duracion:Number(v.lengthSeconds||0),
-            tipo:'video'
-          })).filter(x=>x.id);
-          if(items.length){ await env.UADAV_DB.put(cacheKey,JSON.stringify(items),{expirationTtl:21600}); return new Response(JSON.stringify(items),{headers:{...cors,'X-UADAV-Search-Source':'invidious'}}); }
-        } catch {} finally {clearTimeout(timer)}
+      const ivRaw=await invidiousSearch(q,'video',24);
+      if(ivRaw.length){
+        const items=ivRaw.map(v => ({
+          id:String(v.videoId||v.id||'').trim(),
+          titulo:v.title||'Video',
+          descripcion:v.author||v.authorId||'YouTube',
+          thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.find?.(t=>t?.quality==='medium')?.url||v.videoThumbnails?.[0]?.url||'',
+          categoria:'Resultado',
+          duracion:Number(v.lengthSeconds||0),
+          tipo:'video'
+        })).filter(x=>x.id);
+        if(items.length){ await env.UADAV_DB.put(cacheKey,JSON.stringify(items),{expirationTtl:21600}); return new Response(JSON.stringify(items),{headers:{...cors,'X-UADAV-Search-Source':'invidious'}}); }
       }
 
       // 2) Optional official YouTube API fallback — only when explicitly enabled.
@@ -1482,7 +1564,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       for (const base of INVIDIOUS_INSTANCES) {
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),4000);
         try {
-          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.1'}});
+          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/8.2'}});
           if(!r.ok) continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){result.source='invidious';result.instance=base;result.count=Math.min(arr.length,24);return json(result);}
         } catch {} finally { clearTimeout(timer); }
@@ -1505,7 +1587,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
         const b = await request.json().catch(() => ({}));
         if (!b.nombre || !b.email) return json({error:'Nombre y email son obligatorios'},400);
         const list = await getArray('postulaciones_artista');
-        const item = { id:'ART-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase(), estado:'pendiente', creado:new Date().toISOString(), nombre:String(b.nombre).slice(0,100), rubro:String(b.rubro||'').slice(0,80), ciudad:String(b.ciudad||'').slice(0,100), email:String(b.email).slice(0,160), whatsapp:String(b.whatsapp||'').slice(0,50), youtube:String(b.youtube||'').slice(0,250), foto:String(b.foto||'').slice(0,500), bio:String(b.bio||'').slice(0,2000), terms_version:String(b.terms_version||'ARTIST-1.0').slice(0,40), terms_accepted:b.terms_accepted===true, terms_accepted_at:String(b.terms_accepted_at||''), terms_version:String(b.terms_version||'ARTIST-1.0').slice(0,40), terms_accepted:b.terms_accepted===true, terms_accepted_at:String(b.terms_accepted_at||'').slice(0,50) };
+        const item = { id:'ART-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase(), estado:'pendiente', creado:new Date().toISOString(), nombre:String(b.nombre).slice(0,100), rubro:String(b.rubro||'').slice(0,80), ciudad:String(b.ciudad||'').slice(0,100), email:String(b.email).slice(0,160), whatsapp:String(b.whatsapp||'').slice(0,50), youtube:String(b.youtube||'').slice(0,250), foto:String(b.foto||'').slice(0,500), bio:String(b.bio||'').slice(0,2000), terms_version:String(b.terms_version||'ARTIST-1.0').slice(0,40), terms_accepted:b.terms_accepted===true, terms_accepted_at:String(b.terms_accepted_at||'').slice(0,50) };
         list.push(item); while(list.length>500) list.shift(); await putJSON('postulaciones_artista',list); return json({success:true,id:item.id});
       }
       if (!isAdmin()) return json({error:'No autorizado'},401);
@@ -1595,9 +1677,12 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       rubro:a.rubro||'Artista de variedades',
       ciudad:a.ciudad||a.region||'',
       foto:a.foto||a.imagen||a.thumbnail||'',
+      portada:a.portada||a.banner||a.hero_imagen||'',
       bio:a.bio||'',
       canal:a.canal||a.channel_id||'',
       youtube_bio:a.youtube_bio||'',
+      origen:a.origen||a.source||'',
+      stats:a.stats||{},
       visible:a.visible!==false,
       estado:a.estado||'catalogo',
       afiliado_verificado:a.afiliado_verificado===true,
@@ -1615,20 +1700,25 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
     }); }
     async function artistsFromD1(params={}) {
       if(!hasD1()) return null;
-      const search=String(params.search||'').trim(); const category=String(params.category||'').trim(); const province=String(params.province||'').trim();
-      const where=['visible=1']; const binds=[];
-      if(search){where.push(`(name LIKE ? OR stage_name LIKE ? OR category LIKE ? OR city LIKE ? OR province LIKE ?)`); const q=`%${search}%`; binds.push(q,q,q,q,q);}
-      if(category){where.push('category LIKE ?');binds.push(`%${category}%`);}
-      if(province){where.push('province LIKE ?');binds.push(`%${province}%`);}
-      const sql=`SELECT * FROM artists WHERE ${where.join(' AND ')} AND lower(COALESCE(status,'')) NOT IN ('suspendido','bloqueado','oculto') ORDER BY verified DESC, updated_at DESC LIMIT 500`;
-      const r=await env.DB.prepare(sql).bind(...binds).all();
-      return (r.results||[]).map(x=>({...(safeJSON(x.data_json,{})),id:x.id,nombre:x.name||x.stage_name||'Artista',nombre_artistico:x.stage_name||x.name||'Artista',rubro:x.category||'',ciudad:x.city||'',provincia:x.province||'',pais:x.country||'Argentina',afiliado_verificado:Boolean(x.verified),visible:Boolean(x.visible),estado:x.status||'catalogo',source_id:x.source_id||null,claimed:safeJSON(x.data_json,{}).claimed===true,claim_status:safeJSON(x.data_json,{}).claim_status||'none'}));
+      try{
+        const state=await ensureD1Schema(); if(!state.ready)return null;
+        const search=String(params.search||'').trim(); const category=String(params.category||'').trim(); const province=String(params.province||'').trim();
+        const where=['visible=1']; const binds=[];
+        if(search){where.push(`(name LIKE ? OR stage_name LIKE ? OR category LIKE ? OR city LIKE ? OR province LIKE ?)`); const q=`%${search}%`; binds.push(q,q,q,q,q);}
+        if(category){where.push('category LIKE ?');binds.push(`%${category}%`);}
+        if(province){where.push('province LIKE ?');binds.push(`%${province}%`);}
+        const sql=`SELECT * FROM artists WHERE ${where.join(' AND ')} AND lower(COALESCE(status,'')) NOT IN ('suspendido','bloqueado','oculto') ORDER BY verified DESC, updated_at DESC LIMIT 500`;
+        const r=await env.DB.prepare(sql).bind(...binds).all();
+        return (r.results||[]).map(x=>({...(safeJSON(x.data_json,{})),id:x.id,nombre:x.name||x.stage_name||'Artista',nombre_artistico:x.stage_name||x.name||'Artista',rubro:x.category||'',ciudad:x.city||'',provincia:x.province||'',pais:x.country||'Argentina',afiliado_verificado:Boolean(x.verified),visible:Boolean(x.visible),estado:x.status||'catalogo',source_id:x.source_id||null,claimed:safeJSON(x.data_json,{}).claimed===true,claim_status:safeJSON(x.data_json,{}).claim_status||'none'}));
+      }catch(e){await recordD1SyncError('artists_read',e);return null;}
     }
     async function artistFromD1(identifier){
       if(!hasD1()) return null; const raw=String(identifier||'').trim().toLowerCase(); if(!raw)return null;
-      const like=`%${raw.replace(/%/g,'')}%`;
-      const r=await env.DB.prepare(`SELECT * FROM artists WHERE lower(id)=? OR lower(name)=? OR lower(stage_name)=? OR lower(json_extract(data_json,'$.canal'))=? LIMIT 1`).bind(raw,raw,raw,raw).all();
-      const x=(r.results||[])[0]; if(!x)return null; const d=safeJSON(x.data_json,{}); return {...d,id:x.id,nombre:x.name||x.stage_name||'Artista',nombre_artistico:x.stage_name||x.name||'Artista',rubro:x.category||'',ciudad:x.city||'',provincia:x.province||'',pais:x.country||'Argentina',afiliado_verificado:Boolean(x.verified),visible:Boolean(x.visible),estado:x.status||'catalogo',claimed:d.claimed===true,claim_status:d.claim_status||'none'};
+      try{
+        const state=await ensureD1Schema(); if(!state.ready)return null;
+        const r=await env.DB.prepare(`SELECT * FROM artists WHERE lower(id)=? OR lower(name)=? OR lower(stage_name)=? OR lower(json_extract(data_json,'$.canal'))=? LIMIT 1`).bind(raw,raw,raw,raw).all();
+        const x=(r.results||[])[0]; if(!x)return null; const d=safeJSON(x.data_json,{}); return {...d,id:x.id,nombre:x.name||x.stage_name||'Artista',nombre_artistico:x.stage_name||x.name||'Artista',rubro:x.category||'',ciudad:x.city||'',provincia:x.province||'',pais:x.country||'Argentina',afiliado_verificado:Boolean(x.verified),visible:Boolean(x.visible),estado:x.status||'catalogo',claimed:d.claimed===true,claim_status:d.claim_status||'none'};
+      }catch(e){await recordD1SyncError('artist_read',e);return null;}
     }
 
     async function allCanonicalArtists(){
@@ -1660,15 +1750,16 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
       const artist=await artistFromD1(artistId) || (await allCanonicalArtists()).find(a=>String(publicArtistFromItem(a).id)===artistId); if(!artist)return json({error:'Artista no encontrado'},404);
       if(artist.claimed===true || artist.claim_status==='approved') return json({error:'Este perfil ya fue reclamado'},409);
       const claim={id:'CL-'+Date.now().toString(36).toUpperCase(),artist_id:String(publicArtistFromItem(artist).id),name:String(b.name||'').slice(0,140),email:String(b.email||'').slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),proof_url:String(b.proof_url||'').slice(0,500),social_url:String(b.social_url||'').slice(0,500),note:String(b.note||'').slice(0,1500),status:'pending',created_at:isoNow()};
-      if(hasD1()) await env.DB.prepare(`INSERT INTO artist_claims(id,artist_id,name,email,whatsapp,proof_url,social_url,note,status,created_at,reviewed_at,review_note) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`).bind(claim.id,claim.artist_id,claim.name,claim.email,claim.whatsapp,claim.proof_url,claim.social_url,claim.note,'pending',claim.created_at,null,'').run();
-      else {const list=await getArray('artist_claims');list.push(claim);await putJSON('artist_claims',list.slice(-2000));}
+      let claimStored=false;
+      if(hasD1()) { const saved=await safeD1('artist_claim_insert',()=>env.DB.prepare(`INSERT INTO artist_claims(id,artist_id,name,email,whatsapp,proof_url,social_url,note,status,created_at,reviewed_at,review_note) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`).bind(claim.id,claim.artist_id,claim.name,claim.email,claim.whatsapp,claim.proof_url,claim.social_url,claim.note,'pending',claim.created_at,null,'').run()); claimStored=saved.ok===true; }
+      if(!claimStored) {const list=await getArray('artist_claims');list.push(claim);await putJSON('artist_claims',list.slice(-2000));}
       await emitNotification({event:'ARTIST_CLAIM_CREATED',template:'artist_claim_created',to:claim.email,subject:'Recibimos tu solicitud de perfil en ★ UADAV STREAM',name:claim.name,artist_id:claim.artist_id});
       await audit('artist_claim_created','artist_claim',claim.id,{artist_id:claim.artist_id});
       return json({success:true,id:claim.id,status:'pending'});
     }
     if(path==='/api/admin/artist-claims' && request.method==='GET'){
       if(!isAdmin())return json({error:'No autorizado'},401);
-      if(hasD1()){const r=await env.DB.prepare(`SELECT * FROM artist_claims ORDER BY created_at DESC LIMIT 500`).all();return json(r.results||[]);}
+      if(hasD1()){try{const state=await ensureD1Schema();if(state.ready){const r=await env.DB.prepare(`SELECT * FROM artist_claims ORDER BY created_at DESC LIMIT 500`).all();const rows=r.results||[];if(rows.length)return json(rows);}}catch(e){await recordD1SyncError('artist_claims_read',e);}}
       return json((await getArray('artist_claims')).slice(-500).reverse());
     }
     if(path==='/api/admin/artist-claims' && request.method==='PUT'){
@@ -1869,7 +1960,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_versions_entity ON entity_versions(entity_
     }
 
     if (path === '/api/platform_info') {
-      return json({ service: 'UADAVSTREAM', version: 'V8.1.0', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning'] });
+      return json({ service: 'UADAVSTREAM', version: 'V8.2.0', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning'] });
     }
 
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.

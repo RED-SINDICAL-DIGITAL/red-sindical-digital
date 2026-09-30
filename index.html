@@ -599,6 +599,7 @@ body{padding-bottom:0}
   .topbar,.header-inner{max-width:100%}
 }
 </style>
+<script src="/uadav-api-config.js"></script>
 </head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
@@ -770,9 +771,9 @@ body{padding-bottom:0}
   </div>
 
   <script>
-    const API_REMOTE = 'https://uadav-api.uadavstream.workers.dev/api/';
+    const API_REMOTE = window.UADAV_API_BASE || 'https://uadav-api.uadavstream.workers.dev/api/';
     const API_LOCAL = location.origin + '/api/';
-    const API_URL = API_REMOTE;
+    const API_URL = window.UADAV_USE_LOCAL_API===true ? API_LOCAL : API_REMOTE;
     const FALLBACK_THUMB = 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=900&q=80';
     const STORAGE_KEY = 'uadavstream_discovery_v1';
     let config = {};
@@ -916,7 +917,7 @@ body{padding-bottom:0}
 
     async function api(path, options={}){
       const suffix=(path.includes('?')?'&':'?')+'_='+Date.now();
-      const bases=location.protocol.startsWith('http')?[API_LOCAL,API_REMOTE]:[API_REMOTE];
+      const bases=[API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[API_LOCAL]:[])];
       let lastError=null;
       for(const base of [...new Set(bases)]){
         try{
@@ -1158,6 +1159,9 @@ body{padding-bottom:0}
       'https://invidious.tiekoetter.com'
     ];
 
+    function decodeEntities(v){
+      const txt=document.createElement('textarea');txt.innerHTML=String(v??'');return txt.value;
+    }
     function normalizarResultados(data){
       const arr = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : (Array.isArray(data?.items) ? data.items : []));
       return arr.map(v => {
@@ -1168,8 +1172,8 @@ body{padding-bottom:0}
         const secs = Number(v?.lengthSeconds || v?.duration || 0) || 0;
         return {
           ...v, id,
-          titulo: v?.titulo || v?.title || 'Contenido audiovisual',
-          descripcion: v?.descripcion || v?.author || v?.channelTitle || v?.channel || 'YouTube',
+          titulo: decodeEntities(v?.titulo || v?.title || 'Contenido audiovisual'),
+          descripcion: decodeEntities(v?.descripcion || v?.author || v?.channelTitle || v?.channel || 'YouTube'),
           categoria: v?.categoria || 'Resultado',
           duracion: v?.duracion || (secs ? `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}` : 'HD'),
           thumbnail: thumb,
@@ -1876,7 +1880,7 @@ body{padding-bottom:0}
       const url=String(r.stream_url||r.url||'').trim();if(!url)return;
       const audio=$('radioAudio');if(!audio)return;
       if(activeRadio===url&&!audio.paused){pausarRadio();return}
-      if(ytPlayer&&typeof ytPlayer.stopVideo==='function'){try{ytPlayer.stopVideo()}catch{}}
+
       if($('videoModal')?.classList.contains('active'))cerrarModal();
       document.querySelectorAll('.radio-card').forEach(c=>c.classList.remove('is-active'));
       document.querySelectorAll('.radio-play').forEach(b=>{b.innerHTML='<i class="fa-solid fa-play"></i>'});
@@ -1917,7 +1921,7 @@ body{padding-bottom:0}
       row.hidden=allArtists.length===0;
       if(!allArtists.length){rail.innerHTML='';return;}
       rail.innerHTML=allArtists.slice(0,24).map((a,i)=>{
-        const photo=safe(a.thumbnail||a.foto||a.imagen||FALLBACK_THUMB),name=safe(a.titulo||a.nombre||a.nombre_artistico||'Artista'),rubro=safe(a.rubro||a.categoria||'Artista de variedades');
+        const photo=safe(a.thumbnail||a.foto||a.imagen||FALLBACK_THUMB),name=safe(decodeEntities(a.titulo||a.nombre||a.nombre_artistico||'Artista')),rubro=safe(decodeEntities(a.rubro||a.categoria||'Artista de variedades'));
         const verified=a.afiliado_verificado===true||a.verificado===true;
         return `<article class="artist-card-v28" data-artist-index="${i}"><img src="${photo}" alt="${name}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'"><div class="artist-card-name">${name}</div><div class="artist-card-rubro">${rubro}</div>${verified?'<div class="artist-card-benefit">✓ Afiliado UADAV</div>':'<div class="artist-card-discovery">✨ Descubrimiento</div>'}</article>`;
       }).join('');
@@ -1999,7 +2003,7 @@ body{padding-bottom:0}
       }
       const url=String(s?.liveUrl||s?.url||s?.stream_url||'').trim(); if(!url)return;
       pausarRadio();
-      if(ytPlayer&&typeof ytPlayer.stopVideo==='function'){try{ytPlayer.stopVideo()}catch{}}
+
       const modal=$('videoModal'),host=$('playerFrame');
       if(!modal||!host)return;
       modal.classList.add('active');modal.classList.remove('pip-mode');
@@ -2146,8 +2150,6 @@ body{padding-bottom:0}
     }
 
     let ytPlayer=null;
-    let ytApiReady=false;
-    let pendingVideoId=null;
     let currentQueue=[];
     let currentQueueIndex=0;
     let currentVideoData=null;
@@ -2156,76 +2158,19 @@ body{padding-bottom:0}
     let chatContext={id:'general',title:'Chat UADAV STREAM',subtitle:'Conversación en vivo'};
     let chatTimer=null;
 
-    window.onYouTubeIframeAPIReady=function(){
-      ytApiReady=true;
-      if(pendingVideoId) crearOActualizarPlayer(pendingVideoId);
-    };
-
-    function crearOActualizarPlayer(id){
-      if(!id)return;
-      pendingVideoId=id;
-
-      if(!ytApiReady || !window.YT || !YT.Player)return;
-
-      const host=$('playerFrame');
-      if(!host)return;
-
-      if(ytPlayer && typeof ytPlayer.loadVideoById==='function'){
-        try{
-          ytPlayer.loadVideoById({videoId:id,startSeconds:0});
-          try{ytPlayer.setPlaybackQuality('hd720')}catch{}
-          return;
-        }catch{}
-      }
-
-      host.innerHTML='';
-      ytPlayer=new YT.Player('playerFrame',{
-        width:'100%',
-        height:'100%',
-        videoId:id,
-        playerVars:{
-          autoplay:1,
-          controls:1,
-          rel:0,
-          playsinline:1,
-          enablejsapi:1,
-          origin:location.origin
-        },
-        events:{
-          onReady:function(e){
-            try{e.target.playVideo()}catch{}
-            try{e.target.setPlaybackQuality('hd720')}catch{}
-          },
-          onStateChange:function(e){
-            if(e.data===0) reproducirSiguiente();
-          },
-          onAutoplayBlocked:function(){
-            // The user already clicked the card, so the browser normally allows playback.
-            // If a browser still blocks it, controls remain available.
-          }
-        }
-      });
-    }
-
     function cargarPlayerYouTube(id){
       if(!id)return;
-      pendingVideoId=id;
-
-      if(ytApiReady && window.YT && YT.Player){
-        crearOActualizarPlayer(id);
-        return;
-      }
-
-      // Fallback while the API is still loading.
       const host=$('playerFrame');
-      if(host){
-        host.innerHTML=`<iframe
-          src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=1&rel=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}"
-          title="Reproductor UADAV STREAM"
-          allow="autoplay; encrypted-media; picture-in-picture; web-share"
-          allowfullscreen></iframe>`;
-      }
+      if(!host)return;
+      host.innerHTML=`<iframe
+        src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=1&rel=0&playsinline=1"
+        title="Reproductor UADAV STREAM"
+        allow="autoplay; encrypted-media; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen></iframe>`;
     }
+
+    function crearOActualizarPlayer(id){cargarPlayerYouTube(id);}
 
     function prepararCola(video){
       const base=(allVideos||[]).filter(v=>v&&v.id);
@@ -2303,7 +2248,7 @@ body{padding-bottom:0}
     function cerrarModal(e){
       if(e&&e.target!==e.currentTarget)return;
       $('videoModal').classList.remove('active','pip-mode');
-      if(ytPlayer&&typeof ytPlayer.stopVideo==='function'){try{ytPlayer.stopVideo()}catch{}}
+
       const media=$('playerFrame')?.querySelector('video'); if(media){try{media.pause()}catch{} }
       pendingVideoId=null;
       document.body.style.overflow='';
@@ -2340,30 +2285,38 @@ body{padding-bottom:0}
 
     function applyPublicExperience(cfg){try{const p=cfg?.public_experience||{};document.body.classList.toggle('uadav-mode-landing',p.mode==='landing');document.body.classList.toggle('uadav-density-compact',p.density==='compact');document.body.classList.toggle('uadav-density-cinematic',p.density==='cinematic');document.body.classList.toggle('uadav-nav-complete',p.nav==='complete'); const ap=document.getElementById('navAudienceProfile'); if(ap) ap.hidden=p.audience_profile===false;}catch{}}
     async function init(){
-      await uadavLoadAnalytics();
+      // First paint: only load what is needed to draw the shell and primary rows.
+      uadavLoadAnalytics().catch(()=>{});
       const modo=await cargarEstadoSitio();
-      await cargarConfig();
+      const cfgTasks=[cargarConfig(),cargarWebVisibility(),cargarHomeLayout(),cargarBannersPublicos()];
+      await Promise.allSettled(cfgTasks);
       if(modo==='mantenimiento') return;
-      await cargarWebVisibility();
-      await cargarHomeLayout();
-      await cargarBannersPublicos();
-      await cargarSeccionesAdministradas();
       prepararRailWrappers();
       renderContinue();
-      await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarRadios(),cargarDiscover()]);
+      await Promise.allSettled([cargarDestacados(),cargarArtistas(),cargarEventos(),cargarLive(),cargarRadios()]);
       applyWebVisibility();
       try{renderRecommendations()}catch(e){console.warn('Recomendaciones:',e)}
       prepararRailWrappers();
       activarArrastreCarruseles();
+
+      // Secondary discovery never blocks Home. This is important when an
+      // Invidious instance is slow or unavailable.
+      const deferred=()=>{
+        cargarSeccionesAdministradas().then(()=>{applyWebVisibility();prepararRailWrappers();activarArrastreCarruseles()}).catch(()=>{});
+        cargarDiscover().catch(()=>{});
+      };
+      if('requestIdleCallback' in window) requestIdleCallback(deferred,{timeout:1400});
+      else setTimeout(deferred,500);
+
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v29';
+        const SW_VERSION='uadavstream-v82';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=29',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=82',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
@@ -2383,7 +2336,7 @@ body{padding-bottom:0}
       else if($('resultsRow')&&!$('resultsRow').hidden)volverInicio();
     });
 </script>
-<script src="https://www.youtube.com/iframe_api" async></script>
+
 
 
 
