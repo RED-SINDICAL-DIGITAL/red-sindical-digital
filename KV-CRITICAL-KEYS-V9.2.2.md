@@ -11,5 +11,5 @@ El resto de claves de datos (`artistas`, `radios`, `cartelera_*`, `secciones`, `
 Comprobación rápida después de sincronizar:
 
 - `/diagnostico-v92.html` → Worker `V9.2.2`
-- DevTools → Application → Service Workers → script `/service-worker.js?v=923`
+- DevTools → Application → Service Workers → script `/service-worker.js?v=924`
 - DevTools → Application → Cache Storage → `uadav-stream-v9-2-2`

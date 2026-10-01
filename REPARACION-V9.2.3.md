@@ -1,4 +1,4 @@
-# UADAV STREAM V9.2.3 — Estabilización de producción
+# UADAV STREAM V9.2.4 — Estabilización de producción
 
 ## Qué se corrigió
 
@@ -12,7 +12,7 @@
 - Las tarjetas/perfiles de Radio del Home abren `radio.html`, no el overlay legado.
 - Se corrigió la lógica de carátula de Radio: primero artwork real del tema, luego resolver de carátula, luego imagen/logo de emisora y finalmente `radio-fallback.svg`.
 - Se agregó fallback gráfico local para carátulas bloqueadas por Tracking Prevention.
-- El Service Worker V9.2.3 no tiene `fetch` handler: no puede interceptar HTML, JS, APIs, streams, Range requests ni proveedores externos. Al activarse borra cachés UADAV antiguas.
+- El Service Worker V9.2.4 no tiene `fetch` handler: no puede interceptar HTML, JS, APIs, streams, Range requests ni proveedores externos. Al activarse borra cachés UADAV antiguas.
 - El endpoint público de telemetría del Home cambia de `/api/metrics/event` a `/api/activity`; el Worker acepta ambos para compatibilidad. Un bloqueador del navegador ya no debe afectar el flujo principal.
 - D1 y KV no se migran ni se limpian.
 
@@ -23,13 +23,13 @@ El dominio `uadavstream.com.ar` está configurado como custom domain del GitHub 
 ## Deploy obligatorio
 
 1. Subir **todo el contenido de esta carpeta** a la rama `main` del repositorio GitHub Pages. No subir solamente `worker.js`.
-2. Reemplazar el Worker por `worker.js` V9.2.3 conservando bindings/secrets (`DB → uadavstream`, KV y secretos actuales).
+2. Reemplazar el Worker por `worker.js` V9.2.4 conservando bindings/secrets (`DB → uadavstream`, KV y secretos actuales).
 3. Esperar a que GitHub Pages termine el deployment.
-4. Abrir una vez `https://uadavstream.com.ar/reset-v923.html` para eliminar el Service Worker/caché técnica anterior del navegador.
+4. Abrir una vez `https://uadavstream.com.ar/reset-v924.html` para eliminar el Service Worker/caché técnica anterior del navegador.
 5. Abrir `https://uadavstream.com.ar/diagnostico-v92.html` y comprobar:
-   - Worker: `V9.2.3`
-   - Player universal: `V9.2.3 · YouTube embed directo`
-   - Service Worker: `V9.2.3 · sin interceptación fetch`
+   - Worker: `V9.2.4`
+   - Player universal: `V9.2.4 · YouTube embed directo`
+   - Service Worker: `V9.2.4 · sin interceptación fetch`
 6. Abrir la portada. Debe quedar montada dentro de `/app.html?view=...`.
 
 ## Pruebas mínimas
@@ -46,4 +46,4 @@ El dominio `uadavstream.com.ar` está configurado como custom domain del GitHub 
 - No borrar el namespace KV completo.
 - No recrear D1.
 - No volver a copiar `service_worker_js` de KV sobre el archivo del repositorio GitHub Pages.
-- No mezclar archivos V9.2.2 y V9.2.3.
+- No mezclar archivos V9.2.2 y V9.2.4.

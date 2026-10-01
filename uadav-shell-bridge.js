@@ -6,7 +6,7 @@
   const canShell=/^https?:$/i.test(location.protocol);
   const excluded=path==='/app.html'||path==='/admin.html'||path==='/admin'||path==='/diagnostico-v92.html';
 
-  // V9.2.3: App Shell real. Cuando una vista pública se abre directamente,
+  // V9.2.4: App Shell real. Cuando una vista pública se abre directamente,
   // se monta dentro de app.html para mantener UN solo motor de radio/audio
   // durante toda la navegación. ?standalone=1 queda disponible para diagnóstico.
   if(!embedded&&canShell&&!excluded&&params.get('standalone')!=='1'){

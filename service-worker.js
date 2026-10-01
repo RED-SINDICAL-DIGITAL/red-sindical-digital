@@ -1,7 +1,7 @@
-// ★ UADAV STREAM V9.2.3 — Service Worker de estabilización
+// ★ UADAV STREAM V9.2.4 — Service Worker de estabilización
 // Objetivo: eliminar cualquier posibilidad de que un cache viejo intercepte
 // HTML, JavaScript, APIs, radio, video o streams mientras estabilizamos V9.
-const BUILD='uadav-stream-v9-2-3-stabilization';
+const BUILD='uadav-stream-v9-2-4-stabilization';
 self.addEventListener('install',event=>{self.skipWaiting();});
 self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{

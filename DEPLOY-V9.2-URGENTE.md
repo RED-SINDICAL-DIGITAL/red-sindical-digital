@@ -15,8 +15,8 @@
 4. Si el frontend de `uadavstream.com.ar` sirve archivos desde KV, actualizar también las claves de frontend. En la captura de producción existe `service_worker_js`: su contenido debe ser exactamente el `service-worker.js` de V9.2.2. Si se usan `index_html` y `admin_html`, sincronizarlos con `index.html` y `admin.html`.
 5. No borrar ni recrear D1/KV de datos. Sólo se reemplazan archivos/código de frontend.
 6. Purga de caché de Cloudflare para los archivos estáticos si hay una regla de cache delante del sitio.
-7. Cerrar todas las pestañas de UADAV STREAM y volver a abrir. `index.html` fuerza desregistro de SW viejo cuando detecta `uadavstream-v923`.
-8. Abrir `/diagnostico-v92.html`: Worker debe decir V9.2.2 y el Service Worker debe terminar en `/service-worker.js?v=923`.
+7. Cerrar todas las pestañas de UADAV STREAM y volver a abrir. `index.html` fuerza desregistro de SW viejo cuando detecta `uadavstream-v924`.
+8. Abrir `/diagnostico-v92.html`: Worker debe decir V9.2.2 y el Service Worker debe terminar en `/service-worker.js?v=924`.
 
 ## Sobre los mensajes de consola vistos en Brave
 - `POST .../api/metrics/event net::ERR_BLOCKED_BY_CLIENT` es el bloqueo de métricas por el navegador/escudo. La llamada está encapsulada y NO controla reproducción.

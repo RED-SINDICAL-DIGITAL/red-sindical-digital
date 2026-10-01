@@ -266,24 +266,22 @@ export default {
     }
     async function invidiousPlayback(videoId){
       const id=String(videoId||'').trim(); if(!/^[A-Za-z0-9_-]{11}$/.test(id))return null;
-      for(const base of INVIDIOUS_INSTANCES){
-        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5200);
+      const requestOne=async(base)=>{
+        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),2600);
         try{
-          const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2.3'}});
-          if(!r.ok)continue;
+          const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}?local=true`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2.4'}});
+          if(!r.ok)throw new Error('HTTP '+r.status);
           const d=await r.json();
+          if(!d||(!d.title&&!d.author&&!Array.isArray(d.formatStreams)))throw new Error('invalid response');
           const streams=(Array.isArray(d?.formatStreams)?d.formatStreams:[]).filter(x=>x?.url&&/^video\//i.test(String(x.type||'')));
           const scored=streams.map(x=>{const q=Number(String(x.qualityLabel||x.quality||'').match(/\d+/)?.[0]||0);const mp4=/video\/mp4/i.test(String(x.type||''));return{x,q,score:(mp4?10000:0)+Math.min(q||0,1080)}}).sort((a,b)=>b.score-a.score);
           const chosen=scored[0]?.x;
-          if(chosen?.url){
-            let direct=String(chosen.url||'');
-            try{direct=new URL(direct,base).toString()}catch(_){}
-            return {success:true,source:'invidious',video_id:id,direct_url:direct,base_url:base,mime:String(chosen.type||'video/mp4').split(';')[0],quality:String(chosen.qualityLabel||chosen.quality||''),embed_url:`${base}/embed/${encodeURIComponent(id)}?autoplay=1&local=1`,title:String(d?.title||''),author:String(d?.author||'')};
-          }
-          return {success:true,source:'invidious',video_id:id,direct_url:'',base_url:base,embed_url:`${base}/embed/${encodeURIComponent(id)}?autoplay=1&local=1`,title:String(d?.title||''),author:String(d?.author||'')};
-        }catch(_){}finally{clearTimeout(timer)}
-      }
-      return null;
+          let direct=String(chosen?.url||'');
+          if(direct){try{direct=new URL(direct,base).toString()}catch(_){}}
+          return {success:true,source:'invidious',video_id:id,direct_url:direct,base_url:base,mime:String(chosen?.type||'').split(';')[0],quality:String(chosen?.qualityLabel||chosen?.quality||''),embed_url:`${base}/embed/${encodeURIComponent(id)}?autoplay=1&local=true`,title:String(d?.title||''),author:String(d?.author||'')};
+        } finally { clearTimeout(timer); }
+      };
+      try{return await Promise.any(INVIDIOUS_INSTANCES.map(base=>requestOne(base)))}catch(_){return null}
     }
     async function resolveChannelReference(ref){
       let raw=String(ref||'').trim();if(!raw)return null;if(/^UC[A-Za-z0-9_-]{10,}$/.test(raw))return raw;
@@ -1051,7 +1049,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V9.2.3', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V9.2.4', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:'UADAVSTREAM', architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -1882,7 +1880,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     if (path === '/api/playback/youtube' && request.method === 'GET') {
       const id=String(url.searchParams.get('id')||'').trim();
       if(!/^[A-Za-z0-9_-]{11}$/.test(id))return json({error:'video id inválido'},400);
-      const cacheKey='playback_v923_'+id;
+      const cacheKey='playback_v924_'+id;
       const cached=await env.UADAV_DB.get(cacheKey);
       if(cached){try{const d=JSON.parse(cached);if(d?.video_id===id)return new Response(cached,{headers:{...cors,'Cache-Control':'private, max-age=60','X-UADAV-Playback-Source':'cache'}})}catch{}}
       const iv=await invidiousPlayback(id);
@@ -2611,7 +2609,7 @@ async function saveEntityVersion(type,id,data){
     }
 
     if (path === '/api/platform_info') {
-      return json({ service: 'UADAVSTREAM', version: 'V9.2.3', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2','affiliate-growth-suite','artist-audience-chat','artist-support','presskit','ticketing-foundation','marketplace-foundation','radio-cover-cache','cct340-assistant','cct-current-scales','cct-fiscalization','uadav-tickets-preagreement'] });
+      return json({ service: 'UADAVSTREAM', version: 'V9.2.4', architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2','affiliate-growth-suite','artist-audience-chat','artist-support','presskit','ticketing-foundation','marketplace-foundation','radio-cover-cache','cct340-assistant','cct-current-scales','cct-fiscalization','uadav-tickets-preagreement'] });
     }
 
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.

@@ -2,7 +2,8 @@
   'use strict';
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const pick=(...vals)=>{for(const v of vals){if(v!==undefined&&v!==null&&String(v).trim()!=='')return String(v).trim()}return''};
-  let openSeq=0;
+  const API=()=>window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';
+  let openSeq=0,ytApiPromise=null;
 
   function normalize(raw={}){
     let x={...(raw||{})};
@@ -60,7 +61,7 @@
     root=document.createElement('div');root.id='uadavUniversalPlayer';root.setAttribute('aria-hidden','true');
     root.innerHTML=`<div class="uadav-up-card"><div class="uadav-up-tools"><button class="uadav-up-mini" type="button" aria-label="Minimizar reproductor">⌄</button><button class="uadav-up-close" type="button" aria-label="Cerrar">✕</button></div><div class="uadav-up-frame"></div><div class="uadav-up-copy"><div><strong class="uadav-up-title">Contenido</strong><div class="uadav-up-meta"></div></div></div></div>`;
     const st=document.createElement('style');
-    st.textContent=`#uadavUniversalPlayer{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:18px}#uadavUniversalPlayer.active{display:flex}#uadavUniversalPlayer.mini{pointer-events:none;background:transparent;align-items:flex-end;justify-content:flex-end;padding:14px}.uadav-up-card{position:relative;width:min(1120px,97vw);max-height:95vh;overflow:auto;background:#080d14;border:1px solid rgba(255,255,255,.12);border-radius:24px;box-shadow:0 30px 100px #000b}.uadav-up-frame{aspect-ratio:16/9;background:#000;display:grid;place-items:center;overflow:hidden;border-radius:24px 24px 0 0}.uadav-up-frame iframe,.uadav-up-frame video{width:100%;height:100%;border:0}.uadav-up-frame audio{width:min(760px,90%)}.uadav-up-copy{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:13px 18px}.uadav-up-title{font-size:18px}.uadav-up-meta{color:#94a3b7;font-size:12px;margin-top:4px}.uadav-up-tools{position:absolute;right:12px;top:12px;z-index:3;display:flex;gap:7px}.uadav-up-close,.uadav-up-mini{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:#101722;color:#fff;cursor:pointer;font-weight:900}.uadav-up-empty{color:#c9d4df;text-align:center;padding:40px}.uadav-up-empty h3{margin:0 0 8px}#uadavUniversalPlayer.mini .uadav-up-card{pointer-events:auto;width:min(430px,94vw);max-height:none;border-radius:17px}#uadavUniversalPlayer.mini .uadav-up-frame{border-radius:17px 17px 0 0}#uadavUniversalPlayer.mini .uadav-up-copy{padding:9px 12px}#uadavUniversalPlayer.mini .uadav-up-meta{display:none}#uadavUniversalPlayer.mini .uadav-up-mini{transform:rotate(180deg)}@media(max-width:650px){.uadav-up-copy{align-items:flex-start;flex-direction:column}#uadavUniversalPlayer.mini{padding:8px}#uadavUniversalPlayer.mini .uadav-up-card{width:96vw}}`;
+    st.textContent=`#uadavUniversalPlayer{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:18px}#uadavUniversalPlayer.active{display:flex}#uadavUniversalPlayer.mini{pointer-events:none;background:transparent;align-items:flex-end;justify-content:flex-end;padding:14px}.uadav-up-card{position:relative;width:min(1120px,97vw);max-height:95vh;overflow:auto;background:#080d14;border:1px solid rgba(255,255,255,.12);border-radius:24px;box-shadow:0 30px 100px #000b}.uadav-up-frame{aspect-ratio:16/9;background:#000;display:grid;place-items:center;overflow:hidden;border-radius:24px 24px 0 0;position:relative}.uadav-up-frame iframe,.uadav-up-frame video,.uadav-up-ytmount{width:100%;height:100%;border:0}.uadav-up-frame audio{width:min(760px,90%)}.uadav-up-copy{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:13px 18px}.uadav-up-title{font-size:18px}.uadav-up-meta{color:#94a3b7;font-size:12px;margin-top:4px}.uadav-up-tools{position:absolute;right:12px;top:12px;z-index:3;display:flex;gap:7px}.uadav-up-close,.uadav-up-mini{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:#101722;color:#fff;cursor:pointer;font-weight:900}.uadav-up-empty{color:#c9d4df;text-align:center;padding:40px}.uadav-up-empty h3{margin:0 0 8px}.uadav-up-wait{position:absolute;inset:0;display:grid;place-items:center;background:#000;z-index:1}.uadav-up-wait i{width:42px;height:42px;border:3px solid rgba(255,255,255,.18);border-top-color:#fff;border-radius:50%;animation:uadavspin .75s linear infinite}@keyframes uadavspin{to{transform:rotate(360deg)}}#uadavUniversalPlayer.mini .uadav-up-card{pointer-events:auto;width:min(430px,94vw);max-height:none;border-radius:17px}#uadavUniversalPlayer.mini .uadav-up-frame{border-radius:17px 17px 0 0}#uadavUniversalPlayer.mini .uadav-up-copy{padding:9px 12px}#uadavUniversalPlayer.mini .uadav-up-meta{display:none}#uadavUniversalPlayer.mini .uadav-up-mini{transform:rotate(180deg)}@media(max-width:650px){.uadav-up-copy{align-items:flex-start;flex-direction:column}#uadavUniversalPlayer.mini{padding:8px}#uadavUniversalPlayer.mini .uadav-up-card{width:96vw}}`;
     document.head.appendChild(st);document.body.appendChild(root);
     root.querySelector('.uadav-up-close').onclick=()=>api.close();
     root.querySelector('.uadav-up-mini').onclick=()=>api.toggleMini();
@@ -68,25 +69,81 @@
     return root;
   }
 
-  function frameNode(src,title='Contenido'){
+  function frameNode(src,title='Contenido',policy='strict-origin-when-cross-origin'){
     const f=document.createElement('iframe');
     f.title=title;f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen; web-share';
-    f.referrerPolicy='strict-origin-when-cross-origin';f.allowFullscreen=true;f.loading='eager';f.src=src;
+    f.referrerPolicy=policy;f.allowFullscreen=true;f.loading='eager';f.src=src;
     return f;
   }
   function setEmpty(frame,msg='Este contenido no ofrece reproducción embebida.'){
     frame.innerHTML=`<div class="uadav-up-empty"><h3>No se pudo iniciar la reproducción</h3><p>${esc(msg)}</p></div>`;
   }
-  function renderYoutube(frame,n,seq){
+  const delay=ms=>new Promise(r=>setTimeout(r,ms));
+  async function resolveInvidious(id){
+    const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),3600);
+    try{
+      const r=await fetch(API()+'playback/youtube?id='+encodeURIComponent(id)+'&_='+Date.now(),{cache:'no-store',signal:ctl.signal,headers:{Accept:'application/json'}});
+      if(!r.ok)return null;const d=await r.json();
+      if(d?.source==='invidious'&&/^https?:\/\//i.test(String(d.embed_url||'')))return d;
+      return null;
+    }catch{return null}finally{clearTimeout(timer)}
+  }
+  function ensureYoutubeApi(){
+    if(window.YT?.Player)return Promise.resolve(window.YT);
+    if(ytApiPromise)return ytApiPromise;
+    ytApiPromise=new Promise((resolve,reject)=>{
+      let done=false;
+      const finish=(ok,val)=>{if(done)return;done=true;clearTimeout(timer);ok?resolve(val):reject(val instanceof Error?val:new Error(String(val||'YouTube API no disponible')))};
+      const prev=window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady=()=>{try{prev?.()}catch{};window.YT?.Player?finish(true,window.YT):finish(false,'YouTube API incompleta')};
+      let s=document.querySelector('script[data-uadav-youtube-api]');
+      if(!s){s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';s.async=true;s.dataset.uadavYoutubeApi='1';s.referrerPolicy='strict-origin-when-cross-origin';s.onerror=()=>finish(false,'YouTube API bloqueada por el navegador');document.head.appendChild(s)}
+      const timer=setTimeout(()=>window.YT?.Player?finish(true,window.YT):finish(false,'YouTube API timeout'),3200);
+    }).catch(e=>{ytApiPromise=null;throw e});
+    return ytApiPromise;
+  }
+  function mountInvidious(frame,resolved,seq,title='Video'){
+    if(seq!==openSeq||!resolved?.embed_url)return false;
+    const f=frameNode(String(resolved.embed_url),title,'no-referrer');
+    frame.replaceChildren(f);return true;
+  }
+  async function mountYoutubeApi(frame,id,seq){
+    await ensureYoutubeApi();if(seq!==openSeq)return false;
+    const mount=document.createElement('div');mount.className='uadav-up-ytmount';mount.id='uadavYtMount_'+seq;frame.replaceChildren(mount);
+    return await new Promise((resolve,reject)=>{
+      let settled=false,player=null;
+      const timer=setTimeout(()=>{if(settled)return;settled=true;try{player?.destroy?.()}catch{};reject(new Error('YouTube player timeout'))},4500);
+      const done=(ok,val)=>{if(settled)return;settled=true;clearTimeout(timer);ok?resolve(val):reject(val instanceof Error?val:new Error(String(val||'YouTube player error')))};
+      try{
+        player=new YT.Player(mount,{width:'100%',height:'100%',videoId:id,host:'https://www.youtube.com',playerVars:{autoplay:1,controls:1,rel:0,playsinline:1,enablejsapi:1,origin:location.origin},events:{onReady:e=>{if(seq!==openSeq){try{e.target.destroy()}catch{};return done(false,'cerrado')}try{e.target.playVideo()}catch{}done(true,true)},onError:e=>done(false,new Error('YouTube '+String(e?.data??'error'))),onAutoplayBlocked:()=>done(true,true)}});
+      }catch(e){done(false,e)}
+    });
+  }
+  async function renderYoutube(frame,n,seq){
     let u=null;try{if(n.url)u=new URL(n.url)}catch{}
     const list=(u?.searchParams?.get('list')||((n.content_type==='playlist')?n.external_id:'')||'').trim();
     if(list){frame.replaceChildren(frameNode(youtubePlaylist(list),'YouTube playlist'));return true}
     const id=youtubeId(n,u);if(!id){setEmpty(frame,'Falta el identificador del video.');return false}
-    // Producción: reproducción inmediata. Invidious continúa primero para búsqueda,
-    // catálogo y resolución de metadatos; el player NO espera un stream temporal
-    // de una instancia pública. El embed de YouTube no usa YouTube Data API.
-    frame.replaceChildren(frameNode(youtubeEmbed(id),'YouTube video'));
-    return seq===openSeq;
+
+    // V9.2.4: resolver Invidious en paralelo desde el primer instante. Le damos
+    // una breve prioridad; si no responde rápido, intentamos el player oficial.
+    // Si Brave/una extensión bloquea YouTube o falta Referer (error 153), se
+    // conmuta automáticamente al embed Invidious sin mostrar enlaces externos.
+    frame.innerHTML='<div class="uadav-up-wait" aria-label="Cargando"><i></i></div>';
+    const ivPromise=resolveInvidious(id);
+    const early=await Promise.race([ivPromise.then(v=>({kind:'iv',v})),delay(700).then(()=>({kind:'yt'}))]);
+    if(seq!==openSeq)return false;
+    if(early.kind==='iv'&&early.v)return mountInvidious(frame,early.v,seq,'Invidious video');
+    try{
+      await mountYoutubeApi(frame,id,seq);
+      return seq===openSeq;
+    }catch(_){
+      const iv=early.kind==='iv'?early.v:await ivPromise;
+      if(iv&&mountInvidious(frame,iv,seq,'Invidious video'))return true;
+      // Último fallback: iframe oficial estándar, que conserva Referer del sitio.
+      if(seq===openSeq){frame.replaceChildren(frameNode(youtubeEmbed(id),'YouTube video'));return true}
+      return false;
+    }
   }
   function renderBasic(frame,n){const html=embed(n);if(html){frame.innerHTML=html;return true}setEmpty(frame);return false}
 
@@ -103,13 +160,13 @@
       root.querySelector('.uadav-up-title').textContent=n.titulo||'Contenido';
       root.querySelector('.uadav-up-meta').textContent=[n.provider,n.categoria,n.descripcion].filter(Boolean).join(' · ');
       document.body.style.overflow='hidden';
-      if(n.provider==='youtube')return renderYoutube(frame,n,seq);
+      if(n.provider==='youtube'){renderYoutube(frame,n,seq);return true}
       return renderBasic(frame,n);
     },
     close(){openSeq++;const root=document.getElementById('uadavUniversalPlayer');if(!root)return;const media=root.querySelector('video,audio');try{media?.pause?.()}catch{}root.querySelector('.uadav-up-frame').innerHTML='';root.classList.remove('active','mini');root.setAttribute('aria-hidden','true');document.body.style.overflow=''},
     toggleMini(){const root=document.getElementById('uadavUniversalPlayer');if(!root?.classList.contains('active'))return;const mini=root.classList.toggle('mini');document.body.style.overflow=mini?'':'hidden'}
   };
-  api.build='9.2.3';
+  api.build='9.2.4';
   window.UADAVContentPlayer=api;
   document.addEventListener('keydown',e=>{if(e.key==='Escape')api.close()});
 })();
