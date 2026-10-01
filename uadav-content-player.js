@@ -28,8 +28,7 @@
   function source(raw){const m=normalize(raw);return m.url||(m.provider==='youtube'&&m.external_id?'https://www.youtube.com/watch?v='+m.external_id:'')}
   function youtubeId(m,u){return m.external_id||(u?.hostname?.includes('youtu.be')?u.pathname.slice(1):(u?.searchParams?.get('v')||(/\/(?:shorts|embed|live)\/([^/?]+)/.exec(u?.pathname||'')||[])[1]||''))}
   function youtubeEmbed(id){
-    const q=new URLSearchParams({autoplay:'1',controls:'1',rel:'0',playsinline:'1',enablejsapi:'1'});
-    if(/^https?:$/i.test(location.protocol))q.set('origin',location.origin);
+    const q=new URLSearchParams({autoplay:'1',controls:'1',rel:'0',playsinline:'1'});
     return `https://www.youtube.com/embed/${encodeURIComponent(id)}?${q.toString()}`;
   }
   function youtubePlaylist(list){
@@ -82,8 +81,8 @@
     let u=null;try{if(n.url)u=new URL(n.url)}catch{}
     const list=(u?.searchParams?.get('list')||((n.content_type==='playlist')?n.external_id:'')||'').trim();
     if(list){frame.replaceChildren(frameNode(youtubePlaylist(list),'YouTube playlist'));return true}
-    const id=youtubeId(n,u);if(!id){setEmpty(frame,'Falta el identificador del video.');return false}
-    // V9.2.5: montaje síncrono en desktop para conservar el gesto real del clic.
+    const id=String(youtubeId(n,u)||'').trim();if(!/^[A-Za-z0-9_-]{11}$/.test(id)){setEmpty(frame,'El identificador del video no es válido.');return false}
+    // V9.2.6: montaje síncrono y embed oficial mínimo para máxima compatibilidad.
     // No hay espera de iframe_api/Invidious antes de mostrar el reproductor.
     frame.replaceChildren(frameNode(youtubeEmbed(id),'YouTube video'));
     return seq===openSeq;
@@ -110,7 +109,7 @@
     close(){openSeq++;const root=document.getElementById('uadavUniversalPlayer');if(!root)return;const media=root.querySelector('video,audio');try{media?.pause?.()}catch{}root.querySelector('.uadav-up-frame').innerHTML='';root.classList.remove('active','mini');root.setAttribute('aria-hidden','true');document.body.style.overflow=''},
     toggleMini(){const root=document.getElementById('uadavUniversalPlayer');if(!root?.classList.contains('active'))return;const mini=root.classList.toggle('mini');document.body.style.overflow=mini?'':'hidden'}
   };
-  api.build='9.2.5';
+  api.build='9.2.6';
   window.UADAVContentPlayer=api;
   document.addEventListener('keydown',e=>{if(e.key==='Escape')api.close()});
 })();
