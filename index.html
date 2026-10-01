@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
   <script>
-  // V9.2.6: el Home público se monta primero en el App Shell para conservar
+  // V9.2.8: el Home público se monta primero en el App Shell para conservar
   // un único reproductor global de video/radio durante toda la navegación.
   (()=>{try{const q=new URLSearchParams(location.search);if(window.parent!==window)document.documentElement.classList.add('uadav-embedded-home');if(window.top===window.self&&/^https?:$/i.test(location.protocol)&&q.get('standalone')!=='1'){const view='/index.html'+location.search+location.hash;location.replace('/app.html?view='+encodeURIComponent(view));}}catch{}})();
   </script>
@@ -605,8 +605,8 @@ body{padding-bottom:0}
   .topbar,.header-inner{max-width:100%}
 }
 </style>
-<script src="/uadav-api-config.js?v=927"></script><script src="/uadav-content-player.js?v=927" defer></script>
-<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=927"><link rel="stylesheet" href="/uadav-v9.css?v=927"></head>
+<script src="/uadav-api-config.js?v=928"></script><script src="/uadav-content-player-v928.js" defer></script>
+<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=928"><link rel="stylesheet" href="/uadav-v9.css?v=928"></head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
     <div class="maintenance-card">
@@ -2280,10 +2280,14 @@ body{padding-bottom:0}
     function reproducirVideo(id,titulo,desc,video){
       try{pausarRadio()}catch(e){console.warn('[UADAV] pausa radio no bloqueante:',e)}
       const resolvedId=normalizarVideoId(video?.external_id||video?.youtube_id||video?.videoId||video?.url||id)||(/^[A-Za-z0-9_-]{11}$/.test(String(id||''))?String(id):'');
-      if(resolvedId && window.UADAVContentPlayer){
+      if(resolvedId){
         const payload={...(video||{}),id:resolvedId,external_id:resolvedId,provider:'youtube',url:'https://www.youtube.com/watch?v='+resolvedId,titulo:titulo||video?.titulo||'Video',descripcion:desc||video?.descripcion||'Contenido audiovisual',content_type:video?.content_type||video?.tipo||'video'};
-        window.UADAVContentPlayer.open(payload);
-        return;
+        // V9.2.8: en modo App Shell llamamos DIRECTAMENTE al reproductor padre.
+        // No dependemos del JS del iframe hijo ni de postMessage para iniciar.
+        if(window.parent!==window){
+          try{const host=window.parent.UADAVShellHost;if(host?.playContent){host.playContent(payload);return}}catch(e){console.error('[UADAV] shell playContent',e)}
+        }
+        if(window.UADAVContentPlayer){window.UADAVContentPlayer.open(payload,{local:true});return}
       }
       if(!id||String(id).startsWith('event-')){
         if(video?.eventData){
@@ -2409,17 +2413,17 @@ body{padding-bottom:0}
       if('requestIdleCallback' in window) requestIdleCallback(deferred,{timeout:1400});
       else setTimeout(deferred,500);
 
+      // V9.2.8 estabilización: no registrar Service Worker.
+      // Se eliminan registros/caches anteriores una vez para impedir mezcla de builds.
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v924';
+        const SW_VERSION='uadavstream-v928-nosw';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=924',{updateViaCache:'none'});
-        await reg.update().catch(()=>{});
-      }catch(e){console.warn('SW',e)}}
+      }catch(e){console.warn('SW cleanup',e)}}
     }
     bindRadioDockControls();
     init().then(()=>{
@@ -2482,5 +2486,5 @@ body{padding-bottom:0}
 })();
 </script>
 <nav id="uadavMobileNav" class="uadav-mobile-nav" aria-label="Navegación móvil"><a class="active" href="#contenido"><i class="fa-solid fa-house"></i><span>Inicio</span></a><a href="#radiosRow" onclick="irASeccion('radiosRow');return false"><i class="fa-solid fa-radio"></i><span>Radios</span></a><a href="#artists" onclick="irASeccion('artists');return false"><i class="fa-solid fa-users"></i><span>Artistas</span></a><a href="/cartelera.html"><i class="fa-solid fa-calendar-days"></i><span>Eventos</span></a><a href="/mi-perfil.html"><i class="fa-solid fa-user"></i><span>Mi perfil</span></a></nav>
-<script src="/uadav-shell-bridge.js?v=927"></script><script src="/uadav-ui-v8.4.js?v=927"></script></body>
+<script src="/uadav-shell-bridge-v928.js"></script><script src="/uadav-ui-v8.4.js?v=928"></script></body>
 </html>
