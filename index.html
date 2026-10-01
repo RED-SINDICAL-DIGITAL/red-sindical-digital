@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
   <script>
-  // V9.2.5: el Home público se monta primero en el App Shell para conservar
+  // V9.2.6: el Home público se monta primero en el App Shell para conservar
   // un único reproductor global de video/radio durante toda la navegación.
   (()=>{try{const q=new URLSearchParams(location.search);if(window.parent!==window)document.documentElement.classList.add('uadav-embedded-home');if(window.top===window.self&&/^https?:$/i.test(location.protocol)&&q.get('standalone')!=='1'){const view='/index.html'+location.search+location.hash;location.replace('/app.html?view='+encodeURIComponent(view));}}catch{}})();
   </script>
@@ -576,6 +576,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <style id="uadav-v7-4-2-index-final-fix">
 /* V9.2.5: dentro del App Shell el Home NO dibuja un segundo reproductor de radio. */
 html.uadav-embedded-home #radioPlayerDock{display:none!important}
+html.uadav-embedded-home #radioNowPlaying{display:none!important}
 html.uadav-embedded-home #radioAudio{display:none!important}
 /* Radio dock: never occupies normal document flow. */
 .radio-player-pro[hidden]{display:none!important}
@@ -604,8 +605,8 @@ body{padding-bottom:0}
   .topbar,.header-inner{max-width:100%}
 }
 </style>
-<script src="/uadav-api-config.js?v=925"></script><script src="/uadav-content-player.js?v=925" defer></script>
-<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=925"><link rel="stylesheet" href="/uadav-v9.css?v=925"></head>
+<script src="/uadav-api-config.js?v=926"></script><script src="/uadav-content-player.js?v=926" defer></script>
+<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=926"><link rel="stylesheet" href="/uadav-v9.css?v=926"></head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
     <div class="maintenance-card">
@@ -1182,17 +1183,30 @@ body{padding-bottom:0}
     }
     function normalizarResultados(data){
       const arr = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : (Array.isArray(data?.items) ? data.items : []));
-      return arr.map(v => {
-        const id = String(v?.id || v?.videoId || v?.video_id || v?.youtube_id || '').trim();
-        if(!id) return null;
+      const seen=new Set(),out=[];
+      for(const v of arr){
+        const candidates=[v?.external_id,v?.videoId,v?.video_id,v?.youtube_id,v?.id];
+        let id='';
+        for(const raw of candidates){
+          const value=String(raw??'').trim();
+          if(/^[A-Za-z0-9_-]{11}$/.test(value)){id=value;break}
+          const parsed=normalizarVideoId(value);
+          if(parsed){id=parsed;break}
+        }
+        if(!id||seen.has(id))continue;
+        seen.add(id);
         const thumbs = Array.isArray(v?.videoThumbnails) ? v.videoThumbnails : (Array.isArray(v?.thumbnails) ? v.thumbnails : []);
-        const thumb = v?.thumbnail || v?.thumbnailUrl || v?.thumbnails?.high?.url || v?.thumbnails?.medium?.url || v?.thumbnails?.default?.url || thumbs.find(t=>t?.quality==='high')?.url || thumbs.find(t=>t?.quality==='medium')?.url || thumbs[0]?.url || obtenerCaratula(id);
+        let thumb = v?.thumbnail || v?.thumbnailUrl || v?.thumbnails?.high?.url || v?.thumbnails?.medium?.url || v?.thumbnails?.default?.url || thumbs.find(t=>t?.quality==='high')?.url || thumbs.find(t=>t?.quality==='medium')?.url || thumbs[0]?.url || '';
+        // El fallback genérico ocultaba resultados válidos y hacía imposible
+        // detectar si el proveedor realmente había devuelto miniatura.
+        if(!thumb || thumb===FALLBACK_THUMB || /images\.unsplash\.com\/photo-1511671782779/i.test(String(thumb))) thumb=obtenerCaratula(id);
         const secs = Number(v?.lengthSeconds || v?.duration || 0) || 0;
-        return {
-          ...v, id,
-          external_id:v?.external_id||id,
-          provider:v?.provider||'youtube',
-          url:v?.url||`https://www.youtube.com/watch?v=${encodeURIComponent(v?.external_id||id)}`,
+        out.push({
+          ...v,
+          id,
+          external_id:id,
+          provider:'youtube',
+          url:`https://www.youtube.com/watch?v=${encodeURIComponent(id)}`,
           titulo: decodeEntities(v?.titulo || v?.title || 'Contenido audiovisual'),
           descripcion: decodeEntities(v?.descripcion || v?.author || v?.channelTitle || v?.channel || 'YouTube'),
           categoria: v?.categoria || 'Resultado',
@@ -1200,8 +1214,9 @@ body{padding-bottom:0}
           thumbnail: thumb,
           tipo: secs && secs <= 60 ? 'short' : 'video',
           content_type: secs && secs <= 60 ? 'short' : 'video'
-        };
-      }).filter(Boolean);
+        });
+      }
+      return out;
     }
 
     async function buscarDirectoInvidious(query){
@@ -2263,9 +2278,10 @@ body{padding-bottom:0}
     }
 
     function reproducirVideo(id,titulo,desc,video){
-      pausarRadio();
-      if(id && !String(id).startsWith('event-') && window.UADAVContentPlayer){
-        const payload={...(video||{}),id,external_id:video?.external_id||id,provider:video?.provider||'youtube',url:video?.url||('https://www.youtube.com/watch?v='+id),titulo:titulo||video?.titulo||'Video',descripcion:desc||video?.descripcion||'Contenido audiovisual',content_type:video?.content_type||video?.tipo||'video'};
+      try{pausarRadio()}catch(e){console.warn('[UADAV] pausa radio no bloqueante:',e)}
+      const resolvedId=normalizarVideoId(video?.external_id||video?.youtube_id||video?.videoId||video?.url||id)||(/^[A-Za-z0-9_-]{11}$/.test(String(id||''))?String(id):'');
+      if(resolvedId && window.UADAVContentPlayer){
+        const payload={...(video||{}),id:resolvedId,external_id:resolvedId,provider:'youtube',url:'https://www.youtube.com/watch?v='+resolvedId,titulo:titulo||video?.titulo||'Video',descripcion:desc||video?.descripcion||'Contenido audiovisual',content_type:video?.content_type||video?.tipo||'video'};
         window.UADAVContentPlayer.open(payload);
         return;
       }
@@ -2466,5 +2482,5 @@ body{padding-bottom:0}
 })();
 </script>
 <nav id="uadavMobileNav" class="uadav-mobile-nav" aria-label="Navegación móvil"><a class="active" href="#contenido"><i class="fa-solid fa-house"></i><span>Inicio</span></a><a href="#radiosRow" onclick="irASeccion('radiosRow');return false"><i class="fa-solid fa-radio"></i><span>Radios</span></a><a href="#artists" onclick="irASeccion('artists');return false"><i class="fa-solid fa-users"></i><span>Artistas</span></a><a href="/cartelera.html"><i class="fa-solid fa-calendar-days"></i><span>Eventos</span></a><a href="/mi-perfil.html"><i class="fa-solid fa-user"></i><span>Mi perfil</span></a></nav>
-<script src="/uadav-shell-bridge.js?v=925"></script><script src="/uadav-ui-v8.4.js?v=925"></script></body>
+<script src="/uadav-shell-bridge.js?v=926"></script><script src="/uadav-ui-v8.4.js?v=926"></script></body>
 </html>
