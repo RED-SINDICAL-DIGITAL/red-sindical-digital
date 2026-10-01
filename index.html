@@ -654,7 +654,7 @@
         else if (url.includes('zeno.fm') || url.includes('.mp3') || url.includes('.aac')) tipo = 'audio';
         else tipo = 'youtube';
       }
-      if (window.parent !== window && ['youtube','okru','audio','mp4','video'].includes(tipo)) {
+      if (window.parent !== window && ['youtube','okru','audio','mp4','video','twitch','kick','hls'].includes(tipo)) {
         try {
           const host = window.parent.UADAVShellHost;
           if (host?.playContent) return host.playContent({url,provider:tipo,tipo,content_type:tipo==='audio'?'audio':'video',titulo:senal.nombre,descripcion:senal.descripcion||'Señal oficial en vivo',categoria:'En vivo'});
