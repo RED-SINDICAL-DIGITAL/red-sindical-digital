@@ -69,6 +69,6 @@ async function load(){try{const data=await apiJson('radios?_='+Date.now());const
 async function applyRadioSiteConfig(){try{const a=await apiJson('site_pages');const c=a?.radio;if(!c||c.enabled===false)return;if(c.browser_title)document.title=(radio?.nombre?radio.nombre+' · ':'')+c.browser_title;if(c.description){const copy=document.querySelector('.hero-copy');if(copy)copy.textContent=c.description;}}catch{}}
 load().then(()=>applyRadioSiteConfig?.());
 </script>
-<script src="/uadav-ui-v8.4.js?v=928"></script><script src="/uadav-app-bridge-v10.js?v=103"></script>
+<script src="/uadav-ui-v8.4.js?v=928"></script><script src="/uadav-app-bridge-v104.js"></script>
 </body>
 </html>
