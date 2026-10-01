@@ -93,7 +93,7 @@ button{font:inherit}#shell{height:100dvh;display:flex;flex-direction:column;back
   </div>
   <audio id="radioAudio" preload="none"></audio>
 </div>
-<div id="appBadge">APP V10.4</div>
+<div id="appBadge">APP V10.5</div>
 <script>
 (()=>{
 'use strict';
@@ -185,7 +185,7 @@ function navigate(href,opts={}){
  saveCurrentScroll();minimizeOnNavigate();currentView=to;pendingRestore=scrollMemory.get(to)||0;
  document.getElementById('viewWrap').classList.add('loading');
  updateMobileNav(to);
- if(!opts.fromPop){const state={view:to};history[opts.replace?'replaceState':'pushState'](state,'','/app.html?build=104&view='+encodeURIComponent(to))}
+ if(!opts.fromPop){const state={view:to};history[opts.replace?'replaceState':'pushState'](state,'','/app.html?build=105&view='+encodeURIComponent(to))}
  view.src=to;return true;
 }
 function sendToView(msg){try{view.contentWindow?.postMessage(msg,location.origin)}catch{}}
@@ -208,6 +208,7 @@ function dispatch(d={}){
  if(d.type==='uadav:content-play')return playContent(d.item||{});
  if(d.type==='uadav:content-close'){closeContent();return true}
  if(d.type==='uadav:radio-play')return playRadio(d.radio||{});
+ if(d.type==='uadav:radio-meta'){if(currentRadio){const title=pick(d.title,'Radio en vivo'),artist=pick(d.artist,currentRadio.nombre,'UADAV STREAM'),art=pick(d.artwork,currentRadio.logo,currentRadio.imagen,currentRadio.portada,'/radio-fallback.svg');currentRadio={...currentRadio,now_title:title,now_artist:artist,now_artwork:art};radioName.textContent=title;radioMeta.textContent=artist;radioArt.src=art;try{if('mediaSession'in navigator)navigator.mediaSession.metadata=new MediaMetadata({title,artist,album:currentRadio.nombre||'UADAV STREAM',artwork:[{src:art}]})}catch{}sendToView({type:'uadav:radio-meta',title,artist,artwork:art,radio_id:currentRadio.id||currentRadio.nombre||'',stream_url:currentRadio.stream_url||''});}return true;}
  if(d.type==='uadav:radio-pause'){pauseRadio();return true}
  if(d.type==='uadav:radio-close'){closeRadio();return true}
  if(d.type==='uadav:radio-mute'){audio.muted=!audio.muted;broadcastRadioState();return true}
@@ -233,7 +234,7 @@ mediaDock.addEventListener('click',e=>{if(shell.classList.contains('media-mini')
 radioPlay.onclick=toggleRadio;radioClose.onclick=closeRadio;radioMute.onclick=()=>{audio.muted=!audio.muted;broadcastRadioState()};radioVol.oninput=e=>{audio.volume=Number(e.target.value);audio.muted=false;broadcastRadioState()};
 audio.addEventListener('play',()=>{radioPlay.textContent='❚❚';broadcastRadioState()});audio.addEventListener('pause',()=>{radioPlay.textContent='▶';broadcastRadioState()});
 if('mediaSession'in navigator){try{navigator.mediaSession.setActionHandler('play',()=>audio.play());navigator.mediaSession.setActionHandler('pause',()=>audio.pause());navigator.mediaSession.setActionHandler('stop',closeRadio)}catch{}}
-const initial=cleanView(new URLSearchParams(location.search).get('view')||'/index.html');currentView=initial;updateMobileNav(initial);history.replaceState({view:initial},'','/app.html?build=104&view='+encodeURIComponent(initial));navigate(initial,{fromPop:true,replace:true,force:true});
+const initial=cleanView(new URLSearchParams(location.search).get('view')||'/index.html');currentView=initial;updateMobileNav(initial);history.replaceState({view:initial},'','/app.html?build=105&view='+encodeURIComponent(initial));navigate(initial,{fromPop:true,replace:true,force:true});
 })();
 </script>
 </body></html>
