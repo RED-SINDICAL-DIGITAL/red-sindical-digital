@@ -147,7 +147,11 @@
       .v10-mobile-bar a:first-child{background:rgba(25,216,242,.11);color:#e9fbff}
       .v10-commission-tag{bottom:78px}
     }
-  </style>
+  
+  <style id="uadav-app-embedded-v10">
+    html.uadav-app-embedded #floatingRadioPlayer,
+    html.uadav-app-embedded #videoModal{display:none!important}
+  </style></style>
 </head>
 <body>
 
@@ -650,6 +654,12 @@
         else if (url.includes('zeno.fm') || url.includes('.mp3') || url.includes('.aac')) tipo = 'audio';
         else tipo = 'youtube';
       }
+      if (window.parent !== window && ['youtube','okru','audio','mp4','video'].includes(tipo)) {
+        try {
+          const host = window.parent.UADAVShellHost;
+          if (host?.playContent) return host.playContent({url,provider:tipo,tipo,content_type:tipo==='audio'?'audio':'video',titulo:senal.nombre,descripcion:senal.descripcion||'Señal oficial en vivo',categoria:'En vivo'});
+        } catch (e) { console.warn('Player global no disponible', e); }
+      }
       if (tipo === 'youtube') {
         let videoId = url;
         if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
@@ -736,6 +746,13 @@
     }
 
     function sintonizarRadio(nombre, streamUrl, caratula, ubicacion) {
+        if (window.parent !== window) {
+          try {
+            const host = window.parent.UADAVShellHost;
+            if (host?.playRadio) return host.playRadio({id:radiosData.find(r=>r.nombre===nombre)?.id||nombre,nombre,name:nombre,stream_url:streamUrl,logo:caratula,imagen:caratula,ubicacion});
+            if (host?.dispatch) return host.dispatch({type:'uadav:radio-play',radio:{id:nombre,nombre,stream_url:streamUrl,logo:caratula,ubicacion}});
+          } catch (e) { console.warn('Radio global no disponible', e); }
+        }
         if (isRadioPlaying) audioStream.pause();
         cerrarModal();
         document.getElementById('radioPlayerTitle').innerText = nombre;
@@ -780,6 +797,12 @@
     }
 
     function togglePlayRadio() {
+        if (window.parent !== window) {
+          try {
+            const host = window.parent.UADAVShellHost;
+            if (host?.dispatch) { host.dispatch({type:isRadioPlaying?'uadav:radio-pause':'uadav:radio-state-request'}); return; }
+          } catch {}
+        }
         if (isRadioPlaying) {
             audioStream.pause(); isRadioPlaying = false;
             document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>';
@@ -794,6 +817,9 @@
     }
 
     function cerrarRadio() {
+        if (window.parent !== window) {
+          try { const host=window.parent.UADAVShellHost; if(host?.closeRadio){host.closeRadio();return} if(host?.dispatch){host.dispatch({type:'uadav:radio-close'});return} } catch {}
+        }
         audioStream.pause();
         audioStream.removeAttribute('src');
         audioStream.load();
@@ -883,6 +909,12 @@
     function resetearVista() { document.getElementById('mainContainer').classList.remove('hidden'); document.getElementById('gridViewSection').classList.add('hidden'); document.getElementById('searchInput').value = ''; }
 
     function reproducirVideoPersonalizado(url, tipo, titulo, desc) {
+      if (window.parent !== window) {
+        try {
+          const host = window.parent.UADAVShellHost;
+          if (host?.playContent) return host.playContent({url,provider:tipo,tipo,content_type:tipo==='audio'?'audio':'video',titulo,descripcion:desc,categoria:'Personalizado'});
+        } catch (e) { console.warn('Player global no disponible', e); }
+      }
       if (isRadioPlaying) togglePlayRadio(); document.getElementById('artistModal').classList.add('hidden');
       let itemIndex = queue.findIndex(item => item.url === url || item.id === url);
       if (itemIndex === -1) { queue.push({ url: url, tipo: tipo, titulo: titulo, categoria: 'Personalizado', descripcion: desc }); itemIndex = queue.length - 1; }
@@ -899,6 +931,14 @@
 
     function reproducirVideo(id, titulo, categoria, descripcion) {
       console.info('[UADAV V10 CORE] reproducirVideo', id, titulo);
+      if (window.parent !== window) {
+        try {
+          const host = window.parent.UADAVShellHost;
+          if (host?.playContent) {
+            return host.playContent({id,external_id:id,provider:'youtube',url:'https://www.youtube.com/watch?v='+id,titulo,categoria,descripcion,content_type:'video'});
+          }
+        } catch (e) { console.warn('Player global no disponible', e); }
+      }
       if (isRadioPlaying) togglePlayRadio(); document.getElementById('artistModal').classList.add('hidden');
       let itemIndex = queue.findIndex(item => item.url === id || item.id === id);
       if (itemIndex === -1) { queue.push({ url: id, tipo: 'youtube', titulo: titulo, categoria: categoria, descripcion: descripcion }); itemIndex = queue.length - 1; }
@@ -959,5 +999,6 @@
       initCarouselDrag();
     }
   </script>
+<script src="/uadav-app-bridge-v10.js?v=103"></script>
 </body>
 </html>
