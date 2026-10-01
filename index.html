@@ -3,9 +3,9 @@
 <html lang="es">
 <head>
   <script>
-  // V9.2.8: el Home público se monta primero en el App Shell para conservar
+  // V9.2.9: el Home público se monta primero en el App Shell para conservar
   // un único reproductor global de video/radio durante toda la navegación.
-  (()=>{try{const q=new URLSearchParams(location.search);if(window.parent!==window)document.documentElement.classList.add('uadav-embedded-home');if(window.top===window.self&&/^https?:$/i.test(location.protocol)&&q.get('standalone')!=='1'){const view='/index.html'+location.search+location.hash;location.replace('/app.html?view='+encodeURIComponent(view));}}catch{}})();
+  (()=>{try{const q=new URLSearchParams(location.search);if(window.parent!==window)document.documentElement.classList.add('uadav-embedded-home');if(window.top===window.self&&/^https?:$/i.test(location.protocol)&&q.get('standalone')!=='1'){const view='/index.html'+location.search+location.hash;location.replace('/app-v929.html?view='+encodeURIComponent(view));}}catch{}})();
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -605,8 +605,8 @@ body{padding-bottom:0}
   .topbar,.header-inner{max-width:100%}
 }
 </style>
-<script src="/uadav-api-config.js?v=928"></script><script src="/uadav-content-player-v928.js" defer></script>
-<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=928"><link rel="stylesheet" href="/uadav-v9.css?v=928"></head>
+<script src="/uadav-api-config.js?v=929"></script><script src="/uadav-content-player-v928.js" defer></script>
+<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=929"><link rel="stylesheet" href="/uadav-v9.css?v=929"></head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
     <div class="maintenance-card">
@@ -1255,24 +1255,27 @@ body{padding-bottom:0}
       const thumb=v.thumbnail||v.foto||obtenerCaratula(id);
       const title=v.titulo||v.nombre_artistico||v.nombre||'Contenido';
       const meta=v.descripcion||v.categoria||v.rubro||'UADAV STREAM';
-      return `<article class="card ${portrait?'portrait-card':''}" data-id="${safe(id)}"><img class="thumb" src="${safe(thumb)}" alt="${safe(title)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">${v.en_vivo?'<span class="badge live">● En vivo</span>':''}${v.verificado?'<span class="badge verify">✓ Verificado</span>':''}<span class="play-overlay"><i class="fa-solid fa-play"></i></span><div class="card-body"><div class="card-title">${safe(title)}</div><div class="card-meta">${safe(meta)}</div></div></article>`;
+      const directVideo=!(v.isLiveSignal&&v.liveUrl)&&!v.eventData&&!v.radioData&&!v.artistData&&!v.externalUrl;
+      const videoAttrs=directVideo?` data-uadav-video-id="${safe(id)}" data-uadav-video-title="${safe(title)}" data-uadav-video-meta="${safe(meta)}" onclick="return uadavVideoCardClick(event,this)"`:'';
+      return `<article class="card ${portrait?'portrait-card':''}" data-id="${safe(id)}"${videoAttrs}><img class="thumb" src="${safe(thumb)}" alt="${safe(title)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">${v.en_vivo?'<span class="badge live">● En vivo</span>':''}${v.verificado?'<span class="badge verify">✓ Verificado</span>':''}<span class="play-overlay"><i class="fa-solid fa-play"></i></span><div class="card-body"><div class="card-title">${safe(title)}</div><div class="card-meta">${safe(meta)}</div></div></article>`;
     }
+
+    window.uadavVideoCardClick=function(e,el){
+      const raw=el?.dataset?.uadavVideoId||el?.dataset?.id||'';
+      const id=normalizarVideoId(raw)||(/^[A-Za-z0-9_-]{11}$/.test(String(raw))?String(raw):'');
+      if(!id){console.warn('[UADAV 9.2.9] click sin ID válido',raw);return true}
+      e?.preventDefault?.();e?.stopImmediatePropagation?.();
+      console.info('[UADAV 9.2.9] click video',id);
+      reproducirVideo(id,el?.dataset?.uadavVideoTitle||'Video',el?.dataset?.uadavVideoMeta||'Contenido',{id,external_id:id,provider:'youtube'});
+      return false;
+    };
     function bindCards(container,items){
       if(!container)return;
       container.querySelectorAll('.card').forEach((el,index)=>{
-        let sx=0,sy=0,moved=false;
-        el.addEventListener('pointerdown',e=>{
-          sx=e.clientX;sy=e.clientY;moved=false;
-        },{passive:true});
-        el.addEventListener('pointermove',e=>{
-          if(Math.hypot(e.clientX-sx,e.clientY-sy)>9)moved=true;
-        },{passive:true});
+        // V9.2.9: sin detector de movimiento por tarjeta. En touch/Edge
+        // descartaba taps válidos. El arrastre pertenece al rail, no al card.
         el.addEventListener('click',e=>{
-          if(moved){
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-          }
+          if(el.dataset.uadavVideoId)return; // lo atiende el onclick directo y síncrono
           const v=items[index];
           if(!v)return;
           if(v.isLiveSignal && v.liveUrl){
@@ -2284,10 +2287,15 @@ body{padding-bottom:0}
         const payload={...(video||{}),id:resolvedId,external_id:resolvedId,provider:'youtube',url:'https://www.youtube.com/watch?v='+resolvedId,titulo:titulo||video?.titulo||'Video',descripcion:desc||video?.descripcion||'Contenido audiovisual',content_type:video?.content_type||video?.tipo||'video'};
         // V9.2.8: en modo App Shell llamamos DIRECTAMENTE al reproductor padre.
         // No dependemos del JS del iframe hijo ni de postMessage para iniciar.
+        console.info('[UADAV 9.2.9] reproducirVideo',resolvedId,'embedded=',window.parent!==window);
         if(window.parent!==window){
-          try{const host=window.parent.UADAVShellHost;if(host?.playContent){host.playContent(payload);return}}catch(e){console.error('[UADAV] shell playContent',e)}
+          try{
+            const host=window.parent.UADAVShellHost;
+            console.info('[UADAV 9.2.9] shell host',!!host,typeof host?.playContent);
+            if(host?.playContent){const ok=host.playContent(payload);console.info('[UADAV 9.2.9] shell play result',ok);return}
+          }catch(e){console.error('[UADAV 9.2.9] shell playContent error',e)}
         }
-        if(window.UADAVContentPlayer){window.UADAVContentPlayer.open(payload,{local:true});return}
+        if(window.UADAVContentPlayer){console.info('[UADAV 9.2.9] fallback local player');window.UADAVContentPlayer.open(payload,{local:true});return}
       }
       if(!id||String(id).startsWith('event-')){
         if(video?.eventData){
@@ -2486,5 +2494,5 @@ body{padding-bottom:0}
 })();
 </script>
 <nav id="uadavMobileNav" class="uadav-mobile-nav" aria-label="Navegación móvil"><a class="active" href="#contenido"><i class="fa-solid fa-house"></i><span>Inicio</span></a><a href="#radiosRow" onclick="irASeccion('radiosRow');return false"><i class="fa-solid fa-radio"></i><span>Radios</span></a><a href="#artists" onclick="irASeccion('artists');return false"><i class="fa-solid fa-users"></i><span>Artistas</span></a><a href="/cartelera.html"><i class="fa-solid fa-calendar-days"></i><span>Eventos</span></a><a href="/mi-perfil.html"><i class="fa-solid fa-user"></i><span>Mi perfil</span></a></nav>
-<script src="/uadav-shell-bridge-v928.js"></script><script src="/uadav-ui-v8.4.js?v=928"></script></body>
+<script src="/uadav-shell-bridge-v928.js"></script><script src="/uadav-ui-v8.4.js?v=929"></script></body>
 </html>
