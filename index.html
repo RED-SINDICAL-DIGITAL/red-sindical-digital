@@ -122,8 +122,9 @@
     #artistasGrid img{aspect-ratio:1/1;object-fit:cover}
     #videoModal>div{border-color:var(--v10line)!important;background:#080d14!important;border-radius:22px!important}
     #artistModal>div{border-color:var(--v10line)!important;background:#080d14!important}
-    #floatingRadioPlayer{left:50%!important;right:auto!important;bottom:16px!important;width:min(1080px,calc(100% - 26px))!important;transform:translate(-50%,110%)!important;border:1px solid rgba(25,216,242,.42)!important;border-top-width:1px!important;border-radius:22px!important;background:rgba(6,10,16,.96)!important;box-shadow:0 22px 70px rgba(0,0,0,.4)!important}
-    #floatingRadioPlayer:not(.translate-y-full){transform:translate(-50%,0)!important}
+    #floatingRadioPlayer{left:50%!important;right:auto!important;bottom:16px!important;width:min(1080px,calc(100% - 26px))!important;transform:translate(-50%,calc(100% + 120px))!important;border:1px solid rgba(25,216,242,.42)!important;border-top-width:1px!important;border-radius:22px!important;background:rgba(6,10,16,.96)!important;box-shadow:0 22px 70px rgba(0,0,0,.4)!important;opacity:0;visibility:hidden;pointer-events:none}
+    #floatingRadioPlayer:not(.translate-y-full){transform:translate(-50%,0)!important;opacity:1;visibility:visible;pointer-events:auto}
+    #floatingRadioPlayer.translate-y-full{transform:translate(-50%,calc(100% + 120px))!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important}
     footer{background:#05080d!important;border-color:var(--v10line)!important}
     .v10-mobile-bar{display:none}
     .v10-commission-tag{position:fixed;right:10px;bottom:10px;z-index:39;font-size:9px;color:#516071;pointer-events:none}
@@ -333,7 +334,7 @@
       </div>
     </div>
 
-    <div id="floatingRadioPlayer" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0d]/95 border-t-2 border-uadav-accent backdrop-blur-xl px-4 py-3 shadow-2xl transform translate-y-full transition-transform duration-300">
+    <div id="floatingRadioPlayer" aria-hidden="true" class="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0d]/95 border-t-2 border-uadav-accent backdrop-blur-xl px-4 py-3 shadow-2xl transform translate-y-full transition-all duration-300">
       <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-4">
         <div class="flex items-center gap-3 overflow-hidden"><img id="radioPlayerImg" src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=200&q=80" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl object-cover border border-uadav-accent/40"><div class="overflow-hidden"><div class="flex items-center gap-2"><span class="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping"></span><span id="radioPlayerTag" class="text-[9px] font-black uppercase text-uadav-accent tracking-widest">EN VIVO</span></div><h4 id="radioPlayerTitle" class="text-xs sm:text-sm font-black text-white truncate">UADAV Radio</h4><p id="radioPlayerLocation" class="text-[10px] sm:text-xs text-slate-400 truncate">Señal HD</p></div></div>
         <div id="radioEqualizer" class="hidden sm:flex items-center gap-1 h-5 px-2"><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.1s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.4s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.2s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.5s"></span></div>
@@ -746,6 +747,7 @@
         document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
         document.getElementById('radioEqualizer').classList.remove('hidden');
         document.getElementById('floatingRadioPlayer').classList.remove('translate-y-full');
+        document.getElementById('floatingRadioPlayer').setAttribute('aria-hidden','false');
 
         activeRadioId = radiosData.find(r => r.nombre === nombre)?.id || null;
         document.querySelectorAll('.radio-mini').forEach(el => el.classList.remove('active'));
@@ -792,10 +794,23 @@
     }
 
     function cerrarRadio() {
-        audioStream.pause(); audioStream.src = ''; isRadioPlaying = false;
-        if (zenoEventSource) zenoEventSource.close();
-        document.getElementById('floatingRadioPlayer').classList.add('translate-y-full');
-        if (activeRadioId) { const card = document.getElementById(`radio-card-${activeRadioId}`); if (card) card.classList.remove('active'); const eq = document.getElementById(`radio-eq-${activeRadioId}`); if (eq) eq.style.display = 'none'; }
+        audioStream.pause();
+        audioStream.removeAttribute('src');
+        audioStream.load();
+        isRadioPlaying = false;
+        if (zenoEventSource) { try { zenoEventSource.close(); } catch {} zenoEventSource = null; }
+        document.getElementById('radioPlayBtn').innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>';
+        document.getElementById('radioEqualizer').classList.add('hidden');
+        const player = document.getElementById('floatingRadioPlayer');
+        player.classList.add('translate-y-full');
+        player.setAttribute('aria-hidden','true');
+        if (activeRadioId) {
+          const card = document.getElementById(`radio-card-${activeRadioId}`);
+          if (card) card.classList.remove('active');
+          const eq = document.getElementById(`radio-eq-${activeRadioId}`);
+          if (eq) eq.style.display = 'none';
+        }
+        activeRadioId = null;
     }
 
     // ===== ARTISTAS =====
