@@ -531,9 +531,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     };
     makeFocusable();
     new MutationObserver(makeFocusable).observe(document.body,{subtree:true,childList:true});
-    document.addEventListener('DOMContentLoaded',()=>{
-      $('radioPlayerToggle')?.addEventListener('click',()=>{if(window.parent!==window){const isPlaying=$('radioPlayerToggle')?.textContent==='❚❚';try{window.parent.postMessage({type:isPlaying?'uadav:radio-pause':'uadav:radio-play',radio:currentRadiosCache.find(x=>String(x.stream_url||x.url||'')===String(activeRadio||''))},location.origin)}catch{};return}const a=$('radioAudio');if(!a)return;if(a.paused)a.play().catch(()=>{});else pausarRadio()});$('radioPlayerClose')?.addEventListener('click',()=>{if(window.parent!==window){try{window.parent.postMessage({type:'uadav:radio-close'},location.origin)}catch{};activeRadio=null}else pausarRadio();const d=$('radioPlayerDock');if(d)d.hidden=true});$('radioPlayerMute')?.addEventListener('click',()=>{if(window.parent!==window){try{window.parent.postMessage({type:'uadav:radio-mute'},location.origin)}catch{};return}const a=$('radioAudio');if(!a)return;a.muted=!a.muted;$('radioPlayerMute').textContent=a.muted?'🔇':'🔊'});$('radioPlayerOpen')?.addEventListener('click',()=>{const r=currentRadiosCache.find(x=>String(x.stream_url||x.url||'')===String(activeRadio||''));if(r){const href='/radio.html?id='+encodeURIComponent(r.id||r.nombre||'');if(window.parent!==window)window.parent.postMessage({type:'uadav:navigate',href},location.origin);else location.href=href}});$('radioPlayerDiscover')?.addEventListener('click',()=>{const r=currentRadiosCache.find(x=>String(x.stream_url||x.url||'')===String(activeRadio||''));const st=r?radioTrackState.get(r.nombre||r.stream_url||''):null;if(r&&st)descubrirTemaRadio(r,st)});$('radioPlayerVolume')?.addEventListener('input',e=>{const v=Math.max(0,Math.min(1,Number(e.target.value)));if(window.parent!==window){try{window.parent.postMessage({type:'uadav:radio-volume',value:v},location.origin)}catch{};return}const a=$('radioAudio');if(a){a.volume=v;a.muted=false;if($('radioPlayerMute'))$('radioPlayerMute').textContent='🔊'}});$('radioPlayerVolume')?.addEventListener('change',e=>{const a=$('radioAudio');if(a)a.volume=Number(e.target.value)});$('radioAudio')?.addEventListener('play',()=>{if($('radioPlayerToggle'))$('radioPlayerToggle').textContent='❚❚';if($('radioPlayerStatus'))$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>REPRODUCIENDO'});$('radioAudio')?.addEventListener('pause',()=>{if($('radioPlayerToggle'))$('radioPlayerToggle').textContent='▶';if($('radioPlayerStatus'))$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>PAUSADO'});
-    });
     document.addEventListener('keydown',e=>{
       if(!document.body.classList.contains('uadav-tv-mode'))return;
       const active=document.activeElement;
@@ -599,8 +596,8 @@ body{padding-bottom:0}
   .topbar,.header-inner{max-width:100%}
 }
 </style>
-<script src="/uadav-api-config.js"></script>
-<link rel="stylesheet" href="/uadav-ui-v8.4.css"><link rel="stylesheet" href="/uadav-v9.css"></head>
+<script src="/uadav-api-config.js?v=92"></script><script src="/uadav-content-player.js?v=92" defer></script>
+<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=92"><link rel="stylesheet" href="/uadav-v9.css?v=92"></head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
     <div class="maintenance-card">
@@ -1980,11 +1977,12 @@ body{padding-bottom:0}
       const row=$('cartelera');if(row)row.hidden=!items.length; const rail=$('eventsRail');if(!rail)return;
       if(!items.length){rail.innerHTML='';return}
       rail.innerHTML=items.map((v,i)=>`<article class="card event-card-v31" data-event-index="${i}" style="cursor:pointer"><div class="card-media"><img class="thumb" src="${safe(v.thumbnail)}" alt="${safe(v.titulo)}" loading="lazy" onerror="this.src='${FALLBACK_THUMB}'">${v.eventData?.destacado_pagado?'<span class="badge live">★ DESTACADO</span>':''}</div><div class="card-body"><div class="card-title">${safe(v.titulo)}</div><div class="card-meta">${safe(v.descripcion)}</div></div></article>`).join('');
-      rail.querySelectorAll('.event-card-v31').forEach((el,i)=>el.addEventListener('click',()=>abrirEventoDetalle(items[i]?.eventData||{})));
+      rail.querySelectorAll('.event-card-v31').forEach((el,i)=>el.addEventListener('click',()=>{const ev=items[i]?.eventData||{};if(ev.id){location.href='/evento.html?id='+encodeURIComponent(ev.id);return;}abrirEventoDetalle(ev)}));
       const now=Date.now();const paid=data.filter(e=>{if(!e||e.estado==='cancelado'||e.destacado_pagado!==true)return false;const until=e.destacado_hasta?Date.parse(e.destacado_hasta):NaN;return !Number.isFinite(until)||until>=now}).slice(0,5);
       if(paid.length){const additions=paid.map(e=>({active:true,category:'★ EVENTO DESTACADO',kicker:[e.categoria,e.ciudad].filter(Boolean).join(' · ')||'CARTELERA',title:e.titulo||e.nombre||'Evento destacado',description:e.descripcion_corta||[e.fecha_inicio||e.fecha,e.lugar,e.ciudad].filter(Boolean).join(' · '),image:e.portada||e.imagen||e.poster||'',action_type:'event',action_id:e.id,event_id:e.id,ticket_url:e.ticket_url||e.link_compra||'',evento_id:e.id}));const existingIds=new Set(heroSpotlights.map(h=>String(h.evento_id||h.event_id||'')).filter(Boolean));heroSpotlights=[...additions.filter(h=>!existingIds.has(String(h.evento_id))),...heroSpotlights];heroSpotlightIndex=Math.min(heroSpotlightIndex,heroSpotlights.length-1);renderHeroEditorial();aplicarHeroSpotlight();reiniciarHeroTimer()}
     }
     function abrirEventoDetalle(e){
+      if(e?.id){location.href='/evento.html?id='+encodeURIComponent(e.id);return;}
       $('infoKicker').textContent='📅 CARTELERA UADAV STREAM';$('infoTitle').textContent=e.titulo||e.nombre||'Evento';$('infoDescription').textContent=[e.fecha,e.lugar,e.ciudad,e.precio?('Entrada: '+e.precio):'',e.descripcion].filter(Boolean).join('\n\n')||'Información del evento.';
       const img=$('infoMedia'),src=e.imagen||e.poster||'';if(src){img.src=src;img.classList.add('has-media')}else{img.removeAttribute('src');img.classList.remove('has-media')}
       const b=$('infoPlayBtn');b.textContent='🎟 Ver entradas / información';b.onclick=()=>{if(e.link_compra)window.open(e.link_compra,'_blank','noopener');else cerrarInfoOverlay()};$('infoOverlay').classList.add('active');$('infoOverlay').setAttribute('aria-hidden','false');
@@ -2220,6 +2218,11 @@ body{padding-bottom:0}
 
     function reproducirVideo(id,titulo,desc,video){
       pausarRadio();
+      if(id && !String(id).startsWith('event-') && window.UADAVContentPlayer){
+        const payload={...(video||{}),id,external_id:video?.external_id||id,provider:video?.provider||'youtube',url:video?.url||('https://www.youtube.com/watch?v='+id),titulo:titulo||video?.titulo||'Video',descripcion:desc||video?.descripcion||'Contenido audiovisual',content_type:video?.content_type||video?.tipo||'video'};
+        window.UADAVContentPlayer.open(payload);
+        return;
+      }
       if(!id||String(id).startsWith('event-')){
         if(video?.eventData){
           const e=video.eventData;
@@ -2289,6 +2292,17 @@ body{padding-bottom:0}
     $('chatSendBtn')?.addEventListener('click',enviarMensajeChat);
     $('chatText')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviarMensajeChat()}});
 
+    function bindRadioDockControls(){
+      const toggle=$('radioPlayerToggle'), close=$('radioPlayerClose'), mute=$('radioPlayerMute'), open=$('radioPlayerOpen'), discover=$('radioPlayerDiscover'), volume=$('radioPlayerVolume'), audio=$('radioAudio');
+      if(toggle&&!toggle.dataset.bound){toggle.dataset.bound='1';toggle.addEventListener('click',()=>{if(window.parent!==window){const playing=toggle.textContent==='❚❚';const r=currentRadiosCache.find(x=>String(x.stream_url||x.url||'')===String(activeRadio||''));window.parent.postMessage({type:playing?'uadav:radio-pause':'uadav:radio-play',radio:r},location.origin);toggle.textContent=playing?'▶':'❚❚';return}if(!audio)return;if(audio.paused)audio.play().catch(()=>{});else audio.pause();});}
+      if(close&&!close.dataset.bound){close.dataset.bound='1';close.addEventListener('click',()=>{if(window.parent!==window)window.parent.postMessage({type:'uadav:radio-close'},location.origin);if(audio){try{audio.pause();audio.removeAttribute('src');audio.load()}catch{}}activeRadio=null;const dock=$('radioPlayerDock');if(dock)dock.hidden=true;});}
+      if(mute&&!mute.dataset.bound){mute.dataset.bound='1';mute.addEventListener('click',()=>{if(window.parent!==window){window.parent.postMessage({type:'uadav:radio-mute'},location.origin);return}if(!audio)return;audio.muted=!audio.muted;mute.textContent=audio.muted?'🔇':'🔊';});}
+      if(open&&!open.dataset.bound){open.dataset.bound='1';open.addEventListener('click',()=>{const r=currentRadiosCache.find(x=>String(x.stream_url||x.url||'')===String(activeRadio||''));if(!r)return;const href='/radio.html?id='+encodeURIComponent(r.id||r.nombre||'');if(window.parent!==window)window.parent.postMessage({type:'uadav:navigate',href},location.origin);else location.href=href;});}
+      if(discover&&!discover.dataset.bound){discover.dataset.bound='1';discover.addEventListener('click',()=>{const r=currentRadiosCache.find(x=>String(x.stream_url||x.url||'')===String(activeRadio||''));const st=r?radioTrackState.get(r.nombre||r.stream_url||''):null;if(r&&st)descubrirTemaRadio(r,st);});}
+      if(volume&&!volume.dataset.bound){volume.dataset.bound='1';volume.addEventListener('input',e=>{const v=Math.max(0,Math.min(1,Number(e.target.value)));if(window.parent!==window){window.parent.postMessage({type:'uadav:radio-volume',value:v},location.origin);return}if(audio){audio.volume=v;audio.muted=false;if(mute)mute.textContent='🔊';}});}
+      if(audio&&!audio.dataset.bound){audio.dataset.bound='1';audio.addEventListener('play',()=>{if(toggle)toggle.textContent='❚❚';if($('radioPlayerStatus'))$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>REPRODUCIENDO'});audio.addEventListener('pause',()=>{if(toggle)toggle.textContent='▶';if($('radioPlayerStatus'))$('radioPlayerStatus').innerHTML='<span class="live-dot"></span>PAUSADO'});}
+    }
+
     function applyPublicExperience(cfg){try{const p=cfg?.public_experience||{};document.body.classList.toggle('uadav-mode-landing',p.mode==='landing');document.body.classList.toggle('uadav-density-compact',p.density==='compact');document.body.classList.toggle('uadav-density-cinematic',p.density==='cinematic');document.body.classList.toggle('uadav-nav-complete',p.nav==='complete'); const ap=document.getElementById('navAudienceProfile'); if(ap) ap.hidden=p.audience_profile===false;}catch{}}
     async function init(){
       // First paint: only load what is needed to draw the shell and primary rows.
@@ -2317,17 +2331,18 @@ body{padding-bottom:0}
       else setTimeout(deferred,500);
 
       if('serviceWorker' in navigator){try{
-        const SW_VERSION='uadavstream-v91';
+        const SW_VERSION='uadavstream-v92';
         if(localStorage.getItem('uadav_sw_version')!==SW_VERSION){
           const regs=await navigator.serviceWorker.getRegistrations();
           for(const reg of regs){try{await reg.unregister()}catch{}}
           if(window.caches){const names=await caches.keys();for(const name of names){try{await caches.delete(name)}catch{}}}
           localStorage.setItem('uadav_sw_version',SW_VERSION);
         }
-        const reg=await navigator.serviceWorker.register('/service-worker.js?v=91',{updateViaCache:'none'});
+        const reg=await navigator.serviceWorker.register('/service-worker.js?v=92',{updateViaCache:'none'});
         await reg.update().catch(()=>{});
       }catch(e){console.warn('SW',e)}}
     }
+    bindRadioDockControls();
     init().then(()=>{
       try{
         const params=new URLSearchParams(location.search); const rid=params.get('radio'); const aid=params.get('artist');
@@ -2388,5 +2403,5 @@ body{padding-bottom:0}
 })();
 </script>
 <nav id="uadavMobileNav" class="uadav-mobile-nav" aria-label="Navegación móvil"><a class="active" href="#contenido"><i class="fa-solid fa-house"></i><span>Inicio</span></a><a href="#radiosRow" onclick="irASeccion('radiosRow');return false"><i class="fa-solid fa-radio"></i><span>Radios</span></a><a href="#artists" onclick="irASeccion('artists');return false"><i class="fa-solid fa-users"></i><span>Artistas</span></a><a href="/cartelera.html"><i class="fa-solid fa-calendar-days"></i><span>Eventos</span></a><a href="/mi-perfil.html"><i class="fa-solid fa-user"></i><span>Mi perfil</span></a></nav>
-<script src="/uadav-shell-bridge.js"></script><script src="/uadav-ui-v8.4.js"></script></body>
+<script src="/uadav-shell-bridge.js?v=92"></script><script src="/uadav-ui-v8.4.js?v=92"></script></body>
 </html>
