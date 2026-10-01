@@ -27,15 +27,30 @@
 
   function source(raw){const m=normalize(raw);return m.url||(m.provider==='youtube'&&m.external_id?'https://www.youtube.com/watch?v='+m.external_id:'')}
   function youtubeId(m,u){return m.external_id||(u?.hostname?.includes('youtu.be')?u.pathname.slice(1):(u?.searchParams?.get('v')||(/\/(?:shorts|embed|live)\/([^/?]+)/.exec(u?.pathname||'')||[])[1]||''))}
-  function youtubeFallback(id){return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=1&rel=0&playsinline=1`}
+  function youtubeFallback(id){
+    const q=new URLSearchParams({autoplay:'1',controls:'1',rel:'0',playsinline:'1'});
+    if(/^https?:$/i.test(location.protocol)){
+      q.set('origin',location.origin);
+      q.set('widget_referrer',location.origin+'/');
+    }
+    return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?${q.toString()}`;
+  }
+  function youtubePlaylistFallback(list){
+    const q=new URLSearchParams({list:String(list||''),autoplay:'1',rel:'0',playsinline:'1'});
+    if(/^https?:$/i.test(location.protocol)){
+      q.set('origin',location.origin);
+      q.set('widget_referrer',location.origin+'/');
+    }
+    return `https://www.youtube-nocookie.com/embed/videoseries?${q.toString()}`;
+  }
 
   function embed(raw){
     const m=normalize(raw);let u=null;try{if(m.url)u=new URL(m.url)}catch{}
     if(m.provider==='youtube'){
       const list=(u?.searchParams?.get('list')||((m.content_type==='playlist')?m.external_id:'')||'').trim();
       const vid=youtubeId(m,u);
-      if(list)return `<iframe title="YouTube playlist" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen src="https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(list)}&autoplay=1&rel=0&playsinline=1"></iframe>`;
-      if(vid)return `<iframe title="YouTube video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen src="${youtubeFallback(vid)}"></iframe>`;
+      if(list)return `<iframe title="YouTube playlist" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="origin-when-cross-origin" allowfullscreen src="${youtubePlaylistFallback(list)}"></iframe>`;
+      if(vid)return `<iframe title="YouTube video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="origin-when-cross-origin" allowfullscreen src="${youtubeFallback(vid)}"></iframe>`;
     }
     if(m.provider==='spotify'){const z=m.url.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([^?]+)/);if(z)return `<iframe title="Spotify" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" src="https://open.spotify.com/embed/${z[1]}/${z[2]}"></iframe>`}
     if(m.provider==='vimeo'&&u){const id=(u.pathname.match(/\/(\d+)/)||[])[1];if(id)return `<iframe title="Vimeo" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen src="https://player.vimeo.com/video/${id}?autoplay=1"></iframe>`}
@@ -61,7 +76,7 @@
   }
 
   function iframe(src,title='Contenido'){
-    const f=document.createElement('iframe');f.title=title;f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';f.referrerPolicy='strict-origin-when-cross-origin';f.allowFullscreen=true;f.src=src;return f;
+    const f=document.createElement('iframe');f.title=title;f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';f.referrerPolicy='origin-when-cross-origin';f.allowFullscreen=true;f.src=src;return f;
   }
   function setEmpty(frame,src,msg='Este proveedor no ofrece reproducción embebida para este contenido.'){
     frame.innerHTML=`<div class="uadav-up-empty"><h3>No se puede reproducir dentro de UADAV STREAM</h3><p>${esc(src?msg:'Falta la URL o el identificador del contenido.')}</p></div>`;
@@ -77,16 +92,37 @@
   async function renderYoutube(frame,n,seq){
     let u=null;try{if(n.url)u=new URL(n.url)}catch{}
     const list=(u?.searchParams?.get('list')||((n.content_type==='playlist')?n.external_id:'')||'').trim();
-    if(list){frame.replaceChildren(iframe(`https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(list)}&autoplay=1&rel=0&playsinline=1`,'YouTube playlist'));return true}
+    if(list){frame.replaceChildren(iframe(youtubePlaylistFallback(list),'YouTube playlist'));return true}
     const id=youtubeId(n,u);if(!id){setEmpty(frame,source(n));return false}
     frame.innerHTML='<div class="uadav-up-loading">Preparando reproducción segura…</div>';
     const resolved=await resolveYoutube(id);if(seq!==openSeq)return false;
+
+    // Invidious sigue siendo el primer resolvedor. En producción, sin embargo,
+    // las URL directas de instancias públicas pueden quedar colgadas por hotlink,
+    // CORS, firmas vencidas o políticas del navegador sin disparar `error`.
+    // Por eso sólo se conserva el stream directo si demuestra que puede cargar;
+    // de lo contrario se cambia automáticamente al embed oficial sin consumir
+    // la YouTube Data API.
+    const official=()=>iframe(youtubeFallback(id),'YouTube video');
     if(resolved?.direct_url){
-      const v=document.createElement('video');v.controls=true;v.autoplay=true;v.playsInline=true;v.preload='metadata';v.src=resolved.direct_url;
-      let failed=false;v.addEventListener('error',()=>{if(failed||seq!==openSeq)return;failed=true;frame.replaceChildren(iframe(resolved.embed_url||youtubeFallback(id),'YouTube video'))},{once:true});
-      frame.replaceChildren(v);v.play().catch(()=>{});return true;
+      let direct='';
+      try{direct=new URL(String(resolved.direct_url),String(resolved.base_url||location.origin)).toString()}catch{direct=String(resolved.direct_url||'')}
+      if(/^https?:\/\//i.test(direct)){
+        const v=document.createElement('video');
+        v.controls=true;v.autoplay=true;v.playsInline=true;v.preload='metadata';
+        let settled=false;
+        const fallback=()=>{if(settled||seq!==openSeq)return;settled=true;frame.replaceChildren(official())};
+        const ready=()=>{if(settled||seq!==openSeq)return;settled=true;clearTimeout(timer)};
+        const timer=setTimeout(fallback,4500);
+        ['canplay','playing','loadeddata'].forEach(ev=>v.addEventListener(ev,ready,{once:true}));
+        ['error','abort','stalled'].forEach(ev=>v.addEventListener(ev,fallback,{once:true}));
+        v.src=direct;
+        frame.replaceChildren(v);
+        v.play().catch(()=>{});
+        return true;
+      }
     }
-    frame.replaceChildren(iframe(resolved?.embed_url||youtubeFallback(id),'YouTube video'));return true;
+    frame.replaceChildren(official());return true;
   }
   function renderBasic(frame,n){const html=embed(n);if(html){frame.innerHTML=html;return true}setEmpty(frame,source(n));return false}
 
@@ -109,6 +145,7 @@
     close(){openSeq++;const root=document.getElementById('uadavUniversalPlayer');if(!root)return;const media=root.querySelector('video,audio');try{media?.pause?.()}catch{}root.querySelector('.uadav-up-frame').innerHTML='';root.classList.remove('active','mini');root.setAttribute('aria-hidden','true');document.body.style.overflow=''},
     toggleMini(){const root=document.getElementById('uadavUniversalPlayer');if(!root?.classList.contains('active'))return;const mini=root.classList.toggle('mini');document.body.style.overflow=mini?'':'hidden'}
   };
+  api.build='9.2.2';
   window.UADAVContentPlayer=api;
   document.addEventListener('keydown',e=>{if(e.key==='Escape')api.close()});
 })();
