@@ -1,1 +1,184 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=/index.html?v=10"><title>UADAV STREAM</title></head><body style="background:#050505;color:#fff;font-family:system-ui"><script>location.replace('/index.html?v=10');</script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05080d">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>★ UADAV STREAM</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05080d;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button{font:inherit}#shell{height:100dvh;display:flex;flex-direction:column;background:#05080d;position:relative;overflow:hidden}
+#viewWrap{flex:1;min-height:0;position:relative;background:#05080d}#view{width:100%;height:100%;border:0;display:block;background:#05080d}
+#mediaDock{display:none;background:#080d14;color:#fff;z-index:1000}
+#mediaDock.active{display:block}
+#mediaCard{position:relative;background:#080d14;border:1px solid rgba(255,255,255,.12);overflow:hidden;box-shadow:0 22px 70px rgba(0,0,0,.5)}
+#mediaStage{background:#000;aspect-ratio:16/9;display:grid;place-items:center;overflow:hidden}
+#mediaStage iframe,#mediaStage video{width:100%;height:100%;border:0;display:block}#mediaStage audio{width:min(760px,90%)}
+.media-tools{position:absolute;right:10px;top:10px;z-index:4;display:flex;gap:7px}.media-tools button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(9,14,21,.92);color:#fff;cursor:pointer;font-weight:900}
+#mediaCopy{display:flex;align-items:center;gap:12px;padding:11px 14px;min-height:58px;background:#080d14;border-top:1px solid rgba(255,255,255,.07)}#mediaText{min-width:0;flex:1}#mediaTitle{display:block;font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#mediaMeta{font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+#shell.media-expanded #mediaDock{display:block;position:relative;flex:none}
+#shell.media-expanded #mediaCard{width:100%;border-radius:0;border-left:0;border-right:0}
+#shell.media-mini #mediaDock{display:block;position:fixed;right:12px;bottom:12px;width:min(430px,calc(100vw - 24px));z-index:1200}
+#shell.media-mini #mediaCard{border-radius:17px}
+#shell.media-mini #mediaStage{border-radius:17px 17px 0 0}
+#shell.media-mini #mediaExpand{transform:rotate(180deg)}
+#shell.media-mini #mediaCopy{min-height:48px;padding:8px 11px}
+#shell.media-mini #mediaMeta{display:none}
+#radioDock{display:none;position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:1300;width:min(980px,calc(100vw - 24px));background:rgba(7,11,17,.97);border:1px solid rgba(25,216,242,.42);border-radius:18px;padding:10px 12px;box-shadow:0 20px 60px rgba(0,0,0,.5);align-items:center;gap:10px}
+#radioDock.active{display:flex}#radioArt{width:46px;height:46px;border-radius:10px;object-fit:cover;background:#111827;flex:none}#radioInfo{min-width:0;flex:1}#radioName{font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#radioMeta{font-size:10px;color:#94a3b8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radio-controls{display:flex;align-items:center;gap:7px}.radio-controls button{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:#111827;color:#fff;cursor:pointer}.radio-controls button.primary{background:#18d8f2;color:#041018;border-color:#18d8f2;font-weight:900}#radioVol{width:90px}
+#appBadge{position:fixed;right:7px;top:5px;z-index:1400;font-size:8px;color:#506071;pointer-events:none}
+@media(min-width:721px){
+ #shell.media-expanded #mediaDock{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.78);padding:24px;z-index:1200}
+ #shell.media-expanded #mediaCard{width:min(1100px,94vw);border-radius:22px}
+ #shell.media-expanded #mediaStage{border-radius:22px 22px 0 0}
+}
+@media(max-width:720px){
+ #shell.media-expanded #mediaCard{border-radius:0}
+ #shell.media-expanded #mediaStage{max-height:42vh}
+ #shell.media-mini #mediaDock{left:8px;right:8px;bottom:74px;width:auto}
+ #shell.media-mini #mediaCard{display:grid;grid-template-columns:128px minmax(0,1fr);align-items:stretch}
+ #shell.media-mini #mediaStage{aspect-ratio:auto;height:72px;border-radius:16px 0 0 16px}
+ #shell.media-mini #mediaCopy{border-top:0;align-self:stretch}
+ #shell.media-mini .media-tools{right:5px;top:50%;transform:translateY(-50%)}
+ #shell.media-mini .media-tools button{width:34px;height:34px}
+ #shell.media-mini #mediaExpand{display:none}
+ #shell.media-mini #mediaCopy{padding-right:46px}
+ #radioDock{bottom:74px;padding:8px 9px;border-radius:16px}
+ #radioVol{display:none}
+}
+</style>
+</head>
+<body>
+<div id="shell">
+  <div id="mediaDock" aria-hidden="true">
+    <div id="mediaCard">
+      <div class="media-tools">
+        <button id="mediaExpand" type="button" aria-label="Minimizar o expandir">⌄</button>
+        <button id="mediaClose" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <div id="mediaStage"></div>
+      <div id="mediaCopy"><div id="mediaText"><strong id="mediaTitle">Contenido</strong><div id="mediaMeta"></div></div></div>
+    </div>
+  </div>
+  <div id="viewWrap"><iframe id="view" title="UADAV STREAM" allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+  <div id="radioDock" aria-hidden="true">
+    <img id="radioArt" alt="">
+    <div id="radioInfo"><div id="radioName">Radio</div><div id="radioMeta">En vivo</div></div>
+    <div class="radio-controls">
+      <button id="radioMute" type="button" aria-label="Silenciar">🔊</button>
+      <input id="radioVol" type="range" min="0" max="1" step="0.05" value="0.8" aria-label="Volumen">
+      <button id="radioPlay" class="primary" type="button" aria-label="Play/Pause">▶</button>
+      <button id="radioClose" type="button" aria-label="Cerrar radio">✕</button>
+    </div>
+  </div>
+  <audio id="radioAudio" preload="none"></audio>
+</div>
+<div id="appBadge">APP V10.3</div>
+<script>
+(()=>{
+'use strict';
+const shell=document.getElementById('shell'),view=document.getElementById('view'),stage=document.getElementById('mediaStage');
+const mediaDock=document.getElementById('mediaDock'),mediaTitle=document.getElementById('mediaTitle'),mediaMeta=document.getElementById('mediaMeta');
+const audio=document.getElementById('radioAudio'),radioDock=document.getElementById('radioDock'),radioName=document.getElementById('radioName'),radioMeta=document.getElementById('radioMeta'),radioArt=document.getElementById('radioArt'),radioPlay=document.getElementById('radioPlay'),radioMute=document.getElementById('radioMute'),radioVol=document.getElementById('radioVol');
+let currentMedia=null,currentRadio=null;
+const $=id=>document.getElementById(id);
+const pick=(...v)=>{for(const x of v){if(x!==undefined&&x!==null&&String(x).trim())return String(x).trim()}return''};
+function normalizeMedia(raw={}){
+ let x={...(raw||{})},url=pick(x.url,x.href,x.link,x.source_url,x.video_url,x.youtube_url,x.embed_url),provider=pick(x.provider,x.source,x.plataforma).toLowerCase(),external=pick(x.external_id,x.youtube_id,x.videoId,x.video_id,x.yt_id),type=pick(x.content_type,x.tipo,x.kind).toLowerCase();
+ if(!external){const m=url.match(/[?&]v=([A-Za-z0-9_-]{11})/)||url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/)||url.match(/\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{11})/);if(m)external=m[1]}
+ if(!external&&/^[A-Za-z0-9_-]{11}$/.test(String(x.id||'')))external=String(x.id);
+ if(!provider){if(external||/youtube|youtu\.be/i.test(url))provider='youtube';else if(/spotify\.com/i.test(url))provider='spotify';else if(/vimeo\.com/i.test(url))provider='vimeo';else if(/soundcloud\.com/i.test(url))provider='soundcloud';else if(/ok\.ru/i.test(url))provider='okru';else if(/\.(mp3|aac|m4a)(\?|$)/i.test(url))provider='audio';else if(/\.(mp4|webm)(\?|$)/i.test(url))provider='video'}
+ if(!url&&provider==='youtube'&&external)url='https://www.youtube.com/watch?v='+external;
+ return {...x,url,provider,external_id:external,content_type:type||x.tipo||'',titulo:pick(x.titulo,x.title,x.nombre,'Contenido'),descripcion:pick(x.descripcion,x.description,x.author,x.channelTitle),thumbnail:pick(x.thumbnail,x.imagen,x.image,x.foto)};
+}
+function buildMediaNode(m){
+ if(m.provider==='youtube'){
+  let list='';try{list=new URL(m.url||'',location.origin).searchParams.get('list')||''}catch{}
+  const q=new URLSearchParams({autoplay:'1',controls:'1',playsinline:'1',rel:'0',origin:location.origin,widget_referrer:location.origin});
+  let src=list?'https://www.youtube.com/embed/videoseries?list='+encodeURIComponent(list)+'&'+q.toString():'https://www.youtube.com/embed/'+encodeURIComponent(m.external_id)+'?'+q.toString();
+  const f=document.createElement('iframe');f.src=src;f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen; web-share';f.referrerPolicy='strict-origin-when-cross-origin';f.allowFullscreen=true;f.title=m.titulo||'YouTube';return f;
+ }
+ if(m.provider==='spotify'){
+  const z=(m.url||'').match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([^?]+)/);if(z){const f=document.createElement('iframe');f.src='https://open.spotify.com/embed/'+z[1]+'/'+z[2];f.allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';f.title='Spotify';return f}
+ }
+ if(m.provider==='vimeo'){
+  const z=(m.url||'').match(/vimeo\.com\/(?:video\/)?(\d+)/);if(z){const f=document.createElement('iframe');f.src='https://player.vimeo.com/video/'+z[1]+'?autoplay=1';f.allow='autoplay; fullscreen; picture-in-picture';f.allowFullscreen=true;return f}
+ }
+ if(m.provider==='soundcloud'){
+  const f=document.createElement('iframe');f.src='https://w.soundcloud.com/player/?url='+encodeURIComponent(m.url||'')+'&auto_play=true';f.allow='autoplay';f.title='SoundCloud';return f;
+ }
+ if(m.provider==='okru'){
+  const z=(m.url||'').match(/video\/(?:embed\/)?([^/?]+)/);if(z){const f=document.createElement('iframe');f.src='https://ok.ru/videoembed/'+encodeURIComponent(z[1]);f.allow='autoplay; fullscreen';f.allowFullscreen=true;return f}
+ }
+ if(m.provider==='audio'||/\.(mp3|aac|m4a)(\?|$)/i.test(m.url||'')){const a=document.createElement('audio');a.src=m.url;a.controls=true;a.autoplay=true;return a}
+ if(m.provider==='video'||/\.(mp4|webm)(\?|$)/i.test(m.url||'')){const v=document.createElement('video');v.src=m.url;v.controls=true;v.autoplay=true;v.playsInline=true;return v}
+ return null;
+}
+function setMediaMode(mode){
+ shell.classList.remove('media-expanded','media-mini');
+ if(mode==='expanded')shell.classList.add('media-expanded');
+ if(mode==='mini')shell.classList.add('media-mini');
+ mediaDock.classList.toggle('active',!!mode);mediaDock.setAttribute('aria-hidden',mode?'false':'true');
+}
+function playContent(raw){
+ const m=normalizeMedia(raw);if(!m.url&&!m.external_id)return false;
+ pauseRadio();
+ currentMedia=m;stage.replaceChildren();
+ const node=buildMediaNode(m);if(!node)return false;
+ stage.appendChild(node);mediaTitle.textContent=m.titulo||'Contenido';mediaMeta.textContent=[m.provider,m.descripcion].filter(Boolean).join(' · ');
+ setMediaMode('expanded');return true;
+}
+function closeContent(){stage.replaceChildren();currentMedia=null;setMediaMode('');}
+function toggleMediaMode(){if(!currentMedia)return;setMediaMode(shell.classList.contains('media-mini')?'expanded':'mini')}
+function minimizeOnNavigate(){if(currentMedia)setMediaMode('mini')}
+function cleanView(href){
+ const u=new URL(href||'/index.html',location.origin);if(u.origin!==location.origin)return'/index.html';
+ return u.pathname+u.search+u.hash;
+}
+function navigate(href,opts={}){
+ const to=cleanView(href);minimizeOnNavigate();
+ if(!opts.fromPop){const state={view:to};history[opts.replace?'replaceState':'pushState'](state,'','/app.html?view='+encodeURIComponent(to))}
+ view.src=to;return true;
+}
+function sendToView(msg){try{view.contentWindow?.postMessage(msg,location.origin)}catch{}}
+function radioState(){return{type:'uadav:radio-state',playing:!audio.paused&&!!audio.src,muted:audio.muted,volume:audio.volume,stream_url:currentRadio?.stream_url||currentRadio?.url||'',radio_id:currentRadio?.id||currentRadio?.nombre||''}}
+function broadcastRadioState(){sendToView(radioState())}
+function updateMediaSession(){
+ if(!('mediaSession'in navigator)||!currentRadio)return;
+ try{navigator.mediaSession.metadata=new MediaMetadata({title:currentRadio.nombre||currentRadio.name||'Radio',artist:currentRadio.ubicacion||'UADAV STREAM',album:'UADAV STREAM',artwork:[{src:currentRadio.logo||currentRadio.imagen||currentRadio.portada||'/radio-fallback.svg'}]})}catch{}
+}
+function playRadio(r={}){
+ closeContent();const stream=r.stream_url||r.url||r.stream||'';if(!stream)return false;
+ const changed=stream!==audio.dataset.stream;if(changed){audio.src=stream;audio.dataset.stream=stream}
+ currentRadio={...r,stream_url:stream};radioName.textContent=r.nombre||r.name||'Radio';radioMeta.textContent=r.ubicacion||[r.ciudad,r.provincia].filter(Boolean).join(' · ')||'En vivo';radioArt.src=r.logo||r.imagen||r.portada||'/radio-fallback.svg';radioDock.classList.add('active');radioDock.setAttribute('aria-hidden','false');audio.volume=Number.isFinite(Number(r.volume))?Number(r.volume):Number(radioVol.value||.8);audio.play().catch(()=>{});updateMediaSession();broadcastRadioState();return true;
+}
+function pauseRadio(){try{audio.pause()}catch{}broadcastRadioState()}
+function closeRadio(){try{audio.pause()}catch{}audio.removeAttribute('src');audio.load();audio.dataset.stream='';currentRadio=null;radioDock.classList.remove('active');radioDock.setAttribute('aria-hidden','true');broadcastRadioState()}
+function toggleRadio(){if(!audio.src)return;if(audio.paused)audio.play().catch(()=>{});else audio.pause()}
+function dispatch(d={}){
+ if(d.type==='uadav:navigate')return navigate(d.href,{replace:!!d.replace});
+ if(d.type==='uadav:content-play')return playContent(d.item||{});
+ if(d.type==='uadav:content-close'){closeContent();return true}
+ if(d.type==='uadav:radio-play')return playRadio(d.radio||{});
+ if(d.type==='uadav:radio-pause'){pauseRadio();return true}
+ if(d.type==='uadav:radio-close'){closeRadio();return true}
+ if(d.type==='uadav:radio-mute'){audio.muted=!audio.muted;broadcastRadioState();return true}
+ if(d.type==='uadav:radio-volume'){audio.volume=Math.max(0,Math.min(1,Number(d.value)));audio.muted=false;radioVol.value=String(audio.volume);broadcastRadioState();return true}
+ if(d.type==='uadav:radio-state-request'){broadcastRadioState();return true}
+ return false;
+}
+window.UADAVShellHost={dispatch,navigate,playContent,closeContent,playRadio,pauseRadio,closeRadio};
+window.UADAV_APP=window.UADAVShellHost;
+window.addEventListener('message',e=>{if(e.origin!==location.origin)return;dispatch(e.data||{})});
+window.addEventListener('popstate',e=>navigate(e.state?.view||new URLSearchParams(location.search).get('view')||'/index.html',{fromPop:true,replace:true}));
+view.addEventListener('load',()=>{broadcastRadioState()});
+$('mediaClose').onclick=closeContent;$('mediaExpand').onclick=toggleMediaMode;
+mediaDock.addEventListener('click',e=>{if(shell.classList.contains('media-mini')&&!e.target.closest('button'))setMediaMode('expanded')});
+radioPlay.onclick=toggleRadio;radioClose.onclick=closeRadio;radioMute.onclick=()=>{audio.muted=!audio.muted;broadcastRadioState()};radioVol.oninput=e=>{audio.volume=Number(e.target.value);audio.muted=false;broadcastRadioState()};
+audio.addEventListener('play',()=>{radioPlay.textContent='❚❚';broadcastRadioState()});audio.addEventListener('pause',()=>{radioPlay.textContent='▶';broadcastRadioState()});
+if('mediaSession'in navigator){try{navigator.mediaSession.setActionHandler('play',()=>audio.play());navigator.mediaSession.setActionHandler('pause',()=>audio.pause());navigator.mediaSession.setActionHandler('stop',closeRadio)}catch{}}
+const initial=new URLSearchParams(location.search).get('view')||'/index.html';history.replaceState({view:cleanView(initial)},'','/app.html?view='+encodeURIComponent(cleanView(initial)));navigate(initial,{fromPop:true,replace:true});
+})();
+</script>
+</body></html>
