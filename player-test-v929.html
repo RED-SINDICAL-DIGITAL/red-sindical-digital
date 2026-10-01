@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin"><title>UADAV STREAM · Test YouTube V929</title>
+<style>body{margin:0;background:#05080d;color:#fff;font-family:system-ui;padding:22px}.box{max-width:920px;margin:auto}.stage{aspect-ratio:16/9;background:#000;border:1px solid #333;border-radius:16px;overflow:hidden}.stage iframe{width:100%;height:100%;border:0}button{margin:14px 0;padding:12px 18px;border:0;border-radius:12px;font-weight:800;cursor:pointer}.ok{color:#8ff0b5}</style></head>
+<body><div class="box"><h1>Test directo YouTube · V9.2.9</h1><p>Este archivo no usa App Shell, Worker, KV, D1 ni el reproductor de UADAV STREAM. Si reproduce, YouTube embed funciona en el dominio.</p>
+<button id="go">▶ Cargar video de prueba</button><div id="status"></div><div class="stage"><iframe id="yt" allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div></div>
+<script>document.getElementById('go').onclick=()=>{const q=new URLSearchParams({autoplay:'1',controls:'1',playsinline:'1',rel:'0',origin:location.origin,widget_referrer:location.origin});const src='https://www.youtube.com/embed/M7lc1UVf-VE?'+q;document.getElementById('status').innerHTML='<p class="ok">Iframe solicitado: '+src.replace(/</g,'&lt;')+'</p>';document.getElementById('yt').src=src;console.info('[UADAV TEST V929]',src)};</script></body></html>
