@@ -3,9 +3,9 @@
 <html lang="es">
 <head>
   <script>
-  // V9.2.4: el Home público se monta primero en el App Shell para conservar
+  // V9.2.5: el Home público se monta primero en el App Shell para conservar
   // un único reproductor global de video/radio durante toda la navegación.
-  (()=>{try{const q=new URLSearchParams(location.search);if(window.top===window.self&&/^https?:$/i.test(location.protocol)&&q.get('standalone')!=='1'){const view='/index.html'+location.search+location.hash;location.replace('/app.html?view='+encodeURIComponent(view));}}catch{}})();
+  (()=>{try{const q=new URLSearchParams(location.search);if(window.parent!==window)document.documentElement.classList.add('uadav-embedded-home');if(window.top===window.self&&/^https?:$/i.test(location.protocol)&&q.get('standalone')!=='1'){const view='/index.html'+location.search+location.hash;location.replace('/app.html?view='+encodeURIComponent(view));}}catch{}})();
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -574,6 +574,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script src="/uadav-brand-v7.2.js" defer></script>
 
 <style id="uadav-v7-4-2-index-final-fix">
+/* V9.2.5: dentro del App Shell el Home NO dibuja un segundo reproductor de radio. */
+html.uadav-embedded-home #radioPlayerDock{display:none!important}
+html.uadav-embedded-home #radioAudio{display:none!important}
 /* Radio dock: never occupies normal document flow. */
 .radio-player-pro[hidden]{display:none!important}
 #radioPlayerDock.radio-player-pro{position:fixed!important;left:50%!important;bottom:18px!important;transform:translateX(-50%)!important;width:min(980px,calc(100vw - 36px))!important;margin:0!important;z-index:1200!important;box-shadow:0 28px 90px rgba(0,0,0,.58)!important}
@@ -601,8 +604,8 @@ body{padding-bottom:0}
   .topbar,.header-inner{max-width:100%}
 }
 </style>
-<script src="/uadav-api-config.js?v=924"></script><script src="/uadav-content-player.js?v=924" defer></script>
-<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=924"><link rel="stylesheet" href="/uadav-v9.css?v=924"></head>
+<script src="/uadav-api-config.js?v=925"></script><script src="/uadav-content-player.js?v=925" defer></script>
+<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=925"><link rel="stylesheet" href="/uadav-v9.css?v=925"></head>
 <body>
   <div id="publicMaintenance" class="maintenance-shell" hidden>
     <div class="maintenance-card">
@@ -2463,5 +2466,5 @@ body{padding-bottom:0}
 })();
 </script>
 <nav id="uadavMobileNav" class="uadav-mobile-nav" aria-label="Navegación móvil"><a class="active" href="#contenido"><i class="fa-solid fa-house"></i><span>Inicio</span></a><a href="#radiosRow" onclick="irASeccion('radiosRow');return false"><i class="fa-solid fa-radio"></i><span>Radios</span></a><a href="#artists" onclick="irASeccion('artists');return false"><i class="fa-solid fa-users"></i><span>Artistas</span></a><a href="/cartelera.html"><i class="fa-solid fa-calendar-days"></i><span>Eventos</span></a><a href="/mi-perfil.html"><i class="fa-solid fa-user"></i><span>Mi perfil</span></a></nav>
-<script src="/uadav-shell-bridge.js?v=924"></script><script src="/uadav-ui-v8.4.js?v=924"></script></body>
+<script src="/uadav-shell-bridge.js?v=925"></script><script src="/uadav-ui-v8.4.js?v=925"></script></body>
 </html>
