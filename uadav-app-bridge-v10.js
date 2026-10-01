@@ -8,6 +8,7 @@
     }
     return;
   }
+  document.documentElement.classList.add('uadav-app-embedded');
   const sameOrigin=(url)=>{
     try{return new URL(url,location.href).origin===location.origin}catch{return false}
   };
