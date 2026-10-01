@@ -1,33 +1,23 @@
-# UADAV STREAM V9.2 — despliegue urgente
+# Deploy V9.2.1 — Reparación estructural
 
-No mezclar archivos V9.0/V9.1/V9.2.
+1. Desplegar `worker.js`.
+2. Verificar `/api/health`: `V9.2.1`, KV y D1 activos.
+3. Desplegar **todo el directorio estático**, no sólo `index.html`.
+4. Purga de caché de Cloudflare si la configuración la requiere.
+5. Recargar dos veces el sitio para reemplazar Service Worker anterior.
+6. Ejecutar `TEST-CHECKLIST-V9.2.md` completo.
 
-## Reemplazar primero
-1. `worker.js`
-2. `service-worker.js`
-3. `uadav-content-player.js`
-4. `uadav-api-config.js`
-5. `uadav-shell-bridge.js`
-6. `index.html`
-7. `artista.html`
-8. `radio.html`
-9. `app.html`
-10. `cartelera.html`
-11. `evento.html`
-12. `playlists.html`
-13. `podcasts.html`
+Archivos críticos que deben viajar juntos:
+- `app.html`
+- `index.html`
+- `uadav-content-player.js`
+- `uadav-shell-bridge.js`
+- `uadav-ui-v8.4.js` + CSS
+- `service-worker.js`
+- `radio.html`
+- `artista.html`
+- `media.html`
+- `shorts.html`
+- `worker.js`
 
-Luego subir el resto de la carpeta para mantener todas las páginas en la misma versión.
-
-## Verificación
-- `/api/health` debe indicar `V9.2.0`.
-- abrir `/diagnostico-v92.html`.
-- cerrar todas las pestañas antiguas de UADAV STREAM y abrir de nuevo.
-- `Ctrl+F5` una vez.
-
-## Pruebas obligatorias
-1. Artista → tocar video → debe aparecer iframe `youtube-nocookie.com`.
-2. Home → tocar evento → debe entrar a `evento.html?id=...`.
-3. Cartelera → tocar placa → debe entrar al evento.
-4. Radio → Play/Pausa, volumen, mute, Ver radio y X.
-5. Buscar un video → tocar resultado → debe reproducir dentro de UADAV STREAM.
+No migrar ni limpiar KV/D1 para este deploy.
