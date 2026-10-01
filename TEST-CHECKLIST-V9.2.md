@@ -4,7 +4,7 @@
 - [ ] `/api/health` devuelve `V9.2.2`.
 - [ ] `kv: true` y `d1: true`.
 - [ ] `/diagnostico-v92.html` muestra Player universal OK.
-- [ ] Service Worker activo termina en `service-worker.js?v=922`.
+- [ ] Service Worker activo termina en `service-worker.js?v=923`.
 - [ ] Cache activa = `uadav-stream-v9-2-2`.
 
 ## Reproducción

@@ -1,17 +1,31 @@
 (()=>{
   'use strict';
   const embedded=window.parent!==window;
+  const params=new URLSearchParams(location.search);
+  const path=location.pathname.toLowerCase();
+  const canShell=/^https?:$/i.test(location.protocol);
+  const excluded=path==='/app.html'||path==='/admin.html'||path==='/admin'||path==='/diagnostico-v92.html';
+
+  // V9.2.3: App Shell real. Cuando una vista pública se abre directamente,
+  // se monta dentro de app.html para mantener UN solo motor de radio/audio
+  // durante toda la navegación. ?standalone=1 queda disponible para diagnóstico.
+  if(!embedded&&canShell&&!excluded&&params.get('standalone')!=='1'){
+    const view=(path==='/'?'/index.html':location.pathname)+location.search+location.hash;
+    location.replace('/app.html?view='+encodeURIComponent(view));
+    return;
+  }
+
   const navigate=href=>{
     const raw=String(href||'/index.html');
-    if(embedded){try{parent.postMessage({type:'uadav:navigate',href:raw},location.origin);return true}catch{}}
+    if(embedded){try{const h=parent.UADAVShellHost;if(h?.navigate){h.navigate(raw);return true}}catch{}try{parent.postMessage({type:'uadav:navigate',href:raw},location.origin);return true}catch{}}
     location.href=raw;return true;
   };
   window.UADAVNavigate=navigate;
   window.UADAVShell={
     embedded,
-    playRadio(radio){if(!embedded)return false;try{parent.postMessage({type:'uadav:radio-play',radio},location.origin);return true}catch{return false}},
-    pauseRadio(){if(!embedded)return false;try{parent.postMessage({type:'uadav:radio-pause'},location.origin);return true}catch{return false}},
-    closeRadio(){if(!embedded)return false;try{parent.postMessage({type:'uadav:radio-close'},location.origin);return true}catch{return false}},
+    playRadio(radio){if(!embedded)return false;try{const h=parent.UADAVShellHost;if(h?.playRadio){h.playRadio(radio);return true}}catch{}try{parent.postMessage({type:'uadav:radio-play',radio},location.origin);return true}catch{return false}},
+    pauseRadio(){if(!embedded)return false;try{const h=parent.UADAVShellHost;if(h?.pauseRadio){h.pauseRadio();return true}}catch{}try{parent.postMessage({type:'uadav:radio-pause'},location.origin);return true}catch{return false}},
+    closeRadio(){if(!embedded)return false;try{const h=parent.UADAVShellHost;if(h?.closeRadio){h.closeRadio();return true}}catch{}try{parent.postMessage({type:'uadav:radio-close'},location.origin);return true}catch{return false}},
     meta(meta){if(!embedded)return false;try{parent.postMessage({type:'uadav:radio-meta',...meta},location.origin);return true}catch{return false}},
     navigate
   };
