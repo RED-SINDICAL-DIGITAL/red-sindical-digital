@@ -11,8 +11,8 @@
 </style>
 <script src="/site-page-config.js" defer></script><link rel="stylesheet" href="/uadav-design-v7.2.css">
 <script src="/uadav-brand-v7.2.js" defer></script>
-<script src="/uadav-api-config.js?v=924"></script>
-<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=924"></head>
+<script src="/uadav-api-config.js?v=927"></script>
+<link rel="stylesheet" href="/uadav-ui-v8.4.css?v=927"></head>
 <body>
 <div class="wrap">
   <header class="top"><a class="brand" href="/index.html"><span class="star">★</span><span>UADAV STREAM</span></a><div class="actions"><a class="btn" href="/mi-perfil.html">Mi perfil</a><a class="btn primary" href="/sumate-artista.html">Crear perfil</a></div></header>
@@ -21,7 +21,7 @@
     <h1>Encontrá artistas.<br>Descubrí su mundo.</h1>
     <p>Perfiles visuales de artistas de variedades de Argentina y del mundo. Un artista puede aparecer en el catálogo sin estar afiliado y, si es su perfil, puede reclamarlo y administrarlo.</p>
     <form id="searchForm" class="searchbar"><input id="q" placeholder="Buscar artista, rubro, ciudad o provincia…"><button class="btn primary">Buscar</button></form>
-    <div id="filters" class="filters"></div><div id="prospectingCta" style="display:none;margin-top:14px;padding:14px;border:1px solid rgba(0,229,255,.15);border-radius:16px;background:rgba(0,229,255,.04)"><strong>🇦🇷 Explorá el catálogo argentino</strong><div style="color:#a8b6c8;font-size:12px;margin-top:4px">Buscá por rubro y ciudad dentro del directorio de ★ UADAV STREAM.</div><div style="margin-top:10px"><button class="btn primary" type="button" onclick="document.getElementById('q').value='Argentina';state.q='Argentina';load()">Buscar artistas de Argentina</button></div></div>
+    <div id="filters" class="filters"></div><div id="prospectingCta" style="display:none;margin-top:14px;padding:14px;border:1px solid rgba(0,229,255,.15);border-radius:16px;background:rgba(0,229,255,.04)"><strong>🇦🇷 Explorá el catálogo argentino</strong><div style="color:#a8b6c8;font-size:12px;margin-top:4px">Buscá por rubro y ciudad dentro del directorio de ★ UADAV STREAM.</div><div style="margin-top:10px"><button class="btn primary" type="button" onclick="document.getElementById('q').value='Argentina';state.q='Argentina';render()">Buscar artistas de Argentina</button></div></div>
   </section>
   <section><div style="display:flex;justify-content:space-between;align-items:end;gap:10px"><div><div class="eyebrow">CATÁLOGO</div><h2 style="margin:5px 0 0;font-size:30px">Artistas</h2></div><div id="count" class="meta"></div></div><div id="grid" class="grid" style="margin-top:16px"></div></section>
   <div class="footer">★ UADAV STREAM · Directorio de artistas · <a href="/terminos.html">Términos</a> · <a href="/privacidad.html">Privacidad</a></div>
@@ -29,6 +29,9 @@
 <script>
 const API_REMOTE=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';const API_BASES=[API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[location.origin+'/api/']:[])];
 async function apiFetch(path,opt={}){let last;for(const base of API_BASES){try{const r=await fetch(base+path,{...opt,cache:opt.cache||'no-store'});const ct=r.headers.get('content-type')||'';if(base!==API_REMOTE&&(r.status===404||!ct.includes('json')))continue;const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d}catch(e){last=e}}throw last||new Error('No se pudo conectar')}
+const ART_CACHE_KEY='uadav_artists_catalog_v927',ART_CACHE_TTL=5*60*1000;
+function readArtistCache(){try{const x=JSON.parse(sessionStorage.getItem(ART_CACHE_KEY)||'null');if(x&&Array.isArray(x.items)&&Date.now()-Number(x.ts||0)<ART_CACHE_TTL)return x.items}catch{}return null}
+function writeArtistCache(items){try{sessionStorage.setItem(ART_CACHE_KEY,JSON.stringify({ts:Date.now(),items}))}catch{}}
 const categories=['Todos','Música','Bandas / grupos','Circo','Humor','Magia','Danza','Teatro','Animación','Locución / conducción','Compañías / elencos','Salas / espacios','Productoras','Creadores / YouTubers','Variedades','Otros'];
 let state={q:'',category:'Todos',items:[]};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -36,10 +39,21 @@ const norm=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u03
 function renderFilters(){document.getElementById('filters').innerHTML=categories.map(c=>`<button class="chip ${c===state.category?'active':''}" type="button" onclick="setCategory(${JSON.stringify(c)})">${esc(c)}</button>`).join('')}
 function matches(a){const q=norm(state.q);const text=norm([a.nombre,a.nombre_artistico,a.rubro,a.ciudad,a.provincia,a.pais].join(' '));const qok=!q||text.includes(q);const cok=state.category==='Todos'||norm(a.rubro).includes(norm(state.category));return qok&&cok}
 function render(){const arr=state.items.filter(matches);document.getElementById('count').textContent=`${arr.length} perfiles`;document.getElementById('grid').innerHTML=arr.length?arr.map(a=>{const img=a.foto||a.imagen||a.thumbnail||'https://via.placeholder.com/800x800/0b1017/ffffff?text=UADAV+STREAM';const claimed=a.claimed===true;return `<article class="card"><a href="/artista.html?id=${encodeURIComponent(a.id||a.canal||a.nombre)}"><div class="card-media"><img loading="lazy" src="${esc(img)}" alt="${esc(a.nombre||'Artista')}" onerror="this.src='https://via.placeholder.com/800x800/0b1017/ffffff?text=UADAV+STREAM'"></div><div class="card-body"><div class="name">${esc(a.nombre||'Artista')}</div><div class="meta">${esc(a.rubro||'Artista de variedades')}${a.ciudad?' · '+esc(a.ciudad):''}${a.provincia?' · '+esc(a.provincia):''}</div><div class="badges"><span class="pill">${esc(a.rubro||'Artista')}</span>${a.afiliado_verificado?'<span class="pill verified">✓ Afiliado</span>':''}${claimed?'<span class="pill">✓ Perfil reclamado</span>':'<span class="pill">Perfil disponible para reclamar</span>'}</div></div></a></article>`}).join(''):'<div class="empty" style="grid-column:1/-1">No encontramos coincidencias. Podés crear un perfil nuevo desde <a href="/sumate-artista.html" style="color:var(--accent)">Sumate como artista</a>.</div>'}
-async function load(){document.getElementById('grid').innerHTML='<div class="empty" style="grid-column:1/-1">Cargando catálogo…</div>';try{const qs=new URLSearchParams();if(state.q)qs.set('search',state.q);if(state.category!=='Todos')qs.set('category',state.category);const d=await apiFetch('public/artistas?'+qs);state.items=Array.isArray(d)?d:[];render()}catch(e){document.getElementById('grid').innerHTML='<div class="empty" style="grid-column:1/-1">No pudimos cargar el catálogo ahora.</div>'}}
-function setCategory(c){state.category=c;renderFilters();load()}
-document.getElementById('searchForm').addEventListener('submit',e=>{e.preventDefault();state.q=document.getElementById('q').value.trim();load()});
+async function load(force=false){
+  const cached=!force&&readArtistCache();
+  if(cached){state.items=cached;render()}
+  else document.getElementById('grid').innerHTML='<div class="empty" style="grid-column:1/-1">Cargando catálogo…</div>';
+  try{
+    const d=await apiFetch('public/artistas');
+    const items=Array.isArray(d)?d:[];
+    state.items=items;writeArtistCache(items);render();
+  }catch(e){
+    if(!cached)document.getElementById('grid').innerHTML='<div class="empty" style="grid-column:1/-1">No pudimos cargar el catálogo ahora.</div>';
+  }
+}
+function setCategory(c){state.category=c;renderFilters();render()}
+document.getElementById('searchForm').addEventListener('submit',e=>{e.preventDefault();state.q=document.getElementById('q').value.trim();render()});
 async function loadProspectingCTA(){try{const c=await apiFetch('prospecting/config');document.getElementById('prospectingCta').style.display=c.public_button===true?'block':'none'}catch{}}
 renderFilters();loadProspectingCTA();load();
 </script>
-<script src="/uadav-shell-bridge.js?v=924"></script><script src="/uadav-ui-v8.4.js?v=924"></script></body></html>
+<script src="/uadav-shell-bridge.js?v=927"></script><script src="/uadav-ui-v8.4.js?v=927"></script></body></html>
