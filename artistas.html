@@ -29,9 +29,9 @@
 <script>
 const API_REMOTE=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';const API_BASES=[API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[location.origin+'/api/']:[])];
 async function apiFetch(path,opt={}){let last;for(const base of API_BASES){try{const r=await fetch(base+path,{...opt,cache:opt.cache||'no-store'});const ct=r.headers.get('content-type')||'';if(base!==API_REMOTE&&(r.status===404||!ct.includes('json')))continue;const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d}catch(e){last=e}}throw last||new Error('No se pudo conectar')}
-const ART_CACHE_KEY='uadav_artists_catalog_v927',ART_CACHE_TTL=5*60*1000;
-function readArtistCache(){try{const x=JSON.parse(sessionStorage.getItem(ART_CACHE_KEY)||'null');if(x&&Array.isArray(x.items)&&Date.now()-Number(x.ts||0)<ART_CACHE_TTL)return x.items}catch{}return null}
-function writeArtistCache(items){try{sessionStorage.setItem(ART_CACHE_KEY,JSON.stringify({ts:Date.now(),items}))}catch{}}
+const ART_CACHE_KEY='uadav_artists_catalog_v928',ART_CACHE_TTL=30*60*1000;
+function readArtistCache(){for(const store of [sessionStorage,localStorage]){try{const x=JSON.parse(store.getItem(ART_CACHE_KEY)||'null');if(x&&Array.isArray(x.items)&&Date.now()-Number(x.ts||0)<ART_CACHE_TTL)return x.items}catch{}}return null}
+function writeArtistCache(items){const v=JSON.stringify({ts:Date.now(),items});try{sessionStorage.setItem(ART_CACHE_KEY,v)}catch{}try{localStorage.setItem(ART_CACHE_KEY,v)}catch{}}
 const categories=['Todos','Música','Bandas / grupos','Circo','Humor','Magia','Danza','Teatro','Animación','Locución / conducción','Compañías / elencos','Salas / espacios','Productoras','Creadores / YouTubers','Variedades','Otros'];
 let state={q:'',category:'Todos',items:[]};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
