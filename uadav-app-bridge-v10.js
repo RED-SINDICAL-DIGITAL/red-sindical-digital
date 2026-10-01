@@ -1,6 +1,13 @@
 (()=>{
   'use strict';
-  if(window.top===window.self)return;
+  if(window.top===window.self){
+    const qs=new URLSearchParams(location.search);
+    if(qs.get('standalone')!=='1'){
+      const here=location.pathname+location.search+location.hash;
+      location.replace('/app.html?view='+encodeURIComponent(here));
+    }
+    return;
+  }
   const sameOrigin=(url)=>{
     try{return new URL(url,location.href).origin===location.origin}catch{return false}
   };
