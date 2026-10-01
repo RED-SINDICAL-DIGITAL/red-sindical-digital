@@ -72,4 +72,5 @@ async function loadMore(){try{const [legacy,universal,e]=await Promise.allSettle
 async function boot(){try{artist=await api('public/artista?id='+encodeURIComponent(id));await loadMore()}catch(e){document.getElementById('app').innerHTML='<div class="empty" style="margin:25vh auto;width:min(560px,90vw)"><h2>Perfil no disponible</h2><p>'+esc(e.message)+'</p><p><a class="btn primary" href="/artistas.html">Volver al directorio</a></p></div>'}}
 boot();
 </script>
-<script src="/uadav-ui-v8.4.js?v=928"></script></body></html>
+<script src="/uadav-ui-v8.4.js?v=928"></script><script src="/uadav-app-bridge-v10.js?v=103"></script>
+</body></html>
