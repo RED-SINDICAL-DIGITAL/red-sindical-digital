@@ -28,24 +28,36 @@ button{font:inherit}#shell{height:100dvh;display:flex;flex-direction:column;back
 #radioDock{display:none;position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:1300;width:min(980px,calc(100vw - 24px));background:rgba(7,11,17,.97);border:1px solid rgba(25,216,242,.42);border-radius:18px;padding:10px 12px;box-shadow:0 20px 60px rgba(0,0,0,.5);align-items:center;gap:10px}
 #radioDock.active{display:flex}#radioArt{width:46px;height:46px;border-radius:10px;object-fit:cover;background:#111827;flex:none}#radioInfo{min-width:0;flex:1}#radioName{font-size:12px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#radioMeta{font-size:10px;color:#94a3b8;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radio-controls{display:flex;align-items:center;gap:7px}.radio-controls button{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:#111827;color:#fff;cursor:pointer}.radio-controls button.primary{background:#18d8f2;color:#041018;border-color:#18d8f2;font-weight:900}#radioVol{width:90px}
 #appBadge{position:fixed;right:7px;top:5px;z-index:1400;font-size:8px;color:#506071;pointer-events:none}
+#view{transition:opacity .16s ease}
+#viewWrap.loading #view{opacity:.38}
+#mobileNav{display:none}
+#mobileNav button{appearance:none;border:0;background:transparent;color:#8795a8;font:inherit;cursor:pointer}
+#mobileNav button.active{color:#fff}
+#mobileNav .nav-icon{font-size:19px;line-height:1}
+#mobileNav .nav-label{font-size:9px;font-weight:800;line-height:1.1}
 @media(min-width:721px){
  #shell.media-expanded #mediaDock{position:fixed;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.78);padding:24px;z-index:1200}
  #shell.media-expanded #mediaCard{width:min(1100px,94vw);border-radius:22px}
  #shell.media-expanded #mediaStage{border-radius:22px 22px 0 0}
 }
 @media(max-width:720px){
+ #viewWrap{margin-bottom:64px}
  #shell.media-expanded #mediaCard{border-radius:0}
  #shell.media-expanded #mediaStage{max-height:42vh}
- #shell.media-mini #mediaDock{left:8px;right:8px;bottom:74px;width:auto}
- #shell.media-mini #mediaCard{display:grid;grid-template-columns:128px minmax(0,1fr);align-items:stretch}
- #shell.media-mini #mediaStage{aspect-ratio:auto;height:72px;border-radius:16px 0 0 16px}
- #shell.media-mini #mediaCopy{border-top:0;align-self:stretch}
+ #shell.media-mini #mediaDock{left:6px;right:6px;bottom:70px;width:auto}
+ #shell.media-mini #mediaCard{display:grid;grid-template-columns:124px minmax(0,1fr);align-items:stretch;border-radius:14px}
+ #shell.media-mini #mediaStage{aspect-ratio:auto;height:70px;border-radius:14px 0 0 14px}
+ #shell.media-mini #mediaCopy{border-top:0;align-self:stretch;min-width:0}
  #shell.media-mini .media-tools{right:5px;top:50%;transform:translateY(-50%)}
  #shell.media-mini .media-tools button{width:34px;height:34px}
  #shell.media-mini #mediaExpand{display:none}
- #shell.media-mini #mediaCopy{padding-right:46px}
- #radioDock{bottom:74px;padding:8px 9px;border-radius:16px}
+ #shell.media-mini #mediaCopy{padding-right:44px}
+ #radioDock{bottom:70px;padding:8px 9px;border-radius:14px}
  #radioVol{display:none}
+ #mobileNav{position:fixed;left:0;right:0;bottom:0;height:64px;z-index:1250;display:grid;grid-template-columns:repeat(5,1fr);background:rgba(6,8,12,.98);border-top:1px solid rgba(255,255,255,.09);padding:5px 4px max(5px,env(safe-area-inset-bottom));backdrop-filter:blur(18px)}
+ #mobileNav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;border-radius:12px}
+ #mobileNav button.active{background:rgba(255,255,255,.06)}
+ #appBadge{display:none}
 }
 </style>
 </head>
@@ -62,6 +74,13 @@ button{font:inherit}#shell{height:100dvh;display:flex;flex-direction:column;back
     </div>
   </div>
   <div id="viewWrap"><iframe id="view" title="UADAV STREAM" allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+  <nav id="mobileNav" aria-label="Navegación principal">
+    <button type="button" data-route="/index.html" aria-label="Inicio"><span class="nav-icon">⌂</span><span class="nav-label">Inicio</span></button>
+    <button type="button" data-route="/shorts.html" aria-label="Shorts"><span class="nav-icon">▶</span><span class="nav-label">Shorts</span></button>
+    <button type="button" data-route="/artistas.html" aria-label="Artistas"><span class="nav-icon">★</span><span class="nav-label">Artistas</span></button>
+    <button type="button" data-route="/cartelera.html" aria-label="Eventos"><span class="nav-icon">▣</span><span class="nav-label">Eventos</span></button>
+    <button type="button" data-route="/mi-perfil.html" aria-label="Mi perfil"><span class="nav-icon">●</span><span class="nav-label">Perfil</span></button>
+  </nav>
   <div id="radioDock" aria-hidden="true">
     <img id="radioArt" alt="">
     <div id="radioInfo"><div id="radioName">Radio</div><div id="radioMeta">En vivo</div></div>
@@ -74,14 +93,15 @@ button{font:inherit}#shell{height:100dvh;display:flex;flex-direction:column;back
   </div>
   <audio id="radioAudio" preload="none"></audio>
 </div>
-<div id="appBadge">APP V10.3</div>
+<div id="appBadge">APP V10.4</div>
 <script>
 (()=>{
 'use strict';
 const shell=document.getElementById('shell'),view=document.getElementById('view'),stage=document.getElementById('mediaStage');
 const mediaDock=document.getElementById('mediaDock'),mediaTitle=document.getElementById('mediaTitle'),mediaMeta=document.getElementById('mediaMeta');
 const audio=document.getElementById('radioAudio'),radioDock=document.getElementById('radioDock'),radioName=document.getElementById('radioName'),radioMeta=document.getElementById('radioMeta'),radioArt=document.getElementById('radioArt'),radioPlay=document.getElementById('radioPlay'),radioMute=document.getElementById('radioMute'),radioVol=document.getElementById('radioVol');
-let currentMedia=null,currentRadio=null;
+let currentMedia=null,currentRadio=null,currentView='',pendingRestore=0;
+const scrollMemory=new Map();
 const $=id=>document.getElementById(id);
 const pick=(...v)=>{for(const x of v){if(x!==undefined&&x!==null&&String(x).trim())return String(x).trim()}return''};
 function normalizeMedia(raw={}){
@@ -146,8 +166,25 @@ function cleanView(href){
  const u=new URL(href||'/index.html',location.origin);if(u.origin!==location.origin)return'/index.html';
  return u.pathname+u.search+u.hash;
 }
+function saveCurrentScroll(){
+ if(!currentView)return;
+ try{scrollMemory.set(currentView,Number(view.contentWindow?.scrollY||0))}catch{}
+}
+function routeKey(path){try{return new URL(path,location.origin).pathname}catch{return path}}
+function updateMobileNav(path){
+ const key=routeKey(path);
+ document.querySelectorAll('#mobileNav [data-route]').forEach(btn=>{
+  const active=key===routeKey(btn.dataset.route)||(key==='/artista.html'&&btn.dataset.route==='/artistas.html')||(key==='/evento.html'&&btn.dataset.route==='/cartelera.html');
+  btn.classList.toggle('active',active);
+  btn.setAttribute('aria-current',active?'page':'false');
+ });
+}
 function navigate(href,opts={}){
- const to=cleanView(href);minimizeOnNavigate();
+ const to=cleanView(href);
+ if(to===currentView&&!opts.force){updateMobileNav(to);return true}
+ saveCurrentScroll();minimizeOnNavigate();currentView=to;pendingRestore=scrollMemory.get(to)||0;
+ document.getElementById('viewWrap').classList.add('loading');
+ updateMobileNav(to);
  if(!opts.fromPop){const state={view:to};history[opts.replace?'replaceState':'pushState'](state,'','/app.html?view='+encodeURIComponent(to))}
  view.src=to;return true;
 }
@@ -182,13 +219,21 @@ window.UADAVShellHost={dispatch,navigate,playContent,closeContent,playRadio,paus
 window.UADAV_APP=window.UADAVShellHost;
 window.addEventListener('message',e=>{if(e.origin!==location.origin)return;dispatch(e.data||{})});
 window.addEventListener('popstate',e=>navigate(e.state?.view||new URLSearchParams(location.search).get('view')||'/index.html',{fromPop:true,replace:true}));
-view.addEventListener('load',()=>{if(currentMedia)setMediaMode('mini');broadcastRadioState()});
+view.addEventListener('load',()=>{
+ if(currentMedia)setMediaMode('mini');
+ document.getElementById('viewWrap').classList.remove('loading');
+ updateMobileNav(currentView);
+ const y=Number(pendingRestore||0);pendingRestore=0;
+ if(y>0){setTimeout(()=>{try{view.contentWindow?.scrollTo({top:y,left:0,behavior:'instant'})}catch{}},30)}
+ broadcastRadioState();
+});
+document.querySelectorAll('#mobileNav [data-route]').forEach(btn=>btn.addEventListener('click',()=>navigate(btn.dataset.route)));
 $('mediaClose').onclick=closeContent;$('mediaExpand').onclick=toggleMediaMode;
 mediaDock.addEventListener('click',e=>{if(shell.classList.contains('media-mini')&&!e.target.closest('button'))setMediaMode('expanded')});
 radioPlay.onclick=toggleRadio;radioClose.onclick=closeRadio;radioMute.onclick=()=>{audio.muted=!audio.muted;broadcastRadioState()};radioVol.oninput=e=>{audio.volume=Number(e.target.value);audio.muted=false;broadcastRadioState()};
 audio.addEventListener('play',()=>{radioPlay.textContent='❚❚';broadcastRadioState()});audio.addEventListener('pause',()=>{radioPlay.textContent='▶';broadcastRadioState()});
 if('mediaSession'in navigator){try{navigator.mediaSession.setActionHandler('play',()=>audio.play());navigator.mediaSession.setActionHandler('pause',()=>audio.pause());navigator.mediaSession.setActionHandler('stop',closeRadio)}catch{}}
-const initial=new URLSearchParams(location.search).get('view')||'/index.html';history.replaceState({view:cleanView(initial)},'','/app.html?view='+encodeURIComponent(cleanView(initial)));navigate(initial,{fromPop:true,replace:true});
+const initial=cleanView(new URLSearchParams(location.search).get('view')||'/index.html');currentView=initial;updateMobileNav(initial);history.replaceState({view:initial},'','/app.html?view='+encodeURIComponent(initial));navigate(initial,{fromPop:true,replace:true,force:true});
 })();
 </script>
 </body></html>
