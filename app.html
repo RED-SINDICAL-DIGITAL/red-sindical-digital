@@ -185,7 +185,7 @@ function navigate(href,opts={}){
  saveCurrentScroll();minimizeOnNavigate();currentView=to;pendingRestore=scrollMemory.get(to)||0;
  document.getElementById('viewWrap').classList.add('loading');
  updateMobileNav(to);
- if(!opts.fromPop){const state={view:to};history[opts.replace?'replaceState':'pushState'](state,'','/app.html?view='+encodeURIComponent(to))}
+ if(!opts.fromPop){const state={view:to};history[opts.replace?'replaceState':'pushState'](state,'','/app.html?build=104&view='+encodeURIComponent(to))}
  view.src=to;return true;
 }
 function sendToView(msg){try{view.contentWindow?.postMessage(msg,location.origin)}catch{}}
@@ -233,7 +233,7 @@ mediaDock.addEventListener('click',e=>{if(shell.classList.contains('media-mini')
 radioPlay.onclick=toggleRadio;radioClose.onclick=closeRadio;radioMute.onclick=()=>{audio.muted=!audio.muted;broadcastRadioState()};radioVol.oninput=e=>{audio.volume=Number(e.target.value);audio.muted=false;broadcastRadioState()};
 audio.addEventListener('play',()=>{radioPlay.textContent='❚❚';broadcastRadioState()});audio.addEventListener('pause',()=>{radioPlay.textContent='▶';broadcastRadioState()});
 if('mediaSession'in navigator){try{navigator.mediaSession.setActionHandler('play',()=>audio.play());navigator.mediaSession.setActionHandler('pause',()=>audio.pause());navigator.mediaSession.setActionHandler('stop',closeRadio)}catch{}}
-const initial=cleanView(new URLSearchParams(location.search).get('view')||'/index.html');currentView=initial;updateMobileNav(initial);history.replaceState({view:initial},'','/app.html?view='+encodeURIComponent(initial));navigate(initial,{fromPop:true,replace:true,force:true});
+const initial=cleanView(new URLSearchParams(location.search).get('view')||'/index.html');currentView=initial;updateMobileNav(initial);history.replaceState({view:initial},'','/app.html?build=104&view='+encodeURIComponent(initial));navigate(initial,{fromPop:true,replace:true,force:true});
 })();
 </script>
 </body></html>
