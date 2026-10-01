@@ -3,7 +3,7 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const pick=(...vals)=>{for(const v of vals){if(v!==undefined&&v!==null&&String(v).trim()!=='')return String(v).trim()}return''};
   const API=()=>window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';
-  let openSeq=0,ytApiPromise=null;
+  let openSeq=0;
 
   function normalize(raw={}){
     let x={...(raw||{})};
@@ -78,72 +78,15 @@
   function setEmpty(frame,msg='Este contenido no ofrece reproducción embebida.'){
     frame.innerHTML=`<div class="uadav-up-empty"><h3>No se pudo iniciar la reproducción</h3><p>${esc(msg)}</p></div>`;
   }
-  const delay=ms=>new Promise(r=>setTimeout(r,ms));
-  async function resolveInvidious(id){
-    const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),3600);
-    try{
-      const r=await fetch(API()+'playback/youtube?id='+encodeURIComponent(id)+'&_='+Date.now(),{cache:'no-store',signal:ctl.signal,headers:{Accept:'application/json'}});
-      if(!r.ok)return null;const d=await r.json();
-      if(d?.source==='invidious'&&/^https?:\/\//i.test(String(d.embed_url||'')))return d;
-      return null;
-    }catch{return null}finally{clearTimeout(timer)}
-  }
-  function ensureYoutubeApi(){
-    if(window.YT?.Player)return Promise.resolve(window.YT);
-    if(ytApiPromise)return ytApiPromise;
-    ytApiPromise=new Promise((resolve,reject)=>{
-      let done=false;
-      const finish=(ok,val)=>{if(done)return;done=true;clearTimeout(timer);ok?resolve(val):reject(val instanceof Error?val:new Error(String(val||'YouTube API no disponible')))};
-      const prev=window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady=()=>{try{prev?.()}catch{};window.YT?.Player?finish(true,window.YT):finish(false,'YouTube API incompleta')};
-      let s=document.querySelector('script[data-uadav-youtube-api]');
-      if(!s){s=document.createElement('script');s.src='https://www.youtube.com/iframe_api';s.async=true;s.dataset.uadavYoutubeApi='1';s.referrerPolicy='strict-origin-when-cross-origin';s.onerror=()=>finish(false,'YouTube API bloqueada por el navegador');document.head.appendChild(s)}
-      const timer=setTimeout(()=>window.YT?.Player?finish(true,window.YT):finish(false,'YouTube API timeout'),3200);
-    }).catch(e=>{ytApiPromise=null;throw e});
-    return ytApiPromise;
-  }
-  function mountInvidious(frame,resolved,seq,title='Video'){
-    if(seq!==openSeq||!resolved?.embed_url)return false;
-    const f=frameNode(String(resolved.embed_url),title,'no-referrer');
-    frame.replaceChildren(f);return true;
-  }
-  async function mountYoutubeApi(frame,id,seq){
-    await ensureYoutubeApi();if(seq!==openSeq)return false;
-    const mount=document.createElement('div');mount.className='uadav-up-ytmount';mount.id='uadavYtMount_'+seq;frame.replaceChildren(mount);
-    return await new Promise((resolve,reject)=>{
-      let settled=false,player=null;
-      const timer=setTimeout(()=>{if(settled)return;settled=true;try{player?.destroy?.()}catch{};reject(new Error('YouTube player timeout'))},4500);
-      const done=(ok,val)=>{if(settled)return;settled=true;clearTimeout(timer);ok?resolve(val):reject(val instanceof Error?val:new Error(String(val||'YouTube player error')))};
-      try{
-        player=new YT.Player(mount,{width:'100%',height:'100%',videoId:id,host:'https://www.youtube.com',playerVars:{autoplay:1,controls:1,rel:0,playsinline:1,enablejsapi:1,origin:location.origin},events:{onReady:e=>{if(seq!==openSeq){try{e.target.destroy()}catch{};return done(false,'cerrado')}try{e.target.playVideo()}catch{}done(true,true)},onError:e=>done(false,new Error('YouTube '+String(e?.data??'error'))),onAutoplayBlocked:()=>done(true,true)}});
-      }catch(e){done(false,e)}
-    });
-  }
-  async function renderYoutube(frame,n,seq){
+  function renderYoutube(frame,n,seq){
     let u=null;try{if(n.url)u=new URL(n.url)}catch{}
     const list=(u?.searchParams?.get('list')||((n.content_type==='playlist')?n.external_id:'')||'').trim();
     if(list){frame.replaceChildren(frameNode(youtubePlaylist(list),'YouTube playlist'));return true}
     const id=youtubeId(n,u);if(!id){setEmpty(frame,'Falta el identificador del video.');return false}
-
-    // V9.2.4: resolver Invidious en paralelo desde el primer instante. Le damos
-    // una breve prioridad; si no responde rápido, intentamos el player oficial.
-    // Si Brave/una extensión bloquea YouTube o falta Referer (error 153), se
-    // conmuta automáticamente al embed Invidious sin mostrar enlaces externos.
-    frame.innerHTML='<div class="uadav-up-wait" aria-label="Cargando"><i></i></div>';
-    const ivPromise=resolveInvidious(id);
-    const early=await Promise.race([ivPromise.then(v=>({kind:'iv',v})),delay(700).then(()=>({kind:'yt'}))]);
-    if(seq!==openSeq)return false;
-    if(early.kind==='iv'&&early.v)return mountInvidious(frame,early.v,seq,'Invidious video');
-    try{
-      await mountYoutubeApi(frame,id,seq);
-      return seq===openSeq;
-    }catch(_){
-      const iv=early.kind==='iv'?early.v:await ivPromise;
-      if(iv&&mountInvidious(frame,iv,seq,'Invidious video'))return true;
-      // Último fallback: iframe oficial estándar, que conserva Referer del sitio.
-      if(seq===openSeq){frame.replaceChildren(frameNode(youtubeEmbed(id),'YouTube video'));return true}
-      return false;
-    }
+    // V9.2.5: montaje síncrono en desktop para conservar el gesto real del clic.
+    // No hay espera de iframe_api/Invidious antes de mostrar el reproductor.
+    frame.replaceChildren(frameNode(youtubeEmbed(id),'YouTube video'));
+    return seq===openSeq;
   }
   function renderBasic(frame,n){const html=embed(n);if(html){frame.innerHTML=html;return true}setEmpty(frame);return false}
 
@@ -151,7 +94,8 @@
     normalize,source,embed,
     open(item={},opts={}){
       const n=normalize(item);
-      if(window.parent!==window&&opts.local!==true){
+      const desktopLocal = window.parent!==window && opts.local!==true && window.matchMedia && window.matchMedia('(min-width: 769px)').matches;
+      if(window.parent!==window&&opts.local!==true&&!desktopLocal){
         try{const host=window.parent.UADAVShellHost;if(host?.playContent){host.playContent(n);return true}}catch{}
         try{window.parent.postMessage({type:'uadav:content-play',item:n},location.origin);return true}catch{}
       }
@@ -166,7 +110,7 @@
     close(){openSeq++;const root=document.getElementById('uadavUniversalPlayer');if(!root)return;const media=root.querySelector('video,audio');try{media?.pause?.()}catch{}root.querySelector('.uadav-up-frame').innerHTML='';root.classList.remove('active','mini');root.setAttribute('aria-hidden','true');document.body.style.overflow=''},
     toggleMini(){const root=document.getElementById('uadavUniversalPlayer');if(!root?.classList.contains('active'))return;const mini=root.classList.toggle('mini');document.body.style.overflow=mini?'':'hidden'}
   };
-  api.build='9.2.4';
+  api.build='9.2.5';
   window.UADAVContentPlayer=api;
   document.addEventListener('keydown',e=>{if(e.key==='Escape')api.close()});
 })();
