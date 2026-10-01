@@ -93,8 +93,10 @@
     normalize,source,embed,
     open(item={},opts={}){
       const n=normalize(item);
-      const desktopLocal = window.parent!==window && opts.local!==true && window.matchMedia && window.matchMedia('(min-width: 769px)').matches;
-      if(window.parent!==window&&opts.local!==true&&!desktopLocal){
+      // V9.2.7: si la vista vive dentro de app.html, SIEMPRE delega al
+      // reproductor global del App Shell. Evita YouTube dentro de iframe dentro
+      // de iframe, que en desktop/Edge era la causa más probable del bloqueo.
+      if(window.parent!==window&&opts.local!==true){
         try{const host=window.parent.UADAVShellHost;if(host?.playContent){host.playContent(n);return true}}catch{}
         try{window.parent.postMessage({type:'uadav:content-play',item:n},location.origin);return true}catch{}
       }
@@ -109,7 +111,7 @@
     close(){openSeq++;const root=document.getElementById('uadavUniversalPlayer');if(!root)return;const media=root.querySelector('video,audio');try{media?.pause?.()}catch{}root.querySelector('.uadav-up-frame').innerHTML='';root.classList.remove('active','mini');root.setAttribute('aria-hidden','true');document.body.style.overflow=''},
     toggleMini(){const root=document.getElementById('uadavUniversalPlayer');if(!root?.classList.contains('active'))return;const mini=root.classList.toggle('mini');document.body.style.overflow=mini?'':'hidden'}
   };
-  api.build='9.2.6';
+  api.build='9.2.7';
   window.UADAVContentPlayer=api;
   document.addEventListener('keydown',e=>{if(e.key==='Escape')api.close()});
 })();
