@@ -14,6 +14,25 @@
 #radioDock{display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:1300;width:min(1180px,calc(100vw - 30px));min-height:82px;background:rgba(7,11,17,.97);border:1px solid rgba(47,109,246,.42);border-radius:18px;padding:10px 12px;box-shadow:0 22px 70px #0009;align-items:center;gap:13px;backdrop-filter:blur(24px)}#radioDock.active{display:grid;grid-template-columns:minmax(230px,1fr) auto minmax(210px,1fr)}.radio-left{display:flex;align-items:center;gap:12px;min-width:0}#radioArt{width:58px;height:58px;border-radius:9px;object-fit:cover;background:#111827;flex:none;box-shadow:0 6px 22px #0008}#radioInfo{min-width:0}#radioName{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#radioMeta{font-size:11px;color:#9fb0c5;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radio-center{display:flex;align-items:center;gap:9px}.radio-controls{display:flex;align-items:center;justify-content:flex-end;gap:8px}.radio-controls button,.radio-center button{width:42px;height:42px;border:1px solid #ffffff24;background:#111827;color:#fff;border-radius:50%;cursor:pointer}.radio-center .primary{width:48px;height:48px;background:#2f6df6;color:#031017;border-color:#2f6df6;font-weight:900;font-size:17px}#radioVol{width:92px;accent-color:#2f6df6}#radioDiscover{border-radius:999px!important;width:auto!important;padding:0 14px!important;font-size:11px;font-weight:900;color:#c8f8ff!important}
 #historyDock{display:none;position:fixed;left:50%;bottom:110px;transform:translateX(-50%);z-index:1290;width:min(1180px,calc(100vw - 30px));background:rgba(7,11,17,.98);border:1px solid #ffffff18;border-radius:20px;padding:18px;box-shadow:0 24px 70px #000b;backdrop-filter:blur(24px)}#historyDock.active{display:block}.history-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:13px}.history-head strong{font-size:20px}.history-head span{font-size:11px;color:#8190a5}.history-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.history-item{display:flex;align-items:center;gap:9px;border:1px solid #ffffff12;background:#0b111a;border-radius:13px;padding:8px;cursor:pointer;min-width:0;color:#fff;text-align:left}.history-item:hover,.history-item:focus{border-color:#2f6df6}.history-item img{width:46px;height:46px;border-radius:8px;object-fit:cover}.history-copy{min-width:0}.history-title,.history-artist{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.history-title{font-size:12px;font-weight:900}.history-artist{font-size:10px;color:#91a2b8;margin-top:3px}
 #mobileNav{display:none}.nav-icon{font-size:20px}.nav-label{font-size:10px;font-weight:800}#mobileNav button{border:0;background:transparent;color:#8795a8}.active{color:#fff!important}#appBadge{position:fixed;right:7px;top:5px;font-size:8px;color:#506071;z-index:1400}
+/* V10.10 · dedicated PC / Notebook shell */
+@media(min-width:1180px){
+  #shell.media-expanded #mediaDock{background:rgba(0,0,0,.84);padding:32px}
+  #shell.media-expanded #mediaCard{width:min(1280px,88vw,calc((100dvh - 130px)*16/9));border-radius:24px;border-color:rgba(255,255,255,.14);box-shadow:0 28px 90px #000c}
+  #shell.media-expanded #mediaStage{max-height:calc(100dvh - 126px)}
+  #shell.media-expanded #mediaCopy{padding:14px 18px 16px}
+  #shell.media-expanded #mediaTitle{font-size:16px}
+  #shell.media-expanded #mediaMeta{font-size:12px}
+  .media-tools{top:14px;right:14px;gap:8px}
+  .media-tools button{width:42px;height:42px;background:rgba(8,12,18,.88);border-color:rgba(255,255,255,.18);backdrop-filter:blur(12px)}
+  #shell.media-mini #mediaDock{right:26px;bottom:26px;width:min(470px,32vw)}
+  #shell.media-mini #mediaCard{border-radius:19px}
+  #radioDock{width:min(1320px,calc(100vw - 64px));min-height:88px;bottom:22px;padding:11px 14px;border-radius:20px;grid-template-columns:minmax(300px,1fr) auto minmax(280px,1fr)}
+  #radioArt{width:64px;height:64px;border-radius:12px}
+  #radioName{font-size:15px}#radioMeta{font-size:11px}
+  .radio-center{gap:10px}.radio-controls{gap:9px}
+  #historyDock{width:min(1320px,calc(100vw - 64px));bottom:124px}
+  .history-list{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
 /* V10.9 shared shell polish: tablet/base before dedicated desktop pass */
 #radioDock{border-color:rgba(255,255,255,.12);background:rgba(8,12,18,.97);box-shadow:0 18px 55px #0008}
 .radio-center .primary{background:#2f6df6;color:#fff;border-color:#2f6df6}
