@@ -73,6 +73,19 @@ html.uadav-app-embedded #floatingRadioPlayer{display:none!important}
 #radiosGrid .text-uadav-accent{color:#4b7df7!important}
 #radiosGrid .bg-uadav-accent{background:#2f6df6!important;color:#fff!important}
 .radio-hero button{min-height:48px!important}
+@media(min-width:1180px){
+ #radiosSection{margin-top:42px!important}
+ #radiosGrid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:14px!important}
+ #radiosGrid>div:first-child{grid-template-columns:170px minmax(0,1fr) 190px!important;gap:24px!important;min-height:218px!important;padding:22px 24px!important;border-radius:22px!important;background:linear-gradient(110deg,#101722 0%,#090c11 52%,#0b0f15 100%)!important}
+ #radiosGrid>div:first-child>div:first-of-type{width:170px!important;height:170px!important}
+ #radiosGrid>div:first-child img{width:170px!important;height:170px!important;max-width:170px!important;border-radius:16px!important}
+ #radiosGrid>div:first-child h3{font-size:clamp(30px,3vw,44px)!important;margin:2px 0 7px!important}
+ #radiosGrid>div:first-child p{font-size:13px!important;margin-bottom:10px!important}
+ #radiosGrid>div:first-child .flex.items-center.gap-3{max-width:640px!important;background:rgba(255,255,255,.055)!important;border-color:rgba(255,255,255,.08)!important}
+ #radiosGrid>div:first-child>div:last-child{width:190px!important}
+ #radiosGrid>div:first-child button{width:100%!important;min-width:0!important;border-radius:14px!important}
+ #radiosGrid>div:not(:first-child){max-width:none!important}
+}
 @media(max-width:900px){#radiosGrid>div:first-child{grid-template-columns:180px minmax(0,1fr)!important}.radio-hero>div:last-child{grid-column:1/-1!important}}
 @media(max-width:720px){
  html.uadav-app-embedded body{padding-bottom:150px!important}
