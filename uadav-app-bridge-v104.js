@@ -17,6 +17,31 @@
   document.addEventListener('click',e=>{if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;const a=e.target.closest?.('a[href]');if(!a||a.target==='_blank'||a.hasAttribute('download'))return;const href=a.getAttribute('href')||'';if(!href||href.startsWith('#')||href.startsWith('javascript:')||href.startsWith('mailto:')||href.startsWith('tel:'))return;if(!sameOrigin(href))return;if(navigate(href)){e.preventDefault();e.stopPropagation()}},true);
   window.UADAVAppBridge={navigate,playContent,host};
 
+  // V10.7.3 · puente de búsqueda Shell -> index.html.
+  // El player global navega primero al Inicio y luego envía uadav:search.
+  // Antes index.html no escuchaba ese mensaje, por eso volvía al Inicio sin buscar.
+  window.addEventListener('message',e=>{
+    if(e.origin!==location.origin)return;
+    const d=e.data||{};
+    if(d.type!=='uadav:search')return;
+    const q=String(d.query||'').trim();
+    if(!q)return;
+    const run=()=>{
+      const input=document.getElementById('searchInput');
+      if(!input)return false;
+      input.value=q;
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      if(typeof window.ejecutarBusqueda==='function'){
+        Promise.resolve(window.ejecutarBusqueda()).catch(err=>console.warn('[UADAV search bridge]',err));
+        return true;
+      }
+      const btn=document.querySelector('[onclick*="ejecutarBusqueda"],button[type="submit"]');
+      if(btn){btn.click();return true}
+      return false;
+    };
+    if(!run())setTimeout(run,250);
+  });
+
   const API='https://uadav-api.uadavstream.workers.dev/api/';
   let jsonpSeq=0;
   function splitStreamTitle(raw){let artist='',title=String(raw||'').trim();if(title.includes(' - ')){const p=title.split(' - ');artist=p.shift().trim();title=p.join(' - ').trim()}return{artist,title}}
@@ -42,8 +67,6 @@
   }
   async function getJSON(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 
-  // V10.5.9 · HOME: metadata + artwork persistente. La portada Deezer no vuelve
-  // al logo de la emisora en cada tick y se sincroniza con tarjeta + shell.
   if(location.pathname==='/'||/\/index\.html$/i.test(location.pathname)){
     let homeTimer=0,homeLastKey='',homeLastArt='';
     function paintHomeRadio(radio,rid,m,art){
@@ -55,11 +78,7 @@
       const explicit=document.getElementById('radio-card-'+rid);
       const candidates=[explicit,...document.querySelectorAll('.radio-card')].filter(Boolean);
       const card=candidates.find(el=>el===explicit||el.dataset?.radioName===String(radio.nombre||'')||el.dataset?.radioIndex==='0')||candidates[0];
-      if(card&&art){
-        const main=card.querySelector('.radio-logo');if(main)main.src=art;
-        const track=card.querySelector('.radio-track-art');if(track)track.src=art;
-        const anyImg=!main&&!track?card.querySelector('img'):null;if(anyImg)anyImg.src=art;
-      }
+      if(card&&art){const main=card.querySelector('.radio-logo');if(main)main.src=art;const track=card.querySelector('.radio-track-art');if(track)track.src=art;const anyImg=!main&&!track?card.querySelector('img'):null;if(anyImg)anyImg.src=art}
       try{window.parent.postMessage({type:'uadav:radio-meta',radio_id:rid,stream_url:radio.stream_url||radio.url||'',title:m.title,artist:m.artist,artwork:art,station:radio.nombre||'Radio'},location.origin)}catch{}
     }
     async function homeRadioTick(){
@@ -73,14 +92,7 @@
         const m=parseMeta(payload);if(!m.title)return;
         const key=(m.artist+'|'+m.title).toLowerCase();
         const fallback=radio.logo||radio.imagen||radio.portada||'/radio-fallback.svg';
-        if(key!==homeLastKey){
-          homeLastKey=key;homeLastArt=fallback;
-          paintHomeRadio(radio,rid,m,homeLastArt);
-          const found=await deezerCover(m.artist,m.title);
-          if(found&&key===homeLastKey){homeLastArt=found;paintHomeRadio(radio,rid,m,homeLastArt)}
-        }else{
-          paintHomeRadio(radio,rid,m,homeLastArt||fallback);
-        }
+        if(key!==homeLastKey){homeLastKey=key;homeLastArt=fallback;paintHomeRadio(radio,rid,m,homeLastArt);const found=await deezerCover(m.artist,m.title);if(found&&key===homeLastKey){homeLastArt=found;paintHomeRadio(radio,rid,m,homeLastArt)}}else{paintHomeRadio(radio,rid,m,homeLastArt||fallback)}
       }catch(e){console.warn('[UADAV Home radio metadata]',e)}
     }
     const startHome=()=>{homeRadioTick();clearInterval(homeTimer);homeTimer=setInterval(homeRadioTick,12000)};
@@ -88,7 +100,6 @@
     window.addEventListener('beforeunload',()=>clearInterval(homeTimer));
   }
 
-  // RADIO PROFILE: Worker primero; Zeno SSE como actualización inmediata cuando está disponible.
   if((document.querySelector('meta[name="site-page"]')?.content||'')==='radio'){
     let es=null,fallbackTimer=0,lastKey='';
     const css=document.createElement('style');
@@ -101,14 +112,7 @@
     function notify(title,artist,art){try{window.parent.postMessage({type:'uadav:radio-meta',radio_id:rid(),title,artist,artwork:art||fallbackArt()},location.origin)}catch{}}
     async function applyMeta(meta){const m=parseMeta(meta);if(!m.title)return;setText(m.title,m.artist);const key=(m.artist+'|'+m.title).toLowerCase();if(key===lastKey)return;lastKey=key;const fb=fallbackArt();notify(m.title,m.artist,fb);const art=await deezerCover(m.artist,m.title);if(art){setArt(art);notify(m.title,m.artist,art)}}
     async function workerFallback(){try{const d=await getJSON(API+'radio/metadata?radio_id='+encodeURIComponent(rid())+'&_='+Date.now());applyMeta(d)}catch{}}
-    async function bootRadioMeta(){
-      workerFallback();
-      let metaUrl='';
-      try{const list=await getJSON(API+'radios?_='+Date.now());const radio=Array.isArray(list)?list.find(x=>String(x.id)===String(rid())):null;metaUrl=String(radio?.metadata_url||radio?.meta_url||'')}catch{}
-      if(!metaUrl&&rid()==='beat-digital')metaUrl='https://api.zeno.fm/mounts/metadata/subscribe/9s7nnwmknkhvv';
-      if(metaUrl&&window.EventSource){try{es?.close();es=new EventSource(metaUrl);es.onmessage=e=>{try{applyMeta(JSON.parse(e.data||'{}'))}catch{}};es.onerror=()=>workerFallback()}catch{}}
-      clearInterval(fallbackTimer);fallbackTimer=setInterval(workerFallback,12000);
-    }
+    async function bootRadioMeta(){workerFallback();let metaUrl='';try{const list=await getJSON(API+'radios?_='+Date.now());const radio=Array.isArray(list)?list.find(x=>String(x.id)===String(rid())):null;metaUrl=String(radio?.metadata_url||radio?.meta_url||'')}catch{}if(!metaUrl&&rid()==='beat-digital')metaUrl='https://api.zeno.fm/mounts/metadata/subscribe/9s7nnwmknkhvv';if(metaUrl&&window.EventSource){try{es?.close();es=new EventSource(metaUrl);es.onmessage=e=>{try{applyMeta(JSON.parse(e.data||'{}'))}catch{}};es.onerror=()=>workerFallback()}catch{}}clearInterval(fallbackTimer);fallbackTimer=setInterval(workerFallback,12000)}
     const start=()=>setTimeout(bootRadioMeta,350);
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
     window.addEventListener('beforeunload',()=>{try{es?.close()}catch{};clearInterval(fallbackTimer)});
