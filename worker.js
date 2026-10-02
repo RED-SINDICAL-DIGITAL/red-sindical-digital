@@ -1049,7 +1049,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V10.5.4', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V10.5.5', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:'UADAVSTREAM', architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -2482,59 +2482,92 @@ async function saveEntityVersion(type,id,data){
       return json({error:'Entidad de importación no soportada'},400);
     }
 
-    // --- V10.5.4 · RADIO METADATA PROXY (Zeno/Admin SSE-safe) ---
+    // --- V10.5.5 · RADIO METADATA PROXY (Zeno/Admin SSE-safe) ---
     if(path==='/api/radio/metadata' && request.method==='GET'){
       const rid=String(url.searchParams.get('radio_id')||'').trim();
       const radios=await getArray('radios');
-      const radio=radios.find(r=>String(r.id||r.nombre||r.stream_url)===rid)||radios.find(r=>String(r.nombre||'')===rid);
-      if(!radio)return json({error:'Radio no encontrada'},404);
+      const norm=v=>String(v||'').trim().toLowerCase();
+      const radio=radios.find(r=>norm(r.id)===norm(rid))
+        ||radios.find(r=>norm(r.nombre)===norm(rid))
+        ||radios.find(r=>norm(r.stream_url||r.url)===norm(rid));
+      if(!radio)return json({error:'Radio no encontrada',radio_id:rid},404);
       let metaUrl=String(radio.metadata_url||radio.meta_url||'').trim();
       if(!metaUrl){
         const z=String(radio.stream_url||radio.url||'').match(/(?:stream(?:-[a-z0-9]+)?\.)?zeno\.fm\/([^/?#]+)/i);
         if(z)metaUrl='https://api.zeno.fm/mounts/metadata/subscribe/'+encodeURIComponent(z[1].replace(/\/source$/i,''));
       }
       if(!metaUrl)return json({error:'Metadata no configurada',radio_id:rid},404);
+
+      const usefulMeta=p=>{
+        if(!p||typeof p!=='object'||Array.isArray(p))return false;
+        const title=String(p.streamTitle||p.stream_title||p.title||p.song||p.track||p?.metadata?.streamTitle||p?.metadata?.title||'').trim();
+        const artist=String(p.artist||p?.metadata?.artist||'').trim();
+        return !!(title||artist);
+      };
+      const normalizeMeta=p=>{
+        const m=(p&&typeof p==='object')?p:{};
+        let streamTitle=String(m.streamTitle||m.stream_title||m.title||m.song||m.track||m?.metadata?.streamTitle||m?.metadata?.title||'').trim();
+        let artist=String(m.artist||m?.metadata?.artist||'').trim();
+        let title=String(m.song||m.track||m?.metadata?.song||m?.metadata?.track||'').trim();
+        if(streamTitle&&(!artist||!title)){
+          const parts=streamTitle.split(/\s+-\s+/);
+          if(parts.length>1){if(!artist)artist=parts.shift().trim();if(!title)title=parts.join(' - ').trim();}
+          else if(!title)title=streamTitle;
+        }
+        return {...m,streamTitle,artist,title};
+      };
+
       let reader=null,timer=null;
       try{
         const controller=new AbortController();
-        timer=setTimeout(()=>controller.abort('metadata_timeout'),8000);
-        const rr=await fetch(metaUrl,{headers:{'Accept':'text/event-stream,application/json,*/*','Cache-Control':'no-cache','User-Agent':'UADAVSTREAM/10.5.4'},signal:controller.signal});
-        if(!rr.ok)return json({error:'Metadata upstream '+rr.status},502);
+        timer=setTimeout(()=>controller.abort('metadata_timeout'),10000);
+        const rr=await fetch(metaUrl,{headers:{'Accept':'text/event-stream,application/json,*/*','Cache-Control':'no-cache','User-Agent':'UADAVSTREAM/10.5.5'},signal:controller.signal});
+        if(!rr.ok)return json({error:'Metadata upstream '+rr.status,radio_id:rid},502);
         const ct=String(rr.headers.get('content-type')||'').toLowerCase();
         if(ct.includes('application/json')){
-          const payload=await rr.json().catch(()=>null);
-          if(!payload)return json({error:'Metadata JSON inválida'},502);
-          return json({success:true,radio_id:rid,source:'admin-json',metadata_url:metaUrl,data:payload});
+          const rawPayload=await rr.json().catch(()=>null);
+          const candidates=Array.isArray(rawPayload)?rawPayload:[rawPayload,rawPayload?.data,rawPayload?.metadata].filter(Boolean);
+          const found=candidates.find(usefulMeta);
+          if(!found)return json({error:'Metadata JSON sin tema',radio_id:rid},502);
+          return json({success:true,radio_id:rid,source:'admin-json',data:normalizeMeta(found)});
         }
-        if(!rr.body)return json({error:'Metadata sin stream'},502);
+        if(!rr.body)return json({error:'Metadata sin stream',radio_id:rid},502);
+
         reader=rr.body.getReader();
         const dec=new TextDecoder();
         let buf='',payload=null;
-        while(true){
+        while(!payload){
           const {value,done}=await reader.read();
           if(done)break;
           buf+=dec.decode(value,{stream:true});
           const blocks=buf.split(/\r?\n\r?\n/);
           buf=blocks.pop()||'';
           for(const block of blocks){
-            const dataLines=block.split(/\r?\n/).filter(line=>line.startsWith('data:')).map(line=>line.slice(5).trim()).filter(Boolean);
+            const dataLines=block.split(/\r?\n/)
+              .filter(line=>/^data:/i.test(line))
+              .map(line=>line.replace(/^data:\s*/i,'').trim())
+              .filter(Boolean);
             for(const dataLine of dataLines){
               const parsed=safeJSON(dataLine,null);
-              if(parsed){payload=parsed;break;}
+              const candidates=[parsed,parsed?.data,parsed?.metadata].filter(Boolean);
+              const found=candidates.find(usefulMeta);
+              if(found){payload=normalizeMeta(found);break;}
             }
             if(payload)break;
           }
-          if(payload)break;
-          if(buf.length>65536)buf=buf.slice(-32768);
+          if(buf.length>131072)buf=buf.slice(-65536);
         }
         if(!payload){
-          const all=[...buf.matchAll(/data:\s*(\{[^\n]+\})/g)];
-          for(const m of all){const parsed=safeJSON(m[1],null);if(parsed){payload=parsed;break;}}
+          for(const m of buf.matchAll(/data:\s*(\{[^\n]+\})/g)){
+            const parsed=safeJSON(m[1],null);
+            const found=[parsed,parsed?.data,parsed?.metadata].filter(Boolean).find(usefulMeta);
+            if(found){payload=normalizeMeta(found);break;}
+          }
         }
-        if(!payload)return json({error:'Metadata sin evento utilizable'},502);
-        return json({success:true,radio_id:rid,source:'admin-sse',metadata_url:metaUrl,data:payload});
+        if(!payload)return json({error:'Metadata sin tema utilizable',radio_id:rid},502);
+        return json({success:true,radio_id:rid,source:'admin-sse',data:payload});
       }catch(e){
-        return json({error:'No se pudo consultar metadata',detail:String(e?.message||e)},502);
+        return json({error:'No se pudo consultar metadata',radio_id:rid,detail:String(e?.message||e)},502);
       }finally{
         if(timer)clearTimeout(timer);
         try{await reader?.cancel()}catch{}
