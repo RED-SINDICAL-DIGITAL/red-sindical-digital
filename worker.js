@@ -1049,7 +1049,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V9.2.4', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: 'V10.5.4', kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:'UADAVSTREAM', architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -2482,24 +2482,63 @@ async function saveEntityVersion(type,id,data){
       return json({error:'Entidad de importación no soportada'},400);
     }
 
-    // --- V10.5.3 · RADIO METADATA PROXY (Zeno/Admin) ---
+    // --- V10.5.4 · RADIO METADATA PROXY (Zeno/Admin SSE-safe) ---
     if(path==='/api/radio/metadata' && request.method==='GET'){
       const rid=String(url.searchParams.get('radio_id')||'').trim();
       const radios=await getArray('radios');
       const radio=radios.find(r=>String(r.id||r.nombre||r.stream_url)===rid)||radios.find(r=>String(r.nombre||'')===rid);
       if(!radio)return json({error:'Radio no encontrada'},404);
       let metaUrl=String(radio.metadata_url||radio.meta_url||'').trim();
-      if(!metaUrl){const z=String(radio.stream_url||radio.url||'').match(/(?:stream(?:-[a-z0-9]+)?\.)?zeno\.fm\/([^/?#]+)/i);if(z)metaUrl='https://api.zeno.fm/mounts/metadata/subscribe/'+encodeURIComponent(z[1].replace(/\/source$/i,''));}
+      if(!metaUrl){
+        const z=String(radio.stream_url||radio.url||'').match(/(?:stream(?:-[a-z0-9]+)?\.)?zeno\.fm\/([^/?#]+)/i);
+        if(z)metaUrl='https://api.zeno.fm/mounts/metadata/subscribe/'+encodeURIComponent(z[1].replace(/\/source$/i,''));
+      }
       if(!metaUrl)return json({error:'Metadata no configurada',radio_id:rid},404);
+      let reader=null,timer=null;
       try{
-        const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),6500);
-        const rr=await fetch(metaUrl,{headers:{'Accept':'application/json,text/event-stream,*/*','User-Agent':'UADAVSTREAM/10.5'},signal:controller.signal});clearTimeout(timer);
+        const controller=new AbortController();
+        timer=setTimeout(()=>controller.abort('metadata_timeout'),8000);
+        const rr=await fetch(metaUrl,{headers:{'Accept':'text/event-stream,application/json,*/*','Cache-Control':'no-cache','User-Agent':'UADAVSTREAM/10.5.4'},signal:controller.signal});
         if(!rr.ok)return json({error:'Metadata upstream '+rr.status},502);
-        const txt=await rr.text();let payload=safeJSON(txt,null);
-        if(!payload){const lines=txt.split(/\r?\n/).filter(x=>x.startsWith('data:'));for(const line of lines){payload=safeJSON(line.slice(5).trim(),null);if(payload)break;}}
-        if(!payload)return json({error:'Metadata sin datos utilizables'},502);
-        return json({success:true,radio_id:rid,source:'admin',metadata_url:metaUrl,data:payload});
-      }catch(e){return json({error:'No se pudo consultar metadata',detail:String(e?.message||e)},502);}
+        const ct=String(rr.headers.get('content-type')||'').toLowerCase();
+        if(ct.includes('application/json')){
+          const payload=await rr.json().catch(()=>null);
+          if(!payload)return json({error:'Metadata JSON inválida'},502);
+          return json({success:true,radio_id:rid,source:'admin-json',metadata_url:metaUrl,data:payload});
+        }
+        if(!rr.body)return json({error:'Metadata sin stream'},502);
+        reader=rr.body.getReader();
+        const dec=new TextDecoder();
+        let buf='',payload=null;
+        while(true){
+          const {value,done}=await reader.read();
+          if(done)break;
+          buf+=dec.decode(value,{stream:true});
+          const blocks=buf.split(/\r?\n\r?\n/);
+          buf=blocks.pop()||'';
+          for(const block of blocks){
+            const dataLines=block.split(/\r?\n/).filter(line=>line.startsWith('data:')).map(line=>line.slice(5).trim()).filter(Boolean);
+            for(const dataLine of dataLines){
+              const parsed=safeJSON(dataLine,null);
+              if(parsed){payload=parsed;break;}
+            }
+            if(payload)break;
+          }
+          if(payload)break;
+          if(buf.length>65536)buf=buf.slice(-32768);
+        }
+        if(!payload){
+          const all=[...buf.matchAll(/data:\s*(\{[^\n]+\})/g)];
+          for(const m of all){const parsed=safeJSON(m[1],null);if(parsed){payload=parsed;break;}}
+        }
+        if(!payload)return json({error:'Metadata sin evento utilizable'},502);
+        return json({success:true,radio_id:rid,source:'admin-sse',metadata_url:metaUrl,data:payload});
+      }catch(e){
+        return json({error:'No se pudo consultar metadata',detail:String(e?.message||e)},502);
+      }finally{
+        if(timer)clearTimeout(timer);
+        try{await reader?.cancel()}catch{}
+      }
     }
 
     // --- V8.3 · RADIO HISTORIAL / PEDIDOS ---
