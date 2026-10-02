@@ -92,6 +92,40 @@ header+section>div.absolute:first-child{opacity:.38!important;filter:saturate(.7
 #artistasGrid img{aspect-ratio:1/1;object-fit:cover}#videoModal>div,#artistModal>div{border-color:var(--u-line)!important;background:#0b0b0c!important;box-shadow:none!important}
 #floatingRadioPlayer{border-color:var(--u-line)!important;background:rgba(10,10,11,.97)!important;box-shadow:0 18px 50px rgba(0,0,0,.38)!important}
 footer{background:#050505!important;border-color:var(--u-line)!important}.v10-mobile-bar{display:none}.v10-commission-tag{position:fixed;right:10px;bottom:10px;z-index:39;font-size:9px;color:#555;pointer-events:none}
+/* V10.10 · PC / Notebook experience */
+@media(min-width:1180px){
+  body{background:#050505}
+  .v10-primary-nav{display:flex}
+  header.sticky>div:first-child{height:74px!important;gap:24px!important;max-width:1640px!important;margin:auto!important}
+  header.sticky>div:first-child>.flex-1{max-width:390px!important;margin-left:auto!important}
+  #searchInput{height:44px!important;background:#101012!important;border-color:rgba(255,255,255,.11)!important}
+  #countryBadge{display:none!important}
+  header+section{width:min(1600px,calc(100% - 56px));min-height:500px;margin:22px auto 0!important;border-radius:28px}
+  header+section>div.relative{min-height:500px;padding:88px 72px!important}
+  #heroTitulo{font-size:clamp(54px,5vw,78px)!important;max-width:880px!important}
+  #heroSub{font-size:clamp(42px,4.2vw,66px)!important;max-width:940px!important}
+  .uadav-action-deck{max-width:1540px!important;padding:0 28px!important;margin-top:24px!important}
+  .uadav-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;overflow:visible!important}
+  .uadav-action{min-width:0!important;min-height:138px!important;padding:22px!important;border-radius:20px!important}
+  .uadav-action i{font-size:21px!important}.uadav-action strong{font-size:17px!important}.uadav-action span{font-size:12px!important;line-height:1.45!important}
+  #mainContainer{max-width:1540px!important;padding:46px 28px 100px!important;gap:0!important}
+  #mainContainer>section{margin-top:54px!important}
+  #mainContainer>section:first-child{margin-top:0!important}
+  #mainContainer h2{font-size:26px!important}
+  #senalesGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  #radiosGrid{grid-template-columns:minmax(0,1.6fr) repeat(2,minmax(220px,.7fr))!important;align-items:stretch!important}
+  #artistasGrid{grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:14px!important}
+  #artistasGrid>div{padding:14px!important}
+  #artistasGrid img{width:112px!important;height:112px!important}
+  #teatrosRail,#circosRail,#ipTrendingRail,#carteleraRail,#conciertosRail{gap:16px!important;padding-bottom:12px!important}
+  #teatrosRail>*,#circosRail>*,#ipTrendingRail>*,#carteleraRail>*,#conciertosRail>*{flex:0 0 clamp(230px,18vw,300px)!important}
+  #shortsRail>*{flex:0 0 clamp(190px,14vw,230px)!important}
+  #gridContainer{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:18px!important}
+}
+@media(min-width:1500px){
+  #artistasGrid{grid-template-columns:repeat(10,minmax(0,1fr))!important}
+  #gridContainer{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+}
 @media(min-width:1180px){.v10-primary-nav{display:flex}header.sticky>div:first-child{height:72px!important;gap:22px!important}header.sticky>div:first-child>.flex-1{max-width:330px!important;margin-left:auto!important}#countryBadge{display:none!important}}
 @media(min-width:1600px){#mainContainer,.uadav-action-deck{max-width:1640px!important}.uadav-action{min-height:150px}#mainContainer h2{font-size:30px!important}}
 @media(max-width:767px){
