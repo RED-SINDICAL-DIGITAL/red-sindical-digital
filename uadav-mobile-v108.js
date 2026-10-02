@@ -1,8 +1,7 @@
 (()=>{
 'use strict';
-if(window.top===window.self)return;
-let P,D,shell,mediaDock,mediaCard,radioDock,radioExpand,historyDock;
-try{P=window.parent;D=P.document;shell=D.getElementById('shell');mediaDock=D.getElementById('mediaDock');mediaCard=D.getElementById('mediaCard');radioDock=D.getElementById('radioDock');radioExpand=D.getElementById('radioExpand');historyDock=D.getElementById('historyDock')}catch{return}
+let P=window,D=document,shell,mediaDock,mediaCard,radioDock,radioExpand,historyDock;
+try{shell=D.getElementById('shell');mediaDock=D.getElementById('mediaDock');mediaCard=D.getElementById('mediaCard');radioDock=D.getElementById('radioDock');radioExpand=D.getElementById('radioExpand');historyDock=D.getElementById('historyDock')}catch{return}
 if(!shell||D.getElementById('uadav-mobile-v108-style'))return;
 const css=D.createElement('style');css.id='uadav-mobile-v108-style';css.textContent=`
 @media(max-width:720px){
@@ -60,7 +59,8 @@ function minimizeVideo(){if(!mobile()||!shell.classList.contains('media-expanded
 function expandVideo(){if(!mobile()||!shell.classList.contains('media-mini'))return;shell.classList.remove('media-mini');shell.classList.add('media-expanded');sync()}
 if(mediaDock){mediaDock.addEventListener('click',e=>{if(!mobile()||!shell.classList.contains('media-mini'))return;if(e.target.closest('.media-tools'))return;expandVideo()})}
 const expandBtn=D.getElementById('mediaExpand');if(expandBtn)expandBtn.addEventListener('click',()=>setTimeout(sync,0));
-if(radioDock){radioDock.addEventListener('click',e=>{if(!mobile()||e.target.closest('button,input'))return;const art=D.getElementById('radioArt');if(art)art.click()})}
+if(radioDock){radioDock.addEventListener('click',e=>{if(!mobile()||e.target.closest('button,input'))return;if(radioExpand){radioExpand.classList.add('active');sync()}})}
+const radioPlay=D.getElementById('radioPlay');if(radioPlay)radioPlay.addEventListener('click',()=>{if(!mobile())return;setTimeout(()=>{if(!radioExpand?.classList.contains('active')){radioExpand?.classList.add('active');sync()}},80)});
 if(radioExpand)new MutationObserver(sync).observe(radioExpand,{attributes:true,attributeFilter:['class']});
 new MutationObserver(sync).observe(shell,{attributes:true,attributeFilter:['class']});
 P.addEventListener('resize',sync,{passive:true});
