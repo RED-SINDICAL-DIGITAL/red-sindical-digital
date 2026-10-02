@@ -596,12 +596,34 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     }
 
     // ===== SEÑALES =====
+    function youtubeIdDesdeSenal(senal) {
+      const raw = String(senal?.youtube_id || senal?.video_id || senal?.url || '').trim();
+      if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return raw;
+      try {
+        const u = new URL(raw, location.origin);
+        if (u.hostname.includes('youtu.be')) return u.pathname.split('/').filter(Boolean)[0] || '';
+        if (u.hostname.includes('youtube.com')) {
+          if (u.searchParams.get('v')) return u.searchParams.get('v');
+          const parts = u.pathname.split('/').filter(Boolean);
+          const mark = parts.findIndex(x => ['embed','live','shorts'].includes(x));
+          if (mark >= 0 && parts[mark + 1]) return parts[mark + 1];
+        }
+      } catch {}
+      return '';
+    }
+    function imagenSenal(senal) {
+      const manual = senal?.imagen || senal?.thumbnail || senal?.miniatura || senal?.portada || senal?.logo;
+      if (manual) return manual;
+      const yt = youtubeIdDesdeSenal(senal);
+      return yt ? obtenerCaratulaUltraRapida(yt) : FALLBACK_THUMB;
+    }
     function renderSenalesUI() {
       const container = document.getElementById('senalesGrid'); if(!container) return; container.innerHTML = '';
       if (!senalesData || senalesData.length === 0) { container.innerHTML = '<div class="col-span-full text-center text-slate-400 text-xs py-10">No hay señales cargadas.</div>'; return; }
       senalesData.forEach(senal => {
         const tipoIcon = senal.tipo === 'audio' ? 'fa-headphones' : 'fa-video';
-        container.innerHTML += `<div tabindex="0" onclick="reproducirSenalUniversal('${senal.id}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-3xl p-5 cursor-pointer group shadow-lg transition-all flex flex-col justify-between overflow-hidden relative"><div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] px-3 py-1 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-signal mr-1"></i> EN VIVO</div><div class="flex items-center gap-4 mb-4"><img src="${senal.logo || FALLBACK_THUMB}" class="w-16 h-16 rounded-xl object-cover border border-uadav-border" alt="${senal.nombre}"><div><span class="text-[9px] text-uadav-accent font-black tracking-widest uppercase block mb-1"><i class="fa-solid ${tipoIcon} mr-1"></i> ${senal.tipo === 'audio' ? 'Radio' : 'Streaming'}</span><h4 class="text-lg font-black text-white group-hover:text-uadav-accent transition-colors leading-tight">${senal.nombre}</h4><p class="text-xs text-slate-400">${senal.descripcion || ''}</p></div></div><button class="w-full mt-4 bg-slate-900 border border-uadav-border group-hover:border-uadav-accent text-white font-bold text-xs py-2 rounded-xl flex items-center justify-center gap-2 transition-all"><i class="fa-solid fa-play text-uadav-accent"></i> Ver / Escuchar</button></div>`;
+        const grafica = imagenSenal(senal);
+        container.innerHTML += `<div tabindex="0" onclick="reproducirSenalUniversal('${senal.id}')" class="tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-3xl cursor-pointer group transition-all flex flex-col justify-between overflow-hidden relative"><div class="relative aspect-video bg-black overflow-hidden"><img src="${grafica}" onerror="this.onerror=null;this.src='${FALLBACK_THUMB}'" class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300" alt="${senal.nombre || 'Señal en vivo'}"><div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent"></div><div class="absolute top-3 left-3 bg-red-600 text-white font-black text-[9px] px-2.5 py-1 rounded-full uppercase tracking-widest"><i class="fa-solid fa-signal mr-1"></i> En vivo</div><div class="absolute bottom-3 left-3 right-3"><span class="text-[9px] text-white/75 font-bold uppercase tracking-widest"><i class="fa-solid ${tipoIcon} mr-1"></i> ${senal.tipo === 'audio' ? 'Radio' : 'Streaming'}</span><h4 class="text-lg font-black text-white leading-tight mt-1">${senal.nombre || 'Señal en vivo'}</h4></div></div><div class="p-3.5"><p class="text-xs text-slate-400 line-clamp-2">${senal.descripcion || 'Transmisión en vivo'}</p><button class="w-full mt-3 bg-white text-black font-black text-xs py-2.5 rounded-xl flex items-center justify-center gap-2"><i class="fa-solid fa-play"></i> Ver en vivo</button></div></div>`;
       });
     }
 
