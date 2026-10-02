@@ -34,18 +34,18 @@ const css=D.createElement('style');css.id='uadav-mobile-v108-style';css.textCont
 #historyDock .history-list{grid-template-columns:1fr!important;gap:7px!important}
 #historyDock .history-item{min-height:62px!important;border-radius:12px!important}
 #historyDock .history-item img{width:48px!important;height:48px!important}
-#shell.media-expanded #mediaDock{z-index:1600!important;inset:0!important;padding:0!important;background:#05080d!important;place-items:start!important;overflow:auto!important}
-#shell.media-expanded #mediaCard{width:100%!important;max-height:none!important;min-height:100dvh!important;border:0!important;border-radius:0!important;background:#05080d!important;padding-top:max(52px,env(safe-area-inset-top))!important}
-#shell.media-expanded #mediaStage{width:100%!important;max-height:none!important;aspect-ratio:16/9!important;flex:none!important}
-#shell.media-expanded #mediaCopy{padding:16px 16px 110px!important;border:0!important;background:#05080d!important}
-#shell.media-expanded #mediaTitle{display:block!important;font-size:18px!important;line-height:1.25!important}
-#shell.media-expanded #mediaMeta{font-size:12px!important;margin-top:7px!important}
+#shell.media-expanded #mediaDock{z-index:1600!important;inset:0!important;padding:max(54px,env(safe-area-inset-top)) 0 calc(18px + env(safe-area-inset-bottom))!important;background:linear-gradient(180deg,#071019 0%,#05080d 72%)!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;overflow:auto!important}
+#shell.media-expanded #mediaCard{width:100%!important;max-height:none!important;min-height:0!important;border:0!important;border-radius:0!important;background:transparent!important;padding:0!important;display:flex!important;flex-direction:column!important}
+#shell.media-expanded #mediaStage{width:100%!important;height:auto!important;max-height:min(56dvh,430px)!important;aspect-ratio:16/9!important;flex:none!important;background:#000!important}
+#shell.media-expanded #mediaCopy{padding:18px 18px 22px!important;border:0!important;background:linear-gradient(180deg,#081019,#05080d)!important;min-height:0!important}
+#shell.media-expanded #mediaTitle{display:block!important;font-size:20px!important;line-height:1.18!important;letter-spacing:-.02em!important}
+#shell.media-expanded #mediaMeta{font-size:12px!important;line-height:1.35!important;margin-top:7px!important;color:#9aa6ba!important}
 #shell.media-expanded .media-tools{top:max(8px,env(safe-area-inset-top))!important;right:8px!important}
 #shell.media-expanded .media-tools button{width:40px!important;height:40px!important;background:#111827e8!important}
 #shell.media-mini #mediaDock{z-index:1450!important;left:8px!important;right:8px!important;bottom:calc(var(--uadav-nav-h) + 8px + env(safe-area-inset-bottom))!important;width:auto!important}
-#shell.media-mini #mediaCard{height:var(--uadav-mini-h)!important;display:grid!important;grid-template-columns:104px minmax(0,1fr)!important;grid-template-rows:1fr!important;border-radius:14px!important;background:#0a0e14f7!important;border:1px solid #ffffff1c!important;overflow:hidden!important}
-#shell.media-mini #mediaStage{grid-column:1!important;grid-row:1!important;width:104px!important;height:var(--uadav-mini-h)!important;aspect-ratio:auto!important;pointer-events:none!important}
-#shell.media-mini #mediaCopy{grid-column:2!important;grid-row:1!important;min-width:0!important;padding:11px 76px 8px 11px!important;border:0!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+#shell.media-mini #mediaCard{height:var(--uadav-mini-h)!important;display:grid!important;grid-template-columns:92px minmax(0,1fr)!important;grid-template-rows:1fr!important;border-radius:14px!important;background:#0a0e14f7!important;border:1px solid #ffffff1c!important;overflow:hidden!important}
+#shell.media-mini #mediaStage{grid-column:1!important;grid-row:1!important;width:92px!important;height:var(--uadav-mini-h)!important;aspect-ratio:auto!important;pointer-events:none!important}
+#shell.media-mini #mediaCopy{grid-column:2!important;grid-row:1!important;min-width:0!important;padding:10px 82px 8px 12px!important;border:0!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
 #shell.media-mini #mediaTitle{font-size:12px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 #shell.media-mini #mediaMeta{font-size:9px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 #shell.media-mini .media-tools{top:12px!important;right:8px!important;gap:4px!important}
