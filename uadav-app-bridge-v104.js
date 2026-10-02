@@ -42,10 +42,26 @@
   }
   async function getJSON(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 
-  // V10.5.8 · HOME: la tarjeta oficial no depende de que el usuario pulse Sintonizar.
-  // Lee el endpoint del Worker ya validado y actualiza tarjeta + shell/miniplayer.
+  // V10.5.9 · HOME: metadata + artwork persistente. La portada Deezer no vuelve
+  // al logo de la emisora en cada tick y se sincroniza con tarjeta + shell.
   if(location.pathname==='/'||/\/index\.html$/i.test(location.pathname)){
-    let homeTimer=0,homeLastKey='';
+    let homeTimer=0,homeLastKey='',homeLastArt='';
+    function paintHomeRadio(radio,rid,m,art){
+      const titleEl=document.getElementById('radio-main-song');
+      const artistEl=document.getElementById('radio-main-artist');
+      if(titleEl)titleEl.textContent=m.title;
+      if(artistEl)artistEl.textContent=m.artist||radio.nombre||'En vivo';
+      const mini=document.getElementById('radio-mini-song-'+rid);if(mini)mini.textContent=[m.artist,m.title].filter(Boolean).join(' - ');
+      const explicit=document.getElementById('radio-card-'+rid);
+      const candidates=[explicit,...document.querySelectorAll('.radio-card')].filter(Boolean);
+      const card=candidates.find(el=>el===explicit||el.dataset?.radioName===String(radio.nombre||'')||el.dataset?.radioIndex==='0')||candidates[0];
+      if(card&&art){
+        const main=card.querySelector('.radio-logo');if(main)main.src=art;
+        const track=card.querySelector('.radio-track-art');if(track)track.src=art;
+        const anyImg=!main&&!track?card.querySelector('img'):null;if(anyImg)anyImg.src=art;
+      }
+      try{window.parent.postMessage({type:'uadav:radio-meta',radio_id:rid,stream_url:radio.stream_url||radio.url||'',title:m.title,artist:m.artist,artwork:art,station:radio.nombre||'Radio'},location.origin)}catch{}
+    }
     async function homeRadioTick(){
       try{
         const radios=await getJSON(API+'radios?_='+Date.now());
@@ -54,18 +70,17 @@
         if(!radio)return;
         const rid=String(radio.id||radio.nombre||'beat-digital');
         const payload=await getJSON(API+'radio/metadata?radio_id='+encodeURIComponent(rid)+'&_='+Date.now());
-        const m=parseMeta(payload);
-        if(!m.title)return;
-        const titleEl=document.getElementById('radio-main-song');
-        const artistEl=document.getElementById('radio-main-artist');
-        if(titleEl)titleEl.textContent=m.title;
-        if(artistEl)artistEl.textContent=m.artist||radio.nombre||'En vivo';
-        const mini=document.getElementById('radio-mini-song-'+rid);if(mini)mini.textContent=[m.artist,m.title].filter(Boolean).join(' - ');
+        const m=parseMeta(payload);if(!m.title)return;
         const key=(m.artist+'|'+m.title).toLowerCase();
-        let art=radio.logo||radio.imagen||radio.portada||'/radio-fallback.svg';
-        if(key!==homeLastKey){homeLastKey=key;const found=await deezerCover(m.artist,m.title);if(found)art=found}
-        const card=document.getElementById('radio-card-'+rid);const cardImg=card?.querySelector('img');if(cardImg&&art)cardImg.src=art;
-        try{window.parent.postMessage({type:'uadav:radio-meta',radio_id:rid,stream_url:radio.stream_url||radio.url||'',title:m.title,artist:m.artist,artwork:art,station:radio.nombre||'Radio'},location.origin)}catch{}
+        const fallback=radio.logo||radio.imagen||radio.portada||'/radio-fallback.svg';
+        if(key!==homeLastKey){
+          homeLastKey=key;homeLastArt=fallback;
+          paintHomeRadio(radio,rid,m,homeLastArt);
+          const found=await deezerCover(m.artist,m.title);
+          if(found&&key===homeLastKey){homeLastArt=found;paintHomeRadio(radio,rid,m,homeLastArt)}
+        }else{
+          paintHomeRadio(radio,rid,m,homeLastArt||fallback);
+        }
       }catch(e){console.warn('[UADAV Home radio metadata]',e)}
     }
     const startHome=()=>{homeRadioTick();clearInterval(homeTimer);homeTimer=setInterval(homeRadioTick,12000)};
