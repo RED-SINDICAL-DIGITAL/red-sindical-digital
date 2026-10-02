@@ -2482,6 +2482,26 @@ async function saveEntityVersion(type,id,data){
       return json({error:'Entidad de importación no soportada'},400);
     }
 
+    // --- V10.5.3 · RADIO METADATA PROXY (Zeno/Admin) ---
+    if(path==='/api/radio/metadata' && request.method==='GET'){
+      const rid=String(url.searchParams.get('radio_id')||'').trim();
+      const radios=await getArray('radios');
+      const radio=radios.find(r=>String(r.id||r.nombre||r.stream_url)===rid)||radios.find(r=>String(r.nombre||'')===rid);
+      if(!radio)return json({error:'Radio no encontrada'},404);
+      let metaUrl=String(radio.metadata_url||radio.meta_url||'').trim();
+      if(!metaUrl){const z=String(radio.stream_url||radio.url||'').match(/(?:stream(?:-[a-z0-9]+)?\.)?zeno\.fm\/([^/?#]+)/i);if(z)metaUrl='https://api.zeno.fm/mounts/metadata/subscribe/'+encodeURIComponent(z[1].replace(/\/source$/i,''));}
+      if(!metaUrl)return json({error:'Metadata no configurada',radio_id:rid},404);
+      try{
+        const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),6500);
+        const rr=await fetch(metaUrl,{headers:{'Accept':'application/json,text/event-stream,*/*','User-Agent':'UADAVSTREAM/10.5'},signal:controller.signal});clearTimeout(timer);
+        if(!rr.ok)return json({error:'Metadata upstream '+rr.status},502);
+        const txt=await rr.text();let payload=safeJSON(txt,null);
+        if(!payload){const lines=txt.split(/\r?\n/).filter(x=>x.startsWith('data:'));for(const line of lines){payload=safeJSON(line.slice(5).trim(),null);if(payload)break;}}
+        if(!payload)return json({error:'Metadata sin datos utilizables'},502);
+        return json({success:true,radio_id:rid,source:'admin',metadata_url:metaUrl,data:payload});
+      }catch(e){return json({error:'No se pudo consultar metadata',detail:String(e?.message||e)},502);}
+    }
+
     // --- V8.3 · RADIO HISTORIAL / PEDIDOS ---
     if(path==='/api/radio/cover' && request.method==='GET'){
       const artist=String(url.searchParams.get('artist')||'').trim(); const title=String(url.searchParams.get('title')||'').trim(); const fallback=String(url.searchParams.get('fallback')||'').trim();
