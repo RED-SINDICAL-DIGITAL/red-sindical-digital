@@ -19,12 +19,12 @@ const css=D.createElement('style');css.id='uadav-mobile-v108-style';css.textCont
 #radioHistory{display:none!important}
 #radioPlay{width:42px!important;height:42px!important}
 #radioDock .radio-controls,#radioDiscover{display:none!important}
-#radioExpand{z-index:1600!important;padding:48px 18px calc(100px + env(safe-area-inset-bottom))!important;background:radial-gradient(circle at 50% 22%,rgba(25,216,242,.17),transparent 35%),linear-gradient(180deg,#111a25 0%,#070a0f 68%)!important;overflow:auto!important}
+#radioExpand{z-index:1600!important;padding:42px 18px calc(82px + env(safe-area-inset-bottom))!important;background:radial-gradient(circle at 50% 22%,rgba(25,216,242,.17),transparent 35%),linear-gradient(180deg,#111a25 0%,#070a0f 68%)!important;overflow:auto!important}
 #radioExpand.active{display:flex!important;align-items:flex-start!important}
-.radio-expanded-inner{display:flex!important;flex-direction:column!important;width:100%!important;max-width:520px!important;gap:22px!important;text-align:left!important;margin:auto!important}
-.radio-expanded-cover{width:min(84vw,390px)!important;align-self:center!important;border-radius:18px!important;box-shadow:0 28px 75px #000b!important}
+.radio-expanded-inner{display:flex!important;flex-direction:column!important;width:100%!important;max-width:520px!important;gap:16px!important;text-align:left!important;margin:auto!important}
+.radio-expanded-cover{width:min(76vw,340px)!important;align-self:center!important;border-radius:18px!important;box-shadow:0 28px 75px #000b!important}
 .radio-expanded-copy{width:100%!important}
-.radio-expanded-copy h2{font-size:30px!important;line-height:1.04!important;margin:0 0 7px!important;letter-spacing:-.035em!important}
+.radio-expanded-copy h2{font-size:28px!important;line-height:1.04!important;margin:0 0 7px!important;letter-spacing:-.035em!important}
 .radio-expanded-copy p{font-size:15px!important;margin:0 0 22px!important}
 .radio-expanded-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:9px!important}
 .radio-expanded-actions .primary{grid-column:1/-1!important;min-height:54px!important;font-size:15px!important}
@@ -32,8 +32,11 @@ const css=D.createElement('style');css.id='uadav-mobile-v108-style';css.textCont
 .radio-expanded-close{top:12px!important;right:12px!important;width:42px!important;height:42px!important;z-index:2!important}
 #historyDock{z-index:1700!important;left:0!important;right:0!important;bottom:0!important;transform:none!important;width:100%!important;max-height:78dvh!important;border-radius:24px 24px 0 0!important;padding:18px 14px calc(22px + env(safe-area-inset-bottom))!important;background:#090d13fc!important}
 #historyDock .history-list{grid-template-columns:1fr!important;gap:7px!important}
-#historyDock .history-item{min-height:62px!important;border-radius:12px!important}
-#historyDock .history-item img{width:48px!important;height:48px!important}
+#historyDock .history-item{min-height:62px!important;border-radius:12px!important;padding:8px 10px!important;display:grid!important;grid-template-columns:48px minmax(0,1fr)!important;grid-template-rows:auto auto!important;column-gap:12px!important;align-items:center!important}
+#historyDock .history-item img{width:48px!important;height:48px!important;grid-row:1/3!important;border-radius:9px!important}
+#historyDock .history-item strong,#historyDock .history-item b{display:block!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;line-height:1.15!important}
+#historyDock .history-item span,#historyDock .history-item small{display:block!important;min-width:0!important;color:#929db1!important;font-size:12px!important;line-height:1.2!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+#historyDock .history-close{width:40px!important;height:40px!important;border-radius:50%!important;background:#111827!important;color:#fff!important;border:1px solid #ffffff20!important}
 #shell.media-expanded #mediaDock{z-index:1600!important;inset:0!important;padding:max(54px,env(safe-area-inset-top)) 0 calc(18px + env(safe-area-inset-bottom))!important;background:linear-gradient(180deg,#071019 0%,#05080d 72%)!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;overflow:auto!important}
 #shell.media-expanded #mediaCard{width:100%!important;max-height:none!important;min-height:0!important;border:0!important;border-radius:0!important;background:transparent!important;padding:0!important;display:flex!important;flex-direction:column!important}
 #shell.media-expanded #mediaStage{width:100%!important;height:auto!important;max-height:min(56dvh,430px)!important;aspect-ratio:16/9!important;flex:none!important;background:#000!important}
