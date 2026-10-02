@@ -61,7 +61,7 @@ if(mediaDock){mediaDock.addEventListener('click',e=>{if(!mobile()||!shell.classL
 const expandBtn=D.getElementById('mediaExpand');if(expandBtn)expandBtn.addEventListener('click',()=>setTimeout(sync,0));
 if(radioDock){radioDock.addEventListener('click',e=>{if(!mobile()||e.target.closest('button,input'))return;if(radioExpand){radioExpand.classList.add('active');sync()}})}
 const radioPlay=D.getElementById('radioPlay');if(radioPlay)radioPlay.addEventListener('click',()=>{if(!mobile())return;setTimeout(()=>{if(!radioExpand?.classList.contains('active')){radioExpand?.classList.add('active');sync()}},80)});
-if(radioExpand)new MutationObserver(sync).observe(radioExpand,{attributes:true,attributeFilter:['class']});
+if(radioExpand){let sy=0,cy=0,drag=false;const minimizeRadio=()=>{radioExpand.classList.remove('active');historyDock?.classList.remove('active');sync()};const close=D.getElementById('radioExpandClose');if(close){close.title='Minimizar';close.setAttribute('aria-label','Minimizar reproductor');close.addEventListener('click',()=>setTimeout(minimizeRadio,0))}radioExpand.addEventListener('touchstart',e=>{if(!mobile()||!radioExpand.classList.contains('active')||e.touches.length!==1)return;sy=cy=e.touches[0].clientY;drag=true},{passive:true});radioExpand.addEventListener('touchmove',e=>{if(!drag||!e.touches.length)return;cy=e.touches[0].clientY},{passive:true});radioExpand.addEventListener('touchend',()=>{if(!drag)return;drag=false;if(cy-sy>72)minimizeRadio()},{passive:true});new MutationObserver(sync).observe(radioExpand,{attributes:true,attributeFilter:['class']})}
 new MutationObserver(sync).observe(shell,{attributes:true,attributeFilter:['class']});
 P.addEventListener('resize',sync,{passive:true});
 sync();
