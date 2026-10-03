@@ -1889,6 +1889,19 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       return new Response(JSON.stringify(result),{headers:{...cors,'Content-Type':'application/json; charset=utf-8','Cache-Control':'private, max-age=60','X-UADAV-Playback-Source':result.source}});
     }
 
+    // --- BÚSQUEDA GLOBAL UADAV STREAM ---
+    if(path==='/api/public/search' && request.method==='GET'){
+      const q=String(url.searchParams.get('q')||'').trim().slice(0,140);if(q.length<2)return json({query:q,artists:[],content:[],events:[],radios:[]});
+      const nq=normalizeSearchText(q),contains=x=>normalizeSearchText(x).includes(nq);
+      const [artistsRaw,eventsRaw,radiosRaw,contentRaw]=await Promise.all([allCanonicalArtists().catch(()=>[]),getArray('cartelera').catch(()=>[]),getArray('radios').catch(()=>[]),getArray('content').catch(()=>[])]);
+      const artists=(Array.isArray(artistsRaw)?artistsRaw:[]).map(publicArtistFromItem).filter(a=>a.visible&&contains([a.nombre,a.rubro,a.ciudad,a.provincia,a.bio].join(' '))).slice(0,8);
+      const events=(Array.isArray(eventsRaw)?eventsRaw:[]).filter(e=>String(e.visible??true)!=='false'&&contains([e.titulo,e.nombre,e.artista,e.descripcion,e.categoria,e.ciudad,e.lugar,e.venue].join(' '))).slice(0,8);
+      const radios=(Array.isArray(radiosRaw)?radiosRaw:[]).filter(x=>String(x.visible??true)!=='false'&&contains([x.nombre,x.name,x.descripcion,x.ciudad,x.provincia,x.pais].join(' '))).slice(0,6);
+      const internal=(Array.isArray(contentRaw)?contentRaw:[]).filter(x=>String(x.visible??true)!=='false'&&contains([x.titulo,x.nombre,x.descripcion,x.categoria,x.tipo,x.artist_name,x.artista].join(' '))).slice(0,12);
+      let external=[];if(internal.length<8){const ivRaw=await invidiousSearch(q,'video',16);external=ivRaw.map(v=>{const id=String(v.videoId||v.id||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:v.title||'Video',descripcion:v.author||'YouTube',thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.[0]?.url||'',categoria:'Video',duracion:Number(v.lengthSeconds||0),tipo:'video',content_type:'video'}}).filter(x=>x.id).slice(0,12-internal.length)}
+      return json({query:q,artists,content:[...internal,...external],events,radios,counts:{artists:artists.length,content:internal.length+external.length,events:events.length,radios:radios.length}});
+    }
+
     // --- YOUTUBE / BÚSQUEDA GLOBAL CON FALLBACK ---
     if (path === '/api/youtube/search') {
       const q = String(url.searchParams.get('q') || '').trim();
