@@ -14,7 +14,7 @@
   <meta property="og:url" content="https://uadavstream.com.ar/" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="UADAVSTREAM - Entretenimiento, Teatros & Música Global" />
-  <meta name="twitter:description" content="Sintoniza nuestra transmisión oficial continua de teatro, música y radio online." />
+  <meta name="twitter:description" content="Artistas, música, espectáculos, radio, cartelera y oportunidades en un solo lugar." />
   <meta name="twitter:image" content="https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj" />
   
   <link rel="manifest" href="/manifest.json">
@@ -408,7 +408,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [], senalesData = [];
     let queue = [], currentIndex = -1;
     let activeRadioId = null;
-    let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR", hero_titulo: "SEÑAL OFICIAL", hero_subtitulo: "UADAVSTREAM TV", hero_boton_texto: "Ver SEÑAL OFICIAL", hero_boton_url: "-479TZi-EAs" };
+    let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR", hero_titulo: "DESCUBRÍ. CONECTÁ. VIVÍ.", hero_subtitulo: "UADAVSTREAM", hero_boton_texto: "Explorar UADAVSTREAM", hero_boton_url: "#artistasSection" };
     let zenoEventSource = null;
     let deferredPrompt;
 
@@ -558,10 +558,13 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       const selector = document.getElementById('countrySelectorHeader'); if (configGlobal.pais_trending && configGlobal.pais_trending !== 'Auto' && configGlobal.pais_trending !== '') selector.value = configGlobal.pais_trending; else selector.value = 'AR';
       if (configGlobal.mostrar_ip) { document.getElementById('countryBadge').classList.remove('hidden'); }
       document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
-      document.getElementById('heroTitulo').innerText = configGlobal.hero_titulo || "SEÑAL OFICIAL";
-      document.getElementById('heroSub').innerText = configGlobal.hero_subtitulo || "UADAVSTREAM TV";
-      document.getElementById('heroBtnTexto').innerText = configGlobal.hero_boton_texto || "Ver SEÑAL OFICIAL";
-      document.getElementById('heroBtn').onclick = () => reproducirVideo(configGlobal.hero_boton_url || '-479TZi-EAs', configGlobal.hero_titulo || "Señal Oficial", "En Vivo", "Transmisión oficial");
+      const legacyTvHero=/señal oficial|uadavstream tv/i.test([configGlobal.hero_titulo,configGlobal.hero_subtitulo].filter(Boolean).join(' '));
+      const heroTitle=legacyTvHero?"DESCUBRÍ. CONECTÁ. VIVÍ.":(configGlobal.hero_titulo||"DESCUBRÍ. CONECTÁ. VIVÍ.");
+      const heroSub=legacyTvHero?"UADAVSTREAM":(configGlobal.hero_subtitulo||"UADAVSTREAM");
+      document.getElementById('heroTitulo').innerText=heroTitle;
+      document.getElementById('heroSub').innerText=heroSub;
+      document.getElementById('heroBtnTexto').innerText=legacyTvHero?"Explorar UADAVSTREAM":(configGlobal.hero_boton_texto||"Explorar UADAVSTREAM");
+      document.getElementById('heroBtn').onclick=()=>{const target=configGlobal.hero_boton_url||'#artistasSection';if(!legacyTvHero&&target&&!target.startsWith('#')&&target!=='-479TZi-EAs')reproducirVideo(target,heroTitle,"UADAVSTREAM","Contenido destacado");else document.getElementById('artistasSection')?.scrollIntoView({behavior:'smooth'})};
       try { const resV = await fetch(API_URL + 'visits?_=' + Date.now()); if (resV.ok) { const data = await resV.json(); document.getElementById('visitCounter').innerText = data.visitas_totales; } await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
     }
 
