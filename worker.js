@@ -2205,10 +2205,14 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     }
     async function discoverySignal(channelId,type,meta={}){
       const id=String(channelId||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,100);if(!id)return null;
-      const key='artist_interest_'+id;const d=await getObject(key);d.channel_id=id;d.updated_at=isoNow();d.signals=d.signals||{};
-      const t=String(type||'view').replace(/[^a-z_]/gi,'').slice(0,30);d.signals[t]=Number(d.signals[t]||0)+1;
+      const key='artist_interest_'+id;const d=await getObject(key);d.channel_id=id;d.updated_at=isoNow();d.signals=d.signals||{};d.daily=d.daily||{};
+      const t=String(type||'view').replace(/[^a-z_]/gi,'').slice(0,30),day=new Date().toISOString().slice(0,10),client=String(meta.client_id||'server').replace(/[^A-Za-z0-9_-]/g,'').slice(0,80)||'server';
+      const dedupeKey=day+':'+client+':'+t;let accepted=true;
+      if(meta.public===true){d.daily[dedupeKey]=Number(d.daily[dedupeKey]||0);const cap=t==='share'?2:t==='play'?3:1;if(d.daily[dedupeKey]>=cap)accepted=false;else d.daily[dedupeKey]++;}
+      if(accepted)d.signals[t]=Number(d.signals[t]||0)+1;
       d.score=Number(d.signals.view||0)+Number(d.signals.search||0)*2+Number(d.signals.play||0)*3+Number(d.signals.share||0)*4+Number(d.signals.claim||0)*10;
-      d.meta={...(d.meta||{}),...meta};await env.UADAV_DB.put(key,JSON.stringify(d),{expirationTtl:90*86400});return d;
+      d.meta={...(d.meta||{}),name:meta.name||d.meta?.name||''};const days=Object.keys(d.daily);if(days.length>400){for(const k of days.slice(0,days.length-400))delete d.daily[k];}
+      await env.UADAV_DB.put(key,JSON.stringify(d),{expirationTtl:90*86400});return {...d,accepted};
     }
     async function maybeConsolidateDiscovered(a,interest){
       if(!a?.canal||a.review_level!=='green'||Number(a.confidence||0)<78||Number(interest?.score||0)<12)return false;
@@ -2218,9 +2222,9 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       list.unshift(item);await putJSON('artistas',list.slice(0,5000));await safeD1('auto_artist_consolidate',()=>syncArtistsD1([item]));await audit('artist_auto_consolidated','artist',item.id,{confidence:a.confidence,interest_score:interest.score});return true;
     }
     if(path==='/api/public/artist-signal' && request.method==='POST'){
-      const b=await request.json().catch(()=>({}));const channel=String(b.channel_id||'').trim();const allowed=['view','search','play','share','claim'];const type=allowed.includes(String(b.type))?String(b.type):'view';
-      if(!channel)return json({error:'channel_id requerido'},400);const interest=await discoverySignal(channel,type,{name:String(b.name||'').slice(0,160)});
-      return json({success:true,score:interest.score,signals:interest.signals});
+      const b=await request.json().catch(()=>({}));const channel=String(b.channel_id||'').trim();const allowed=['view','play','share'];const type=allowed.includes(String(b.type))?String(b.type):'view';
+      if(!channel)return json({error:'channel_id requerido'},400);const client=String(request.headers.get('X-Client-Id')||b.client_id||'anon').trim().slice(0,80);const interest=await discoverySignal(channel,type,{name:String(b.name||'').slice(0,160),client_id:client,public:true});
+      return json({success:true,accepted:interest.accepted!==false,score:interest.score,signals:interest.signals});
     }
 
     if(path==='/api/public/discover-artist' && request.method==='GET'){
@@ -2284,12 +2288,15 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       if(!artist && artistId.startsWith('discover:')){const channel=String(b.channel_id||artistId.slice(9)).trim();const name=String(b.artist_name||b.name||'Artista').slice(0,180);const info=channel?await invidiousChannelInfo(channel).catch(()=>null):null;const item={id:'ART-'+channel,nombre:info?.nombre||name,nombre_artistico:info?.nombre||name,rubro:'Artista / creador',bio:String(info?.bio||'').slice(0,1200),foto:info?.thumbnail||'',portada:info?.banner||'',canal:channel,youtube:channel?'https://www.youtube.com/channel/'+channel:'',visible:true,claimed:false,claim_status:'none',estado:'publicado',origen:'reclamo_perfil_descubierto',creado:isoNow()};const list=await getArray('artistas');if(!list.some(x=>String(x.id)===item.id))list.unshift(item);await putJSON('artistas',list.slice(0,5000));await safeD1('claim_discovered_artist',()=>syncArtistsD1([item]));artist=item;artistId=item.id;await audit('artist_materialized_for_claim','artist',item.id,{channel});}
       if(!artist)return json({error:'Artista no encontrado'},404);
       if(artist.claimed===true || artist.claim_status==='approved') return json({error:'Este perfil ya fue reclamado'},409);
-      const claim={id:'CL-'+Date.now().toString(36).toUpperCase(),artist_id:String(publicArtistFromItem(artist).id),name:String(b.name||'').slice(0,140),email:String(b.email||'').slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),proof_url:String(b.proof_url||'').slice(0,500),social_url:String(b.social_url||'').slice(0,500),note:String(b.note||'').slice(0,1500),status:'pending',created_at:isoNow()};
+      const email=String(b.email||'').trim().toLowerCase().slice(0,180);if(!email||!email.includes('@'))return json({error:'Email válido requerido'},400);
+      let pending=[];if(hasD1()){const pr=await safeD1('artist_claim_pending_check',()=>env.DB.prepare(`SELECT id,email FROM artist_claims WHERE artist_id=? AND status='pending' ORDER BY created_at DESC LIMIT 20`).bind(String(publicArtistFromItem(artist).id)).all());if(pr.ok)pending=pr.value?.results||pr.results||[];}else pending=(await getArray('artist_claims')).filter(x=>String(x.artist_id)===String(publicArtistFromItem(artist).id)&&String(x.status)==='pending');
+      const same=pending.find(x=>String(x.email||'').trim().toLowerCase()===email);if(same)return json({success:true,id:same.id,status:'pending',duplicate:true});
+      const claim={id:'CL-'+Date.now().toString(36).toUpperCase(),artist_id:String(publicArtistFromItem(artist).id),name:String(b.name||'').slice(0,140),email,whatsapp:String(b.whatsapp||'').slice(0,60),proof_url:String(b.proof_url||'').slice(0,500),social_url:String(b.social_url||'').slice(0,500),note:String(b.note||'').slice(0,1500),status:'pending',created_at:isoNow()};
       let claimStored=false;
       if(hasD1()) { const saved=await safeD1('artist_claim_insert',()=>env.DB.prepare(`INSERT INTO artist_claims(id,artist_id,name,email,whatsapp,proof_url,social_url,note,status,created_at,reviewed_at,review_note) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`).bind(claim.id,claim.artist_id,claim.name,claim.email,claim.whatsapp,claim.proof_url,claim.social_url,claim.note,'pending',claim.created_at,null,'').run()); claimStored=saved.ok===true; }
       if(!claimStored) {const list=await getArray('artist_claims');list.push(claim);await putJSON('artist_claims',list.slice(-2000));}
       await emitNotification({event:'ARTIST_CLAIM_CREATED',template:'artist_claim_created',to:claim.email,subject:'Recibimos tu solicitud de perfil en ★ UADAV STREAM',name:claim.name,artist_id:claim.artist_id});
-      await audit('artist_claim_created','artist_claim',claim.id,{artist_id:claim.artist_id});
+      if(artist.canal||artist.channel_id)await discoverySignal(artist.canal||artist.channel_id,'claim',{name:artist.nombre||artist.nombre_artistico||'',client_id:'verified_claim'});await audit('artist_claim_created','artist_claim',claim.id,{artist_id:claim.artist_id,conflict:pending.length>0});
       return json({success:true,id:claim.id,status:'pending'});
     }
     if(path==='/api/admin/exceptions' && request.method==='GET'){
@@ -2297,7 +2304,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       const items=[];
       const claims=hasD1()?await safeD1('exceptions_claims',()=>env.DB.prepare(`SELECT id,artist_id,name,email,status,created_at FROM artist_claims WHERE status='pending' ORDER BY created_at DESC LIMIT 100`).all()):{ok:false};
       const claimRows=claims.ok?(claims.value?.results||claims.results||[]):(await getArray('artist_claims')).filter(x=>String(x.status)==='pending').slice(-100).reverse();
-      for(const x of claimRows)items.push({id:x.id,type:'artist_claim',level:'yellow',title:'Reclamo de perfil: '+String(x.name||x.artist_id||'Artista'),detail:String(x.email||''),created_at:x.created_at||'',target:'artists'});
+      const claimCounts={};for(const x of claimRows)claimCounts[x.artist_id]=Number(claimCounts[x.artist_id]||0)+1;for(const x of claimRows)items.push({id:x.id,type:'artist_claim',level:claimCounts[x.artist_id]>1?'red':'yellow',title:(claimCounts[x.artist_id]>1?'Conflicto de identidad: ':'Reclamo de perfil: ')+String(x.name||x.artist_id||'Artista'),detail:String(x.email||'')+(claimCounts[x.artist_id]>1?' · '+claimCounts[x.artist_id]+' solicitudes pendientes':''),created_at:x.created_at||'',target:'artists'});
       const pendingEvents=(await getArray('eventos_pendientes')).slice(-100).reverse();
       for(const x of pendingEvents)items.push({id:x.id||x.event_id,type:'event_review',level:'yellow',title:'Evento/destaque pendiente: '+String(x.titulo||x.nombre||'Evento'),detail:String(x.ciudad||x.lugar||''),created_at:x.created_at||x.fecha_creacion||'',target:'events'});
       let syncErrors=[];if(hasD1()){const er=await safeD1('exceptions_sync',()=>env.DB.prepare(`SELECT id,scope,error,created_at FROM d1_sync_errors ORDER BY created_at DESC LIMIT 50`).all());if(er.ok)syncErrors=er.value?.results||er.results||[];}
