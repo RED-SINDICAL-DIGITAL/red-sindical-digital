@@ -2190,6 +2190,45 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       for(const s of Array.isArray(secs)?secs:[]){ if(s?.tipo_contenido!=='perfiles') continue; for(const a of Array.isArray(s.items)?s.items:[]){const p=publicArtistFromItem(a);const k=String(p.id||p.canal||p.nombre).toLowerCase();if(k&&!seen.has(k)){seen.add(k);out.push({...a,id:p.id})}} }
       return out;
     }
+    if(path==='/api/public/discover-artist' && request.method==='GET'){
+      const q=String(url.searchParams.get('q')||'').trim().slice(0,140);
+      if(q.length<2)return json({error:'Búsqueda requerida'},400);
+      const restrictions=await getSearchRestrictions();
+      const existing=(await allCanonicalArtists()).find(a=>normalizeSearchText(publicArtistFromItem(a).nombre)===normalizeSearchText(q));
+      if(existing){const p=publicArtistFromItem(existing);return json({...p,discovered:false,existing:true});}
+      let channel=await invidiousChannelSearch(q);
+      if(!channel){
+        const videos=await invidiousSearch(q,'video',8);
+        const v=videos.find(x=>x?.authorId&&normalizeSearchText(x?.author||x?.title).includes(normalizeSearchText(q)));
+        if(v)channel={channelId:String(v.authorId),nombre:String(v.author||q),thumbnail:String(v.authorThumbnails?.[0]?.url||v.videoThumbnails?.[0]?.url||''),bio:'',source:'invidious'};
+      }
+      if(!channel)return json({error:'No encontramos una fuente pública suficiente para generar el perfil'},404);
+      const probe={title:channel.nombre,channel_name:channel.nombre,url:'https://www.youtube.com/channel/'+channel.channelId,external_id:channel.channelId};
+      if(restrictedProspect(probe,restrictions))return json({error:'Este resultado no está disponible'},404);
+      const info=await invidiousChannelInfo(channel.channelId).catch(()=>null);
+      const src=info||channel;
+      return json({
+        id:'discover:'+channel.channelId,
+        nombre:src.nombre||q,
+        nombre_artistico:src.nombre||q,
+        rubro:'Artista / creador',
+        bio:String(src.bio||'').slice(0,1200),
+        foto:src.thumbnail||channel.thumbnail||'',
+        portada:src.banner||'',
+        canal:channel.channelId,
+        youtube:'https://www.youtube.com/channel/'+channel.channelId,
+        visible:true,
+        claimed:false,
+        afiliado_verificado:false,
+        estado:'descubierto',
+        discovered:true,
+        generated:true,
+        source:'Fuente pública externa',
+        source_provider:'YouTube / Invidious',
+        disclaimer:'Perfil generado automáticamente a partir de información pública. No implica afiliación, representación ni verificación por UADAV.'
+      });
+    }
+
     if(path==='/api/public/artistas' && request.method==='GET'){
       const q=String(url.searchParams.get('search')||'').trim(); const category=String(url.searchParams.get('category')||'').trim(); const province=String(url.searchParams.get('province')||'').trim();
       const d1=await artistsFromD1({search:q,category,province}); const kv=await allCanonicalArtists(); const map=new Map(); for(const a of (Array.isArray(d1)?d1:[])){const p=publicArtistFromItem(a);map.set(String(p.id||p.nombre).toLowerCase(),a)} for(const a of kv){const p=publicArtistFromItem(a),key=String(p.id||p.nombre).toLowerCase();map.set(key,{...(map.get(key)||{}),...a})} const arr=[...map.values()];
