@@ -73,6 +73,8 @@ document.getElementById('q').addEventListener('input',()=>{clearTimeout(searchTi
 document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Escape'){e.currentTarget.value='';state.q='';render()}});
 
 async function loadProspectingCTA(){try{const c=await apiFetch('prospecting/config');document.getElementById('prospectingCta').style.display=c.public_button===true?'block':'none'}catch{}}
+const initialQ=new URLSearchParams(location.search).get('q')||'';
+if(initialQ){document.getElementById('q').value=initialQ;state.q=initialQ}
 renderFilters();loadProspectingCTA();load();
 </script>
 <script src="/uadav-ui-v8.4.js?v=928"></script><script src="/uadav-app-bridge-v104.js?v=10112"></script>
