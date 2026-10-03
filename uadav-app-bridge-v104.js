@@ -2,6 +2,8 @@
 'use strict';
 if(window.top===window.self){const qs=new URLSearchParams(location.search);if(qs.get('standalone')!=='1'){const here=location.pathname+location.search+location.hash;location.replace('/app.html?build=104&view='+encodeURIComponent(here));}return;}
 document.documentElement.classList.add('uadav-app-embedded');
+function simplifyEmbeddedChrome(){if(location.pathname==='/'||/\/index\.html$/i.test(location.pathname)){const s=document.createElement('style');s.id='uadav-shell-owned-nav';s.textContent='.v10-primary-nav{display:none!important}';document.head.appendChild(s)}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',simplifyEmbeddedChrome,{once:true});else simplifyEmbeddedChrome();
 const API='https://uadav-api.uadavstream.workers.dev/api/';
 const sameOrigin=url=>{try{return new URL(url,location.href).origin===location.origin}catch{return false}};
 const normalizeHref=href=>{const u=new URL(href,location.href);if(u.origin!==location.origin)return'';return u.pathname+u.search+u.hash};
