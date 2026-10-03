@@ -1898,7 +1898,22 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       const events=(Array.isArray(eventsRaw)?eventsRaw:[]).filter(e=>String(e.visible??true)!=='false'&&contains([e.titulo,e.nombre,e.artista,e.descripcion,e.categoria,e.ciudad,e.lugar,e.venue].join(' '))).slice(0,8);
       const radios=(Array.isArray(radiosRaw)?radiosRaw:[]).filter(x=>String(x.visible??true)!=='false'&&contains([x.nombre,x.name,x.descripcion,x.ciudad,x.provincia,x.pais].join(' '))).slice(0,6);
       const internal=(Array.isArray(contentRaw)?contentRaw:[]).filter(x=>String(x.visible??true)!=='false'&&contains([x.titulo,x.nombre,x.descripcion,x.categoria,x.tipo,x.artist_name,x.artista].join(' '))).slice(0,12);
-      let external=[];if(internal.length<8){const ivRaw=await invidiousSearch(q,'video',16);external=ivRaw.map(v=>{const id=String(v.videoId||v.id||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:v.title||'Video',descripcion:v.author||'YouTube',thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.[0]?.url||'',categoria:'Video',duracion:Number(v.lengthSeconds||0),tipo:'video',content_type:'video'}}).filter(x=>x.id).slice(0,12-internal.length)}
+      let external=[];
+      if(internal.length<8){
+        const maxExternal=Math.max(0,12-internal.length);
+        const ivRaw=await invidiousSearch(q,'video',16);
+        external=ivRaw.map(v=>{const id=String(v.videoId||v.id||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:v.title||'Video',descripcion:v.author||'YouTube',thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.[0]?.url||'',categoria:'Video',duracion:Number(v.lengthSeconds||0),tipo:'video',content_type:'video'}}).filter(x=>x.id).slice(0,maxExternal);
+        // Si todas las instancias Invidious fallan, la búsqueda pública NO puede quedar vacía.
+        // Usamos la API oficial sólo como fallback, respetando el interruptor youtube_api_enabled.
+        if(!external.length && maxExternal>0 && await youtubeApiEnabled() && env.YOUTUBE_API_KEY){
+          try{
+            const qs=new URLSearchParams({part:'snippet',maxResults:String(Math.min(12,maxExternal)),q,type:'video',regionCode:'AR',order:'relevance',key:env.YOUTUBE_API_KEY});
+            const yr=await fetch('https://www.googleapis.com/youtube/v3/search?'+qs.toString());
+            const yd=await yr.json();
+            if(yr.ok&&!yd.error) external=(yd.items||[]).map(x=>{const id=String(x.id?.videoId||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:x.snippet?.title||'Video',descripcion:x.snippet?.channelTitle||'YouTube',thumbnail:x.snippet?.thumbnails?.high?.url||x.snippet?.thumbnails?.medium?.url||x.snippet?.thumbnails?.default?.url||'',categoria:'Video',tipo:'video',content_type:'video'}}).filter(x=>x.id).slice(0,maxExternal);
+          }catch(_){}
+        }
+      }
       return json({query:q,artists,content:[...internal,...external],events,radios,counts:{artists:artists.length,content:internal.length+external.length,events:events.length,radios:radios.length}});
     }
 
