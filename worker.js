@@ -2195,7 +2195,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       if(q.length<2)return json({error:'Búsqueda requerida'},400);
       const restrictions=await getSearchRestrictions();
       const existing=(await allCanonicalArtists()).find(a=>normalizeSearchText(publicArtistFromItem(a).nombre)===normalizeSearchText(q));
-      if(existing){const p=publicArtistFromItem(existing);return json({...p,discovered:false,existing:true});}
+      if(existing){const p=publicArtistFromItem(existing);return json({...p,discovered:false,existing:true,confidence:100,review_level:'green'});}
       let channel=await invidiousChannelSearch(q);
       if(!channel){
         const videos=await invidiousSearch(q,'video',8);
@@ -2207,24 +2207,22 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       if(restrictedProspect(probe,restrictions))return json({error:'Este resultado no está disponible'},404);
       const info=await invidiousChannelInfo(channel.channelId).catch(()=>null);
       const src=info||channel;
+      const nq=normalizeSearchText(q),nn=normalizeSearchText(src.nombre||channel.nombre||'');
+      let confidence=45;
+      if(nn===nq)confidence+=35; else if(nn.includes(nq)||nq.includes(nn))confidence+=22;
+      if(src.thumbnail||channel.thumbnail)confidence+=8;
+      if(src.bio)confidence+=7;
+      if(Number(src.subscribers||0)>0)confidence+=5;
+      confidence=Math.min(100,confidence);
+      const review_level=confidence>=78?'green':confidence>=58?'yellow':'red';
       return json({
         id:'discover:'+channel.channelId,
-        nombre:src.nombre||q,
-        nombre_artistico:src.nombre||q,
-        rubro:'Artista / creador',
-        bio:String(src.bio||'').slice(0,1200),
-        foto:src.thumbnail||channel.thumbnail||'',
-        portada:src.banner||'',
-        canal:channel.channelId,
-        youtube:'https://www.youtube.com/channel/'+channel.channelId,
-        visible:true,
-        claimed:false,
-        afiliado_verificado:false,
-        estado:'descubierto',
-        discovered:true,
-        generated:true,
-        source:'Fuente pública externa',
-        source_provider:'YouTube / Invidious',
+        nombre:src.nombre||q,nombre_artistico:src.nombre||q,rubro:'Artista / creador',
+        bio:String(src.bio||'').slice(0,1200),foto:src.thumbnail||channel.thumbnail||'',portada:src.banner||'',
+        canal:channel.channelId,youtube:'https://www.youtube.com/channel/'+channel.channelId,
+        visible:review_level!=='red',claimed:false,afiliado_verificado:false,estado:'descubierto',
+        discovered:true,generated:true,confidence,review_level,
+        source:'Fuente pública externa',source_provider:'YouTube / Invidious',
         disclaimer:'Perfil generado automáticamente a partir de información pública. No implica afiliación, representación ni verificación por UADAV.'
       });
     }
@@ -2255,6 +2253,20 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       await audit('artist_claim_created','artist_claim',claim.id,{artist_id:claim.artist_id});
       return json({success:true,id:claim.id,status:'pending'});
     }
+    if(path==='/api/admin/exceptions' && request.method==='GET'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      const items=[];
+      const claims=hasD1()?await safeD1('exceptions_claims',()=>env.DB.prepare(`SELECT id,artist_id,name,email,status,created_at FROM artist_claims WHERE status='pending' ORDER BY created_at DESC LIMIT 100`).all()):{ok:false};
+      const claimRows=claims.ok?(claims.value?.results||claims.results||[]):(await getArray('artist_claims')).filter(x=>String(x.status)==='pending').slice(-100).reverse();
+      for(const x of claimRows)items.push({id:x.id,type:'artist_claim',level:'yellow',title:'Reclamo de perfil: '+String(x.name||x.artist_id||'Artista'),detail:String(x.email||''),created_at:x.created_at||'',target:'artists'});
+      const pendingEvents=(await getArray('eventos_pendientes')).slice(-100).reverse();
+      for(const x of pendingEvents)items.push({id:x.id||x.event_id,type:'event_review',level:'yellow',title:'Evento/destaque pendiente: '+String(x.titulo||x.nombre||'Evento'),detail:String(x.ciudad||x.lugar||''),created_at:x.created_at||x.fecha_creacion||'',target:'events'});
+      let syncErrors=[];if(hasD1()){const er=await safeD1('exceptions_sync',()=>env.DB.prepare(`SELECT id,scope,error,created_at FROM d1_sync_errors ORDER BY created_at DESC LIMIT 50`).all());if(er.ok)syncErrors=er.value?.results||er.results||[];}
+      for(const x of syncErrors)items.push({id:x.id,type:'sync_error',level:'red',title:'Error de sincronización',detail:String(x.scope||'D1')+' · '+String(x.error||''),created_at:x.created_at||'',target:'diagnostics'});
+      items.sort((a,b)=>(a.level==='red'?-1:1)-(b.level==='red'?-1:1)||String(b.created_at).localeCompare(String(a.created_at)));
+      return json({count:items.length,red:items.filter(x=>x.level==='red').length,yellow:items.filter(x=>x.level==='yellow').length,items});
+    }
+
     if(path==='/api/admin/artist-claims' && request.method==='GET'){
       if(!isAdmin())return json({error:'No autorizado'},401);
       if(hasD1()){try{const state=await ensureD1Schema();if(state.ready){const r=await env.DB.prepare(`SELECT * FROM artist_claims ORDER BY created_at DESC LIMIT 500`).all();const rows=r.results||[];if(rows.length)return json(rows);}}catch(e){await recordD1SyncError('artist_claims_read',e);}}
