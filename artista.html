@@ -77,7 +77,7 @@ function render(){
  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 }
 function switchTab(tab){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));['inicio','musica','videos','playlists','podcast','clips','eventos','community','about'].forEach(x=>{const el=document.getElementById('tab-'+x);if(el)el.hidden=x!==tab});if(tab==='community'&&artist?.audience_chat_enabled){loadAudienceChat();clearInterval(audienceTimer);audienceTimer=setInterval(loadAudienceChat,20000)}}
-function shareProfile(){if(navigator.share){navigator.share({title:artist.nombre,text:`${artist.nombre} en ★ UADAV STREAM`,url:location.href}).catch(()=>{});}else{navigator.clipboard?.writeText(location.href);}}
+function shareProfile(){const shareUrl=new URL('/artista.html',location.origin);shareUrl.searchParams.set('id',artist?.id||id);shareUrl.searchParams.set('standalone','1');const url=shareUrl.toString();if(navigator.share){navigator.share({title:artist.nombre,text:`${artist.nombre} en ★ UADAV STREAM`,url}).catch(()=>{});}else{navigator.clipboard?.writeText(url);}}
 function openClaim(){document.getElementById('claimModal').classList.add('active');document.getElementById('claimTitle').textContent='Reclamar: '+artist.nombre}
 function closeClaim(){document.getElementById('claimModal').classList.remove('active')}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePlayer();closeClaim()}});
