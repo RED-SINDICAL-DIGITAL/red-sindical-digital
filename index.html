@@ -197,7 +197,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
               <option value="CL">🇨🇱 Chile</option>
             </select>
           </div>
-          <button tabindex="0" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión ininterrumpida HD 24/7')" class="tv-focusable flex items-center gap-1.5 sm:gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider"><div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div> <span class="hidden xs:inline">Live TV</span></button>
+          <button tabindex="0" onclick="document.getElementById('senalesSection')?.scrollIntoView({behavior:'smooth',block:'start'})" class="tv-focusable hidden md:flex items-center gap-2 border border-white/10 hover:border-white/20 text-white/70 hover:text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-signal"></i><span>En vivo</span></button>
         </div>
       </div>
       <nav id="legacyCategoryNav" class="hidden" aria-hidden="true">
