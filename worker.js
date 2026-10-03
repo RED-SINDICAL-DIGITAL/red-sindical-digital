@@ -1905,7 +1905,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
         external=ivRaw.map(v=>{const id=String(v.videoId||v.id||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:v.title||'Video',descripcion:v.author||'YouTube',thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.[0]?.url||'',categoria:'Video',duracion:Number(v.lengthSeconds||0),tipo:'video',content_type:'video'}}).filter(x=>x.id).slice(0,maxExternal);
         // Si todas las instancias Invidious fallan, la búsqueda pública NO puede quedar vacía.
         // Usamos la API oficial sólo como fallback, respetando el interruptor youtube_api_enabled.
-        if(!external.length && maxExternal>0 && await youtubeApiEnabled() && env.YOUTUBE_API_KEY){
+        if(!external.length && maxExternal>0 && env.YOUTUBE_API_KEY){
           try{
             const qs=new URLSearchParams({part:'snippet',maxResults:String(Math.min(12,maxExternal)),q,type:'video',regionCode:'AR',order:'relevance',key:env.YOUTUBE_API_KEY});
             const yr=await fetch('https://www.googleapis.com/youtube/v3/search?'+qs.toString());
@@ -1953,7 +1953,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       }
 
       // 2) Optional official YouTube API fallback — only when explicitly enabled.
-      if (await youtubeApiEnabled() && env.YOUTUBE_API_KEY) {
+      if (env.YOUTUBE_API_KEY) {
         try {
           const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=24&q=${encodeURIComponent(q)}&type=video&key=${env.YOUTUBE_API_KEY}`);
           const data = await res.json();
