@@ -13,6 +13,26 @@
     const style=document.createElement('style');style.textContent='.uadav-public-footer{max-width:1180px;margin:42px auto 90px;padding:22px 18px;border-top:1px solid rgba(255,255,255,.09);display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;color:#8291a5;font:12px/1.45 Inter,system-ui,sans-serif}.uadav-public-footer strong{color:#eef5ff}.uadav-public-footer nav{display:flex;gap:14px;flex-wrap:wrap}.uadav-public-footer a{color:#aebbd0;text-decoration:none}.uadav-public-footer a:hover{color:#fff}@media(max-width:640px){.uadav-public-footer{margin-bottom:110px;align-items:flex-start;flex-direction:column}.uadav-public-footer nav{gap:10px 16px}}';document.head.appendChild(style);
     const foot=document.createElement('footer');foot.className='uadav-public-footer';foot.dataset.uadavPublicFooter='1';foot.innerHTML='<div><strong>★ UADAV STREAM</strong><div>Entretenimiento · artistas · trabajo</div></div><nav aria-label="Ayuda y legales"><a href="/guia.html">Guía</a><a href="/documentacion.html">Derechos y CCT</a><a href="/terminos.html">Términos</a><a href="/privacidad.html">Privacidad</a></nav>';document.body.appendChild(foot);
   }
+  function publicSectionHeader(){
+    const path=location.pathname.toLowerCase();
+    if(/\/(admin(?:-secure)?|manual)\.html$/.test(path)||document.querySelector('[data-uadav-public-header]'))return;
+    const pages={
+      '/artistas.html':['Artistas','Descubrí talento, perfiles y trayectorias.'],
+      '/artista.html':['Perfil de artista','Contenido, agenda y contratación.'],
+      '/cartelera.html':['Cartelera','Eventos, espectáculos y experiencias.'],
+      '/trabajo.html':['Trabajo','Talento, oportunidades y contratación.'],
+      '/bolsa-trabajo.html':['Bolsa de trabajo','Oportunidades para artistas y contratantes.'],
+      '/documentacion.html':['Derechos y CCT','Documentación laboral y normativa pública.'],
+      '/guia.html':['Guía UADAVSTREAM','Ayuda para público, artistas y productoras.'],
+      '/terminos.html':['Términos','Condiciones de uso de la plataforma.'],
+      '/privacidad.html':['Privacidad','Información sobre datos y preferencias.']
+    };
+    const meta=pages[path];if(!meta)return;
+    const h=document.createElement('div');h.dataset.uadavPublicHeader='1';h.className='uadav-public-header';
+    h.innerHTML='<a class="uph-brand" href="/index.html"><b>★</b><span>UADAVSTREAM</span></a><div class="uph-context"><strong>'+meta[0]+'</strong><small>'+meta[1]+'</small></div><nav><a href="/index.html">Inicio</a><a href="/artistas.html">Artistas</a><a href="/cartelera.html">Cartelera</a><a href="/trabajo.html">Trabajo</a><a href="/guia.html">Ayuda</a></nav>';
+    const s=document.createElement('style');s.textContent='.uadav-public-header{position:relative;z-index:80;min-height:68px;padding:10px clamp(14px,3vw,34px);display:grid;grid-template-columns:auto minmax(180px,1fr) auto;align-items:center;gap:22px;background:rgba(5,7,10,.94);border-bottom:1px solid rgba(255,255,255,.09);backdrop-filter:blur(18px);color:#fff;font-family:Inter,system-ui,sans-serif}.uph-brand{display:flex;align-items:center;gap:9px;color:#fff;text-decoration:none;font-weight:950;letter-spacing:-.02em}.uph-brand b{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#2f6df6}.uph-context strong,.uph-context small{display:block}.uph-context strong{font-size:14px}.uph-context small{margin-top:2px;color:#8290a3;font-size:10px}.uadav-public-header nav{display:flex;gap:5px;align-items:center}.uadav-public-header nav a{padding:8px 10px;border-radius:9px;color:#aeb8c7;text-decoration:none;font-size:12px;font-weight:750}.uadav-public-header nav a:hover{background:rgba(255,255,255,.06);color:#fff}@media(max-width:760px){.uadav-public-header{grid-template-columns:1fr auto;min-height:58px}.uph-context{display:none}.uadav-public-header nav a{display:none}.uadav-public-header nav a:last-child{display:block}.uph-brand b{width:30px;height:30px}.uph-brand{font-size:13px}}';
+    document.head.appendChild(s);document.body.prepend(h)
+  }
   function boot(){document.querySelectorAll('.rail,.premium-rail,.artist-profile-rail').forEach(enhanceRail);const obs=new MutationObserver(()=>document.querySelectorAll('.rail,.premium-rail,.artist-profile-rail').forEach(enhanceRail));obs.observe(document.body,{childList:true,subtree:true});if(new URLSearchParams(location.search).get('tv')==='1')document.body.classList.add('uadav-tv-mode');document.addEventListener('keydown',tvKeys,true);addPublicFooter()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   window.uadavEnhanceRails=()=>document.querySelectorAll('.rail,.premium-rail,.artist-profile-rail').forEach(enhanceRail);
