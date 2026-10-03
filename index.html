@@ -344,7 +344,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
         <div class="text-center md:text-right space-y-2">
           <div id="bannerFooterContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
           <p id="footerLegal" class="max-w-md text-slate-400">UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.</p>
-          <p class="flex items-center justify-center md:justify-end gap-2"><i class="fa-solid fa-eye text-uadav-accent"></i> <span id="visitCounter" class="font-bold text-white">0</span> Visitas</p>
+          
           <p class="text-uadav-accent font-bold"><i class="fa-brands fa-whatsapp"></i> +54 341 3 602 783</p>
         </div>
       </div>
@@ -584,18 +584,24 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     function initCarouselDrag() { document.querySelectorAll('.overflow-x-auto').forEach(container => { let isDown = false, startX, scrollLeft; container.style.cursor = 'grab'; container.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - container.offsetLeft; scrollLeft = container.scrollLeft; }); container.addEventListener('mouseleave', () => { isDown = false; container.style.cursor = 'grab'; }); container.addEventListener('mouseup', () => { isDown = false; container.style.cursor = 'grab'; }); container.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - container.offsetLeft; const walk = (x - startX) * 2; container.scrollLeft = scrollLeft - walk; }); container.addEventListener('wheel', (e) => { if (e.shiftKey) { e.preventDefault(); container.scrollLeft += e.deltaY; } }, { passive: false }); container.setAttribute('tabindex', '0'); container.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { e.preventDefault(); container.scrollLeft += 50; } if (e.key === 'ArrowLeft') { e.preventDefault(); container.scrollLeft -= 50; } }); }); }
 
     async function cargarConfigYVisitas() {
+      let landing = {}, visibility = {};
       try { const res = await fetch(API_URL + 'config?_=' + Date.now()); if (res.ok) configGlobal = await res.json(); } catch(e) {}
+      try { const res = await fetch(API_URL + 'landing_config?_=' + Date.now()); if (res.ok) landing = await res.json() || {}; } catch(e) {}
+      try { const res = await fetch(API_URL + 'web_visibility?_=' + Date.now()); if (res.ok) visibility = await res.json() || {}; } catch(e) {}
       const selector = document.getElementById('countrySelectorHeader'); if (configGlobal.pais_trending && configGlobal.pais_trending !== 'Auto' && configGlobal.pais_trending !== '') selector.value = configGlobal.pais_trending; else selector.value = 'AR';
       if (configGlobal.mostrar_ip) { document.getElementById('countryBadge').classList.remove('hidden'); }
       document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
-      const legacyTvHero=/señal oficial|uadavstream tv/i.test([configGlobal.hero_titulo,configGlobal.hero_subtitulo].filter(Boolean).join(' '));
-      const heroTitle=legacyTvHero?"DESCUBRÍ. CONECTÁ. VIVÍ.":(configGlobal.hero_titulo||"DESCUBRÍ. CONECTÁ. VIVÍ.");
-      const heroSub=legacyTvHero?"UADAV STREAM":(configGlobal.hero_subtitulo||"UADAV STREAM");
-      document.getElementById('heroTitulo').innerText=heroTitle;
-      document.getElementById('heroSub').innerText=heroSub;
-      document.getElementById('heroBtnTexto').innerText=legacyTvHero?"Explorar UADAV STREAM":(configGlobal.hero_boton_texto||"Explorar UADAV STREAM");
-      document.getElementById('heroBtn').onclick=()=>{const target=configGlobal.hero_boton_url||'#artistasSection';if(!legacyTvHero&&target&&!target.startsWith('#')&&target!=='-479TZi-EAs')reproducirVideo(target,heroTitle,"UADAV STREAM","Contenido destacado");else document.getElementById('artistasSection')?.scrollIntoView({behavior:'smooth'})};
-      try { const resV = await fetch(API_URL + 'visits?_=' + Date.now()); if (resV.ok) { const data = await resV.json(); document.getElementById('visitCounter').innerText = data.visitas_totales; } await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
+      const heroTitle = landing.brand_hero_title || configGlobal.hero_titulo || "DESCUBRÍ. CONECTÁ. VIVÍ.";
+      const heroDesc = landing.brand_hero_description || "Descubrí artistas, música, videos, espectáculos y oportunidades. Todo en una experiencia creada para disfrutar, conectar y hacer crecer la carrera artística.";
+      const heroSub = landing.brand_hero_subtitle || "★ UADAV STREAM";
+      document.getElementById('heroTitulo').innerText = heroTitle;
+      document.getElementById('heroSub').innerText = heroSub;
+      const heroText = document.querySelector('#heroSub + p'); if (heroText) heroText.innerText = heroDesc;
+      const heroBg = document.querySelector('header + section > div.absolute:first-child'); if (heroBg && landing.brand_hero_image) heroBg.style.backgroundImage = "url('" + String(landing.brand_hero_image).replace(/'/g,"%27") + "')";
+      document.getElementById('heroBtnTexto').innerText = landing.brand_hero_button_text || configGlobal.hero_boton_texto || "Empezar a descubrir";
+      document.getElementById('heroBtn').onclick=()=>{const target=landing.brand_hero_button_url||configGlobal.hero_boton_url||'#artistasSection';if(target.startsWith('#'))document.querySelector(target)?.scrollIntoView({behavior:'smooth'});else if(target)location.href=target};
+      if (visibility.hero === false || landing.brand_hero_enabled === false) document.querySelector('header + section')?.classList.add('hidden');
+      try { await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
     }
 
     async function obtenerDatos(seccion) { 
@@ -1051,7 +1057,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
         {id:'conciertos',nombre:'Conciertos',icono:'fa-compact-disc',query:'concierto completo'}
       ];
       const remotas = Array.isArray(seccionesRemotas) ? seccionesRemotas : [];
-      seccionesActivas = seccionesBase.map(base => ({...base, ...(remotas.find(x => x?.id === base.id) || {}), activa:true}));
+      seccionesActivas = seccionesBase.map(base => ({...base, ...(remotas.find(x => x?.id === base.id) || {})}));
       aplicarVisibilidadSecciones();
       aplicarTitulosDinamicos();
       renderNavbar();
