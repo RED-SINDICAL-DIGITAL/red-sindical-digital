@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="uadav-build" content="10.11.0">
+  <meta name="uadav-build" content="10.21.0">
   <title>UADAV STREAM — Plataforma de artistas y entretenimiento</title>
   <meta name="description" content="UADAV STREAM conecta entretenimiento y oportunidades: artistas, música, radio, teatro, circo, cine, eventos, transmisiones en vivo y bolsa de trabajo.">
   <meta property="og:type" content="website" />
@@ -174,7 +174,7 @@ header+section{width:100%;margin:0!important;border-radius:0;border-left:0;borde
 }
 html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal,html.uadav-app-embedded .v10-mobile-bar{display:none!important}html.uadav-app-embedded body{padding-bottom:0!important}
 </style>
-</head>
+<style id="v1021-home-release">#mainContainer>[data-home-secondary="1"]{display:none}.uadav-action-deck{max-width:1400px;margin:0 auto;padding:28px 24px 0}@media(min-width:1180px){#mainContainer{display:flex;flex-direction:column}#senalesSection{order:1}#trendingSection{order:2}#artistasSection{order:3}#carteleraSection{order:4}#radiosSection{order:5}#shortsSection{order:6}#bannerInfeedContainer{order:7}}</style></head>
 <body>
 <script>(async()=>{try{const r=await fetch('https://uadav-api.uadavstream.workers.dev/api/estado_sitio',{cache:'no-store'});if(!r.ok)return;const s=await r.json();if(s?.modo==='promo'&&!location.search.includes('full=1'))location.replace('/promo.html')}catch(_){}})();</script>
 
@@ -243,9 +243,9 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
         <span class="inline-flex items-center gap-2 bg-blue-600/15 text-blue-200 border border-blue-500/25 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase mb-4 tracking-widest"><span class="w-2 h-2 rounded-full bg-uadav-accent"></span> ARTISTAS · ENTRETENIMIENTO · OPORTUNIDADES</span>
         <h1 id="heroTitulo" class="text-3xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-3 sm:mb-4 tracking-tight">DESCUBRÍ. CONECTÁ. VIVÍ.</h1>
         <span id="heroSub" class="text-white text-2xl sm:text-4xl lg:text-5xl font-black leading-[1.1] mb-4 tracking-tight">★ UADAV <span class="text-blue-400">STREAM</span></span>
-        <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 sm:mb-8 font-light">Sintoniza nuestra transmisión oficial continua de teatro, música y radio online.</p>
+        <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 sm:mb-8 font-light">Descubrí artistas, música, videos, espectáculos y oportunidades. Todo en una experiencia creada para disfrutar, conectar y hacer crecer la carrera artística.</p>
         <div class="flex flex-wrap gap-3 sm:gap-4">
-          <button tabindex="0" id="heroBtn" onclick="document.getElementById('artistasSection').scrollIntoView({behavior:'smooth'})" class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(47,109,246,0.3)] transition-all"><i class="fa-solid fa-play"></i> <span id="heroBtnTexto">Explorar UADAV STREAM</span></button>
+          <button tabindex="0" id="heroBtn" onclick="document.getElementById('artistasSection').scrollIntoView({behavior:'smooth'})" class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(47,109,246,0.3)] transition-all"><i class="fa-solid fa-play"></i> <span id="heroBtnTexto">Empezar a descubrir</span></button>
         </div>
       </div>
     </section>
@@ -253,8 +253,8 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     <section class="uadav-action-deck" aria-label="Acciones principales">
       <div class="uadav-action-head"><div><h2>Todo el espectáculo, más cerca</h2><p>Descubrí, publicá, trabajá y conectá con artistas.</p></div></div>
       <div class="uadav-actions">
-        <a class="uadav-action" href="#artistasSection"><i class="fa-solid fa-magnifying-glass"></i><div><strong>Encontrá artistas</strong><span>Música, teatro, circo, danza, magia, humor y más.</span></div></a>
-        <a class="uadav-action" href="/cartelera.html"><i class="fa-solid fa-calendar-plus"></i><div><strong>Publicá tu evento</strong><span>Sumá tu show, función o espectáculo a la cartelera.</span></div></a>
+        <a class="uadav-action" href="/artistas.html"><i class="fa-solid fa-magnifying-glass"></i><div><strong>Encontrá artistas</strong><span>Música, teatro, circo, danza, magia, humor y más.</span></div></a>
+        <a class="uadav-action" href="/cartelera.html"><i class="fa-solid fa-ticket"></i><div><strong>Descubrí la cartelera</strong><span>Shows, funciones y espectáculos para disfrutar.</span></div></a>
         <a class="uadav-action work" href="/trabajo.html"><i class="fa-solid fa-briefcase"></i><div><strong>Bolsa de Trabajo</strong><span>Publicá o encontrá oportunidades para artistas.</span></div></a>
         <a class="uadav-action live" href="#senalesSection"><i class="fa-solid fa-circle-play"></i><div><strong>En vivo</strong><span>Artistas, señales y espectáculos transmitiendo ahora.</span></div></a>
       </div>
@@ -273,7 +273,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       <section id="artistasSection" class="space-y-4">
         <div class="flex items-center justify-between gap-3 mb-4 sm:mb-5">
           <h2 id="artistasTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-star text-uadav-accent"></i> Artistas recomendados</h2>
-          <a href="/sumate-artista.html" class="tv-focusable inline-flex items-center gap-2 bg-white text-slate-950 px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-black whitespace-nowrap hover:bg-uadav-accent transition-colors"><i class="fa-solid fa-user-plus"></i><span class="hidden xs:inline">Sumate como artista</span><span class="xs:hidden">Sumate</span></a>
+          <a href="/para-artistas.html" class="tv-focusable inline-flex items-center gap-2 bg-white text-slate-950 px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-black whitespace-nowrap hover:bg-uadav-accent transition-colors"><i class="fa-solid fa-star"></i><span class="hidden xs:inline">Para artistas</span><span class="xs:hidden">Artistas</span></a>
         </div>
         <div id="artistasGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4"></div>
       </section>
