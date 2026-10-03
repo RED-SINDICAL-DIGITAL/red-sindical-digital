@@ -2266,8 +2266,10 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       return json({...p,claimed:found.claimed===true,claim_status:found.claim_status||'none',claim_email:found.claim_email||'',claim_at:found.claim_at||null});
     }
     if(path==='/api/artista/claim' && request.method==='POST'){
-      const b=await request.json().catch(()=>({})); const artistId=String(b.artist_id||'').trim(); if(!artistId)return json({error:'artist_id requerido'},400);
-      const artist=await artistFromD1(artistId) || (await allCanonicalArtists()).find(a=>String(publicArtistFromItem(a).id)===artistId); if(!artist)return json({error:'Artista no encontrado'},404);
+      const b=await request.json().catch(()=>({})); let artistId=String(b.artist_id||'').trim(); if(!artistId)return json({error:'artist_id requerido'},400);
+      let artist=await artistFromD1(artistId) || (await allCanonicalArtists()).find(a=>String(publicArtistFromItem(a).id)===artistId);
+      if(!artist && artistId.startsWith('discover:')){const channel=String(b.channel_id||artistId.slice(9)).trim();const name=String(b.artist_name||b.name||'Artista').slice(0,180);const info=channel?await invidiousChannelInfo(channel).catch(()=>null):null;const item={id:'ART-'+channel,nombre:info?.nombre||name,nombre_artistico:info?.nombre||name,rubro:'Artista / creador',bio:String(info?.bio||'').slice(0,1200),foto:info?.thumbnail||'',portada:info?.banner||'',canal:channel,youtube:channel?'https://www.youtube.com/channel/'+channel:'',visible:true,claimed:false,claim_status:'none',estado:'publicado',origen:'reclamo_perfil_descubierto',creado:isoNow()};const list=await getArray('artistas');if(!list.some(x=>String(x.id)===item.id))list.unshift(item);await putJSON('artistas',list.slice(0,5000));await safeD1('claim_discovered_artist',()=>syncArtistsD1([item]));artist=item;artistId=item.id;await audit('artist_materialized_for_claim','artist',item.id,{channel});}
+      if(!artist)return json({error:'Artista no encontrado'},404);
       if(artist.claimed===true || artist.claim_status==='approved') return json({error:'Este perfil ya fue reclamado'},409);
       const claim={id:'CL-'+Date.now().toString(36).toUpperCase(),artist_id:String(publicArtistFromItem(artist).id),name:String(b.name||'').slice(0,140),email:String(b.email||'').slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),proof_url:String(b.proof_url||'').slice(0,500),social_url:String(b.social_url||'').slice(0,500),note:String(b.note||'').slice(0,1500),status:'pending',created_at:isoNow()};
       let claimStored=false;
