@@ -37,7 +37,7 @@
 <script>
 const API_REMOTE=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';const API_BASES=[API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[location.origin+'/api/']:[])];
 async function apiFetch(path,opt={}){let last;for(const base of API_BASES){try{const r=await fetch(base+path,{...opt,cache:opt.cache||'no-store'});const ct=r.headers.get('content-type')||'';if(base!==API_REMOTE&&(r.status===404||!ct.includes('json')))continue;const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d}catch(e){last=e}}throw last||new Error('No se pudo conectar')}
-const id=new URLSearchParams(location.search).get('id')||'';
+const params=new URLSearchParams(location.search);const id=params.get('id')||'';const discoverQuery=(params.get('discover')||'').trim();
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const decodeEntities=v=>{const t=document.createElement('textarea');t.innerHTML=String(v??'');return t.value};
 const norm=v=>String(v||'').toLowerCase();
@@ -61,7 +61,7 @@ function closePlayer(){if(window.UADAVContentPlayer)window.UADAVContentPlayer.cl
 function goBack(){if(history.length>1)history.back();else location.href='/artistas.html'}
 function render(){
  playerItems=[];
- const a=artist; const verified=a.afiliado_verificado===true; const claimed=a.claimed===true; const artistState=verified?'★ ARTISTA AFILIADO UADAV':(claimed?'✓ PERFIL RECLAMADO':'✦ ARTISTA DESCUBIERTO'); const bg=a.portada||a.banner||a.foto||a.imagen||a.thumbnail||'';
+ const a=artist; const verified=a.afiliado_verificado===true; const claimed=a.claimed===true; const artistState=verified?'★ ARTISTA AFILIADO UADAV':(claimed?'✓ PERFIL RECLAMADO':(a.generated?'✦ PERFIL GENERADO DESDE FUENTES PÚBLICAS':'✦ ARTISTA DESCUBIERTO')); const bg=a.portada||a.banner||a.foto||a.imagen||a.thumbnail||'';
  const live=a.live_url?`<a class="btn primary" href="${esc(a.live_url)}" target="_blank" rel="noopener">● En vivo</a>`:'';
  const hasSupport=verified&&a.support_enabled!==false&&supportLinks(a).length>0; const donate=hasSupport?`<button class="btn" type="button" onclick="switchTab('community');setTimeout(()=>document.getElementById('supportArea')?.scrollIntoView({behavior:'smooth'}),30)">♥ Apoyar</button>`:''; const presskit=verified&&a.presskit_enabled!==false?`<a class="btn" href="/presskit.html?id=${encodeURIComponent(a.id)}">▤ Press Kit</a>`:'';
  const book=`<a class="btn" href="/contratar-artista.html?id=${encodeURIComponent(a.id)}">💼 Contratar</a>`;
@@ -83,7 +83,7 @@ function closeClaim(){document.getElementById('claimModal').classList.remove('ac
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePlayer();closeClaim()}});
 document.getElementById('claimForm').addEventListener('submit',async e=>{e.preventDefault();const out=document.getElementById('claimStatus');const data=Object.fromEntries(new FormData(e.target));data.artist_id=artist.id;out.textContent='Enviando…';try{const d=await apiFetch('artista/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});out.textContent='✓ Solicitud enviada. Te avisaremos por correo cuando sea revisada.';out.className='status ok';e.target.reset()}catch(err){out.textContent='❌ '+err.message;out.className='status'}});
 async function loadMore(){try{const [legacy,universal,e]=await Promise.allSettled([api('artista/content?artist_id='+encodeURIComponent(artist.id)),api('content?artist_id='+encodeURIComponent(artist.id)),api('cartelera')]);const merged=[];for(const pack of [legacy,universal]){if(pack.status==='fulfilled'&&Array.isArray(pack.value))pack.value.forEach(x=>{if(!merged.some(y=>String(y.url||y.id)===String(x.url||x.id)))merged.push(x)})}events=e.status==='fulfilled'&&Array.isArray(e.value)?e.value:[];if(merged.length<4){try{const yt=await api('youtube/search?q='+encodeURIComponent(artist.nombre));if(Array.isArray(yt))yt.slice(0,12).forEach(x=>{if(!merged.some(y=>String(y.url||y.id)===String(x.id)))merged.push({...x,provider:x.provider||'youtube',external_id:x.external_id||x.id,url:x.url||('https://www.youtube.com/watch?v='+encodeURIComponent(x.external_id||x.id||'')),tipo:'video',content_type:'video'})})}catch{}}content=merged.map(normalizeClientMedia);render()}catch{render()}}
-async function boot(){try{artist=await api('public/artista?id='+encodeURIComponent(id));await loadMore()}catch(e){document.getElementById('app').innerHTML='<div class="empty" style="margin:25vh auto;width:min(560px,90vw)"><h2>Perfil no disponible</h2><p>'+esc(e.message)+'</p><p><a class="btn primary" href="/artistas.html">Volver al directorio</a></p></div>'}}
+async function boot(){try{artist=discoverQuery?await api('public/discover-artist?q='+encodeURIComponent(discoverQuery)):await api('public/artista?id='+encodeURIComponent(id));await loadMore()}catch(e){document.getElementById('app').innerHTML='<div class="empty" style="margin:25vh auto;width:min(560px,90vw)"><h2>Perfil no disponible</h2><p>'+esc(e.message)+'</p><p><a class="btn primary" href="/artistas.html">Volver al directorio</a></p></div>'}}
 boot();
 </script>
 <script src="/uadav-ui-v8.4.js?v=928"></script><script src="/uadav-app-bridge-v104.js?v=10112"></script>
