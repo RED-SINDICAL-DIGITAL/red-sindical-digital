@@ -2190,6 +2190,26 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       for(const s of Array.isArray(secs)?secs:[]){ if(s?.tipo_contenido!=='perfiles') continue; for(const a of Array.isArray(s.items)?s.items:[]){const p=publicArtistFromItem(a);const k=String(p.id||p.canal||p.nombre).toLowerCase();if(k&&!seen.has(k)){seen.add(k);out.push({...a,id:p.id})}} }
       return out;
     }
+    async function discoverySignal(channelId,type,meta={}){
+      const id=String(channelId||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,100);if(!id)return null;
+      const key='artist_interest_'+id;const d=await getObject(key);d.channel_id=id;d.updated_at=isoNow();d.signals=d.signals||{};
+      const t=String(type||'view').replace(/[^a-z_]/gi,'').slice(0,30);d.signals[t]=Number(d.signals[t]||0)+1;
+      d.score=Number(d.signals.view||0)+Number(d.signals.search||0)*2+Number(d.signals.play||0)*3+Number(d.signals.share||0)*4+Number(d.signals.claim||0)*10;
+      d.meta={...(d.meta||{}),...meta};await env.UADAV_DB.put(key,JSON.stringify(d),{expirationTtl:90*86400});return d;
+    }
+    async function maybeConsolidateDiscovered(a,interest){
+      if(!a?.canal||a.review_level!=='green'||Number(a.confidence||0)<78||Number(interest?.score||0)<12)return false;
+      const list=await getArray('artistas');const channel=String(a.canal);
+      if(list.some(x=>String(x.canal||x.channel_id||'')===channel))return true;
+      const item={...a,id:'ART-'+channel,nombre:a.nombre,nombre_artistico:a.nombre,estado:'publicado',visible:true,claimed:false,claim_status:'none',origen:'descubrimiento_automatico',auto_consolidated:true,interest_score:Number(interest.score||0),creado:isoNow()};
+      list.unshift(item);await putJSON('artistas',list.slice(0,5000));await safeD1('auto_artist_consolidate',()=>syncArtistsD1([item]));await audit('artist_auto_consolidated','artist',item.id,{confidence:a.confidence,interest_score:interest.score});return true;
+    }
+    if(path==='/api/public/artist-signal' && request.method==='POST'){
+      const b=await request.json().catch(()=>({}));const channel=String(b.channel_id||'').trim();const allowed=['view','search','play','share','claim'];const type=allowed.includes(String(b.type))?String(b.type):'view';
+      if(!channel)return json({error:'channel_id requerido'},400);const interest=await discoverySignal(channel,type,{name:String(b.name||'').slice(0,160)});
+      return json({success:true,score:interest.score,signals:interest.signals});
+    }
+
     if(path==='/api/public/discover-artist' && request.method==='GET'){
       const q=String(url.searchParams.get('q')||'').trim().slice(0,140);
       if(q.length<2)return json({error:'Búsqueda requerida'},400);
@@ -2215,7 +2235,8 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       if(Number(src.subscribers||0)>0)confidence+=5;
       confidence=Math.min(100,confidence);
       const review_level=confidence>=78?'green':confidence>=58?'yellow':'red';
-      return json({
+      const interest=await discoverySignal(channel.channelId,'search',{name:src.nombre||q});
+      const discoveredProfile={
         id:'discover:'+channel.channelId,
         nombre:src.nombre||q,nombre_artistico:src.nombre||q,rubro:'Artista / creador',
         bio:String(src.bio||'').slice(0,1200),foto:src.thumbnail||channel.thumbnail||'',portada:src.banner||'',
@@ -2223,8 +2244,11 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
         visible:review_level!=='red',claimed:false,afiliado_verificado:false,estado:'descubierto',
         discovered:true,generated:true,confidence,review_level,
         source:'Fuente pública externa',source_provider:'YouTube / Invidious',
-        disclaimer:'Perfil generado automáticamente a partir de información pública. No implica afiliación, representación ni verificación por UADAV.'
-      });
+        disclaimer:'Perfil generado automáticamente a partir de información pública. No implica afiliación, representación ni verificación por UADAV.',
+        interest_score:Number(interest?.score||0)
+      };
+      const consolidated=await maybeConsolidateDiscovered(discoveredProfile,interest);
+      return json({...discoveredProfile,consolidated});
     }
 
     if(path==='/api/public/artistas' && request.method==='GET'){
