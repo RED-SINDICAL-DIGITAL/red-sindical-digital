@@ -56,8 +56,8 @@
     const img=card.querySelector('img');
     const src=img?.getAttribute('src')||img?.src||'';
     const m=src.match(/\/vi\/([A-Za-z0-9_-]{11})\//);
-    if(!m)return;
-    const id=m[1];
+    const id=card.dataset.videoId||card.querySelector('[data-video-id]')?.dataset.videoId||m?.[1]||'';
+    if(!id)return;
     const titulo=(card.querySelector('h3,h4')?.textContent||'Contenido').trim();
     const meta=[...card.querySelectorAll('span,p')].map(x=>(x.textContent||'').trim()).filter(Boolean);
     const categoria=meta[0]||'Resultado';
