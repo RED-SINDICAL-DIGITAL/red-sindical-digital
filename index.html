@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="uadav-build" content="10.9.0">
+  <meta name="uadav-build" content="10.11.0">
   <title>UADAV STREAM — Plataforma de artistas y entretenimiento</title>
   <meta name="description" content="UADAVSTREAM conecta entretenimiento y oportunidades: artistas, música, radio, teatro, circo, cine, eventos, transmisiones en vivo y bolsa de trabajo.">
   <meta property="og:type" content="website" />
   <meta property="og:title" content="UADAVSTREAM - Entretenimiento, Teatros & Música Global" />
-  <meta property="og:description" content="Sintoniza nuestra transmisión oficial continua de teatro, música y radio online." />
+  <meta property="og:description" content="Artistas, música, espectáculos, radio, cartelera y oportunidades en un solo lugar." />
   <meta property="og:image" content="https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj" />
   <meta property="og:url" content="https://uadavstream.com.ar/" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="UADAVSTREAM - Entretenimiento, Teatros & Música Global" />
-  <meta name="twitter:description" content="Sintoniza nuestra transmisión oficial continua de teatro, música y radio online." />
+  <meta name="twitter:description" content="Artistas, música, espectáculos, radio, cartelera y oportunidades en un solo lugar." />
   <meta name="twitter:image" content="https://yt3.googleusercontent.com/XiRxtgGY3oDyx6oTUlFyzMlegX2xCp6LxYl-Yz4VNBjPhbOcMkJBwcybb3SJ8yHk-cSVxZXX-A=s176-c-k-c0x00ffffff-no-rj" />
   
   <link rel="manifest" href="/manifest.json">
@@ -69,6 +69,10 @@
   </style>
 
   <style id="uadav-v109-streaming">
+/* V10.11 launch curation: Home is discovery, not the full catalog */
+#teatrosSection,#circosSection,#conciertosSection{display:none!important}
+#legacyCategoryNav{display:none!important}
+@media(max-width:720px){header+section{margin-top:8px!important}}
 :root{--u-bg:#050505;--u-surface:#101114;--u-surface2:#17181c;--u-text:#f7f7f8;--u-muted:#969aa3;--u-blue:#2f6df6;--u-blue2:#4b7df7;--u-line:rgba(255,255,255,.10);--u-radius:18px}
 html{background:var(--u-bg);color-scheme:dark}body{background:var(--u-bg)!important;color:var(--u-text)}
 *:focus-visible{outline:2px solid var(--u-blue)!important;outline-offset:3px!important}.tv-focusable:focus{outline:2px solid var(--u-blue)!important;outline-offset:3px;box-shadow:none!important}
@@ -165,15 +169,13 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
           </div>
         </div>
         <nav class="v10-primary-nav" aria-label="Secciones principales">
-          <a href="/index.html?v=10">Inicio</a>
-          <a href="#trendingSection">Explorar</a>
-          <a href="#artistasSection">Artistas</a>
+          <a href="/index.html?v=1011">Inicio</a>
+          <a href="/index.html?modo=explorar#trendingSection">Explorar</a>
+          <a href="/artistas.html">Artistas</a>
           <a href="/trabajo.html">Trabajo</a>
-          <a href="#radiosSection">Radio</a>
           <a href="/cartelera.html">Cartelera</a>
-          <a href="/media.html">Cine &amp; Historias</a>
           <a href="#senalesSection">En vivo</a>
-          <a class="more" href="/manual.html">Manual</a>
+          <a href="#radiosSection">Radio</a>
         </nav>
         <div class="flex-1 max-w-2xl mx-1 sm:mx-2 relative">
           <div class="relative group">
@@ -198,8 +200,8 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
           <button tabindex="0" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión ininterrumpida HD 24/7')" class="tv-focusable flex items-center gap-1.5 sm:gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider"><div class="w-2 h-2 rounded-full bg-red-500 animate-ping"></div> <span class="hidden xs:inline">Live TV</span></button>
         </div>
       </div>
-      <nav class="border-t border-uadav-border bg-[#050505]">
-        <div id="navbar" class="max-w-[1400px] mx-auto px-4 flex items-center gap-3 overflow-x-auto py-3.5 no-scrollbar text-sm font-black"></div>
+      <nav id="legacyCategoryNav" class="hidden" aria-hidden="true">
+        <div id="navbar"></div>
       </nav>
       <div id="bannerTopContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
     </header>
@@ -208,12 +210,12 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600')] bg-cover bg-center opacity-30 filter blur-[2px]"></div>
       <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#050505] via-[#050505]/90 to-transparent"></div>
       <div class="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-10 md:py-20 flex flex-col items-start justify-center">
-        <span class="inline-flex items-center gap-2 bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase mb-4 tracking-widest"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Al Aire 24/7</span>
-        <h1 id="heroTitulo" class="text-3xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-3 sm:mb-4 tracking-tight">SEÑAL OFICIAL</h1>
-        <span id="heroSub" class="text-transparent bg-clip-text bg-gradient-to-r from-uadav-accent to-purple-500 text-3xl sm:text-5xl lg:text-7xl font-black leading-[1.1] mb-4 tracking-tight">UADAVSTREAM TV</span>
+        <span class="inline-flex items-center gap-2 bg-blue-600/15 text-blue-200 border border-blue-500/25 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase mb-4 tracking-widest"><span class="w-2 h-2 rounded-full bg-uadav-accent"></span> ARTISTAS · ENTRETENIMIENTO · TRABAJO</span>
+        <h1 id="heroTitulo" class="text-3xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-3 sm:mb-4 tracking-tight">DESCUBRÍ. CONECTÁ. VIVÍ.</h1>
+        <span id="heroSub" class="text-transparent bg-clip-text bg-gradient-to-r from-uadav-accent to-purple-500 text-3xl sm:text-5xl lg:text-7xl font-black leading-[1.1] mb-4 tracking-tight">UADAVSTREAM</span>
         <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 sm:mb-8 font-light">Sintoniza nuestra transmisión oficial continua de teatro, música y radio online.</p>
         <div class="flex flex-wrap gap-3 sm:gap-4">
-          <button tabindex="0" id="heroBtn" onclick="reproducirVideo('-479TZi-EAs', 'SEÑAL OFICIAL UADAVSTREAM TV', 'En Vivo', 'Transmisión oficial 24/7')" class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(47,109,246,0.3)] transition-all"><i class="fa-solid fa-play"></i> <span id="heroBtnTexto">Ver SEÑAL OFICIAL</span></button>
+          <button tabindex="0" id="heroBtn" onclick="document.getElementById('artistasSection').scrollIntoView({behavior:'smooth'})" class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(47,109,246,0.3)] transition-all"><i class="fa-solid fa-play"></i> <span id="heroBtnTexto">Explorar UADAVSTREAM</span></button>
         </div>
       </div>
     </section>
@@ -300,7 +302,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     </div>
 
     <nav class="v10-mobile-bar" aria-label="Navegación móvil">
-      <a href="/index.html?v=10"><i class="fa-solid fa-house"></i><span>Inicio</span></a>
+      <a href="/index.html?v=1011"><i class="fa-solid fa-house"></i><span>Inicio</span></a>
       <a href="#radiosSection"><i class="fa-solid fa-radio"></i><span>Radio</span></a>
       <a href="#artistasSection"><i class="fa-solid fa-users"></i><span>Artistas</span></a>
       <a href="/cartelera.html"><i class="fa-solid fa-calendar-days"></i><span>Eventos</span></a>
@@ -406,7 +408,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     let seccionesActivas = [], artistasData = [], radiosData = [], carteleraData = [], senalesData = [];
     let queue = [], currentIndex = -1;
     let activeRadioId = null;
-    let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR", hero_titulo: "SEÑAL OFICIAL", hero_subtitulo: "UADAVSTREAM TV", hero_boton_texto: "Ver SEÑAL OFICIAL", hero_boton_url: "-479TZi-EAs" };
+    let configGlobal = { mostrar_ip: false, texto_legal: "", pais_trending: "AR", hero_titulo: "DESCUBRÍ. CONECTÁ. VIVÍ.", hero_subtitulo: "UADAVSTREAM", hero_boton_texto: "Explorar UADAVSTREAM", hero_boton_url: "#artistasSection" };
     let zenoEventSource = null;
     let deferredPrompt;
 
@@ -556,10 +558,13 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       const selector = document.getElementById('countrySelectorHeader'); if (configGlobal.pais_trending && configGlobal.pais_trending !== 'Auto' && configGlobal.pais_trending !== '') selector.value = configGlobal.pais_trending; else selector.value = 'AR';
       if (configGlobal.mostrar_ip) { document.getElementById('countryBadge').classList.remove('hidden'); }
       document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
-      document.getElementById('heroTitulo').innerText = configGlobal.hero_titulo || "SEÑAL OFICIAL";
-      document.getElementById('heroSub').innerText = configGlobal.hero_subtitulo || "UADAVSTREAM TV";
-      document.getElementById('heroBtnTexto').innerText = configGlobal.hero_boton_texto || "Ver SEÑAL OFICIAL";
-      document.getElementById('heroBtn').onclick = () => reproducirVideo(configGlobal.hero_boton_url || '-479TZi-EAs', configGlobal.hero_titulo || "Señal Oficial", "En Vivo", "Transmisión oficial");
+      const legacyTvHero=/señal oficial|uadavstream tv/i.test([configGlobal.hero_titulo,configGlobal.hero_subtitulo].filter(Boolean).join(' '));
+      const heroTitle=legacyTvHero?"DESCUBRÍ. CONECTÁ. VIVÍ.":(configGlobal.hero_titulo||"DESCUBRÍ. CONECTÁ. VIVÍ.");
+      const heroSub=legacyTvHero?"UADAVSTREAM":(configGlobal.hero_subtitulo||"UADAVSTREAM");
+      document.getElementById('heroTitulo').innerText=heroTitle;
+      document.getElementById('heroSub').innerText=heroSub;
+      document.getElementById('heroBtnTexto').innerText=legacyTvHero?"Explorar UADAVSTREAM":(configGlobal.hero_boton_texto||"Explorar UADAVSTREAM");
+      document.getElementById('heroBtn').onclick=()=>{const target=configGlobal.hero_boton_url||'#artistasSection';if(!legacyTvHero&&target&&!target.startsWith('#')&&target!=='-479TZi-EAs')reproducirVideo(target,heroTitle,"UADAVSTREAM","Contenido destacado");else document.getElementById('artistasSection')?.scrollIntoView({behavior:'smooth'})};
       try { const resV = await fetch(API_URL + 'visits?_=' + Date.now()); if (resV.ok) { const data = await resV.json(); document.getElementById('visitCounter').innerText = data.visitas_totales; } await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
     }
 
