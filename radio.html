@@ -30,11 +30,25 @@ body.tv-mode{font-size:1.15rem}.tv-mode .shell{width:min(1600px,100%)}.tv-mode .
 /* V11.1 móvil · radio compacta */
 @media(max-width:700px){.shell{padding:0 12px 44px}.top{margin:0 -12px;padding:7px 12px;height:54px}.hero{min-height:360px;border-radius:0;margin:0 -12px}.hero-content{padding:26px 18px 30px}.hero-title{font-size:clamp(36px,11vw,48px)}.hero-copy{font-size:13px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.now{margin:-24px 0 0}.radio-tabs{top:0;margin:14px 0 0;border-radius:14px}.section{margin-top:26px}.section-title{font-size:20px}footer{padding-bottom:22px}}
 </style>
+<style id="uadav-radio-shell-v11">
+html.uadav-app-embedded body{background:#05080d!important}
+html.uadav-app-embedded .shell{width:min(1460px,100%)!important;padding:18px clamp(16px,3vw,42px) 120px!important}
+html.uadav-app-embedded .top,html.uadav-app-embedded footer{display:none!important}
+html.uadav-app-embedded .hero{min-height:clamp(390px,50vw,610px)!important;border-radius:28px!important;margin:0!important}
+html.uadav-app-embedded .hero-content{padding:clamp(30px,5vw,64px)!important;max-width:800px!important}
+html.uadav-app-embedded .hero-title{font-size:clamp(44px,7vw,92px)!important}
+html.uadav-app-embedded .now{margin:-58px clamp(14px,3vw,34px) 0!important;background:rgba(9,14,22,.94)!important;border-color:rgba(255,255,255,.12)!important;box-shadow:0 24px 70px rgba(0,0,0,.42)!important}
+html.uadav-app-embedded .radio-tabs{top:0!important;background:rgba(7,11,17,.92)!important;backdrop-filter:blur(20px)!important}
+html.uadav-app-embedded .section{margin-top:42px!important}
+html.uadav-app-embedded .panel,html.uadav-app-embedded .meta,html.uadav-app-embedded .track{background:#0b111a!important;border-color:rgba(255,255,255,.09)!important}
+@media(max-width:720px){html.uadav-app-embedded .shell{padding:0 12px 120px!important}html.uadav-app-embedded .hero{min-height:430px!important;border-radius:0!important;margin:0 -12px!important}html.uadav-app-embedded .hero-content{padding:28px 18px 54px!important}html.uadav-app-embedded .now{grid-template-columns:74px minmax(0,1fr)!important;margin:-36px 0 0!important;padding:10px!important;border-radius:19px!important}html.uadav-app-embedded .now-art{width:74px!important;height:74px!important}html.uadav-app-embedded .community{grid-template-columns:1fr!important}}
+</style>
 <link rel="stylesheet" href="/uadav-design-v7.2.css">
 <script src="/uadav-brand-v7.2.js" defer></script>
 <script src="/uadav-api-config.js?v=928"></script>
 <link rel="stylesheet" href="/uadav-ui-v8.4.css?v=928"></head>
 <body>
+<script>(function(){try{if(window.parent!==window){document.documentElement.classList.add('uadav-app-embedded');document.body?.classList.add('uadav-app-embedded')}}catch(_){}})();</script>
 <div class="shell">
 <header class="top">
   <a class="brand" href="/index.html" aria-label="Volver a UADAV STREAM"><span class="brand-mark">★</span><span>UADAV STREAM</span></a>
