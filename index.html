@@ -1112,9 +1112,10 @@ async function regionalizarHome(){
  }catch(e){console.warn('Regionalización Home:',e)}
 }
 async function cargarHome() {
-      await cargarConfigYVisitas();
-      await aplicarApariencia();
-      await cargarBanners();
+      const safe=async(label,fn)=>{try{return await fn()}catch(e){console.warn('Home '+label+':',e);return null}};
+      await safe('config',()=>cargarConfigYVisitas());
+      await safe('apariencia',()=>aplicarApariencia());
+      await safe('banners',()=>cargarBanners());
       const seccionesRemotas = await obtenerDatos('secciones');
       const seccionesBase = [
         {id:'senales',nombre:'Señales',icono:'fa-tower-broadcast',query:'en vivo'},
@@ -1132,12 +1133,12 @@ async function cargarHome() {
       senalesData = await obtenerDatos('senales_oficiales'); renderSenalesUI();
       artistasData = await obtenerDatos('public/artistas'); renderArtistasUI();
       radiosData = await obtenerDatos('radios'); renderRadiosUI();
-      carteleraData = await obtenerDatos('cartelera'); renderCarteleraUI(); await regionalizarHome(); startPremiumHero();
+      carteleraData = await obtenerDatos('cartelera'); renderCarteleraUI(); await safe('regionalización',()=>regionalizarHome()); startPremiumHero();
       cargarTendenciasPorPais(document.getElementById('countrySelectorHeader').value);
       cargarShortsExclusivos();
       cargarArtistasEnVivo();
       cargarLiveArgentina();
-      await cargarColeccionesHome();
+      await safe('colecciones',()=>cargarColeccionesHome());
       if(!homePremiumPool.length) refreshHomeEditorial();
       initCarouselDrag();
     }
