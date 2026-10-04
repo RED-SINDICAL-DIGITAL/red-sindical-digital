@@ -66,7 +66,7 @@ async function load(force=false){
 }
 function setCategory(c){state.category=c;renderFilters();render()}
 let searchTimer;
-function applySearch(){state.q=document.getElementById('q').value.trim();render()}
+let discoverySeq=0;async function applySearch(){state.q=document.getElementById('q').value.trim();render();const q=state.q,seq=++discoverySeq;if(q.length<2||state.items.some(matches))return;const grid=document.getElementById('grid');if(grid)grid.innerHTML='<div class="empty" style="grid-column:1/-1">Buscando el perfil público de “'+esc(q)+'”…</div>';try{const a=await apiFetch('public/discover-artist?q='+encodeURIComponent(q));if(seq!==discoverySeq||state.q!==q)return;if(a?.id){state.items=[a,...state.items.filter(x=>String(x.id)!==String(a.id))];render()}}catch(_){if(seq===discoverySeq)render()}}
 document.getElementById('searchForm').addEventListener('submit',e=>{e.preventDefault();applySearch()});
 document.getElementById('q').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(applySearch,180)});
 document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Escape'){e.currentTarget.value='';state.q='';render()}});
