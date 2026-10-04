@@ -2146,7 +2146,13 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       const jobs=(await getArray('bolsa_trabajo')).filter(x=>x&&x.activo!==false).map(x=>({...x,feed_type:'job'}));
       const events=(await getArray('cartelera_aprobada')).filter(x=>x&&x.estado!=='deleted').map(x=>({...x,feed_type:'event'}));
       let out=kind==='job'?jobs:(kind==='event'?events:[...jobs,...events]);
-      out.sort((a,b)=>Date.parse(b.actualizado||b.creado||b.fecha_creacion||0)-Date.parse(a.actualizado||a.creado||a.fecha_creacion||0));return json(out.slice(0,limit));
+      const cf=request.cf||{},wantedProvince=String(url.searchParams.get('province')||cf.region||'').trim(),wantedCity=String(url.searchParams.get('city')||cf.city||'').trim(),wantedCountry=String(url.searchParams.get('country')||cf.country||'AR').trim();
+      const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+      const provinceAliases={'santa fe':'santa fe','cordoba':'cordoba','tucuman':'tucuman','buenos aires':'buenos aires','caba':'ciudad autonoma de buenos aires','capital federal':'ciudad autonoma de buenos aires'};
+      const wp=provinceAliases[norm(wantedProvince)]||norm(wantedProvince),wc=norm(wantedCity);
+      const territorialScore=x=>{const p=provinceAliases[norm(x.provincia||x.region||'')]||norm(x.provincia||x.region||''),city=norm(x.ciudad||x.localidad||''),country=norm(x.pais||x.country||'argentina'),remote=/remot|online|virtual/.test(norm(x.modalidad||x.region_scope||''));let s=0;if(wc&&city===wc)s+=500;if(wp&&p===wp)s+=300;if(country==='argentina'||country==='ar')s+=100;if(remote)s+=40;return s};
+      out=out.map(x=>({...x,_territorial_score:territorialScore(x)}));out.sort((a,b)=>(b._territorial_score-a._territorial_score)||(Date.parse(b.actualizado||b.creado||b.fecha_creacion||0)-Date.parse(a.actualizado||a.creado||a.fecha_creacion||0)));
+      return json({items:out.slice(0,limit),context:{country:wantedCountry,province:wantedProvince,city:wantedCity,mode:url.searchParams.get('province')?'manual':'auto'}});
     }
     if(path==='/api/admin/federated/url-preview' && request.method==='POST'){
       if(!isAdmin())return json({error:'No autorizado'},401);
