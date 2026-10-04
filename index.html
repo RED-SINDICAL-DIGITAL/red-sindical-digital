@@ -983,10 +983,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     function armSearchInfinite(){
       searchObserver?.disconnect();const sentinel=document.getElementById('searchSentinel');if(!sentinel)return;searchObserver=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))loadMoreSearch()},{rootMargin:'700px 0px'});searchObserver.observe(sentinel);
     }
-    function searchDiscovery(q){
-      const ideas=['Artistas','Música','Magia','Circos','Humor','Danza','Malabares','Eventos'];
-      return `<div class="uadav-search-discovery"><div><b>Explorá UADAV STREAM</b><span>Buscá un nombre, una actividad o un espectáculo.</span></div><div class="uadav-search-chips">${ideas.map(x=>`<button type="button" onclick="document.getElementById('searchInput').value='${x}';ejecutarBusqueda()">${x}</button>`).join('')}</div></div>`;
-    }
+    function searchDiscovery(){return ''}
     async function ejecutarBusqueda() {
       const q=document.getElementById('searchInput').value.trim();if(!q){resetearVista();return}
       const mainContainer=document.getElementById('mainContainer'),gridView=document.getElementById('gridViewSection'),gridContainer=document.getElementById('gridContainer');if(!mainContainer||!gridView||!gridContainer)return;
