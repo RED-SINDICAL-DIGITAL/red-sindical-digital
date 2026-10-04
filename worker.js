@@ -2140,6 +2140,13 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({})),list=await federatedSources(),selected=list.filter(x=>x.active&&(b.source_id?String(x.id)===String(b.source_id):true));const results=[];for(const src of selected.slice(0,12))results.push(await probeFederatedSource(src));return json({success:true,results});
     }
 
+    if(path==='/api/public/region' && request.method==='GET'){
+      const cf=request.cf||{};return json({country:String(cf.country||'AR'),province:String(cf.region||''),city:String(cf.city||''),source:'network'});
+    }
+    if(path==='/api/public/artistas-regional' && request.method==='GET'){
+      const cf=request.cf||{},province=String(url.searchParams.get('province')||cf.region||'').trim(),city=String(url.searchParams.get('city')||cf.city||'').trim(),limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||40))),norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(),wp=norm(province),wc=norm(city);
+      const arr=(await allCanonicalArtists()).map(publicArtistFromItem).filter(a=>a.visible!==false).map(a=>{const p=norm(a.provincia||a.region||''),ct=norm(a.ciudad||'');return{...a,_territorial_score:(wc&&ct===wc?500:0)+(wp&&p===wp?300:0)}}).sort((a,b)=>b._territorial_score-a._territorial_score);return json({items:arr.slice(0,limit),context:{province,city,mode:url.searchParams.get('province')?'manual':'auto'}});
+    }
     // --- FEDERACIÓN DE FUENTES EXTERNAS ---
     if(path==='/api/public/federated-feed' && request.method==='GET'){
       const kind=String(url.searchParams.get('kind')||'all').toLowerCase(),limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||40)));
