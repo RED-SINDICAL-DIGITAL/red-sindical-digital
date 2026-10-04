@@ -2215,11 +2215,6 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       redes:a.redes||{},
       contenido:a.contenido||[],
       bolsa_activa:true,
-      claimed:a.claimed===true,
-      claim_status:a.claim_status||'none',
-      pro_active:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()),
-      pro_started:a.pro_started||null,
-      pro_expires:a.pro_expires||null,
       support_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.support_enabled!==false,
       support_links:Array.isArray(a.support_links)?a.support_links.filter(x=>x&&x.url&&x.active!==false).slice(0,12):[],
       audience_chat_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.audience_chat_enabled===true,
@@ -2227,6 +2222,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       marketplace_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.marketplace_enabled!==false,
       ticketing_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.ticketing_enabled===true
     }); }
+    function privateArtistFromItem(a){const p=publicArtistFromItem(a);return {...p,claimed:a.claimed===true,claim_status:a.claim_status||'none',pro_active:a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now()),pro_started:a.pro_started||null,pro_expires:a.pro_expires||null};}
     async function artistsFromD1(params={}) {
       if(!hasD1()) return null;
       try{
@@ -2331,7 +2327,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     if(path==='/api/public/artist-shorts' && request.method==='GET'){
       const raw=String(url.searchParams.get('artist_id')||url.searchParams.get('channel_id')||'').trim();if(!raw)return json([]);
       const artists=await allCanonicalArtists();const artist=artists.find(a=>{const p=publicArtistFromItem(a);return [p.id,p.canal,a.channel_id,a.youtube_id].some(v=>String(v||'')===raw)});if(!artist)return json([]);
-      const p=publicArtistFromItem(artist),channel=String(p.canal||'').trim();if(!channel)return json([]);
+      const p=publicArtistFromItem(artist),channelRef=String(p.canal||'').trim();if(!channelRef)return json([]);const channel=await resolveChannelReference(channelRef).catch(()=>null)||channelRef;
       const cacheKey='artist_shorts_'+channel.replace(/[^A-Za-z0-9_-]/g,'').slice(0,100);
       try{const cached=await env.UADAV_DB.get(cacheKey,{type:'json'});if(Array.isArray(cached))return json(cached)}catch(_){}
       const vids=await invidiousChannelVideos(channel,36).catch(()=>[]);
@@ -2453,7 +2449,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       return json({success:true,token,profileUrl,artist:publicArtistFromItem(artist)});
     }
     if(path==='/api/artista/access' && request.method==='GET'){
-      const token=String(url.searchParams.get('token')||'').trim(); if(!token)return json({error:'Token requerido'},400); const raw=await env.UADAV_DB.get(artistTokenKey(token)); if(!raw)return json({error:'Acceso inválido o vencido'},401); const access=JSON.parse(raw); if(access.expires&&Date.now()>access.expires)return json({error:'Acceso vencido'},401); const arr=await allCanonicalArtists(); const artist=arr.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id)); if(!artist)return json({error:'Perfil no encontrado'},404); return json({artist:publicArtistFromItem(artist),access:{artist_id:access.artist_id,expires:access.expires}});
+      const token=String(url.searchParams.get('token')||'').trim(); if(!token)return json({error:'Token requerido'},400); const raw=await env.UADAV_DB.get(artistTokenKey(token)); if(!raw)return json({error:'Acceso inválido o vencido'},401); const access=JSON.parse(raw); if(access.expires&&Date.now()>access.expires)return json({error:'Acceso vencido'},401); const arr=await allCanonicalArtists(); const artist=arr.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id)); if(!artist)return json({error:'Perfil no encontrado'},404); return json({artist:privateArtistFromItem(artist),access:{artist_id:access.artist_id,expires:access.expires}});
     }
     if(path==='/api/artista/access' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); const token=String(b.token||'').trim(); const raw=await env.UADAV_DB.get(artistTokenKey(token)); if(!raw)return json({error:'Acceso inválido o vencido'},401); const access=JSON.parse(raw); if(access.expires&&Date.now()>access.expires)return json({error:'Acceso vencido'},401);
@@ -2464,7 +2460,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       const proNow=a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now()); const proFields=new Set(['support_enabled','support_links','audience_chat_enabled','presskit_enabled','marketplace_enabled','ticketing_enabled']);
       for(const k of allowed) if(Object.prototype.hasOwnProperty.call(b,k) && (!proFields.has(k)||proNow)) a[k]=b[k];
       a.self_managed=true; a.ultima_edicion_artista=new Date().toISOString(); a.cambios_pendientes=true; a.estado=a.estado==='aprobado'?'aprobado':(a.estado||'pendiente');
-      await putJSON('artistas',arr); return json({success:true,review_required:true,artist:publicArtistFromItem(a)});
+      await putJSON('artistas',arr); return json({success:true,review_required:true,artist:privateArtistFromItem(a)});
     }
     if(path==='/api/artista/content' && request.method==='GET'){
       const id=String(url.searchParams.get('artist_id')||''); const list=await getArray('artista_contenido'); return json(list.filter(x=>String(x.artist_id)===id && x.estado==='publicado').map(normalizeContentItem));
