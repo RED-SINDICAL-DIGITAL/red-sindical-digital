@@ -2305,6 +2305,21 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       for(const x of found)registry=[x,...registry.filter(y=>String(y.channel_id)!==String(x.channel_id))];
       registry=registry.slice(0,24);await putJSON('public_live_registry',registry);return json(registry);
     }
+    if(path==='/api/public/live-argentina' && request.method==='GET'){
+      const cacheKey='public_live_argentina_v1';
+      try{const cached=await env.UADAV_DB.get(cacheKey,{type:'json'});if(cached?.expires>Date.now()&&Array.isArray(cached.items))return json(cached.items)}catch(_){}
+      const queries=['Argentina música en vivo','Argentina artistas en vivo','Argentina teatro danza circo en vivo'];
+      const batches=await Promise.all(queries.map(q=>invidiousSearch(q,'video',12,1).catch(()=>[])));
+      const seen=new Set(),items=[];
+      for(const v of batches.flat()){
+        const id=String(v?.videoId||v?.id||'').trim();
+        const isLive=v?.liveNow===true||v?.isLive===true||String(v?.liveBroadcastContent||'').toLowerCase()==='live';
+        if(!isLive||!/^[A-Za-z0-9_-]{11}$/.test(id)||seen.has(id))continue;
+        seen.add(id);items.push({provider:'youtube',video_id:id,title:String(v.title||'En vivo'),artist_name:String(v.author||'Argentina en vivo'),channel_id:String(v.authorId||''),thumbnail:String(v.videoThumbnails?.[0]?.url||''),source_scope:'argentina_discovery',detected_at:isoNow()});
+      }
+      const out=items.slice(0,18);try{await env.UADAV_DB.put(cacheKey,JSON.stringify({items:out,expires:Date.now()+180000}),{expirationTtl:240})}catch(_){}
+      return json(out);
+    }
     if(path==='/api/public/artista' && request.method==='GET'){
       const rawId=decodeURIComponent(String(url.searchParams.get('id')||url.searchParams.get('artist')||'')).trim();
       const norm=v=>String(v||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,''); const id=norm(rawId); const arr=await allCanonicalArtists();
