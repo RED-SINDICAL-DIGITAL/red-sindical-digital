@@ -2347,8 +2347,9 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
         nombre:src.nombre||q,nombre_artistico:src.nombre||q,rubro:'Artista / creador',
         bio:String(src.bio||'').slice(0,1200),foto:src.thumbnail||channel.thumbnail||'',portada:src.banner||'',
         canal:channel.channelId,youtube:'https://www.youtube.com/channel/'+channel.channelId,
-        visible:review_level!=='red',claimed:false,afiliado_verificado:false,estado:'descubierto',
+        visible:review_level!=='red',afiliado_verificado:false,estado:'descubierto',
         discovered:true,generated:true,confidence,review_level,
+        auto_content:(Array.isArray(src.latestVideos)?src.latestVideos:[]).slice(0,18).map(v=>{const id=String(v.videoId||v.id||'');return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:String(v.title||src.nombre||q),descripcion:String(src.nombre||q),author:String(src.nombre||q),thumbnail:String(v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.find?.(t=>t?.quality==='medium')?.url||v.videoThumbnails?.[0]?.url||''),duracion:Number(v.lengthSeconds||0),tipo:'video',content_type:'video'}}).filter(v=>v.id),
         source:'Fuente pública externa',source_provider:'YouTube / Invidious',
         disclaimer:'Perfil generado automáticamente a partir de información pública. No implica afiliación, representación ni verificación por UADAV.',
         interest_score:Number(interest?.score||0)
