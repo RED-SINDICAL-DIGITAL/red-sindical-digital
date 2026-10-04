@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="uadav-build" content="10.23.2">
+  <meta name="uadav-build" content="10.23.3">
   <title>UADAV STREAM — Plataforma de artistas y entretenimiento</title>
   <meta name="description" content="UADAV STREAM conecta entretenimiento y oportunidades: artistas, música, radio, teatro, circo, cine, eventos, transmisiones en vivo y bolsa de trabajo.">
   <meta property="og:type" content="website" />
@@ -1043,13 +1043,16 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     }
 
     function reproducirVideo(id, titulo, categoria, descripcion) {
+      id=normalizarIdYoutube({id,url:String(id||'')})||String(id||'').trim();
       console.info('[UADAV V10 CORE] reproducirVideo', id, titulo);
+      if (!/^[A-Za-z0-9_-]{11}$/.test(id)) { console.warn('[UADAV PLAYER] ID YouTube inválido',id); return false; }
       if (window.parent !== window) {
         try {
-          const host = window.parent.UADAVShellHost;
-          if (host?.playContent) {
-            return host.playContent({id,external_id:id,provider:'youtube',url:'https://www.youtube.com/watch?v='+id,titulo,categoria,descripcion,content_type:'video'});
-          }
+          const item={id,external_id:id,youtube_id:id,videoId:id,provider:'youtube',url:'https://www.youtube.com/watch?v='+id,titulo,categoria,descripcion,content_type:'video'};
+          const host = window.parent.UADAVShellHost||window.parent.UADAV_APP;
+          if (host?.playContent && host.playContent(item)!==false) return true;
+          window.parent.postMessage({type:'uadav:content-play',item},location.origin);
+          return true;
         } catch (e) { console.warn('Player global no disponible', e); }
       }
       if (isRadioPlaying) togglePlayRadio(); document.getElementById('artistModal').classList.add('hidden');
@@ -1144,6 +1147,6 @@ async function cargarHome() {
       initCarouselDrag();
     }
   </script>
-<script src="/uadav-app-bridge-v104.js?v=10249"></script>
+<script src="/uadav-app-bridge-v104.js?v=10250"></script>
 </body>
 </html>
