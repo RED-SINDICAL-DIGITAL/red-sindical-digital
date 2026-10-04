@@ -1140,7 +1140,14 @@ async function cargarHome() {
         {id:'artistas',nombre:'Artistas',icono:'fa-user-group'},
         {id:'trending',nombre:'Tendencias',icono:'fa-fire'},
         {id:'shorts',nombre:'Shorts',icono:'fa-bolt'},
-        {id:'cartelera',nombre:'Cartelera',icono:'fa-ticket'}
+        {id:'cartelera',nombre:'Cartelera',icono:'fa-ticket'},
+        {id:'musica',nombre:'Música',icono:'fa-music',query:'música argentina'},
+        {id:'conciertos',nombre:'Conciertos',icono:'fa-guitar',query:'conciertos Argentina'},
+        {id:'teatros',nombre:'Teatro',icono:'fa-masks-theater',query:'teatro Argentina'},
+        {id:'circos',nombre:'Circo',icono:'fa-tent',query:'circo Argentina'},
+        {id:'humor',nombre:'Humor',icono:'fa-face-laugh',query:'humor Argentina'},
+        {id:'magia',nombre:'Magia',icono:'fa-wand-magic-sparkles',query:'magia Argentina'},
+        {id:'danza',nombre:'Danza',icono:'fa-person-dress',query:'danza Argentina'}
       ];
       const [seccionesRemotas,senales,artistas,radios,cartelera]=await Promise.all([
         obtenerDatos('secciones'),obtenerDatos('senales_oficiales'),obtenerDatos('public/artistas'),obtenerDatos('radios'),obtenerDatos('cartelera')
@@ -1152,10 +1159,13 @@ async function cargarHome() {
       renderSenalesUI(); renderArtistasUI(); renderRadiosUI(); renderCarteleraUI();
       safe('regionalización',()=>regionalizarHome()).then(()=>startPremiumHero());
       cargarTendenciasPorPais(document.getElementById('countrySelectorHeader').value);
+      const discoveryLoads=[
+        ['musicaRail','musica'],['conciertosRail','conciertos'],['teatrosRail','teatros'],['circosRail','circos'],['humorRail','humor'],['magiaRail','magia'],['danzaRail','danza']
+      ].map(([rail,id])=>safe(id,()=>cargarSeccionDinamica(rail,id)));
       cargarShortsExclusivos();
       cargarArtistasEnVivo();
       cargarLiveArgentina();
-      await safe('colecciones',()=>cargarColeccionesHome());
+      await Promise.allSettled([...discoveryLoads,safe('colecciones',()=>cargarColeccionesHome())]);
       if(!homePremiumPool.length) refreshHomeEditorial();
       initCarouselDrag();
     }
