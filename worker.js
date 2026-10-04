@@ -2532,7 +2532,28 @@ async function saveEntityVersion(type,id,data){
     }
     if(path==='/api/collections'){
       const list=await getArray('collections');
-      if(request.method==='GET'){const showAll=url.searchParams.get('all')==='true'&&isAdmin();return json(list.filter(x=>x&&(showAll||x.active!==false)));}
+      if(request.method==='GET'){
+        const showAll=url.searchParams.get('all')==='true'&&isAdmin();
+        if(showAll)return json(list.filter(Boolean));
+        const content=(await getArray('content_items')).map(normalizeContentItem).filter(x=>x&&x.visible!==false);
+        const events=(await getArray('eventos_publicados')).filter(x=>x&&String(x.estado||'published').toLowerCase()!=='hidden');
+        const norm=v=>normalizeSearchText(String(v||''));
+        const publicCollections=list.filter(x=>x&&x.active!==false).map(col=>{
+          const mode=String(col.mode||col.modo||'manual').toLowerCase();
+          if(mode==='manual')return col;
+          const category=norm(col.category||col.categoria),q=norm(col.query);
+          const hay=(x,needle)=>{if(!needle)return false;return norm([x.titulo,x.title,x.nombre,x.descripcion,x.descripcion_corta,x.categoria,x.subcategoria,x.artist_id,x.organizador,x.lugar,x.ciudad].filter(Boolean).join(' ')).includes(needle)};
+          let items=[];
+          if(mode==='category'&&category){
+            items=[...content.filter(x=>hay(x,category)).map(x=>({type:'content',id:x.id,...x})),...events.filter(x=>hay(x,category)).map(x=>({type:'event',id:x.id,...x}))];
+          }else if(mode==='query'&&q){
+            items=[...content.filter(x=>hay(x,q)).map(x=>({type:'content',id:x.id,...x})),...events.filter(x=>hay(x,q)).map(x=>({type:'event',id:x.id,...x}))];
+          }
+          const max=Math.max(1,Math.min(100,Number(col.max_items||24)));
+          return {...col,items:items.slice(0,max),resolved:true};
+        });
+        return json(publicCollections);
+      }
       if(!isAdmin())return json({error:'No autorizado'},401);
       const b=await request.json().catch(()=>({}));
       if(request.method==='POST'){const item={id:String(b.id||makeId('COL')),titulo:String(b.titulo||b.title||'Colección'),descripcion:String(b.descripcion||''),imagen:String(b.imagen||''),layout:String(b.layout||'landscape'),active:b.active!==false,items:Array.isArray(b.items)?b.items:[],orden:Number(b.orden||0),creado:isoNow(),actualizado:isoNow()};list.push(item);await putJSON('collections',list);await saveEntityVersion('collection',item.id,item);const d1sync=await safeD1('collection_create',()=>syncCollectionsD1([item]));return json({success:true,item,d1_sync:d1sync});}
