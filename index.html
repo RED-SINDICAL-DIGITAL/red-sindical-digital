@@ -236,71 +236,35 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       <div id="bannerTopContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
     </header>
 
-    <section class="relative bg-uadav-dark border-b border-uadav-border overflow-hidden">
-      <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600')] bg-cover bg-center opacity-30 filter blur-[2px]"></div>
-      <div class="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-[#050505]/95 via-[#050505]/68 to-transparent"></div>
-      <div class="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-10 md:py-20 flex flex-col items-start justify-center">
-        <span class="inline-flex items-center gap-2 bg-blue-600/15 text-blue-200 border border-blue-500/25 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase mb-4 tracking-widest"><span class="w-2 h-2 rounded-full bg-uadav-accent"></span> ARTISTAS · ENTRETENIMIENTO · OPORTUNIDADES</span>
-        <h1 id="heroTitulo" class="text-3xl sm:text-5xl lg:text-7xl font-black text-white max-w-3xl leading-[1.1] mb-3 sm:mb-4 tracking-tight">DESCUBRÍ. CONECTÁ. VIVÍ.</h1>
-        <span id="heroSub" class="text-white text-2xl sm:text-4xl lg:text-5xl font-black leading-[1.1] mb-4 tracking-tight">★ UADAV <span class="text-blue-400">STREAM</span></span>
-        <p class="text-slate-400 text-xs sm:text-base max-w-xl mb-6 sm:mb-8 font-light">Descubrí artistas, música, videos, espectáculos y oportunidades. Todo en una experiencia creada para disfrutar, conectar y hacer crecer la carrera artística.</p>
-        <div class="flex flex-wrap gap-3 sm:gap-4">
-          <button tabindex="0" id="heroBtn" onclick="document.getElementById('artistasSection').scrollIntoView({behavior:'smooth'})" class="tv-focusable bg-uadav-accent hover:bg-white text-slate-950 px-5 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 shadow-[0_0_20px_rgba(47,109,246,0.3)] transition-all"><i class="fa-solid fa-play"></i> <span id="heroBtnTexto">Empezar a descubrir</span></button>
+    <section class="relative overflow-hidden border-b border-white/10 bg-[#050505]">
+      <div class="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-transparent to-transparent"></div>
+      <div class="relative max-w-[1500px] mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-7 sm:pb-11">
+        <div class="max-w-3xl">
+          <div id="homeContext" class="text-[10px] sm:text-xs uppercase tracking-[.2em] font-black text-uadav-accent mb-3">★ UADAV STREAM</div>
+          <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.02] tracking-tight mb-3">Todo lo que querés ver,<br class="hidden sm:block"> escuchar y encontrar.</h1>
+          <p class="text-sm sm:text-base text-slate-400 max-w-2xl mb-6">Artistas, música, radio, espectáculos y oportunidades en una sola experiencia.</p>
+          <div class="flex flex-wrap gap-2.5">
+            <button onclick="document.getElementById('searchInput')?.focus()" class="bg-white text-black font-black px-5 py-3 rounded-full text-xs sm:text-sm"><i class="fa-solid fa-magnifying-glass mr-2"></i>Buscar</button>
+            <a href="/artistas.html" class="bg-white/5 border border-white/10 text-white font-bold px-5 py-3 rounded-full text-xs sm:text-sm">Artistas</a>
+            <a href="/cartelera.html" class="bg-white/5 border border-white/10 text-white font-bold px-5 py-3 rounded-full text-xs sm:text-sm">Cartelera</a>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="uadav-action-deck" aria-label="Acciones principales">
-      <div class="uadav-action-head"><div><h2>Todo el espectáculo, más cerca</h2><p>Descubrí, publicá, trabajá y conectá con artistas.</p></div></div>
-      <div class="uadav-actions">
-        <a class="uadav-action" href="/artistas.html"><i class="fa-solid fa-magnifying-glass"></i><div><strong>Encontrá artistas</strong><span>Música, teatro, circo, danza, magia, humor y más.</span></div></a>
-        <a class="uadav-action" href="/cartelera.html"><i class="fa-solid fa-ticket"></i><div><strong>Descubrí la cartelera</strong><span>Shows, funciones y espectáculos para disfrutar.</span></div></a>
-        <a class="uadav-action work" href="/trabajo.html"><i class="fa-solid fa-briefcase"></i><div><strong>Bolsa de Trabajo</strong><span>Publicá o encontrá oportunidades para artistas.</span></div></a>
-        <a class="uadav-action live" href="#senalesSection"><i class="fa-solid fa-circle-play"></i><div><strong>En vivo</strong><span>Artistas, señales y espectáculos transmitiendo ahora.</span></div></a>
-      </div>
-    </section>
-
-    <main id="mainContainer" class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-12 sm:space-y-16">
-      <section id="senalesSection" class="space-y-4">
-        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="senalesTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-circle-play text-uadav-accent"></i> En vivo ahora</h2></div>
-        <div id="senalesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"></div>
+    <main id="mainContainer" class="flex-1 max-w-[1500px] w-full mx-auto px-4 sm:px-6 py-7 sm:py-10 space-y-9 sm:space-y-12">
+      <section id="continueSection" class="hidden space-y-3">
+        <div class="flex items-end justify-between"><div><div class="text-[9px] uppercase tracking-[.18em] text-uadav-accent font-black">Para vos</div><h2 class="text-xl sm:text-2xl font-black text-white">Continuar</h2></div><button onclick="localStorage.removeItem('uadav_recent_v11');location.reload()" class="text-[10px] text-slate-500 hover:text-white">Limpiar</button></div>
+        <div id="continueRail" class="flex gap-3 overflow-x-auto no-scrollbar pb-2"></div>
       </section>
-      <section id="radiosSection" class="space-y-4">
-        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="radiosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-radio text-uadav-accent"></i> Radio en vivo</h2></div>
-        <div id="radiosGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"></div>
-      </section>
-      <div id="bannerInfeedContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
-      <section id="artistasSection" class="space-y-4">
-        <div class="flex items-center justify-between gap-3 mb-4 sm:mb-5">
-          <h2 id="artistasTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-star text-uadav-accent"></i> Artistas recomendados</h2>
-          <a href="/para-artistas.html" class="tv-focusable inline-flex items-center gap-2 bg-white text-slate-950 px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-black whitespace-nowrap hover:bg-uadav-accent transition-colors"><i class="fa-solid fa-star"></i><span class="hidden xs:inline">Para artistas</span><span class="xs:hidden">Artistas</span></a>
-        </div>
-        <div id="artistasGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4"></div>
-      </section>
-      <section id="teatrosSection" class="space-y-4">
-        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="teatrosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-masks-theater text-uadav-accent"></i> Teatros & Espectáculos</h2></div>
-        <div id="teatrosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
-      </section>
-      <section id="circosSection" class="space-y-4">
-        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="circosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-tent text-uadav-accent"></i> Circos & Varieté</h2></div>
-        <div id="circosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
-      </section>
-      <section id="trendingSection" class="space-y-4">
-        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="trendingTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-arrow-trend-up text-uadav-accent"></i> Tendencias</h2></div>
-        <div id="ipTrendingRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
-      </section>
-      <section id="shortsSection" class="space-y-4">
-        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="shortsTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-bolt text-uadav-accent"></i> Shorts</h2></div>
-        <div id="shortsRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[300px]"></div>
-      </section>
-      <section id="carteleraSection" class="space-y-4">
-        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="carteleraTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-ticket text-uadav-accent"></i> Cartelera</h2></div>
-        <div id="carteleraRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar"></div>
-      </section>
-      <section id="conciertosSection" class="space-y-4">
-        <div class="flex items-center justify-between mb-4 sm:mb-5"><h2 id="conciertosTitle" class="text-lg sm:text-2xl font-black text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-compact-disc text-uadav-accent"></i> Conciertos Completos</h2></div>
-        <div id="conciertosRail" class="flex gap-4 overflow-x-auto pb-4 no-scrollbar min-h-[220px]"></div>
-      </section>
+      <section id="senalesSection" class="space-y-3"><div class="flex items-center justify-between"><h2 id="senalesTitle" class="text-xl sm:text-2xl font-black text-white">En vivo</h2><span class="text-[10px] text-uadav-accent font-black uppercase tracking-widest">Ahora</span></div><div id="senalesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"></div></section>
+      <section id="radiosSection" class="space-y-3"><div class="flex items-center justify-between"><h2 id="radiosTitle" class="text-xl sm:text-2xl font-black text-white">Radio</h2><a href="/radio.html" class="text-xs text-slate-400 hover:text-white">Ver todo</a></div><div id="radiosGrid" class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"></div></section>
+      <section id="artistasSection" class="space-y-3"><div class="flex items-center justify-between"><h2 id="artistasTitle" class="text-xl sm:text-2xl font-black text-white">Artistas</h2><a href="/artistas.html" class="text-xs text-slate-400 hover:text-white">Buscar artista</a></div><div id="artistasGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div></section>
+      <section id="trendingSection" class="space-y-3"><div class="flex items-center justify-between"><div><div id="locationLabel" class="text-[9px] uppercase tracking-[.18em] text-uadav-accent font-black">Tendencias</div><h2 id="trendingTitle" class="text-xl sm:text-2xl font-black text-white">Popular cerca tuyo</h2></div><button id="locationChange" class="text-xs text-slate-400 hover:text-white">Cambiar país</button></div><div id="ipTrendingRail" class="flex gap-3 overflow-x-auto pb-3 no-scrollbar min-h-[190px]"></div></section>
+      <section id="carteleraSection" class="space-y-3"><div class="flex items-center justify-between"><h2 id="carteleraTitle" class="text-xl sm:text-2xl font-black text-white">Cartelera</h2><a href="/cartelera.html" class="text-xs text-slate-400 hover:text-white">Ver todo</a></div><div id="carteleraRail" class="flex gap-3 overflow-x-auto pb-3 no-scrollbar"></div></section>
+      <section id="shortsSection" class="space-y-3"><div class="flex items-center justify-between"><h2 id="shortsTitle" class="text-xl sm:text-2xl font-black text-white">Shorts</h2><a href="/shorts.html" class="text-xs text-slate-400 hover:text-white">Ver todo</a></div><div id="shortsRail" class="flex gap-3 overflow-x-auto pb-3 no-scrollbar min-h-[270px]"></div></section>
+      <section id="conciertosSection" class="space-y-3"><div class="flex items-center justify-between"><h2 id="conciertosTitle" class="text-xl sm:text-2xl font-black text-white">Para ver completo</h2></div><div id="conciertosRail" class="flex gap-3 overflow-x-auto pb-3 no-scrollbar min-h-[190px]"></div></section>
+      <section id="teatrosSection" class="hidden"><div id="teatrosRail"></div></section><section id="circosSection" class="hidden"><div id="circosRail"></div></section>
     </main>
 
     <section id="gridViewSection" class="hidden max-w-[1500px] w-full mx-auto px-4 sm:px-6 pt-5 sm:pt-7 pb-14 min-h-[70vh] scroll-mt-24">
@@ -1011,6 +975,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     function resetearVista() { document.getElementById('mainContainer').classList.remove('hidden'); document.getElementById('gridViewSection').classList.add('hidden'); document.getElementById('searchInput').value = ''; window.scrollTo({top:0,behavior:'smooth'}); }
     function aplicarBusquedaInicial(){const sp=new URLSearchParams(location.search);const q=(sp.get('buscar')||sp.get('q')||'').trim();if(!q)return;const input=document.getElementById('searchInput');if(!input)return;input.value=q;setTimeout(()=>ejecutarBusqueda(),120)}
     window.addEventListener('DOMContentLoaded',aplicarBusquedaInicial);
+    window.addEventListener('DOMContentLoaded',async()=>{try{let pref=JSON.parse(localStorage.getItem('uadav_user_v11')||'{}');if(!pref.country){const r=await fetch('https://ipapi.co/json/');const d=await r.json();pref.country=d.country_code||'AR';pref.countryName=d.country_name||'Argentina';pref.region=d.region||'';localStorage.setItem('uadav_user_v11',JSON.stringify(pref))}const label=document.getElementById('locationLabel'),ctx=document.getElementById('homeContext');if(label)label.textContent='Tendencias · '+(pref.countryName||pref.country||'Argentina');if(ctx&&pref.region)ctx.textContent='★ UADAV STREAM · '+pref.region;cargarTendenciasPorPais(pref.country||'AR')}catch(_){cargarTendenciasPorPais('AR')}});document.getElementById('locationChange')?.addEventListener('click',()=>{document.getElementById('countrySelectorHeader')?.focus()});
 
     function reproducirVideoPersonalizado(url, tipo, titulo, desc) {
       if (window.parent !== window) {
