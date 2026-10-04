@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="uadav-build" content="10.23.3">
+  <meta name="uadav-build" content="10.23.4">
   <title>UADAV STREAM — Plataforma de artistas y entretenimiento</title>
   <meta name="description" content="UADAV STREAM conecta entretenimiento y oportunidades: artistas, música, radio, teatro, circo, cine, eventos, transmisiones en vivo y bolsa de trabajo.">
   <meta property="og:type" content="website" />
@@ -1012,6 +1012,15 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       card.addEventListener('click',play);card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();play()}});
       return card;
     }
+    // PC mouse bridge: captura el gesto antes de que cualquier capa/listener intermedio lo cancele.
+    // Teclado y touch conservan su flujo actual.
+    (function initDesktopMousePlayback(){
+      if(window.__uadavDesktopMousePlayback)return;window.__uadavDesktopMousePlayback=true;
+      let down=null,last=0;
+      document.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;const el=e.target.closest('[data-video-id],[data-video]');if(!el)return;down={el,x:e.clientX,y:e.clientY}},true);
+      document.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse'||!down)return;const d=down;down=null;if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>8)return;const el=e.target.closest('[data-video-id],[data-video]')||d.el;if(!el||el!==d.el)return;const id=el.dataset.videoId||el.dataset.video||'';if(!id)return;const now=Date.now();if(now-last<350)return;last=now;e.preventDefault();e.stopPropagation();const title=el.dataset.title||el.querySelector('h3,h4')?.textContent||'Contenido';reproducirVideo(id,title,el.dataset.category||'Contenido',el.dataset.description||'UADAV STREAM')},true);
+    })();
+
     function crearShortCard(item) { const card = document.createElement('div'); card.className = "tv-focusable min-w-[140px] sm:min-w-[170px] max-w-[190px] bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl overflow-hidden shadow-lg transition-all group cursor-pointer flex-shrink-0"; card.setAttribute('tabindex', '0'); const videoId = normalizarIdYoutube(item) || item.id || '-479TZi-EAs', thumb = obtenerCaratulaUltraRapida(videoId), safeTitulo = (item.titulo || 'Short').replace(/'/g, "\\'"), safeDesc = (item.descripcion || 'Short').replace(/'/g, "\\'"); card.dataset.videoId=videoId; card.dataset.provider='youtube'; card.dataset.mediaUrl='https://www.youtube.com/watch?v='+videoId; card.innerHTML = `<div onclick="reproducirVideo('${videoId}', '${safeTitulo}', '${item.categoria}', '${safeDesc}')" class="relative aspect-[9/16] bg-black overflow-hidden"><img src="${thumb}" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_THUMB}';" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"><div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div><div class="absolute top-2 left-2 sm:top-3 sm:left-3 bg-red-600 text-white text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full flex items-center gap-1 shadow-lg tracking-wider"><i class="fa-solid fa-bolt"></i> SHORT</div><span class="absolute top-2 right-2 sm:top-3 sm:right-3 bg-black/70 text-white text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded-full font-bold">${formatearDuracion(item.duracion)}</span><div class="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3"><h4 class="font-bold text-[11px] sm:text-xs text-white line-clamp-2 leading-snug drop-shadow-md">${item.titulo}</h4></div></div>`; return card; }
 
     function filtrarCategoria(cat, btn) { if (btn) { document.querySelectorAll('.cat-btn').forEach(b => { b.classList.remove('bg-uadav-accent', 'text-slate-950'); b.classList.add('bg-[#0f0f13]', 'text-slate-300', 'border-2', 'border-uadav-border'); }); btn.classList.remove('bg-[#0f0f13]', 'text-slate-300', 'border-2', 'border-uadav-border'); btn.classList.add('bg-uadav-accent', 'text-slate-950'); } if (cat === 'todas') { resetearVista(); return; } const scrollTargets = { 'radios':'radiosSection','senales':'senalesSection','artistas':'artistasSection','musica':'musicaSection','música':'musicaSection','teatros':'teatrosSection','teatro':'teatrosSection','circos':'circosSection','circo':'circosSection','humor':'humorSection','magia':'magiaSection','danza':'danzaSection','trending':'trendingSection','shorts':'shortsSection','cartelera':'carteleraSection','conciertos':'conciertosSection' }; if (scrollTargets[cat]) { resetearVista(); document.getElementById(scrollTargets[cat]).scrollIntoView({ behavior: 'smooth' }); return; } const queryTarget = cat; document.getElementById('searchInput').value = queryTarget; ejecutarBusqueda(); }
@@ -1147,6 +1156,6 @@ async function cargarHome() {
       initCarouselDrag();
     }
   </script>
-<script src="/uadav-app-bridge-v104.js?v=10250"></script>
+<script src="/uadav-app-bridge-v104.js?v=10252"></script>
 </body>
 </html>
