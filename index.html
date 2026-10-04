@@ -78,6 +78,13 @@
 #homeHeroTitle{font-size:clamp(38px,5vw,72px)!important;line-height:.96!important;letter-spacing:-.05em!important;max-width:850px}
 #homeHeroText{max-width:650px;line-height:1.5}.uadav-home-empty{display:none!important}
 #mainContainer>section{content-visibility:auto;contain-intrinsic-size:260px}
+#entertainmentDiscovery{display:grid;gap:38px}
+#entertainmentDiscovery>section{min-width:0}
+#liveArtistsSection,#liveArgentinaSection{padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(120deg,rgba(255,54,84,.055),rgba(47,109,246,.035),transparent 68%)}
+#liveArtistsRail article,#liveArgentinaRail article{min-width:280px;transition:.18s transform,.18s border-color}#liveArtistsRail article:hover,#liveArgentinaRail article:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.22)}
+#radiosSection{padding:18px 0 4px}#radiosGrid{align-items:flex-start}
+@media(min-width:1180px){#mainContainer{display:flex!important;flex-direction:column!important}#senalesSection{order:1!important}#liveArtistsSection{order:2!important}#trendingSection{order:3!important}#artistasSection{order:4!important}#carteleraSection{order:5!important}#shortsSection{order:6!important}#entertainmentDiscovery{order:7!important}#radiosSection{order:8!important}#liveArgentinaSection{order:9!important}#dynamicCollections{order:10!important}#bannerInfeedContainer{order:11!important}}
+@media(max-width:720px){#entertainmentDiscovery{gap:28px}#liveArtistsSection,#liveArgentinaSection{margin-left:-4px;margin-right:-4px;padding:14px;border-radius:20px}#liveArtistsRail article,#liveArgentinaRail article{min-width:min(82vw,310px)}}
 @media(max-width:720px){#homeHero{width:100%;min-height:260px;margin:0!important;border-radius:0;border-left:0;border-right:0}#homeHero>div.relative{min-height:260px!important;padding:34px 16px 28px!important}#homeHeroTitle{font-size:clamp(31px,10vw,42px)!important;max-width:94%;line-height:.98!important}#homeHeroText{font-size:12px!important;max-width:92%;margin-bottom:16px!important}#homeHero .flex.flex-wrap{gap:7px!important}#homeHero .flex.flex-wrap>a,#homeHero .flex.flex-wrap>button{padding:10px 14px!important;font-size:10px!important}#mainContainer{padding-top:20px!important}}
 
 /* V11.3 · limpieza definitiva de chrome público */
@@ -120,7 +127,7 @@ html.uadav-in-shell header.sticky{display:none!important}html.uadav-in-shell #ho
 @media(min-width:1180px){#shortsRail>*{flex-basis:210px!important}#carteleraRail>*{flex-basis:280px!important}}
 
 /* V10.11 launch curation: Home is discovery, not the full catalog */
-#teatrosSection,#circosSection,#conciertosSection{display:none!important}
+#teatrosSection,#circosSection,#conciertosSection{display:block!important}
 #legacyCategoryNav{display:none!important}
 @media(max-width:720px){}
 :root{--u-bg:#050505;--u-surface:#101114;--u-surface2:#17181c;--u-text:#f7f7f8;--u-muted:#969aa3;--u-blue:#2f6df6;--u-blue2:#4b7df7;--u-line:rgba(255,255,255,.10);--u-radius:18px}
