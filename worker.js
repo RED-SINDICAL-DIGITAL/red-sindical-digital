@@ -1896,7 +1896,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     if(path==='/api/public/search' && request.method==='GET'){
       const q=String(url.searchParams.get('q')||'').trim().slice(0,140);if(q.length<2)return json({query:q,artists:[],content:[],events:[],radios:[],cursor:null,has_more:false});
       const requestedCursor=String(url.searchParams.get('cursor')||'').trim(),page=Math.max(1,Math.min(50,Number(requestedCursor)||1)),firstPage=page===1;
-      const nq=normalizeSearchText(q),contains=x=>normalizeSearchText(x).includes(nq);
+      const nq=normalizeSearchText(q),contains=x=>normalizeSearchText(x).includes(nq),generic=/^(artistas?|musica|música|magia|circos?|humor|danza|malabares|eventos?|teatro|shows?|conciertos?)$/i.test(q),externalQ=generic?(q+' Argentina español'):q;
       let artists=[],events=[],radios=[],internal=[];
       if(firstPage){
         const [artistsRaw,eventsRaw,radiosRaw,contentRaw]=await Promise.all([allCanonicalArtists().catch(()=>[]),getArray('cartelera').catch(()=>[]),getArray('radios').catch(()=>[]),getArray('content').catch(()=>[])]);
@@ -1906,12 +1906,12 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
         internal=(Array.isArray(contentRaw)?contentRaw:[]).filter(x=>String(x.visible??true)!=='false'&&contains([x.titulo,x.nombre,x.descripcion,x.categoria,x.tipo,x.artist_name,x.artista].join(' '))).slice(0,16);
       }
       let external=[],source='invidious',youtubeNext='';
-      const ivRaw=await invidiousSearch(q,'video',24,page);
+      const ivRaw=await invidiousSearch(externalQ,'video',24,page);
       external=ivRaw.map(v=>{const id=String(v.videoId||v.id||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:v.title||'Video',descripcion:v.author||'YouTube',author:v.author||'YouTube',thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.find?.(t=>t?.quality==='medium')?.url||v.videoThumbnails?.[0]?.url||'',categoria:'Video',duracion:Number(v.lengthSeconds||0),tipo:'video',content_type:'video'}}).filter(x=>x.id);
       if(!external.length && env.YOUTUBE_API_KEY){
         try{
           source='youtube_api';const token=requestedCursor.startsWith('yt:')?requestedCursor.slice(3):'';
-          const qs=new URLSearchParams({part:'snippet',maxResults:'24',q,type:'video',regionCode:'AR',order:'relevance',key:env.YOUTUBE_API_KEY});if(token)qs.set('pageToken',token);
+          const qs=new URLSearchParams({part:'snippet',maxResults:'24',q:externalQ,type:'video',regionCode:'AR',relevanceLanguage:'es',order:'relevance',key:env.YOUTUBE_API_KEY});if(token)qs.set('pageToken',token);
           const yr=await fetch('https://www.googleapis.com/youtube/v3/search?'+qs.toString()),yd=await yr.json();
           if(yr.ok&&!yd.error){youtubeNext=String(yd.nextPageToken||'');external=(yd.items||[]).map(x=>{const id=String(x.id?.videoId||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:x.snippet?.title||'Video',descripcion:x.snippet?.channelTitle||'YouTube',author:x.snippet?.channelTitle||'YouTube',thumbnail:x.snippet?.thumbnails?.high?.url||x.snippet?.thumbnails?.medium?.url||x.snippet?.thumbnails?.default?.url||'',categoria:'Video',tipo:'video',content_type:'video'}}).filter(x=>x.id)}
         }catch(_){}
@@ -1934,7 +1934,8 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       }
 
       // 1) Invidious first: zero official YouTube quota in normal operation.
-      const ivRaw=await invidiousSearch(q,'video',24);
+      const contextualQ=/^(artistas?|musica|música|magia|circos?|humor|danza|malabares|eventos?|teatro|shows?|conciertos?)$/i.test(q)?(q+' Argentina español'):q;
+      const ivRaw=await invidiousSearch(contextualQ,'video',24);
       if(ivRaw.length){
         const items=ivRaw.map(v => {
           const id=String(v.videoId||v.id||'').trim();
@@ -1958,7 +1959,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       // 2) Optional official YouTube API fallback — only when explicitly enabled.
       if (env.YOUTUBE_API_KEY) {
         try {
-          const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=24&q=${encodeURIComponent(q)}&type=video&key=${env.YOUTUBE_API_KEY}`);
+          const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=24&q=${encodeURIComponent(contextualQ)}&type=video&regionCode=AR&relevanceLanguage=es&key=${env.YOUTUBE_API_KEY}`);
           const data = await res.json();
           if (res.ok && !data.error) {
             const items = (data.items || []).map(x => {
