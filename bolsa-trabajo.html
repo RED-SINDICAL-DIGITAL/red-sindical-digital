@@ -9,7 +9,7 @@ const API_REMOTE=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.d
 async function apiFetch(path,opt={}){let last;for(const base of API_BASES){try{const r=await fetch(base+path,{...opt,cache:opt.cache||'no-store'});const ct=r.headers.get('content-type')||'';if(base!==API_REMOTE&&(r.status===404||!ct.includes('json')))continue;const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d}catch(e){last=e}}throw last||new Error('No se pudo conectar')}
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 async function load(){
-  const a=await apiFetch('bolsa_trabajo');
+  const pref=localStorage.getItem('uadav_region_preference')||'';let a;try{const fd=await apiFetch('public/federated-feed?kind=job&limit=100'+(pref?'&province='+encodeURIComponent(pref):''));a=Array.isArray(fd)?fd:(fd.items||[])}catch(_){a=await apiFetch('bolsa_trabajo')}
   const q=(document.getElementById('q').value||'').toLowerCase();
   const city=(document.getElementById('city').value||'').toLowerCase();
   const rubro=document.getElementById('rubro').value;
