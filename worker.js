@@ -2176,15 +2176,18 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       disponibilidad:a.disponibilidad||'',
       redes:a.redes||{},
       contenido:a.contenido||[],
-      bolsa_activa:a.afiliado_verificado===true,
+      bolsa_activa:true,
       claimed:a.claimed===true,
       claim_status:a.claim_status||'none',
-      support_enabled:a.afiliado_verificado===true && a.support_enabled!==false,
+      pro_active:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()),
+      pro_started:a.pro_started||null,
+      pro_expires:a.pro_expires||null,
+      support_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.support_enabled!==false,
       support_links:Array.isArray(a.support_links)?a.support_links.filter(x=>x&&x.url&&x.active!==false).slice(0,12):[],
-      audience_chat_enabled:a.afiliado_verificado===true && a.audience_chat_enabled===true,
-      presskit_enabled:a.afiliado_verificado===true && a.presskit_enabled!==false,
-      marketplace_enabled:a.afiliado_verificado===true && a.marketplace_enabled!==false,
-      ticketing_enabled:a.afiliado_verificado===true && a.ticketing_enabled===true
+      audience_chat_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.audience_chat_enabled===true,
+      presskit_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.presskit_enabled!==false,
+      marketplace_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.marketplace_enabled!==false,
+      ticketing_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.ticketing_enabled===true
     }); }
     async function artistsFromD1(params={}) {
       if(!hasD1()) return null;
@@ -2382,7 +2385,8 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       if(i<0){ const all=await allCanonicalArtists(); const found=all.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id)); if(!found)return json({error:'Perfil no encontrado'},404); arr.push(found); i=arr.length-1; }
       const a=arr[i];
       const allowed=['nombre','nombre_artistico','rubro','ciudad','foto','bio','canal','live_url','booking_url','donation_url','donacion_url','honorario_desde','disponibilidad','redes','web','support_enabled','support_links','audience_chat_enabled','presskit_enabled','marketplace_enabled','ticketing_enabled'];
-      for(const k of allowed) if(Object.prototype.hasOwnProperty.call(b,k)) a[k]=b[k];
+      const proNow=a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now()); const proFields=new Set(['support_enabled','support_links','audience_chat_enabled','presskit_enabled','marketplace_enabled','ticketing_enabled']);
+      for(const k of allowed) if(Object.prototype.hasOwnProperty.call(b,k) && (!proFields.has(k)||proNow)) a[k]=b[k];
       a.self_managed=true; a.ultima_edicion_artista=new Date().toISOString(); a.cambios_pendientes=true; a.estado=a.estado==='aprobado'?'aprobado':(a.estado||'pendiente');
       await putJSON('artistas',arr); return json({success:true,review_required:true,artist:publicArtistFromItem(a)});
     }
@@ -2394,7 +2398,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     }
     if(path==='/api/contrataciones' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); if(!b.artist_id||!b.nombre||!b.email)return json({error:'Artista, nombre y email son obligatorios'},400); if(b.acepta_contrato!==true)return json({error:'Debe aceptar el contrato/condiciones para continuar'},400);
-      const artists=await getArray('artistas'); const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(b.artist_id)); if(!artist||artist.afiliado_verificado!==true)return json({error:'La contratación directa está disponible para artistas afiliados UADAV verificados.'},403);
+      const artists=await getArray('artistas'); const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(b.artist_id)); if(!artist)return json({error:'Artista no encontrado'},404); const pro=artist.pro_active===true&&(!artist.pro_expires||Date.parse(artist.pro_expires)>Date.now()); if(!pro||artist.marketplace_enabled===false)return json({error:'La contratación directa está disponible para perfiles UADAV STREAM PRO activos.'},403);
       const list=await getArray('contrataciones'); const item={id:'CON-'+Date.now().toString(36).toUpperCase(),creado:new Date().toISOString(),artist_id:String(b.artist_id),nombre:String(b.nombre).slice(0,140),empresa:String(b.empresa||'').slice(0,160),email:String(b.email).slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),evento:String(b.evento||'').slice(0,220),fecha:String(b.fecha||''),ciudad:String(b.ciudad||'').slice(0,100),honorario:String(b.honorario||'').slice(0,80),detalles:String(b.detalles||'').slice(0,3000),contrato_version:String(b.contrato_version||'UADAV-1.0').slice(0,40),contrato_url:String(b.contrato_url||'').slice(0,500),acepta_contrato:true,estado:'pendiente'}; list.push(item); while(list.length>2000)list.shift(); await putJSON('contrataciones',list); return json({success:true,item});
     }
     if(path==='/api/contrataciones' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await getArray('contrataciones'));}
