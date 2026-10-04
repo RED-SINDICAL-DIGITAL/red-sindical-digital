@@ -70,6 +70,15 @@
 /* V11.1 · búsqueda universal y continua */
 .uadav-search-discovery{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 20px;border:1px solid rgba(255,255,255,.08);border-radius:20px;background:linear-gradient(120deg,#0e1117,#080a0e);margin-bottom:6px}.uadav-search-discovery b{display:block;font-size:16px;color:#fff}.uadav-search-discovery span{display:block;font-size:11px;color:#7f8a9b;margin-top:3px}.uadav-search-chips{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}.uadav-search-chips::-webkit-scrollbar{display:none}.uadav-search-chips button{flex:none;border:1px solid rgba(255,255,255,.1);background:#121722;color:#dfe6ef;border-radius:999px;padding:8px 12px;font:800 11px Outfit,system-ui;cursor:pointer}.uadav-search-chips button:hover{background:#fff;color:#050608}.uadav-search-feed-wrap{margin-top:24px;min-width:0}.uadav-search-feed-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:12px}.uadav-search-feed-head small{font-size:9px;letter-spacing:.16em;color:#2f6df6;font-weight:900}.uadav-search-feed-head h3{font-size:24px;font-weight:900;color:#fff;margin:2px 0 0}.uadav-search-feed-head>span{font-size:11px;color:#6f7a8b}.uadav-search-feed{display:grid;gap:8px}.uadav-search-row{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;padding:8px;border-radius:15px;transition:.16s}.uadav-search-row:hover{background:#ffffff08}.uadav-search-thumb{position:relative;aspect-ratio:16/9;border:0;padding:0;border-radius:11px;overflow:hidden;background:#000;cursor:pointer}.uadav-search-thumb img{width:100%;height:100%;object-fit:cover}.uadav-search-thumb span{position:absolute;inset:0;display:grid;place-items:center;font-size:22px;color:#fff;background:#0000;transition:.15s}.uadav-search-thumb:hover span{background:#0005}.uadav-search-copy{min-width:0;align-self:center}.uadav-search-copy small{font-size:9px;color:#2f6df6;font-weight:900;letter-spacing:.1em}.uadav-search-copy button{border:0;background:none;padding:0;color:#fff;text-align:left;cursor:pointer}.uadav-search-copy h3{font-size:16px;line-height:1.2;margin:5px 0 6px;font-weight:800}.uadav-search-copy p{font-size:11px;color:#7f8998;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.uadav-search-more{text-align:center;color:#657184;font-size:11px;padding:24px 0 36px}#searchSentinel{height:1px}
 @media(max-width:720px){.uadav-search-discovery{display:block;padding:14px;margin-bottom:4px}.uadav-search-chips{margin-top:12px;margin-right:-14px;padding-right:14px}.uadav-search-row{grid-template-columns:132px minmax(0,1fr);gap:11px;padding:6px 0}.uadav-search-copy h3{font-size:13px;margin:3px 0 4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.uadav-search-copy p{font-size:10px}.uadav-search-feed-head h3{font-size:20px}.uadav-search-feed-head>span{display:none}}
+
+/* V11.2 · Home editorial dinámico */
+#homeHero{width:min(1540px,calc(100% - 56px));min-height:clamp(330px,38vw,500px);margin:18px auto 0!important;border:1px solid rgba(255,255,255,.09);border-radius:26px;isolation:isolate}
+#homeHero #homeHeroBackdrop{opacity:1!important;filter:none!important;transform:none!important;background-size:cover;background-position:center;transition:background-image .35s ease}
+#homeHero>div.relative{min-height:clamp(330px,38vw,500px)!important;padding:clamp(46px,7vw,90px) clamp(24px,5vw,70px)!important;display:flex;align-items:flex-end}
+#homeHeroTitle{font-size:clamp(38px,5vw,72px)!important;line-height:.96!important;letter-spacing:-.05em!important;max-width:850px}
+#homeHeroText{max-width:650px;line-height:1.5}.uadav-home-empty{display:none!important}
+#mainContainer>section{content-visibility:auto;contain-intrinsic-size:260px}
+@media(max-width:720px){#homeHero{width:100%;min-height:260px;margin:0!important;border-radius:0;border-left:0;border-right:0}#homeHero>div.relative{min-height:260px!important;padding:34px 16px 28px!important}#homeHeroTitle{font-size:clamp(31px,10vw,42px)!important;max-width:94%;line-height:.98!important}#homeHeroText{font-size:12px!important;max-width:92%;margin-bottom:16px!important}#homeHero .flex.flex-wrap{gap:7px!important}#homeHero .flex.flex-wrap>a,#homeHero .flex.flex-wrap>button{padding:10px 14px!important;font-size:10px!important}#mainContainer{padding-top:20px!important}}
 </style>
 
   <style id="uadav-v109-streaming">
@@ -240,13 +249,13 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       <div id="bannerTopContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
     </header>
 
-    <section class="relative overflow-hidden border-b border-white/10 bg-[#050505]">
-      <div class="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-transparent to-transparent"></div>
+    <section id="homeHero" class="relative overflow-hidden border-b border-white/10 bg-[#050505]">
+      <div id="homeHeroBackdrop" class="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-transparent to-transparent"></div>
       <div class="relative max-w-[1500px] mx-auto px-4 sm:px-6 pt-8 sm:pt-14 pb-7 sm:pb-11">
         <div class="max-w-3xl">
           <div id="homeContext" class="text-[10px] sm:text-xs uppercase tracking-[.2em] font-black text-uadav-accent mb-3">★ UADAV STREAM</div>
-          <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.02] tracking-tight mb-3">Todo lo que querés ver,<br class="hidden sm:block"> escuchar y encontrar.</h1>
-          <p class="text-sm sm:text-base text-slate-400 max-w-2xl mb-6">Artistas, música, radio, espectáculos y oportunidades en una sola experiencia.</p>
+          <h1 id="homeHeroTitle" class="text-3xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.02] tracking-tight mb-3">Todo lo que querés ver,<br class="hidden sm:block"> escuchar y encontrar.</h1>
+          <p id="homeHeroText" class="text-sm sm:text-base text-slate-400 max-w-2xl mb-6">Artistas, música, radio, espectáculos y oportunidades en una sola experiencia.</p>
           <div class="flex flex-wrap gap-2.5">
             <button onclick="document.getElementById('searchInput')?.focus()" class="bg-white text-black font-black px-5 py-3 rounded-full text-xs sm:text-sm"><i class="fa-solid fa-magnifying-glass mr-2"></i>Buscar</button>
             <a href="/artistas.html" class="bg-white/5 border border-white/10 text-white font-bold px-5 py-3 rounded-full text-xs sm:text-sm">Artistas</a>
@@ -416,6 +425,21 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     let deferredPrompt;
 
     if (localStorage.getItem('uadav_cache_version') !== 'v32us') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v32us'); }
+
+    // ===== HOME V11 · HERO EDITORIAL + SECCIONES AUTOLIMPIABLES =====
+    function homeText(el,selectors){for(const s of selectors){const n=el?.querySelector?.(s);const v=String(n?.textContent||'').trim();if(v)return v}return''}
+    function homeImage(el){const im=el?.querySelector?.('img');return im?.currentSrc||im?.src||''}
+    function refreshHomeEditorial(){
+      const hero=document.getElementById('homeHero');if(!hero)return;
+      const sources=[['carteleraRail','EN CARTELERA'],['senalesGrid','EN VIVO'],['artistasGrid','DESCUBRÍ'],['ipTrendingRail','TENDENCIA']];
+      let chosen=null,label='★ UADAV STREAM';
+      for(const [id,l] of sources){const box=document.getElementById(id),item=box?.querySelector?.(':scope > *');if(item){const title=homeText(item,['h1','h2','h3','h4','strong','b','[data-title]']);if(title){chosen=item;label=l;break}}}
+      const title=document.getElementById('homeHeroTitle'),text=document.getElementById('homeHeroText'),ctx=document.getElementById('homeContext'),bg=document.getElementById('homeHeroBackdrop');
+      if(chosen){const t=homeText(chosen,['h1','h2','h3','h4','strong','b','[data-title]']),sub=homeText(chosen,['p','small','.text-slate-400','.text-slate-500']);if(t&&title)title.textContent=t;if(ctx)ctx.textContent=label+' · UADAV STREAM';if(text)text.textContent=sub||'Descubrí este contenido y seguí explorando artistas, espectáculos y entretenimiento.';const img=homeImage(chosen);if(bg&&img){bg.style.backgroundImage=`linear-gradient(90deg,rgba(5,5,5,.97) 0%,rgba(5,5,5,.76) 46%,rgba(5,5,5,.18) 100%),url("${img.replace(/"/g,'%22')}")`;bg.style.backgroundSize='cover';bg.style.backgroundPosition='center'}}
+      ['senalesSection','radiosSection','artistasSection','carteleraSection','shortsSection','conciertosSection','teatrosSection','circosSection'].forEach(id=>{const sec=document.getElementById(id);if(!sec)return;const content=sec.querySelector('[id$="Grid"],[id$="Rail"]');if(!content)return;const meaningful=[...content.children].some(x=>!x.matches('.hidden')&&String(x.textContent||'').trim()!==''||x.querySelector?.('img,video,button,a'));sec.classList.toggle('uadav-home-empty',!meaningful)});
+    }
+    function watchHomeEditorial(){const ids=['senalesGrid','radiosGrid','artistasGrid','carteleraRail','shortsRail','ipTrendingRail'];ids.forEach(id=>{const el=document.getElementById(id);if(el)new MutationObserver(()=>{clearTimeout(window.__uadavHeroTimer);window.__uadavHeroTimer=setTimeout(refreshHomeEditorial,180)}).observe(el,{childList:true,subtree:true})});setTimeout(refreshHomeEditorial,900)}
+    window.addEventListener('DOMContentLoaded',watchHomeEditorial);
 
     // ===== APARIENCIA =====
     async function aplicarApariencia() {
