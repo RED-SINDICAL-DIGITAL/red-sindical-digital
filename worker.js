@@ -1113,9 +1113,13 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
 
     if (path === '/api/v7/export' && request.method === 'GET') {
       if (!isAdmin()) return json({error:'No autorizado'},401);
-      if (!hasD1()) return json({error:'D1 no configurado'},503);
-      const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records']; const out={generated_at:isoNow(),tables:{}};
-      for(const t of tables){const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[];}
+      const out={generated_at:isoNow(),service:'★ UADAV STREAM',version:VERSION||'current',kv:{},tables:{}};
+      const kvKeys=['config_global','apariencia','secciones','web_visibility','home_layout','landing_config','footer_config','site_pages','estado_sitio','radios','senales_oficiales','artistas','artistas_prospectos','cartelera','eventos','bolsa_trabajo','content_items','collections','banners'];
+      for(const key of kvKeys){try{const raw=await env.UADAV_DB.get(key);out.kv[key]=raw==null?null:safeJSON(raw,raw)}catch(e){out.kv[key]={error:String(e?.message||e)}}}
+      if(hasD1()){
+        const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
+        for(const t of tables){try{const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[]}catch(e){out.tables[t]={error:String(e?.message||e)}}}
+      }
       return json(out);
     }
 
