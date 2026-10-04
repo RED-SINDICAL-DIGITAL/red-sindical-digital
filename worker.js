@@ -2375,7 +2375,9 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       try{await env.UADAV_DB.put(cacheKey,JSON.stringify(shorts),{expirationTtl:900})}catch(_){}return json(shorts);
     }
     if(path==='/api/public/live-artists' && request.method==='GET'){
-      const artists=(await allCanonicalArtists()).filter(a=>{const p=publicArtistFromItem(a);return p.visible!==false&&!!p.canal}).slice(0,80);
+      const all=(await allCanonicalArtists()).filter(a=>publicArtistFromItem(a).visible!==false).slice(0,120);
+      const artists=all.filter(a=>!!publicArtistFromItem(a).canal);
+      const external=all.map(a=>publicArtistFromItem(a)).flatMap(p=>[['twitch',p.twitch],['kick',p.kick]].map(([provider,raw])=>{const url=String(raw||'').trim();if(!url)return null;const slug=url.replace(/^https?:\/\//i,'').replace(/^www\./i,'').split('/').filter(Boolean).pop()||'';return slug?{artist_id:p.id,artist_name:p.nombre,artist_photo:p.foto,provider,url:url.startsWith('http')?url:'https://'+provider+'.com/'+slug,channel_id:slug,title:p.nombre+' en '+provider.charAt(0).toUpperCase()+provider.slice(1),thumbnail:p.portada||p.foto||'',linked_channel:true,detected_at:isoNow()}:null})).filter(Boolean);
       let cursor=Number(await env.UADAV_DB.get('public_live_cursor')||0), found=[];
       for(let n=0;n<Math.min(4,artists.length);n++){
         const a=artists[(cursor+n)%artists.length],p=publicArtistFromItem(a),info=await invidiousChannelInfo(p.canal).catch(()=>null);
@@ -2385,6 +2387,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       if(artists.length){cursor=(cursor+4)%artists.length;await env.UADAV_DB.put('public_live_cursor',String(cursor))}
       let registry=(await getArray('public_live_registry')).filter(x=>Date.now()-Date.parse(x.detected_at||0)<180000);
       for(const x of found)registry=[x,...registry.filter(y=>String(y.channel_id)!==String(x.channel_id))];
+      for(const x of external)registry=[x,...registry.filter(y=>!(String(y.provider)===String(x.provider)&&String(y.channel_id)===String(x.channel_id)))];
       registry=registry.slice(0,24);await putJSON('public_live_registry',registry);return json(registry);
     }
     if(path==='/api/public/live-argentina' && request.method==='GET'){
@@ -2409,7 +2412,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       if(!found)found=await artistFromD1(rawId);
       if(!found)return json({error:'Artista no encontrado'},404);
       const p=publicArtistFromItem(found); if(!p.visible && !p.afiliado_verificado)return json({error:'Perfil no disponible'},404);
-      return json({...p,claimed:found.claimed===true,claim_status:found.claim_status||'none',claim_email:found.claim_email||'',claim_at:found.claim_at||null});
+      return json(p);
     }
     if(path==='/api/artista/claim' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); let artistId=String(b.artist_id||'').trim(); if(!artistId)return json({error:'artist_id requerido'},400);
