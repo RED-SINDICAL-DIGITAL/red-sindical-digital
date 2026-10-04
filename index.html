@@ -426,15 +426,19 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     if (localStorage.getItem('uadav_cache_version') !== 'v32us') { localStorage.clear(); localStorage.setItem('uadav_cache_version', 'v32us'); }
 
     // ===== HOME V11 · HERO EDITORIAL + SECCIONES AUTOLIMPIABLES =====
-    let homePremiumTimer=null,homePremiumIndex=0,homePremiumPool=[];
+    let homePremiumTimer=null,homePremiumIndex=0,homePremiumPool=[],homeHeroBase=null,homeHeroShowingPremium=false;
     function premiumEventActive(e){if(!e||e.destacado_pagado!==true)return false;const until=e.destacado_hasta?Date.parse(e.destacado_hasta):Infinity;return !Number.isFinite(until)||until>Date.now()}
     function renderPremiumHero(i=0){
       if(!homePremiumPool.length)return false;homePremiumIndex=(i+homePremiumPool.length)%homePremiumPool.length;const e=homePremiumPool[homePremiumIndex],title=document.getElementById('homeHeroTitle'),text=document.getElementById('homeHeroText'),ctx=document.getElementById('homeContext'),bg=document.getElementById('homeHeroBackdrop'),action=document.getElementById('homeHeroAction');
       if(title)title.textContent=e.titulo||e.nombre||'Evento destacado';if(text)text.textContent=e.descripcion_corta||e.descripcion||[e.lugar,e.ciudad,e.fecha_inicio||e.fecha].filter(Boolean).join(' · ');if(ctx)ctx.textContent='DESTACADO · CARTELERA';const image=e.portada||e.poster||e.imagen||'';if(bg&&image){bg.style.backgroundImage='linear-gradient(90deg,rgba(5,5,5,.97) 0%,rgba(5,5,5,.70) 46%,rgba(5,5,5,.18) 100%),url("'+String(image).replace(/"/g,'%22')+'")';bg.style.backgroundSize='cover';bg.style.backgroundPosition='center'}if(action){action.href='/evento.html?id='+encodeURIComponent(e.id||'');action.textContent='Ver evento'}return true
     }
+    function captureBaseHero(){const title=document.getElementById('homeHeroTitle'),text=document.getElementById('homeHeroText'),ctx=document.getElementById('homeContext'),bg=document.getElementById('homeHeroBackdrop'),action=document.getElementById('homeHeroAction');homeHeroBase={title:title?.textContent||'Todo lo que querés ver, escuchar y encontrar.',text:text?.textContent||'',ctx:ctx?.textContent||'★ UADAV STREAM',bg:bg?.style.backgroundImage||'',bgSize:bg?.style.backgroundSize||'',bgPos:bg?.style.backgroundPosition||'',href:action?.getAttribute('href')||'#artistasSection',action:action?.textContent||'Explorar'};}
+    function renderBaseHero(){if(!homeHeroBase)return;const title=document.getElementById('homeHeroTitle'),text=document.getElementById('homeHeroText'),ctx=document.getElementById('homeContext'),bg=document.getElementById('homeHeroBackdrop'),action=document.getElementById('homeHeroAction');if(title)title.textContent=homeHeroBase.title;if(text)text.textContent=homeHeroBase.text;if(ctx)ctx.textContent=homeHeroBase.ctx;if(bg){bg.style.backgroundImage=homeHeroBase.bg;bg.style.backgroundSize=homeHeroBase.bgSize;bg.style.backgroundPosition=homeHeroBase.bgPos}if(action){action.href=homeHeroBase.href;action.textContent=homeHeroBase.action}homeHeroShowingPremium=false}
     function startPremiumHero(){
+      if(!homeHeroBase)captureBaseHero();
       homePremiumPool=(Array.isArray(carteleraData)?carteleraData:[]).filter(premiumEventActive).sort((a,b)=>Date.parse(a.destacado_hasta||'2999-01-01')-Date.parse(b.destacado_hasta||'2999-01-01')).slice(0,6);
-      clearInterval(homePremiumTimer);if(!homePremiumPool.length)return false;renderPremiumHero(0);if(homePremiumPool.length>1)homePremiumTimer=setInterval(()=>renderPremiumHero(homePremiumIndex+1),12000);return true
+      clearInterval(homePremiumTimer);renderBaseHero();if(!homePremiumPool.length)return false;
+      homePremiumTimer=setInterval(()=>{if(homeHeroShowingPremium){renderBaseHero()}else{renderPremiumHero(homePremiumIndex);homePremiumIndex=(homePremiumIndex+1)%homePremiumPool.length;homeHeroShowingPremium=true}},9000);return true
     }
     function homeText(el,selectors){for(const s of selectors){const n=el?.querySelector?.(s);const v=String(n?.textContent||'').trim();if(v)return v}return''}
     function homeImage(el){const im=el?.querySelector?.('img');return im?.currentSrc||im?.src||''}
