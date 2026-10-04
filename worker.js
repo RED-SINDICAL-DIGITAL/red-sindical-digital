@@ -215,7 +215,7 @@ export default {
       'https://invidious.tiekoetter.com',
       'https://yewtu.be'
     ];
-    async function invidiousSearch(query, type='video', limit=20) {
+    async function invidiousSearch(query, type='video', limit=20, page=1) {
       const q=String(query||'').trim(); if(!q)return [];
       const max=Math.min(25,Math.max(1,Number(limit||20)));
       const requestOne=async(base)=>{
@@ -225,7 +225,7 @@ export default {
           const u=new URL(base+'/api/v1/search');
           u.searchParams.set('q',q);
           u.searchParams.set('type',type);
-          u.searchParams.set('page','1');
+          u.searchParams.set('page',String(Math.max(1,Number(page||1))));
           u.searchParams.set('hl','es');
           const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});
           if(!r.ok)throw new Error('HTTP '+r.status);
@@ -1889,32 +1889,32 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       return new Response(JSON.stringify(result),{headers:{...cors,'Content-Type':'application/json; charset=utf-8','Cache-Control':'private, max-age=60','X-UADAV-Playback-Source':result.source}});
     }
 
-    // --- BÚSQUEDA GLOBAL UADAV STREAM ---
+    // --- BÚSQUEDA GLOBAL UADAV STREAM · CURSOR / DESCUBRIMIENTO CONTINUO ---
     if(path==='/api/public/search' && request.method==='GET'){
-      const q=String(url.searchParams.get('q')||'').trim().slice(0,140);if(q.length<2)return json({query:q,artists:[],content:[],events:[],radios:[]});
+      const q=String(url.searchParams.get('q')||'').trim().slice(0,140);if(q.length<2)return json({query:q,artists:[],content:[],events:[],radios:[],cursor:null,has_more:false});
+      const requestedCursor=String(url.searchParams.get('cursor')||'').trim(),page=Math.max(1,Math.min(50,Number(requestedCursor)||1)),firstPage=page===1;
       const nq=normalizeSearchText(q),contains=x=>normalizeSearchText(x).includes(nq);
-      const [artistsRaw,eventsRaw,radiosRaw,contentRaw]=await Promise.all([allCanonicalArtists().catch(()=>[]),getArray('cartelera').catch(()=>[]),getArray('radios').catch(()=>[]),getArray('content').catch(()=>[])]);
-      const artists=(Array.isArray(artistsRaw)?artistsRaw:[]).map(publicArtistFromItem).filter(a=>a.visible&&contains([a.nombre,a.rubro,a.ciudad,a.provincia,a.bio].join(' '))).slice(0,8);
-      const events=(Array.isArray(eventsRaw)?eventsRaw:[]).filter(e=>String(e.visible??true)!=='false'&&contains([e.titulo,e.nombre,e.artista,e.descripcion,e.categoria,e.ciudad,e.lugar,e.venue].join(' '))).slice(0,8);
-      const radios=(Array.isArray(radiosRaw)?radiosRaw:[]).filter(x=>String(x.visible??true)!=='false'&&contains([x.nombre,x.name,x.descripcion,x.ciudad,x.provincia,x.pais].join(' '))).slice(0,6);
-      const internal=(Array.isArray(contentRaw)?contentRaw:[]).filter(x=>String(x.visible??true)!=='false'&&contains([x.titulo,x.nombre,x.descripcion,x.categoria,x.tipo,x.artist_name,x.artista].join(' '))).slice(0,12);
-      let external=[];
-      if(internal.length<8){
-        const maxExternal=Math.max(0,12-internal.length);
-        const ivRaw=await invidiousSearch(q,'video',16);
-        external=ivRaw.map(v=>{const id=String(v.videoId||v.id||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:v.title||'Video',descripcion:v.author||'YouTube',thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.[0]?.url||'',categoria:'Video',duracion:Number(v.lengthSeconds||0),tipo:'video',content_type:'video'}}).filter(x=>x.id).slice(0,maxExternal);
-        // Si todas las instancias Invidious fallan, la búsqueda pública NO puede quedar vacía.
-        // Usamos la API oficial sólo como fallback, respetando el interruptor youtube_api_enabled.
-        if(!external.length && maxExternal>0 && env.YOUTUBE_API_KEY){
-          try{
-            const qs=new URLSearchParams({part:'snippet',maxResults:String(Math.min(12,maxExternal)),q,type:'video',regionCode:'AR',order:'relevance',key:env.YOUTUBE_API_KEY});
-            const yr=await fetch('https://www.googleapis.com/youtube/v3/search?'+qs.toString());
-            const yd=await yr.json();
-            if(yr.ok&&!yd.error) external=(yd.items||[]).map(x=>{const id=String(x.id?.videoId||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:x.snippet?.title||'Video',descripcion:x.snippet?.channelTitle||'YouTube',thumbnail:x.snippet?.thumbnails?.high?.url||x.snippet?.thumbnails?.medium?.url||x.snippet?.thumbnails?.default?.url||'',categoria:'Video',tipo:'video',content_type:'video'}}).filter(x=>x.id).slice(0,maxExternal);
-          }catch(_){}
-        }
+      let artists=[],events=[],radios=[],internal=[];
+      if(firstPage){
+        const [artistsRaw,eventsRaw,radiosRaw,contentRaw]=await Promise.all([allCanonicalArtists().catch(()=>[]),getArray('cartelera').catch(()=>[]),getArray('radios').catch(()=>[]),getArray('content').catch(()=>[])]);
+        artists=(Array.isArray(artistsRaw)?artistsRaw:[]).map(publicArtistFromItem).filter(a=>a.visible&&contains([a.nombre,a.rubro,a.ciudad,a.provincia,a.bio].join(' '))).slice(0,12);
+        events=(Array.isArray(eventsRaw)?eventsRaw:[]).filter(e=>String(e.visible??true)!=='false'&&contains([e.titulo,e.nombre,e.artista,e.descripcion,e.categoria,e.ciudad,e.lugar,e.venue].join(' '))).slice(0,12);
+        radios=(Array.isArray(radiosRaw)?radiosRaw:[]).filter(x=>String(x.visible??true)!=='false'&&contains([x.nombre,x.name,x.descripcion,x.ciudad,x.provincia,x.pais].join(' '))).slice(0,8);
+        internal=(Array.isArray(contentRaw)?contentRaw:[]).filter(x=>String(x.visible??true)!=='false'&&contains([x.titulo,x.nombre,x.descripcion,x.categoria,x.tipo,x.artist_name,x.artista].join(' '))).slice(0,16);
       }
-      return json({query:q,artists,content:[...internal,...external],events,radios,counts:{artists:artists.length,content:internal.length+external.length,events:events.length,radios:radios.length}});
+      let external=[],source='invidious',youtubeNext='';
+      const ivRaw=await invidiousSearch(q,'video',24,page);
+      external=ivRaw.map(v=>{const id=String(v.videoId||v.id||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:v.title||'Video',descripcion:v.author||'YouTube',author:v.author||'YouTube',thumbnail:v.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||v.videoThumbnails?.find?.(t=>t?.quality==='medium')?.url||v.videoThumbnails?.[0]?.url||'',categoria:'Video',duracion:Number(v.lengthSeconds||0),tipo:'video',content_type:'video'}}).filter(x=>x.id);
+      if(!external.length && env.YOUTUBE_API_KEY){
+        try{
+          source='youtube_api';const token=requestedCursor.startsWith('yt:')?requestedCursor.slice(3):'';
+          const qs=new URLSearchParams({part:'snippet',maxResults:'24',q,type:'video',regionCode:'AR',order:'relevance',key:env.YOUTUBE_API_KEY});if(token)qs.set('pageToken',token);
+          const yr=await fetch('https://www.googleapis.com/youtube/v3/search?'+qs.toString()),yd=await yr.json();
+          if(yr.ok&&!yd.error){youtubeNext=String(yd.nextPageToken||'');external=(yd.items||[]).map(x=>{const id=String(x.id?.videoId||'').trim();return{id,external_id:id,provider:'youtube',url:id?'https://www.youtube.com/watch?v='+id:'',titulo:x.snippet?.title||'Video',descripcion:x.snippet?.channelTitle||'YouTube',author:x.snippet?.channelTitle||'YouTube',thumbnail:x.snippet?.thumbnails?.high?.url||x.snippet?.thumbnails?.medium?.url||x.snippet?.thumbnails?.default?.url||'',categoria:'Video',tipo:'video',content_type:'video'}}).filter(x=>x.id)}
+        }catch(_){}
+      }
+      const next=source==='youtube_api'?(youtubeNext?'yt:'+youtubeNext:null):(external.length>=20?String(page+1):null);
+      return json({query:q,artists,content:[...internal,...external],events,radios,cursor:next,has_more:!!next,source,counts:{artists:artists.length,content:internal.length+external.length,events:events.length,radios:radios.length}});
     }
 
     // --- YOUTUBE / BÚSQUEDA GLOBAL CON FALLBACK ---
