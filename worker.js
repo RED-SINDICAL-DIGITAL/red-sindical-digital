@@ -2424,7 +2424,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       const arr=await getArray('artistas'); let i=arr.findIndex(a=>String(publicArtistFromItem(a).id)===String(access.artist_id));
       if(i<0){ const all=await allCanonicalArtists(); const found=all.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id)); if(!found)return json({error:'Perfil no encontrado'},404); arr.push(found); i=arr.length-1; }
       const a=arr[i];
-      const allowed=['nombre','nombre_artistico','rubro','ciudad','foto','bio','canal','live_url','booking_url','donation_url','donacion_url','honorario_desde','disponibilidad','redes','web','support_enabled','support_links','audience_chat_enabled','presskit_enabled','marketplace_enabled','ticketing_enabled'];
+      const allowed=['nombre','nombre_artistico','rubro','ciudad','foto','bio','canal','twitch','kick','booking_url','donation_url','donacion_url','honorario_desde','disponibilidad','redes','web','support_enabled','support_links','audience_chat_enabled','presskit_enabled','marketplace_enabled','ticketing_enabled'];
       const proNow=a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now()); const proFields=new Set(['support_enabled','support_links','audience_chat_enabled','presskit_enabled','marketplace_enabled','ticketing_enabled']);
       for(const k of allowed) if(Object.prototype.hasOwnProperty.call(b,k) && (!proFields.has(k)||proNow)) a[k]=b[k];
       a.self_managed=true; a.ultima_edicion_artista=new Date().toISOString(); a.cambios_pendientes=true; a.estado=a.estado==='aprobado'?'aprobado':(a.estado||'pendiente');
@@ -2465,7 +2465,7 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     if(path==='/api/artist/jobs' && request.method==='GET'){
       const token=String(url.searchParams.get('token')||'').trim(); if(!token)return json({error:'Token requerido'},400);
       const raw=await env.UADAV_DB.get(artistTokenKey(token)); if(!raw)return json({error:'Acceso inválido'},401); let access; try{access=JSON.parse(raw)}catch{return json({error:'Acceso inválido'},401)}
-      if(access.expires&&Date.now()>access.expires)return json({error:'Acceso vencido'},401); const arr=await getArray('artistas'); const artist=arr.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id)); if(!artist)return json({error:'Artista no encontrado'},404); if(artist.afiliado_verificado!==true)return json({enabled:false,items:[]});
+      if(access.expires&&Date.now()>access.expires)return json({error:'Acceso vencido'},401); const arr=await getArray('artistas'); const artist=arr.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id)); if(!artist)return json({error:'Artista no encontrado'},404);
       const jobs=await getArray('bolsa_trabajo'); const rubro=String(artist.rubro||'').toLowerCase(); const items=jobs.filter(x=>x&&x.activo!==false).sort((a,b)=>{const ar=String(a.rubro||'').toLowerCase().includes(rubro)?0:1;const br=String(b.rubro||'').toLowerCase().includes(rubro)?0:1;return ar-br}).slice(0,50); return json({enabled:true,items});
     }
     if(path==='/api/admin/artista-rights' && request.method==='GET'){
