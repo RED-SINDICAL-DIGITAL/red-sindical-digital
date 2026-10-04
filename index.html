@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="uadav-build" content="10.23.1">
+  <meta name="uadav-build" content="10.23.2">
   <title>UADAV STREAM — Plataforma de artistas y entretenimiento</title>
   <meta name="description" content="UADAV STREAM conecta entretenimiento y oportunidades: artistas, música, radio, teatro, circo, cine, eventos, transmisiones en vivo y bolsa de trabajo.">
   <meta property="og:type" content="website" />
@@ -28,6 +28,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
+(function markShellEarly(){try{if(window.parent!==window){document.documentElement.classList.add('uadav-in-shell','uadav-app-embedded')}}catch(_){}})();
     tailwind.config = { theme: { extend: { colors: { uadav: { accent: '#2f6df6', accentHover: '#4b7df7', dark: '#050505', card: '#0f0f13', border: '#1f1f26' } }, fontFamily: { sans: ['Outfit', 'sans-serif'] } } } }
   </script>
   <style>
@@ -92,7 +93,7 @@
 @media(max-width:720px){.uadav-v11-footer{margin-top:24px;padding:22px 16px 92px;display:block}.uadav-v11-footer>div{display:block}.uadav-v11-footer>div span{display:block;margin-top:5px}.uadav-v11-footer nav{margin-top:16px;gap:16px}}
 
 /* V11.4 · chrome standalone; el Shell manda al estar embebido */
-html.uadav-in-shell header.sticky{display:none!important}html.uadav-in-shell #homeHero{margin-top:0!important}html.uadav-in-shell body{padding-bottom:0!important}
+html.uadav-in-shell header.sticky,html.uadav-app-embedded header.sticky{display:none!important}html.uadav-in-shell #homeHero,html.uadav-app-embedded #homeHero{margin-top:0!important}html.uadav-in-shell body,html.uadav-app-embedded body{padding-bottom:0!important}
 @media(max-width:767px){body{padding-bottom:0!important}#homeHero{margin-top:0!important}}
 </style>
 
@@ -1143,6 +1144,6 @@ async function cargarHome() {
       initCarouselDrag();
     }
   </script>
-<script src="/uadav-app-bridge-v104.js?v=10247"></script>
+<script src="/uadav-app-bridge-v104.js?v=10249"></script>
 </body>
 </html>
