@@ -2118,6 +2118,28 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       if(!isAdmin())return json({error:'No autorizado'},401); return json(await getArray('postulaciones_trabajo'));
     }
 
+    // --- FUENTES AUTOMÁTICAS / FEDERACIÓN ---
+    const defaultFederatedSources=()=>[
+      {id:'rosario-cultura',name:'Rosario Cultura',kind:'event',scope:'rosario',country:'Argentina',url:'https://www.rosario.gob.ar/inicio/cultura-y-educacion',active:true,interval_hours:12,mode:'page_discovery',priority:100},
+      {id:'agenda-cultural-federal',name:'Agenda Cultural Federal',kind:'event',scope:'argentina',country:'Argentina',url:'https://www.cultura.gob.ar/agenda/',active:true,interval_hours:12,mode:'page_discovery',priority:90},
+      {id:'teatro-cervantes-convocatorias',name:'Teatro Nacional Cervantes · Convocatorias',kind:'job',scope:'argentina',country:'Argentina',url:'https://www.teatrocervantes.gob.ar/convocatorias-artisticas/',active:true,interval_hours:12,mode:'page_discovery',priority:95},
+      {id:'alternativa-convocatorias',name:'Alternativa · Convocatorias',kind:'job',scope:'argentina',country:'Argentina',url:'https://alternativa.ar/convocatorias.php',active:false,interval_hours:12,mode:'page_discovery',priority:80}
+    ];
+    async function federatedSources(){const saved=await getArray('federated_sources');if(saved.length)return saved;const d=defaultFederatedSources();await putJSON('federated_sources',d);return d}
+    if(path==='/api/admin/federated/sources' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await federatedSources())}
+    if(path==='/api/admin/federated/sources' && request.method==='POST'){
+      if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({})),list=await federatedSources(),idx=list.findIndex(x=>String(x.id)===String(b.id));if(idx<0)return json({error:'Fuente no encontrada'},404);
+      list[idx]={...list[idx],active:b.active===undefined?list[idx].active:b.active===true,interval_hours:Math.max(1,Number(b.interval_hours||list[idx].interval_hours||12)),updated_at:isoNow()};await putJSON('federated_sources',list);return json({success:true,item:list[idx]});
+    }
+    async function probeFederatedSource(src){
+      const started=Date.now(),out={source_id:src.id,checked_at:isoNow(),ok:false,status:'error',found:0,error:''};
+      try{const r=await fetch(src.url,{redirect:'follow',headers:{'User-Agent':'UADAVSTREAM/1.0'}});out.http_status=r.status;if(!r.ok)throw new Error('HTTP '+r.status);const html=(await r.text()).slice(0,900000);const links=[...html.matchAll(/href=["']([^"'#]+)["']/gi)].map(m=>m[1]).filter(Boolean);const words=src.kind==='job'?/convoc|casting|audicion|audición|busca|vacante|trabajo/i:/evento|agenda|teatro|musica|música|danza|circo|festival|show/i;out.found=Math.min(500,links.filter(x=>words.test(x)).length);out.ok=true;out.status='active';out.duration_ms=Date.now()-started}catch(e){out.error=String(e?.message||e).slice(0,300);out.duration_ms=Date.now()-started}const state=await getObject('federated_source_state');state[src.id]=out;await putJSON('federated_source_state',state);return out
+    }
+    if(path==='/api/admin/federated/source-status' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);const list=await federatedSources(),state=await getObject('federated_source_state');return json(list.map(x=>({...x,last_check:state[x.id]||null})))}
+    if(path==='/api/admin/federated/sync' && request.method==='POST'){
+      if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({})),list=await federatedSources(),selected=list.filter(x=>x.active&&(b.source_id?String(x.id)===String(b.source_id):true));const results=[];for(const src of selected.slice(0,12))results.push(await probeFederatedSource(src));return json({success:true,results});
+    }
+
     // --- FEDERACIÓN DE FUENTES EXTERNAS ---
     if(path==='/api/public/federated-feed' && request.method==='GET'){
       const kind=String(url.searchParams.get('kind')||'all').toLowerCase(),limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||40)));
