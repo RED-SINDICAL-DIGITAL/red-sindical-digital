@@ -195,7 +195,12 @@ header.sticky>nav{overflow-x:auto!important;white-space:nowrap!important}#navbar
 }
 html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal{display:none!important}html.uadav-app-embedded body{padding-bottom:0!important}
 </style>
-<style id="v1021-home-release">#mainContainer>[data-home-secondary="1"]{display:none}.uadav-action-deck{max-width:1400px;margin:0 auto;padding:28px 24px 0}@media(min-width:1180px){#mainContainer{display:flex;flex-direction:column}#senalesSection{order:1}#trendingSection{order:2}#artistasSection{order:3}#carteleraSection{order:4}#radiosSection{order:5}#shortsSection{order:6}#bannerInfeedContainer{order:7}}</style></head>
+<style id="v1021-home-release">#mainContainer>[data-home-secondary="1"]{display:none}.uadav-action-deck{max-width:1400px;margin:0 auto;padding:28px 24px 0}@media(min-width:1180px){#mainContainer{display:flex;flex-direction:column}#senalesSection{order:1}#trendingSection{order:2}#artistasSection{order:3}#carteleraSection{order:4}#radiosSection{order:5}#shortsSection{order:6}#bannerInfeedContainer{order:7}}
+/* V11.5 · estabilidad Hero + Radio responsive */
+#radiosGrid .radio-hero{min-height:300px!important;display:grid!important;grid-template-columns:190px minmax(0,1fr)!important;align-items:center!important}
+#radiosGrid .radio-hero-cover{aspect-ratio:1/1!important;object-fit:cover!important}
+@media(max-width:720px){#radiosGrid{display:block!important}#radiosGrid .radio-hero{min-height:0!important;display:grid!important;grid-template-columns:92px minmax(0,1fr)!important;gap:14px!important;padding:18px!important;border-radius:22px!important;align-items:center!important}#radiosGrid .radio-hero>div:nth-child(2){width:92px!important;height:92px!important}#radiosGrid .radio-hero h3{font-size:25px!important;line-height:1!important;margin-bottom:6px!important}#radiosGrid .radio-hero p{margin-bottom:8px!important}#radiosGrid .radio-hero .absolute.top-0.right-0{font-size:8px!important;padding:7px 10px!important;max-width:92px!important;text-align:center!important}#radiosGrid .radio-hero .bg-\[\#0a0a0c\]\/80{padding:8px!important}#homeHero #homeHeroBackdrop{transition:opacity .3s ease!important}#homeHeroTitle{overflow-wrap:anywhere}}
+</style></head>
 <body>
 <script>(async()=>{try{const r=await fetch('https://uadav-api.uadavstream.workers.dev/api/estado_sitio',{cache:'no-store'});if(!r.ok)return;const s=await r.json();if(s?.modo==='promo'&&!location.search.includes('full=1'))location.replace('/promo.html')}catch(_){}})();</script>
 
@@ -429,7 +434,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     }
     function startPremiumHero(){
       homePremiumPool=(Array.isArray(carteleraData)?carteleraData:[]).filter(premiumEventActive).sort((a,b)=>Date.parse(a.destacado_hasta||'2999-01-01')-Date.parse(b.destacado_hasta||'2999-01-01')).slice(0,6);
-      clearInterval(homePremiumTimer);if(!homePremiumPool.length)return false;renderPremiumHero(0);if(homePremiumPool.length>1)homePremiumTimer=setInterval(()=>renderPremiumHero(homePremiumIndex+1),9000);return true
+      clearInterval(homePremiumTimer);if(!homePremiumPool.length)return false;renderPremiumHero(0);if(homePremiumPool.length>1)homePremiumTimer=setInterval(()=>renderPremiumHero(homePremiumIndex+1),12000);return true
     }
     function homeText(el,selectors){for(const s of selectors){const n=el?.querySelector?.(s);const v=String(n?.textContent||'').trim();if(v)return v}return''}
     function homeImage(el){const im=el?.querySelector?.('img');return im?.currentSrc||im?.src||''}
@@ -443,7 +448,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       ['senalesSection','radiosSection','artistasSection','carteleraSection','shortsSection','conciertosSection','teatrosSection','circosSection'].forEach(id=>{const sec=document.getElementById(id);if(!sec)return;const content=sec.querySelector('[id$="Grid"],[id$="Rail"]');if(!content)return;const meaningful=[...content.children].some(x=>!x.matches('.hidden')&&String(x.textContent||'').trim()!==''||x.querySelector?.('img,video,button,a'));sec.classList.toggle('uadav-home-empty',!meaningful)});
     }
     function watchHomeEditorial(){const ids=['senalesGrid','radiosGrid','artistasGrid','carteleraRail','shortsRail','ipTrendingRail'];ids.forEach(id=>{const el=document.getElementById(id);if(el)new MutationObserver(()=>{clearTimeout(window.__uadavHeroTimer);window.__uadavHeroTimer=setTimeout(refreshHomeEditorial,180)}).observe(el,{childList:true,subtree:true})});setTimeout(refreshHomeEditorial,900)}
-    window.addEventListener('DOMContentLoaded',watchHomeEditorial);
+    // Hero editorial se inicia una sola vez al finalizar la carga; no durante la hidratación.
 
     // ===== APARIENCIA =====
     async function aplicarApariencia() {
@@ -1102,7 +1107,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       }catch(e){console.warn('Colecciones Home:',e);host.innerHTML=''}
     }
 async function regionalizarHome(){
- try{const pref=localStorage.getItem('uadav_region_preference')||'',suf=pref?'&province='+encodeURIComponent(pref):'',fd=await fetch(API_URL+'public/federated-feed?kind=event&limit=80'+suf,{cache:'no-store'}).then(r=>r.ok?r.json():({items:[]})),ranked=Array.isArray(fd)?fd:(fd.items||[]),map=new Map();for(const x of [...ranked,...carteleraData])if(x?.id&&!map.has(String(x.id)))map.set(String(x.id),x);carteleraData=[...map.values()];renderCarteleraUI();const ad=await fetch(API_URL+'public/artistas-regional?limit=80'+suf,{cache:'no-store'}).then(r=>r.ok?r.json():({items:[]}));if(Array.isArray(ad?.items)&&ad.items.length){artistasData=ad.items;renderArtistasUI()}let bar=document.getElementById('uadavRegionBar');if(!bar){bar=document.createElement('div');bar.id='uadavRegionBar';bar.className='fixed bottom-20 sm:bottom-5 right-3 z-[70] bg-[#101114]/95 border border-white/10 rounded-full px-3 py-2 shadow-2xl backdrop-blur';document.body.appendChild(bar)}const detected=pref||fd?.context?.province||'Argentina',provs=['Santa Fe','Córdoba','Tucumán','Buenos Aires','Ciudad Autónoma de Buenos Aires','Entre Ríos','Mendoza','Salta','Jujuy','Chaco','Corrientes','Misiones','Santiago del Estero','San Juan','San Luis','La Rioja','Catamarca','La Pampa','Neuquén','Río Negro','Chubut','Santa Cruz','Tierra del Fuego','Formosa'];bar.innerHTML='<label class="text-[10px] font-black text-slate-400 mr-2">📍 '+searchEsc(detected)+'</label><select id="uadavRegionSelect" class="bg-transparent text-xs text-white outline-none"><option value="">Automático</option><option value="Toda Argentina">Toda Argentina</option>'+provs.map(x=>'<option value="'+searchEsc(x)+'" '+(pref===x?'selected':'')+'>'+searchEsc(x)+'</option>').join('')+'</select>';document.getElementById('uadavRegionSelect').onchange=e=>{const v=e.target.value;if(!v||v==='Toda Argentina')localStorage.removeItem('uadav_region_preference');else localStorage.setItem('uadav_region_preference',v);location.reload()}}catch(e){console.warn('Regionalización Home:',e)}
+ try{const pref=localStorage.getItem('uadav_region_preference')||'',suf=pref?'&province='+encodeURIComponent(pref):'',fd=await fetch(API_URL+'public/federated-feed?kind=event&limit=80'+suf,{cache:'no-store'}).then(r=>r.ok?r.json():({items:[]})),ranked=Array.isArray(fd)?fd:(fd.items||[]),map=new Map();for(const x of [...ranked,...carteleraData])if(x?.id&&!map.has(String(x.id)))map.set(String(x.id),x);carteleraData=[...map.values()];renderCarteleraUI();const ad=await fetch(API_URL+'public/artistas-regional?limit=80'+suf,{cache:'no-store'}).then(r=>r.ok?r.json():({items:[]}));if(Array.isArray(ad?.items)&&ad.items.length){artistasData=ad.items;renderArtistasUI()}// La preferencia territorial se aplica al ranking sin superponer controles flotantes al contenido. }catch(e){console.warn('Regionalización Home:',e)}
 }
 async function cargarHome() {
       await cargarConfigYVisitas();
@@ -1131,6 +1136,7 @@ async function cargarHome() {
       cargarArtistasEnVivo();
       cargarLiveArgentina();
       await cargarColeccionesHome();
+      if(!homePremiumPool.length) refreshHomeEditorial();
       initCarouselDrag();
     }
   </script>
