@@ -2164,6 +2164,8 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       portada:a.portada||a.banner||a.hero_imagen||'',
       bio:a.bio||'',
       canal:a.canal||a.channel_id||'',
+      twitch:a.twitch||a.redes?.twitch||'',
+      kick:a.kick||a.redes?.kick||'',
       youtube_bio:a.youtube_bio||'',
       origen:a.origen||a.source||'',
       stats:a.stats||{},
