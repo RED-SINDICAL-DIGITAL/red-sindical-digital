@@ -2123,6 +2123,21 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       let out=kind==='job'?jobs:(kind==='event'?events:[...jobs,...events]);
       out.sort((a,b)=>Date.parse(b.actualizado||b.creado||b.fecha_creacion||0)-Date.parse(a.actualizado||a.creado||a.fecha_creacion||0));return json(out.slice(0,limit));
     }
+    if(path==='/api/admin/federated/url-preview' && request.method==='POST'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      const b=await request.json().catch(()=>({})); const kind=String(b.kind||'event').toLowerCase(); let target;
+      try{target=new URL(String(b.url||''));if(!['http:','https:'].includes(target.protocol))throw new Error('bad')}catch{return json({error:'URL pública inválida'},400)}
+      const host=target.hostname.toLowerCase(); if(host==='localhost'||host==='127.0.0.1'||host.startsWith('10.')||host.startsWith('192.168.')||host.startsWith('169.254.'))return json({error:'Origen no permitido'},400);
+      let html='';try{const r=await fetch(target.toString(),{redirect:'follow',headers:{'User-Agent':'UADAVSTREAM/1.0'}});if(!r.ok)throw new Error('HTTP '+r.status);if(!(r.headers.get('content-type')||'').toLowerCase().includes('text/html'))return json({error:'La URL no entrega HTML importable'},400);html=(await r.text()).slice(0,750000)}catch{return json({error:'No pudimos leer esa página. Usá Excel/CSV o carga manual.'},422)}
+      const clean=s=>String(s||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      const meta=name=>{const tags=html.match(/<meta\b[^>]*>/gi)||[];for(const tag of tags){if(!tag.toLowerCase().includes(name.toLowerCase()))continue;const m=tag.match(/content=["']([^"']*)["']/i);if(m)return clean(m[1])}return''};
+      const title=meta('og:title')||meta('twitter:title')||clean((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]||''); const desc=meta('og:description')||meta('description'); const image=meta('og:image');
+      let schema={}; const scripts=html.match(/<script[^>]*application\/ld\+json[^>]*>[\s\S]*?<\/script>/gi)||[]; for(const tag of scripts){try{const raw=tag.replace(/^<script[^>]*>/i,'').replace(/<\/script>$/i,'');const x=JSON.parse(raw);const roots=Array.isArray(x)?x:[x];const flat=roots.flatMap(v=>Array.isArray(v?.['@graph'])?v['@graph']:[v]);const hit=flat.find(v=>kind==='event'?String(v?.['@type']||'').toLowerCase().includes('event'):String(v?.['@type']||'').toLowerCase().includes('job'));if(hit){schema=hit;break}}catch(_){}}
+      const loc=schema.location||{},addr=loc.address||{}; const item={titulo:clean(schema.name||title||'Sin título'),descripcion:clean(schema.description||desc),imagen:String(schema.image?.url||schema.image?.[0]||schema.image||image||''),source:host.replace(/^www\./,''),source_url:target.toString(),external_id:String(schema.identifier?.value||schema.identifier||target.toString()),origen:'externo',last_seen_at:isoNow(),source_status:'active'};
+      if(kind==='event')Object.assign(item,{fecha:String(schema.startDate||''),fecha_inicio:String(schema.startDate||''),fecha_fin:String(schema.endDate||''),lugar:clean(loc.name||''),ciudad:clean(addr.addressLocality||''),provincia:clean(addr.addressRegion||''),pais:clean(addr.addressCountry?.name||addr.addressCountry||'Argentina'),categoria:'Eventos'});
+      else Object.assign(item,{fecha:String(schema.datePosted||''),fecha_limite:String(schema.validThrough||''),empresa:clean(schema.hiringOrganization?.name||''),ciudad:clean(schema.jobLocation?.address?.addressLocality||''),provincia:clean(schema.jobLocation?.address?.addressRegion||''),pais:clean(schema.jobLocation?.address?.addressCountry?.name||schema.jobLocation?.address?.addressCountry||'Argentina'),modalidad:schema.jobLocationType==='TELECOMMUTE'?'remoto':'presencial',application_mode:'external_url',application_url:target.toString(),region_scope:'argentina'});
+      return json({success:true,kind,item,structured:Object.keys(schema).length>0});
+    }
     if(path==='/api/admin/federated/import' && request.method==='POST'){
       if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({})),kind=String(b.kind||'').toLowerCase(),items=Array.isArray(b.items)?b.items:[];
       if(!['job','event'].includes(kind)||!items.length)return json({error:'kind e items requeridos'},400);
