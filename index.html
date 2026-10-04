@@ -283,8 +283,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       <section id="trendingSection" class="space-y-3"><div class="flex items-center justify-between"><div><div id="locationLabel" class="text-[9px] uppercase tracking-[.18em] text-uadav-accent font-black">Tendencias</div><h2 id="trendingTitle" class="text-xl sm:text-2xl font-black text-white">Popular cerca tuyo</h2></div><button id="locationChange" class="text-xs text-slate-400 hover:text-white">Cambiar país</button></div><div id="ipTrendingRail" class="flex gap-3 overflow-x-auto pb-3 no-scrollbar min-h-[190px]"></div></section>
       <section id="carteleraSection" class="space-y-3"><div class="flex items-center justify-between"><h2 id="carteleraTitle" class="text-xl sm:text-2xl font-black text-white">Cartelera</h2><a href="/cartelera.html" class="text-xs text-slate-400 hover:text-white">Ver todo</a></div><div id="carteleraRail" class="flex gap-3 overflow-x-auto pb-3 no-scrollbar"></div></section>
       <section id="shortsSection" class="space-y-3"><div class="flex items-center justify-between"><h2 id="shortsTitle" class="text-xl sm:text-2xl font-black text-white">Shorts</h2><a href="/shorts.html" class="text-xs text-slate-400 hover:text-white">Ver todo</a></div><div id="shortsRail" class="flex gap-3 overflow-x-auto pb-3 no-scrollbar min-h-[270px]"></div></section>
-      <section id="conciertosSection" class="space-y-3"><div class="flex items-center justify-between"><h2 id="conciertosTitle" class="text-xl sm:text-2xl font-black text-white">Para ver completo</h2></div><div id="conciertosRail" class="flex gap-3 overflow-x-auto pb-3 no-scrollbar min-h-[190px]"></div></section>
-      <section id="teatrosSection" class="hidden"><div id="teatrosRail"></div></section><section id="circosSection" class="hidden"><div id="circosRail"></div></section>
+      <div id="dynamicCollections" class="space-y-8"></div>
     </main>
 
     <section id="gridViewSection" class="hidden max-w-[1500px] w-full mx-auto px-4 sm:px-6 pt-5 sm:pt-7 pb-14 min-h-[70vh] scroll-mt-24">
@@ -1078,7 +1077,21 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     function cerrarModalBackdrop(e) { if (e.target.id === 'videoModal') cerrarModal(); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { cerrarModal(); cerrarModalArtista(); } if (e.key === 'ArrowRight') nextVideo(); if (e.key === 'ArrowLeft') prevVideo(); });
 
-    async function cargarHome() {
+    
+    function collectionCard(item){
+      const title=String(item.titulo||item.title||item.nombre||'Contenido'),img=String(item.thumbnail||item.imagen||item.poster||item.portada||''),type=String(item.type||item.item_type||'content'),url=String(item.url||item.link||item.trailer||item.youtube_id||'');
+      return '<article class="v11-collection-card group shrink-0 w-[72vw] sm:w-[280px] lg:w-[310px] cursor-pointer" data-kind="'+searchEsc(type)+'" data-url="'+searchEsc(url)+'" data-title="'+searchEsc(title)+'"><div class="aspect-video rounded-2xl overflow-hidden bg-white/5 border border-white/10">'+(img?'<img src="'+searchEsc(img)+'" alt="" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]">':'<div class="w-full h-full flex items-center justify-center text-3xl text-white/20">★</div>')+'</div><div class="pt-2.5"><h3 class="text-sm sm:text-base font-bold text-white truncate">'+searchEsc(title)+'</h3><p class="text-[11px] text-slate-500 mt-1">'+(type==='event'?'Evento':'Contenido')+(item.categoria?' · '+searchEsc(item.categoria):'')+'</p></div></article>';
+    }
+    async function cargarColeccionesHome(){
+      const host=document.getElementById('dynamicCollections');if(!host)return;
+      try{
+        const cols=await obtenerDatos('collections');
+        host.innerHTML=(Array.isArray(cols)?cols:[]).filter(x=>x&&x.active!==false&&Array.isArray(x.items)&&x.items.length).sort((a,b)=>Number(a.orden||0)-Number(b.orden||0)).map(col=>'<section class="v11-dynamic-collection space-y-3"><div class="flex items-end justify-between gap-3"><div><div class="text-[9px] font-black tracking-[.18em] uppercase text-uadav-accent">Explorá</div><h2 class="text-xl sm:text-2xl font-black text-white">'+searchEsc(col.titulo||'Colección')+'</h2>'+(col.descripcion?'<p class="text-xs text-slate-500 mt-1 max-w-2xl">'+searchEsc(col.descripcion)+'</p>':'')+'</div></div><div class="v11-collection-rail flex gap-3 overflow-x-auto pb-3 no-scrollbar">'+col.items.map(collectionCard).join('')+'</div></section>').join('');
+        host.onclick=e=>{const card=e.target.closest('.v11-collection-card');if(!card)return;if(card.dataset.kind==='event'){location.href='/cartelera.html';return}if(card.dataset.url)reproducirDesdeBusqueda({url:card.dataset.url,titulo:card.dataset.title||'Contenido'})};
+        setTimeout(refreshHomeEditorial,100);
+      }catch(e){console.warn('Colecciones Home:',e);host.innerHTML=''}
+    }
+async function cargarHome() {
       await cargarConfigYVisitas();
       await aplicarApariencia();
       await cargarBanners();
@@ -1087,12 +1100,9 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
         {id:'senales',nombre:'Señales',icono:'fa-tower-broadcast',query:'en vivo'},
         {id:'radios',nombre:'Radios',icono:'fa-radio'},
         {id:'artistas',nombre:'Artistas',icono:'fa-user-group'},
-        {id:'teatros',nombre:'Teatros',icono:'fa-masks-theater',query:'obra de teatro'},
-        {id:'circos',nombre:'Circos & Varieté',icono:'fa-tent',query:'circo variedades'},
         {id:'trending',nombre:'Tendencias',icono:'fa-fire'},
         {id:'shorts',nombre:'Shorts',icono:'fa-bolt'},
-        {id:'cartelera',nombre:'Cartelera',icono:'fa-ticket'},
-        {id:'conciertos',nombre:'Conciertos',icono:'fa-compact-disc',query:'concierto completo'}
+        {id:'cartelera',nombre:'Cartelera',icono:'fa-ticket'}
       ];
       const remotas = Array.isArray(seccionesRemotas) ? seccionesRemotas : [];
       seccionesActivas = seccionesBase.map(base => ({...base, ...(remotas.find(x => x?.id === base.id) || {})}));
@@ -1105,9 +1115,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       carteleraData = await obtenerDatos('cartelera'); renderCarteleraUI();
       cargarTendenciasPorPais(document.getElementById('countrySelectorHeader').value);
       cargarShortsExclusivos();
-      cargarSeccionDinamica('teatrosRail', 'teatros');
-      cargarSeccionDinamica('circosRail', 'circos');
-      cargarSeccionDinamica('conciertosRail', 'conciertos');
+      await cargarColeccionesHome();
       initCarouselDrag();
     }
   </script>
