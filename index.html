@@ -79,6 +79,10 @@
 #homeHeroText{max-width:650px;line-height:1.5}.uadav-home-empty{display:none!important}
 #mainContainer>section{content-visibility:auto;contain-intrinsic-size:260px}
 @media(max-width:720px){#homeHero{width:100%;min-height:260px;margin:0!important;border-radius:0;border-left:0;border-right:0}#homeHero>div.relative{min-height:260px!important;padding:34px 16px 28px!important}#homeHeroTitle{font-size:clamp(31px,10vw,42px)!important;max-width:94%;line-height:.98!important}#homeHeroText{font-size:12px!important;max-width:92%;margin-bottom:16px!important}#homeHero .flex.flex-wrap{gap:7px!important}#homeHero .flex.flex-wrap>a,#homeHero .flex.flex-wrap>button{padding:10px 14px!important;font-size:10px!important}#mainContainer{padding-top:20px!important}}
+
+/* V11.3 · limpieza definitiva de chrome público */
+.v10-mobile-bar,.v10-commission-tag{display:none!important}.uadav-v11-footer{max-width:1540px;margin:42px auto 0;padding:26px 28px 34px;border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;gap:24px;color:#687385;font:500 11px Outfit,system-ui}.uadav-v11-footer>div{display:flex;align-items:center;gap:12px}.uadav-v11-footer strong{color:#fff;font-size:13px;letter-spacing:.02em}.uadav-v11-footer nav{display:flex;gap:18px}.uadav-v11-footer a{color:#8791a0;text-decoration:none}.uadav-v11-footer a:hover{color:#fff}
+@media(max-width:720px){.uadav-v11-footer{margin-top:24px;padding:22px 16px 92px;display:block}.uadav-v11-footer>div{display:block}.uadav-v11-footer>div span{display:block;margin-top:5px}.uadav-v11-footer nav{margin-top:16px;gap:16px}}
 </style>
 
   <style id="uadav-v109-streaming">
@@ -200,7 +204,6 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
 
   <!-- Contenido principal -->
   <div id="pageContent">
-    <div class="v10-commission-tag">UADAV STREAM · V10.11.2</div>
 
     <header class="sticky top-0 z-40 bg-uadav-dark/90 backdrop-blur-xl border-b border-uadav-border">
       <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-6">
@@ -313,23 +316,9 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       <div id="queueList" class="space-y-1 max-h-40 overflow-y-auto no-scrollbar"></div>
     </div>
 
-    <nav class="v10-mobile-bar" aria-label="Navegación móvil">
-      <a href="/index.html?v=1011"><i class="fa-solid fa-house"></i><span>Inicio</span></a>
-      <a href="/shorts.html"><i class="fa-solid fa-play"></i><span>Shorts</span></a>
-      <a href="/artistas.html"><i class="fa-solid fa-users"></i><span>Artistas</span></a>
-      <a href="/cartelera.html"><i class="fa-solid fa-calendar-days"></i><span>Eventos</span></a>
-      <a href="/trabajo.html"><i class="fa-solid fa-briefcase"></i><span>Trabajo</span></a>
-    </nav>
-    <footer class="bg-[#050505] border-t border-uadav-border py-8 text-xs sm:text-sm text-slate-500">
-      <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="flex items-center gap-2 text-white font-black text-lg sm:text-xl">UADAV<span class="text-uadav-accent">STREAM</span></div>
-        <div class="text-center md:text-right space-y-2">
-          <div id="bannerFooterContainer" class="max-w-[1400px] mx-auto px-4 py-2"></div>
-          <p id="footerLegal" class="max-w-md text-slate-400">UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.</p>
-          
-          <p class="text-uadav-accent font-bold"><i class="fa-brands fa-whatsapp"></i> +54 341 3 602 783</p>
-        </div>
-      </div>
+    <footer id="publicFooter" class="uadav-v11-footer">
+      <div><strong>★ UADAV STREAM</strong><span>Artistas · espectáculos · contenido · radio</span></div>
+      <nav><a href="/terminos.html">Términos</a><a href="/privacidad.html">Privacidad</a><a href="/index.html?buscar=">Buscar</a></nav>
     </footer>
 
     <div id="artistModal" onclick="cerrarModalArtistaBackdrop(event)" class="fixed inset-0 z-50 bg-[#050505]/95 backdrop-blur-xl hidden flex items-center justify-center p-4">
