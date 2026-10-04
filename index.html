@@ -1107,7 +1107,9 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       }catch(e){console.warn('Colecciones Home:',e);host.innerHTML=''}
     }
 async function regionalizarHome(){
- try{const pref=localStorage.getItem('uadav_region_preference')||'',suf=pref?'&province='+encodeURIComponent(pref):'',fd=await fetch(API_URL+'public/federated-feed?kind=event&limit=80'+suf,{cache:'no-store'}).then(r=>r.ok?r.json():({items:[]})),ranked=Array.isArray(fd)?fd:(fd.items||[]),map=new Map();for(const x of [...ranked,...carteleraData])if(x?.id&&!map.has(String(x.id)))map.set(String(x.id),x);carteleraData=[...map.values()];renderCarteleraUI();const ad=await fetch(API_URL+'public/artistas-regional?limit=80'+suf,{cache:'no-store'}).then(r=>r.ok?r.json():({items:[]}));if(Array.isArray(ad?.items)&&ad.items.length){artistasData=ad.items;renderArtistasUI()}// La preferencia territorial se aplica al ranking sin superponer controles flotantes al contenido. }catch(e){console.warn('Regionalización Home:',e)}
+ try{const pref=localStorage.getItem('uadav_region_preference')||'',suf=pref?'&province='+encodeURIComponent(pref):'',fd=await fetch(API_URL+'public/federated-feed?kind=event&limit=80'+suf,{cache:'no-store'}).then(r=>r.ok?r.json():({items:[]})),ranked=Array.isArray(fd)?fd:(fd.items||[]),map=new Map();for(const x of [...ranked,...carteleraData])if(x?.id&&!map.has(String(x.id)))map.set(String(x.id),x);carteleraData=[...map.values()];renderCarteleraUI();const ad=await fetch(API_URL+'public/artistas-regional?limit=80'+suf,{cache:'no-store'}).then(r=>r.ok?r.json():({items:[]}));if(Array.isArray(ad?.items)&&ad.items.length){artistasData=ad.items;renderArtistasUI()}
+ // La preferencia territorial se aplica al ranking sin superponer controles flotantes al contenido.
+ }catch(e){console.warn('Regionalización Home:',e)}
 }
 async function cargarHome() {
       await cargarConfigYVisitas();
