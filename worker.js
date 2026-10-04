@@ -2093,22 +2093,21 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     }
     if (path === '/api/bolsa_trabajo/postular' && request.method === 'POST') {
       const b=await request.json().catch(()=>({}));
-      if(!b.job_id||!b.nombre||!b.email)return json({error:'Faltan datos'},400);
-      const token=String(b.artist_token||'').trim();
-      if(!token)return json({error:'La participación en la Bolsa de Trabajo es un beneficio para artistas afiliados. Ingresá desde tu perfil privado UADAVSTREAM.'},403);
-      const raw=await env.UADAV_DB.get(artistTokenKey(token));
-      if(!raw)return json({error:'Acceso de artista inválido o vencido'},401);
-      let access; try{access=JSON.parse(raw)}catch{return json({error:'Acceso de artista inválido'},401)}
-      if(access.expires&&Date.now()>access.expires)return json({error:'Acceso de artista vencido'},401);
-      const arr=await getArray('artistas');
-      const artist=arr.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id));
-      if(!artist || artist.afiliado_verificado!==true)return json({error:'La Bolsa de Trabajo está disponible para artistas afiliados UADAV verificados.'},403);
+      if(!b.job_id||!b.nombre||!b.email)return json({error:'Oportunidad, nombre y email son obligatorios'},400);
       const jobList=await getArray('bolsa_trabajo');
       const job=jobList.find(x=>String(x.id)===String(b.job_id)&&x.activo!==false);
       if(!job)return json({error:'Oportunidad no disponible'},404);
+      let artist_id='',artist_nombre='',perfil_verificado=false;
+      const token=String(b.artist_token||'').trim();
+      if(token){
+        try{
+          const raw=await env.UADAV_DB.get(artistTokenKey(token));
+          if(raw){const access=JSON.parse(raw);if(!access.expires||Date.now()<=access.expires){const artists=await getArray('artistas');const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id));if(artist){artist_id=String(access.artist_id);artist_nombre=String(artist.nombre_artistico||artist.nombre||'');perfil_verificado=artist.afiliado_verificado===true||artist.claimed===true}}}
+        }catch(_){}
+      }
       const list=await getArray('postulaciones_trabajo');
-      const item={id:'POST-'+Date.now().toString(36).toUpperCase(),job_id:String(b.job_id),artist_id:String(access.artist_id),artist_nombre:String(artist.nombre_artistico||artist.nombre||''),nombre:String(b.nombre).slice(0,120),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),creado:new Date().toISOString(),estado:'pendiente'};
-      list.push(item); while(list.length>1000)list.shift(); await putJSON('postulaciones_trabajo',list); await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id}); await emitNotification({event:'JOB_APPLICATION',to:String(job.contacto_email||job.email||''),subject:'★ UADAV STREAM · Nueva postulación',text:'Se recibió una postulación a una oportunidad laboral.',entity_id:item.id}); return json({success:true,item});
+      const item={id:'POST-'+Date.now().toString(36).toUpperCase(),job_id:String(b.job_id),artist_id,artist_nombre,nombre:String(b.nombre).slice(0,120),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),portfolio_url:String(b.portfolio_url||b.portfolio||'').slice(0,500),perfil_verificado,origen:artist_id?'perfil_artista':'publico',creado:new Date().toISOString(),estado:'pendiente'};
+      list.push(item); while(list.length>2000)list.shift(); await putJSON('postulaciones_trabajo',list); await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id||null,public:!item.artist_id}); await emitNotification({event:'JOB_APPLICATION',to:String(job.contacto_email||job.email||''),subject:'★ UADAV STREAM · Nueva postulación',text:'Se recibió una postulación a una oportunidad laboral.',entity_id:item.id}); return json({success:true,item});
     }
     if (path === '/api/bolsa_trabajo/postulaciones' && request.method === 'GET') {
       if(!isAdmin())return json({error:'No autorizado'},401); return json(await getArray('postulaciones_trabajo'));
