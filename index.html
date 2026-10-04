@@ -950,29 +950,16 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       }catch(e){console.warn('Live Argentina:',e);sec.classList.add('hidden')}
     }
     async function cargarShortsExclusivos() {
-      const rail = document.getElementById('shortsRail'); if (!rail) return;
-      const cacheKey = 'uadav_cache_shorts_v10_2';
-      let items = [];
-      try {
-        const cached = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-        if (Array.isArray(cached) && cached.length) items = cached.map(normalizarResultadoVideo).filter(Boolean);
-      } catch {}
-      if (!items.length) {
-        const data = await obtenerVideos('shorts música artistas');
-        if (Array.isArray(data)) {
-          items = data.filter(item => item.tipo === 'short' || (Number(item.duracion) > 0 && Number(item.duracion) <= 180)).slice(0, 12);
-          // Algunas fuentes no entregan duración. En ese caso igual mostramos los
-          // resultados de una búsqueda específica de Shorts, en formato vertical.
-          if (!items.length) items = data.slice(0, 12).map(x => ({...x, tipo:'short', content_type:'short'}));
-          if (items.length) localStorage.setItem(cacheKey, JSON.stringify(items));
-        }
-      }
-      rail.innerHTML = '';
-      if (!items.length) {
-        rail.innerHTML = '<div class="py-8 text-slate-500 text-xs">No hay Shorts disponibles en este momento.</div>';
-        return;
-      }
-      items.forEach(item => rail.appendChild(crearShortCard(item)));
+      const rail=document.getElementById('shortsRail');if(!rail)return;let items=[];
+      try{
+        const artists=Array.isArray(artistasData)?artistasData.filter(a=>a?.canal).slice(0,12):[];
+        const batches=await Promise.allSettled(artists.slice(0,6).map(a=>fetch(API_URL+'public/artist-shorts?artist_id='+encodeURIComponent(a.id||a.canal)).then(r=>r.ok?r.json():[])));
+        items=batches.flatMap(r=>r.status==='fulfilled'&&Array.isArray(r.value)?r.value:[]).filter(Boolean);
+      }catch(_){}
+      if(!items.length){try{const data=await obtenerVideos('shorts artistas Argentina');if(Array.isArray(data))items=data.filter(x=>x.tipo==='short'||(Number(x.duracion)>0&&Number(x.duracion)<=180)).slice(0,12)}catch(_){}}
+      const seen=new Set();items=items.filter(x=>{const k=String(x.video_id||x.external_id||x.id||x.url||'');if(!k||seen.has(k))return false;seen.add(k);return true}).slice(0,18);
+      rail.innerHTML='';if(!items.length){rail.innerHTML='<div class="py-8 text-slate-500 text-xs">No hay Shorts disponibles en este momento.</div>';return}
+      items.forEach(item=>rail.appendChild(crearShortCard(normalizarResultadoVideo({...item,id:item.video_id||item.external_id||item.id,titulo:item.title||item.titulo,descripcion:item.artist_name||item.descripcion,tipo:'short',content_type:'short'}))));
     }
 
     function searchEsc(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[ch]))}
