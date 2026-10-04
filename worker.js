@@ -2292,6 +2292,16 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       const d1=await artistsFromD1({search:q,category,province}); const kv=await allCanonicalArtists(); const map=new Map(); for(const a of (Array.isArray(d1)?d1:[])){const p=publicArtistFromItem(a);map.set(String(p.id||p.nombre).toLowerCase(),a)} for(const a of kv){const p=publicArtistFromItem(a),key=String(p.id||p.nombre).toLowerCase();map.set(key,{...(map.get(key)||{}),...a})} const arr=[...map.values()];
       return json(arr.map(publicArtistFromItem).filter(a=>{if(!a.visible||['suspendido','bloqueado','oculto'].includes(String(a.estado||'').toLowerCase()))return false;const text=normalizeSearchText([a.nombre,a.rubro,a.ciudad,a.provincia].join(' '));if(q&&!text.includes(normalizeSearchText(q)))return false;if(category&&!normalizeSearchText(a.rubro).includes(normalizeSearchText(category)))return false;return true}));
     }
+    if(path==='/api/public/artist-shorts' && request.method==='GET'){
+      const raw=String(url.searchParams.get('artist_id')||url.searchParams.get('channel_id')||'').trim();if(!raw)return json([]);
+      const artists=await allCanonicalArtists();const artist=artists.find(a=>{const p=publicArtistFromItem(a);return [p.id,p.canal,a.channel_id,a.youtube_id].some(v=>String(v||'')===raw)});if(!artist)return json([]);
+      const p=publicArtistFromItem(artist),channel=String(p.canal||'').trim();if(!channel)return json([]);
+      const cacheKey='artist_shorts_'+channel.replace(/[^A-Za-z0-9_-]/g,'').slice(0,100);
+      try{const cached=await env.UADAV_DB.get(cacheKey,{type:'json'});if(Array.isArray(cached))return json(cached)}catch(_){}
+      const vids=await invidiousChannelVideos(channel,36).catch(()=>[]);
+      const shorts=vids.filter(v=>{const len=Number(v.lengthSeconds||0),title=String(v.title||'');return (len>0&&len<=180)||/#shorts?\b|\bshorts?\b/i.test(title)}).slice(0,18).map(v=>{const id=String(v.videoId||v.id||'');return{provider:'youtube',content_type:'short',format:'vertical',video_id:id,external_id:id,url:'https://www.youtube.com/shorts/'+id,title:String(v.title||p.nombre),artist_id:p.id,artist_name:p.nombre,artist_photo:p.foto,channel_id:channel,duration:Number(v.lengthSeconds||0),thumbnail:String(v.videoThumbnails?.[0]?.url||('https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'))}});
+      try{await env.UADAV_DB.put(cacheKey,JSON.stringify(shorts),{expirationTtl:900})}catch(_){}return json(shorts);
+    }
     if(path==='/api/public/live-artists' && request.method==='GET'){
       const artists=(await allCanonicalArtists()).filter(a=>{const p=publicArtistFromItem(a);return p.visible!==false&&!!p.canal}).slice(0,80);
       let cursor=Number(await env.UADAV_DB.get('public_live_cursor')||0), found=[];
