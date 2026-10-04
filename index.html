@@ -595,9 +595,14 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
 
     async function cargarConfigYVisitas() {
       let landing = {}, visibility = {};
-      try { const res = await fetch(API_URL + 'config?_=' + Date.now()); if (res.ok) configGlobal = await res.json() || configGlobal; } catch(e) {}
-      try { const res = await fetch(API_URL + 'landing_config?_=' + Date.now()); if (res.ok) landing = await res.json() || {}; } catch(e) {}
-      try { const res = await fetch(API_URL + 'web_visibility?_=' + Date.now()); if (res.ok) visibility = await res.json() || {}; } catch(e) {}
+      const stamp=Date.now(),packs=await Promise.allSettled([
+        fetch(API_URL+'config?_='+stamp).then(r=>r.ok?r.json():null),
+        fetch(API_URL+'landing_config?_='+stamp).then(r=>r.ok?r.json():null),
+        fetch(API_URL+'web_visibility?_='+stamp).then(r=>r.ok?r.json():null)
+      ]);
+      if(packs[0].status==='fulfilled'&&packs[0].value)configGlobal=packs[0].value||configGlobal;
+      if(packs[1].status==='fulfilled'&&packs[1].value)landing=packs[1].value||{};
+      if(packs[2].status==='fulfilled'&&packs[2].value)visibility=packs[2].value||{};
       window.__uadavVisibility=visibility;
       const selector=document.getElementById('countrySelectorHeader');if(selector)selector.value=(configGlobal.pais_trending&&configGlobal.pais_trending!=='Auto')?configGlobal.pais_trending:'AR';
       const countryBadge=document.getElementById('countryBadge');if(countryBadge&&configGlobal.mostrar_ip)countryBadge.classList.remove('hidden');
@@ -609,7 +614,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       if(hero&&(visibility.hero===false||landing.brand_hero_enabled===false))hero.classList.add('hidden');
       const visibilityMap={live:'senalesSection',radios:'radiosSection',artists:'artistasSection',shorts:'shortsSection',cartelera:'carteleraSection',collections:'dynamicCollections'};
       for(const [key,id] of Object.entries(visibilityMap)){const el=document.getElementById(id);if(el&&visibility[key]===false)el.classList.add('hidden')}
-      try { await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
+      fetch(API_URL + 'visits', { method: 'POST' }).catch(()=>{});
     }
 
     async function obtenerDatos(seccion) { 
