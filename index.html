@@ -1101,6 +1101,9 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
         setTimeout(refreshHomeEditorial,100);
       }catch(e){console.warn('Colecciones Home:',e);host.innerHTML=''}
     }
+async function regionalizarHome(){
+ try{const pref=localStorage.getItem('uadav_region_preference')||'',suf=pref?'&province='+encodeURIComponent(pref):'',fd=await fetch(API_URL+'public/federated-feed?kind=event&limit=80'+suf,{cache:'no-store'}).then(r=>r.ok?r.json():({items:[]})),ranked=Array.isArray(fd)?fd:(fd.items||[]),map=new Map();for(const x of [...ranked,...carteleraData])if(x?.id&&!map.has(String(x.id)))map.set(String(x.id),x);carteleraData=[...map.values()];renderCarteleraUI();const ad=await fetch(API_URL+'public/artistas-regional?limit=80'+suf,{cache:'no-store'}).then(r=>r.ok?r.json():({items:[]}));if(Array.isArray(ad?.items)&&ad.items.length){artistasData=ad.items;renderArtistasUI()}let bar=document.getElementById('uadavRegionBar');if(!bar){bar=document.createElement('div');bar.id='uadavRegionBar';bar.className='fixed bottom-20 sm:bottom-5 right-3 z-[70] bg-[#101114]/95 border border-white/10 rounded-full px-3 py-2 shadow-2xl backdrop-blur';document.body.appendChild(bar)}const detected=pref||fd?.context?.province||'Argentina',provs=['Santa Fe','Córdoba','Tucumán','Buenos Aires','Ciudad Autónoma de Buenos Aires','Entre Ríos','Mendoza','Salta','Jujuy','Chaco','Corrientes','Misiones','Santiago del Estero','San Juan','San Luis','La Rioja','Catamarca','La Pampa','Neuquén','Río Negro','Chubut','Santa Cruz','Tierra del Fuego','Formosa'];bar.innerHTML='<label class="text-[10px] font-black text-slate-400 mr-2">📍 '+searchEsc(detected)+'</label><select id="uadavRegionSelect" class="bg-transparent text-xs text-white outline-none"><option value="">Automático</option><option value="Toda Argentina">Toda Argentina</option>'+provs.map(x=>'<option value="'+searchEsc(x)+'" '+(pref===x?'selected':'')+'>'+searchEsc(x)+'</option>').join('')+'</select>';document.getElementById('uadavRegionSelect').onchange=e=>{const v=e.target.value;if(!v||v==='Toda Argentina')localStorage.removeItem('uadav_region_preference');else localStorage.setItem('uadav_region_preference',v);location.reload()}}catch(e){console.warn('Regionalización Home:',e)}
+}
 async function cargarHome() {
       await cargarConfigYVisitas();
       await aplicarApariencia();
@@ -1122,7 +1125,7 @@ async function cargarHome() {
       senalesData = await obtenerDatos('senales_oficiales'); renderSenalesUI();
       artistasData = await obtenerDatos('public/artistas'); renderArtistasUI();
       radiosData = await obtenerDatos('radios'); renderRadiosUI();
-      carteleraData = await obtenerDatos('cartelera'); renderCarteleraUI(); startPremiumHero();
+      carteleraData = await obtenerDatos('cartelera'); renderCarteleraUI(); await regionalizarHome(); startPremiumHero();
       cargarTendenciasPorPais(document.getElementById('countrySelectorHeader').value);
       cargarShortsExclusivos();
       cargarArtistasEnVivo();
