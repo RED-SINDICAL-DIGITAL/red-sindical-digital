@@ -1116,7 +1116,6 @@ async function cargarHome() {
       await safe('config',()=>cargarConfigYVisitas());
       await safe('apariencia',()=>aplicarApariencia());
       await safe('banners',()=>cargarBanners());
-      const seccionesRemotas = await obtenerDatos('secciones');
       const seccionesBase = [
         {id:'senales',nombre:'Señales',icono:'fa-tower-broadcast',query:'en vivo'},
         {id:'radios',nombre:'Radios',icono:'fa-radio'},
@@ -1125,15 +1124,15 @@ async function cargarHome() {
         {id:'shorts',nombre:'Shorts',icono:'fa-bolt'},
         {id:'cartelera',nombre:'Cartelera',icono:'fa-ticket'}
       ];
+      const [seccionesRemotas,senales,artistas,radios,cartelera]=await Promise.all([
+        obtenerDatos('secciones'),obtenerDatos('senales_oficiales'),obtenerDatos('public/artistas'),obtenerDatos('radios'),obtenerDatos('cartelera')
+      ]);
       const remotas = Array.isArray(seccionesRemotas) ? seccionesRemotas : [];
       seccionesActivas = seccionesBase.map(base => ({...base, ...(remotas.find(x => x?.id === base.id) || {})}));
-      aplicarVisibilidadSecciones();
-      aplicarTitulosDinamicos();
-      renderNavbar();
-      senalesData = await obtenerDatos('senales_oficiales'); renderSenalesUI();
-      artistasData = await obtenerDatos('public/artistas'); renderArtistasUI();
-      radiosData = await obtenerDatos('radios'); renderRadiosUI();
-      carteleraData = await obtenerDatos('cartelera'); renderCarteleraUI(); await safe('regionalización',()=>regionalizarHome()); startPremiumHero();
+      aplicarVisibilidadSecciones(); aplicarTitulosDinamicos(); renderNavbar();
+      senalesData=senales; artistasData=artistas; radiosData=radios; carteleraData=cartelera;
+      renderSenalesUI(); renderArtistasUI(); renderRadiosUI(); renderCarteleraUI();
+      safe('regionalización',()=>regionalizarHome()).then(()=>startPremiumHero());
       cargarTendenciasPorPais(document.getElementById('countrySelectorHeader').value);
       cargarShortsExclusivos();
       cargarArtistasEnVivo();
