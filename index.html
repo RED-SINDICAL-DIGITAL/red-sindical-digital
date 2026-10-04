@@ -777,58 +777,12 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
     }
 
     // ===== RADIOS =====
-    function renderRadiosUI() {
-      const container = document.getElementById('radiosGrid'); if(!container) return; container.innerHTML = '';
+    function renderRadiosUI(){
+      const container=document.getElementById('radiosGrid');if(!container)return;container.innerHTML='';
       radiosData=(Array.isArray(radiosData)?radiosData:[]).map((r,i)=>({...r,id:r.id||('radio-'+i),nombre:r.nombre||r.name||'Radio',stream_url:r.stream_url||r.url||r.stream||'',logo:r.logo||r.imagen||r.portada||FALLBACK_THUMB,ubicacion:r.ubicacion||[r.ciudad,r.provincia,r.pais].filter(Boolean).join(' · ')})).filter(r=>r.stream_url);
-      const radiosMostrar = radiosData; const principal = radiosMostrar.find(r => r.es_oficial) || radiosMostrar[0];
-      if (principal) {
-        container.innerHTML += `<div id="radio-card-${principal.id}" class="tv-focusable relative md:col-span-3 radio-hero rounded-3xl p-6 sm:p-8 cursor-pointer group shadow-2xl transition-all overflow-hidden flex flex-col md:flex-row items-center gap-6 md:gap-10" onclick="sintonizarRadio('${principal.nombre}', '${principal.stream_url}', '${principal.logo}', '${principal.ubicacion}')">
-          <div class="absolute top-0 right-0 bg-uadav-accent text-slate-950 font-black text-[10px] sm:text-xs px-4 py-1.5 rounded-bl-2xl uppercase tracking-widest shadow-md"><i class="fa-solid fa-star mr-1"></i> EMISORA OFICIAL</div>
-          <div class="relative w-32 h-32 sm:w-48 sm:h-48 flex-shrink-0"><img src="${principal.logo}" class="w-full h-full rounded-2xl object-cover radio-hero-cover transition-transform group-hover:scale-105" alt="${principal.nombre}"><div class="absolute inset-0 bg-black/30 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><div class="w-16 h-16 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-black text-2xl shadow-lg"><i class="fa-solid fa-play ml-1"></i></div></div></div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-2"><span class="inline-flex items-center gap-1.5 bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"><span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span> LIVE</span><span class="text-[10px] text-uadav-accent font-black uppercase tracking-widest">${principal.bitrate || 'HD'} · ${principal.ubicacion || 'Global'}</span></div>
-            <h3 class="text-2xl sm:text-4xl font-black text-white group-hover:text-uadav-accent transition-colors leading-tight mb-2">${principal.nombre}</h3>
-            <p class="text-xs sm:text-sm text-slate-300 mb-4">${principal.descripcion || 'Transmisión oficial'}</p>
-            <div class="flex items-center gap-3 bg-[#0a0a0c]/80 border border-uadav-border/50 rounded-xl p-3 backdrop-blur-md"><i class="fa-solid fa-music text-uadav-accent animate-pulse"></i><div class="overflow-hidden"><p id="radio-main-song" class="font-bold text-sm sm:text-base text-white truncate">${principal.tema_actual || 'Cargando tema...'}</p><p id="radio-main-artist" class="text-xs text-uadav-accent truncate">${principal.artista_actual || 'Artista'}</p></div></div>
-          </div>
-          <div class="flex flex-col items-center gap-3">
-            <button class="bg-uadav-accent group-hover:bg-white text-slate-950 font-black text-sm px-8 py-3 rounded-full flex items-center gap-2 shadow-lg transition-all"><i class="fa-solid fa-play"></i> Sintonizar</button>
-            <div class="flex items-center gap-1 h-6" id="radio-eq-${principal.id}" style="display: none;"><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.1s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.4s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.2s"></span><span class="w-1 bg-uadav-accent rounded-full equalizer-bar" style="animation-delay: 0.5s"></span></div>
-          </div>
-        </div>`;
-      }
-      radiosMostrar.filter(r => !principal || String(r.id)!==String(principal.id)).forEach(radio => {
-        container.innerHTML += `<div id="radio-card-${radio.id}" class="radio-mini tv-focusable bg-uadav-card border border-uadav-border hover:border-uadav-accent rounded-2xl p-4 cursor-pointer group transition-all flex flex-col justify-between" onclick="sintonizarRadio('${radio.nombre}', '${radio.stream_url}', '${radio.logo}', '${radio.ubicacion}')">
-          <div class="flex items-center gap-4"><div class="relative w-16 h-16 flex-shrink-0"><img src="${radio.logo}" class="w-full h-full rounded-xl object-cover border border-uadav-border" alt="${radio.nombre}"><div class="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><div class="w-8 h-8 bg-uadav-accent text-slate-950 rounded-full flex items-center justify-center font-bold"><i class="fa-solid fa-play ml-0.5 text-xs"></i></div></div></div><div class="min-w-0 flex-1"><span class="text-[9px] text-uadav-accent font-black tracking-widest uppercase block mb-0.5">Radio</span><h4 class="font-black text-white group-hover:text-uadav-accent transition-colors truncate">${radio.nombre}</h4><p class="text-[10px] text-slate-400 truncate">${radio.descripcion || ''}</p></div></div>
-          <div class="mt-3 flex items-center justify-between">
-            <div class="flex items-center gap-2 bg-[#0a0a0c] border border-uadav-border rounded-lg px-2 py-1.5 min-w-0 flex-1"><i class="fa-solid fa-music text-uadav-accent text-xs animate-pulse"></i><span class="text-[10px] font-bold text-white truncate" id="radio-mini-song-${radio.id}">${radio.tema_actual || 'Sin tema'}</span></div>
-            <div class="flex items-center gap-2 ml-2"><div class="hidden radio-eq-live" id="radio-eq-${radio.id}"><span style="animation-delay: 0.1s"></span><span style="animation-delay: 0.4s"></span><span style="animation-delay: 0.2s"></span></div><button class="play-btn w-8 h-8 bg-slate-900 border border-uadav-border text-uadav-accent rounded-full flex items-center justify-center font-bold hover:bg-uadav-accent hover:text-slate-950 transition-all" onclick="event.stopPropagation(); sintonizarRadio('${radio.nombre}', '${radio.stream_url}', '${radio.logo}', '${radio.ubicacion}')"><i class="fa-solid fa-play ml-0.5 text-xs"></i></button></div>
-          </div>
-        </div>`;
-      });
-    }
-
-    let isRadioPlaying = false;
-    const audioStream = document.getElementById('audioStream');
-    const volumeSlider = document.getElementById('volumeSlider');
-    const savedVol = localStorage.getItem('uadav_volume');
-    if (savedVol !== null) { audioStream.volume = parseFloat(savedVol); volumeSlider.value = savedVol * 100; }
-    volumeSlider.addEventListener('input', (e) => { const vol = parseFloat(e.target.value) / 100; audioStream.volume = vol; localStorage.setItem('uadav_volume', vol); });
-
-    window.handleDeezerRadioCover = function(data) {
-      if (data && data.data && data.data.length > 0) {
-        document.getElementById('radioPlayerImg').src = data.data[0].album.cover_big;
-        const activeId = activeRadioId;
-        if (activeId) { const heroImg = document.querySelector(`#radio-card-${activeId} img`); if (heroImg) heroImg.src = data.data[0].album.cover_big; }
-      }
-    };
-
-    function updateRadioCardMetadata(radioId, song, artist) {
-      const heroSong = document.getElementById('radio-main-song');
-      const heroArtist = document.getElementById('radio-main-artist');
-      if (heroSong && heroArtist && activeRadioId === radioId) { heroSong.innerText = song; heroArtist.innerText = artist || 'Artista'; }
-      const miniSong = document.getElementById(`radio-mini-song-${radioId}`);
-      if (miniSong) miniSong.innerText = `${song} - ${artist}`;
+      container.className='flex gap-4 overflow-x-auto pb-3 no-scrollbar';
+      for(const r of radiosData){const card=document.createElement('button');card.type='button';card.className='tv-focusable group min-w-[132px] sm:min-w-[150px] bg-transparent text-left flex-shrink-0';card.innerHTML='<div class="relative w-[112px] h-[112px] sm:w-[128px] sm:h-[128px] mx-auto rounded-full overflow-hidden border border-white/10 bg-[#111] shadow-xl"><img src="'+searchEsc(r.logo)+'" alt="" class="w-full h-full object-cover"><span class="absolute inset-0 grid place-items-center bg-black/15 group-hover:bg-black/35 transition"><span class="w-11 h-11 rounded-full bg-white text-black grid place-items-center shadow-lg"><i class="fa-solid fa-play ml-0.5"></i></span></span></div><strong class="block text-sm text-white mt-3 truncate">'+searchEsc(r.nombre)+'</strong><span class="block text-[10px] text-slate-500 truncate mt-1">'+searchEsc(r.programa||r.ubicacion||'Radio en vivo')+'</span>';card.onclick=()=>sintonizarRadio(r.nombre,r.stream_url,r.logo,r.ubicacion);container.appendChild(card)}
+      if(!radiosData.length)container.innerHTML='<p class="text-xs text-slate-500">No hay radios disponibles.</p>';
     }
 
     function sintonizarRadio(nombre, streamUrl, caratula, ubicacion) {
