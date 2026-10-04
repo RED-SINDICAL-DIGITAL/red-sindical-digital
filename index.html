@@ -574,22 +574,20 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
 
     async function cargarConfigYVisitas() {
       let landing = {}, visibility = {};
-      try { const res = await fetch(API_URL + 'config?_=' + Date.now()); if (res.ok) configGlobal = await res.json(); } catch(e) {}
+      try { const res = await fetch(API_URL + 'config?_=' + Date.now()); if (res.ok) configGlobal = await res.json() || configGlobal; } catch(e) {}
       try { const res = await fetch(API_URL + 'landing_config?_=' + Date.now()); if (res.ok) landing = await res.json() || {}; } catch(e) {}
       try { const res = await fetch(API_URL + 'web_visibility?_=' + Date.now()); if (res.ok) visibility = await res.json() || {}; } catch(e) {}
-      const selector = document.getElementById('countrySelectorHeader'); if (configGlobal.pais_trending && configGlobal.pais_trending !== 'Auto' && configGlobal.pais_trending !== '') selector.value = configGlobal.pais_trending; else selector.value = 'AR';
-      if (configGlobal.mostrar_ip) { document.getElementById('countryBadge').classList.remove('hidden'); }
-      document.getElementById('footerLegal').innerText = configGlobal.texto_legal || "UADAV STREAM es un desarrollo de Beat Digital Medios. No hospeda contenido, solo indexa señales públicas.";
-      const heroTitle = landing.brand_hero_title || configGlobal.hero_titulo || "DESCUBRÍ. CONECTÁ. VIVÍ.";
-      const heroDesc = landing.brand_hero_description || "Descubrí artistas, música, videos, espectáculos y oportunidades. Todo en una experiencia creada para disfrutar, conectar y hacer crecer la carrera artística.";
-      const heroSub = landing.brand_hero_subtitle || "★ UADAV STREAM";
-      document.getElementById('heroTitulo').innerText = heroTitle;
-      document.getElementById('heroSub').innerText = heroSub;
-      const heroText = document.querySelector('#heroSub + p'); if (heroText) heroText.innerText = heroDesc;
-      const heroBg = document.querySelector('header + section > div.absolute:first-child'); if (heroBg && landing.brand_hero_image) heroBg.style.backgroundImage = "url('" + String(landing.brand_hero_image).replace(/'/g,"%27") + "')";
-      document.getElementById('heroBtnTexto').innerText = landing.brand_hero_button_text || configGlobal.hero_boton_texto || "Empezar a descubrir";
-      document.getElementById('heroBtn').onclick=()=>{const target=landing.brand_hero_button_url||configGlobal.hero_boton_url||'#artistasSection';if(target.startsWith('#'))document.querySelector(target)?.scrollIntoView({behavior:'smooth'});else if(target)location.href=target};
-      if (visibility.hero === false || landing.brand_hero_enabled === false) document.querySelector('header + section')?.classList.add('hidden');
+      window.__uadavVisibility=visibility;
+      const selector=document.getElementById('countrySelectorHeader');if(selector)selector.value=(configGlobal.pais_trending&&configGlobal.pais_trending!=='Auto')?configGlobal.pais_trending:'AR';
+      const countryBadge=document.getElementById('countryBadge');if(countryBadge&&configGlobal.mostrar_ip)countryBadge.classList.remove('hidden');
+      const title=document.getElementById('homeHeroTitle'),text=document.getElementById('homeHeroText'),ctx=document.getElementById('homeContext'),hero=document.getElementById('homeHero');
+      if(title)title.textContent=landing.brand_hero_title||configGlobal.hero_titulo||'Todo lo que querés ver, escuchar y encontrar.';
+      if(text)text.textContent=landing.brand_hero_description||'Artistas, espectáculos, música, radio, oportunidades y contenido para descubrir.';
+      if(ctx)ctx.textContent=landing.brand_hero_subtitle||'★ UADAV STREAM';
+      const bg=document.getElementById('homeHeroBackdrop');if(bg&&landing.brand_hero_image){bg.style.backgroundImage='linear-gradient(90deg,rgba(5,5,5,.97),rgba(5,5,5,.30)),url("'+String(landing.brand_hero_image).replace(/"/g,'%22')+'")';bg.style.backgroundSize='cover';bg.style.backgroundPosition='center'}
+      if(hero&&(visibility.hero===false||landing.brand_hero_enabled===false))hero.classList.add('hidden');
+      const visibilityMap={live:'senalesSection',radios:'radiosSection',artists:'artistasSection',shorts:'shortsSection',cartelera:'carteleraSection',collections:'dynamicCollections'};
+      for(const [key,id] of Object.entries(visibilityMap)){const el=document.getElementById(id);if(el&&visibility[key]===false)el.classList.add('hidden')}
       try { await fetch(API_URL + 'visits', { method: 'POST' }); } catch(e) {}
     }
 
@@ -1083,7 +1081,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
       return '<article class="v11-collection-card group shrink-0 w-[72vw] sm:w-[280px] lg:w-[310px] cursor-pointer" data-kind="'+searchEsc(type)+'" data-url="'+searchEsc(url)+'" data-title="'+searchEsc(title)+'"><div class="aspect-video rounded-2xl overflow-hidden bg-white/5 border border-white/10">'+(img?'<img src="'+searchEsc(img)+'" alt="" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]">':'<div class="w-full h-full flex items-center justify-center text-3xl text-white/20">★</div>')+'</div><div class="pt-2.5"><h3 class="text-sm sm:text-base font-bold text-white truncate">'+searchEsc(title)+'</h3><p class="text-[11px] text-slate-500 mt-1">'+(type==='event'?'Evento':'Contenido')+(item.categoria?' · '+searchEsc(item.categoria):'')+'</p></div></article>';
     }
     async function cargarColeccionesHome(){
-      const host=document.getElementById('dynamicCollections');if(!host)return;
+      const host=document.getElementById('dynamicCollections');if(!host)return;if(window.__uadavVisibility?.collections===false){host.classList.add('hidden');return}
       try{
         const cols=await obtenerDatos('collections');
         host.innerHTML=(Array.isArray(cols)?cols:[]).filter(x=>x&&x.active!==false&&Array.isArray(x.items)&&x.items.length).sort((a,b)=>Number(a.orden||0)-Number(b.orden||0)).map(col=>'<section class="v11-dynamic-collection space-y-3"><div class="flex items-end justify-between gap-3"><div><div class="text-[9px] font-black tracking-[.18em] uppercase text-uadav-accent">Explorá</div><h2 class="text-xl sm:text-2xl font-black text-white">'+searchEsc(col.titulo||'Colección')+'</h2>'+(col.descripcion?'<p class="text-xs text-slate-500 mt-1 max-w-2xl">'+searchEsc(col.descripcion)+'</p>':'')+'</div></div><div class="v11-collection-rail flex gap-3 overflow-x-auto pb-3 no-scrollbar">'+col.items.map(collectionCard).join('')+'</div></section>').join('');
