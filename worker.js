@@ -2292,6 +2292,19 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       const d1=await artistsFromD1({search:q,category,province}); const kv=await allCanonicalArtists(); const map=new Map(); for(const a of (Array.isArray(d1)?d1:[])){const p=publicArtistFromItem(a);map.set(String(p.id||p.nombre).toLowerCase(),a)} for(const a of kv){const p=publicArtistFromItem(a),key=String(p.id||p.nombre).toLowerCase();map.set(key,{...(map.get(key)||{}),...a})} const arr=[...map.values()];
       return json(arr.map(publicArtistFromItem).filter(a=>{if(!a.visible||['suspendido','bloqueado','oculto'].includes(String(a.estado||'').toLowerCase()))return false;const text=normalizeSearchText([a.nombre,a.rubro,a.ciudad,a.provincia].join(' '));if(q&&!text.includes(normalizeSearchText(q)))return false;if(category&&!normalizeSearchText(a.rubro).includes(normalizeSearchText(category)))return false;return true}));
     }
+    if(path==='/api/public/live-artists' && request.method==='GET'){
+      const artists=(await allCanonicalArtists()).filter(a=>{const p=publicArtistFromItem(a);return p.visible!==false&&!!p.canal}).slice(0,80);
+      let cursor=Number(await env.UADAV_DB.get('public_live_cursor')||0), found=[];
+      for(let n=0;n<Math.min(4,artists.length);n++){
+        const a=artists[(cursor+n)%artists.length],p=publicArtistFromItem(a),info=await invidiousChannelInfo(p.canal).catch(()=>null);
+        const v=(Array.isArray(info?.latestVideos)?info.latestVideos:[]).find(x=>x?.liveNow===true||x?.isLive===true||String(x?.liveBroadcastContent||'').toLowerCase()==='live');
+        if(v?.videoId)found.push({artist_id:p.id,artist_name:p.nombre,artist_photo:p.foto,channel_id:p.canal,provider:'youtube',video_id:String(v.videoId),title:String(v.title||p.nombre),thumbnail:String(v.videoThumbnails?.[0]?.url||''),detected_at:isoNow()});
+      }
+      if(artists.length){cursor=(cursor+4)%artists.length;await env.UADAV_DB.put('public_live_cursor',String(cursor))}
+      let registry=(await getArray('public_live_registry')).filter(x=>Date.now()-Date.parse(x.detected_at||0)<180000);
+      for(const x of found)registry=[x,...registry.filter(y=>String(y.channel_id)!==String(x.channel_id))];
+      registry=registry.slice(0,24);await putJSON('public_live_registry',registry);return json(registry);
+    }
     if(path==='/api/public/artista' && request.method==='GET'){
       const rawId=decodeURIComponent(String(url.searchParams.get('id')||url.searchParams.get('artist')||'')).trim();
       const norm=v=>String(v||'').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,''); const id=norm(rawId); const arr=await allCanonicalArtists();
