@@ -84,7 +84,7 @@
 #liveArtistsSection,#liveArgentinaSection{padding:18px;border:1px solid rgba(255,255,255,.08);border-radius:24px;background:linear-gradient(120deg,rgba(255,54,84,.055),rgba(47,109,246,.035),transparent 68%)}
 #liveArtistsRail article,#liveArgentinaRail article{min-width:280px;transition:.18s transform,.18s border-color}#liveArtistsRail article:hover,#liveArgentinaRail article:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.22)}
 #radiosSection{padding:18px 0 4px}#radiosGrid{align-items:flex-start}
-@media(min-width:1180px){#mainContainer{display:flex!important;flex-direction:column!important}#senalesSection{order:1!important}#liveArtistsSection{order:2!important}#trendingSection{order:3!important}#artistasSection{order:4!important}#carteleraSection{order:5!important}#shortsSection{order:6!important}#entertainmentDiscovery{order:7!important}#radiosSection{order:8!important}#liveArgentinaSection{order:9!important}#dynamicCollections{order:10!important}#bannerInfeedContainer{order:11!important}}
+@media(min-width:1180px){#mainContainer{display:flex!important;flex-direction:column!important}#continueSection{order:0!important}#senalesSection{order:1!important}#liveArtistsSection{order:2!important}#trendingSection{order:3!important}#artistasSection{order:4!important}#carteleraSection{order:5!important}#shortsSection{order:6!important}#entertainmentDiscovery{order:7!important}#radiosSection{order:8!important}#liveArgentinaSection{order:9!important}#dynamicCollections{order:10!important}#bannerInfeedContainer{order:11!important}}
 @media(max-width:720px){#entertainmentDiscovery{gap:28px}#liveArtistsSection,#liveArgentinaSection{margin-left:-4px;margin-right:-4px;padding:14px;border-radius:20px}#liveArtistsRail article,#liveArgentinaRail article{min-width:min(82vw,310px)}}
 @media(max-width:720px){#homeHero{width:100%;min-height:260px;margin:0!important;border-radius:0;border-left:0;border-right:0}#homeHero>div.relative{min-height:260px!important;padding:34px 16px 28px!important}#homeHeroTitle{font-size:clamp(31px,10vw,42px)!important;max-width:94%;line-height:.98!important}#homeHeroText{font-size:12px!important;max-width:92%;margin-bottom:16px!important}#homeHero .flex.flex-wrap{gap:7px!important}#homeHero .flex.flex-wrap>a,#homeHero .flex.flex-wrap>button{padding:10px 14px!important;font-size:10px!important}#mainContainer{padding-top:20px!important}}
 
@@ -1115,7 +1115,10 @@ async function regionalizarHome(){
  // La preferencia territorial se aplica al ranking sin superponer controles flotantes al contenido.
  }catch(e){console.warn('Regionalización Home:',e)}
 }
+function renderContinueHome(){let list=[];try{list=JSON.parse(localStorage.getItem('uadav_recent_v11')||'[]')}catch{}const sec=document.getElementById('continueSection'),rail=document.getElementById('continueRail');if(!sec||!rail)return;if(!Array.isArray(list)||!list.length){sec.classList.add('hidden');rail.innerHTML='';return}const escH=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));rail.innerHTML=list.slice(0,12).map((x,i)=>{const id=normalizarIdYoutube(x),img=x.thumbnail||x.imagen||x.portada||(id?obtenerCaratulaUltraRapida(id):FALLBACK_THUMB),title=x.titulo||x.title||x.nombre||'Contenido',meta=x.artista||x.author||x.descripcion||'★ UADAV STREAM';return '<article tabindex="0" data-recent="'+i+'" class="tv-focusable min-w-[220px] max-w-[220px] cursor-pointer bg-[#101114] border border-white/10 rounded-2xl overflow-hidden"><img src="'+escH(img)+'" class="w-full aspect-video object-cover" onerror="this.src=FALLBACK_THUMB"><div class="p-3"><div class="text-sm font-black text-white truncate">'+escH(title)+'</div><div class="text-[10px] text-slate-500 truncate mt-1">'+escH(meta)+'</div></div></article>'}).join('');rail.querySelectorAll('[data-recent]').forEach(el=>{const open=()=>{const x=list[Number(el.dataset.recent)];if(!x)return;try{const host=window.parent!==window&&window.parent.UADAVShellHost;if(host?.playContent)return host.playContent(x)}catch{}if(typeof window.UADAVContentPlayer?.open==='function')return window.UADAVContentPlayer.open(x)};el.onclick=open;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}}});sec.classList.remove('hidden')}
+
 async function cargarHome() {
+      renderContinueHome();
       const safe=async(label,fn)=>{try{return await fn()}catch(e){console.warn('Home '+label+':',e);return null}};
       await safe('config',()=>cargarConfigYVisitas());
       await safe('apariencia',()=>aplicarApariencia());
@@ -1156,6 +1159,6 @@ async function cargarHome() {
       initCarouselDrag();
     }
   </script>
-<script src="/uadav-app-bridge-v104.js?v=10252"></script>
+<script src="/uadav-app-bridge-v104.js?v=11003"></script>
 </body>
 </html>
