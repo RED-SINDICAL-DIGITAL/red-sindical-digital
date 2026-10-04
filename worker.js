@@ -1989,9 +1989,11 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
       const id=String(url.searchParams.get('id')||'').trim();
       const handle=String(url.searchParams.get('handle')||'').trim();
       let meta=null;
+      const liveMetaKey='channel_meta_'+String(id||handle).toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,100);
+      if(liveMetaKey!=='channel_meta_'){try{const cached=await env.UADAV_DB.get(liveMetaKey);if(cached)return new Response(cached,{headers:{...cors,'X-UADAV-Channel-Source':'cache'}})}catch(_){}}
       if(id) meta=await invidiousChannelInfo(id);
       if(!meta && handle){ const found=await invidiousChannelSearch(handle); if(found) meta=await invidiousChannelInfo(found.channelId)||found; }
-      if(meta){ return json(meta); }
+      if(meta){ if(liveMetaKey!=='channel_meta_')await env.UADAV_DB.put(liveMetaKey,JSON.stringify(meta),{expirationTtl:90}); return json(meta); }
       if(await youtubeApiEnabled() && env.YOUTUBE_API_KEY){
         try{
           const qs=new URLSearchParams({part:'snippet,brandingSettings',maxResults:'1',key:env.YOUTUBE_API_KEY});
