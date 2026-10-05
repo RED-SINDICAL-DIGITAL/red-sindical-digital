@@ -1787,10 +1787,18 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     }
 
     if (path === '/api/estado_sitio') {
-      if (request.method === 'GET') return json(await getObject('estado_sitio'));
+      if (request.method === 'GET') {
+        const s = await getObject('estado_sitio');
+        const raw = String(s?.modo || 'normal').toLowerCase();
+        const modo = raw === 'landing' ? 'promo' : (['normal','promo','mantenimiento'].includes(raw) ? raw : 'normal');
+        return json({ ...s, modo });
+      }
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
-      await env.UADAV_DB.put('estado_sitio', await request.text());
-      return json({ success: true });
+      const body = await request.json().catch(() => ({}));
+      const raw = String(body?.modo || 'normal').toLowerCase();
+      const modo = raw === 'landing' ? 'promo' : (['normal','promo','mantenimiento'].includes(raw) ? raw : 'normal');
+      await putJSON('estado_sitio', { ...body, modo, updated_at: isoNow() });
+      return json({ success: true, modo });
     }
 
     if (path === '/api/web_visibility' || path === '/api/home_layout') {
