@@ -59,7 +59,7 @@ html.uadav-app-embedded .panel,html.uadav-app-embedded .meta,html.uadav-app-embe
 </div>
 <script>
 const API_REMOTE=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/',API_LOCAL=location.origin+'/api/';
-async function apiJson(path,opt={}){let err;for(const base of [...new Set([API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[API_LOCAL]:[])])]){try{const r=await fetch(base+path,{cache:'no-store',...opt});const ct=r.headers.get('content-type')||'';if(!r.ok||!ct.includes('json')){err=new Error('API '+r.status);continue}return await r.json()}catch(e){err=e}}throw err||new Error('API no disponible')}
+async function apiJson(path,opt={}){let err;for(const base of [...new Set([API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[API_LOCAL]:[])])]){try{const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);let r;try{r=await fetch(base+path,{cache:'no-store',...opt,signal:opt.signal||ctl.signal})}finally{clearTimeout(timer)};const ct=r.headers.get('content-type')||'';if(!r.ok||!ct.includes('json')){err=new Error('API '+r.status);continue}return await r.json()}catch(e){err=e}}throw err||new Error('API no disponible')}
 async function apiRaw(path,opt={}){let err;for(const base of [...new Set([API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[API_LOCAL]:[])])]){try{const r=await fetch(base+path,opt);if(!r.ok){err=new Error('API '+r.status);continue}return r}catch(e){err=e}}throw err||new Error('API no disponible')}
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const params=new URLSearchParams(location.search);const wanted=params.get('id')||'';if(params.get('tv')==='1')document.body.classList.add('tv-mode');
