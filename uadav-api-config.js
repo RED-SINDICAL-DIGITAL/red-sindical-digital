@@ -7,22 +7,26 @@ window.UADAV_USE_LOCAL_API = window.UADAV_USE_LOCAL_API === true;
   'use strict';
   const API=window.UADAV_API_BASE;
   const json=async path=>{
+    const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);
     try{
-      const r=await fetch(API+path+(path.includes('?')?'&':'?')+'_='+Date.now(),{cache:'no-store'});
+      const r=await fetch(API+path+(path.includes('?')?'&':'?')+'_='+Date.now(),{cache:'no-store',signal:ctl.signal});
       if(!r.ok)return null;
       return await r.json();
-    }catch(_){return null}
+    }catch(_){return null}finally{clearTimeout(timer)}
   };
   const unwrap=x=>x&&typeof x==='object'?(x.data||x.config||x):{};
   const first=(o,keys)=>{for(const k of keys){const v=o?.[k];if(v!==undefined&&v!==null&&String(v).trim()!=='')return v}return null};
   const videoId=x=>{
-    const direct=x?.videoId||x?.video_id||x?.external_id||x?.youtube_id||x?.id||'';
-    if(/^[A-Za-z0-9_-]{11}$/.test(String(direct)))return String(direct);
-    const u=String(x?.url||x?.href||x?.youtube_url||'');
+    const explicit=x?.videoId||x?.video_id||x?.external_id||x?.youtube_id||'';
+    if(/^[A-Za-z0-9_-]{11}$/.test(String(explicit)))return String(explicit);
+    const provider=String(x?.provider||'').toLowerCase();
+    if(provider==='youtube'&&/^[A-Za-z0-9_-]{11}$/.test(String(x?.id||'')))return String(x.id);
+    const u=String(x?.url||x?.href||x?.youtube_url||x?.webpage_url||x?.source_url||x?.media_url||x?.embed_url||x?.stream_url||x?.link||'');
     const m=u.match(/[?&]v=([A-Za-z0-9_-]{11})/)||u.match(/youtu\.be\/([A-Za-z0-9_-]{11})/)||u.match(/\/(?:shorts|embed|live)\/([A-Za-z0-9_-]{11})/);
     return m?.[1]||'';
   };
-  const mediaKey=x=>videoId(x)||String(x?.url||x?.href||x?.titulo||x?.title||x?.nombre||'').trim().toLowerCase();
+  const source=x=>String(x?.url||x?.href||x?.youtube_url||x?.webpage_url||x?.source_url||x?.media_url||x?.embed_url||x?.stream_url||x?.link||'');
+  const mediaKey=x=>videoId(x)||source(x)||String(x?.titulo||x?.title||x?.nombre||'').trim().toLowerCase();
   const richness=x=>Object.values(x||{}).filter(v=>v!==null&&v!==undefined&&String(v)!=='').length;
   const normalizeRecent=list=>{
     const map=new Map();
@@ -30,7 +34,8 @@ window.UADAV_USE_LOCAL_API = window.UADAV_USE_LOCAL_API === true;
       if(!raw||typeof raw!=='object')continue;
       const id=videoId(raw),key=mediaKey(raw); if(!key)continue;
       const item={...raw};
-      if(id){item.id=id;item.videoId=id;item.video_id=id;item.external_id=id;if(!item.url)item.url='https://www.youtube.com/watch?v='+id}
+      if(!item.url&&source(raw))item.url=source(raw);
+      if(id){item.videoId=id;item.video_id=id;item.external_id=id;item.youtube_id=id;if(!item.url)item.url='https://www.youtube.com/watch?v='+id}
       item.title=item.title||item.titulo||item.nombre||'Contenido';
       item.titulo=item.titulo||item.title;
       const old=map.get(key);
