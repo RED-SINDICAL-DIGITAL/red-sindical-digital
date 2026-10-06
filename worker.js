@@ -1180,12 +1180,28 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     }
 
     if (path === '/api/visits') {
-      const counters = await getObject('contadores');
+      const counters = await getObject('contadores', { visitas_totales: 15651, mostrar_visitas: true });
+      if (!Number.isFinite(Number(counters.visitas_totales))) counters.visitas_totales = 15651;
+      if (typeof counters.mostrar_visitas !== 'boolean') counters.mostrar_visitas = true;
       if (request.method === 'GET') return json(counters);
       if (request.method === 'POST') {
-        counters.visitas_totales = Number(counters.visitas_totales || 0) + 1;
+        counters.visitas_totales = Math.max(0, Number(counters.visitas_totales || 15651)) + 1;
+        counters.actualizado = isoNow();
         await putJSON('contadores', counters);
         return json(counters);
+      }
+      if (request.method === 'PUT') {
+        if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
+        const body = await request.json().catch(() => ({}));
+        if (body.visitas_totales != null) {
+          const value = Math.floor(Number(body.visitas_totales));
+          if (!Number.isFinite(value) || value < 0) return json({ error: 'Valor de visitas inválido' }, 400);
+          counters.visitas_totales = value;
+        }
+        if (body.mostrar_visitas != null) counters.mostrar_visitas = body.mostrar_visitas === true;
+        counters.actualizado = isoNow();
+        await putJSON('contadores', counters);
+        return json({ success: true, ...counters });
       }
       return json({ error: 'Método no permitido' }, 405);
     }
