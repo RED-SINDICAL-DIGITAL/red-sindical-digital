@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "platform": "★ UADAV STREAM",
+  "currency_reference": "USD",
+  "artist_plans": {
+    "free": {
+      "label": "Artista GRATIS",
+      "price": 0,
+      "features": ["profile", "free_claim", "basic_profile_management", "public_discovery", "basic_content", "basic_cartelera", "jobs", "marketplace", "basic_hiring", "support_links"]
+    },
+    "pro": {
+      "label": "Artista PRO",
+      "reference_price_monthly": 3,
+      "admin_price_override": true,
+      "features": ["advanced_analytics", "ai_assistant", "audience_intelligence", "press_kit", "reports_7_30_90", "advanced_customization", "conversion_metrics", "growth_tools"]
+    }
+  },
+  "support": {
+    "public_can_support": true,
+    "artist_requires_pro": false,
+    "platform_commission_initial": 0,
+    "external_destinations": ["Mercado Pago", "Cafecito", "Ko-fi", "PayPal", "otro enlace autorizado"]
+  },
+  "cartelera": {
+    "basic_publication": "free",
+    "paid_products": ["featured", "cartelera_hero", "home_hero", "vertical_feed", "premium_position"]
+  },
+  "marketplace": {
+    "model": "direct_contact",
+    "platform_commission_initial": 0,
+    "platform_processes_payment": false,
+    "categories": ["merchandising", "instruments", "wardrobe", "equipment", "classes", "production", "sound", "lighting", "professional_services"]
+  },
+  "jobs": {"access": "free"},
+  "travel_benefits": {
+    "categories": ["lodging", "transport", "gastronomy", "parking", "rehearsal", "studios", "equipment", "services"],
+    "audiences": ["public", "artist", "artist_pro", "uadav_member"]
+  },
+  "audience": {
+    "free": ["watch", "listen", "search", "follow", "favorites", "playlists", "watch_later", "history", "support_artist"],
+    "stream_plus": {"status": "future", "separate_from_artist_pro": true}
+  },
+  "separation_rules": ["uadav_membership != artist_pro", "artist_pro != stream_plus", "support != artist_pro", "cartelera_premium != artist_pro"],
+  "metrics": {
+    "internal": ["profile_views", "play_starts", "followers", "favorites", "playlist_adds", "ticket_clicks", "hire_clicks", "support_clicks", "shares"],
+    "external": "Show only when legitimately available and label by source; never present as UADAV STREAM royalties or official provider payouts."
+  }
+}
