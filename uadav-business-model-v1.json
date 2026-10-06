@@ -1,48 +1,15 @@
 {
-  "version": "1.0",
-  "platform": "★ UADAV STREAM",
-  "currency_reference": "USD",
-  "artist_plans": {
-    "free": {
-      "label": "Artista GRATIS",
-      "price": 0,
-      "features": ["profile", "free_claim", "basic_profile_management", "public_discovery", "basic_content", "basic_cartelera", "jobs", "marketplace", "basic_hiring", "support_links"]
-    },
-    "pro": {
-      "label": "Artista PRO",
-      "reference_price_monthly": 3,
-      "admin_price_override": true,
-      "features": ["advanced_analytics", "ai_assistant", "audience_intelligence", "press_kit", "reports_7_30_90", "advanced_customization", "conversion_metrics", "growth_tools"]
-    }
-  },
-  "support": {
-    "public_can_support": true,
-    "artist_requires_pro": false,
-    "platform_commission_initial": 0,
-    "external_destinations": ["Mercado Pago", "Cafecito", "Ko-fi", "PayPal", "otro enlace autorizado"]
-  },
-  "cartelera": {
-    "basic_publication": "free",
-    "paid_products": ["featured", "cartelera_hero", "home_hero", "vertical_feed", "premium_position"]
-  },
-  "marketplace": {
-    "model": "direct_contact",
-    "platform_commission_initial": 0,
-    "platform_processes_payment": false,
-    "categories": ["merchandising", "instruments", "wardrobe", "equipment", "classes", "production", "sound", "lighting", "professional_services"]
-  },
-  "jobs": {"access": "free"},
-  "travel_benefits": {
-    "categories": ["lodging", "transport", "gastronomy", "parking", "rehearsal", "studios", "equipment", "services"],
-    "audiences": ["public", "artist", "artist_pro", "uadav_member"]
-  },
-  "audience": {
-    "free": ["watch", "listen", "search", "follow", "favorites", "playlists", "watch_later", "history", "support_artist"],
-    "stream_plus": {"status": "future", "separate_from_artist_pro": true}
-  },
-  "separation_rules": ["uadav_membership != artist_pro", "artist_pro != stream_plus", "support != artist_pro", "cartelera_premium != artist_pro"],
-  "metrics": {
-    "internal": ["profile_views", "play_starts", "followers", "favorites", "playlist_adds", "ticket_clicks", "hire_clicks", "support_clicks", "shares"],
-    "external": "Show only when legitimately available and label by source; never present as UADAV STREAM royalties or official provider payouts."
-  }
+  "version":"1.1","platform":"★ UADAV STREAM","platform_version":"V11.7","build":11719,"currency_reference":"USD",
+  "artist_plans":{"free":{"label":"Artista GRATIS","price":0,"features":["profile","free_claim","basic_profile_management","public_discovery","basic_content","basic_cartelera","jobs","marketplace","basic_hiring","support_links"]},"pro":{"label":"Artista PRO","reference_price_monthly":3,"admin_price_override":true,"promise":"Entendé tu audiencia. Hacé crecer tu carrera.","features":["advanced_analytics","ai_assistant","audience_intelligence","press_kit","reports_7_30_90","advanced_customization","conversion_metrics","growth_tools"]}},
+  "support":{"public_can_support":true,"artist_requires_pro":false,"artist_must_be_claimed":true,"platform_commission_initial":0,"platform_processes_payment":false,"external_destinations":["Mercado Pago","Cafecito","Ko-fi","PayPal","otro enlace autorizado"]},
+  "cartelera":{"basic_publication":"free","independent_from_pro":true,"paid_products":["featured","cartelera_hero","home_hero","vertical_feed","premium_position"]},
+  "marketplace":{"model":"direct_contact","platform_commission_initial":0,"platform_processes_payment":false,"categories":["merchandising","instruments","wardrobe","equipment","classes","production","sound","lighting","professional_services"]},
+  "jobs":{"access":"free","paywall":false},
+  "travel_benefits":{"categories":["lodging","transport","gastronomy","parking","rehearsal","studios","equipment","services"],"audiences":["public","artist","artist_pro","uadav_member"],"connect_to_event_location":true},
+  "audience":{"free":["watch","listen","search","follow","favorites","playlists","watch_later","history","support_artist"],"stream_plus":{"status":"future","separate_from_artist_pro":true}},
+  "ai_pro":{"enabled_in_product_model":true,"backend_provider":"Gemini when enabled by Worker","uses_internal_metrics":true,"tasks":["weekly_summary","growth_recommendations","content_performance","press_kit","bio","campaign_copy","commercial_pitch"],"prohibited_claims":["official_external_royalties","invented_external_stream_counts"]},
+  "separation_rules":["uadav_membership != artist_pro","artist_pro != stream_plus","support != artist_pro","cartelera_premium != artist_pro"],
+  "metrics":{"internal":["profile_view","play_start","follow","favorite","playlist_add","ticket_click","hire_click","support_click","share"],"external":"Show only when legitimately available and label by source; never present as UADAV STREAM royalties or official provider payouts."},
+  "admin":{"price_configurable":true,"plan_expiration":true,"claim_moderation":true,"benefits_management":true,"support_links_management":true,"analytics_management":true,"ai_reports_management":true},
+  "worker_deploy":"cloudflare"
 }
