@@ -252,17 +252,17 @@ export default {
     }
     async function invidiousChannelInfo(channelId){
       const id=String(channelId||'').trim(); if(!id)return null;
-      for(const base of INVIDIOUS_INSTANCES){
-        const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
+      const requestOne=async(base)=>{
+        const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4200);
         try{
           const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});
-          if(!r.ok)continue; const d=await r.json();
-          if(d?.authorId||d?.author){
-            return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),subscribers:Number(d.subCount||0),total_views:Number(d.totalViews||0),latestVideos:Array.isArray(d.latestVideos)?d.latestVideos.slice(0,24):[],source:'invidious'};
-          }
-        }catch(_){ } finally{clearTimeout(timer)}
-      }
-      return null;
+          if(!r.ok)throw new Error('HTTP '+r.status);
+          const d=await r.json();
+          if(!(d?.authorId||d?.author))throw new Error('invalid channel');
+          return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),subscribers:Number(d.subCount||0),total_views:Number(d.totalViews||0),latestVideos:Array.isArray(d.latestVideos)?d.latestVideos.slice(0,24):[],source:'invidious'};
+        }finally{clearTimeout(timer)}
+      };
+      try{return await Promise.any(INVIDIOUS_INSTANCES.map(base=>requestOne(base)))}catch(_){return null}
     }
     async function invidiousVideoInfo(videoId){
       const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
@@ -1180,12 +1180,28 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     }
 
     if (path === '/api/visits') {
-      const counters = await getObject('contadores');
+      const counters = await getObject('contadores', { visitas_totales: 15651, mostrar_visitas: true });
+      if (!Number.isFinite(Number(counters.visitas_totales))) counters.visitas_totales = 15651;
+      if (typeof counters.mostrar_visitas !== 'boolean') counters.mostrar_visitas = true;
       if (request.method === 'GET') return json(counters);
       if (request.method === 'POST') {
-        counters.visitas_totales = Number(counters.visitas_totales || 0) + 1;
+        counters.visitas_totales = Math.max(0, Number(counters.visitas_totales || 15651)) + 1;
+        counters.actualizado = isoNow();
         await putJSON('contadores', counters);
         return json(counters);
+      }
+      if (request.method === 'PUT') {
+        if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
+        const body = await request.json().catch(() => ({}));
+        if (body.visitas_totales != null) {
+          const value = Math.floor(Number(body.visitas_totales));
+          if (!Number.isFinite(value) || value < 0) return json({ error: 'Valor de visitas inválido' }, 400);
+          counters.visitas_totales = value;
+        }
+        if (body.mostrar_visitas != null) counters.mostrar_visitas = body.mostrar_visitas === true;
+        counters.actualizado = isoNow();
+        await putJSON('contadores', counters);
+        return json({ success: true, ...counters });
       }
       return json({ error: 'Método no permitido' }, 405);
     }
@@ -1787,10 +1803,18 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
     }
 
     if (path === '/api/estado_sitio') {
-      if (request.method === 'GET') return json(await getObject('estado_sitio'));
+      if (request.method === 'GET') {
+        const s = await getObject('estado_sitio');
+        const raw = String(s?.modo || 'normal').toLowerCase();
+        const modo = raw === 'landing' ? 'promo' : (['normal','promo','mantenimiento'].includes(raw) ? raw : 'normal');
+        return json({ ...s, modo });
+      }
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
-      await env.UADAV_DB.put('estado_sitio', await request.text());
-      return json({ success: true });
+      const body = await request.json().catch(() => ({}));
+      const raw = String(body?.modo || 'normal').toLowerCase();
+      const modo = raw === 'landing' ? 'promo' : (['normal','promo','mantenimiento'].includes(raw) ? raw : 'normal');
+      await putJSON('estado_sitio', { ...body, modo, updated_at: isoNow() });
+      return json({ success: true, modo });
     }
 
     if (path === '/api/web_visibility' || path === '/api/home_layout') {

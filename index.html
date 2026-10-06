@@ -210,7 +210,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
 @media(max-width:720px){#radiosGrid{display:block!important}#radiosGrid .radio-hero{min-height:0!important;display:grid!important;grid-template-columns:92px minmax(0,1fr)!important;gap:14px!important;padding:18px!important;border-radius:22px!important;align-items:center!important}#radiosGrid .radio-hero>div:nth-child(2){width:92px!important;height:92px!important}#radiosGrid .radio-hero h3{font-size:25px!important;line-height:1!important;margin-bottom:6px!important}#radiosGrid .radio-hero p{margin-bottom:8px!important}#radiosGrid .radio-hero .absolute.top-0.right-0{font-size:8px!important;padding:7px 10px!important;max-width:92px!important;text-align:center!important}#radiosGrid .radio-hero .bg-\[\#0a0a0c\]\/80{padding:8px!important}#homeHero #homeHeroBackdrop{transition:opacity .3s ease!important}#homeHeroTitle{overflow-wrap:anywhere}}
 </style></head>
 <body>
-<script>(async()=>{try{const r=await fetch('https://uadav-api.uadavstream.workers.dev/api/estado_sitio',{cache:'no-store'});if(!r.ok)return;const s=await r.json();if(s?.modo==='promo'&&!location.search.includes('full=1'))location.replace('/promo.html')}catch(_){}})();</script>
+<script>(async()=>{try{const r=await fetch('https://uadav-api.uadavstream.workers.dev/api/estado_sitio?_='+Date.now(),{cache:'no-store'});if(!r.ok)return;const s=await r.json(),mode=String(s?.modo||'normal').toLowerCase();if(mode==='promo'&&!location.search.includes('full=1')){location.replace('/promo.html');return}if(mode==='normal'&&!location.search.includes('legacy=1')){location.replace('/app.html?build=11719');return}}catch(_){}})();</script>
 
   <!-- Overlay de mantenimiento -->
   <div id="maintenance-overlay" style="display:none;">
@@ -410,7 +410,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
             overlay.style.display = 'flex';
             pageContent.style.display = 'none';
             return;
-          } else if (estado.modo === 'landing' && estado.landing_url) {
+          } else if ((estado.modo === 'promo' || estado.modo === 'landing') && estado.landing_url) {
             window.location.href = estado.landing_url;
             return;
           }
