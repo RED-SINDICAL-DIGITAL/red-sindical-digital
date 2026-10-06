@@ -410,7 +410,7 @@ html.uadav-app-embedded #floatingRadioPlayer,html.uadav-app-embedded #videoModal
             overlay.style.display = 'flex';
             pageContent.style.display = 'none';
             return;
-          } else if (estado.modo === 'landing' && estado.landing_url) {
+          } else if ((estado.modo === 'promo' || estado.modo === 'landing') && estado.landing_url) {
             window.location.href = estado.landing_url;
             return;
           }
