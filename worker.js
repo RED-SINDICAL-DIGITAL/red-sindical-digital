@@ -1051,7 +1051,60 @@ CREATE TABLE IF NOT EXISTS cct_contract_records (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_records(artist_id,created_at DESC);
-`;
+
+-- V11.7 · Artista PRO / Apoyar / Analytics
+CREATE TABLE IF NOT EXISTS artist_plan_state (
+  artist_id TEXT PRIMARY KEY,
+  plan TEXT NOT NULL DEFAULT 'free',
+  pro_started_at TEXT,
+  pro_expires_at TEXT,
+  source TEXT NOT NULL DEFAULT 'admin',
+  analytics_enabled INTEGER NOT NULL DEFAULT 0,
+  ai_enabled INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_artist_plan_plan ON artist_plan_state(plan,pro_expires_at);
+
+CREATE TABLE IF NOT EXISTS artist_support_links (
+  id TEXT PRIMARY KEY,
+  artist_id TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  label TEXT,
+  url TEXT NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_artist_support_artist ON artist_support_links(artist_id,active,sort_order);
+
+CREATE TABLE IF NOT EXISTS audience_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  artist_id TEXT,
+  content_id TEXT,
+  event_type TEXT NOT NULL,
+  session_id TEXT,
+  source TEXT,
+  province TEXT,
+  country TEXT,
+  metadata_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_audience_artist_created ON audience_events(artist_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audience_artist_type ON audience_events(artist_id,event_type,created_at DESC);
+
+CREATE TABLE IF NOT EXISTS artist_ai_reports (
+  id TEXT PRIMARY KEY,
+  artist_id TEXT NOT NULL,
+  period_days INTEGER NOT NULL DEFAULT 30,
+  metrics_json TEXT NOT NULL DEFAULT '{}',
+  summary TEXT,
+  recommendations_json TEXT NOT NULL DEFAULT '[]',
+  model TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ai_reports_artist ON artist_ai_reports(artist_id,created_at DESC);
+
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
@@ -1546,6 +1599,52 @@ CREATE INDEX IF NOT EXISTS idx_cct_contract_records_artist ON cct_contract_recor
         days, visits: Number(counters?.visitas_totales || 0), events: total,
         by_type: byType, radios: radios.length, artists: artists.length, eventos_publicados: events.length
       });
+    }
+
+    if (path === '/api/admin/artist-plan' && request.method === 'GET') {
+      if(!isAdmin())return json({error:'No autorizado'},401); if(!hasD1())return json({error:'D1 no configurado'},503);
+      await ensureD1Schema(); const artistId=String(url.searchParams.get('artist_id')||'').trim();
+      if(!artistId)return json({error:'artist_id requerido'},400);
+      const plan=await env.DB.prepare('SELECT * FROM artist_plan_state WHERE artist_id=?').bind(artistId).first();
+      const links=await env.DB.prepare('SELECT id,provider,label,url,active,sort_order,created_at,updated_at FROM artist_support_links WHERE artist_id=? ORDER BY sort_order,id').bind(artistId).all();
+      return json({artist_id:artistId,plan:plan||{artist_id:artistId,plan:'free',analytics_enabled:0,ai_enabled:0},support_links:links.results||[]});
+    }
+
+    if (path === '/api/admin/artist-plan' && request.method === 'PUT') {
+      if(!isAdmin())return json({error:'No autorizado'},401); if(!hasD1())return json({error:'D1 no configurado'},503);
+      await ensureD1Schema(); const body=await request.json().catch(()=>({})),artistId=String(body.artist_id||'').trim(),plan=body.plan==='pro'?'pro':'free';
+      if(!artistId)return json({error:'artist_id requerido'},400); const now=isoNow();
+      await env.DB.prepare(`INSERT INTO artist_plan_state(artist_id,plan,pro_started_at,pro_expires_at,source,analytics_enabled,ai_enabled,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(artist_id) DO UPDATE SET plan=excluded.plan,pro_started_at=excluded.pro_started_at,pro_expires_at=excluded.pro_expires_at,source=excluded.source,analytics_enabled=excluded.analytics_enabled,ai_enabled=excluded.ai_enabled,updated_at=excluded.updated_at`)
+        .bind(artistId,plan,plan==='pro'?(body.pro_started_at||now):null,plan==='pro'?(body.pro_expires_at||null):null,String(body.source||'admin'),plan==='pro'&&body.analytics_enabled!==false?1:0,plan==='pro'&&body.ai_enabled!==false?1:0,now).run();
+      await audit('artist_plan_update','artist',artistId,{plan,source:body.source||'admin'});
+      return json({success:true,artist_id:artistId,plan});
+    }
+
+    if (path === '/api/admin/artist-support-links' && request.method === 'PUT') {
+      if(!isAdmin())return json({error:'No autorizado'},401); if(!hasD1())return json({error:'D1 no configurado'},503);
+      await ensureD1Schema(); const body=await request.json().catch(()=>({})),artistId=String(body.artist_id||'').trim(),links=Array.isArray(body.links)?body.links:[];
+      if(!artistId)return json({error:'artist_id requerido'},400);
+      await env.DB.prepare('DELETE FROM artist_support_links WHERE artist_id=?').bind(artistId).run(); const now=isoNow();
+      for(let i=0;i<Math.min(20,links.length);i++){const x=links[i]||{},u=String(x.url||'').trim();if(!/^https?:\/\//i.test(u))continue;await env.DB.prepare('INSERT INTO artist_support_links(id,artist_id,provider,label,url,active,sort_order,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)').bind('SUP-'+Date.now().toString(36)+'-'+i,artistId,String(x.provider||'external'),String(x.label||x.provider||'Apoyar'),u,x.active===false?0:1,i,now,now).run()}
+      await audit('artist_support_links_update','artist',artistId,{count:links.length}); return json({success:true});
+    }
+
+    if (path === '/api/admin/artist-analytics' && request.method === 'GET') {
+      if(!isAdmin())return json({error:'No autorizado'},401); if(!hasD1())return json({error:'D1 no configurado'},503);
+      await ensureD1Schema(); const artistId=String(url.searchParams.get('artist_id')||'').trim(),days=Math.max(1,Math.min(90,Number(url.searchParams.get('days')||30)));
+      if(!artistId)return json({error:'artist_id requerido'},400); const since=new Date(Date.now()-days*86400000).toISOString();
+      const rows=await env.DB.prepare('SELECT event_type,COUNT(*) count FROM audience_events WHERE artist_id=? AND created_at>=? GROUP BY event_type ORDER BY count DESC').bind(artistId,since).all();
+      const geo=await env.DB.prepare("SELECT province,country,COUNT(*) count FROM audience_events WHERE artist_id=? AND created_at>=? AND (province IS NOT NULL OR country IS NOT NULL) GROUP BY province,country ORDER BY count DESC LIMIT 20").bind(artistId,since).all();
+      return json({artist_id:artistId,days,by_type:Object.fromEntries((rows.results||[]).map(x=>[x.event_type,Number(x.count||0)])),geography:geo.results||[]});
+    }
+
+    if (path === '/api/analytics/event' && request.method === 'POST') {
+      if(!hasD1())return json({success:false,stored:false},202); await ensureD1Schema(); const body=await request.json().catch(()=>({}));
+      const allowed=new Set(['profile_view','play_start','follow','favorite','playlist_add','ticket_click','hire_click','support_click','share']),eventType=String(body.event_type||'');
+      if(!allowed.has(eventType))return json({error:'event_type no permitido'},400);
+      const artistId=String(body.artist_id||'').trim().slice(0,160)||null,contentId=String(body.content_id||'').trim().slice(0,160)||null,sessionId=String(body.session_id||'').trim().slice(0,160)||null;
+      await env.DB.prepare('INSERT INTO audience_events(artist_id,content_id,event_type,session_id,source,province,country,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)').bind(artistId,contentId,eventType,sessionId,String(body.source||'web').slice(0,80),String(body.province||'').slice(0,100)||null,String(body.country||'').slice(0,100)||null,JSON.stringify(body.metadata||{}).slice(0,4000),isoNow()).run();
+      return json({success:true,stored:true});
     }
 
     if (path === '/api/admin/audit-log' && request.method === 'GET') {
