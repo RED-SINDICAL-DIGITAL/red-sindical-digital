@@ -15,4 +15,8 @@ assert.equal(ctx.chooseHeroSlides(paid,{mode:'off'}).length,0);
 assert.equal(ctx.chooseHeroSlides([],{slides:[{...custom,active:false}]})[0]._generic,true);
 assert.equal(ctx.chooseHeroSlides([],{slides:[{...custom,link:'javascript:alert(1)',image:'javascript:alert(1)'}]})[0].hero_href,'');
 assert.equal(ctx.safeSlideLink('//evil.example'),'');
+const many=Array.from({length:40},(_,i)=>({id:String(i),destacado_pagado:true}));
+assert.equal(ctx.chooseHeroSlides(many,{mode:'mixed',slides:[{title:'Campaña'}]}).length,41);
+assert.equal(ctx.chooseHeroSlides(many,{mode:'featured'}).length,40);
+assert(!html.includes('const picks=list.slice('));
 console.log('PASS: slider modes, empty fallback, inactive campaigns and safe URLs');
