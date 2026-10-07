@@ -1,12 +1,13 @@
-// ★ UADAV STREAM · API centralizada
-// Fuente única de API para plataforma, Admin y vistas V11.7.
+// White-label CORE · API centralizada
+// PLATFORM_* es la interfaz genérica; UADAV_* se conserva como alias de compatibilidad.
 window.PLATFORM_API_BASE = window.PLATFORM_API_BASE || window.UADAV_API_BASE || 'https://uadav-api.uadavstream.workers.dev/api/';
 window.UADAV_API_BASE = window.UADAV_API_BASE || window.PLATFORM_API_BASE;
-window.UADAV_USE_LOCAL_API = window.UADAV_USE_LOCAL_API === true;
+window.PLATFORM_USE_LOCAL_API = window.PLATFORM_USE_LOCAL_API === true || window.UADAV_USE_LOCAL_API === true;
+window.UADAV_USE_LOCAL_API = window.PLATFORM_USE_LOCAL_API;
 
 (function(){
   'use strict';
-  const API=window.UADAV_API_BASE;
+  const API=window.PLATFORM_API_BASE;
   const json=async path=>{
     const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);
     try{
@@ -59,18 +60,19 @@ window.UADAV_USE_LOCAL_API = window.UADAV_USE_LOCAL_API === true;
     nativeSet.call(localStorage,'uadav_recent_v11',JSON.stringify(normalizeRecent(current)));
   }catch(_){}
 
-  window.UADAV_CONFIG={
+  window.PLATFORM_CONFIG={
     async siteState(){return unwrap(await json('estado_sitio'))},
     async landing(){return unwrap(await json('landing_config'))},
     async layout(){return unwrap(await json('home_layout'))},
     async visibility(){return unwrap(await json('web_visibility'))},
     async all(){const [site,landing,layout,visibility]=await Promise.all([this.siteState(),this.landing(),this.layout(),this.visibility()]);return{site,landing,layout,visibility}}
   };
+  window.UADAV_CONFIG=window.UADAV_CONFIG||window.PLATFORM_CONFIG;
 
   // Home V11.7: Admin/landing_config manda; /public/landing queda como fallback del código heredado.
   document.addEventListener('DOMContentLoaded',async()=>{
     if(!/\/index-v117\.html$/i.test(location.pathname))return;
-    const cfg=await window.UADAV_CONFIG.landing();
+    const cfg=await window.PLATFORM_CONFIG.landing();
     if(!cfg||!Object.keys(cfg).length)return;
     const title=first(cfg,['brand_hero_title','home_title','hero_title','title']);
     const text=first(cfg,['brand_hero_description','home_description','hero_description','description']);
