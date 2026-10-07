@@ -233,7 +233,7 @@ export default {
           u.searchParams.set('type',type);
           u.searchParams.set('page',String(Math.max(1,Number(page||1))));
           u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});
           if(!r.ok)throw new Error('HTTP '+r.status);
           const arr=await r.json();
           if(!Array.isArray(arr)||!arr.length)throw new Error('empty');
@@ -258,7 +258,7 @@ export default {
       const requestOne=async(base)=>{
         const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4200);
         try{
-          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});
+          const r=await fetch(base+'/api/v1/channels/'+encodeURIComponent(id)+'?hl=es',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});
           if(!r.ok)throw new Error('HTTP '+r.status);
           const d=await r.json();
           if(!(d?.authorId||d?.author))throw new Error('invalid channel');
@@ -268,14 +268,14 @@ export default {
       try{return await Promise.any(INVIDIOUS_INSTANCES.map(base=>requestOne(base)))}catch(_){return null}
     }
     async function invidiousVideoInfo(videoId){
-      const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
+      const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
     }
     async function invidiousPlayback(videoId){
       const id=String(videoId||'').trim(); if(!/^[A-Za-z0-9_-]{11}$/.test(id))return null;
       const requestOne=async(base)=>{
         const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),2600);
         try{
-          const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}?local=true`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2.4'}});
+          const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}?local=true`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});
           if(!r.ok)throw new Error('HTTP '+r.status);
           const d=await r.json();
           if(!d||(!d.title&&!d.author&&!Array.isArray(d.formatStreams)))throw new Error('invalid response');
@@ -296,11 +296,11 @@ export default {
     }
     async function invidiousChannelVideos(channelId, limit=50){
       const id=String(channelId||'').trim(),max=Math.min(200,Math.max(1,Number(limit||50)));if(!id)return [];
-      for(const base of INVIDIOUS_INSTANCES){const out=[];for(let page=1;page<=Math.min(6,Math.ceil(max/30));page++){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/videos?page=${page}&sort_by=newest`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});if(!r.ok)break;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.videos)?d.videos:[]);if(!items.length)break;out.push(...items);if(out.length>=max)break}catch(_){break}finally{clearTimeout(timer)}}if(out.length)return out.slice(0,max)}return [];
+      for(const base of INVIDIOUS_INSTANCES){const out=[];for(let page=1;page<=Math.min(6,Math.ceil(max/30));page++){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/videos?page=${page}&sort_by=newest`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});if(!r.ok)break;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.videos)?d.videos:[]);if(!items.length)break;out.push(...items);if(out.length>=max)break}catch(_){break}finally{clearTimeout(timer)}}if(out.length)return out.slice(0,max)}return [];
     }
     async function invidiousChannelPlaylists(channelId, limit=30){
       const id=String(channelId||'').trim();if(!id)return [];
-      for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/playlists`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});if(!r.ok)continue;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.playlists)?d.playlists:[]);if(items.length)return items.slice(0,Math.min(60,Number(limit||30)))}catch(_){}finally{clearTimeout(timer)}}return [];
+      for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(`${base}/api/v1/channels/${encodeURIComponent(id)}/playlists`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});if(!r.ok)continue;const d=await r.json(),items=Array.isArray(d)?d:(Array.isArray(d?.playlists)?d.playlists:[]);if(items.length)return items.slice(0,Math.min(60,Number(limit||30)))}catch(_){}finally{clearTimeout(timer)}}return [];
     }
     let d1SchemaReady = false;
     async function recordD1SyncError(label,error){
@@ -368,14 +368,14 @@ export default {
         return {count:statements.length};
       });
     };
-    async function platformIdentity(){const cfg=await getObject('config_global').catch(()=>({})),b=cfg?.branding||cfg?.platform||{},seo=cfg?.seo||{};let origin=String(seo.canonical_origin||'').trim().replace(/\/$/,'');return{name:String(b.name||'UADAV STREAM'),origin,order_prefix:String(cfg?.commerce?.order_prefix||b.order_prefix||'ORD').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8)||'ORD',artist_token_prefix:String(cfg?.security?.artist_token_prefix||'ART').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8)||'ART'}}
+    async function platformIdentity(){const cfg=await getObject('config_global').catch(()=>({})),b=cfg?.branding||cfg?.platform||{},seo=cfg?.seo||{};let origin=String(seo.canonical_origin||'').trim().replace(/\/$/,'');return{name:String(b.name||'PLATFORM'),origin,order_prefix:String(cfg?.commerce?.order_prefix||b.order_prefix||'ORD').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8)||'ORD',artist_token_prefix:String(cfg?.security?.artist_token_prefix||'ART').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8)||'ART'}}
 
     const safeJSON = (v, fallback = {}) => { try { return typeof v === 'string' ? JSON.parse(v) : (v ?? fallback); } catch { return fallback; } };
     async function audit(action, entityType, entityId, meta = {}) {
       if (!hasD1()) return;
       try {
         await env.DB.prepare(`INSERT INTO audit_log(actor_type,actor_name,action,entity_type,entity_id,meta_json,created_at) VALUES(?,?,?,?,?,?,?)`)
-          .bind(isAdmin() ? 'admin' : 'system', isAdmin() ? 'Administración' : 'UADAV STREAM', action, entityType || null, entityId || null, JSON.stringify(meta), isoNow()).run();
+          .bind(isAdmin() ? 'admin' : 'system', isAdmin() ? 'Administración' : (await platformIdentity()).name, action, entityType || null, entityId || null, JSON.stringify(meta), isoNow()).run();
       } catch (_) {}
     }
     async function upsertSetting(key, value) {
@@ -1148,7 +1148,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const out=[];
       for(const base of INVIDIOUS_INSTANCES){
         const controller=new AbortController(); const timer=setTimeout(()=>controller.abort(),3500); const t=Date.now();
-        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
+        try{const r=await fetch(base+'/api/v1/stats',{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});out.push({instance:base,ok:r.ok,status:r.status,ms:Date.now()-t});}
         catch(e){out.push({instance:base,ok:false,error:String(e?.message||e)});} finally{clearTimeout(timer);}
       }
       return json({checked_at:isoNow(),instances:out});
@@ -2078,7 +2078,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),5000);
         try {
           const u=new URL(base+'/api/v1/trending'); u.searchParams.set('region',region); u.searchParams.set('type',category?'music':'default'); u.searchParams.set('hl','es');
-          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});
+          const r=await fetch(u.toString(),{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});
           if(!r.ok)continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){const items=arr.slice(0,limit).map(x=>({id:x.videoId||'',channel_id:x.authorId||'',channel_name:x.author||'',titulo:x.title||'',descripcion:x.description||'',thumbnail:x.videoThumbnails?.find?.(t=>t?.quality==='high')?.url||x.videoThumbnails?.[0]?.url||'',views:Number(x.viewCount||0),published_at:x.publishedText||'',category_id:category||''})).filter(x=>x.id); if(items.length){const payload={source:'invidious_trending',region,category:category||null,items};const out=JSON.stringify(payload);await env.UADAV_DB.put(cacheKey,out,{expirationTtl:1800});return new Response(out,{headers:{...cors,'X-UADAV-Search-Source':'invidious_trending'}});}}
         } catch {} finally {clearTimeout(timer)}
@@ -2274,7 +2274,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       for (const base of INVIDIOUS_INSTANCES) {
         const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),4000);
         try {
-          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'UADAVSTREAM/9.2'}});
+          const r=await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video&page=1&hl=es`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});
           if(!r.ok) continue; const arr=await r.json();
           if(Array.isArray(arr)&&arr.length){result.source='invidious';result.instance=base;result.count=Math.min(arr.length,24);return json(result);}
         } catch {} finally { clearTimeout(timer); }
@@ -3077,7 +3077,7 @@ async function saveEntityVersion(type,id,data){
       const key='radio_cover_'+normalizeSearchText(artist+'|'+title).slice(0,180);
       try{const cached=await env.UADAV_DB.get(key);if(cached)return json({artwork:cached,source:'cache'});}catch{}
       let artwork='';
-      try{const q=encodeURIComponent([artist,title].filter(Boolean).join(' '));const r=await fetch('https://api.deezer.com/search/track?limit=1&q='+q,{headers:{'User-Agent':'UADAVSTREAM/9.2'}});if(r.ok){const d=await r.json();artwork=d?.data?.[0]?.album?.cover_xl||d?.data?.[0]?.album?.cover_big||d?.data?.[0]?.album?.cover_medium||'';}}catch{}
+      try{const q=encodeURIComponent([artist,title].filter(Boolean).join(' '));const r=await fetch('https://api.deezer.com/search/track?limit=1&q='+q,{headers:{'User-Agent':'WhiteLabelMediaPlatform/1.0'}});if(r.ok){const d=await r.json();artwork=d?.data?.[0]?.album?.cover_xl||d?.data?.[0]?.album?.cover_big||d?.data?.[0]?.album?.cover_medium||'';}}catch{}
       artwork=artwork||fallback||''; if(artwork){try{await env.UADAV_DB.put(key,artwork,{expirationTtl:60*60*24*30})}catch{}}
       return json({artwork,source:artwork===fallback?'fallback':'provider'});
     }
