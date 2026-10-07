@@ -1883,6 +1883,15 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const cfg=await getObject('config_global'),b=cfg?.branding||cfg?.platform||{},seo=cfg?.seo||{};return json({brand:{name:b.name||'UADAV STREAM',icon:b.icon||'★',logo_url:b.logo_url||'',favicon_url:b.favicon_url||'',tagline:b.tagline||''},seo:{title:seo.title||b.name||'UADAV STREAM',description:seo.description||b.tagline||'',keywords:seo.keywords||'',og_image:seo.og_image||'',canonical_origin:seo.canonical_origin||'',google_site_verification:seo.google_site_verification||'',msvalidate_01:seo.msvalidate_01||''}});
     }
 
+    if (path === '/api/admin/seo/indexnow' && request.method === 'POST') {
+      if(!isAdmin())return json({error:'No autorizado'},401);const cfg=await getObject('config_global'),seo=cfg?.seo||{},origin=String(seo.canonical_origin||'').replace(/\/$/,'');if(!origin)return json({error:'Configurá primero el dominio canónico'},400);let host;try{host=new URL(origin).host}catch{return json({error:'Dominio canónico inválido'},400)}
+      let key=String(seo.indexnow_key||'').trim();if(!key){key=Array.from(crypto.getRandomValues(new Uint8Array(16))).map(x=>x.toString(16).padStart(2,'0')).join('');seo.indexnow_key=key;cfg.seo=seo;await putJSON('config_global',cfg)}
+      const b=await request.json().catch(()=>({})),urls=Array.isArray(b.urls)?b.urls.map(String):[];const list=(urls.length?urls:[origin+'/',origin+'/artistas.html',origin+'/cartelera.html',origin+'/radio.html']).filter(x=>{try{return new URL(x).host===host}catch{return false}}).slice(0,10000);const endpoint='https://api.indexnow.org/indexnow';const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify({host,key,keyLocation:origin+'/'+key+'.txt',urlList:list})});await audit('seo_indexnow_submit','seo',host,{count:list.length,status:r.status});return json({success:r.ok,status:r.status,submitted:list.length,key_location:origin+'/'+key+'.txt'});
+    }
+    if (/^\/[a-f0-9]{32}\.txt$/i.test(path) && request.method === 'GET') {
+      const cfg=await getObject('config_global'),key=String(cfg?.seo?.indexnow_key||'').trim();if(key&&path==='/'+key+'.txt')return new Response(key,{headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'public, max-age=3600'}});return new Response('Not found',{status:404});
+    }
+
     if (path === '/api/admin/iptv/import' && request.method === 'POST') {
       if (!isAdmin()) return json({error:'No autorizado'},401);
       const b=await request.json().catch(()=>({}));let raw=String(b.content||'');const source=String(b.url||'').trim();
