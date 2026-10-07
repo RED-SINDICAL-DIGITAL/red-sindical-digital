@@ -101,10 +101,10 @@ html,body{font-family:Outfit,Inter,ui-sans-serif,system-ui,-apple-system,"Segoe 
 <script>
 (() => {
 'use strict';
-const API_REMOTE=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';
+const API_REMOTE=window.PLATFORM_API_BASE||window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';
 let API_ACTIVE=API_REMOTE;
 const API_LOCAL=location.origin.replace(/\/$/,'')+'/api/';
-const API_USE_LOCAL=window.UADAV_USE_LOCAL_API===true;
+const API_USE_LOCAL=window.PLATFORM_USE_LOCAL_API===true||window.UADAV_USE_LOCAL_API===true;
 const FALLBACK='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="100%" height="100%" fill="#1c2743"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#7f8da8" font-family="Arial" font-size="20">★ UADAV STREAM</text></svg>`);
 let ADMIN_KEY=sessionStorage.getItem('uadav_admin_v8')||'';
 const S={view:'dashboard',cache:{},health:null,systemTab:'setup'};
@@ -122,7 +122,7 @@ const NAV=[
  {g:'HERRAMIENTAS',items:[['prospecting','⌕','Descubrimiento'],['cct','⚖','Convenios / fiscalización'],['restrictions','⊘','Restricciones'],['system','⚙','Sistema'],['audit','≡','Auditoría'],['diagnostics','✚','Diagnóstico'],['manuals','?','Ayuda']]}
 ];
 const TITLES={dashboard:'Visión general',home:'Inicio / Home',content:'Contenido',collections:'Colecciones y categorías',playlists:'Playlists',podcasts:'Podcast',pages:'Mi perfil / páginas / SEO',artists:'Artistas y perfiles',producers:'Productoras',radios:'Radio',live:'En vivo / IPTV autorizada',events:'Cartelera y eventos',media:'Cine & Historias',jobs:'Bolsa de trabajo',work:'Trabajo y Marketplace',cct:'Convenio y fiscalización',prospecting:'Descubrimiento / Prospección',restrictions:'Restricciones',ads:'Inventario publicitario',monetization:'Promociones y campañas',requests:'Comunidad, apoyo y solicitudes',sources:'Fuentes automáticas',imports:'Importar / exportar',manuals:'Ayuda y manuales',system:'D1, IA y automatización',audit:'Auditoría y exportación',diagnostics:'Diagnóstico'};
-const UADAV_TAXONOMY={
+const PLATFORM_TAXONOMY={
  'Música y shows':['Cantante','Solista','Banda','Dúo','Músico','Instrumentista','DJ','DJ Set','Concierto / Recital','Festival musical','Coro','Orquesta'],
  'En escena · Teatro y actuación':['Actor / Actriz','Compañía teatral','Teatro independiente','Teatro musical','Espectáculo teatral','Improvisación','Títeres / Marionetas'],
  'Circo y destrezas':['Artista circense','Acróbata','Trapecista','Malabarista','Equilibrista','Contorsionista','Payaso / Clown','Fakir','Artista aéreo'],
@@ -132,8 +132,8 @@ const UADAV_TAXONOMY={
  'Espectáculos y espacios':['Circo','Teatro / Sala','Centro cultural','Festival','Show familiar','Espectáculo infantil','Productora'],
  'Cine, series y audiovisual':['Película','Serie','Documental','Cortometraje','Productor audiovisual','Streamer','Creador digital','Podcast','Radio','Videocreador']
 };
-const UADAV_ACTIVITY_OPTIONS=Object.entries(UADAV_TAXONOMY).flatMap(([family,items])=>items.map(x=>[x,x+' · '+family]));
-function activitySelect(id,label,value='',extra=''){const known=UADAV_ACTIVITY_OPTIONS.some(x=>x[0]===value),opts=[['','Sin clasificar'],...UADAV_ACTIVITY_OPTIONS];if(value&&!known)opts.splice(1,0,[value,value+' · personalizada']);return sel(id,label,value,opts,extra)}
+const PLATFORM_ACTIVITY_OPTIONS=Object.entries(PLATFORM_TAXONOMY).flatMap(([family,items])=>items.map(x=>[x,x+' · '+family]));
+function activitySelect(id,label,value='',extra=''){const known=PLATFORM_ACTIVITY_OPTIONS.some(x=>x[0]===value),opts=[['','Sin clasificar'],...PLATFORM_ACTIVITY_OPTIONS];if(value&&!known)opts.splice(1,0,[value,value+' · personalizada']);return sel(id,label,value,opts,extra)}
 
 
 function toast(msg,type='ok'){const el=document.createElement('div');el.className='toast '+(type==='bad'?'bad':'ok');el.textContent=msg;$('toasts').appendChild(el);setTimeout(()=>el.remove(),3500)}
@@ -441,7 +441,7 @@ window.runMaintenance=async()=>{const d=await api('admin/maintenance',{method:'P
 window.initD1=async()=>{if(!confirm('¿Inicializar las tablas D1 faltantes?'))return;const d=await api('admin/d1/init',{method:'POST'});toast('D1 inicializada · '+(d.queries||0)+' consultas');go('system',true)};window.migrateD1=async()=>{if(!confirm('¿Copiar registros compatibles de KV a D1? KV no será eliminado.'))return;await api('v7/migrate_kv',{method:'POST'});toast('Migración KV → D1 completada');go('system',true)};window.askAI=async()=>{const q=$('aiQuestion').value.trim();if(!q)return;const box=$('aiAnswer');box.textContent='Analizando…';const d=await api('v7/ai/assistant',{method:'POST',body:{question:q,context:{stats:S.cache.stats||{},view:S.view}}});box.textContent=JSON.stringify(d.result||d,null,2)};
 
 VIEWS.audit=async(force)=>{S.cache.audit=await cache('audit',()=>api('admin/audit-log'),force);$('main').innerHTML=head('Auditoría y exportación','Trazabilidad central y copias descargables.',`<button class="btn btn-primary" onclick="exportAll()">Exportar D1 JSON</button>`)+`<section class="card card-pad"><div class="section-title"><h2>Actividad reciente</h2><small>Últimos 100 registros</small></div>${table(['Acción','Entidad','ID','Fecha'],arr(S.cache.audit).map(a=>`<tr><td><strong>${esc(a.action||'—')}</strong></td><td>${esc(a.entity_type||'—')}</td><td>${esc(a.entity_id||'—')}</td><td>${fmtDate(a.created_at||a.fecha)}</td></tr>`))}</section><section class="card card-pad" style="margin-top:16px"><div class="section-title"><h2>Exportaciones rápidas</h2></div><div class="actions"><button class="btn btn-secondary" onclick="exportCurrent('artists')">Artistas CSV</button><button class="btn btn-secondary" onclick="exportCurrent('radios')">Radios CSV</button><button class="btn btn-secondary" onclick="exportCurrent('events')">Eventos CSV</button><button class="btn btn-secondary" onclick="downloadRights()">SADAIC / AADI / CAPIF</button></div></section>`};
-window.exportAll=async()=>{const r=await api('v7/export',{raw:true});if(!r.ok)throw new Error('No se pudo exportar');downloadBlob(await r.blob(),'uadavstream-d1-backup-'+new Date().toISOString().slice(0,10)+'.json')};
+window.exportAll=async()=>{const r=await api('v7/export',{raw:true});if(!r.ok)throw new Error('No se pudo exportar');downloadBlob(await r.blob(),String(S.cache.config?.branding?.name||'platform').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-d1-backup-'+new Date().toISOString().slice(0,10)+'.json')};
 window.downloadRights=async()=>{const r=await api('admin/rights-export?month='+new Date().toISOString().slice(0,7),{raw:true});downloadBlob(await r.blob(),'uadav-rights.csv')};
 window.exportCurrent=async type=>{let data=[];if(type==='artists')data=await api('artistas');if(type==='radios')data=await api('radios');if(type==='events')data=await api('cartelera');downloadBlob(new Blob([toCSV(arr(data))],{type:'text/csv'}),type+'.csv')};
 function toCSV(list){if(!list.length)return'';const keys=Array.from(new Set(list.flatMap(x=>Object.keys(x)))).filter(k=>typeof list.find(x=>x[k]!==undefined)?.[k]!=='object');return [keys.join(','),...list.map(x=>keys.map(k=>'"'+String(x[k]??'').replace(/"/g,'""')+'"').join(','))].join('\n')}function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
