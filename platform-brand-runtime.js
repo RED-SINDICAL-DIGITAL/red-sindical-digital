@@ -1,6 +1,6 @@
 // White-label runtime · CORE compatible with legacy UADAV globals.
 (()=>{'use strict';
-const API=window.UADAV_API_BASE||window.PLATFORM_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';
+const API=window.PLATFORM_API_BASE||window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';
 const up=(sel,attr,val)=>{if(!val)return;document.querySelectorAll(sel).forEach(el=>attr?el.setAttribute(attr,val):el.textContent=val)};
 const meta=(name,val,prop=false)=>{if(!val)return;let el=document.head.querySelector(`meta[${prop?'property':'name'}="${name}"]`);if(!el){el=document.createElement('meta');el.setAttribute(prop?'property':'name',name);document.head.appendChild(el)}el.content=val};
 const link=(rel,href)=>{if(!href)return;let el=document.head.querySelector('link[rel="'+rel+'"]');if(!el){el=document.createElement('link');el.rel=rel;document.head.appendChild(el)}el.href=href};
@@ -9,7 +9,10 @@ window.PlatformBrand=brand;window.UADAVBrand=window.UADAVBrand||brand;
 up('[data-brand-name]',null,brand.name);up('[data-brand-icon]',null,brand.icon);up('[data-brand-full]',null,(brand.icon?brand.icon+' ':'')+brand.name);up('[data-brand-logo]','src',brand.logo_url);
 if(seo.title)document.title=seo.title;meta('description',seo.description);meta('keywords',seo.keywords);meta('google-site-verification',seo.google_site_verification);meta('msvalidate.01',seo.msvalidate_01);meta('og:title',seo.title,true);meta('og:description',seo.description,true);meta('og:image',seo.og_image,true);link('icon',brand.favicon_url);
 const origin=String(seo.canonical_origin||'').replace(/\/$/,'');if(origin)link('canonical',origin+location.pathname+(location.search||''));
-window.PlatformModules={artists:true,radio:true,podcasts:true,iptv:true,events:true,jobs:true,marketplace:true,pro:true,ads:true,...(cfg.modules||{})};document.dispatchEvent(new CustomEvent('platformbrand',{detail:brand}));document.dispatchEvent(new CustomEvent('platformmodules',{detail:window.PlatformModules}));
+window.PlatformModules={artists:true,radio:true,podcasts:true,iptv:true,events:true,jobs:true,marketplace:true,pro:true,ads:true,union:false,...(cfg.modules||{})};
+const routeModules={'/artistas.html':'artists','/artista.html':'artists','/gestionar-artista.html':'artists','/para-artistas.html':'artists','/radio.html':'radio','/en-vivo.html':'iptv','/cartelera.html':'events','/publicar-evento.html':'events','/trabajo.html':'jobs','/bolsa-trabajo.html':'jobs'};
+const required=routeModules[location.pathname.toLowerCase()];if(required&&window.PlatformModules[required]===false){document.documentElement.innerHTML='<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Módulo no disponible</title></head><body style="margin:0;background:#050608;color:#fff;font-family:system-ui;display:grid;min-height:100vh;place-items:center"><main style="max-width:560px;padding:28px;text-align:center"><h1 style="font-size:28px">Módulo no disponible</h1><p style="color:#aab5c5">Esta función no está habilitada en '+brand.name+'.</p><a href="/app.html" style="display:inline-block;margin-top:14px;padding:11px 16px;border-radius:999px;background:#2f6df6;color:#fff;text-decoration:none;font-weight:800">Volver al inicio</a></main></body>';return}
+document.dispatchEvent(new CustomEvent('platformbrand',{detail:brand}));document.dispatchEvent(new CustomEvent('platformmodules',{detail:window.PlatformModules}));
 }catch(_){}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
