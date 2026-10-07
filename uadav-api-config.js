@@ -1,6 +1,7 @@
 // ★ UADAV STREAM · API centralizada
 // Fuente única de API para plataforma, Admin y vistas V11.7.
-window.UADAV_API_BASE = window.UADAV_API_BASE || 'https://uadav-api.uadavstream.workers.dev/api/';
+window.PLATFORM_API_BASE = window.PLATFORM_API_BASE || window.UADAV_API_BASE || 'https://uadav-api.uadavstream.workers.dev/api/';
+window.UADAV_API_BASE = window.UADAV_API_BASE || window.PLATFORM_API_BASE;
 window.UADAV_USE_LOCAL_API = window.UADAV_USE_LOCAL_API === true;
 
 (function(){
