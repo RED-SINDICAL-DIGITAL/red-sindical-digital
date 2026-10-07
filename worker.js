@@ -339,10 +339,11 @@ export default {
       if(!hasD1())return {configured:false,ready:false};
       if(d1SchemaReady)return {configured:true,ready:true};
       try{
-        const row=await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='cct_assessments' LIMIT 1`).first();
-        if(!row) await runD1Bootstrap();
+        const required=['cct_assessments','artist_plan_state','pro_payment_orders','audience_events'];let missing=[];
+        for(const name of required){const row=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=? LIMIT 1").bind(name).first();if(!row)missing.push(name);}
+        if(missing.length) await runD1Bootstrap();
         d1SchemaReady=true;
-        return {configured:true,ready:true,auto_initialized:!row};
+        return {configured:true,ready:true,auto_initialized:missing.length>0,missing_initialized:missing};
       }catch(e){
         await recordD1SyncError('schema',e);
         return {configured:true,ready:false,error:String(e?.message||e)};
@@ -1676,8 +1677,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(!hasD1())return json({success:false,stored:false},202); await ensureD1Schema(); const body=await request.json().catch(()=>({}));
       const allowed=new Set(['profile_view','play_start','follow','favorite','playlist_add','ticket_click','hire_click','support_click','share']),eventType=String(body.event_type||'');
       if(!allowed.has(eventType))return json({error:'event_type no permitido'},400);
-      const artistId=String(body.artist_id||'').trim().slice(0,160)||null,contentId=String(body.content_id||'').trim().slice(0,160)||null,sessionId=String(body.session_id||'').trim().slice(0,160)||null;
-      await env.DB.prepare('INSERT INTO audience_events(artist_id,content_id,event_type,session_id,source,province,country,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)').bind(artistId,contentId,eventType,sessionId,String(body.source||'web').slice(0,80),String(body.province||'').slice(0,100)||null,String(body.country||'').slice(0,100)||null,JSON.stringify(body.metadata||{}).slice(0,4000),isoNow()).run();
+      const artistId=String(body.artist_id||'').trim().slice(0,160)||null,contentId=String(body.content_id||'').trim().slice(0,160)||null,sessionId=String(body.session_id||'').trim().slice(0,160)||null;if(!artistId&&!contentId)return json({error:'artist_id o content_id requerido'},400);
+      const source=String(body.source||'web').slice(0,80),country=String(request.cf?.country||'').slice(0,8)||null,province=String(request.cf?.region||'').slice(0,100)||null,meta=body.metadata&&typeof body.metadata==='object'&&!Array.isArray(body.metadata)?body.metadata:{},metadata={};for(const k of ['surface','position','query','referrer_type'])if(meta[k]!=null)metadata[k]=String(meta[k]).slice(0,200);
+      if(sessionId){const since=new Date(Date.now()-60*1000).toISOString(),dup=await env.DB.prepare('SELECT id FROM audience_events WHERE artist_id IS ? AND content_id IS ? AND event_type=? AND session_id=? AND created_at>=? LIMIT 1').bind(artistId,contentId,eventType,sessionId,since).first();if(dup)return json({success:true,stored:false,deduplicated:true});const burst=await env.DB.prepare('SELECT COUNT(*) count FROM audience_events WHERE session_id=? AND created_at>=?').bind(sessionId,new Date(Date.now()-60*1000).toISOString()).first();if(Number(burst?.count||0)>=60)return json({success:true,stored:false,rate_limited:true},202);}
+      await env.DB.prepare('INSERT INTO audience_events(artist_id,content_id,event_type,session_id,source,province,country,metadata_json,created_at) VALUES(?,?,?,?,?,?,?,?,?)').bind(artistId,contentId,eventType,sessionId,source,province,country,JSON.stringify(metadata).slice(0,1200),isoNow()).run();
       return json({success:true,stored:true});
     }
 
