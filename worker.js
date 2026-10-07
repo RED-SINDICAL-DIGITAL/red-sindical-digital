@@ -339,7 +339,7 @@ export default {
       if(!hasD1())return {configured:false,ready:false};
       if(d1SchemaReady)return {configured:true,ready:true};
       try{
-        const required=['cct_assessments','artist_plan_state','pro_payment_orders','audience_events'];let missing=[];
+        const required=['cct_assessments','artist_plan_state','pro_payment_orders','audience_events','artist_owners','artist_claim_evidence'];let missing=[];
         for(const name of required){const row=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=? LIMIT 1").bind(name).first();if(!row)missing.push(name);}
         if(missing.length) await runD1Bootstrap();
         d1SchemaReady=true;
@@ -1105,6 +1105,23 @@ CREATE TABLE IF NOT EXISTS artist_ai_reports (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_ai_reports_artist ON artist_ai_reports(artist_id,created_at DESC);
+
+CREATE TABLE IF NOT EXISTS artist_owners (
+  id TEXT PRIMARY KEY, artist_id TEXT NOT NULL, claim_id TEXT, contact_email TEXT,
+  role TEXT NOT NULL DEFAULT 'owner', status TEXT NOT NULL DEFAULT 'active',
+  verification_level TEXT NOT NULL DEFAULT 'admin_approved',
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL, revoked_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_artist_owners_artist ON artist_owners(artist_id,status);
+CREATE INDEX IF NOT EXISTS idx_artist_owners_claim ON artist_owners(claim_id);
+CREATE INDEX IF NOT EXISTS idx_artist_owners_email ON artist_owners(contact_email);
+
+CREATE TABLE IF NOT EXISTS artist_claim_evidence (
+  id TEXT PRIMARY KEY, claim_id TEXT NOT NULL, evidence_type TEXT NOT NULL, value TEXT,
+  status TEXT NOT NULL DEFAULT 'submitted', created_at TEXT NOT NULL,
+  reviewed_at TEXT, review_note TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_claim_evidence_claim ON artist_claim_evidence(claim_id,status);
 
 CREATE TABLE IF NOT EXISTS pro_payment_orders (
   id TEXT PRIMARY KEY, artist_id TEXT NOT NULL, account_id TEXT, plan_period TEXT NOT NULL DEFAULT 'annual',
@@ -2666,7 +2683,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         if(!artist)return json({error:'Artista asociado no encontrado'},404);
         const arr=await getArray('artistas'); let i=arr.findIndex(a=>String(publicArtistFromItem(a).id)===String(claim.artist_id)); if(i<0){arr.push(artist);i=arr.length-1;}
         const token='UAD-ART-'+crypto.randomUUID().replace(/-/g,''); const artistId=String(publicArtistFromItem(arr[i]).id); await env.UADAV_DB.put(artistTokenKey(token),JSON.stringify({artist_id:artistId,claim_id:claimId,email:String(claim.email||'').toLowerCase(),role:'owner',verification:'admin_approved',created:now,expires:Date.now()+1000*60*60*24*365*2}));
-        arr[i]={...arr[i],claimed:true,claim_status:'approved',claim_email:claim.email||'',claim_name:claim.name||'',claim_at:now,claim_id:claim.id,self_managed:true}; await putJSON('artistas',arr); await syncArtistsD1([arr[i]]);
+        arr[i]={...arr[i],claimed:true,claim_status:'approved',claim_email:claim.email||'',claim_name:claim.name||'',claim_at:now,claim_id:claim.id,self_managed:true}; await putJSON('artistas',arr); await syncArtistsD1([arr[i]]); if(hasD1())await env.DB.prepare(`INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET artist_id=excluded.artist_id,contact_email=excluded.contact_email,status='active',verification_level=excluded.verification_level,updated_at=excluded.updated_at`).bind('OWN-'+claimId,artistId,claimId,String(claim.email||'').toLowerCase(),'owner','active','admin_approved',now,now).run();
         if(hasD1()) await env.DB.prepare(`UPDATE artist_claims SET status='approved',reviewed_at=?,review_note=? WHERE id=?`).bind(now,String(b.review_note||'Aprobado por administración').slice(0,1000),claimId).run();
         else {const list=await getArray('artist_claims');const ix=list.findIndex(x=>String(x.id)===claimId);if(ix>=0){list[ix]={...list[ix],status:'approved',reviewed_at:now,review_note:String(b.review_note||'').slice(0,1000)};await putJSON('artist_claims',list);}}
         const base=String(b.base_url||'https://uadavstream.com.ar').replace(/\/$/,''); const profileUrl=base+'/gestionar-artista.html?token='+encodeURIComponent(token);
@@ -2678,6 +2695,13 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       else {const list=await getArray('artist_claims');const ix=list.findIndex(x=>String(x.id)===claimId);if(ix>=0){list[ix]={...list[ix],status,reviewed_at:now,review_note:String(b.review_note||'').slice(0,1000)};await putJSON('artist_claims',list);}}
       await audit('artist_claim_'+status,'artist_claim',claimId,{}); return json({success:true,status});
     }
+    if(path==='/api/admin/artist-owners' && request.method==='GET'){
+      if(!isAdmin())return json({error:'No autorizado'},401);if(!hasD1())return json({error:'D1 no configurado'},503);await ensureD1Schema();const artistId=String(url.searchParams.get('artist_id')||'').trim();const q=artistId?'SELECT * FROM artist_owners WHERE artist_id=? ORDER BY created_at DESC LIMIT 100':'SELECT * FROM artist_owners ORDER BY created_at DESC LIMIT 500';const r=artistId?await env.DB.prepare(q).bind(artistId).all():await env.DB.prepare(q).all();return json(r.results||[]);
+    }
+    if(path==='/api/admin/artist-owners/revoke' && request.method==='POST'){
+      if(!isAdmin())return json({error:'No autorizado'},401);if(!hasD1())return json({error:'D1 no configurado'},503);await ensureD1Schema();const b=await request.json().catch(()=>({})),id=String(b.id||'').trim(),note=String(b.note||'').trim();if(!id||!note)return json({error:'id y motivo requeridos'},400);const now=isoNow(),owner=await env.DB.prepare('SELECT * FROM artist_owners WHERE id=?').bind(id).first();if(!owner)return json({error:'Propietario no encontrado'},404);await env.DB.prepare("UPDATE artist_owners SET status='revoked',revoked_at=?,updated_at=? WHERE id=?").bind(now,now,id).run();await audit('artist_owner_revoked','artist',owner.artist_id,{owner_id:id,note:note.slice(0,500)});return json({success:true,id,status:'revoked'});
+    }
+
     if(path==='/api/admin/artistas/sync' && request.method==='POST'){
       if(!isAdmin()) return json({error:'No autorizado'},401);
       const arr=await allCanonicalArtists();
