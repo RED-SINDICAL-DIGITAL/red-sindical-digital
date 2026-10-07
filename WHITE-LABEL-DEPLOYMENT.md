@@ -50,3 +50,14 @@ No considerar una versión desplegada porque exista un commit. Confirmar por sep
 - prueba E2E completada.
 
 Para una nueva marca, por ejemplo BeatPlay, repetir este procedimiento con recursos independientes; nunca reutilizar D1/KV/secrets de UADAV STREAM.
+
+
+## 8. Separación CORE / módulos institucionales
+- Ticketing del CORE usa modo genérico de consulta/lista de interés; una marca puede integrar luego su operador de pagos y control de acceso.
+- Sindicato/CCT es un módulo opcional y debe permanecer desactivado en marcas comerciales como BeatPlay.
+- Artista PRO, propiedad del perfil y afiliación institucional son estados independientes.
+- Los flags de módulos deben gobernar tanto la navegación pública como el Centro de Control.
+- Los textos visibles deben provenir de branding/configuración; los identificadores UADAV_* que permanezcan son compatibilidad técnica, no identidad de producto.
+
+## 9. Criterio de salida para una nueva marca
+Antes de publicar: identidad y dominio configurados; D1/KV propios; Worker propio; módulos elegidos; SEO verificado; precios/medios de pago definidos si PRO está activo; reproducción, búsqueda, radio/IPTV autorizada y formularios probados; ningún dato, secreto, propietario de artista ni orden comercial compartido con otra instalación.
