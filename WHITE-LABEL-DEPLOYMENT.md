@@ -61,3 +61,25 @@ Para una nueva marca, por ejemplo BeatPlay, repetir este procedimiento con recur
 
 ## 9. Criterio de salida para una nueva marca
 Antes de publicar: identidad y dominio configurados; D1/KV propios; Worker propio; módulos elegidos; SEO verificado; precios/medios de pago definidos si PRO está activo; reproducción, búsqueda, radio/IPTV autorizada y formularios probados; ningún dato, secreto, propietario de artista ni orden comercial compartido con otra instalación.
+
+
+## 10. CORE build 11722 — controles implementados
+
+- CCT exige modules.union=true. El valor omitido es false; configurar explícitamente la instalación institucional antes de desplegar si necesita CCT.
+- Marketplace y contrataciones respetan modules.marketplace=false, incluyendo acceso directo por API.
+- Ticketing exige que modules.events y modules.ticketing estén activos. Sigue siendo una base de solicitudes; este cambio no integra pagos ni emite entradas.
+- Marketplace requiere PRO vigente y perfil visible. Afiliación institucional no determina el acceso comercial.
+- /api/seo/head entrega identidad, color, contacto y flags efectivos. El runtime puede obtener la marca desde /api/config si falla SEO.
+- Enlaces de módulos desactivados se ocultan también cuando son insertados después de la carga.
+- Se mantienen bindings, claves KV, tablas D1 e identificadores heredados. Las tablas CCT siguen presentes por compatibilidad; el acceso a sus rutas queda condicionado.
+- Build 11722 identifica este Worker. Un commit no cambia el build del Worker que está en producción.
+
+### Verificación reproducible
+Desde la raíz del repositorio:
+
+    node tests/white-label.mjs
+    node tests/brand-runtime.mjs
+    node --input-type=module --check < worker.js
+    node --check platform-brand-runtime.js
+
+Las pruebas usan KV independiente por instancia y una fixture DOM sin dependencias. Cubren bloqueo de rutas, autorización Admin, PRO sin afiliación, PRO vencido, perfil oculto, identidad, fallo de SEO y enlaces dinámicos. No sustituyen la prueba visual en navegador ni la verificación contra D1/Cloudflare reales.

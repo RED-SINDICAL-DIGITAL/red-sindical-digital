@@ -1,5 +1,5 @@
 const VERSION = 'V11.7';
-const BUILD = '11719';
+const BUILD = '11722';
 
 function uadavSafeJSON(v,fallback={}){try{return typeof v==='string'?JSON.parse(v):(v??fallback)}catch{return fallback}}
 async function uadavDeliverNotification(payload,env){const url=String(env.EMAIL_AUTOMATION_URL||'').trim();if(!url)return {sent:false,reason:'EMAIL_AUTOMATION_URL no configurada'};try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(env.EMAIL_AUTOMATION_SECRET?{'X-UADAV-Webhook-Secret':String(env.EMAIL_AUTOMATION_SECRET)}:{})},body:JSON.stringify(payload)});return r.ok?{sent:true}:{sent:false,status:r.status}}catch(e){return {sent:false,error:String(e?.message||e)}}}
@@ -40,6 +40,28 @@ export default {
     const putJSON = (key, value) => env.UADAV_DB.put(key, JSON.stringify(value));
     const getArray = (key) => getJSON(key, []);
     const getObject = (key) => getJSON(key, {});
+    // Request-local configuration: the same flags govern API and public UI.
+    let platformConfigPromise;
+    const platformConfig = () => platformConfigPromise ||= getObject('config_global');
+    const platformModules = async () => {
+      const cfg = await platformConfig();
+      const defaults = {artists:true,radio:true,podcasts:true,iptv:true,events:true,jobs:true,marketplace:true,ticketing:true,pro:true,ads:true,union:false};
+      const flags = cfg?.modules || {};
+      for (const key of Object.keys(defaults)) if (typeof flags[key] === 'boolean') defaults[key] = flags[key];
+      return defaults;
+    };
+    const requiredModules = [];
+    if (/^\/api\/(?:admin\/|artist\/)?cct(?:\/|$)/.test(path)) requiredModules.push('union');
+    if (/^\/api\/(?:admin\/)?marketplace(?:\/|$)/.test(path) || path === '/api/contrataciones') requiredModules.push('marketplace');
+    if (/^\/api\/(?:admin\/)?ticketing(?:\/|$)/.test(path)) requiredModules.push('events','ticketing');
+    if (requiredModules.length) {
+      let modules;
+      try { modules = await platformModules(); }
+      catch (_) { return json({error:'Configuración no disponible',code:'CONFIG_UNAVAILABLE'},503); }
+      const disabled = requiredModules.find(key => !modules[key]);
+      if (disabled) return json({error:'Módulo no disponible',code:'MODULE_DISABLED',module:disabled},404);
+    }
+
     const isoNow = () => new Date().toISOString();
     const normalizeSearchText = (v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
     const arrSafe = v => Array.isArray(v)?v:[];
@@ -1138,10 +1160,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: 'UADAVSTREAM', version: VERSION, build: BUILD, kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: (await platformIdentity()).name, version: VERSION, build: BUILD, kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
-      return json({ service:'UADAVSTREAM', architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
+      return json({ service:(await platformIdentity()).name, architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
     }
     if (path === '/api/admin/invidious/health' && request.method === 'GET') {
       if(!isAdmin()) return json({error:'No autorizado'},401);
@@ -1882,7 +1904,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const cfg=await getObject('config_global'),seo=cfg?.seo||{},origin=String(seo.canonical_origin||url.origin).replace(/\/$/,'');const staticPaths=['/','/artistas.html','/cartelera.html','/radio.html','/en-vivo.html','/trabajo.html','/descubrir.html'];const artists=(await allCanonicalArtists()).filter(a=>publicArtistFromItem(a).visible!==false).slice(0,50000);const events=(await getArray('eventos_publicados')).filter(e=>e?.visible!==false).slice(0,50000);const locs=[...staticPaths.map(p=>origin+p),...artists.map(a=>origin+'/artista.html?id='+encodeURIComponent(publicArtistFromItem(a).id)),...events.map(e=>origin+'/cartelera.html?id='+encodeURIComponent(e.id||e.slug||''))];const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+locs.filter(Boolean).map(x=>'<url><loc>'+String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</loc></url>').join('')+'</urlset>';return new Response(xml,{headers:{'Content-Type':'application/xml; charset=utf-8','Cache-Control':'public, max-age=900'}});
     }
     if (path === '/api/seo/head' && request.method === 'GET') {
-      const cfg=await getObject('config_global'),b=cfg?.branding||cfg?.platform||{},seo=cfg?.seo||{};return json({brand:{name:b.name||'UADAV STREAM',icon:b.icon||'★',logo_url:b.logo_url||'',favicon_url:b.favicon_url||'',tagline:b.tagline||''},seo:{title:seo.title||b.name||'UADAV STREAM',description:seo.description||b.tagline||'',keywords:seo.keywords||'',og_image:seo.og_image||'',canonical_origin:seo.canonical_origin||'',google_site_verification:seo.google_site_verification||'',msvalidate_01:seo.msvalidate_01||''}});
+      const cfg=await platformConfig(),b=cfg?.branding||cfg?.platform||{},seo=cfg?.seo||{};return json({brand:{name:b.name||'PLATFORM',icon:b.icon??'★',logo_url:b.logo_url||'',favicon_url:b.favicon_url||'',tagline:b.tagline||'',primary_color:b.primary_color||'#2f6df6',support_email:b.support_email||''},modules:await platformModules(),seo:{title:seo.title||b.name||'PLATFORM',description:seo.description||b.tagline||'',keywords:seo.keywords||'',og_image:seo.og_image||'',canonical_origin:seo.canonical_origin||'',google_site_verification:seo.google_site_verification||'',msvalidate_01:seo.msvalidate_01||''}});
     }
 
     if (path === '/api/admin/seo/indexnow' && request.method === 'POST') {
@@ -1911,7 +1933,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
 
     if (path === '/api/config' || path === '/api/config_global') {
-      if (request.method === 'GET') return json(await getObject('config_global'));
+      if (request.method === 'GET') return json(await platformConfig());
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
       const body = await request.text();
       await env.UADAV_DB.put('config_global', body);
@@ -2758,8 +2780,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
     if(path==='/api/contrataciones' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); if(!b.artist_id||!b.nombre||!b.email)return json({error:'Artista, nombre y email son obligatorios'},400); if(b.acepta_contrato!==true)return json({error:'Debe aceptar el contrato/condiciones para continuar'},400);
-      const artists=await getArray('artistas'); const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(b.artist_id)); if(!artist)return json({error:'Artista no encontrado'},404); const pro=artist.pro_active===true&&(!artist.pro_expires||Date.parse(artist.pro_expires)>Date.now()); if(!pro||artist.marketplace_enabled===false)return json({error:'La contratación directa está disponible para perfiles UADAV STREAM PRO activos.'},403);
-      const list=await getArray('contrataciones'); const item={id:'CON-'+Date.now().toString(36).toUpperCase(),creado:new Date().toISOString(),artist_id:String(b.artist_id),nombre:String(b.nombre).slice(0,140),empresa:String(b.empresa||'').slice(0,160),email:String(b.email).slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),evento:String(b.evento||'').slice(0,220),fecha:String(b.fecha||''),ciudad:String(b.ciudad||'').slice(0,100),honorario:String(b.honorario||'').slice(0,80),detalles:String(b.detalles||'').slice(0,3000),contrato_version:String(b.contrato_version||'UADAV-1.0').slice(0,40),contrato_url:String(b.contrato_url||'').slice(0,500),acepta_contrato:true,estado:'pendiente'}; list.push(item); while(list.length>2000)list.shift(); await putJSON('contrataciones',list); return json({success:true,item});
+      const artists=await getArray('artistas'); const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(b.artist_id)); if(!artist)return json({error:'Artista no encontrado'},404); const pro=artist.pro_active===true&&(!artist.pro_expires||Date.parse(artist.pro_expires)>Date.now()); if(!pro||artist.marketplace_enabled===false)return json({error:'La contratación directa está disponible para perfiles PRO activos.'},403);
+      const list=await getArray('contrataciones'); const item={id:'CON-'+Date.now().toString(36).toUpperCase(),creado:new Date().toISOString(),artist_id:String(b.artist_id),nombre:String(b.nombre).slice(0,140),empresa:String(b.empresa||'').slice(0,160),email:String(b.email).slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),evento:String(b.evento||'').slice(0,220),fecha:String(b.fecha||''),ciudad:String(b.ciudad||'').slice(0,100),honorario:String(b.honorario||'').slice(0,80),detalles:String(b.detalles||'').slice(0,3000),contrato_version:String(b.contrato_version||'CORE-1.0').slice(0,40),contrato_url:String(b.contrato_url||'').slice(0,500),acepta_contrato:true,estado:'pendiente'}; list.push(item); while(list.length>2000)list.shift(); await putJSON('contrataciones',list); return json({success:true,item});
     }
     if(path==='/api/contrataciones' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await getArray('contrataciones'));}
     if(path==='/api/admin/artista_contenido' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await getArray('artista_contenido'));}
@@ -3166,7 +3188,7 @@ async function saveEntityVersion(type,id,data){
 
     if(path==='/api/marketplace/request' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); const artistId=String(b.artist_id||'').trim(); if(!artistId||!b.requester_name||!b.requester_email)return json({error:'Artista, nombre y email son obligatorios'},400);
-      const artist=await artistFromD1(artistId)||(await allCanonicalArtists()).find(a=>String(publicArtistFromItem(a).id)===artistId); const p=artist?publicArtistFromItem(artist):null; if(!p||!p.afiliado_verificado||!p.marketplace_enabled)return json({error:'Este artista no recibe solicitudes por marketplace'},403);
+      const artist=await artistFromD1(artistId)||(await allCanonicalArtists()).find(a=>String(publicArtistFromItem(a).id)===artistId); const p=artist?publicArtistFromItem(artist):null; if(!p||p.visible===false||!p.marketplace_enabled)return json({error:'Este artista no recibe solicitudes por marketplace'},403);
       const item={id:makeId('MKT'),artist_id:artistId,requester_name:String(b.requester_name).slice(0,120),requester_email:String(b.requester_email).slice(0,180),requester_phone:String(b.requester_phone||'').slice(0,60),event_date:String(b.event_date||'').slice(0,40),city:String(b.city||'').slice(0,120),message:String(b.message||'').slice(0,1600),status:'new',created_at:isoNow(),updated_at:isoNow()};
       if(hasD1())await safeD1('marketplace_request',()=>env.DB.prepare(`INSERT INTO marketplace_requests(id,artist_id,requester_name,requester_email,requester_phone,event_date,city,message,status,created_at,updated_at,data_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`).bind(item.id,item.artist_id,item.requester_name,item.requester_email,item.requester_phone,item.event_date,item.city,item.message,item.status,item.created_at,item.updated_at,'{}').run());
       const list=await getArray('marketplace_requests');list.unshift(item);await putJSON('marketplace_requests',list.slice(0,2000)); await audit('marketplace_request','artist',artistId,{request_id:item.id}); return json({success:true,id:item.id});
@@ -3197,7 +3219,7 @@ async function saveEntityVersion(type,id,data){
     }
 
     if (path === '/api/platform_info') {
-      return json({ service: 'UADAVSTREAM', version: VERSION, build: BUILD, architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2','affiliate-growth-suite','artist-audience-chat','artist-support','presskit','ticketing-foundation','marketplace-foundation','radio-cover-cache','cct340-assistant','cct-current-scales','cct-fiscalization','uadav-tickets-preagreement'] });
+      return json({ service: (await platformIdentity()).name, modules: await platformModules(), version: VERSION, build: BUILD, architecture: 'Cloudflare D1 + KV', features: ['core-api','d1-bootstrap','event-calendar','prospecting','search-restrictions', 'youtube-search', 'chat', 'banners', 'radios', 'senales', 'artistas', 'premium', 'home-layout', 'youtube-popular-regional','artist-center','artist-self-management','contracting','artist-content','job-board','universal-content','collections','hybrid-sections','entity-versioning','radio-requests','radio-history','movies-series','seasons-episodes','monetization-v2','affiliate-growth-suite','artist-audience-chat','artist-support','presskit','ticketing-foundation','marketplace-foundation','radio-cover-cache','cct340-assistant','cct-current-scales','cct-fiscalization','uadav-tickets-preagreement'] });
     }
 
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.
@@ -3226,3 +3248,4 @@ async function saveEntityVersion(type,id,data){
     if(ctx?.waitUntil) ctx.waitUntil(run()); else await run();
   }
 };
+
