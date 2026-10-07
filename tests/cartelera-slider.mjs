@@ -1,0 +1,18 @@
+import {readFile} from 'node:fs/promises';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const html=await readFile(new URL('../cartelera.html',import.meta.url),'utf8');
+for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))if(m[1].trim())new vm.Script(m[1]);
+const code=html.slice(html.indexOf('function safeSlideLink('),html.indexOf('function buildHero('));
+const ctx=vm.createContext({});vm.runInContext(code,ctx);
+const paid=[{id:'a',destacado_pagado:true}],custom={title:'Campaña',image:'https://example.com/banner.jpg',link:'/radio.html'};
+assert.equal(ctx.chooseHeroSlides([],{} )[0]._generic,true);
+assert.equal(ctx.chooseHeroSlides(paid,{mode:'mixed',slides:[custom]}).length,2);
+assert.equal(ctx.chooseHeroSlides(paid,{mode:'custom',slides:[custom]})[0].titulo,'Campaña');
+assert.equal(ctx.chooseHeroSlides(paid,{mode:'featured',slides:[custom]})[0].id,'a');
+assert.equal(ctx.chooseHeroSlides(paid,{mode:'generic'})[0]._generic,true);
+assert.equal(ctx.chooseHeroSlides(paid,{mode:'off'}).length,0);
+assert.equal(ctx.chooseHeroSlides([],{slides:[{...custom,active:false}]})[0]._generic,true);
+assert.equal(ctx.chooseHeroSlides([],{slides:[{...custom,link:'javascript:alert(1)',image:'javascript:alert(1)'}]})[0].hero_href,'');
+assert.equal(ctx.safeSlideLink('//evil.example'),'');
+console.log('PASS: slider modes, empty fallback, inactive campaigns and safe URLs');
