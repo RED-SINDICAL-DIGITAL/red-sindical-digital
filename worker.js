@@ -1105,6 +1105,16 @@ CREATE TABLE IF NOT EXISTS artist_ai_reports (
 );
 CREATE INDEX IF NOT EXISTS idx_ai_reports_artist ON artist_ai_reports(artist_id,created_at DESC);
 
+CREATE TABLE IF NOT EXISTS pro_payment_orders (
+  id TEXT PRIMARY KEY, artist_id TEXT NOT NULL, account_id TEXT, plan_period TEXT NOT NULL DEFAULT 'annual',
+  duration_days INTEGER NOT NULL DEFAULT 365, amount REAL, currency TEXT NOT NULL DEFAULT 'ARS',
+  payment_method TEXT NOT NULL DEFAULT 'bank_transfer', payment_reference TEXT, status TEXT NOT NULL DEFAULT 'pending',
+  payer_name TEXT, payer_note TEXT, receipt_url TEXT, reported_at TEXT, reviewed_at TEXT, reviewed_by TEXT,
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_pro_orders_status ON pro_payment_orders(status,created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id,created_at DESC);
+`;
     // V8.1: la D1 se prepara sola. Si algo falla, KV continúa operando y el error queda auditado.
     if(hasD1()){ try{ await ensureD1Schema(); }catch(_){} }
     if (path === '/api/health') {
@@ -1599,6 +1609,24 @@ CREATE INDEX IF NOT EXISTS idx_ai_reports_artist ON artist_ai_reports(artist_id,
         days, visits: Number(counters?.visitas_totales || 0), events: total,
         by_type: byType, radios: radios.length, artists: artists.length, eventos_publicados: events.length
       });
+    }
+
+    if (path === '/api/pro/payment-orders' && request.method === 'POST') {
+      if(!hasD1())return json({error:'D1 no configurado'},503); await ensureD1Schema(); const body=await request.json().catch(()=>({})),artistId=String(body.artist_id||'').trim(); if(!artistId)return json({error:'artist_id requerido'},400);
+      const duration=Math.max(30,Math.min(366,Number(body.duration_days||365))),id='UAD-'+Date.now().toString(36).toUpperCase().slice(-6)+'-'+Math.random().toString(36).slice(2,5).toUpperCase(),now=isoNow();
+      await env.DB.prepare('INSERT INTO pro_payment_orders(id,artist_id,account_id,plan_period,duration_days,amount,currency,payment_method,status,payer_name,payer_note,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(id,artistId,String(body.account_id||'')||null,String(body.plan_period||'annual'),duration,Number(body.amount||0)||null,String(body.currency||'ARS').slice(0,8),'bank_transfer','pending',String(body.payer_name||'').slice(0,160),String(body.payer_note||'').slice(0,1000),now,now).run(); return json({success:true,order:{id,artist_id:artistId,status:'pending',duration_days:duration,payment_method:'bank_transfer'}});
+    }
+    if (path === '/api/pro/payment-orders/report' && request.method === 'POST') {
+      if(!hasD1())return json({error:'D1 no configurado'},503); await ensureD1Schema(); const body=await request.json().catch(()=>({})),id=String(body.order_id||'').trim(); if(!id)return json({error:'order_id requerido'},400); const row=await env.DB.prepare('SELECT id,status FROM pro_payment_orders WHERE id=?').bind(id).first(); if(!row)return json({error:'Orden no encontrada'},404); if(!['pending','reported'].includes(String(row.status)))return json({error:'La orden ya fue revisada'},409);
+      await env.DB.prepare("UPDATE pro_payment_orders SET status='reported',payment_reference=?,payer_name=?,payer_note=?,receipt_url=?,reported_at=?,updated_at=? WHERE id=?").bind(String(body.payment_reference||'').slice(0,160),String(body.payer_name||'').slice(0,160),String(body.payer_note||'').slice(0,1000),String(body.receipt_url||'').slice(0,1000),isoNow(),isoNow(),id).run(); return json({success:true,order_id:id,status:'reported'});
+    }
+    if (path === '/api/admin/pro-payment-orders' && request.method === 'GET') {
+      if(!isAdmin())return json({error:'No autorizado'},401); if(!hasD1())return json({error:'D1 no configurado'},503); await ensureD1Schema(); const r=await env.DB.prepare('SELECT * FROM pro_payment_orders ORDER BY created_at DESC LIMIT 500').all(); return json(r.results||[]);
+    }
+    if (path === '/api/admin/pro-payment-orders/review' && request.method === 'POST') {
+      if(!isAdmin())return json({error:'No autorizado'},401); if(!hasD1())return json({error:'D1 no configurado'},503); await ensureD1Schema(); const body=await request.json().catch(()=>({})),id=String(body.order_id||'').trim(),decision=String(body.decision||''); if(!id||!['approve','reject'].includes(decision))return json({error:'Orden y decisión requeridas'},400); const row=await env.DB.prepare('SELECT * FROM pro_payment_orders WHERE id=?').bind(id).first(); if(!row)return json({error:'Orden no encontrada'},404); const now=isoNow(),status=decision==='approve'?'approved':'rejected'; await env.DB.prepare('UPDATE pro_payment_orders SET status=?,reviewed_at=?,reviewed_by=?,updated_at=? WHERE id=?').bind(status,now,'Administrador Nacional',now,id).run();
+      if(decision==='approve'){const current=await env.DB.prepare('SELECT pro_expires_at FROM artist_plan_state WHERE artist_id=?').bind(row.artist_id).first(),base=current?.pro_expires_at&&Date.parse(current.pro_expires_at)>Date.now()?new Date(current.pro_expires_at):new Date();base.setDate(base.getDate()+Number(row.duration_days||365));const expires=base.toISOString();await env.DB.prepare("INSERT INTO artist_plan_state(artist_id,plan,pro_started_at,pro_expires_at,source,analytics_enabled,ai_enabled,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(artist_id) DO UPDATE SET plan='pro',pro_expires_at=excluded.pro_expires_at,source='manual_payment',analytics_enabled=1,ai_enabled=1,updated_at=excluded.updated_at").bind(row.artist_id,'pro',now,expires,'manual_payment',1,1,now).run();await audit('pro_payment_approved','artist',row.artist_id,{order_id:id,duration_days:row.duration_days,expires});return json({success:true,status,artist_id:row.artist_id,pro_expires_at:expires})}
+      await audit('pro_payment_rejected','artist',row.artist_id,{order_id:id}); return json({success:true,status,artist_id:row.artist_id});
     }
 
     if (path === '/api/admin/artist-plan' && request.method === 'GET') {
