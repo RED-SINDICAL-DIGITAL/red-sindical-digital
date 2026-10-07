@@ -93,3 +93,9 @@ Las pruebas usan KV independiente por instancia y una fixture DOM sin dependenci
 - Una productora se puede editar con Sindicato/CCT desactivado, preservando su dato institucional previo.
 - Se corrigió el cierre incorrecto de la función de apertura del importador M3U, que invalidaba el script del Admin.
 - Prueba adicional: node tests/admin-modules.mjs. Incluye análisis de sintaxis de todos los scripts inline del Admin y comprobaciones funcionales aisladas.
+
+## 12. Identidad local de instalación
+
+platform-instance.json guarda únicamente la marca pública de esta instalación. No contiene datos ni secretos. Al clonar para BeatPlay u otra marca, cambiar sus valores junto con la API, dominio y recursos independientes. El Admin y el runtime usan esta identidad si falta la configuración remota; una marca guardada desde Admin tiene prioridad.
+
+Verificación pública realizada: Admin responde y muestra API disponible V11.7; navegación a Radio muestra Beat Digital; búsqueda Madonna entrega 25 resultados y aumenta a 42 al cargar la página siguiente. El clic en un resultado abre el reproductor YouTube; el navegador remoto no confirmó avance del medio (readyState 0). Esto no confirma el build del Worker, la reproducción audiovisual ni el estado interno de D1. El acceso al panel Cloudflare quedó bloqueado por un fallo de verificación de su pantalla de ingreso; no se desplegó el Worker.

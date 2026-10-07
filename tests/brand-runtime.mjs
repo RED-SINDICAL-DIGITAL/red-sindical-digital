@@ -21,7 +21,7 @@ class Element {
  }
  querySelector(selector){return this.querySelectorAll(selector)[0]||null}
 }
-async function boot(config,path='/app.html',headFails=false){
+async function boot(config,path='/app.html',headFails=false,instance={}){
  const documentElement=new Element('html'),head=new Element('head'),body=new Element('body');
  documentElement.append(head,body);
  const name=new Element('span');name.setAttribute('data-brand-name','');
@@ -32,7 +32,7 @@ async function boot(config,path='/app.html',headFails=false){
  const window={PLATFORM_API_BASE:'https://instance.test/api/'};
  const context={window,document,location:{href:'https://instance.test'+path,pathname:path,origin:'https://instance.test',search:''},URL,AbortController,setTimeout,clearTimeout,
   CustomEvent:class{},MutationObserver:class{constructor(callback){observer=callback}observe(){}},
-  fetch:async url=>({ok:!headFails||!url.endsWith('seo/head'),json:async()=>url.endsWith('config')?config:{brand:config.branding,modules:config.modules}})
+  fetch:async url=>({ok:!headFails||!url.endsWith('seo/head'),json:async()=>url.endsWith('/platform-instance.json')?instance:url.endsWith('config')?config:{brand:config.branding,modules:config.modules}})
  };
  vm.runInNewContext(source,context);await window.PlatformBrandReady;
  return {window,document,name,market,radio,observer};
@@ -55,3 +55,9 @@ for(const path of ['/evento.html','/marketplace.html','/podcasts.html','/planes-
  assert.equal(state.document.body.children[0].tag,'main',path);
 }
 console.log('PASS: runtime DOM fixture: SEO failure, brand color, async links, disabled routes, literal brand text');
+
+const local=await boot({},'/app.html',true,{branding:{name:'UADAV STREAM',icon:'★',primary_color:'#2f6df6'}});
+assert.equal(local.name.textContent,'UADAV STREAM','instance identity survives missing remote configuration');
+const override=await boot({branding:{name:'BeatPlay'}},'/app.html',false,{branding:{name:'UADAV STREAM'}});
+assert.equal(override.name.textContent,'BeatPlay','configured identity overrides installation fallback');
+console.log('PASS: local instance branding and remote override');

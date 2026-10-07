@@ -37,9 +37,9 @@
     if (!el) { el=document.createElement('link'); el.rel=rel; document.head.appendChild(el); }
     el.href=href;
   };
-  async function read(path) {
+  async function read(path,local=false) {
     const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);
-    try { const r=await fetch(API+path,{cache:'no-store',signal:ctl.signal}); return r.ok?unwrap(await r.json()):{}; }
+    try { const r=await fetch(local?path:API+path,{cache:'no-store',signal:ctl.signal}); return r.ok?unwrap(await r.json()):{}; }
     catch (_) { return {}; } finally { clearTimeout(timer); }
   }
   function applyNavigation(root=document) {
@@ -63,8 +63,10 @@
     main.append(title,text,back);document.body.replaceChildren(main);document.body.style.background='#050608';
   }
   async function boot() {
-    const [head,cfg]=await Promise.all([read('seo/head'),read('config')]);
-    const b=head.brand||cfg.branding||cfg.platform||{},seo=head.seo||cfg.seo||{};
+    const [head,cfg,instance]=await Promise.all([read('seo/head'),read('config'),read('/platform-instance.json',true)]);
+    const configured=cfg.branding||cfg.platform||{};
+    const b={...(head.brand||{}),...(instance.branding||{}),...configured},seo=head.seo||cfg.seo||{};
+    if((!b.name||b.name==='PLATFORM')&&instance.branding?.name&&!configured.name)b.name=instance.branding.name;
     const color=/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(b.primary_color||'')?b.primary_color:'#2f6df6';
     const brand={name:String(b.name||'PLATFORM'),icon:String(b.icon??'★'),logo_url:safeURL(b.logo_url||''),favicon_url:safeURL(b.favicon_url||''),tagline:String(b.tagline||''),primary_color:color,support_email:String(b.support_email||''),seo};
     window.PlatformBrand=brand;window.UADAVBrand=brand;
