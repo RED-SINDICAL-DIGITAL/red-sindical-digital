@@ -1853,6 +1853,16 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       }
     }
 
+    if (path === '/robots.txt' || path === '/api/seo/robots') {
+      const cfg=await getObject('config_global'),seo=cfg?.seo||{},origin=String(seo.canonical_origin||url.origin).replace(/\/$/,'');return new Response('User-agent: *\nAllow: /\nDisallow: /admin.html\nDisallow: /gestionar-artista.html\nSitemap: '+origin+'/sitemap.xml\n',{headers:{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'public, max-age=900'}});
+    }
+    if (path === '/sitemap.xml' || path === '/api/seo/sitemap') {
+      const cfg=await getObject('config_global'),seo=cfg?.seo||{},origin=String(seo.canonical_origin||url.origin).replace(/\/$/,'');const staticPaths=['/','/artistas.html','/cartelera.html','/radio.html','/en-vivo.html','/trabajo.html','/descubrir.html'];const artists=(await allCanonicalArtists()).filter(a=>publicArtistFromItem(a).visible!==false).slice(0,50000);const events=(await getArray('eventos_publicados')).filter(e=>e?.visible!==false).slice(0,50000);const locs=[...staticPaths.map(p=>origin+p),...artists.map(a=>origin+'/artista.html?id='+encodeURIComponent(publicArtistFromItem(a).id)),...events.map(e=>origin+'/cartelera.html?id='+encodeURIComponent(e.id||e.slug||''))];const xml='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+locs.filter(Boolean).map(x=>'<url><loc>'+String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</loc></url>').join('')+'</urlset>';return new Response(xml,{headers:{'Content-Type':'application/xml; charset=utf-8','Cache-Control':'public, max-age=900'}});
+    }
+    if (path === '/api/seo/head' && request.method === 'GET') {
+      const cfg=await getObject('config_global'),b=cfg?.branding||cfg?.platform||{},seo=cfg?.seo||{};return json({brand:{name:b.name||'UADAV STREAM',icon:b.icon||'★',logo_url:b.logo_url||'',favicon_url:b.favicon_url||'',tagline:b.tagline||''},seo:{title:seo.title||b.name||'UADAV STREAM',description:seo.description||b.tagline||'',keywords:seo.keywords||'',og_image:seo.og_image||'',canonical_origin:seo.canonical_origin||'',google_site_verification:seo.google_site_verification||'',msvalidate_01:seo.msvalidate_01||''}});
+    }
+
     if (path === '/api/apariencia') {
       if (request.method === 'GET') return json(await getObject('apariencia'));
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
