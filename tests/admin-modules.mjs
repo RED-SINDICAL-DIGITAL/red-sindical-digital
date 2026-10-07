@@ -3,6 +3,7 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 const html=await readFile(new URL('../admin.html',import.meta.url),'utf8');
 for (const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) if(match[1].trim())new vm.Script(match[1]);
+assert.match(html,/preloadPublicBrand\(\);\s*publicHealth\(\)/,'Admin startup must initialize public branding');
 const lines=html.split('\n');
 const get=(prefix)=>{const line=lines.find(x=>x.startsWith(prefix));assert.ok(line,prefix);return line};
 const definitions=['const MODULE_DEFAULTS=','function effectiveModules','function moduleEnabled','async function moduleCache','function moduleValues','window.saveModules=','window.saveSystemModules=','window.setTicketOrder=','window.saveProducer=','VIEWS.work='].map(get).join('\n');

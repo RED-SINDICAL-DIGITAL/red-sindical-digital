@@ -461,6 +461,7 @@ function applySearch(){const q=$('globalSearch').value.trim().toLowerCase();docu
 
 $('loginBtn').onclick=login;$('loginKey').onkeydown=e=>{if(e.key==='Enter')login()};$('logoutTop').onclick=$('logoutSide').onclick=logout;$('navFilter').oninput=renderNav;$('globalSearch').oninput=applySearch;$('mobileMenu').onclick=()=>toggleSidebar(true);$('mobileBackdrop').onclick=()=>toggleSidebar(false);
 window.go=go;window.S=S;window.toast=toast;window.refreshSystemPills=refreshSystemPills;window.renderArtists=renderArtists;window.renderEvents=renderEvents;window.renderJobs=renderJobs;
+preloadPublicBrand();
 publicHealth().then(()=>{if(ADMIN_KEY)enterApp()});
 })();
 </script>
