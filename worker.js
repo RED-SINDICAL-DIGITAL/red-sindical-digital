@@ -1612,6 +1612,12 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       });
     }
 
+    if (path === '/api/artist/plan' && request.method === 'GET') {
+      const token=String(url.searchParams.get('token')||'').trim(),raw=token?await env.UADAV_DB.get(artistTokenKey(token)):null;if(!raw)return json({error:'Acceso inválido o vencido'},401);let a;try{a=JSON.parse(raw)}catch{return json({error:'Acceso inválido'},401)};if(a.expires&&Date.now()>a.expires)return json({error:'Acceso vencido'},401);
+      if(!hasD1())return json({artist_id:a.artist_id,plan:'free'});await ensureD1Schema();const row=await env.DB.prepare('SELECT * FROM artist_plan_state WHERE artist_id=?').bind(String(a.artist_id)).first();if(!row)return json({artist_id:a.artist_id,plan:'free',analytics_enabled:false,ai_enabled:false});
+      const expired=row.pro_expires_at&&Date.parse(row.pro_expires_at)<Date.now();return json({...row,plan:expired?'free':String(row.plan||'free'),analytics_enabled:!expired&&row.analytics_enabled===1,ai_enabled:!expired&&row.ai_enabled===1,expired:!!expired});
+    }
+
     if (path === '/api/pro/payment-orders' && request.method === 'POST') {
       if(!hasD1())return json({error:'D1 no configurado'},503); await ensureD1Schema(); const body=await request.json().catch(()=>({})),token=String(body.token||'').trim(); if(!token)return json({error:'Acceso de artista requerido'},401);
       const raw=await env.UADAV_DB.get(artistTokenKey(token)); if(!raw)return json({error:'Acceso inválido o vencido'},401); let artistAccess;try{artistAccess=JSON.parse(raw)}catch{return json({error:'Acceso inválido'},401)};if(artistAccess.expires&&Date.now()>artistAccess.expires)return json({error:'Acceso vencido'},401);
