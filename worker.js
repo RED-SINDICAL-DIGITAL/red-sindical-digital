@@ -1863,6 +1863,15 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const cfg=await getObject('config_global'),b=cfg?.branding||cfg?.platform||{},seo=cfg?.seo||{};return json({brand:{name:b.name||'UADAV STREAM',icon:b.icon||'★',logo_url:b.logo_url||'',favicon_url:b.favicon_url||'',tagline:b.tagline||''},seo:{title:seo.title||b.name||'UADAV STREAM',description:seo.description||b.tagline||'',keywords:seo.keywords||'',og_image:seo.og_image||'',canonical_origin:seo.canonical_origin||'',google_site_verification:seo.google_site_verification||'',msvalidate_01:seo.msvalidate_01||''}});
     }
 
+    if (path === '/api/admin/iptv/import' && request.method === 'POST') {
+      if (!isAdmin()) return json({error:'No autorizado'},401);
+      const b=await request.json().catch(()=>({}));let raw=String(b.content||'');const source=String(b.url||'').trim();
+      if(!raw&&source){try{const r=await fetch(source,{headers:{'User-Agent':'UADAVSTREAM-M3U-Importer/1.0'},redirect:'follow'});if(!r.ok)return json({error:'No se pudo descargar la M3U ('+r.status+')'},400);raw=await r.text()}catch(e){return json({error:'No se pudo leer la URL M3U'},400)}}
+      if(!raw.trim())return json({error:'Pegá contenido M3U o indicá una URL'},400);if(raw.length>2000000)return json({error:'La M3U supera el límite de 2 MB'},413);
+      const lines=raw.replace(/\r/g,'').split('\n'),parsed=[];let meta=null;for(const ln0 of lines){const ln=ln0.trim();if(!ln)continue;if(ln.startsWith('#EXTINF:')){const attrs={};for(const m of ln.matchAll(/([\w-]+)="([^"]*)"/g))attrs[m[1]]=m[2];meta={nombre:(ln.split(',').slice(1).join(',').trim()||attrs['tvg-name']||'Señal'),logo:attrs['tvg-logo']||'',grupo:attrs['group-title']||''};continue}if(ln.startsWith('#'))continue;if(meta&&/^https?:\/\//i.test(ln)){parsed.push({id:makeId('LIVE'),nombre:meta.nombre,tipo:/\.m3u8(?:\?|$)/i.test(ln)?'m3u8':'generic',url:ln,imagen:meta.logo,titulo_banner:meta.grupo,grupo:meta.grupo,principal:false,activa:true,origen:'m3u_import',source_url:source,creado:isoNow()});meta=null}}
+      if(!parsed.length)return json({error:'No se encontraron señales HTTP/HTTPS válidas'},400);const existing=await getArray('senales_oficiales'),seen=new Set(existing.map(x=>String(x.url||'').trim()));const fresh=parsed.filter(x=>!seen.has(x.url)).slice(0,2000),items=[...existing,...fresh];await putJSON('senales_oficiales',items);await audit('iptv_m3u_import','live',null,{imported:fresh.length,parsed:parsed.length,source:source?'url':'pasted'});return json({success:true,imported:fresh.length,parsed:parsed.length,items});
+    }
+
     if (path === '/api/apariencia') {
       if (request.method === 'GET') return json(await getObject('apariencia'));
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
