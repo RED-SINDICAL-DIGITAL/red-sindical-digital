@@ -51,14 +51,14 @@ html.uadav-app-embedded .panel,html.uadav-app-embedded .meta,html.uadav-app-embe
 <script>(function(){try{if(window.parent!==window){document.documentElement.classList.add('uadav-app-embedded');document.body?.classList.add('uadav-app-embedded')}}catch(_){}})();</script>
 <div class="shell">
 <header class="top">
-  <a class="brand" href="/index-v117.html" aria-label="Volver a UADAV STREAM"><span class="brand-mark">★</span><span>UADAV STREAM</span></a>
+  <a class="brand" href="/index-v117.html" aria-label="Volver a la plataforma"><span class="brand-mark" data-brand-icon>★</span><span data-brand-name>PLATFORM</span></a>
   <div class="top-actions"><a class="btn" href="/index-v117.html">Explorar</a></div>
 </header>
 <main id="app">Cargando radio…</main>
-<footer><span>★ UADAV STREAM · Radio</span><span class="tv-hint">Experiencia adaptable a PC · móvil · Smart TV</span></footer>
+<footer><span><span data-brand-icon>★</span> <span data-brand-name>PLATFORM</span> · Radio</span><span class="tv-hint">Experiencia adaptable a PC · móvil · Smart TV</span></footer>
 </div>
 <script>
-const API_REMOTE=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/',API_LOCAL=location.origin+'/api/';
+const API_REMOTE=window.PLATFORM_API_BASE||window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/',API_LOCAL=location.origin+'/api/';
 async function apiJson(path,opt={}){let err;for(const base of [...new Set([API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[API_LOCAL]:[])])]){try{const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);let r;try{r=await fetch(base+path,{cache:'no-store',...opt,signal:opt.signal||ctl.signal})}finally{clearTimeout(timer)};const ct=r.headers.get('content-type')||'';if(!r.ok||!ct.includes('json')){err=new Error('API '+r.status);continue}return await r.json()}catch(e){err=e}}throw err||new Error('API no disponible')}
 async function apiRaw(path,opt={}){let err;for(const base of [...new Set([API_REMOTE,...(window.UADAV_USE_LOCAL_API===true?[API_LOCAL]:[])])]){try{const r=await fetch(base+path,opt);if(!r.ok){err=new Error('API '+r.status);continue}return r}catch(e){err=e}}throw err||new Error('API no disponible')}
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
