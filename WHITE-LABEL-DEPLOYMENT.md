@@ -83,3 +83,13 @@ Desde la raíz del repositorio:
     node --check platform-brand-runtime.js
 
 Las pruebas usan KV independiente por instancia y una fixture DOM sin dependencias. Cubren bloqueo de rutas, autorización Admin, PRO sin afiliación, PRO vencido, perfil oculto, identidad, fallo de SEO y enlaces dinámicos. No sustituyen la prueba visual en navegador ni la verificación contra D1/Cloudflare reales.
+
+## 11. Centro de Control — consistencia de módulos
+
+- Las dos pantallas de módulos incluyen Solicitudes de entradas (ticketing).
+- Guardar módulos conserva flags adicionales y el resto de la configuración; un fallo de guardado no modifica la copia en memoria.
+- Trabajo y bandejas no consultan endpoints de módulos desactivados. Sus paneles y contadores respetan la configuración.
+- Confirmar una solicitud de entradas conserva payment_status. No acredita un pago automáticamente.
+- Una productora se puede editar con Sindicato/CCT desactivado, preservando su dato institucional previo.
+- Se corrigió el cierre incorrecto de la función de apertura del importador M3U, que invalidaba el script del Admin.
+- Prueba adicional: node tests/admin-modules.mjs. Incluye análisis de sintaxis de todos los scripts inline del Admin y comprobaciones funcionales aisladas.
