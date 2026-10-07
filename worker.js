@@ -2639,6 +2639,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(!claim)return json({error:'Reclamo no encontrado'},404);
       const now=isoNow();
       if(status==='approved'){
+        const conflicts=hasD1()?await env.DB.prepare(`SELECT COUNT(*) count FROM artist_claims WHERE artist_id=? AND status='pending' AND id<>?`).bind(String(claim.artist_id),claimId).first():{count:(await getArray('artist_claims')).filter(x=>String(x.artist_id)===String(claim.artist_id)&&String(x.status)==='pending'&&String(x.id)!==claimId).length};if(Number(conflicts?.count||0)>0&&b.confirm_conflict!==true)return json({error:'Hay otro reclamo pendiente sobre este perfil. Resolvé el conflicto antes de aprobar.',conflict:true},409);if(!String(b.review_note||'').trim())return json({error:'La aprobación requiere una nota de verificación'},400);
         let artist=await artistFromD1(String(claim.artist_id)); if(!artist){const arr=await allCanonicalArtists();artist=arr.find(a=>String(publicArtistFromItem(a).id)===String(claim.artist_id));}
         if(!artist)return json({error:'Artista asociado no encontrado'},404);
         const arr=await getArray('artistas'); let i=arr.findIndex(a=>String(publicArtistFromItem(a).id)===String(claim.artist_id)); if(i<0){arr.push(artist);i=arr.length-1;}
