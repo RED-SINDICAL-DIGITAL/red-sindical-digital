@@ -156,3 +156,111 @@
   body[data-page="usuario"] .prefs{gap:8px}
   body[data-page="usuario"] .item{flex:0 0 150px!important;max-width:150px}
 }
+/* Complete mobile layouts for existing catalog, artist and form screens. */
+@media screen and (max-width:1024px){
+ body[data-page="cartelera"] .shell{width:100%;padding:14px 12px 36px!important}
+ body[data-page="cartelera"] .top{position:static;flex-wrap:wrap;padding:0 0 12px!important}
+ body[data-page="cartelera"] .top-actions{flex-wrap:wrap;gap:8px}
+ body[data-page="cartelera"] .top-actions .btn{font-size:12px;padding:9px 12px}
+ body[data-page="cartelera"] .hero-slider{height:290px!important;border-radius:16px}
+ body[data-page="cartelera"] .hero-copy{left:18px!important;right:18px;bottom:42px!important;width:auto!important;max-width:none}
+ body[data-page="cartelera"] .hero h1{font-size:25px!important;line-height:1.15!important;margin:8px 0 10px}
+ body[data-page="cartelera"] .hero p{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+ body[data-page="cartelera"] .hero-actions{margin-top:12px;gap:8px}
+ body[data-page="cartelera"] .hero-actions .btn{font-size:12px;padding:9px 13px}
+ body[data-page="cartelera"] .hero-arrow{top:14px;width:36px;height:36px;min-height:36px}
+ body[data-page="cartelera"] .dots{bottom:12px}
+ body[data-page="cartelera"] .dot{min-height:8px!important;height:8px}
+ body[data-page="cartelera"] .search-strip{grid-template-columns:minmax(0,1fr) auto;padding:10px;gap:8px}
+ body[data-page="cartelera"] .search-strip input{min-width:0;min-height:44px;padding:0 12px;background:#0b1320;color:#fff}
+ body[data-page="cartelera"] .search-strip .btn{font-size:12px;padding:9px 12px}
+ body[data-page="cartelera"] .section-head{margin:24px 0 12px;align-items:flex-start;gap:10px}
+ body[data-page="cartelera"] .section-head h2{font-size:21px!important;line-height:1.2}
+ body[data-page="cartelera"] .section-head .section-sub{font-size:11px}
+ body[data-page="cartelera"] .premium-card{height:240px;flex:0 0 min(86vw,360px)!important;border-radius:16px}
+ body[data-page="cartelera"] .premium-copy h3{font-size:20px;line-height:1.2}
+ body[data-page="cartelera"] .quick{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+ body[data-page="cartelera"] .quick .chip{flex:none;white-space:nowrap!important;font-size:12px!important}
+ body[data-page="cartelera"] .events-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px;min-width:0}
+ body[data-page="cartelera"] .event-card{min-width:0;border-radius:14px}
+ body[data-page="cartelera"] .event-card>a{display:grid;grid-template-columns:96px minmax(0,1fr);height:100%}
+ body[data-page="cartelera"] .event-media{aspect-ratio:auto;height:100%;min-height:160px}
+ body[data-page="cartelera"] .event-media img{object-fit:contain;object-position:center;background:#060b13}
+ body[data-page="cartelera"] .date-box{left:5px;top:5px;min-width:34px;padding:4px;border-radius:8px}
+ body[data-page="cartelera"] .date-box strong{font-size:15px}
+ body[data-page="cartelera"] .card-body{padding:12px;min-width:0}
+ body[data-page="cartelera"] .card-body h3{font-size:16px;line-height:1.25;overflow-wrap:anywhere}
+ body[data-page="cartelera"] .card-footer{flex-wrap:wrap;gap:6px}
+ body[data-page="cartelera"] .card-footer .btn{font-size:11px;min-height:32px;padding:7px 10px}
+ body[data-page="evento"] .shell{width:100%;padding:14px 12px 36px}
+ body[data-page="evento"] .top{flex-wrap:wrap}
+ body[data-page="evento"] .hero{min-height:0!important;border-radius:16px}
+ body[data-page="evento"] .hero-content{min-height:0!important;padding:18px!important;gap:18px;flex-direction:row;align-items:flex-start}
+ body[data-page="evento"] .poster{width:110px!important;flex:none;border-radius:12px;object-fit:contain}
+ body[data-page="evento"] .copy{min-width:0;max-width:100%}
+ body[data-page="evento"] .title{font-size:26px!important;line-height:1.15!important;overflow-wrap:anywhere}
+ body[data-page="evento"] .lead{font-size:13px;line-height:1.5}
+ body[data-page="evento"] .grid{grid-template-columns:minmax(0,1fr)!important}
+ body[data-page="evento"] .panel{padding:16px;border-radius:16px}
+ body[data-page="evento"] .actions{display:flex!important;flex-wrap:wrap;width:100%;gap:8px}
+ body[data-page="evento"] .actions .btn{font-size:12px;padding:10px 12px;max-width:100%;white-space:normal}
+ body[data-page="evento"] .related-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ body[data-page="evento"] .desc{font-size:14px;line-height:1.6}
+ body[data-page="artista"] .top{position:relative;padding:12px!important;flex-wrap:wrap;min-height:44px}
+ body[data-page="artista"] .top-back{gap:8px}
+ body[data-page="artista"] .top-back .brand{display:none}
+ body[data-page="artista"] .top-actions{display:flex!important;flex-wrap:wrap;gap:8px}
+ body[data-page="artista"] .hero-inner{padding:20px 16px 24px!important;min-height:0!important}
+ body[data-page="artista"] .artist-head{flex-direction:row;align-items:flex-start;gap:14px;min-width:0;width:100%}
+ body[data-page="artista"] .artist-head>div{min-width:0}
+ body[data-page="artista"] .artist-avatar{width:72px!important;height:72px!important;border-width:2px}
+ body[data-page="artista"] .title{font-size:28px!important;line-height:1.15!important;overflow-wrap:anywhere}
+ body[data-page="artista"] .bio{font-size:13px;line-height:1.5}
+ body[data-page="artista"] .actions .btn,body[data-page="artista"] .top .btn{font-size:12px;padding:9px 12px}
+ body[data-page="artista"] .tabs{width:100%!important;padding:8px 12px!important;scrollbar-width:none;gap:6px}
+ body[data-page="artista"] .tab{font-size:12px;padding:10px 12px;min-height:38px}
+ body[data-page="artista"] .main{width:calc(100% - 24px)!important;padding-top:16px!important}
+ body[data-page="artista"] .panel{margin-top:20px}
+ body[data-page="artista"] .heading h2{font-size:21px}
+ body[data-page="artista"] .tile{flex-basis:min(82vw,300px);border-radius:14px}
+ body[data-page="artista"] .tile-title{font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+ body[data-page="biblioteca"] .w{width:calc(100% - 24px)}
+ body[data-page="biblioteca"] .top{height:auto;padding:12px 0;gap:8px;flex-wrap:wrap}
+ body[data-page="biblioteca"] .hero{padding:14px 0 8px}
+ body[data-page="biblioteca"] .hero h1{font-size:25px!important}
+ body[data-page="biblioteca"] .hero p{font-size:13px;margin:8px 0}
+ body[data-page="biblioteca"] .tabs{flex-wrap:nowrap;overflow:auto;scrollbar-width:none;margin:12px 0 18px;gap:8px}
+ body[data-page="biblioteca"] .tab{flex:none;font-size:12px;min-height:38px;padding:9px 12px}
+ body[data-page="biblioteca"] .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding-bottom:28px}
+ body[data-page="biblioteca"] .card{padding:12px;border-radius:14px;min-width:0}
+ body[data-page="biblioteca"] .card b{font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+ body[data-page="biblioteca"] .actions button{min-height:36px;font-size:12px;padding:8px 10px}
+ body[data-page="biblioteca"] .playlistbar{flex-wrap:wrap}
+ body[data-page="biblioteca"] .playlistbar input{flex:1 1 180px}
+ body[data-page="biblioteca"] .playlistHead h2{font-size:22px}
+ body[data-page="para-artistas"] .shell{width:100%;padding:16px 12px 36px}
+ body[data-page="para-artistas"] .hero{padding:20px 0;text-align:left}
+ body[data-page="para-artistas"] .hero h1{font-size:28px!important;line-height:1.15!important}
+ body[data-page="para-artistas"] .hero p{font-size:14px;line-height:1.5;margin:12px 0}
+ body[data-page="para-artistas"] .cards,body[data-page="para-artistas"] .registration-grid{grid-template-columns:minmax(0,1fr)!important}
+ body[data-page="para-artistas"] .registration-wide{grid-column:auto!important}
+ body[data-page="para-artistas"] .registration{padding:16px;min-width:0}
+ body[data-page="para-artistas"] .registration input,body[data-page="para-artistas"] .registration textarea,body[data-page="para-artistas"] .registration select{width:100%;min-width:0}
+ body[data-page="para-artistas"] .search{margin:16px 0;max-width:100%}
+ body[data-page="para-artistas"] .card{padding:18px;border-radius:16px}
+ body[data-page="para-artistas"] .pro{padding:18px;align-items:flex-start;flex-direction:column}
+ body[data-page="publicar-evento"] .hero{padding:12px 0!important}
+ body[data-page="publicar-evento"] .hero h1{font-size:26px!important;line-height:1.15!important}
+ body[data-page="publicar-evento"] .card{padding:16px!important;border-radius:16px}
+ body[data-page="publicar-evento"] .field.span2{grid-column:auto!important}
+ body[data-page="publicar-evento"] .functions{min-width:0;overflow-x:auto}
+ body[data-page="admin"] .stat-card{min-width:0;padding:14px}
+ body[data-page="admin"] .quick-grid,body[data-page="admin"] .prospect-grid{grid-template-columns:minmax(0,1fr)!important}
+}
+@media screen and (max-width:600px){
+ body[data-page="cartelera"] .events-grid,body[data-page="biblioteca"] .grid{grid-template-columns:minmax(0,1fr)!important}
+ body[data-page="evento"] .hero-content{flex-direction:column}
+ body[data-page="evento"] .poster{width:110px!important}
+ body[data-page="evento"] .title{font-size:25px!important}
+ body[data-page="artista"] .artist-head{flex-direction:column}
+}
