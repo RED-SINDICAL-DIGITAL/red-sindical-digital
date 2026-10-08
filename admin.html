@@ -124,11 +124,11 @@ function moduleValues(prefix){const values={...obj(S.cache.config?.modules)};for
 const nowId=p=>p+'-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
 
 const NAV=[
- {g:'OPERACIÓN',items:[['dashboard','◫','Resumen'],['home','⌂','Portada / Home'],['content','▶','Contenido'],['collections','▦','Colecciones y categorías'],['events','▣','Cartelera'],['radios','◉','Radio'],['live','◍','En vivo']]},
- {g:'TALENTO',items:[['artists','★','Artistas y perfiles'],['producers','◆','Productoras'],['jobs','✦','Bolsa de trabajo'],['work','▦','Contratación / Marketplace']]},
- {g:'PUBLICACIÓN',items:[['playlists','♫','Playlists'],['podcasts','◉','Podcast'],['media','▤','Cine & Historias'],['pages','⌘','Páginas / SEO']]},
- {g:'GESTIÓN',items:[['requests','◎','Solicitudes y comunidad'],['monetization','◆','Promociones'],['ads','▰','Publicidad'],['sources','◎','Fuentes automáticas'],['imports','⇅','Importar / exportar']]},
- {g:'HERRAMIENTAS',items:[['prospecting','⌕','Descubrimiento'],['cct','⚖','Convenios / fiscalización'],['restrictions','⊘','Restricciones'],['system','⚙','Sistema'],['audit','≡','Auditoría'],['diagnostics','✚','Diagnóstico'],['manuals','?','Ayuda']]}
+ {g:'RESUMEN',items:[['dashboard','◫','Visión general'],['requests','◎','Solicitudes y comunidad']]},
+ {g:'PERSONAS',items:[['artists','★','Artistas y perfiles'],['producers','◆','Productoras'],['jobs','✦','Bolsa de Trabajo gratuita'],['work','▦','Contratación gratuita']]},
+ {g:'CONTENIDO',items:[['home','⌂','Portada'],['content','▶','Videos y música'],['collections','▦','Colecciones y categorías'],['events','▣','Cartelera'],['radios','◉','Radio'],['live','◍','En vivo'],['playlists','♫','Playlists'],['podcasts','◉','Podcasts'],['media','▤','Cine y series']]},
+ {g:'COMERCIAL',items:[['monetization','◆','PRO y destacados'],['ads','▰','Publicidad'],['cct','⚖','Convenios y fiscalización']]},
+ {g:'CONFIGURACIÓN',items:[['sources','◎','Fuentes automáticas'],['imports','⇅','Importar y exportar'],['prospecting','⌕','Descubrimiento'],['pages','⌘','Páginas y SEO'],['restrictions','⊘','Restricciones'],['system','⚙','Sistema'],['audit','≡','Auditoría'],['diagnostics','✚','Diagnóstico'],['manuals','?','Ayuda']]}
 ];
 const TITLES={dashboard:'Visión general',home:'Inicio / Home',content:'Contenido',collections:'Colecciones y categorías',playlists:'Playlists',podcasts:'Podcast',pages:'Mi perfil / páginas / SEO',artists:'Artistas y perfiles',producers:'Productoras',radios:'Radio',live:'En vivo / IPTV autorizada',events:'Cartelera y eventos',media:'Cine & Historias',jobs:'Bolsa de trabajo',work:'Trabajo y Marketplace',cct:'Convenio y fiscalización',prospecting:'Descubrimiento / Prospección',restrictions:'Restricciones',ads:'Inventario publicitario',monetization:'Promociones y campañas',requests:'Comunidad, apoyo y solicitudes',sources:'Fuentes automáticas',imports:'Importar / exportar',manuals:'Ayuda y manuales',system:'D1, IA y automatización',audit:'Auditoría y exportación',diagnostics:'Diagnóstico'};
 const PLATFORM_TAXONOMY={
