@@ -1,11 +1,11 @@
-# Mi cuenta, mi artista y consultas · Worker 11733 / interfaz 12018
+# Mi cuenta, mi artista y consultas · Worker 11733 / interfaz 12019
 
 ## Qué se corrigió
 El formulario Consultar contratación guardaba solicitudes en el registro Contrataciones, accesible desde Admin, sin una bandeja privada para el artista. Ahora Consultas recibidas muestra las solicitudes dirigidas a su ID, incluidas las anteriores que sigan guardadas. Esta función es gratuita y no depende de PRO.
 
 El artista puede ver quién consulta, evento, fecha, ciudad, presupuesto informado, detalles, email y WhatsApp. Puede abrir su aplicación de email para responder y marcar Nueva, Leída, Respondida o Cerrada. Cambiar estado no envía mensajes. Una consulta no confirma un contrato, reserva, presupuesto aceptado ni pago.
 
-Admin muestra las mismas solicitudes y sus estados. Cada cambio de estado se guarda en D1 por solicitud; no reescribe ni elimina las consultas de otros artistas. El formulario muestra el número de referencia y evita envíos dobles mientras espera la respuesta. Al alcanzar la capacidad existente no elimina solicitudes anteriores: rechaza nuevas solicitudes con un aviso.
+Admin → Solicitudes y comunidad → Consultas de contratación muestra las mismas solicitudes y sus estados, con búsqueda, detalle y carga progresiva. Los pedidos del Marketplace tienen una tabla separada. Cada cambio de estado se guarda en D1 por solicitud; no reescribe ni elimina las consultas de otros artistas. El formulario muestra el número de referencia y evita envíos dobles mientras espera la respuesta. Al alcanzar la capacidad existente no elimina solicitudes anteriores: rechaza nuevas solicitudes con un aviso.
 
 ## Vinculación cuenta–artista
 1. Desplegar el Worker 11733, manteniendo KV y D1 y las claves actuales. Verificar /api/health: build 11733.
