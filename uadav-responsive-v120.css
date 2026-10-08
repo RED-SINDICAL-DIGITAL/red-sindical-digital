@@ -1,0 +1,276 @@
+/* Responsive layouts shared by shell, public pages and administration. */
+@media screen and (max-width:1024px){
+  html,body{max-width:100%;min-width:0}body[data-page] *,body[data-page] *::before,body[data-page] *::after{box-sizing:border-box}
+  body[data-page] input,body[data-page] select,body[data-page] textarea{font-size:16px!important;min-width:0;max-width:100%}
+  body[data-page] img,body[data-page] video{max-width:100%}body[data-page] button,body[data-page] .btn{min-height:44px}body[data-page] dialog{max-width:calc(100% - 24px);max-height:calc(100dvh - 36px);overflow:auto}
+  body[data-page] .rail,body[data-page] .premium-rail,body[data-page] .music-genres{max-width:100%;overscroll-behavior-inline:contain;touch-action:auto}
+  body[data-page] .head{align-items:flex-start;gap:8px;flex-wrap:wrap}body[data-page] .head h2{font-size:22px!important;line-height:1.2}body[data-page] .head>span{font-size:12px}
+  body[data-page] .layout{grid-template-columns:minmax(0,1fr)!important}body[data-page] .layout>*{min-width:0}
+  body[data-page="app"] #top{display:flex!important;flex:none;height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 14px 0!important;gap:10px!important}
+  body[data-page="app"] #top .nav,body[data-page="app"] #top .artist{display:none!important}
+  body[data-page="app"] #top .brand{font-size:14px!important;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis}
+  body[data-page="app"] #top .actions{gap:8px;min-width:0}body[data-page="app"] #top .user{width:40px;height:40px;flex:none;font-size:14px}
+  body[data-page="app"] #top .searchbox{width:40px;height:40px;flex:none}body[data-page="app"] #top .searchbox button{width:38px;height:38px;min-height:38px}
+  body[data-page="app"] #top:has(.searchbox.open) .brand,body[data-page="app"] #top:has(.searchbox:focus-within) .brand{display:none}
+  body[data-page="app"] #top:has(.searchbox.open) .actions,body[data-page="app"] #top:has(.searchbox:focus-within) .actions{width:100%}
+  body[data-page="app"] #top .searchbox.open,body[data-page="app"] #top .searchbox:focus-within{width:calc(100% - 48px)!important;flex:1}body[data-page="app"] #top .searchbox input{font-size:16px!important}
+  body[data-page="app"] #mobile{display:grid!important;position:fixed;inset:auto 0 0;height:calc(64px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);grid-template-columns:repeat(5,minmax(0,1fr));z-index:1500}
+  body[data-page="app"] #mobile button{border-radius:0;background:transparent!important;min-width:0;min-height:56px;font-size:11px!important;color:#95a6bd}body[data-page="app"] #mobile button.active{color:#8db8ff!important}
+  body[data-page="app"] #mobile button i{font-size:23px!important;line-height:1}
+  body[data-page="app"] #viewWrap{margin-bottom:calc(64px + env(safe-area-inset-bottom))!important;min-height:0}
+  body[data-page="app"] #shell:has(#mediaDock.active.mini) #viewWrap,body[data-page="app"] #shell:has(#radioDock.active) #viewWrap{margin-bottom:calc(142px + env(safe-area-inset-bottom))!important}
+  body[data-page="app"] #mediaDock.mini{inset:auto 8px calc(72px + env(safe-area-inset-bottom))!important;width:auto!important;z-index:1450}
+  body[data-page="app"] #mediaDock.mini #mediaCard{width:100%;height:68px!important;max-height:none;display:grid!important;grid-template-columns:84px minmax(0,1fr) 42px!important;grid-template-areas:'stage copy tools';align-items:center;border-radius:16px!important;overflow:hidden}
+  body[data-page="app"] #mediaDock.mini #mediaStage{grid-area:stage;width:84px!important;height:68px!important;aspect-ratio:auto!important;pointer-events:none;overflow:hidden}
+  body[data-page="app"] #mediaDock.mini .mediaCopy{grid-area:copy;min-width:0;padding:8px 10px!important}body[data-page="app"] #mediaDock.mini .mediaCopy b,body[data-page="app"] #mediaDock.mini .mediaCopy span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  body[data-page="app"] #mediaDock.mini #libraryTools{display:none}body[data-page="app"] #mediaDock.mini .tools{grid-area:tools;position:static;display:flex;flex-direction:column;gap:2px;padding-right:4px}
+  body[data-page="app"] #mediaDock.mini .tools button{width:32px;height:30px;min-height:30px!important;border-radius:8px}body[data-page="app"] #mediaDock.mini #closeMedia{display:block!important}
+  body[data-page="app"] #mediaDock.expanded{position:fixed;inset:0!important;padding:env(safe-area-inset-top) 0 calc(64px + env(safe-area-inset-bottom))!important;display:block!important;overflow-y:auto;z-index:1600;background:#05080e!important}
+  body[data-page="app"] #mediaDock.expanded #mediaCard{width:100%!important;display:block!important;height:auto;max-height:none!important;border:0;border-radius:0!important;overflow:visible}
+  body[data-page="app"] #mediaDock.expanded #mediaStage{position:relative;width:100%!important;height:auto!important;aspect-ratio:16/9!important;max-height:none!important;overflow:hidden;flex:none!important}
+  body[data-page="app"] #mediaDock.expanded #mediaStage iframe,body[data-page="app"] #mediaDock.expanded #mediaStage video{position:absolute;inset:0;width:100%;height:100%;max-height:none;flex:none}
+  body[data-page="app"] #mediaDock.expanded .mediaCopy{padding:18px!important;min-width:0}body[data-page="app"] #mediaDock.expanded .tools{position:absolute;top:calc(8px + env(safe-area-inset-top));right:8px;z-index:4;display:flex;gap:6px}
+  body[data-page="app"] #mediaDock.expanded .tools button{min-height:40px;width:40px;height:40px}body[data-page="app"] #libraryTools{flex-wrap:wrap}body[data-page="app"] .libBtn{min-height:40px;padding:9px 12px}
+  body[data-page="app"] #radioDock{left:8px!important;right:8px!important;bottom:calc(72px + env(safe-area-inset-bottom))!important;transform:none!important;width:auto!important;height:68px!important;min-height:68px;padding:8px!important;border-radius:16px!important;gap:10px}
+  body[data-page="app"] #radioArt{width:48px!important;height:48px!important;flex:none}body[data-page="app"] .radioInfo{display:block;min-width:0;flex:1}body[data-page="app"] #radioName,body[data-page="app"] #radioMeta{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body[data-page="app"] #radioName{font-size:13px!important}body[data-page="app"] #radioMeta{font-size:11px!important}
+  body[data-page="app"] .radioActions{display:flex;gap:5px;flex:none;margin-left:0}body[data-page="app"] .radioBtn{width:40px;height:40px;min-height:40px}body[data-page="app"] .radioVol,body[data-page="app"] .radioLink{display:none}
+  body[data-page="index-v117"] .shell{width:calc(100% - 32px)!important;max-width:960px!important}body[data-page="index-v117"] .section{padding:24px 0}
+  body[data-page="index-v117"] #hero{min-height:380px!important}body[data-page="index-v117"] #hero .copy{width:calc(100% - 32px);padding:90px 0 28px!important;margin:auto;max-width:760px}
+  html.uadav-in-shell body[data-page="index-v117"] #heroTitle,body[data-page="index-v117"] #hero h1{font-size:clamp(28px,8vw,38px)!important;line-height:1.08!important;letter-spacing:-.035em}body[data-page="index-v117"] #heroText{font-size:14px!important;line-height:1.5}
+  body[data-page="index-v117"] .worlds{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,76%);grid-template-columns:none!important;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:8px;gap:12px}body[data-page="index-v117"] .world{min-height:150px;scroll-snap-align:start;padding:18px;text-align:left}
+  body[data-page="index-v117"] .rail{grid-auto-columns:clamp(220px,73vw,300px)}body[data-page="index-v117"] .artist-card{flex-basis:128px!important;min-width:128px}body[data-page="index-v117"] .cinema-card{flex-basis:150px!important}
+  body[data-page="index-v117"] .genre{min-width:112px;padding:18px 16px;font-size:15px}body[data-page="index-v117"] .work{padding:24px 16px;border-radius:20px}body[data-page="index-v117"] .work h2{font-size:29px;line-height:1.1}
+  body[data-page="buscar"] .shell{width:100%;padding:22px 16px 44px}body[data-page="buscar"] .hero h1{font-size:34px!important;line-height:1.08!important}body[data-page="buscar"] .hero p{font-size:14px}
+  body[data-page="buscar"] .search{grid-template-columns:minmax(0,1fr) auto!important;gap:8px;margin:18px 0;padding:8px 0}body[data-page="buscar"] .search button{min-height:46px;padding:0 14px}body[data-page="buscar"] .search input{width:100%;min-width:0;padding:12px}
+  body[data-page="buscar"] .rail{display:grid!important;grid-template-columns:minmax(0,1fr)!important;overflow:visible!important;gap:10px;cursor:auto!important;scroll-snap-type:none}
+  body[data-page="buscar"] .card{display:grid!important;grid-template-columns:112px minmax(0,1fr);grid-template-rows:auto auto;gap:4px 12px;align-items:center;padding:10px;flex:none!important;max-width:100%;min-width:0;border-radius:14px}
+  body[data-page="buscar"] .card>img{grid-column:1;grid-row:1/3;width:112px;height:72px;aspect-ratio:auto!important;object-fit:cover;border-radius:9px}
+  body[data-page="buscar"] .card>b{grid-column:2;grid-row:1;font-size:14px;line-height:1.3;padding:0 28px 0 0;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  body[data-page="buscar"] .card>small{grid-column:2;grid-row:2;font-size:11px;line-height:1.4;padding:0 28px 0 0;margin:0;overflow-wrap:anywhere}
+  body[data-page="buscar"] .card .save{top:auto;bottom:8px;right:6px;min-height:32px;width:30px;height:32px}
+  body[data-page="buscar"] .card.artist{grid-template-columns:68px minmax(0,1fr)}body[data-page="buscar"] .card.artist>img{width:64px;height:64px;border-radius:50%}
+  body[data-page="artistas"] .wrap{width:100%;padding:24px 16px 44px}body[data-page="artistas"] h1{font-size:34px;line-height:1.1}body[data-page="artistas"] .search{margin:18px 0 24px;gap:8px}body[data-page="artistas"] .search input{min-width:0;width:100%;padding:0 14px}body[data-page="artistas"] .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}body[data-page="artistas"] .card img{aspect-ratio:1;object-fit:cover}body[data-page="artistas"] .card .name{font-size:16px}body[data-page="artistas"] .card .type{font-size:12px}
+  body[data-page="artista"] .hero-inner{width:100%;padding:86px 16px 26px!important;min-height:0}body[data-page="artista"] .hero{min-height:0}body[data-page="artista"] .artist-head{flex-direction:column;gap:14px}body[data-page="artista"] .artist-avatar{width:88px;height:88px;flex:none}body[data-page="artista"] .title{font-size:36px!important;line-height:1.08!important}body[data-page="artista"] .actions{flex-wrap:wrap}body[data-page="artista"] .tabs,body[data-page="artista"] .main{width:calc(100% - 32px);padding-left:0!important;padding-right:0!important}body[data-page="artista"] .about{grid-template-columns:1fr}
+  body[data-page="usuario"] .wrap{width:100%;padding:20px 16px 44px}body[data-page="usuario"] .hero{display:grid;grid-template-columns:60px minmax(0,1fr) 40px;gap:12px;align-items:start;margin-top:16px;padding:18px!important;border-radius:20px}body[data-page="usuario"] .hero>div{min-width:0}body[data-page="usuario"] .hero h1{font-size:28px!important;line-height:1.12!important;overflow-wrap:anywhere}body[data-page="usuario"] .hero p{font-size:13px!important;line-height:1.4}body[data-page="usuario"] .avatar{width:60px;height:60px;flex:none;font-size:25px}body[data-page="usuario"] .edit{width:40px;height:40px;min-height:40px;padding:0;font-size:0}
+  body[data-page="usuario"] .grid{grid-template-columns:1fr;gap:14px;margin-top:20px}body[data-page="usuario"] .panel.wide{grid-column:auto}body[data-page="usuario"] .panel{padding:18px;border-radius:20px}body[data-page="usuario"] .panel h2{font-size:21px}
+  body[data-page="cartelera"] .filters{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px;padding:12px}body[data-page="cartelera"] .filters>*{min-width:0}body[data-page="cartelera"] .filters>button{grid-column:1/-1}body[data-page="cartelera"] .grid{grid-template-columns:1fr!important}body[data-page="cartelera"] .card>a{display:grid;grid-template-columns:112px minmax(0,1fr)}body[data-page="cartelera"] .card-body{min-width:0;padding:12px}body[data-page="cartelera"] .card h3{font-size:17px;line-height:1.2}body[data-page="cartelera"] .card-footer{flex-wrap:wrap}body[data-page="cartelera"] .card-footer .btn{padding:8px 12px;min-height:36px}body[data-page="cartelera"] .premium-card{flex-basis:min(86vw,380px);max-width:100%}
+  body[data-page="evento"] .layout{grid-template-columns:1fr!important}body[data-page="evento"] .hero-inner{gap:18px;padding:24px 16px!important}body[data-page="evento"] .hero h1{font-size:32px!important;line-height:1.1}body[data-page="evento"] .poster{width:min(150px,42vw)}body[data-page="evento"] .hero-actions{flex-wrap:wrap}
+  body[data-page="radio"] .radio-hub-hero{min-height:340px!important;grid-template-columns:1fr!important;padding:26px 18px!important;border-radius:20px}body[data-page="radio"] .radio-hub-copy h1{font-size:34px!important;line-height:1.1}body[data-page="radio"] .radio-hub-grid{grid-template-columns:minmax(0,1fr)!important}body[data-page="radio"] .radio-hub-card{grid-template-columns:76px minmax(0,1fr);padding:10px}body[data-page="radio"] .radio-hub-card img{width:76px;height:76px}body[data-page="radio"] .hero-content{padding:28px 16px!important}body[data-page="radio"] .station-grid{grid-template-columns:1fr!important}
+  body[data-page="descubrir"] .explore{padding:20px 12px 36px}body[data-page="descubrir"] .moment{min-height:62svh;border-radius:20px}body[data-page="descubrir"] .moment-copy{padding:22px}body[data-page="descubrir"] .moment h2{font-size:28px}body[data-page="descubrir"] .feed{gap:16px}
+  body[data-page="bolsa-trabajo"] .shell,body[data-page="publicar-evento"] .shell,body[data-page="gestionar-artista"] .shell,body[data-page="mi-espacio-artista"] .shell{width:100%;padding:20px 16px 44px!important}
+  body[data-page="bolsa-trabajo"] .grid,body[data-page="publicar-evento"] .grid,body[data-page="gestionar-artista"] .grid,body[data-page="mi-espacio-artista"] .grid{grid-template-columns:minmax(0,1fr)!important}
+  body[data-page="bolsa-trabajo"] .panel,body[data-page="publicar-evento"] .panel,body[data-page="mi-espacio-artista"] .panel{padding:18px}body[data-page="bolsa-trabajo"] .lead{font-size:15px;line-height:1.5}
+  body[data-page="gestionar-artista"] .side{position:static}body[data-page="gestionar-artista"] .nav,body[data-page="mi-espacio-artista"] #tabs{display:flex;flex-direction:row;overflow:auto;gap:8px}body[data-page="gestionar-artista"] .nav button,body[data-page="mi-espacio-artista"] #tabs button{flex:none;white-space:nowrap;width:auto}
+  body[data-page="mi-espacio-artista"] .top{align-items:flex-start;gap:16px}body[data-page="mi-espacio-artista"] h1{font-size:29px}body[data-page="mi-espacio-artista"] .actions{flex-wrap:wrap}
+  body[data-page="para-artistas"] .shell,body[data-page="planes-artistas"] .wrap,body[data-page="marketplace"] .shell{width:100%;padding-left:16px;padding-right:16px}body[data-page="para-artistas"] .cards,body[data-page="marketplace"] .grid{grid-template-columns:1fr}body[data-page="para-artistas"] .hero{padding:34px 0 24px}body[data-page="para-artistas"] .hero h1{font-size:38px!important}body[data-page="para-artistas"] .pro{flex-direction:column;align-items:flex-start}
+  body[data-page="admin"] .app-shell{display:block}body[data-page="admin"] .main{padding:16px}body[data-page="admin"] .topbar{display:flex;height:62px;padding:0 12px;gap:8px}body[data-page="admin"] .top-left{flex:1;min-width:0;gap:8px}body[data-page="admin"] .global-search{min-width:0;max-width:none}body[data-page="admin"] .top-title{display:none}body[data-page="admin"] .top-right{flex:none;gap:4px}body[data-page="admin"] .mobile-menu{display:grid!important}body[data-page="admin"] #apiPill,body[data-page="admin"] #d1Pill{display:none}
+  body[data-page="admin"] .sidebar{position:fixed;inset:0 auto 0 0;width:min(290px,86vw);transform:translateX(-105%);z-index:40}body[data-page="admin"] .sidebar.open{transform:translateX(0)}body[data-page="admin"] .mobile-backdrop.show{display:block;opacity:1;pointer-events:auto}
+  body[data-page="admin"] .view-head{flex-direction:column;gap:12px}body[data-page="admin"] .toolbar{flex-wrap:wrap;gap:8px}body[data-page="admin"] .form-grid,body[data-page="admin"] .dashboard-grid{grid-template-columns:1fr!important}body[data-page="admin"] .form-grid .full{grid-column:auto}
+  body[data-page="admin"] .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}body[data-page="admin"] .quick-grid,body[data-page="admin"] .prospect-grid{grid-template-columns:repeat(2,minmax(0,1fr))}body[data-page="admin"] .stat{min-width:0;padding:14px}
+  body[data-page="admin"] #modal{width:calc(100% - 24px);max-height:calc(100dvh - 24px)}body[data-page="admin"] .modal-body{padding:16px}body[data-page="admin"] .modal-foot{flex-wrap:wrap;padding:12px}body[data-page="admin"] .toast-stack{left:12px;right:12px}body[data-page="admin"] .toast{min-width:0;width:100%;max-width:100%}
+}
+@media screen and (max-width:600px){
+  body[data-page="usuario"] .hero{grid-template-columns:52px minmax(0,1fr) 36px;gap:10px;padding:16px!important}body[data-page="usuario"] .avatar{width:52px;height:52px}body[data-page="usuario"] .edit{width:36px;height:36px;min-height:36px}body[data-page="usuario"] .hero h1{font-size:25px!important}
+  body[data-page="planes-artistas"] .grid,body[data-page="trabajo"] .cards,body[data-page="peliculas-series"] .grid{grid-template-columns:1fr!important}
+  body[data-page="admin"] table[data-mobile-table],body[data-page="mi-espacio-artista"] table[data-mobile-table]{display:block;width:100%!important;min-width:0!important;border:0}
+  body[data-page] table[data-mobile-table] thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  body[data-page] table[data-mobile-table] tbody{display:block;width:100%}body[data-page] table[data-mobile-table] tbody tr{display:block;margin-bottom:12px;padding:12px;border:1px solid #ffffff22;border-radius:16px;background:#101827}
+  body[data-page] table[data-mobile-table] td{display:block;width:100%!important;min-width:0!important;padding:8px 2px!important;white-space:normal!important;overflow-wrap:anywhere;border:0!important}
+  body[data-page] table[data-mobile-table] td[data-label]:not([data-label=""])::before{content:attr(data-label);display:block;font-size:11px;line-height:1.4;font-weight:700;color:#93a8c5;margin-bottom:5px}
+  body[data-page="admin"] .table-wrap,body[data-page="mi-espacio-artista"] .tablewrap{min-width:0;overflow:visible;border:0;background:transparent}
+}
+/* Mobile restyling: compact navigation, content-first pages and bounded populated panels. */
+@media screen and (max-width:1024px){
+  body[data-page]{font-family:Inter,system-ui,sans-serif!important;font-size:14px!important;line-height:1.45}
+  body[data-page] .grid,body[data-page] .grid>*{min-width:0!important;max-width:100%}
+  body[data-page] .panel{min-width:0!important;max-width:100%;overflow-wrap:anywhere}
+  body[data-page] .panel h2{white-space:normal!important;overflow-wrap:anywhere;font-size:18px!important;line-height:1.3!important}
+  body[data-page] .prefs{min-width:0;max-width:100%;flex-wrap:wrap!important}
+  body[data-page] .chip{max-width:100%;white-space:normal!important;overflow-wrap:anywhere;font-size:13px!important;padding:10px 14px}
+  body[data-page] .rail{min-width:0!important;width:100%;scrollbar-width:none}body[data-page] .rail::-webkit-scrollbar{display:none}
+  body[data-page] h1{font-size:26px!important;line-height:1.15!important;letter-spacing:-.035em!important}
+  body[data-page] .head h2{font-size:20px!important}
+  body[data-page="app"] #top{height:calc(52px + env(safe-area-inset-top));padding-left:12px!important;padding-right:12px!important}
+  body[data-page="app"] #top .brand{font-size:13px!important}
+  body[data-page="app"] #mobile{height:calc(60px + env(safe-area-inset-bottom))}
+  body[data-page="app"] #mobile button{font-family:Inter,system-ui,sans-serif!important;font-size:10px!important;gap:4px}
+  body[data-page="app"] #mobile button i{font-style:normal;font-size:22px!important}
+  body[data-page="app"] #viewWrap{margin-bottom:calc(60px + env(safe-area-inset-bottom))!important}
+  body[data-page="app"] #shell:has(#mediaDock.active.mini) #viewWrap,body[data-page="app"] #shell:has(#radioDock.active) #viewWrap{margin-bottom:calc(134px + env(safe-area-inset-bottom))!important}
+  body[data-page="app"] #mediaDock.mini,body[data-page="app"] #radioDock{bottom:calc(68px + env(safe-area-inset-bottom))!important}
+  body[data-page="app"] #mediaDock.expanded{inset:calc(52px + env(safe-area-inset-top)) 0 calc(60px + env(safe-area-inset-bottom))!important;padding:0!important;background:#05080e!important}
+  body[data-page="app"] #mediaDock.expanded #mediaCard{border:0;border-radius:0!important;margin:0;width:100%!important}
+  body[data-page="app"] #mediaDock.expanded .mediaCopy{padding:16px!important}
+  body[data-page="index-v117"] #hero{min-height:220px!important;height:auto!important}
+  body[data-page="index-v117"] #hero .copy{padding:28px 0!important;width:calc(100% - 32px)}
+  html.uadav-in-shell body[data-page="index-v117"] #heroTitle,body[data-page="index-v117"] #hero h1{font-size:26px!important;line-height:1.15!important;max-width:560px!important;margin:10px 0!important}
+  body[data-page="index-v117"] #heroText{font-size:13px!important;line-height:1.45!important;margin:10px 0 16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  body[data-page="index-v117"] #hero .eyebrow{font-size:10px!important;letter-spacing:.08em!important}
+  body[data-page="index-v117"] #hero .btn{font-size:13px!important;padding:10px 16px!important;min-height:40px}
+  body[data-page="index-v117"] .section{padding:18px 0}
+  body[data-page="index-v117"] #worldsSection .head>span{display:none}
+  body[data-page="index-v117"] .worlds{display:flex!important;gap:8px;scrollbar-width:none;padding-bottom:0}
+  body[data-page="index-v117"] .worlds::-webkit-scrollbar{display:none}
+  body[data-page="index-v117"] .world{flex:none;min-height:44px!important;border-radius:12px!important;padding:10px 14px!important;background:#141d2a!important;max-width:230px}
+  body[data-page="index-v117"] .world small,body[data-page="index-v117"] .world span{display:none}
+  body[data-page="index-v117"] .world b{font-size:13px!important;line-height:1.4;margin:0!important;white-space:nowrap}
+  body[data-page="index-v117"] .rail{grid-auto-columns:clamp(230px,82vw,330px)}
+  body[data-page="buscar"] .shell{padding:14px 12px 28px!important}
+  body[data-page="buscar"] .top,body[data-page="buscar"] .hero .eyebrow,body[data-page="buscar"] .hero p{display:none!important}
+  body[data-page="buscar"] .hero h1{font-size:22px!important;margin:0 0 12px!important}
+  body[data-page="buscar"] .search{margin:0 0 12px!important;padding:0!important;background:transparent!important;border:0!important}
+  body[data-page="buscar"] .search input{padding:12px!important;height:46px;border-radius:12px}
+  body[data-page="buscar"] .search button{font-size:13px!important;height:46px;border-radius:12px!important}
+  body[data-page="buscar"] .result-filters{gap:8px!important;padding-bottom:8px!important;scrollbar-width:none}
+  body[data-page="buscar"] .result-filters button{font-size:12px!important;padding:8px 12px!important;min-height:36px!important}
+  body[data-page="buscar"] .status{font-size:13px;padding:8px 0!important}
+  body[data-page="buscar"] .card{grid-template-columns:104px minmax(0,1fr);gap:4px 10px;padding:8px}
+  body[data-page="buscar"] .card>img{width:104px;height:66px}
+  body[data-page="descubrir"] .explore{padding:14px 12px 28px!important}
+  body[data-page="descubrir"] .intro h1{font-size:22px!important;margin:0 0 12px!important}
+  body[data-page="descubrir"] .intro p,body[data-page="descubrir"] .status{display:none}
+  body[data-page="descubrir"] .filters{position:static!important;padding:0 0 12px!important;scrollbar-width:none}
+  body[data-page="descubrir"] .filters button{font-size:12px!important;padding:8px 12px!important;min-height:36px!important}
+  body[data-page="descubrir"] .moment{min-height:60svh!important;border-radius:16px}
+  body[data-page="descubrir"] .moment-copy{padding:16px!important}
+  body[data-page="descubrir"] .moment h2{font-size:21px!important;line-height:1.2!important;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:8px 0 14px!important}
+  body[data-page="descubrir"] .moment small{font-size:12px!important}
+  body[data-page="descubrir"] .actions{gap:8px;flex-wrap:wrap}
+  body[data-page="descubrir"] .action{font-size:12px!important;padding:10px 12px!important;min-height:40px!important}
+  body[data-page="radio"] .radio-hub{padding:14px 12px!important}
+  body[data-page="radio"] .radio-hub-hero{min-height:0!important;padding:18px!important;border-radius:16px;gap:14px}
+  body[data-page="radio"] .radio-hub-copy h1{font-size:25px!important;line-height:1.12!important;margin:8px 0 12px!important}
+  body[data-page="radio"] .radio-hub-copy p{font-size:13px!important;line-height:1.45!important;margin:8px 0 14px!important}
+  body[data-page="radio"] .radio-hub-copy .btn{font-size:13px!important;padding:10px 14px!important;min-height:44px!important;max-width:100%;white-space:normal}
+  body[data-page="radio"] .radio-hub-copy .hero-actions{gap:8px;flex-wrap:wrap}
+  body[data-page="radio"] .radio-hub-feature{display:none!important}
+  body[data-page="radio"] .section-title{font-size:21px!important;line-height:1.2!important}
+  body[data-page="usuario"] .wrap{padding:14px 12px 28px!important}
+  body[data-page="usuario"] .wrap>.brand{display:none!important}
+  body[data-page="usuario"] .hero{margin:0!important;padding:16px!important}
+  body[data-page="usuario"] .hero h1{font-size:23px!important}
+  body[data-page="usuario"] .hero p{font-size:12px!important;margin-bottom:0}
+  body[data-page="usuario"] .grid{grid-template-columns:minmax(0,1fr)!important;margin-top:14px;gap:12px}
+  body[data-page="usuario"] .panel{padding:16px!important;border-radius:16px}
+  body[data-page="usuario"] .muted{font-size:13px!important;line-height:1.5!important;white-space:normal!important}
+  body[data-page="usuario"] .prefs{gap:8px}
+  body[data-page="usuario"] .item{flex:0 0 150px!important;max-width:150px}
+}
+/* Complete mobile layouts for existing catalog, artist and form screens. */
+@media screen and (max-width:1024px){
+ body[data-page="cartelera"] .shell{width:100%;padding:14px 12px 36px!important}
+ body[data-page="cartelera"] .top{position:static;flex-wrap:wrap;padding:0 0 12px!important}
+ body[data-page="cartelera"] .top-actions{flex-wrap:wrap;gap:8px}
+ body[data-page="cartelera"] .top-actions .btn{font-size:12px;padding:9px 12px}
+ body[data-page="cartelera"] .hero-slider{height:290px!important;border-radius:16px}
+ body[data-page="cartelera"] .hero-copy{left:18px!important;right:18px;bottom:42px!important;width:auto!important;max-width:none}
+ body[data-page="cartelera"] .hero h1{font-size:25px!important;line-height:1.15!important;margin:8px 0 10px}
+ body[data-page="cartelera"] .hero p{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+ body[data-page="cartelera"] .hero-actions{margin-top:12px;gap:8px}
+ body[data-page="cartelera"] .hero-actions .btn{font-size:12px;padding:9px 13px}
+ body[data-page="cartelera"] .hero-arrow{top:14px;width:36px;height:36px;min-height:36px}
+ body[data-page="cartelera"] .dots{bottom:12px}
+ body[data-page="cartelera"] .dot{min-height:8px!important;height:8px}
+ body[data-page="cartelera"] .search-strip{grid-template-columns:minmax(0,1fr) auto;padding:10px;gap:8px}
+ body[data-page="cartelera"] .search-strip input{min-width:0;min-height:44px;padding:0 12px;background:#0b1320;color:#fff}
+ body[data-page="cartelera"] .search-strip .btn{font-size:12px;padding:9px 12px}
+ body[data-page="cartelera"] .section-head{margin:24px 0 12px;align-items:flex-start;gap:10px}
+ body[data-page="cartelera"] .section-head h2{font-size:21px!important;line-height:1.2}
+ body[data-page="cartelera"] .section-head .section-sub{font-size:11px}
+ body[data-page="cartelera"] .premium-card{height:240px;flex:0 0 min(86vw,360px)!important;border-radius:16px}
+ body[data-page="cartelera"] .premium-copy h3{font-size:20px;line-height:1.2}
+ body[data-page="cartelera"] .quick{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+ body[data-page="cartelera"] .quick .chip{flex:none;white-space:nowrap!important;font-size:12px!important}
+ body[data-page="cartelera"] .events-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px;min-width:0}
+ body[data-page="cartelera"] .event-card{min-width:0;border-radius:14px}
+ body[data-page="cartelera"] .event-card>a{display:grid;grid-template-columns:96px minmax(0,1fr);height:100%}
+ body[data-page="cartelera"] .event-media{aspect-ratio:auto;height:100%;min-height:160px}
+ body[data-page="cartelera"] .event-media img{object-fit:contain;object-position:center;background:#060b13}
+ body[data-page="cartelera"] .date-box{left:5px;top:5px;min-width:34px;padding:4px;border-radius:8px}
+ body[data-page="cartelera"] .date-box strong{font-size:15px}
+ body[data-page="cartelera"] .card-body{padding:12px;min-width:0}
+ body[data-page="cartelera"] .card-body h3{font-size:16px;line-height:1.25;overflow-wrap:anywhere}
+ body[data-page="cartelera"] .card-footer{flex-wrap:wrap;gap:6px}
+ body[data-page="cartelera"] .card-footer .btn{font-size:11px;min-height:32px;padding:7px 10px}
+ body[data-page="evento"] .shell{width:100%;padding:14px 12px 36px}
+ body[data-page="evento"] .top{flex-wrap:wrap}
+ body[data-page="evento"] .hero{min-height:0!important;border-radius:16px}
+ body[data-page="evento"] .hero-content{min-height:0!important;padding:18px!important;gap:18px;flex-direction:row;align-items:flex-start}
+ body[data-page="evento"] .poster{width:110px!important;flex:none;border-radius:12px;object-fit:contain}
+ body[data-page="evento"] .copy{min-width:0;max-width:100%}
+ body[data-page="evento"] .title{font-size:26px!important;line-height:1.15!important;overflow-wrap:anywhere}
+ body[data-page="evento"] .lead{font-size:13px;line-height:1.5}
+ body[data-page="evento"] .grid{grid-template-columns:minmax(0,1fr)!important}
+ body[data-page="evento"] .panel{padding:16px;border-radius:16px}
+ body[data-page="evento"] .actions{display:flex!important;flex-wrap:wrap;width:100%;gap:8px}
+ body[data-page="evento"] .actions .btn{font-size:12px;padding:10px 12px;max-width:100%;white-space:normal}
+ body[data-page="evento"] .related-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ body[data-page="evento"] .desc{font-size:14px;line-height:1.6}
+ body[data-page="artista"] .top{position:relative;padding:12px!important;flex-wrap:wrap;min-height:44px}
+ body[data-page="artista"] .top-back{gap:8px}
+ body[data-page="artista"] .top-back .brand{display:none}
+ body[data-page="artista"] .top-actions{display:flex!important;flex-wrap:wrap;gap:8px}
+ body[data-page="artista"] .hero-inner{padding:20px 16px 24px!important;min-height:0!important}
+ body[data-page="artista"] .artist-head{flex-direction:row;align-items:flex-start;gap:14px;min-width:0;width:100%}
+ body[data-page="artista"] .artist-head>div{min-width:0}
+ body[data-page="artista"] .artist-avatar{width:72px!important;height:72px!important;border-width:2px}
+ body[data-page="artista"] .title{font-size:28px!important;line-height:1.15!important;overflow-wrap:anywhere}
+ body[data-page="artista"] .bio{font-size:13px;line-height:1.5}
+ body[data-page="artista"] .actions .btn,body[data-page="artista"] .top .btn{font-size:12px;padding:9px 12px}
+ body[data-page="artista"] .tabs{width:100%!important;padding:8px 12px!important;scrollbar-width:none;gap:6px}
+ body[data-page="artista"] .tab{font-size:12px;padding:10px 12px;min-height:38px}
+ body[data-page="artista"] .main{width:calc(100% - 24px)!important;padding-top:16px!important}
+ body[data-page="artista"] .panel{margin-top:20px}
+ body[data-page="artista"] .heading h2{font-size:21px}
+ body[data-page="artista"] .tile{flex-basis:min(82vw,300px);border-radius:14px}
+ body[data-page="artista"] .tile-title{font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+ body[data-page="biblioteca"] .w{width:calc(100% - 24px)}
+ body[data-page="biblioteca"] .top{height:auto;padding:12px 0;gap:8px;flex-wrap:wrap}
+ body[data-page="biblioteca"] .hero{padding:14px 0 8px}
+ body[data-page="biblioteca"] .hero h1{font-size:25px!important}
+ body[data-page="biblioteca"] .hero p{font-size:13px;margin:8px 0}
+ body[data-page="biblioteca"] .tabs{flex-wrap:nowrap;overflow:auto;scrollbar-width:none;margin:12px 0 18px;gap:8px}
+ body[data-page="biblioteca"] .tab{flex:none;font-size:12px;min-height:38px;padding:9px 12px}
+ body[data-page="biblioteca"] .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding-bottom:28px}
+ body[data-page="biblioteca"] .card{padding:12px;border-radius:14px;min-width:0}
+ body[data-page="biblioteca"] .card b{font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+ body[data-page="biblioteca"] .actions button{min-height:36px;font-size:12px;padding:8px 10px}
+ body[data-page="biblioteca"] .playlistbar{flex-wrap:wrap}
+ body[data-page="biblioteca"] .playlistbar input{flex:1 1 180px}
+ body[data-page="biblioteca"] .playlistHead h2{font-size:22px}
+ body[data-page="para-artistas"] .shell{width:100%;padding:16px 12px 36px}
+ body[data-page="para-artistas"] .hero{padding:20px 0;text-align:left}
+ body[data-page="para-artistas"] .hero h1{font-size:28px!important;line-height:1.15!important}
+ body[data-page="para-artistas"] .hero p{font-size:14px;line-height:1.5;margin:12px 0}
+ body[data-page="para-artistas"] .cards,body[data-page="para-artistas"] .registration-grid{grid-template-columns:minmax(0,1fr)!important}
+ body[data-page="para-artistas"] .registration-wide{grid-column:auto!important}
+ body[data-page="para-artistas"] .registration{padding:16px;min-width:0}
+ body[data-page="para-artistas"] .registration input,body[data-page="para-artistas"] .registration textarea,body[data-page="para-artistas"] .registration select{width:100%;min-width:0}
+ body[data-page="para-artistas"] .search{margin:16px 0;max-width:100%}
+ body[data-page="para-artistas"] .card{padding:18px;border-radius:16px}
+ body[data-page="para-artistas"] .pro{padding:18px;align-items:flex-start;flex-direction:column}
+ body[data-page="publicar-evento"] .hero{padding:12px 0!important}
+ body[data-page="publicar-evento"] .hero h1{font-size:26px!important;line-height:1.15!important}
+ body[data-page="publicar-evento"] .card{padding:16px!important;border-radius:16px}
+ body[data-page="publicar-evento"] .field.span2{grid-column:auto!important}
+ body[data-page="publicar-evento"] .functions{min-width:0;overflow-x:auto}
+ body[data-page="admin"] .stat-card{min-width:0;padding:14px}
+ body[data-page="admin"] .quick-grid,body[data-page="admin"] .prospect-grid{grid-template-columns:minmax(0,1fr)!important}
+}
+@media screen and (max-width:600px){
+ body[data-page="cartelera"] .events-grid,body[data-page="biblioteca"] .grid{grid-template-columns:minmax(0,1fr)!important}
+ body[data-page="evento"] .hero-content{flex-direction:column}
+ body[data-page="evento"] .poster{width:110px!important}
+ body[data-page="evento"] .title{font-size:25px!important}
+ body[data-page="artista"] .artist-head{flex-direction:column}
+}
+@media screen and (max-width:1024px){
+ body[data-page="evento"] .hero .copy{padding:0!important;width:100%!important;max-width:100%;margin:0}
+ body[data-page="evento"] .hero h1.title{font-size:25px!important;line-height:1.15!important}
+ body[data-page="evento"] .hero .lead{font-size:13px!important;line-height:1.5!important}
+ body[data-page="cartelera"] .shell>.top,body[data-page="cartelera"] .shell>.hero{margin-left:0!important;margin-right:0!important;width:100%;max-width:100%}
+}
+@media screen and (max-width:1024px){
+ body[data-page="artista"] .hero-inner .bio{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:12px 0!important;line-height:1.5!important}
+ body[data-page="artistas"] .brand{display:none!important}
+}
