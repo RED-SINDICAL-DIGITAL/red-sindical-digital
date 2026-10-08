@@ -1,5 +1,5 @@
 const VERSION = 'V11.7';
-const BUILD = '11724';
+const BUILD = '11725';
 
 function uadavSafeJSON(v,fallback={}){try{return typeof v==='string'?JSON.parse(v):(v??fallback)}catch{return fallback}}
 async function uadavDeliverNotification(payload,env){const url=String(env.EMAIL_AUTOMATION_URL||'').trim();if(!url)return {sent:false,reason:'EMAIL_AUTOMATION_URL no configurada'};try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(env.EMAIL_AUTOMATION_SECRET?{'X-UADAV-Webhook-Secret':String(env.EMAIL_AUTOMATION_SECRET)}:{})},body:JSON.stringify(payload)});return r.ok?{sent:true}:{sent:false,status:r.status}}catch(e){return {sent:false,error:String(e?.message||e)}}}
@@ -2482,7 +2482,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     // V6.4 — ARTIST CENTER / SELF MANAGEMENT / CONTRACTING
     // ============================================================
     function artistTokenKey(token){ return 'artist_access_' + String(token || '').replace(/[^A-Za-z0-9_-]/g,'').slice(0,120); }
-    function publicArtistFromItem(a){ return ({
+    function publicArtistFromItem(a){ const canSupport=a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now())&&a.claimed===true&&a.claim_status==='approved'&&a.support_enabled!==false; return ({
       id:a.id||a.token||a.canal||a.nombre||a.nombre_artistico||'',
       nombre:a.nombre_artistico||a.nombre||'Artista',
       rubro:a.rubro||'Artista de variedades',
@@ -2499,8 +2499,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       visible:a.visible!==false,
       estado:a.estado||'catalogo',
       afiliado_verificado:a.afiliado_verificado===true,
-      donacion_activa:a.donacion_activa===true,
-      donation_url:a.donation_url||a.donacion_url||'',
+      donacion_activa:canSupport&&a.donacion_activa===true,
+      donation_url:canSupport?(a.donation_url||a.donacion_url||''):'',
       live_url:a.live_url||'',
       booking_url:a.booking_url||'',
       honorario_desde:a.honorario_desde||a.precio_desde||'',
@@ -2508,8 +2508,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       redes:a.redes||{},
       contenido:a.contenido||[],
       bolsa_activa:true,
-      support_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.support_enabled!==false,
-      support_links:Array.isArray(a.support_links)?a.support_links.filter(x=>x&&x.url&&x.active!==false).slice(0,12):[],
+      support_enabled:canSupport&&((Array.isArray(a.support_links)&&a.support_links.some(x=>x&&/^https?:\/\//i.test(x.url||'')&&x.active!==false))||/^https?:\/\//i.test(a.donation_url||a.donacion_url||'')),
+      support_links:canSupport&&Array.isArray(a.support_links)?a.support_links.filter(x=>x&&x.url&&x.active!==false).slice(0,12):[],
       audience_chat_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.audience_chat_enabled===true,
       presskit_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.presskit_enabled!==false,
       marketplace_enabled:a.marketplace_enabled!==false,
@@ -2788,7 +2788,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const text=(v,max=4000)=>String(v??'').slice(0,max),link=v=>/^https?:\/\//i.test(String(v||''))?text(v,1500):'',fields=(x,keys)=>Object.fromEntries(keys.map(k=>[k,text(x?.[k])]));
       const kit={...fields(b.data?.kit,['name','discipline','city','bio','contact','trajectory']),photo:link(b.data?.kit?.photo),video:link(b.data?.kit?.video)};
       const clean=(key,keys)=>{const input=b.data?.[key];if(!Array.isArray(input)||input.length>200)throw Error('Máximo 200 registros por herramienta');return input.map(x=>fields(x,keys))};
-      let data;try{data={kit,shows:clean('shows',['id','name','duration','audience','members','requirements','setup','price']),quotes:clean('quotes',['id','client','show','date','place','fee','travel','other','valid_until','conditions','status']),agenda:clean('agenda',['id','date','time','show','place','status','notes']),leads:clean('leads',['id','client','contact','event','date','status','next_date','notes'])}}catch(e){return reply({error:e.message},400)}
+      let data;try{data={kit,shows:clean('shows',['id','name','duration','audience','members','requirements','setup','price']),quotes:clean('quotes',['id','client','show','date','place','fee','travel','other','valid_until','conditions','status','deposit','paid','payment_notes']),agenda:clean('agenda',['id','date','time','show','place','status','notes']),leads:clean('leads',['id','client','contact','event','date','status','next_date','notes'])}}catch(e){return reply({error:e.message},400)}
       const now=isoNow();let published=row?.public_json||null;
       if(b.publication==='publish'){if(!kit.name||!kit.bio)return reply({error:'Nombre y biografía son obligatorios para publicar'},400);published=JSON.stringify({artist_id:artistId,kit,shows:data.shows.map(({price,...show})=>show),updated_at:now})}
       if(b.publication==='unpublish')published=null;
@@ -2811,11 +2811,25 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       a.self_managed=true; a.ultima_edicion_artista=new Date().toISOString(); a.cambios_pendientes=true; a.estado=a.estado==='aprobado'?'aprobado':(a.estado||'pendiente');
       await putJSON('artistas',arr); return json({success:true,review_required:true,artist:privateArtistFromItem(a)});
     }
-    if(path==='/api/artista/content' && request.method==='GET'){
-      const id=String(url.searchParams.get('artist_id')||''); const list=await getArray('artista_contenido'); return json(list.filter(x=>String(x.artist_id)===id && x.estado==='publicado').map(normalizeContentItem));
-    }
-    if(path==='/api/artista/content' && request.method==='POST'){
-      const b=await request.json().catch(()=>({})); const token=String(b.token||''); const raw=await env.UADAV_DB.get(artistTokenKey(token)); if(!raw)return json({error:'Acceso inválido'},401); const access=JSON.parse(raw); const det=detectProvider(b.url); const item={id:'AC-'+crypto.randomUUID().slice(0,8),artist_id:String(access.artist_id),titulo:String(b.titulo||'Contenido'),tipo:String(b.tipo||det.content_type||'video'),content_type:String(b.content_type||b.tipo||det.content_type||'video'),provider:String(b.provider||det.provider||'custom'),external_id:String(b.external_id||det.external_id||''),url:String(b.url||''),thumbnail:String(b.thumbnail||''),descripcion:String(b.descripcion||''),estado:'pendiente',creado:new Date().toISOString()}; if(!item.url)return json({error:'URL requerida'},400); const list=await getArray('artista_contenido'); list.push(item); await putJSON('artista_contenido',list); return json({success:true,item:normalizeContentItem(item)});
+    if(path==='/api/artista/content'){
+      const reply=(data,status=200)=>{const r=json(data,status);r.headers.set('Cache-Control','no-store');return r};
+      const b=request.method==='GET'?{}:await request.json().catch(()=>({}));
+      const token=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'')||String(b.token||'');
+      let access=null;
+      if(token){access=safeJSON(await env.UADAV_DB.get(artistTokenKey(token)),null);if(!access?.artist_id||!access.expires||Number(access.expires)<=Date.now())return reply({error:'Acceso inválido o vencido'},401);
+        if(access.claim_id&&hasD1()){const owner=await env.DB.prepare("SELECT claim_id FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(String(access.artist_id)).first();if(!owner||String(owner.claim_id)!==String(access.claim_id))return reply({error:'Acceso revocado'},403)}}
+      const list=await getArray('artista_contenido');
+      if(request.method==='GET'){const id=access?String(access.artist_id):String(url.searchParams.get('artist_id')||'');return reply(list.filter(x=>String(x.artist_id)===id&&(access||x.estado==='publicado')).sort((a,b)=>Number(a.orden||0)-Number(b.orden||0)).map(normalizeContentItem))}
+      if(!['POST','PUT'].includes(request.method))return reply({error:'Método no permitido'},405);
+      if(!access)return reply({error:'Acceso de artista requerido'},401);
+      const artistId=String(access.artist_id),index=list.findIndex(x=>String(x.id)===String(b.id)&&String(x.artist_id)===artistId);
+      if(request.method==='PUT'&&index<0)return reply({error:'Contenido no encontrado'},404);
+      const clean=(v,max=1500)=>String(v||'').trim().slice(0,max),valid=v=>{try{return ['http:','https:'].includes(new URL(v).protocol)}catch{return false}};
+      const mediaUrl=clean(b.url);if(!valid(mediaUrl))return reply({error:'Ingresá un enlace http o https válido'},400);
+      const thumbnail=clean(b.thumbnail);if(thumbnail&&!valid(thumbnail))return reply({error:'Miniatura inválida'},400);
+      const det=detectProvider(mediaUrl),previous=index>=0?list[index]:{};
+      const item={...previous,id:previous.id||'AC-'+crypto.randomUUID().slice(0,8),artist_id:artistId,titulo:clean(b.titulo,200)||'Contenido',tipo:clean(b.tipo,30)||'video',content_type:clean(b.tipo,30)||det.content_type,provider:det.provider,external_id:det.external_id,url:mediaUrl,thumbnail,descripcion:clean(b.descripcion,4000),orden:Math.max(0,Math.min(10000,Number(b.orden)||0)),estado:'pendiente',creado:previous.creado||isoNow(),actualizado:isoNow()};
+      if(index>=0)list[index]=item;else list.push(item);await putJSON('artista_contenido',list);return reply({success:true,review_required:true,item:normalizeContentItem(item)});
     }
     if(path==='/api/contrataciones' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); if(!b.artist_id||!b.nombre||!b.email)return json({error:'Artista, nombre y email son obligatorios'},400); if(b.acepta_contrato!==true)return json({error:'Debe aceptar el contrato/condiciones para continuar'},400);

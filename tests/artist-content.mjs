@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import vm from 'node:vm';
+const source=await readFile(new URL('../worker.js',import.meta.url),'utf8');const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const data=new Map([['artist_access_TEST_OWNER_123',JSON.stringify({artist_id:'a1',expires:Date.now()+60000})],['artista_contenido',JSON.stringify([{id:'c1',artist_id:'a1',titulo:'Publicado',url:'https://youtube.com/watch?v=abcdefghijk',estado:'publicado'},{id:'c2',artist_id:'a2',url:'https://example.com',estado:'pendiente'}])]]);
+const env={UADAV_DB:{get:async k=>data.get(k)||null,put:async(k,v)=>data.set(k,v)}};
+async function req(method='GET',body,token='TEST_OWNER_123',suffix=''){const r=await worker.fetch(new Request('https://test.example/api/artista/content'+suffix,{method,headers:token?{Authorization:'Bearer '+token}:{},...(body?{body:JSON.stringify(body)}:{})}),env,{});return {status:r.status,data:await r.json()}}
+assert.equal((await req()).data.length,1);assert.equal((await req('PUT',{id:'c2',url:'https://example.com'})).status,404);assert.equal((await req('PUT',{id:'c1',url:'javascript:alert(1)'})).status,400);
+const edit=await req('PUT',{id:'c1',titulo:'Editado',url:'https://youtube.com/watch?v=abcdefghijk',orden:3});assert.equal(edit.status,200);assert.equal(edit.data.item.estado,'pendiente');assert.equal((await req('GET',null,'','?artist_id=a1')).data.length,0);assert.equal((await req()).data[0].titulo,'Editado');
+data.set('artist_access_TEST_OWNER_123',JSON.stringify({artist_id:'a1',expires:1}));assert.equal((await req('POST',{url:'https://example.com'})).status,401);
+for(const p of ['gestionar-artista.html','admin.html']){const html=await readFile(new URL('../'+p,import.meta.url),'utf8');for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))if(m[1].trim())new vm.Script(m[1])}
+console.log('PASS: content ownership, expiry, unsafe links, edit moderation and profile/admin syntax');
