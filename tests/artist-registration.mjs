@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {webcrypto} from 'node:crypto';
+globalThis.crypto ||= webcrypto;
+const source=await readFile(new URL('../worker.js',import.meta.url),'utf8');
+const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const data=new Map();const env={UADAV_DB:{get:async k=>data.get(k)||null,put:async(k,v)=>data.set(k,v)}};
+const body={new_profile:true,artist_name:'Maga sin canal',rubro:'Maga · mentalista',name:'Representante',email:'artista@example.invalid',ciudad:'Rosario',bio:'Espectáculos de magia.'};
+const send=async payload=>{const r=await worker.fetch(new Request('https://test.example/api/artista/claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),env,{});return{status:r.status,data:await r.json()}};
+assert.equal((await send({...body,email:'invalido'})).status,400);assert.equal(data.has('artistas'),false);
+assert.equal((await send({...body,social_url:'javascript:alert(1)'})).status,400);assert.equal(data.has('artistas'),false);
+const first=await send(body);assert.equal(first.status,200);assert.equal(first.data.status,'pending');
+const artists=JSON.parse(data.get('artistas'));assert.equal(artists.length,1);assert.equal(artists[0].visible,false);assert.equal(artists[0].registration_pending,true);assert.equal(artists[0].rubro,body.rubro);assert.equal(artists[0].canal,undefined);assert.equal(artists[0].claimed,false);
+const second=await send(body);assert.equal(second.status,200);assert.equal(second.data.duplicate,true);assert.equal(JSON.parse(data.get('artistas')).length,1);assert.equal(JSON.parse(data.get('artist_claims')).length,1);
+const pub=await worker.fetch(new Request('https://test.example/api/public/artista?id='+artists[0].id),env,{});assert.equal(pub.status,404);
+console.log('PASS: profile without YouTube, validation before storage, hidden until review and duplicate submission');
