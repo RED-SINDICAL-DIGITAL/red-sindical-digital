@@ -270,3 +270,7 @@
  body[data-page="evento"] .hero .lead{font-size:13px!important;line-height:1.5!important}
  body[data-page="cartelera"] .shell>.top,body[data-page="cartelera"] .shell>.hero{margin-left:0!important;margin-right:0!important;width:100%;max-width:100%}
 }
+@media screen and (max-width:1024px){
+ body[data-page="artista"] .hero-inner .bio{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:12px 0!important;line-height:1.5!important}
+ body[data-page="artistas"] .brand{display:none!important}
+}
