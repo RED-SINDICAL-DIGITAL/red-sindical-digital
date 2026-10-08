@@ -1,0 +1,15 @@
+/* Persistent radio and compact home, preserving native playback. */
+body[data-page="app"] #radioDock{left:0;right:0;bottom:0;transform:none;width:100%;border-radius:0;min-height:88px;padding:12px 28px;background:#101318;border-width:1px 0 0;box-shadow:0 -10px 32px #0005;gap:16px}
+body[data-page="app"]:has(#radioDock.active) #viewWrap{margin-bottom:88px}
+body[data-page="app"] #radioArt{width:56px;height:56px;border-radius:6px}
+.radioLiveLabel{display:block;font-size:9px;font-weight:800;letter-spacing:.12em;color:#9abaff;margin-bottom:3px}
+body[data-page="app"] .radioInfo b{font-size:14px;line-height:1.5}
+body[data-page="app"] .radioInfo span{font-size:12px;line-height:1.5}
+body[data-page="app"] .radioActions{gap:18px}
+body[data-page="app"] #radioPlay{width:44px;height:44px;background:#fff;color:#080b10;font-size:18px}
+body[data-page="app"] #radioPage{background:transparent;border:0;color:#c3cfdf}
+body[data-page="app"] #radioClose{background:transparent}
+body[data-page="app"] .radioVol{accent-color:#fff;width:130px}
+body[data-page="app"] #radioDock button:focus-visible{outline:2px solid #97bdff;outline-offset:4px}
+@media(min-width:1025px){body[data-page="index-v117"] #hero{min-height:380px!important;height:auto!important;align-items:center!important}body[data-page="index-v117"] #hero .copy{padding:50px max(32px,5vw)!important;max-width:1000px}body[data-page="index-v117"] #hero h1{font-size:clamp(34px,4.3vw,58px)!important;line-height:1.08!important;max-width:880px}body[data-page="index-v117"] #hero p{font-size:17px!important;max-width:670px}body[data-page="index-v117"] .section{margin-top:32px!important}}
+@media(max-width:1024px){body[data-page="app"] #radioDock{left:8px;right:8px;bottom:calc(68px + env(safe-area-inset-bottom));width:auto;min-height:64px;padding:8px 10px;border:1px solid #ffffff20;border-radius:12px;gap:10px}body[data-page="app"]:has(#radioDock.active) #viewWrap{margin-bottom:calc(140px + env(safe-area-inset-bottom))}body[data-page="app"] #radioArt{width:42px;height:42px}body[data-page="app"] .radioActions{gap:6px}body[data-page="app"] #radioPlay{width:38px;height:38px}body[data-page="app"] #radioClose{width:32px;height:32px}body[data-page="app"] .radioLiveLabel{font-size:8px;margin:0}body[data-page="app"] .radioInfo b{font-size:12px}body[data-page="app"] .radioInfo span{font-size:10px}body[data-page="app"] .radioVol,body[data-page="app"] #radioPage{display:none!important}}
