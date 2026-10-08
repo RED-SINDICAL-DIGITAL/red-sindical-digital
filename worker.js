@@ -1,5 +1,169 @@
+// Account credentials and pairing secrets are hashed; no permanent credential is sent through a QR.
+const uadavAccountSchemas=new WeakMap();
+async function uadavAccountSchema(db){
+  if(!uadavAccountSchemas.has(db))uadavAccountSchemas.set(db,(async()=>{
+    for(const sql of [
+      'CREATE TABLE IF NOT EXISTS audience_accounts(id TEXT PRIMARY KEY,data_json TEXT NOT NULL,revision INTEGER NOT NULL,updated_at TEXT NOT NULL)',
+      'CREATE TABLE IF NOT EXISTS audience_devices(credential_hash TEXT PRIMARY KEY,id TEXT UNIQUE NOT NULL,account_id TEXT NOT NULL,name TEXT NOT NULL,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,revoked_at INTEGER)',
+      'CREATE TABLE IF NOT EXISTS audience_pairings(id TEXT PRIMARY KEY,account_id TEXT NOT NULL,code_hash TEXT UNIQUE NOT NULL,qr_hash TEXT UNIQUE NOT NULL,state TEXT NOT NULL,expires_at INTEGER NOT NULL,device_hash TEXT,device_name TEXT,verification TEXT)',
+      'CREATE TABLE IF NOT EXISTS audience_rate_limits(id TEXT PRIMARY KEY,count INTEGER NOT NULL,expires_at INTEGER NOT NULL)',
+      'CREATE TABLE IF NOT EXISTS audience_recovery_keys(credential_hash TEXT PRIMARY KEY,account_id TEXT NOT NULL,revoked_at INTEGER)',
+      'CREATE INDEX IF NOT EXISTS audience_device_account ON audience_devices(account_id,revoked_at)',
+      'CREATE INDEX IF NOT EXISTS audience_pairing_account ON audience_pairings(account_id,expires_at)'
+    ])await db.prepare(sql).run();
+  })().catch(e=>{uadavAccountSchemas.delete(db);throw e}));
+  return uadavAccountSchemas.get(db);
+}
+async function uadavAccountRoute(request,env){
+  const url=new URL(request.url),path=url.pathname,now=Date.now(),origin=request.headers.get('Origin');
+  const origins=String(env.ACCOUNT_ALLOWED_ORIGINS||'https://uadavstream.com.ar,https://www.uadavstream.com.ar').split(',').map(x=>x.trim()).filter(Boolean);
+  const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Pragma':'no-cache','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','Vary':'Origin',...(origin&&origins.includes(origin)?{'Access-Control-Allow-Origin':origin}:{})};
+  const reply=(d,s=200)=>new Response(JSON.stringify(d),{status:s,headers});
+  if(origin&&!origins.includes(origin))return reply({error:'Origen no autorizado'},403);
+  if(!env.DB)return reply({error:'La sincronización requiere D1'},503);
+  const db=typeof env.DB.withSession==='function'?env.DB.withSession('first-primary'):env.DB;
+  const hash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),x=>x.toString(16).padStart(2,'0')).join('');
+  const random=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
+  const number=max=>{const a=new Uint32Array(1),limit=Math.floor(4294967296/max)*max;do{crypto.getRandomValues(a)}while(a[0]>=limit);return a[0]%max};
+  const secret=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
+  const body=async(max=5000)=>{const raw=await request.text();if(raw.length>max)throw Object.assign(Error('Datos demasiado grandes'),{status:413});try{return JSON.parse(raw)}catch{throw Object.assign(Error('Datos inválidos'),{status:400})}};
+  const rate=async(scope,limit,period)=>{
+    const ip=String(request.headers.get('CF-Connecting-IP')||'unknown'),bucket=Math.floor(now/period),id=await hash(scope+':'+ip+':'+bucket);
+    const r=await db.prepare('INSERT INTO audience_rate_limits(id,count,expires_at) VALUES(?,1,?) ON CONFLICT(id) DO UPDATE SET count=count+1 WHERE count<? RETURNING count').bind(id,now+period*2,limit).first();
+    if(!r)throw Object.assign(Error('Demasiados intentos. Esperá unos minutos antes de volver a probar.'),{status:429});
+  };
+  try{
+    // Cache schema initialization on the underlying binding, not on per-request sessions.
+    await uadavAccountSchema(env.DB);
+    if(path==='/api/account/pair/join'){
+      if(request.method!=='POST')return reply({error:'Método no permitido'},405);
+      await rate('pair-join',8,600000);
+      const b=await body(),code=String(b.code||'').replace(/\s/g,''),proof=String(b.proof||'');
+      if(!/^UAD-[a-f0-9]{64}$/.test(secret)||!(/^\d{6}$/.test(code)||/^[a-f0-9]{64}$/.test(proof)))return reply({error:'Código inválido o vencido'},400);
+      const deviceHash=await hash(secret),lookup=await hash(proof||code),row=await db.prepare('SELECT * FROM audience_pairings WHERE '+(proof?'qr_hash':'code_hash')+'=?').bind(lookup).first();
+      if(!row||row.expires_at<=now||!['waiting','requested'].includes(row.state))return reply({error:'Código inválido o vencido'},400);
+      if(row.state==='requested')return row.device_hash===deviceHash?reply({id:row.id,verification:row.verification,state:'requested',expires_at:row.expires_at}):reply({error:'Este código ya tiene una solicitud. Generá otro desde tu cuenta.'},409);
+      if(await db.prepare('SELECT id FROM audience_devices WHERE credential_hash=?').bind(deviceHash).first())return reply({error:'Generá una nueva solicitud desde este dispositivo'},409);
+      const verification=String(number(10000)).padStart(4,'0'),name=String(b.name||'Nuevo dispositivo').trim().slice(0,80)||'Nuevo dispositivo';
+      const result=await db.prepare("UPDATE audience_pairings SET state='requested',device_hash=?,device_name=?,verification=? WHERE id=? AND state='waiting' AND expires_at>?").bind(deviceHash,name,verification,row.id,now).run();
+      if(result.meta?.changes!==1)return reply({error:'El código ya fue utilizado'},409);
+      return reply({id:row.id,verification,state:'requested',expires_at:row.expires_at});
+    }
+    if(path==='/api/account/pair/status'){
+      if(request.method!=='GET'||!/^UAD-[a-f0-9]{64}$/.test(secret))return reply({error:'Solicitud inválida'},401);
+      await rate('pair-status',180,300000);
+      const deviceHash=await hash(secret),row=await db.prepare('SELECT * FROM audience_pairings WHERE id=? AND device_hash=?').bind(url.searchParams.get('id')||'',deviceHash).first();
+      if(!row)return reply({error:'Solicitud no encontrada'},404);
+      if(row.state==='approved'){
+        const device=await db.prepare('SELECT id FROM audience_devices WHERE credential_hash=? AND revoked_at IS NULL AND expires_at>?').bind(deviceHash,now).first();
+        return device?reply({state:'approved'}):reply({error:'El permiso fue revocado o venció'},401);
+      }
+      return reply({state:row.expires_at<=now?'expired':row.state});
+    }
+    if(!/^UA[CD]-[a-f0-9]{64}$/.test(secret))return reply({error:'Acceso privado requerido'},401);
+    const credentialHash=await hash(secret);let accountId=credentialHash,currentDevice=null;
+    if(secret.startsWith('UAC-')){
+      const recovery=await db.prepare('SELECT * FROM audience_recovery_keys WHERE credential_hash=?').bind(credentialHash).first();
+      if(recovery?.revoked_at!=null)return reply({error:'Este respaldo de recuperación fue reemplazado'},401);
+      if(recovery)accountId=recovery.account_id;
+    }
+    if(secret.startsWith('UAD-')){
+      currentDevice=await db.prepare('SELECT * FROM audience_devices WHERE credential_hash=? AND revoked_at IS NULL AND expires_at>?').bind(credentialHash,now).first();
+      if(!currentDevice)return reply({error:'Este dispositivo perdió su acceso. Volvé a vincularlo.',code:'DEVICE_REVOKED'},401);
+      accountId=currentDevice.account_id;
+    }
+    const account=await db.prepare('SELECT * FROM audience_accounts WHERE id=?').bind(accountId).first();
+    if(path==='/api/account'){
+      if(!['GET','POST','PUT'].includes(request.method))return reply({error:'Método no permitido'},405);
+      if(request.method==='GET')return account?reply({data:JSON.parse(account.data_json),revision:account.revision}):reply({error:'Cuenta no encontrada'},404);
+      if(request.method==='POST'&&(account||currentDevice))return reply({error:'Esta cuenta ya existe'},409);
+      if(request.method==='PUT'&&!account)return reply({error:'Cuenta no encontrada'},404);
+      if(request.method==='POST')await rate('account-create',10,3600000);
+      const b=await body(600000);
+      if(request.method==='PUT'&&(!Number.isInteger(b.revision)||b.revision!==account.revision))return reply({error:'La cuenta cambió en otro dispositivo',code:'REVISION_CONFLICT'},409);
+      const keys=['uadav_user_v11','uadav_favorites_v1','uadav_watch_later_v1','uadav_playlists_v1','uadav_following_v1','uadav_radio_favorites_v1','uadav_recent_v11'];
+      if(!b.data||typeof b.data!=='object'||Array.isArray(b.data)||Object.keys(b.data).some(k=>!keys.includes(k)))return reply({error:'Datos de cuenta inválidos'},400);
+      const safe=(x,depth=0)=>{if(depth>12)return false;if(typeof x==='string')return !/^\s*(?:javascript:|vbscript:|data:text\/html)/i.test(x);if(x&&typeof x==='object')return Object.entries(x).every(([k,v])=>!['__proto__','prototype','constructor'].includes(k)&&safe(v,depth+1));return true};
+      if(!safe(b.data))return reply({error:'La cuenta contiene datos o enlaces no permitidos'},400);
+      const data={};for(const key of keys){const value=b.data[key];if(value==null){data[key]=null;continue}if(key==='uadav_user_v11'){
+        if(typeof value!=='object'||Array.isArray(value))return reply({error:'Perfil inválido'},400);
+        const photo=String(value.photo||'');if(photo.length>100000||photo&&!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(photo))return reply({error:'Foto inválida o demasiado grande'},400);
+        data[key]={name:String(value.name||'Mi cuenta').slice(0,100),avatar:String(value.avatar||'U').slice(0,2),photo,preferences:Array.isArray(value.preferences)?value.preferences.slice(0,100).map(x=>String(x).slice(0,100)):[]};
+      }else{if(!Array.isArray(value)||value.length>500||JSON.stringify(value).length>250000)return reply({error:'Biblioteca demasiado grande o inválida'},400);data[key]=value}}
+      const revision=(account?.revision||0)+1;
+      const result=request.method==='POST'?await db.prepare('INSERT OR IGNORE INTO audience_accounts(id,data_json,revision,updated_at) VALUES(?,?,?,?)').bind(accountId,JSON.stringify(data),revision,new Date(now).toISOString()).run():await db.prepare('UPDATE audience_accounts SET data_json=?,revision=?,updated_at=? WHERE id=? AND revision=?').bind(JSON.stringify(data),revision,new Date(now).toISOString(),accountId,b.revision).run();
+      if(result.meta?.changes!==1)return reply({error:'La cuenta cambió. Volvé a sincronizar.',code:'REVISION_CONFLICT'},409);
+      return reply({data,revision});
+    }
+    if(!account)return reply({error:'Cuenta no encontrada'},404);
+    if(path==='/api/account/recovery'){
+      if(request.method!=='POST')return reply({error:'Método no permitido'},405);
+      await rate('recovery-rotate',3,3600000);
+      const newSecret='UAC-'+random(),newHash=await hash(newSecret);
+      await db.batch([
+        db.prepare('INSERT OR IGNORE INTO audience_recovery_keys(credential_hash,account_id,revoked_at) VALUES(?,?,?)').bind(accountId,accountId,now),
+        db.prepare('UPDATE audience_recovery_keys SET revoked_at=? WHERE account_id=?').bind(now,accountId),
+        db.prepare('INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at) VALUES(?,?,NULL)').bind(newHash,accountId)
+      ]);
+      return reply({secret:newSecret});
+    }
+    if(path==='/api/account/devices'){
+      if(request.method==='GET'){
+        const rows=await db.prepare('SELECT id,name,created_at,expires_at FROM audience_devices WHERE account_id=? AND revoked_at IS NULL AND expires_at>? ORDER BY created_at DESC').bind(accountId,now).all();
+        return reply({devices:(rows.results||[]).map(d=>({...d,current:d.id===currentDevice?.id}))});
+      }
+      if(request.method!=='POST')return reply({error:'Método no permitido'},405);
+      const b=await body();
+      if(b.action==='revoke'){
+        const r=await db.prepare('UPDATE audience_devices SET revoked_at=? WHERE id=? AND account_id=? AND revoked_at IS NULL').bind(now,String(b.id||''),accountId).run();
+        return r.meta?.changes===1?reply({success:true}):reply({error:'Dispositivo no encontrado'},404);
+      }
+      if(!secret.startsWith('UAC-'))return reply({error:'Para crear un nuevo permiso usá la vinculación temporal'},403);
+      await rate('device-create',10,3600000);
+      const deviceSecret='UAD-'+random(),deviceId=crypto.randomUUID(),deviceHash=await hash(deviceSecret),name=String(b.name||'Mi dispositivo').trim().slice(0,80)||'Mi dispositivo';
+      const r=await db.prepare('INSERT INTO audience_devices(credential_hash,id,account_id,name,created_at,expires_at) SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM audience_devices WHERE account_id=? AND revoked_at IS NULL AND expires_at>?)<20').bind(deviceHash,deviceId,accountId,name,now,now+365*86400000,accountId,now).run();
+      return r.meta?.changes===1?reply({secret:deviceSecret,id:deviceId}):reply({error:'Máximo 20 dispositivos activos. Revocá alguno antes de agregar otro.'},409);
+    }
+    if(path==='/api/account/pair'){
+      if(request.method==='GET'){
+        const row=await db.prepare('SELECT id,state,expires_at,device_name,verification FROM audience_pairings WHERE id=? AND account_id=?').bind(url.searchParams.get('id')||'',accountId).first();
+        return row?reply({...row,state:row.expires_at<=now&&row.state!=='approved'?'expired':row.state}):reply({error:'Vinculación no encontrada'},404);
+      }
+      if(request.method!=='POST')return reply({error:'Método no permitido'},405);
+      const b=await body();
+      if(b.action==='create'){
+        await rate('pair-create',10,3600000);
+        await db.prepare('DELETE FROM audience_pairings WHERE expires_at<?').bind(now).run();
+        await db.prepare('DELETE FROM audience_rate_limits WHERE expires_at<?').bind(now).run();
+        // One open invitation per account. A new QR cancels older pending invitations.
+        await db.prepare("UPDATE audience_pairings SET state='cancelled' WHERE account_id=? AND state IN ('waiting','requested')").bind(accountId).run();
+        for(let i=0;i<5;i++){
+          const code=String(number(1000000)).padStart(6,'0'),proof=random(),id=crypto.randomUUID(),expires=now+300000;
+          const r=await db.prepare("INSERT OR IGNORE INTO audience_pairings(id,account_id,code_hash,qr_hash,state,expires_at) VALUES(?,?,?,?,'waiting',?)").bind(id,accountId,await hash(code),await hash(proof),expires).run();
+          if(r.meta?.changes===1)return reply({id,code,proof,expires_at:expires});
+        }return reply({error:'No pudimos generar un código. Intentá nuevamente.'},503);
+      }
+      if(b.action==='cancel'){
+        await db.prepare("UPDATE audience_pairings SET state='cancelled' WHERE id=? AND account_id=? AND state IN ('waiting','requested')").bind(String(b.id||''),accountId).run();return reply({success:true});
+      }
+      if(b.action==='approve'){
+        const row=await db.prepare('SELECT * FROM audience_pairings WHERE id=? AND account_id=?').bind(String(b.id||''),accountId).first();
+        if(!row||row.state!=='requested'||row.expires_at<=now||String(b.verification||'')!==row.verification)return reply({error:'La solicitud cambió o venció. Generá otro código.'},409);
+        const deviceId=crypto.randomUUID();
+        const results=await db.batch([
+          db.prepare("UPDATE audience_pairings SET state='approved' WHERE id=? AND account_id=? AND state='requested' AND device_hash=? AND expires_at>? AND (SELECT COUNT(*) FROM audience_devices WHERE account_id=? AND revoked_at IS NULL AND expires_at>?)<20").bind(row.id,accountId,row.device_hash,now,accountId,now),
+          db.prepare("INSERT OR IGNORE INTO audience_devices(credential_hash,id,account_id,name,created_at,expires_at) SELECT device_hash,?,account_id,device_name,?,? FROM audience_pairings WHERE id=? AND state='approved' AND expires_at>?").bind(deviceId,now,now+365*86400000,row.id,now)
+        ]);
+        return results[0].meta?.changes===1?reply({success:true}):reply({error:'La solicitud ya fue utilizada o alcanzaste el límite de dispositivos'},409);
+      }
+      return reply({error:'Acción inválida'},400);
+    }
+    return reply({error:'Ruta no encontrada'},404);
+  }catch(e){return reply({error:e.status?e.message:'No pudimos completar la operación. Tus datos locales se conservan.'},e.status||503)}
+}
+
 const VERSION = 'V11.7';
-const BUILD = '11727';
+const BUILD = '11728';
 
 function uadavSafeJSON(v,fallback={}){try{return typeof v==='string'?JSON.parse(v):(v??fallback)}catch{return fallback}}
 async function uadavDeliverNotification(payload,env){const url=String(env.EMAIL_AUTOMATION_URL||'').trim();if(!url)return {sent:false,reason:'EMAIL_AUTOMATION_URL no configurada'};try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(env.EMAIL_AUTOMATION_SECRET?{'X-UADAV-Webhook-Secret':String(env.EMAIL_AUTOMATION_SECRET)}:{})},body:JSON.stringify(payload)});return r.ok?{sent:true}:{sent:false,status:r.status}}catch(e){return {sent:false,error:String(e?.message||e)}}}
@@ -31,42 +195,7 @@ export default {
       status,
       headers: { ...cors, 'Content-Type': 'text/plain; charset=utf-8', ...extra }
     });
-    if(path==='/api/account'){
-      const reply=(d,s=200)=>json(d,s,{'Cache-Control':'no-store','Pragma':'no-cache'});
-      if(!env.DB)return reply({error:'La sincronización requiere D1'},503);
-      if(!['GET','POST','PUT'].includes(request.method))return reply({error:'Método no permitido'},405);
-      const secret=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
-      if(!/^UAC-[a-f0-9]{64}$/.test(secret))return reply({error:'Código privado inválido'},401);
-      const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(secret));
-      const id=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,'0')).join('');
-      try{
-        await env.DB.prepare('CREATE TABLE IF NOT EXISTS audience_accounts(id TEXT PRIMARY KEY,data_json TEXT NOT NULL,revision INTEGER NOT NULL,updated_at TEXT NOT NULL)').run();
-        const row=await env.DB.prepare('SELECT * FROM audience_accounts WHERE id=?').bind(id).first();
-        if(request.method==='GET')return row?reply({data:JSON.parse(row.data_json),revision:row.revision}):reply({error:'No encontramos esta cuenta. Revisá el código.'},404);
-        if(request.method==='POST'&&row)return reply({error:'Esta cuenta ya existe'},409);
-        if(request.method==='PUT'&&!row)return reply({error:'Cuenta no encontrada'},404);
-        if(request.method==='POST'&&env.UADAV_DB&&request.headers.get('CF-Connecting-IP')){
-          const rawIp=request.headers.get('CF-Connecting-IP'),ipDigest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(rawIp));
-          const ipHash=Array.from(new Uint8Array(ipDigest),x=>x.toString(16).padStart(2,'0')).join(''),rateKey='account_creation_'+ipHash+'_'+Math.floor(Date.now()/3600000);
-          const attempts=Number(await env.UADAV_DB.get(rateKey)||0);if(attempts>=10)return reply({error:'Alcanzaste el límite de nuevas cuentas por hora. Usá tu código existente o intentá más tarde.'},429);
-          await env.UADAV_DB.put(rateKey,String(attempts+1),{expirationTtl:7200});
-        }
-        const raw=await request.text();if(raw.length>600000)return reply({error:'Tu biblioteca supera el tamaño de sincronización permitido'},413);
-        let b;try{b=JSON.parse(raw)}catch{return reply({error:'Datos inválidos'},400)}
-        if(request.method==='PUT'&&(!Number.isInteger(b.revision)||b.revision!==row.revision))return reply({error:'La cuenta cambió en otro dispositivo',code:'REVISION_CONFLICT'},409);
-        const keys=['uadav_user_v11','uadav_favorites_v1','uadav_watch_later_v1','uadav_playlists_v1','uadav_following_v1','uadav_radio_favorites_v1','uadav_recent_v11'];
-        if(!b.data||typeof b.data!=='object'||Array.isArray(b.data)||Object.keys(b.data).some(k=>!keys.includes(k)))return reply({error:'Datos de cuenta inválidos'},400);
-        const data={};for(const key of keys){const value=b.data[key];if(value==null){data[key]=null;continue}if(key==='uadav_user_v11'){
-          if(typeof value!=='object'||Array.isArray(value))return reply({error:'Perfil inválido'},400);
-          const photo=String(value.photo||'');if(photo.length>100000||photo&&!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(photo))return reply({error:'Foto inválida o demasiado grande'},400);
-          data[key]={name:String(value.name||'Mi cuenta').slice(0,100),avatar:String(value.avatar||'U').slice(0,2),photo,preferences:Array.isArray(value.preferences)?value.preferences.slice(0,100).map(x=>String(x).slice(0,100)):[]};
-        }else{if(!Array.isArray(value)||value.length>500||JSON.stringify(value).length>250000)return reply({error:'Biblioteca demasiado grande o inválida'},400);data[key]=value}}
-        const revision=(row?.revision||0)+1,now=new Date().toISOString();
-        const result=request.method==='POST'?await env.DB.prepare('INSERT OR IGNORE INTO audience_accounts(id,data_json,revision,updated_at) VALUES(?,?,?,?)').bind(id,JSON.stringify(data),revision,now).run():await env.DB.prepare('UPDATE audience_accounts SET data_json=?,revision=?,updated_at=? WHERE id=? AND revision=?').bind(JSON.stringify(data),revision,now,id,b.revision).run();
-        if(result.meta?.changes!==1)return reply({error:'La cuenta cambió. Volvé a sincronizar.',code:'REVISION_CONFLICT'},409);
-        return reply({data,revision});
-      }catch{return reply({error:'No pudimos sincronizar ahora. Tus datos locales se conservan.'},503)}
-    }
+    if(path==='/api/account'||path.startsWith('/api/account/'))return uadavAccountRoute(request,env);
 
     const isAdmin = () => { const got=String(request.headers.get('Authorization')||'').trim(); const want='Bearer '+String(env.ADMIN_KEY||'').trim(); return !!env.ADMIN_KEY && got===want; }
     const getJSON = async (key, fallback) => {
