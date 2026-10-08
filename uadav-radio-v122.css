@@ -1,0 +1,79 @@
+/* Radio: a compact music library, with real stations and persistent audio. */
+body[data-page="radio"]{background:#080b10}
+body[data-page="radio"] .shell{max-width:1440px;padding:20px 28px 70px}
+body[data-page="radio"] .radio-hub{padding:8px 0}
+body[data-page="radio"] .radio-library-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 0 28px;border-bottom:1px solid #ffffff16}
+body[data-page="radio"] .radio-library-head h1{font-size:clamp(28px,4vw,46px);letter-spacing:-.04em;line-height:1.1;margin:10px 0}
+body[data-page="radio"] .radio-library-head p{color:#a6b3c4;font-size:14px;margin:0;line-height:1.5}
+body[data-page="radio"] .radio-hub-head{margin:26px 0 14px}
+body[data-page="radio"] .radio-hub-head h2{font-size:23px}
+body[data-page="radio"] .radio-search{max-width:430px;display:grid;gap:8px;font-size:12px;color:#a6b3c4;margin:0 0 16px}
+body[data-page="radio"] .radio-search input{width:100%;border-radius:999px;background:#151b25;border:1px solid #ffffff25;padding:12px 16px;color:white;font:inherit;font-size:14px}
+body[data-page="radio"] .radio-hub-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;align-items:start}
+body[data-page="radio"] .radio-hub-card{display:flex;flex-direction:column;align-items:stretch;gap:14px;background:#121821;border:1px solid #ffffff12;border-radius:18px;padding:16px;max-width:380px;min-width:0}
+body[data-page="radio"] .radio-hub-card[hidden]{display:none}
+body[data-page="radio"] .station-art img{width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:10px;display:block;box-shadow:0 12px 30px #0005}
+body[data-page="radio"] .station-copy{min-width:0}
+body[data-page="radio"] .station-copy a{text-decoration:none}
+body[data-page="radio"] .station-copy strong{font-size:19px;display:block;line-height:1.25}
+body[data-page="radio"] .station-copy span{display:block;color:#a6b3c4;font-size:12px;margin:7px 0}
+body[data-page="radio"] .station-copy small{font-size:12px;color:#c3cedc;display:block;line-height:1.5}
+body[data-page="radio"] .station-actions{display:flex;flex-wrap:wrap;gap:8px}
+body[data-page="radio"] .btn{font-size:13px;padding:11px 16px;min-height:42px;border-radius:999px}
+body[data-page="radio"] .btn.primary{background:#2f6df6;color:white}
+body[data-page="radio"] .hero{min-height:0!important;display:block!important;margin:0!important;border-radius:20px;padding:28px!important;background:linear-gradient(130deg,#27344b,#111723)!important;overflow:hidden}
+body[data-page="radio"] .hero-content{padding:0!important;max-width:none!important;display:grid;grid-template-columns:156px minmax(0,1fr);column-gap:24px}
+body[data-page="radio"] .station-cover{grid-column:1;grid-row:1 / span 4;width:156px;height:156px;object-fit:cover;border-radius:12px;box-shadow:0 15px 35px #0007}
+body[data-page="radio"] .hero-content>*:not(.station-cover){grid-column:2}
+body[data-page="radio"] .hero-title{font-size:clamp(27px,4vw,46px)!important;line-height:1.05!important;margin:10px 0!important;letter-spacing:-.035em;overflow-wrap:anywhere}
+body[data-page="radio"] .hero-copy{font-size:14px!important;line-height:1.5!important;margin:0 0 14px!important;color:#c1ccdb;max-width:760px}
+body[data-page="radio"] .hero-actions{gap:8px;margin:0!important}
+body[data-page="radio"] .now{margin:18px 0;padding:18px;border-radius:16px;grid-template-columns:72px minmax(0,1fr) auto;gap:16px;min-height:0;background:#121821;box-shadow:none}
+body[data-page="radio"] .now-art{width:72px;height:72px;object-fit:cover;border-radius:8px}
+body[data-page="radio"] .now-title{font-size:20px;line-height:1.25;overflow-wrap:anywhere}
+body[data-page="radio"] .now-artist{font-size:13px}
+body[data-page="radio"] .now-state{font-size:10px}
+body[data-page="radio"] .radio-tabs{position:static;display:flex;gap:8px;overflow-x:auto;margin:18px 0;padding:0 0 8px;background:none;border:0;scrollbar-width:none}
+body[data-page="radio"] .radio-tabs button{white-space:nowrap;flex-shrink:0;background:#161e2b;border:1px solid #ffffff1a;border-radius:999px;padding:11px 16px;color:#cbd5e3;font-size:13px}
+body[data-page="radio"] .radio-tabs button.active{background:#2f6df6;color:white}
+body[data-page="radio"] .section{margin-top:26px}
+body[data-page="radio"] .section-title{font-size:21px}
+body[data-page="radio"] .section-sub{font-size:12px;color:#a6b3c4}
+body[data-page="radio"] .meta-grid{gap:10px}
+body[data-page="radio"] .meta{padding:16px;border-radius:12px;background:#121821}
+body[data-page="radio"] .track{background:#111720;border-radius:12px}
+body[data-page="radio"] button:focus-visible,body[data-page="radio"] a:focus-visible{outline:2px solid #a9c5ff;outline-offset:4px}
+@media(max-width:600px){
+ body[data-page="radio"] .shell{padding:12px 12px 40px!important}
+ body[data-page="radio"] .radio-library-head{display:block;padding:14px 0 20px}
+ body[data-page="radio"] .radio-library-head h1{font-size:28px}
+ body[data-page="radio"] .radio-library-head p{font-size:13px}
+ body[data-page="radio"] .radio-library-head>.btn{display:inline-flex;margin-top:14px}
+ body[data-page="radio"] .radio-hub-grid{grid-template-columns:minmax(0,1fr)}
+ body[data-page="radio"] .radio-hub-card{max-width:none;display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;padding:14px}
+ body[data-page="radio"] .station-art img{width:92px;height:92px}
+ body[data-page="radio"] .station-copy strong{font-size:16px}
+ body[data-page="radio"] .station-copy small{font-size:11px}
+ body[data-page="radio"] .station-actions{grid-column:1/-1}
+ body[data-page="radio"] .hero{padding:18px!important}
+ body[data-page="radio"] .hero-content{grid-template-columns:80px minmax(0,1fr);gap:8px 14px}
+ body[data-page="radio"] .station-cover{width:80px;height:80px;grid-row:1/span 2}
+ body[data-page="radio"] .hero-title{font-size:25px!important;margin:0!important}
+ body[data-page="radio"] .hero-content .hero-copy,body[data-page="radio"] .hero-content .hero-actions{grid-column:1/-1}
+ body[data-page="radio"] .eyebrow{font-size:9px;letter-spacing:.12em}
+ body[data-page="radio"] .now{grid-template-columns:54px minmax(0,1fr);padding:14px;gap:12px}
+ body[data-page="radio"] .now-art{width:54px;height:54px}
+ body[data-page="radio"] .now-title{font-size:17px}
+ body[data-page="radio"] .now-controls{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-start;gap:14px}
+ body[data-page="radio"] .audio-wrap{display:flex;align-items:center;gap:10px}
+ body[data-page="radio"] .meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body[data-page="radio"] .meta{padding:12px;min-width:0;overflow-wrap:anywhere}
+ body[data-page="radio"] .request-grid,body[data-page="radio"] .community{grid-template-columns:minmax(0,1fr)}
+ body[data-page="radio"] .composer{display:flex;flex-direction:column;gap:8px}
+ body[data-page="radio"] .composer input{width:100%;min-width:0}
+}
+/* Override inherited promotional layouts so controls never overlap the header. */
+body[data-page="radio"] .now{position:static!important;inset:auto!important;margin:18px 0!important;transform:none!important}
+body[data-page="radio"] .hero-actions{display:flex!important;flex-wrap:wrap!important;gap:8px!important}
+body[data-page="radio"] .hero-actions .btn{width:auto!important;flex:0 1 auto!important;padding:10px 15px!important;font-size:13px!important}
+body[data-page="radio"] #chatOpen,body[data-page="radio"] #requestOpen{display:none!important}
