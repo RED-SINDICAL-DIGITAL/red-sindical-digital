@@ -1,0 +1,8 @@
+(()=>{'use strict';
+const options=[['videos','Videos'],['playlists','Playlists de YouTube'],['music','Música y audio'],['clips','Clips'],['live','Transmisiones'],['events','Eventos']];
+function normalize(value){const raw=value&&typeof value==='object'&&!Array.isArray(value)?value:{};return Object.fromEntries(options.map(([key])=>[key,raw[key]!==false]))}
+function kind(item){const type=String(item.content_type||item.tipo||item.categoria||'').toLowerCase();if(/playlist/.test(type))return'playlists';if(/live|stream|en.vivo/.test(type))return'live';if(/short|clip|vertical/.test(type))return'clips';if(/podcast|audio|song|music|música|cancion/.test(type))return'music';return'videos'}
+function form(value,prefix='profileDisplay'){const p=normalize(value);return '<fieldset class="profile-display span-2 wide"><legend>Contenido de mi perfil</legend><p>Elegí qué mostrar. Tus enlaces se conservan y podés volver a activarlos.</p><div class="profile-display-options">'+options.map(([key,label])=>'<label class="profile-display-choice" for="'+prefix+'-'+key+'"><input type="checkbox" id="'+prefix+'-'+key+'" data-profile-display="'+key+'" '+(p[key]?'checked':'')+'><span>'+label+'</span></label>').join('')+'</div><small>Música y audio muestra los enlaces cargados como audio. Los videos de YouTube siguen siendo videos. Se muestran las secciones que tienen contenido disponible.</small></fieldset>'}
+function read(root,prefix='profileDisplay'){return Object.fromEntries(options.map(([key])=>[key,root.querySelector('#'+prefix+'-'+key)?.checked!==false]))}
+window.UADAVProfileDisplay={normalize,kind,form,read};
+})();
