@@ -1,5 +1,5 @@
 const VERSION = 'V11.7';
-const BUILD = '11726';
+const BUILD = '11727';
 
 function uadavSafeJSON(v,fallback={}){try{return typeof v==='string'?JSON.parse(v):(v??fallback)}catch{return fallback}}
 async function uadavDeliverNotification(payload,env){const url=String(env.EMAIL_AUTOMATION_URL||'').trim();if(!url)return {sent:false,reason:'EMAIL_AUTOMATION_URL no configurada'};try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(env.EMAIL_AUTOMATION_SECRET?{'X-UADAV-Webhook-Secret':String(env.EMAIL_AUTOMATION_SECRET)}:{})},body:JSON.stringify(payload)});return r.ok?{sent:true}:{sent:false,status:r.status}}catch(e){return {sent:false,error:String(e?.message||e)}}}
@@ -31,6 +31,43 @@ export default {
       status,
       headers: { ...cors, 'Content-Type': 'text/plain; charset=utf-8', ...extra }
     });
+    if(path==='/api/account'){
+      const reply=(d,s=200)=>json(d,s,{'Cache-Control':'no-store','Pragma':'no-cache'});
+      if(!env.DB)return reply({error:'La sincronización requiere D1'},503);
+      if(!['GET','POST','PUT'].includes(request.method))return reply({error:'Método no permitido'},405);
+      const secret=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
+      if(!/^UAC-[a-f0-9]{64}$/.test(secret))return reply({error:'Código privado inválido'},401);
+      const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(secret));
+      const id=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,'0')).join('');
+      try{
+        await env.DB.prepare('CREATE TABLE IF NOT EXISTS audience_accounts(id TEXT PRIMARY KEY,data_json TEXT NOT NULL,revision INTEGER NOT NULL,updated_at TEXT NOT NULL)').run();
+        const row=await env.DB.prepare('SELECT * FROM audience_accounts WHERE id=?').bind(id).first();
+        if(request.method==='GET')return row?reply({data:JSON.parse(row.data_json),revision:row.revision}):reply({error:'No encontramos esta cuenta. Revisá el código.'},404);
+        if(request.method==='POST'&&row)return reply({error:'Esta cuenta ya existe'},409);
+        if(request.method==='PUT'&&!row)return reply({error:'Cuenta no encontrada'},404);
+        if(request.method==='POST'&&env.UADAV_DB&&request.headers.get('CF-Connecting-IP')){
+          const rawIp=request.headers.get('CF-Connecting-IP'),ipDigest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(rawIp));
+          const ipHash=Array.from(new Uint8Array(ipDigest),x=>x.toString(16).padStart(2,'0')).join(''),rateKey='account_creation_'+ipHash+'_'+Math.floor(Date.now()/3600000);
+          const attempts=Number(await env.UADAV_DB.get(rateKey)||0);if(attempts>=10)return reply({error:'Alcanzaste el límite de nuevas cuentas por hora. Usá tu código existente o intentá más tarde.'},429);
+          await env.UADAV_DB.put(rateKey,String(attempts+1),{expirationTtl:7200});
+        }
+        const raw=await request.text();if(raw.length>600000)return reply({error:'Tu biblioteca supera el tamaño de sincronización permitido'},413);
+        let b;try{b=JSON.parse(raw)}catch{return reply({error:'Datos inválidos'},400)}
+        if(request.method==='PUT'&&(!Number.isInteger(b.revision)||b.revision!==row.revision))return reply({error:'La cuenta cambió en otro dispositivo',code:'REVISION_CONFLICT'},409);
+        const keys=['uadav_user_v11','uadav_favorites_v1','uadav_watch_later_v1','uadav_playlists_v1','uadav_following_v1','uadav_radio_favorites_v1','uadav_recent_v11'];
+        if(!b.data||typeof b.data!=='object'||Array.isArray(b.data)||Object.keys(b.data).some(k=>!keys.includes(k)))return reply({error:'Datos de cuenta inválidos'},400);
+        const data={};for(const key of keys){const value=b.data[key];if(value==null){data[key]=null;continue}if(key==='uadav_user_v11'){
+          if(typeof value!=='object'||Array.isArray(value))return reply({error:'Perfil inválido'},400);
+          const photo=String(value.photo||'');if(photo.length>100000||photo&&!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(photo))return reply({error:'Foto inválida o demasiado grande'},400);
+          data[key]={name:String(value.name||'Mi cuenta').slice(0,100),avatar:String(value.avatar||'U').slice(0,2),photo,preferences:Array.isArray(value.preferences)?value.preferences.slice(0,100).map(x=>String(x).slice(0,100)):[]};
+        }else{if(!Array.isArray(value)||value.length>500||JSON.stringify(value).length>250000)return reply({error:'Biblioteca demasiado grande o inválida'},400);data[key]=value}}
+        const revision=(row?.revision||0)+1,now=new Date().toISOString();
+        const result=request.method==='POST'?await env.DB.prepare('INSERT OR IGNORE INTO audience_accounts(id,data_json,revision,updated_at) VALUES(?,?,?,?)').bind(id,JSON.stringify(data),revision,now).run():await env.DB.prepare('UPDATE audience_accounts SET data_json=?,revision=?,updated_at=? WHERE id=? AND revision=?').bind(JSON.stringify(data),revision,now,id,b.revision).run();
+        if(result.meta?.changes!==1)return reply({error:'La cuenta cambió. Volvé a sincronizar.',code:'REVISION_CONFLICT'},409);
+        return reply({data,revision});
+      }catch{return reply({error:'No pudimos sincronizar ahora. Tus datos locales se conservan.'},503)}
+    }
+
     const isAdmin = () => { const got=String(request.headers.get('Authorization')||'').trim(); const want='Bearer '+String(env.ADMIN_KEY||'').trim(); return !!env.ADMIN_KEY && got===want; }
     const getJSON = async (key, fallback) => {
       const raw = await env.UADAV_DB.get(key);
