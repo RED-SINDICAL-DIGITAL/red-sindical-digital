@@ -1,6 +1,6 @@
 # Admin adaptable y contenido del perfil
 
-Frontend 12012 · Worker V11.7 / build 11731
+Frontend 12013 · Worker V11.7 / build 11731
 
 ## Activación
 
