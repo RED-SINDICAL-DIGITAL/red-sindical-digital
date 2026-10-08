@@ -45,7 +45,7 @@ export default {
     const platformConfig = () => platformConfigPromise ||= getObject('config_global');
     const platformModules = async () => {
       const cfg = await platformConfig();
-      const defaults = {artists:true,radio:true,podcasts:true,iptv:true,events:true,jobs:true,marketplace:true,ticketing:true,pro:true,ads:true,union:false};
+      const defaults = {artists:true,radio:true,podcasts:true,iptv:true,events:true,jobs:true,marketplace:true,ticketing:false,pro:true,ads:true,union:false};
       const flags = cfg?.modules || {};
       for (const key of Object.keys(defaults)) if (typeof flags[key] === 'boolean') defaults[key] = flags[key];
       return defaults;

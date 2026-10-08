@@ -115,7 +115,7 @@ const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const arr=v=>Array.isArray(v)?v:[];
 const obj=v=>(v&&typeof v==='object'&&!Array.isArray(v))?v:{};
-const MODULE_DEFAULTS={artists:true,radio:true,podcasts:true,iptv:true,events:true,jobs:true,marketplace:true,ticketing:true,pro:true,ads:true,union:false};
+const MODULE_DEFAULTS={artists:true,radio:true,podcasts:true,iptv:true,events:true,jobs:true,marketplace:true,ticketing:false,pro:true,ads:true,union:false};
 function effectiveModules(config=S.cache.config){const out={...MODULE_DEFAULTS},flags=obj(config?.modules);for(const key of Object.keys(out))if(typeof flags[key]==='boolean')out[key]=flags[key];return out}
 function moduleEnabled(key){const m=effectiveModules();return m[key]===true&&(key!=='ticketing'||m.events===true)}
 async function moduleCache(key,cacheKey,path,force){return moduleEnabled(key)?cache(cacheKey,()=>api(path),force).catch(()=>[]):[]}

@@ -33,7 +33,8 @@ assert.equal((await request(instance({}, {pro_active:false}),'/api/marketplace/r
 assert.equal((await request(instance({}, {pro_expires:'2020-01-01'}),'/api/marketplace/request','POST',form)).status,200,'Expired PRO retains free marketplace access');
 assert.equal((await request(instance({}, {visible:false}),'/api/marketplace/request','POST',form)).status,403,'hidden profile denied');
 assert.equal((await request(instance({modules:{ticketing:false}}),'/api/ticketing/orders')).status,404);
-assert.equal((await request(active,'/api/ticketing/orders')).status,401);
+assert.equal((await request(active,'/api/ticketing/orders')).status,404,'Ticket is disabled by default');
+assert.equal((await request(instance({modules:{ticketing:true}}),'/api/ticketing/orders')).status,401,'Enabling Ticket does not bypass authorization');
 const broken=instance({});broken.env.UADAV_DB.get=async()=>{throw Error('KV unavailable')};
 assert.equal((await request(broken,'/api/cct/categories')).status,503,'do not enable institutional modules when config is unavailable');
 console.log('PASS: Worker module gates, identity, authorization, independent KV and PRO without affiliation');
