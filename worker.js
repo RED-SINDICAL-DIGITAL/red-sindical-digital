@@ -1,3 +1,25 @@
+function uadavSecurityConfig(env){const sitekey=String(env.TURNSTILE_SITE_KEY||'').trim(),secret=String(env.TURNSTILE_SECRET_KEY||'').trim();return{enabled:!!sitekey&&!!secret,configured:!!sitekey||!!secret,sitekey:sitekey||null}}
+async function uadavSecurityJSON(request,max=80000){
+  const tooLarge=()=>Object.assign(Error('Datos demasiado grandes'),{status:413});
+  if(Number(request.headers.get('Content-Length')||0)>max)throw tooLarge();
+  let raw='',size=0;const reader=request.body?.getReader(),decoder=new TextDecoder();
+  if(reader){try{while(true){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>max){reader.cancel().catch(()=>{});throw tooLarge()}raw+=decoder.decode(value,{stream:true})}raw+=decoder.decode()}finally{reader.releaseLock()}}
+  try{return JSON.parse(raw)}catch{throw Object.assign(Error('Datos inválidos'),{status:400})}
+}
+async function uadavVerifyTurnstile(env,token,action){
+  const cfg=uadavSecurityConfig(env);if(!cfg.configured)return{ok:true};
+  if(!cfg.enabled)return{ok:false,status:503,error:'La verificación de seguridad está incompleta. Administración debe revisar ambas claves.'};
+  if(typeof token!=='string'||!token||token.length>2048)return{ok:false,status:403,error:'Completá la verificación de seguridad antes de enviar.'};
+  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),8000);
+  try{
+    const r=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({secret:String(env.TURNSTILE_SECRET_KEY).trim(),response:token,idempotency_key:crypto.randomUUID()}),signal:ctl.signal});
+    if(!r.ok)return{ok:false,status:503,error:'La verificación de seguridad no está disponible. Intentá nuevamente.'};
+    const d=await r.json(),allowed=String(env.TURNSTILE_ALLOWED_HOSTNAMES||env.ACCOUNT_ALLOWED_ORIGINS||'https://uadavstream.com.ar,https://www.uadavstream.com.ar').split(',').map(x=>{try{return new URL(x.trim()).hostname.toLowerCase()}catch{return x.trim().toLowerCase()}}).filter(Boolean);
+    if(d.success!==true||d.action!==action||!allowed.includes(String(d.hostname||'').toLowerCase()))return{ok:false,status:403,error:'La verificación venció o no corresponde a esta solicitud. Intentá nuevamente.'};
+    return{ok:true};
+  }catch{return{ok:false,status:503,error:'No pudimos comprobar la seguridad. Intentá nuevamente.'}}finally{clearTimeout(timer)}
+}
+
 // Account credentials and pairing secrets are hashed; no permanent credential is sent through a QR.
 const uadavAccountSchemas=new WeakMap();
 async function uadavAccountSchema(db){
@@ -26,13 +48,7 @@ async function uadavAccountRoute(request,env){
   const random=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
   const number=max=>{const a=new Uint32Array(1),limit=Math.floor(4294967296/max)*max;do{crypto.getRandomValues(a)}while(a[0]>=limit);return a[0]%max};
   const secret=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
-  const body=async(max=5000)=>{
-    const tooLarge=()=>Object.assign(Error('Datos demasiado grandes'),{status:413});
-    if(Number(request.headers.get('Content-Length')||0)>max)throw tooLarge();
-    let raw='',size=0;const reader=request.body?.getReader(),decoder=new TextDecoder();
-    if(reader){try{while(true){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>max){await reader.cancel();throw tooLarge()}raw+=decoder.decode(value,{stream:true})}raw+=decoder.decode()}finally{reader.releaseLock()}}
-    try{return JSON.parse(raw)}catch{throw Object.assign(Error('Datos inválidos'),{status:400})}
-  };
+  const body=(max=5000)=>uadavSecurityJSON(request,max);
   const rate=async(scope,limit,period)=>{
     const ip=String(request.headers.get('CF-Connecting-IP')||'unknown'),bucket=Math.floor(now/period),id=await hash(scope+':'+ip+':'+bucket);
     const r=await db.prepare('INSERT INTO audience_rate_limits(id,count,expires_at) VALUES(?,1,?) ON CONFLICT(id) DO UPDATE SET count=count+1 WHERE count<? RETURNING count').bind(id,now+period*2,limit).first();
@@ -44,7 +60,7 @@ async function uadavAccountRoute(request,env){
     if(path==='/api/account/pair/join'){
       if(request.method!=='POST')return reply({error:'Método no permitido'},405);
       await rate('pair-join',8,600000);
-      const b=await body(),code=String(b.code||'').replace(/\s/g,''),proof=String(b.proof||'');
+      const b=await body();const verificationResult=await uadavVerifyTurnstile(env,b.turnstile_token,'device_link');if(!verificationResult.ok)return reply({error:verificationResult.error},verificationResult.status);const code=String(b.code||'').replace(/\s/g,''),proof=String(b.proof||'');
       if(!/^UAD-[a-f0-9]{64}$/.test(secret)||!(/^\d{6}$/.test(code)||/^[a-f0-9]{64}$/.test(proof)))return reply({error:'Código inválido o vencido'},400);
       const deviceHash=await hash(secret),lookup=await hash(proof||code),row=await db.prepare('SELECT * FROM audience_pairings WHERE '+(proof?'qr_hash':'code_hash')+'=?').bind(lookup).first();
       if(!row||row.expires_at<=now||!['waiting','requested'].includes(row.state))return reply({error:'Código inválido o vencido'},400);
@@ -85,7 +101,7 @@ async function uadavAccountRoute(request,env){
       if(request.method==='POST'&&(account||currentDevice))return reply({error:'Esta cuenta ya existe'},409);
       if(request.method==='PUT'&&!account)return reply({error:'Cuenta no encontrada'},404);
       if(request.method==='POST')await rate('account-create',10,3600000);
-      const b=await body(600000);
+      const b=await body(600000);if(request.method==='POST'){const check=await uadavVerifyTurnstile(env,b.turnstile_token,'account_create');if(!check.ok)return reply({error:check.error},check.status);}
       if(request.method==='PUT'&&(!Number.isInteger(b.revision)||b.revision!==account.revision))return reply({error:'La cuenta cambió en otro dispositivo',code:'REVISION_CONFLICT'},409);
       const keys=['uadav_user_v11','uadav_favorites_v1','uadav_watch_later_v1','uadav_playlists_v1','uadav_following_v1','uadav_radio_favorites_v1','uadav_recent_v11'];
       if(!b.data||typeof b.data!=='object'||Array.isArray(b.data)||Object.keys(b.data).some(k=>!keys.includes(k)))return reply({error:'Datos de cuenta inválidos'},400);
@@ -169,7 +185,7 @@ async function uadavAccountRoute(request,env){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11728';
+const BUILD = '11729';
 
 function uadavSafeJSON(v,fallback={}){try{return typeof v==='string'?JSON.parse(v):(v??fallback)}catch{return fallback}}
 async function uadavDeliverNotification(payload,env){const url=String(env.EMAIL_AUTOMATION_URL||'').trim();if(!url)return {sent:false,reason:'EMAIL_AUTOMATION_URL no configurada'};try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(env.EMAIL_AUTOMATION_SECRET?{'X-UADAV-Webhook-Secret':String(env.EMAIL_AUTOMATION_SECRET)}:{})},body:JSON.stringify(payload)});return r.ok?{sent:true}:{sent:false,status:r.status}}catch(e){return {sent:false,error:String(e?.message||e)}}}
@@ -201,9 +217,16 @@ export default {
       status,
       headers: { ...cors, 'Content-Type': 'text/plain; charset=utf-8', ...extra }
     });
+    if(path==='/api/public/security'){const cfg=uadavSecurityConfig(env);return json({enabled:cfg.enabled,configured:cfg.configured,sitekey:cfg.enabled?cfg.sitekey:null},200,{'Cache-Control':'no-store'});}
     if(path==='/api/account'||path.startsWith('/api/account/'))return uadavAccountRoute(request,env);
 
     const isAdmin = () => { const got=String(request.headers.get('Authorization')||'').trim(); const want='Bearer '+String(env.ADMIN_KEY||'').trim(); return !!env.ADMIN_KEY && got===want; }
+    const securityActions={'/api/artista/claim':'artist_claim','/api/eventos':'event_publish','/api/bolsa_trabajo':'job_publish','/api/bolsa_trabajo/postular':'job_apply'};
+    if(request.method==='POST'&&securityActions[path]&&!isAdmin()&&uadavSecurityConfig(env).configured){
+      let b;try{b=await uadavSecurityJSON(request.clone())}catch(e){return json({error:e.message},e.status||400)}
+      const check=await uadavVerifyTurnstile(env,b.turnstile_token,securityActions[path]);if(!check.ok)return json({error:check.error},check.status);
+      delete b.turnstile_token;const cleanHeaders=new Headers(request.headers);cleanHeaders.delete('Content-Length');request=new Request(request,{headers:cleanHeaders,body:JSON.stringify(b)});
+    }
     const getJSON = async (key, fallback) => {
       const raw = await env.UADAV_DB.get(key);
       if (!raw) return fallback;
