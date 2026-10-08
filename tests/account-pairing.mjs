@@ -36,6 +36,8 @@ try{
  assert.equal((await send('/pair/join','POST',{code:'invalid'},target,'blocked-ip')).status,429);
  const rows=await DB.prepare('SELECT * FROM audience_pairings').all();assert.equal(JSON.stringify(rows).includes(invitation.data.proof),false);assert.equal(JSON.stringify(rows).includes(invitation.data.code),false);
  assert.equal((await send('','PUT',{revision:1,data:{uadav_favorites_v1:[{url:'javascript:alert(1)'}]}})).status,400);
+ assert.equal((await send('/pair','POST',{action:'create',padding:'x'.repeat(6000)})).status,413);
+ assert.equal((await send('/pair','POST',{action:'create',padding:'😀'.repeat(2000)})).status,413);
  const current=await send('');const saves=await Promise.all([send('','PUT',{revision:current.data.revision,data:current.data.data}),send('','PUT',{revision:current.data.revision,data:current.data.data})]);assert.deepEqual(saves.map(r=>r.status).sort(),[200,409]);
  const rotated=await send('/recovery','POST',{},migration.data.secret);assert.equal(rotated.status,200);assert.equal((await send('','GET',null,root)).status,401);assert.equal((await send('','GET',null,rotated.data.secret)).status,200);assert.equal((await send('','GET',null,migration.data.secret)).status,200);
  console.log('PASS: real SQLite transactions, QR/code, approval, expiry, replay, revocation, account isolation, rate limits, origin restrictions and CAS');

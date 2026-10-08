@@ -14,6 +14,7 @@
 - Permisos individuales aleatorios de 256 bits. El QR transporta una invitación aleatoria temporal, nunca la credencial raíz.
 - Caducidad de invitación: 5 minutos; autorización explícita del origen; aprobación transaccional en D1; imposibilidad de reutilizar la misma invitación para otro permiso.
 - Código corto de seis dígitos con generación uniforme. No concede acceso sin aprobación del origen y comparación de los cuatro dígitos.
+- Lectura de cuerpos limitada durante el streaming (no después de cargar toda la petición en memoria).
 - SQL parametrizado. Límites de intentos mediante incremento condicional atómico en D1: 8 solicitudes por IP / 10 minutos; 10 invitaciones por IP / hora; 10 cuentas nuevas por IP / hora; 3 cambios de respaldo por IP / hora.
 - Límite de 20 permisos activos por cuenta. Sesiones de lectura con `first-primary` cuando D1 lo ofrece; evita leer estados viejos de revocación desde una réplica.
 - Credenciales, códigos temporales y secretos QR guardados como SHA-256. IP usada sólo como huella dentro de la clave temporal de limitación, sin almacenar la IP literal en nuestras tablas. El proveedor puede conservar sus propios registros.

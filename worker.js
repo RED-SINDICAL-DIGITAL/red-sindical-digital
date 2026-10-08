@@ -26,7 +26,13 @@ async function uadavAccountRoute(request,env){
   const random=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
   const number=max=>{const a=new Uint32Array(1),limit=Math.floor(4294967296/max)*max;do{crypto.getRandomValues(a)}while(a[0]>=limit);return a[0]%max};
   const secret=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
-  const body=async(max=5000)=>{const raw=await request.text();if(raw.length>max)throw Object.assign(Error('Datos demasiado grandes'),{status:413});try{return JSON.parse(raw)}catch{throw Object.assign(Error('Datos inválidos'),{status:400})}};
+  const body=async(max=5000)=>{
+    const tooLarge=()=>Object.assign(Error('Datos demasiado grandes'),{status:413});
+    if(Number(request.headers.get('Content-Length')||0)>max)throw tooLarge();
+    let raw='',size=0;const reader=request.body?.getReader(),decoder=new TextDecoder();
+    if(reader){try{while(true){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>max){await reader.cancel();throw tooLarge()}raw+=decoder.decode(value,{stream:true})}raw+=decoder.decode()}finally{reader.releaseLock()}}
+    try{return JSON.parse(raw)}catch{throw Object.assign(Error('Datos inválidos'),{status:400})}
+  };
   const rate=async(scope,limit,period)=>{
     const ip=String(request.headers.get('CF-Connecting-IP')||'unknown'),bucket=Math.floor(now/period),id=await hash(scope+':'+ip+':'+bucket);
     const r=await db.prepare('INSERT INTO audience_rate_limits(id,count,expires_at) VALUES(?,1,?) ON CONFLICT(id) DO UPDATE SET count=count+1 WHERE count<? RETURNING count').bind(id,now+period*2,limit).first();
