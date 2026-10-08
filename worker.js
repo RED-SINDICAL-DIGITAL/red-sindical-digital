@@ -1,5 +1,5 @@
 const VERSION = 'V11.7';
-const BUILD = '11722';
+const BUILD = '11723';
 
 function uadavSafeJSON(v,fallback={}){try{return typeof v==='string'?JSON.parse(v):(v??fallback)}catch{return fallback}}
 async function uadavDeliverNotification(payload,env){const url=String(env.EMAIL_AUTOMATION_URL||'').trim();if(!url)return {sent:false,reason:'EMAIL_AUTOMATION_URL no configurada'};try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(env.EMAIL_AUTOMATION_SECRET?{'X-UADAV-Webhook-Secret':String(env.EMAIL_AUTOMATION_SECRET)}:{})},body:JSON.stringify(payload)});return r.ok?{sent:true}:{sent:false,status:r.status}}catch(e){return {sent:false,error:String(e?.message||e)}}}
@@ -2512,7 +2512,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       support_links:Array.isArray(a.support_links)?a.support_links.filter(x=>x&&x.url&&x.active!==false).slice(0,12):[],
       audience_chat_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.audience_chat_enabled===true,
       presskit_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.presskit_enabled!==false,
-      marketplace_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.marketplace_enabled!==false,
+      marketplace_enabled:a.marketplace_enabled!==false,
       ticketing_enabled:a.pro_active===true && (!a.pro_expires||Date.parse(a.pro_expires)>Date.now()) && a.ticketing_enabled===true
     }); }
     function privateArtistFromItem(a){const p=publicArtistFromItem(a);return {...p,claimed:a.claimed===true,claim_status:a.claim_status||'none',pro_active:a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now()),pro_started:a.pro_started||null,pro_expires:a.pro_expires||null};}
@@ -2767,7 +2767,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(i<0){ const all=await allCanonicalArtists(); const found=all.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id)); if(!found)return json({error:'Perfil no encontrado'},404); arr.push(found); i=arr.length-1; }
       const a=arr[i];
       const allowed=['nombre','nombre_artistico','rubro','ciudad','foto','bio','canal','twitch','kick','booking_url','donation_url','donacion_url','honorario_desde','disponibilidad','redes','web','support_enabled','support_links','audience_chat_enabled','presskit_enabled','marketplace_enabled','ticketing_enabled'];
-      const proNow=a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now()); const proFields=new Set(['support_enabled','support_links','audience_chat_enabled','presskit_enabled','marketplace_enabled','ticketing_enabled']);
+      const proNow=a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now()); const proFields=new Set(['support_enabled','support_links','audience_chat_enabled','presskit_enabled','ticketing_enabled']);
       for(const k of allowed) if(Object.prototype.hasOwnProperty.call(b,k) && (!proFields.has(k)||proNow)) a[k]=b[k];
       a.self_managed=true; a.ultima_edicion_artista=new Date().toISOString(); a.cambios_pendientes=true; a.estado=a.estado==='aprobado'?'aprobado':(a.estado||'pendiente');
       await putJSON('artistas',arr); return json({success:true,review_required:true,artist:privateArtistFromItem(a)});
@@ -2780,7 +2780,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
     if(path==='/api/contrataciones' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); if(!b.artist_id||!b.nombre||!b.email)return json({error:'Artista, nombre y email son obligatorios'},400); if(b.acepta_contrato!==true)return json({error:'Debe aceptar el contrato/condiciones para continuar'},400);
-      const artists=await getArray('artistas'); const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(b.artist_id)); if(!artist)return json({error:'Artista no encontrado'},404); const pro=artist.pro_active===true&&(!artist.pro_expires||Date.parse(artist.pro_expires)>Date.now()); if(!pro||artist.marketplace_enabled===false)return json({error:'La contratación directa está disponible para perfiles PRO activos.'},403);
+      const artists=await getArray('artistas'); const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(b.artist_id)); if(!artist)return json({error:'Artista no encontrado'},404); const pro=artist.pro_active===true&&(!artist.pro_expires||Date.parse(artist.pro_expires)>Date.now()); if(artist.visible===false||artist.marketplace_enabled===false)return json({error:'Este perfil no recibe solicitudes de contratación.'},403);
       const list=await getArray('contrataciones'); const item={id:'CON-'+Date.now().toString(36).toUpperCase(),creado:new Date().toISOString(),artist_id:String(b.artist_id),nombre:String(b.nombre).slice(0,140),empresa:String(b.empresa||'').slice(0,160),email:String(b.email).slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),evento:String(b.evento||'').slice(0,220),fecha:String(b.fecha||''),ciudad:String(b.ciudad||'').slice(0,100),honorario:String(b.honorario||'').slice(0,80),detalles:String(b.detalles||'').slice(0,3000),contrato_version:String(b.contrato_version||'CORE-1.0').slice(0,40),contrato_url:String(b.contrato_url||'').slice(0,500),acepta_contrato:true,estado:'pendiente'}; list.push(item); while(list.length>2000)list.shift(); await putJSON('contrataciones',list); return json({success:true,item});
     }
     if(path==='/api/contrataciones' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await getArray('contrataciones'));}

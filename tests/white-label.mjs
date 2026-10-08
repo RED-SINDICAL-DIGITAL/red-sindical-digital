@@ -29,8 +29,8 @@ assert.equal((await request(commercial,'/api/platform_info')).data.service,'Beat
 const active=instance({modules:{marketplace:true}});
 const form={artist_id:'a1',requester_name:'Cliente',requester_email:'cliente@example.test'};
 assert.equal((await request(active,'/api/marketplace/request','POST',form)).status,200,'PRO without union affiliation');
-assert.equal((await request(instance({}, {pro_active:false}),'/api/marketplace/request','POST',form)).status,403,'PRO required');
-assert.equal((await request(instance({}, {pro_expires:'2020-01-01'}),'/api/marketplace/request','POST',form)).status,403,'expired PRO denied');
+assert.equal((await request(instance({}, {pro_active:false}),'/api/marketplace/request','POST',form)).status,200,'Free artists can receive marketplace requests');
+assert.equal((await request(instance({}, {pro_expires:'2020-01-01'}),'/api/marketplace/request','POST',form)).status,200,'Expired PRO retains free marketplace access');
 assert.equal((await request(instance({}, {visible:false}),'/api/marketplace/request','POST',form)).status,403,'hidden profile denied');
 assert.equal((await request(instance({modules:{ticketing:false}}),'/api/ticketing/orders')).status,404);
 assert.equal((await request(active,'/api/ticketing/orders')).status,401);
