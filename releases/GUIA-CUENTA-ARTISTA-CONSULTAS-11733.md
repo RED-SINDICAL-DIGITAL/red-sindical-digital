@@ -1,4 +1,4 @@
-# Mi cuenta, mi artista y consultas · Worker 11733 / interfaz 12017
+# Mi cuenta, mi artista y consultas · Worker 11733 / interfaz 12018
 
 ## Qué se corrigió
 El formulario Consultar contratación guardaba solicitudes en el registro Contrataciones, accesible desde Admin, sin una bandeja privada para el artista. Ahora Consultas recibidas muestra las solicitudes dirigidas a su ID, incluidas las anteriores que sigan guardadas. Esta función es gratuita y no depende de PRO.
