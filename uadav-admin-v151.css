@@ -35,3 +35,11 @@ body[data-page="admin"] .cct-note p{margin:0}
 body[data-page="admin"] .ad-inventory-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))!important}
 body[data-page="admin"] .cct-rights{margin:12px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#0b1220}
 body[data-page="admin"] .cct-rights>summary{cursor:pointer;font-weight:700;min-height:38px;display:flex;align-items:center}
+
+/* Fuentes automáticas: candidatos legibles, acciones cómodas y mobile sin desborde. */
+body[data-page="admin"] .federated-candidate{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:13px;border:1px solid var(--line);border-radius:13px;background:#0a111c;min-width:0}
+body[data-page="admin"] .federated-candidate>span:first-child{min-width:0;overflow-wrap:anywhere;line-height:1.5}
+body[data-page="admin"] .federated-candidate a{color:#9fc0ff}
+body[data-page="admin"] .federated-candidate .actions{justify-content:flex-end}
+body[data-page="admin"] .table-wrap{max-width:100%}
+@media(max-width:720px){body[data-page="admin"] .federated-candidate{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}body[data-page="admin"] .federated-candidate .actions{justify-content:flex-start}body[data-page="admin"] .federated-candidate .actions>.btn{flex:1 1 130px}}
