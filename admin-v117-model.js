@@ -3,7 +3,7 @@
 (function(){
   'use strict';
   const MODEL={
-    version:'11.7',build:'11746',
+    version:'11.7',build:'11747',
     plans:{
       free:{label:'Artista GRATIS',price:0,features:['Perfil público','Creación y reclamo gratuitos','Contenido por enlaces','Cartelera gratuita','Bolsa de Trabajo gratuita','Contratación sin comisión']},
       pro:{label:'Artista PRO',referenceMonthlyUSD:3.99,referenceAnnualUSD:30,features:['Presentación interactiva compartible','Presupuestos','Agenda y organización de consultas','Estadísticas de la plataforma','Un cupo mensual de destacado por 7 días','Convenios comerciales disponibles']}
