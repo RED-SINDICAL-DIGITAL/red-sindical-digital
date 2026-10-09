@@ -1,0 +1,25 @@
+/* Admin: consistent spacing, readable controls, responsive overflow. */
+body[data-page="admin"]{--line:#ffffff18}
+body[data-page="admin"] .main{max-width:1600px;margin-inline:auto}
+body[data-page="admin"] :is(.view-head,.section-title){gap:16px;flex-wrap:wrap;align-items:flex-start}
+body[data-page="admin"] :is(h1,h2,h3,p,small,.entity){overflow-wrap:anywhere}
+body[data-page="admin"] :is(.card,.field,.grid>*,.form-grid>*){min-width:0}
+body[data-page="admin"] .card-pad{padding:clamp(16px,2vw,26px)}
+body[data-page="admin"] .actions{gap:8px;flex-wrap:wrap;align-items:center}
+body[data-page="admin"] .actions>details{position:relative}
+body[data-page="admin"] .actions>details>summary{cursor:pointer;padding:10px 12px;border:1px solid var(--line);border-radius:10px;min-height:44px}
+body[data-page="admin"] .actions>details[open]>.actions{display:flex;padding:12px;margin-top:8px;border:1px solid var(--line);border-radius:12px;background:#101827;max-width:420px}
+body[data-page="admin"] :is(.btn,.tab,summary,input,select){min-height:44px}
+body[data-page="admin"] :is(input,select,textarea){max-width:100%;font-size:14px}
+body[data-page="admin"] :is(.tabs,.toolbar){max-width:100%}
+body[data-page="admin"] .tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin}
+body[data-page="admin"] .tab{white-space:nowrap;flex:0 0 auto}
+body[data-page="admin"] .table :is(td,th){vertical-align:top}
+body[data-page="admin"] .table td>small{line-height:1.5}
+body[data-page="admin"] .json-box{max-height:380px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+body[data-page="admin"] :is(button,a,input,select,textarea,summary):focus-visible{outline:3px solid #82b4ff;outline-offset:3px}
+@media(max-width:720px){body[data-page="admin"] .view-actions{display:flex;flex-wrap:wrap}body[data-page="admin"] .view-actions>.btn{flex:1 1 140px}body[data-page="admin"] :is(input,select,textarea){font-size:16px}body[data-page="admin"] .form-grid{grid-template-columns:minmax(0,1fr)!important}body[data-page="admin"] .form-grid .span-2{grid-column:auto}body[data-page="admin"] .top-title{font-size:17px}body[data-page="admin"] .actions>details[open]>.actions{max-width:100%;width:100%}}
+@media(min-width:1800px){body[data-page="admin"][data-admin-tv="true"] .main{max-width:1900px}body[data-page="admin"][data-admin-tv="true"] :is(input,select,textarea){font-size:18px}}
+body[data-page="admin"] [hidden]{display:none!important}
+body[data-page="admin"] details.card>summary{font-weight:750;cursor:pointer;padding:6px 0}
+body[data-page="admin"] details.card[open]>summary{margin-bottom:16px}
