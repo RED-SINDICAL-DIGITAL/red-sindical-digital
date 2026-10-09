@@ -6,6 +6,7 @@ let serial=0;async function send(path,method='GET',body,auth=root){const r=await
 try{
  await DB.prepare('CREATE TABLE artist_owners(id TEXT,artist_id TEXT,claim_id TEXT,status TEXT,created_at TEXT,contact_email TEXT,role TEXT,verification_level TEXT,updated_at TEXT,revoked_at TEXT)').run();await DB.prepare("INSERT INTO artist_owners(artist_id,claim_id,status,created_at) VALUES('a1','claim1','active','2026')").run();
  assert.equal((await send('account','POST',{data:{}})).status,200);await send('account','POST',{data:{}},other);
+ const regenerated=await send('artista/access/create','POST',{artist_id:'a1'},'test-admin');assert.equal(regenerated.status,200);const regeneratedAccess=JSON.parse(map.get('artist_access_'+regenerated.data.token));assert.equal(regeneratedAccess.claim_id,'claim1');assert.equal((await send('account/artists','POST',{artist_token:regenerated.data.token})).status,200);
  assert.equal((await send('account/artists','POST',{artist_token:ownerToken})).status,200);let d=await send('account/artists');assert.equal(d.data.artists.length,1);assert(!JSON.stringify(d.data).includes(ownerToken));assert.equal((await send('account/artists','GET',null,other)).data.artists.length,0);
  assert.equal((await send('account/artist-session','POST',{artist_id:'a1'},other)).status,403);
  const device=await send('account/devices','POST',{name:'PC'}),credential=device.data.secret;const session=await send('account/artist-session','POST',{artist_id:'a1'},credential);assert.equal(session.status,200);
