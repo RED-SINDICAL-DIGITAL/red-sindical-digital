@@ -23,3 +23,15 @@ body[data-page="admin"] :is(button,a,input,select,textarea,summary):focus-visibl
 body[data-page="admin"] [hidden]{display:none!important}
 body[data-page="admin"] details.card>summary{font-weight:750;cursor:pointer;padding:6px 0}
 body[data-page="admin"] details.card[open]>summary{margin-bottom:16px}
+/* Convenio and advertising: fluid panels, readable checklists and disclosures. */
+body[data-page="admin"] .cct-layout{grid-template-columns:minmax(0,1fr)!important}
+body[data-page="admin"] .cct-note{margin-top:14px;color:var(--muted);line-height:1.6}
+body[data-page="admin"] .cct-checks{margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025)}
+body[data-page="admin"] .cct-checks>summary{cursor:pointer;font-weight:700;min-height:38px;display:flex;align-items:center}
+body[data-page="admin"] .cct-checks .check-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))!important;gap:10px;margin-top:12px}
+body[data-page="admin"] .cct-checks label{display:flex;align-items:flex-start;gap:9px;line-height:1.45;min-width:0;overflow-wrap:normal;word-break:normal}
+body[data-page="admin"] .cct-checks input{flex:0 0 auto;margin-top:3px}
+body[data-page="admin"] .cct-note p{margin:0}
+body[data-page="admin"] .ad-inventory-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))!important}
+body[data-page="admin"] .cct-rights{margin:12px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#0b1220}
+body[data-page="admin"] .cct-rights>summary{cursor:pointer;font-weight:700;min-height:38px;display:flex;align-items:center}
