@@ -33,7 +33,8 @@
       #uadav-update-notice button{min-height:44px;padding:9px 16px;border:1px solid #53627a;border-radius:999px;background:#1a2538;color:#f7f9ff;font:650 14px system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer}
       #uadav-update-notice button:focus-visible{outline:3px solid #8db2ff;outline-offset:2px}
       #uadav-update-notice button[data-primary]{border-color:#3974fa;background:#326cf2}
-      @media(max-width:560px){#uadav-update-notice{inset:auto 12px calc(12px + env(safe-area-inset-bottom));width:auto;padding:16px;border-radius:16px}#uadav-update-notice .uadav-update-actions{display:grid;grid-template-columns:1fr 1fr}#uadav-update-notice button{width:100%}}
+      @media(max-width:1024px){#uadav-update-notice{bottom:calc(76px + env(safe-area-inset-bottom))}}
+      @media(max-width:560px){#uadav-update-notice{inset:auto 12px calc(76px + env(safe-area-inset-bottom));width:auto;padding:16px;border-radius:16px}#uadav-update-notice .uadav-update-actions{display:grid;grid-template-columns:1fr 1fr}#uadav-update-notice button{width:100%}}
       @media(min-width:1600px){#uadav-update-notice{width:460px;padding:22px;font-size:17px}}
     `;
     document.head.append(style);
