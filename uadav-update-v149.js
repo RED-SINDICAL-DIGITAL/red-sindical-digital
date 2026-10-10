@@ -59,7 +59,10 @@
     update.dataset.primary = 'true';
     update.addEventListener('click', () => {
       try { sessionStorage.setItem(reloadKey, String(build)); } catch {}
-      location.reload();
+      // Ask the browser for a fresh navigation rather than reusing the current shell.
+      const next = new URL(location.href);
+      next.searchParams.set('uadav_build', String(build));
+      location.replace(next.href);
     });
     const later = document.createElement('button');
     later.type = 'button';
