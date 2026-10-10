@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('../uadav-update-v149.js', import.meta.url), 'utf8');
 
+const currentBuild = Number(/const currentBuild = (\d+)/.exec(source)[1]);
+
 class Node {
   constructor(tag) { this.tagName = tag; this.children = []; this.listeners = {}; this.attributes = {}; this.style = {}; this.dataset = {}; }
   append(...nodes) { this.children.push(...nodes); }
@@ -42,20 +44,20 @@ const storage = {
   removeItem: key => values.delete(key),
 };
 
-let page = await runtime(12057, storage);
+let page = await runtime(currentBuild, storage);
 assert.equal(page.body.children.filter(x => x.id === 'uadav-update-notice').length, 0, 'current build is quiet');
 
-page = await runtime(12058, storage);
+page = await runtime(currentBuild + 1, storage);
 let notice = page.body.children.find(x => x.id === 'uadav-update-notice');
 assert(notice, 'new build shows an update notice');
 const later = notice.children[2].children.find(x => x.textContent === 'Más tarde');
 later.click();
-assert.equal(values.get('uadav_update_dismissed_build_v1'), '12058', 'dismissal is stored for the shown build');
+assert.equal(values.get('uadav_update_dismissed_build_v1'), String(currentBuild + 1), 'dismissal is stored for the shown build');
 
-page = await runtime(12058, storage);
+page = await runtime(currentBuild + 1, storage);
 assert.equal(page.body.children.filter(x => x.id === 'uadav-update-notice').length, 0, 'dismissal survives reload');
 
-page = await runtime(12059, storage);
+page = await runtime(currentBuild + 2, storage);
 notice = page.body.children.find(x => x.id === 'uadav-update-notice');
 assert(notice, 'a later build can still notify again');
 notice.children[2].children.find(x => x.textContent === 'Actualizar').click();
