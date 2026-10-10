@@ -25,3 +25,4 @@ console.log('PASS: summary loader counts pending highlights and reports failed i
 const admin=await readFile(new URL('../admin.html',import.meta.url),'utf8'),start=admin.indexOf('VIEWS.dashboard=async'),end=admin.indexOf('\n};',start),dashboard=admin.slice(start,end);
 assert.ok(dashboard.includes('UADAVPendingAdmin.load(api)'));assert.ok(!dashboard.includes("api('eventos')"));assert.ok(dashboard.includes('pendingSummary.failures'));
 console.log('PASS: dashboard uses same pending loader and surfaces incomplete counts');
+assert.ok(admin.includes("window.UADAVOpenPendingEventHighlights=()=>{S.eventTab='pending';go('events')};"));assert.ok((await readFile(new URL('../uadav-pending-admin-v146.js',import.meta.url),'utf8')).includes('g.UADAVOpenPendingEventHighlights()'));console.log('PASS: reviewing an event highlight opens the exact Cartelera review tab');
