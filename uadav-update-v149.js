@@ -4,6 +4,7 @@
 
   const currentBuild = 12058;
   const dismissedKey = 'uadav_update_dismissed_build_v1';
+  const reloadKey = 'uadav_update_reload_attempt_v1';
   let checking = false;
   let shownBuild = 0;
 
@@ -57,7 +58,7 @@
     update.textContent = 'Actualizar';
     update.dataset.primary = 'true';
     update.addEventListener('click', () => {
-      try { localStorage.removeItem(dismissedKey); } catch {}
+      try { sessionStorage.setItem(reloadKey, String(build)); } catch {}
       location.reload();
     });
     const later = document.createElement('button');
@@ -82,6 +83,8 @@
       const data = await response.json();
       const build = Number(data.build);
       if (!Number.isInteger(build) || build <= currentBuild || build <= dismissedBuild()) return;
+      // Avoid an endless update prompt when a CDN/browser keeps serving an older shell.
+      try { if (Number(sessionStorage.getItem(reloadKey)) === build) return; } catch {}
       render(build, data.message);
     } catch {
       // Version checks are optional; the app remains usable while offline.
