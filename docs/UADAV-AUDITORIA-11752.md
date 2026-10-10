@@ -1,4 +1,4 @@
-# Revisión Admin y Worker — build 11752 / sitio 12051
+# Revisión Admin y Worker — build 11752 / sitio 12053
 
 ## Admin
 - Importar / exportar ahora tiene una vista real conectada al menú.
@@ -15,7 +15,7 @@
 - No modifica campañas, pagos ni estados guardados existentes.
 
 ## Despliegue
-- Sitio: Pages se publica desde el commit `12051`.
+- Sitio: Pages se publica desde el commit `12053`.
 - Worker: cargar `worker-UADAVSTREAM-V11.7-11752.js` en Cloudflare. No requiere migración de base ni variables nuevas.
 
 ## Pruebas
