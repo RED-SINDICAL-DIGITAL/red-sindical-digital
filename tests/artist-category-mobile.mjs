@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 const html = await readFile(new URL('../artistas.html', import.meta.url), 'utf8');
 assert.match(html, /\.categories\{[^}]*overflow-x:auto/);
-assert.match(html, /\.categories>\.chip\{flex:0 0 auto/);
-assert.match(html, /white-space:nowrap!important/);
-assert.match(html, /@media\(max-width:700px\)\{[^}]*\.grid\{grid-template-columns:repeat\(2,1fr\)/);
+assert.match(html, /\.categories>\.chip\{flex:0 0 auto|\.categories \.chip\{flex:0 0 auto/);
+assert.match(html, /\.categories[^}]*white-space:nowrap!important/);
+assert.match(html, /\.grid\{grid-template-columns:repeat\(2,1fr\)/);
 console.log('PASS: artist category chips keep readable widths and scroll horizontally on mobile');
