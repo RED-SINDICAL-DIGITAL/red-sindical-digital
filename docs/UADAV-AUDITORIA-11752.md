@@ -1,4 +1,4 @@
-# Revisión Admin y Worker — build 11752 / sitio 12050
+# Revisión Admin y Worker — build 11752 / sitio 12051
 
 ## Admin
 - Importar / exportar ahora tiene una vista real conectada al menú.
@@ -6,6 +6,7 @@
 - JSON requiere tipo indicado; cambiar archivo u opciones invalida la vista previa. Cada lote se revisa y confirma; los fallidos quedan disponibles para reintentar.
 - Los estados de derechos que descarga el botón corresponden a lo informado en perfiles de artistas, no a una confirmación ante SADAIC, AADI o CAPIF.
 - Las campañas activas requieren pago registrado o bonificación, y fechas válidas.
+- El contador “Pendientes” en Visión general ahora usa las mismas bandejas y estados que Admin → Pendientes. Antes sumaba también todos los eventos de Cartelera, incluidos los publicados. Si alguna bandeja no responde, se indica cuál y el total se marca como incompleto.
 
 ## Worker 11752
 - Rechaza activar campañas sin pago/bonificación, sin fechas o con un fin anterior al inicio.
@@ -14,7 +15,7 @@
 - No modifica campañas, pagos ni estados guardados existentes.
 
 ## Despliegue
-- Sitio: Pages se publica desde el commit `12050`.
+- Sitio: Pages se publica desde el commit `12051`.
 - Worker: cargar `worker-UADAVSTREAM-V11.7-11752.js` en Cloudflare. No requiere migración de base ni variables nuevas.
 
 ## Pruebas
