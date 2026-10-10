@@ -19,6 +19,10 @@ try{
  const credential=phone.service.newDeviceSecret(),joined=await phone.service.join({code:pair.code,name:'Mi celular'},credential);
  assert.equal((await phone.service.joinStatus(joined.id,credential)).state,'requested');assert.equal(phone.service.state().linked,false);
  await pc.service.pairingApprove(joined.id,joined.verification);assert.equal((await phone.service.joinStatus(joined.id,credential)).state,'approved');await phone.service.connect(credential);
+ const deviceHash=Array.from(new Uint8Array(await webcrypto.subtle.digest('SHA-256',new TextEncoder().encode(credential))),x=>x.toString(16).padStart(2,'0')).join('');
+ assert.equal((await DB.prepare('SELECT expires_at FROM audience_devices WHERE credential_hash=?').bind(deviceHash).first()).expires_at,0,'approved device has no expiry');
+ const realNow=Date.now;Date.now=()=>realNow()+366*86400000;
+ try{await phone.service.sync();assert.equal(phone.service.state().linked,true,'device stays signed in beyond one year');assert.equal((await DB.prepare('SELECT expires_at FROM audience_devices WHERE credential_hash=?').bind(deviceHash).first()).expires_at,0,'persistent device remains non-expiring')}finally{Date.now=realNow}
  assert.equal(JSON.parse(phone.localStorage.getItem('uadav_user_v11')).name,'Marcos');assert.equal(phone.service.recovery(),'');assert.equal(phone.service.code().includes(root),false);
  phone.localStorage.setItem('uadav_following_v1',JSON.stringify([{id:'artist-phone'}]));pc.localStorage.setItem('uadav_favorites_v1',JSON.stringify([{id:'PC-new'}]));await phone.service.sync();await pc.service.sync();await phone.service.sync();assert.equal(JSON.parse(pc.localStorage.getItem('uadav_following_v1'))[0].id,'artist-phone');assert.equal(JSON.parse(phone.localStorage.getItem('uadav_favorites_v1'))[0].id,'PC-new');
  const devices=await pc.service.devices(),other=devices.devices.find(d=>!d.current);assert.ok(other);await pc.service.revoke(other.id);await phone.service.sync();assert.match(phone.service.state().message,/perdió su acceso/);assert.equal(JSON.parse(phone.localStorage.getItem('uadav_user_v11')).name,'Marcos');
