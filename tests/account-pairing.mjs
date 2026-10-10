@@ -13,7 +13,7 @@ async function send(path,method='GET',body=null,secret=root,ip='ip-'+(++ipSerial
 try{
  assert.equal((await send('', 'POST',{data:{uadav_user_v11:{name:'Marcos'}}})).status,200);
  await send('','POST',{data:{}},other);
- assert.equal((await send('', 'DELETE',null,root)).status,405); // Unsupported method.
+ assert.equal((await send('', 'PATCH',null,root)).status,405); // Unsupported method; DELETE is reserved for confirmed account removal.
  assert.equal((await send('','GET',null,root,undefined,'https://evil.invalid')).status,403);
  const migration=await send('/devices','POST',{name:'Mi PC'});assert.equal(migration.status,200);assert.match(migration.data.secret,/^UAD-[a-f0-9]{64}$/);
  const invitation=await send('/pair','POST',{action:'create'},migration.data.secret);assert.equal(invitation.status,200);assert.match(invitation.data.code,/^\d{6}$/);assert.match(invitation.data.proof,/^[a-f0-9]{64}$/);

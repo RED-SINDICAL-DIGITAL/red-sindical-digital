@@ -10,6 +10,7 @@ const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',innerHTM
 const pending=new Map();
 const fetch=async url=>{const u=new URL(url);if(u.pathname.endsWith('/public/search'))return await new Promise(resolve=>pending.set(u.searchParams.get('q'),resolve));return{ok:true,json:async()=>[]}};
 const context=vm.createContext({console,URL,URLSearchParams,AbortController,setTimeout,clearTimeout,fetch,location:{search:'',pathname:'/buscar.html',origin:'https://example.invalid'},history:{replaceState(){}},localStorage:{getItem(){return null}},document:{getElementById:node,querySelectorAll(){return[]},querySelector(){return null},addEventListener(){}},window:{},parent:{}});
+vm.runInContext(read('uadav-artist-discovery-v133.js'),context);
 vm.runInContext(scripts('buscar.html')[0],context);
 node('q').value='primero';const first=context.search();
 node('q').value='segundo';const second=context.search();

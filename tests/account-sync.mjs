@@ -9,7 +9,7 @@ const rows=new Map();
 const db={prepare(sql){
   const statement={run:async()=>({meta:{changes:0}})};
   statement.bind=(...args)=>({
-    first:async()=>sql.startsWith('INSERT INTO audience_rate_limits')?{count:1}:sql.includes('audience_recovery_keys')?null:rows.get(args[0])||null,
+    first:async()=>sql.startsWith('INSERT INTO audience_rate_limits')?{count:1}:sql.includes('audience_recovery_keys')||sql.includes('audience_deletions')?null:rows.get(args[0])||null,
     run:async()=>{
       if(sql.startsWith('INSERT')){
         if(rows.has(args[0]))return{meta:{changes:0}};

@@ -25,3 +25,5 @@
 - `node core/tests/federated-source-lifecycle.mjs`
 - `node core/tests/worker-monetization-guard.mjs`
 - `node core/tests/worker-audit-log.mjs`
+- La página Buscar ahora carga el módulo que recuerda los artistas consultados. La prueba reprodujo el fallo real y quedó actualizada para cargar esa dependencia.
+- Se actualizaron dos pruebas que aún suponían que eliminar una cuenta era método inválido y no contemplaban el registro de cuentas eliminadas; ambas verifican ahora la conducta actual.
