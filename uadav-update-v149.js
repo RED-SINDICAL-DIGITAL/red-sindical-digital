@@ -2,7 +2,7 @@
   'use strict';
   if (window.parent !== window) return;
 
-  const currentBuild = 12057;
+  const currentBuild = 12058;
   const dismissedKey = 'uadav_update_dismissed_build_v1';
   let checking = false;
   let shownBuild = 0;
