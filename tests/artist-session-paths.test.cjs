@@ -27,3 +27,15 @@ test('artist token refresh does not inject token into public paths', () => {
 test('artist token refresh encodes special characters safely', () => {
   assert.equal(context.withArtistToken('artist/plan?token=OLD', 'A+B/C'), 'artist/plan?token=A%2BB%2FC');
 });
+
+test('artist token refresh is independent of API deployment prefix', () => {
+  assert.equal(context.withArtistToken('artista/access?token=OLD', 'NEW'), 'artista/access?token=NEW');
+});
+
+test('artist token refresh supports leading slash without double slash', () => {
+  assert.equal(context.withArtistToken('/artist/plan?token=OLD', 'NEW'), 'artist/plan?token=NEW');
+});
+
+test('artist token refresh leaves an unrelated query token field unchanged', () => {
+  assert.equal(context.withArtistToken('artist/plan?artist_token=OLD', 'NEW'), 'artist/plan?artist_token=OLD');
+});
