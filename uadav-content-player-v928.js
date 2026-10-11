@@ -32,7 +32,7 @@ function host(){try{return window.parent?.UADAVShellHost||window.parent?.UADAV_A
 async function resolveYoutube(n){
  const id=youtubeId(n);if(!id)return n;
  try{
-  const r=await fetch(API+'playback/youtube?id='+encodeURIComponent(id),{cache:'no-store',signal:AbortSignal.timeout(1800)});
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),1800);let r;try{r=await fetch(API+'playback/youtube?id='+encodeURIComponent(id),{cache:'no-store',signal:controller.signal})}finally{clearTimeout(timer)}
   if(!r.ok)return n;
   const d=await r.json();
   return {...n,external_id:id,youtube_id:id,playback:d};
