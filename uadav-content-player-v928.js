@@ -39,9 +39,11 @@ async function resolveYoutube(n){
  }catch{return n}
 }
 async function open(item={}){
- let n=normalize(item);n=await resolveYoutube(n);
+ let n=normalize(item);
  const h=host();
+ // The host owns playback resolution; avoid a redundant metadata request here.
  if(h?.playContent){h.playContent(n);return true}
+ n=await resolveYoutube(n);
  try{
   if(window.parent!==window){window.parent.postMessage({type:'uadav:content-play',item:n},location.origin);return true}
  }catch{}
