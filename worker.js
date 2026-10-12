@@ -3016,7 +3016,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const keep=list.filter(x=>!x||x.origen!=='externo');
       await putJSON('bolsa_trabajo',keep);
       // No se ejecuta DELETE D1 aquí: reconciliar D1 y respaldos antes de cualquier limpieza definitiva.
-      await audit('cleanup_external_jobs','job',{removed:targets.length,preserved:keep.length});
+      await audit('cleanup_external_jobs','job','external_imports',{removed:targets.length,preserved:keep.length});
       return json({success:true,removed:targets.length,preserved:keep.length,d1_cleanup_pending:true});
     }
     if(path==='/api/admin/federated/import' && request.method==='POST'){
