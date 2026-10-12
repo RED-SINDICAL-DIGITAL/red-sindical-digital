@@ -2532,6 +2532,34 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       await audit('review_signal_application','signal',String(b.id),{status});
       return json({success:true,item:list[i],publication_pending:true});
     }
+    // Publication is a separate, explicit, admin-only step after approval.
+    if (path === '/api/signal-onboarding/publish') {
+      if (!isAdmin()) return json({error:'No autorizado'},401);
+      if (request.method!=='POST') return json({error:'Método no permitido'},405);
+      const b=await request.json().catch(()=>({}));
+      const requests=await getArray('signal_onboarding_applications');
+      const i=requests.findIndex(x=>x.id===b.id);
+      if(i<0)return json({error:'Solicitud no encontrada'},404);
+      const application=requests[i];
+      if(application.status!=='approved')return json({error:'Primero debe aprobarse la solicitud'},409);
+      if(application.published_id)return json({error:'La señal ya fue publicada',published_id:application.published_id},409);
+      const radio=application.type==='radio',key=radio?'radios':'senales_oficiales';
+      const existing=await getArray(key);
+      if(!Array.isArray(existing))return json({error:'Catálogo inválido: no se modificó'},503);
+      if(existing.some(x=>String(x.onboarding_id||'')===application.id||String(x.stream_url||x.url||'').trim().toLowerCase()===String(application.stream_url).trim().toLowerCase()))return json({error:'La señal ya existe en el catálogo; revisar antes de publicar'},409);
+      const id=(radio?'RAD-':'LIVE-')+application.id;
+      const record=radio
+        ?{id,nombre:application.name,stream_url:application.stream_url,provincia:application.province||'',descripcion:application.description||'',pais:'Argentina',estado:'active',destacada:false,pauta_status:'sin_pauta',onboarding_id:application.id}
+        :{id,nombre:application.name,url:application.stream_url,tipo:/\\.m3u8(?:[?#]|$)/i.test(application.stream_url)?'m3u8':'generic',activa:true,principal:false,onboarding_id:application.id};
+      // Append only: never replace, delete or reorder the existing catalog.
+      const updated=[...existing,record];
+      await putJSON(key,updated);
+      if(radio){const d1sync=await safeD1('signal_radio_publish',()=>syncRadiosD1([record]));if(!d1sync.ok)return json({error:'Radio guardada en KV pero falta sincronizar D1; revisar antes de reintentar',partial:true,id},503)}
+      requests[i]={...application,published_id:id,published_at:isoNow(),status:'published'};
+      await putJSON('signal_onboarding_applications',requests);
+      await audit('publish_signal','signal',application.id,{type:application.type,published_id:id});
+      return json({success:true,id,type:application.type});
+    }
     if (path === '/api/signal-onboarding/apply') {
       if (request.method!=='POST')return json({error:'Método no permitido'},405);
       const c=await getObject('signal_onboarding_config');
