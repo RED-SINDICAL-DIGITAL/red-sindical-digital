@@ -3,7 +3,7 @@ test('publishing requires admin and approved request, and does not replace exist
 
 test('published applications cannot be reverted through review',()=>{assert.match(worker,/list\[i\]\.published_id\|\|list\[i\]\.status==='published'/)});
 test('partial radio publication can be reconciled without appending duplicates',()=>{assert.match(worker,/const previouslyStored=existing\.find/);assert.match(worker,/signal_radio_repair/);assert.match(worker,/reconciled:true/)});
-test('HLS signals use m3u8 classification',()=>{assert.match(worker,/tipo:\/\\\.m3u8/)});
+test('HLS signals use m3u8 classification',()=>{assert.ok(worker.includes("tipo:/\\.m3u8"))});
 
 test('admin retains per-type preferences even when public enrollment is closed',()=>{assert.match(worker,/radio:isAdmin\(\)\?c\.radio===true:c\.enabled===true&&c\.radio===true/);assert.match(worker,/tv:isAdmin\(\)\?c\.tv===true:c\.enabled===true&&c\.tv===true/)});
 test('published signal review actions are hidden in admin',()=>{assert.match(admin,/x\.status==='published'\?'<span class="badge info">Publicada<\/span>'/)});
@@ -11,4 +11,4 @@ test('published signal review actions are hidden in admin',()=>{assert.match(adm
 test('new applications are inserted atomically in D1 with unique stream keys',()=>{assert.match(worker,/CREATE TABLE IF NOT EXISTS signal_onboarding_applications/);assert.match(worker,/stream_key TEXT NOT NULL UNIQUE/);assert.match(worker,/INSERT INTO signal_onboarding_applications/);assert.match(worker,/await saveSignalApplication\(item\)/)});
 test('legacy KV requests remain readable and new requests fail closed without D1',()=>{assert.match(worker,/legacy\.filter\(x=>!ids\.has\(x\.id\)\)/);assert.match(worker,/D1 obligatorio para inscripciones de señales/)});
 
-test('submission rate limits use D1 counters rather than KV read-modify-write',()=>{assert.match(worker,/CREATE TABLE IF NOT EXISTS signal_onboarding_rate_limits/);assert.match(worker,/INSERT INTO signal_onboarding_rate_limits/);assert.doesNotMatch(worker,/signal_onboarding_rate_/)});
+test('submission rate limits use D1 counters rather than KV read-modify-write',()=>{assert.match(worker,/CREATE TABLE IF NOT EXISTS signal_onboarding_rate_limits/);assert.match(worker,/INSERT INTO signal_onboarding_rate_limits/);assert.doesNotMatch(worker,/const rateKey='signal_onboarding_rate_/)});
