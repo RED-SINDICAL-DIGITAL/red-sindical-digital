@@ -2509,7 +2509,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if (path === '/api/signal-onboarding/config') {
       if (request.method === 'GET') {
         const c=await getObject('signal_onboarding_config');
-        return json({enabled:c.enabled===true,radio:c.enabled===true&&c.radio===true,tv:c.enabled===true&&c.tv===true,closed_message:String(c.closed_message||'Las inscripciones están temporalmente cerradas.').slice(0,250)});
+        return json({enabled:c.enabled===true,radio:isAdmin()?c.radio===true:c.enabled===true&&c.radio===true,tv:isAdmin()?c.tv===true:c.enabled===true&&c.tv===true,closed_message:String(c.closed_message||'Las inscripciones están temporalmente cerradas.').slice(0,250)});
       }
       if (request.method !== 'PUT') return json({error:'Método no permitido'},405);
       if (!isAdmin()) return json({error:'No autorizado'},401);
