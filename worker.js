@@ -2897,7 +2897,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('postulaciones_trabajo',list); await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id||null,public:!item.artist_id}); await emitNotification({event:'JOB_APPLICATION',to:String(job.contacto_email||job.email||''),subject:'★ UADAV STREAM · Nueva postulación',text:'Se recibió una postulación a una oportunidad laboral.',entity_id:item.id}); return json({success:true,item:{id:item.id,estado:item.estado,creado:item.creado},clave_consulta:consultaClave});
     }
     if (path === '/api/bolsa_trabajo/postulaciones' && request.method === 'GET') {
-      if(!isAdmin())return json({error:'No autorizado'},401); return json(await getArray('postulaciones_trabajo'));
+      if(!isAdmin())return json({error:'No autorizado'},401); const items=await getArray('postulaciones_trabajo'); return json(items.map(({consulta_hash,...item})=>item));
     }
 
     // --- FUENTES AUTOMÁTICAS / FEDERACIÓN ---
