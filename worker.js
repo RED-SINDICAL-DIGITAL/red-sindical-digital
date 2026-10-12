@@ -2547,7 +2547,15 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const radio=application.type==='radio',key=radio?'radios':'senales_oficiales';
       const existing=await getArray(key);
       if(!Array.isArray(existing))return json({error:'Catálogo inválido: no se modificó'},503);
-      if(existing.some(x=>String(x.onboarding_id||'')===application.id||String(x.stream_url||x.url||'').trim().toLowerCase()===String(application.stream_url).trim().toLowerCase()))return json({error:'La señal ya existe en el catálogo; revisar antes de publicar'},409);
+      const previouslyStored=existing.find(x=>String(x.onboarding_id||'')===application.id);
+      if(previouslyStored){
+        if(radio){const repair=await safeD1('signal_radio_repair',()=>syncRadiosD1([previouslyStored]));if(!repair.ok)return json({error:'La señal ya está en KV, pero D1 sigue sin sincronizar. Revisá la base antes de continuar.',partial:true},503)}
+        requests[i]={...application,published_id:previouslyStored.id,published_at:isoNow(),status:'published'};
+        await putJSON('signal_onboarding_applications',requests);
+        await audit('reconcile_signal_publication','signal',application.id,{published_id:previouslyStored.id});
+        return json({success:true,id:previouslyStored.id,reconciled:true});
+      }
+      if(existing.some(x=>String(x.stream_url||x.url||'').trim().toLowerCase()===String(application.stream_url).trim().toLowerCase()))return json({error:'La señal ya existe en el catálogo; revisar antes de publicar'},409);
       const id=(radio?'RAD-':'LIVE-')+application.id;
       const record=radio
         ?{id,nombre:application.name,stream_url:application.stream_url,provincia:application.province||'',descripcion:application.description||'',pais:'Argentina',estado:'active',destacada:false,pauta_status:'sin_pauta',onboarding_id:application.id}
