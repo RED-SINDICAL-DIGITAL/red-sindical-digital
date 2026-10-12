@@ -2527,6 +2527,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if (!['approved','rejected','pending'].includes(status))return json({error:'Estado inválido'},400);
       const list=await getArray('signal_onboarding_applications'),i=list.findIndex(x=>x.id===b.id);
       if(i<0)return json({error:'Solicitud no encontrada'},404);
+      if(list[i].published_id||list[i].status==='published')return json({error:'La señal ya está publicada; administrala desde el catálogo'},409);
       list[i]={...list[i],status,review_note:String(b.review_note||'').slice(0,500),reviewed_at:isoNow()};
       await putJSON('signal_onboarding_applications',list);
       await audit('review_signal_application','signal',String(b.id),{status});
@@ -2550,11 +2551,11 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const id=(radio?'RAD-':'LIVE-')+application.id;
       const record=radio
         ?{id,nombre:application.name,stream_url:application.stream_url,provincia:application.province||'',descripcion:application.description||'',pais:'Argentina',estado:'active',destacada:false,pauta_status:'sin_pauta',onboarding_id:application.id}
-        :{id,nombre:application.name,url:application.stream_url,tipo:/\\.m3u8(?:[?#]|$)/i.test(application.stream_url)?'m3u8':'generic',activa:true,principal:false,onboarding_id:application.id};
+        :{id,nombre:application.name,url:application.stream_url,tipo:/\.m3u8(?:[?#]|$)/i.test(application.stream_url)?'m3u8':'generic',activa:true,principal:false,onboarding_id:application.id};
       // Append only: never replace, delete or reorder the existing catalog.
       const updated=[...existing,record];
       await putJSON(key,updated);
-      if(radio){const d1sync=await safeD1('signal_radio_publish',()=>syncRadiosD1([record]));if(!d1sync.ok)return json({error:'Radio guardada en KV pero falta sincronizar D1; revisar antes de reintentar',partial:true,id},503)}
+      if(radio){const d1sync=await safeD1('signal_radio_publish',()=>syncRadiosD1([record]));if(!d1sync.ok){requests[i]={...application,status:'approved',publication_error:'D1 sync pending',publication_attempt_at:isoNow()};await putJSON('signal_onboarding_applications',requests);return json({error:'Radio guardada en KV pero falta sincronizar D1; revisar antes de reintentar',partial:true,id},503)}}
       requests[i]={...application,published_id:id,published_at:isoNow(),status:'published'};
       await putJSON('signal_onboarding_applications',requests);
       await audit('publish_signal','signal',application.id,{type:application.type,published_id:id});
