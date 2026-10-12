@@ -2865,6 +2865,17 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(request.method==='PUT'){const b=await request.json().catch(()=>({}));const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'No encontrado'},404);Object.assign(list[i],b,{id:list[i].id});await putJSON('bolsa_trabajo',list); const d1sync=await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('update_job','job',list[i].id,{}); return json({success:true,item:list[i]});}
       if(request.method==='DELETE'){const b=await request.json().catch(()=>({})); const next=list.filter(x=>String(x.id)!==String(b.id)); await putJSON('bolsa_trabajo',next); const d1sync=await safeD1('sync_jobs',()=>syncJobsD1(next)); await audit('delete_job','job',b.id,{}); return json({success:true,d1_sync:d1sync});}
     }
+    // Consulta individual: nunca exponer la lista completa ni datos de contacto.
+    if (path === '/api/bolsa_trabajo/mi-postulacion' && request.method === 'POST') {
+      const b=await request.json().catch(()=>({}));
+      const id=String(b.id||'').trim(), secret=String(b.clave||'').trim();
+      if(!/^POST-[A-Z0-9-]{5,60}$/.test(id)||!/^[a-f0-9]{64}$/.test(secret))return json({error:'Credenciales inválidas'},400);
+      const digest=await uadavDigest(secret);
+      const list=await getArray('postulaciones_trabajo');
+      const item=list.find(x=>x.id===id&&x.consulta_hash===digest);
+      if(!item)return json({error:'No se encontró una postulación con esas credenciales'},404);
+      return json({success:true,id:item.id,estado:item.estado||'pendiente',actualizado:item.actualizado||item.creado});
+    }
     if (path === '/api/bolsa_trabajo/postular' && request.method === 'POST') {
       const b=await request.json().catch(()=>({}));
       if(!b.job_id||!b.nombre||!b.email)return json({error:'Oportunidad, nombre y email son obligatorios'},400);
@@ -2880,8 +2891,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         }catch(_){}
       }
       const list=await getArray('postulaciones_trabajo');
-      const item={id:'POST-'+Date.now().toString(36).toUpperCase(),job_id:String(b.job_id),artist_id,artist_nombre,nombre:String(b.nombre).slice(0,120),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),portfolio_url:String(b.portfolio_url||b.portfolio||'').slice(0,500),perfil_verificado,origen:artist_id?'perfil_artista':'publico',creado:new Date().toISOString(),estado:'pendiente'};
-      if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('postulaciones_trabajo',list); await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id||null,public:!item.artist_id}); await emitNotification({event:'JOB_APPLICATION',to:String(job.contacto_email||job.email||''),subject:'★ UADAV STREAM · Nueva postulación',text:'Se recibió una postulación a una oportunidad laboral.',entity_id:item.id}); return json({success:true,item});
+      const consultaClave=Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
+      const consultaHash=await uadavDigest(consultaClave);
+      const item={id:'POST-'+Date.now().toString(36).toUpperCase()+'-'+crypto.randomUUID().slice(0,8).toUpperCase(),consulta_hash:consultaHash,job_id:String(b.job_id),artist_id,artist_nombre,nombre:String(b.nombre).slice(0,120),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),portfolio_url:String(b.portfolio_url||b.portfolio||'').slice(0,500),perfil_verificado,origen:artist_id?'perfil_artista':'publico',creado:new Date().toISOString(),estado:'pendiente'};
+      if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('postulaciones_trabajo',list); await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id||null,public:!item.artist_id}); await emitNotification({event:'JOB_APPLICATION',to:String(job.contacto_email||job.email||''),subject:'★ UADAV STREAM · Nueva postulación',text:'Se recibió una postulación a una oportunidad laboral.',entity_id:item.id}); return json({success:true,item:{id:item.id,estado:item.estado,creado:item.creado},clave_consulta:consultaClave});
     }
     if (path === '/api/bolsa_trabajo/postulaciones' && request.method === 'GET') {
       if(!isAdmin())return json({error:'No autorizado'},401); return json(await getArray('postulaciones_trabajo'));
