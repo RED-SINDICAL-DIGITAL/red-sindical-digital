@@ -21,7 +21,7 @@
   function targeting(campaign,location){
     const t=campaign?.targeting||{};
     const countries=parts(t.countries,country),provinces=parts(t.provinces,province),cities=parts(t.cities,city);
-    const scope=t.scope||((cities.length&&'city')||(provinces.length&&'province')||(countries.length&&'country')||'global');
+    const scope=t.scope||((cities.length&&'city')||(provinces.length&&'province')||(countries.length&&'country')||null);
     if(!['global','country','province','city'].includes(scope))return null;
     const l={country:country(location?.country),province:province(location?.province),city:city(location?.city)};
     if(scope==='global'){
