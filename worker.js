@@ -2556,6 +2556,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const claimed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='approved' RETURNING id").bind(JSON.stringify({...application,status:'publishing',publication_attempt_at:isoNow()}),application.id).first();
       if(!claimed)return json({error:'Esta solicitud ya está siendo publicada o cambió de estado. Actualizá la bandeja.',conflict:true},409);
       const releasePublication=async(error)=>{await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing'").bind(JSON.stringify({...application,status:'approved',publication_error:error,publication_attempt_at:isoNow()}),application.id).run()};
+      // The existing KV catalogs still require serialization across distinct applications.
       const radio=application.type==='radio',key=radio?'radios':'senales_oficiales';
       const existing=await getArray(key);
       if(!Array.isArray(existing)){await releasePublication('Catálogo inválido');return json({error:'Catálogo inválido: no se modificó'},503)}
