@@ -22,3 +22,20 @@
 - Consulta posterior al commit de workflow: **sin ejecuciones registradas** en la respuesta de GitHub. No se afirma que CI esté verde.
 - Si GitHub Actions no dispara el flujo, revisar habilitación, permisos y reglas de ejecución de workflows en ramas/PR.
 - Mantener el PR como borrador hasta disponer de resultados verificables y pruebas integradas.
+
+## Matriz de aceptación previa a fusionar
+| Caso | Esperado | Estado |
+|---|---|---|
+| Anuncio Santa Fe, visitante Santa Fe | Visible solo si aprobado y vigente | Unit test escrito, ejecución pendiente |
+| Anuncio Santa Fe, visitante Córdoba | No visible | Unit test escrito, ejecución pendiente |
+| Campaña sin alcance definido | No visible | Corrección y test escritos, ejecución pendiente |
+| Campaña global explícita | Visible con aprobación y vigencia | Unit test escrito, ejecución pendiente |
+| Publicidad en Inicio/Cartelera/Explorar | Rotulada, sin interrumpir contenido | Integración pendiente |
+| Ubicación IP ausente o errónea | No extender campañas locales | Prueba integrada pendiente |
+| Comprobante de transferencia | Estado pendiente, sin activación | Prueba E2E pendiente |
+| Pago aprobado y verificado | Activación y auditoría | Implementación/verificación pendiente |
+| Evento público sin PRO | Publicación y consulta completas | Prueba E2E pendiente |
+| Postulación pública sin PRO | Envío y consulta posterior del estado | Seguimiento pendiente |
+| PC, móvil, tablet, Smart TV | Navegación, foco, reproducción y formularios/QR | QA pendiente |
+
+**Regla de salida:** no habilitar campañas reales ni fusionar hasta que CI y las pruebas integradas relevantes tengan evidencia documentada.
