@@ -2867,6 +2867,14 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
     // Consulta individual: nunca exponer la lista completa ni datos de contacto.
     if (path === '/api/bolsa_trabajo/mi-postulacion' && request.method === 'POST') {
+      // Limitación orientativa por IP, con TTL; no almacenar direcciones IP en claro.
+      // KV no ofrece incremento atómico: reforzar con WAF/rate limiting en Cloudflare antes del despliegue.
+      const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();
+      if(!peer)return json({error:'No se pudo validar el origen de la consulta'},403);
+      const bucket='job-status-rate:'+await uadavDigest(peer);
+      const count=Number(await env.UADAV_DB.get(bucket)||0);
+      if(count>=10)return json({error:'Demasiadas consultas. Intentá nuevamente más tarde.'},429);
+      await env.UADAV_DB.put(bucket,String(count+1),{expirationTtl:600});
       const b=await request.json().catch(()=>({}));
       const id=String(b.id||'').trim(), secret=String(b.clave||'').trim();
       if(!/^POST-[A-Z0-9-]{5,60}$/.test(id)||!/^[a-f0-9]{64}$/.test(secret))return json({error:'Credenciales inválidas'},400);
