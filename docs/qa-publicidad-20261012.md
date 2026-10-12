@@ -16,3 +16,9 @@
 - El servidor debe validar autorización, pago y ámbito contratado; el selector de navegador solo filtra presentación.
 - Un comprobante de transferencia no constituye acreditación automática. Objetivo operativo de resolución: máximo 24 h, sujeto a verificación y mecanismos reales de control.
 - Documentar cualquier cambio en el manual público y en el interno antes de activar el servicio.
+
+## Automatización de pruebas
+- Se agregó `.github/workflows/territorial-ads-tests.yml` en la rama del PR #11 para ejecutar Node 22 en cambios del selector o sus tests.
+- Consulta posterior al commit de workflow: **sin ejecuciones registradas** en la respuesta de GitHub. No se afirma que CI esté verde.
+- Si GitHub Actions no dispara el flujo, revisar habilitación, permisos y reglas de ejecución de workflows en ramas/PR.
+- Mantener el PR como borrador hasta disponer de resultados verificables y pruebas integradas.
