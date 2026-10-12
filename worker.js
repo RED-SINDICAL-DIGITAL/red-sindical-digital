@@ -2550,18 +2550,24 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const application=requests[i];
       if(application.status!=='approved')return json({error:'Primero debe aprobarse la solicitud'},409);
       if(application.published_id)return json({error:'La señal ya fue publicada',published_id:application.published_id},409);
+      // Claim publication with a conditional D1 update; only one concurrent admin can win.
+      if(!hasD1())return json({error:'Publicación no disponible sin D1'},503);
+      await signalApplicationSchema();
+      const claimed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='approved' RETURNING id").bind(JSON.stringify({...application,status:'publishing',publication_attempt_at:isoNow()}),application.id).first();
+      if(!claimed)return json({error:'Esta solicitud ya está siendo publicada o cambió de estado. Actualizá la bandeja.',conflict:true},409);
+      const releasePublication=async(error)=>{await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing'").bind(JSON.stringify({...application,status:'approved',publication_error:error,publication_attempt_at:isoNow()}),application.id).run()};
       const radio=application.type==='radio',key=radio?'radios':'senales_oficiales';
       const existing=await getArray(key);
-      if(!Array.isArray(existing))return json({error:'Catálogo inválido: no se modificó'},503);
+      if(!Array.isArray(existing)){await releasePublication('Catálogo inválido');return json({error:'Catálogo inválido: no se modificó'},503)}
       const previouslyStored=existing.find(x=>String(x.onboarding_id||'')===application.id);
       if(previouslyStored){
-        if(radio){const repair=await safeD1('signal_radio_repair',()=>syncRadiosD1([previouslyStored]));if(!repair.ok)return json({error:'La señal ya está en KV, pero D1 sigue sin sincronizar. Revisá la base antes de continuar.',partial:true},503)}
+        if(radio){const repair=await safeD1('signal_radio_repair',()=>syncRadiosD1([previouslyStored]));if(!repair.ok){await releasePublication('D1 sync pending');return json({error:'La señal ya está en KV, pero D1 sigue sin sincronizar. Revisá la base antes de continuar.',partial:true},503)}}
         requests[i]={...application,published_id:previouslyStored.id,published_at:isoNow(),status:'published'};
         await updateSignalApplication(requests[i]);
         await audit('reconcile_signal_publication','signal',application.id,{published_id:previouslyStored.id});
         return json({success:true,id:previouslyStored.id,reconciled:true});
       }
-      if(existing.some(x=>String(x.stream_url||x.url||'').trim().toLowerCase()===String(application.stream_url).trim().toLowerCase()))return json({error:'La señal ya existe en el catálogo; revisar antes de publicar'},409);
+      if(existing.some(x=>String(x.stream_url||x.url||'').trim().toLowerCase()===String(application.stream_url).trim().toLowerCase())){await releasePublication('URL existente');return json({error:'La señal ya existe en el catálogo; revisar antes de publicar'},409)}
       const id=(radio?'RAD-':'LIVE-')+application.id;
       const record=radio
         ?{id,nombre:application.name,stream_url:application.stream_url,provincia:application.province||'',descripcion:application.description||'',pais:'Argentina',estado:'active',destacada:false,pauta_status:'sin_pauta',onboarding_id:application.id}
