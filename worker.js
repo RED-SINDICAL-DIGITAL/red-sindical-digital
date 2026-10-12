@@ -2535,6 +2535,12 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if (path === '/api/signal-onboarding/apply') {
       if (request.method!=='POST')return json({error:'Método no permitido'},405);
       const c=await getObject('signal_onboarding_config');
+      const ip=String(request.headers.get('CF-Connecting-IP')||'').trim();
+      if(!ip)return json({error:'No se pudo verificar el origen de la solicitud.'},403);
+      const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('signal-apply:'+ip)))).map(x=>x.toString(16).padStart(2,'0')).join('');
+      const rateKey='signal_onboarding_rate_'+digest;
+      const last=await getObject(rateKey),nowMs=Date.now();
+      if(Number(last.until||0)>nowMs&&Number(last.count||0)>=3)return json({error:'Demasiadas solicitudes. Volvé a intentarlo más tarde.'},429);
       const b=await request.json().catch(()=>({}));
       const type=String(b.type||'').toLowerCase();
       if(c.enabled!==true||!(type==='radio'?c.radio===true:type==='tv'&&c.tv===true))return json({error:String(c.closed_message||'Las inscripciones están cerradas.'),closed:true},403);
@@ -2545,7 +2551,11 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const list=await getArray('signal_onboarding_applications');
       if(list.length>=2000)return json({error:'Bandeja llena; contactá al equipo.'},503);
       const item={id:crypto.randomUUID(),type,name,contact,stream_url:stream,website:String(b.website||'').slice(0,400),province:String(b.province||'').slice(0,100),description:String(b.description||'').slice(0,900),rights_confirmed:true,status:'pending',created_at:isoNow()};
+      const normalized=stream.replace(/\/$/,'').toLowerCase();
+      if(list.some(x=>x.status!=='rejected'&&String(x.stream_url||'').replace(/\/$/,'').toLowerCase()===normalized))return json({error:'Esta señal ya tiene una solicitud en revisión o aprobada.'},409);
       list.push(item);await putJSON('signal_onboarding_applications',list);
+      const within=Number(last.until||0)>nowMs;
+      await putJSON(rateKey,{count:within?Number(last.count||0)+1:1,until:within?Number(last.until):nowMs+86400000});
       return json({success:true,id:item.id,status:'pending'});
     }
 
