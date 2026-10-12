@@ -23,3 +23,12 @@ Fecha: 2026-10-12. Estado: especificación tras inspección de Worker, admin.htm
 - Agregar controles faltantes en Admin reutilizando API existente, luego preferencias de usuario y eventos automáticos con idempotencia.
 - Verificar extremo a extremo: permiso, suscripción, envío, recepción en primer plano y segundo plano, click/deep link, revocación, límites, radio requests, chat y roles.
 - Probar PC, Android, iOS PWA cuando aplique, tablet y avisos internos Smart TV. Sin declarar funcionalidad productiva antes de pruebas reales.
+
+## Incorporación pública de radios y señales TV/IPTV (acuerdo 2026-10-12)
+- Formulario público «Sumá tu señal» reutilizable en UADAV STREAM y despliegues de marca blanca, con identidad y configuración por tenant. La solicitud NO se publica automáticamente: queda pendiente de aprobación por Admin central.
+- Tipos: radio de audio, televisión lineal, señal IPTV/HLS/DASH autorizada. Capturar nombre, URL del stream, sitio, contacto verificable, región, imagen, programación, proveedor y declaración de derechos; comprobar seguridad de URL y no reproducir playlists M3U indiscriminadas.
+- Flujo: envío público → validación y antispam → bandeja de solicitudes → prueba técnica y revisión de derechos → aprobación/rechazo con motivo → alta en catálogo existente → invitación segura al responsable de Radio Studio/TV Studio.
+- Paneles privados con permisos por señal, roles delegados, revocación, chat, mensajes, programación, metadatos, estadísticas y campañas limitadas. Nunca acceso a admin.html central; verificar aislamiento de tenant y emisora en cada endpoint Worker.
+- Monetización: publicación básica gratuita cuando la política comercial lo permita; destacados por territorio/periodo/ubicación, campañas y convenios negociados, cupos, vigencia, reportes y factura/orden. La plataforma retiene control sobre espacios publicitarios; evitar insertar publicidad sobre streams de terceros sin permiso contractual.
+- Compartir el motor de formularios, catálogo, permisos y cobros entre marca actual y marca blanca, sin mezclar identidades, datos privados ni pagos de diferentes clientes.
+- Actualizar manual público e interno al implementar; pruebas completas antes de habilitar producción.
