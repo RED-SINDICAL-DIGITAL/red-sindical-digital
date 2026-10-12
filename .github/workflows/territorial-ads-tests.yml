@@ -1,0 +1,27 @@
+name: Territorial advertising unit tests
+on:
+  pull_request:
+    paths:
+      - 'uadav-territorial-ads.js'
+      - 'tests/territorial-ads.test.cjs'
+      - '.github/workflows/territorial-ads-tests.yml'
+  push:
+    branches:
+      - feat/territorial-ad-matching-20261011
+    paths:
+      - 'uadav-territorial-ads.js'
+      - 'tests/territorial-ads.test.cjs'
+      - '.github/workflows/territorial-ads-tests.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run territorial ad tests
+        run: node --test tests/territorial-ads.test.cjs
