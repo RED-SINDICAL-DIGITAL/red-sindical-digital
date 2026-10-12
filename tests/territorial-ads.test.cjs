@@ -31,3 +31,15 @@ test('solo tres emplazamientos, URL HTTPS, no ubicación específica por defecto
  assert.equal(ads.eligible({...c,destination:'javascript:alert(1)'},sf,'home',now),null);
  assert.equal(ads.select([make('sf',{scope:'province',countries:['AR'],provinces:['Santa Fe']})],{},'home',now),null);
 });
+
+test('rechaza campañas sin alcance territorial explícito',()=>{
+ const c=make('missing',undefined);
+ assert.equal(ads.eligible(c,sf,'home',now),null);
+ assert.equal(ads.eligible({...c,targeting:{}},sf,'home',now),null);
+ assert.equal(ads.eligible({...c,targeting:{scope:'global'}},sf,'home',now)?.id,'missing');
+});
+test('rechaza alcance desconocido y filtros globales contradictorios',()=>{
+ const c=make('bad',{scope:'planet'});
+ assert.equal(ads.eligible(c,sf,'home',now),null);
+ assert.equal(ads.eligible({...c,targeting:{scope:'global',countries:['AR']}},sf,'home',now),null);
+});
