@@ -18,3 +18,13 @@
 ## Restricciones
 - No se modificó Worker, KV, D1 ni producción en esta auditoría.
 - No se han ejecutado pruebas E2E. La implementación requiere revisar el flujo completo de seguridad y despliegue del Worker antes de introducir rutas.
+
+## Implementación en borrador y controles pendientes (2026-10-12)
+- El Worker crea credencial aleatoria y almacena su hash; devuelve el secreto una sola vez al crear la postulación.
+- La página de Bolsa muestra comprobante y formulario de consulta del estado.
+- La lista administrativa omite el hash. El hash permanece en el registro interno KV/D1 y debe excluirse de exportaciones generales y logs.
+- El endpoint limita intentos por origen mediante KV (10 intentos, TTL de 600 segundos). **Este mecanismo no es atómico y puede tener carreras o evasión**; configurar reglas de WAF/rate limiting de Cloudflare y probarlas antes de producción.
+- Las postulaciones anteriores carecen de credencial privada: no se deben hacer accesibles por identificador solamente. Diseñar recuperación con verificación de titularidad.
+- Se agregaron pruebas estáticas de contrato y workflow Node 22; consulta de ejecuciones del commit del workflow: **cero ejecuciones registradas**. No equivalen a pruebas E2E.
+- Pendiente: probar POST real, clave correcta/incorrecta, consulta de estados, privacidad, carga simultánea, dispositivos, y persistencia KV/D1; comprobar que la respuesta de alta es compatible con consumidores previos.
+- **No fusionar ni desplegar hasta contar con evidencia de CI y pruebas integradas.**
