@@ -28,3 +28,9 @@
 - Se agregaron pruebas estáticas de contrato y workflow Node 22; consulta de ejecuciones del commit del workflow: **cero ejecuciones registradas**. No equivalen a pruebas E2E.
 - Pendiente: probar POST real, clave correcta/incorrecta, consulta de estados, privacidad, carga simultánea, dispositivos, y persistencia KV/D1; comprobar que la respuesta de alta es compatible con consumidores previos.
 - **No fusionar ni desplegar hasta contar con evidencia de CI y pruebas integradas.**
+
+## Validación estática efectuada — 2026-10-12
+- Se verificaron cinco contratos directamente contra el contenido de la rama: endpoint, hash, respuesta sin datos personales, omisión de hash en listado administrativo y conexión del formulario; cinco verificaciones positivas.
+- Los scripts inline no vacíos de `bolsa-trabajo.html` superaron análisis sintáctico en V8.
+- `worker.js` es un módulo ES (`export default`), por lo que no debe comprobarse mediante `new Function`; la verificación correcta está configurada en CI con `node --check worker.js`, pero todavía no se ha observado una ejecución.
+- No se ejecutaron pruebas HTTP reales, KV/D1, dispositivos ni WAF. El PR continúa en borrador y no es apto para despliegue todavía.
