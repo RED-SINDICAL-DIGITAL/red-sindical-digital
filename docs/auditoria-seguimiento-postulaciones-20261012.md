@@ -34,3 +34,10 @@
 - Los scripts inline no vacíos de `bolsa-trabajo.html` superaron análisis sintáctico en V8.
 - `worker.js` es un módulo ES (`export default`), por lo que no debe comprobarse mediante `new Function`; la verificación correcta está configurada en CI con `node --check worker.js`, pero todavía no se ha observado una ejecución.
 - No se ejecutaron pruebas HTTP reales, KV/D1, dispositivos ni WAF. El PR continúa en borrador y no es apto para despliegue todavía.
+
+## Importaciones externas y limpieza previa al lanzamiento
+- Se identificó que `/api/admin/federated/import` aceptaba ofertas externas con título y URL, y podía marcarlas activas inmediatamente.
+- Cambio propuesto: las ofertas externas nuevas ingresan inactivas y con `revision_pendiente=true`; deben revisarse antes de activarse. Las ya activas no se despublican automáticamente: requieren auditoría selectiva.
+- Criterios para revisión: convocatoria artística real, fuente verificable, enlace directo pertinente, fecha vigente, ubicación/modalidad coherente y ausencia de duplicados. Evitar páginas genéricas, directorios y enlaces sin oferta concreta.
+- Antes del lanzamiento: respaldo KV/D1, inventario de dependencias y borrado selectivo de usuarios, artistas, eventos, trabajos y postulaciones de prueba. Nunca vaciar KV o D1 completos sin inventario.
+- No se efectuó borrado ni despliegue.
