@@ -2506,6 +2506,12 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
 
     // Public signal onboarding: admin-controlled, pending review only.
+    // D1 is the transactional source of truth for new onboarding submissions.
+    // Legacy KV entries remain readable for migrations and existing applications.
+    const signalApplicationSchema=async()=>{if(!hasD1())return false;await env.DB.prepare("CREATE TABLE IF NOT EXISTS signal_onboarding_applications (id TEXT PRIMARY KEY, stream_key TEXT NOT NULL UNIQUE, data_json TEXT NOT NULL, created_at TEXT NOT NULL)").run();return true};
+    const signalApplications=async()=>{const legacy=await getArray('signal_onboarding_applications');if(!hasD1())return legacy;await signalApplicationSchema();const rows=await env.DB.prepare("SELECT data_json FROM signal_onboarding_applications ORDER BY created_at DESC LIMIT 2500").all();const current=(rows.results||[]).map(x=>safeJSON(x.data_json,null)).filter(Boolean);const ids=new Set(current.map(x=>x.id));return [...current,...legacy.filter(x=>!ids.has(x.id))]};
+    const saveSignalApplication=async(item)=>{if(!hasD1())throw new Error('D1 obligatorio para inscripciones de señales');await signalApplicationSchema();const streamKey=String(item.stream_url||'').replace(/\\/$/,'').toLowerCase();await env.DB.prepare("INSERT INTO signal_onboarding_applications(id,stream_key,data_json,created_at) VALUES(?,?,?,?)").bind(item.id,streamKey,JSON.stringify(item),item.created_at).run()};
+    const updateSignalApplication=async(item)=>{if(hasD1()){await signalApplicationSchema();const result=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=?").bind(JSON.stringify(item),item.id).run();if(result.meta?.changes)return}const legacy=await getArray('signal_onboarding_applications');const idx=legacy.findIndex(x=>x.id===item.id);if(idx>=0){legacy[idx]=item;await putJSON('signal_onboarding_applications',legacy)}};
     if (path === '/api/signal-onboarding/config') {
       if (request.method === 'GET') {
         const c=await getObject('signal_onboarding_config');
@@ -2521,15 +2527,15 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
     if (path === '/api/signal-onboarding/applications') {
       if (!isAdmin()) return json({error:'No autorizado'},401);
-      if (request.method === 'GET') return json(await getArray('signal_onboarding_applications'));
+      if (request.method === 'GET') return json(await signalApplications());
       if (request.method !== 'PATCH') return json({error:'Método no permitido'},405);
       const b=await request.json().catch(()=>({})),status=String(b.status||'');
       if (!['approved','rejected','pending'].includes(status))return json({error:'Estado inválido'},400);
-      const list=await getArray('signal_onboarding_applications'),i=list.findIndex(x=>x.id===b.id);
+      const list=await signalApplications(),i=list.findIndex(x=>x.id===b.id);
       if(i<0)return json({error:'Solicitud no encontrada'},404);
       if(list[i].published_id||list[i].status==='published')return json({error:'La señal ya está publicada; administrala desde el catálogo'},409);
       list[i]={...list[i],status,review_note:String(b.review_note||'').slice(0,500),reviewed_at:isoNow()};
-      await putJSON('signal_onboarding_applications',list);
+      await updateSignalApplication(list[i]);
       await audit('review_signal_application','signal',String(b.id),{status});
       return json({success:true,item:list[i],publication_pending:true});
     }
@@ -2538,7 +2544,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if (!isAdmin()) return json({error:'No autorizado'},401);
       if (request.method!=='POST') return json({error:'Método no permitido'},405);
       const b=await request.json().catch(()=>({}));
-      const requests=await getArray('signal_onboarding_applications');
+      const requests=await signalApplications();
       const i=requests.findIndex(x=>x.id===b.id);
       if(i<0)return json({error:'Solicitud no encontrada'},404);
       const application=requests[i];
@@ -2551,7 +2557,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(previouslyStored){
         if(radio){const repair=await safeD1('signal_radio_repair',()=>syncRadiosD1([previouslyStored]));if(!repair.ok)return json({error:'La señal ya está en KV, pero D1 sigue sin sincronizar. Revisá la base antes de continuar.',partial:true},503)}
         requests[i]={...application,published_id:previouslyStored.id,published_at:isoNow(),status:'published'};
-        await putJSON('signal_onboarding_applications',requests);
+        await updateSignalApplication(requests[i]);
         await audit('reconcile_signal_publication','signal',application.id,{published_id:previouslyStored.id});
         return json({success:true,id:previouslyStored.id,reconciled:true});
       }
@@ -2563,9 +2569,9 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       // Append only: never replace, delete or reorder the existing catalog.
       const updated=[...existing,record];
       await putJSON(key,updated);
-      if(radio){const d1sync=await safeD1('signal_radio_publish',()=>syncRadiosD1([record]));if(!d1sync.ok){requests[i]={...application,status:'approved',publication_error:'D1 sync pending',publication_attempt_at:isoNow()};await putJSON('signal_onboarding_applications',requests);return json({error:'Radio guardada en KV pero falta sincronizar D1; revisar antes de reintentar',partial:true,id},503)}}
+      if(radio){const d1sync=await safeD1('signal_radio_publish',()=>syncRadiosD1([record]));if(!d1sync.ok){requests[i]={...application,status:'approved',publication_error:'D1 sync pending',publication_attempt_at:isoNow()};await updateSignalApplication(requests[i]);return json({error:'Radio guardada en KV pero falta sincronizar D1; revisar antes de reintentar',partial:true,id},503)}}
       requests[i]={...application,published_id:id,published_at:isoNow(),status:'published'};
-      await putJSON('signal_onboarding_applications',requests);
+      await updateSignalApplication(requests[i]);
       await audit('publish_signal','signal',application.id,{type:application.type,published_id:id});
       return json({success:true,id,type:application.type});
     }
@@ -2585,12 +2591,12 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const name=String(b.name||'').trim().slice(0,120),contact=String(b.contact||'').trim().slice(0,180),stream=String(b.stream_url||'').trim().slice(0,1500);
       if(name.length<3||contact.length<5||!/^https:\/\//i.test(stream)||b.rights_confirmed!==true)return json({error:'Completá nombre, contacto, URL HTTPS y declaración de derechos.'},400);
       try{const u=new URL(stream);if(u.username||u.password||['localhost','127.0.0.1','0.0.0.0','::1'].includes(u.hostname)||!u.hostname.includes('.'))return json({error:'URL de transmisión inválida'},400)}catch{return json({error:'URL inválida'},400)}
-      const list=await getArray('signal_onboarding_applications');
+      const list=await signalApplications();
       if(list.length>=2000)return json({error:'Bandeja llena; contactá al equipo.'},503);
       const item={id:crypto.randomUUID(),type,name,contact,stream_url:stream,website:String(b.website||'').slice(0,400),province:String(b.province||'').slice(0,100),description:String(b.description||'').slice(0,900),rights_confirmed:true,status:'pending',created_at:isoNow()};
       const normalized=stream.replace(/\/$/,'').toLowerCase();
       if(list.some(x=>x.status!=='rejected'&&String(x.stream_url||'').replace(/\/$/,'').toLowerCase()===normalized))return json({error:'Esta señal ya tiene una solicitud en revisión o aprobada.'},409);
-      list.push(item);await putJSON('signal_onboarding_applications',list);
+      try{await saveSignalApplication(item)}catch(e){if(/UNIQUE|constraint/i.test(String(e)))return json({error:'Esta URL de transmisión ya fue registrada.'},409);return json({error:'No se pudo guardar la solicitud. Intentá más tarde.'},503)}
       const within=Number(last.until||0)>nowMs;
       await putJSON(rateKey,{count:within?Number(last.count||0)+1:1,until:within?Number(last.until):nowMs+86400000});
       return json({success:true,id:item.id,status:'pending'});
