@@ -32,3 +32,10 @@ Fecha: 2026-10-12. Estado: especificación tras inspección de Worker, admin.htm
 - Monetización: publicación básica gratuita cuando la política comercial lo permita; destacados por territorio/periodo/ubicación, campañas y convenios negociados, cupos, vigencia, reportes y factura/orden. La plataforma retiene control sobre espacios publicitarios; evitar insertar publicidad sobre streams de terceros sin permiso contractual.
 - Compartir el motor de formularios, catálogo, permisos y cobros entre marca actual y marca blanca, sin mezclar identidades, datos privados ni pagos de diferentes clientes.
 - Actualizar manual público e interno al implementar; pruebas completas antes de habilitar producción.
+
+## Control de apertura de formularios desde Admin
+- Interruptor maestro de «Sumá tu señal», más interruptores independientes para Radio y TV/IPTV, configurables por despliegue/tenant desde Admin, sin redeploy.
+- Configuración: visible/oculto en menú y páginas, texto personalizado de cierre, campos habilitados, límite antispam y notificación interna de nueva solicitud.
+- El cierre debe aplicarse **en el Worker al POST**, no solo ocultando botones; devolver estado de inscripciones cerradas sin crear registros. El GET público debe exponer únicamente flags de apertura, nunca credenciales ni configuración privada.
+- Las señales previamente aprobadas continúan reproduciéndose; el cierre no suspende paneles privados ni elimina solicitudes pendientes.
+- Cambios auditados con usuario, fecha y valor anterior/nuevo. Valores seguros ante configuración ausente: inscripciones cerradas hasta habilitación explícita por Admin.
