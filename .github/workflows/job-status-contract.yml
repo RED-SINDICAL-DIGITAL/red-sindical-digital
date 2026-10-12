@@ -1,0 +1,29 @@
+name: Job status contract checks
+on:
+  pull_request:
+    paths:
+      - worker.js
+      - bolsa-trabajo.html
+      - tests/job-status-contract.test.cjs
+      - .github/workflows/job-status-contract.yml
+  push:
+    branches:
+      - audit/public-job-status-20261012
+    paths:
+      - worker.js
+      - bolsa-trabajo.html
+      - tests/job-status-contract.test.cjs
+      - .github/workflows/job-status-contract.yml
+permissions:
+  contents: read
+jobs:
+  static-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check worker.js
+      - run: node --test tests/job-status-contract.test.cjs
