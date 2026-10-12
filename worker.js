@@ -2505,6 +2505,50 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       return json({ error:'Método no permitido' },405);
     }
 
+    // Public signal onboarding: admin-controlled, pending review only.
+    if (path === '/api/signal-onboarding/config') {
+      if (request.method === 'GET') {
+        const c=await getObject('signal_onboarding_config');
+        return json({enabled:c.enabled===true,radio:c.enabled===true&&c.radio===true,tv:c.enabled===true&&c.tv===true,closed_message:String(c.closed_message||'Las inscripciones están temporalmente cerradas.').slice(0,250)});
+      }
+      if (request.method !== 'PUT') return json({error:'Método no permitido'},405);
+      if (!isAdmin()) return json({error:'No autorizado'},401);
+      const b=await request.json().catch(()=>({}));
+      const config={enabled:b.enabled===true,radio:b.radio===true,tv:b.tv===true,closed_message:String(b.closed_message||'Las inscripciones están temporalmente cerradas.').slice(0,250),updated_at:isoNow()};
+      await putJSON('signal_onboarding_config',config);
+      await audit('update_signal_onboarding','settings','signal_onboarding_config',{enabled:config.enabled,radio:config.radio,tv:config.tv});
+      return json({success:true,config});
+    }
+    if (path === '/api/signal-onboarding/applications') {
+      if (!isAdmin()) return json({error:'No autorizado'},401);
+      if (request.method === 'GET') return json(await getArray('signal_onboarding_applications'));
+      if (request.method !== 'PATCH') return json({error:'Método no permitido'},405);
+      const b=await request.json().catch(()=>({})),status=String(b.status||'');
+      if (!['approved','rejected','pending'].includes(status))return json({error:'Estado inválido'},400);
+      const list=await getArray('signal_onboarding_applications'),i=list.findIndex(x=>x.id===b.id);
+      if(i<0)return json({error:'Solicitud no encontrada'},404);
+      list[i]={...list[i],status,review_note:String(b.review_note||'').slice(0,500),reviewed_at:isoNow()};
+      await putJSON('signal_onboarding_applications',list);
+      await audit('review_signal_application','signal',String(b.id),{status});
+      return json({success:true,item:list[i],publication_pending:true});
+    }
+    if (path === '/api/signal-onboarding/apply') {
+      if (request.method!=='POST')return json({error:'Método no permitido'},405);
+      const c=await getObject('signal_onboarding_config');
+      const b=await request.json().catch(()=>({}));
+      const type=String(b.type||'').toLowerCase();
+      if(c.enabled!==true||!(type==='radio'?c.radio===true:type==='tv'&&c.tv===true))return json({error:String(c.closed_message||'Las inscripciones están cerradas.'),closed:true},403);
+      if(type!=='radio'&&type!=='tv')return json({error:'Tipo inválido'},400);
+      const name=String(b.name||'').trim().slice(0,120),contact=String(b.contact||'').trim().slice(0,180),stream=String(b.stream_url||'').trim().slice(0,1500);
+      if(name.length<3||contact.length<5||!/^https:\/\//i.test(stream)||b.rights_confirmed!==true)return json({error:'Completá nombre, contacto, URL HTTPS y declaración de derechos.'},400);
+      try{const u=new URL(stream);if(u.username||u.password||['localhost','127.0.0.1','0.0.0.0','::1'].includes(u.hostname)||!u.hostname.includes('.'))return json({error:'URL de transmisión inválida'},400)}catch{return json({error:'URL inválida'},400)}
+      const list=await getArray('signal_onboarding_applications');
+      if(list.length>=2000)return json({error:'Bandeja llena; contactá al equipo.'},503);
+      const item={id:crypto.randomUUID(),type,name,contact,stream_url:stream,website:String(b.website||'').slice(0,400),province:String(b.province||'').slice(0,100),description:String(b.description||'').slice(0,900),rights_confirmed:true,status:'pending',created_at:isoNow()};
+      list.push(item);await putJSON('signal_onboarding_applications',list);
+      return json({success:true,id:item.id,status:'pending'});
+    }
+
     if (path === '/api/radios') {
       if (request.method === 'GET') {
         const kv=await getArray('radios'); let d1=[];
