@@ -2912,7 +2912,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     const defaultFederatedSources=()=>[
       {id:'rosario-cultura',name:'Rosario Cultura',kind:'event',scope:'rosario',country:'Argentina',url:'https://www.rosario.gob.ar/inicio/agenda/buscar',active:true,interval_hours:12,mode:'page_discovery',priority:100,auto_publish:false,publish_limit:6},
       {id:'agenda-cultural-federal',name:'Agenda Cultural Federal',kind:'event',scope:'argentina',country:'Argentina',url:'https://www.cultura.gob.ar/agenda/',active:true,interval_hours:12,mode:'page_discovery',priority:90},
-      {id:'teatro-cervantes-convocatorias',name:'Teatro Nacional Cervantes · Convocatorias',kind:'job',scope:'argentina',country:'Argentina',url:'https://www.teatrocervantes.gob.ar/convocatorias-artisticas/',active:true,interval_hours:12,mode:'page_discovery',priority:95,auto_publish:false,publish_limit:6},
+      {id:'teatro-cervantes-convocatorias',name:'Teatro Nacional Cervantes · Convocatorias',kind:'job',scope:'argentina',country:'Argentina',url:'https://www.teatrocervantes.gob.ar/convocatorias-artisticas/',active:false,interval_hours:12,mode:'page_discovery',priority:95,auto_publish:false,publish_limit:6},
       {id:'alternativa-convocatorias',name:'Alternativa · Convocatorias',kind:'job',scope:'argentina',country:'Argentina',url:'https://alternativa.ar/convocatorias.php',active:false,interval_hours:12,mode:'page_discovery',priority:80}
     ];
     async function federatedSources(){
@@ -3004,6 +3004,20 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(kind==='event')Object.assign(item,{fecha:String(schema.startDate||''),fecha_inicio:String(schema.startDate||''),fecha_fin:String(schema.endDate||''),lugar:clean(loc.name||''),ciudad:clean(addr.addressLocality||''),provincia:clean(addr.addressRegion||''),pais:clean(addr.addressCountry?.name||addr.addressCountry||'Argentina'),categoria:'Eventos'});
       else Object.assign(item,{fecha:String(schema.datePosted||''),fecha_limite:String(schema.validThrough||''),empresa:clean(schema.hiringOrganization?.name||''),ciudad:clean(schema.jobLocation?.address?.addressLocality||''),provincia:clean(schema.jobLocation?.address?.addressRegion||''),pais:clean(schema.jobLocation?.address?.addressCountry?.name||schema.jobLocation?.address?.addressCountry||'Argentina'),modalidad:schema.jobLocationType==='TELECOMMUTE'?'remoto':'presencial',application_mode:'external_url',application_url:target.toString(),region_scope:'argentina'});
       return json({success:true,kind,item,structured:Object.keys(schema).length>0});
+    }
+    // Limpieza selectiva de convocatorias importadas: vista previa y confirmación explícita.
+    if(path==='/api/admin/federated/cleanup-jobs' && ['GET','POST'].includes(request.method)){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      const list=await getArray('bolsa_trabajo');
+      const targets=list.filter(x=>x&&x.origen==='externo');
+      if(request.method==='GET')return json({total:targets.length,ids:targets.map(x=>x.id),preserved:list.length-targets.length});
+      const b=await request.json().catch(()=>({}));
+      if(b.confirm!=='ELIMINAR_IMPORTACIONES_EXTERNAS')return json({error:'Confirmación explícita requerida'},400);
+      const keep=list.filter(x=>!x||x.origen!=='externo');
+      await putJSON('bolsa_trabajo',keep);
+      // No se ejecuta DELETE D1 aquí: reconciliar D1 y respaldos antes de cualquier limpieza definitiva.
+      await audit('cleanup_external_jobs','job',{removed:targets.length,preserved:keep.length});
+      return json({success:true,removed:targets.length,preserved:keep.length,d1_cleanup_pending:true});
     }
     if(path==='/api/admin/federated/import' && request.method==='POST'){
       if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({})),kind=String(b.kind||'').toLowerCase(),items=Array.isArray(b.items)?b.items:[];
