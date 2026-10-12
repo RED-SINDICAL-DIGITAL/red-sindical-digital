@@ -4,3 +4,6 @@ test('publishing requires admin and approved request, and does not replace exist
 test('published applications cannot be reverted through review',()=>{assert.match(worker,/list\[i\]\.published_id\|\|list\[i\]\.status==='published'/)});
 test('partial radio publication can be reconciled without appending duplicates',()=>{assert.match(worker,/const previouslyStored=existing\.find/);assert.match(worker,/signal_radio_repair/);assert.match(worker,/reconciled:true/)});
 test('HLS signals use m3u8 classification',()=>{assert.match(worker,/tipo:\/\\\.m3u8/)});
+
+test('admin retains per-type preferences even when public enrollment is closed',()=>{assert.match(worker,/radio:isAdmin\(\)\?c\.radio===true:c\.enabled===true&&c\.radio===true/);assert.match(worker,/tv:isAdmin\(\)\?c\.tv===true:c\.enabled===true&&c\.tv===true/)});
+test('published signal review actions are hidden in admin',()=>{assert.match(admin,/x\.status==='published'\?'<span class="badge info">Publicada<\/span>'/)});
