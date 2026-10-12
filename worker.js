@@ -2508,7 +2508,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     // Public signal onboarding: admin-controlled, pending review only.
     // D1 is the transactional source of truth for new onboarding submissions.
     // Legacy KV entries remain readable for migrations and existing applications.
-    const signalApplicationSchema=async()=>{if(!hasD1())return false;await env.DB.prepare("CREATE TABLE IF NOT EXISTS signal_onboarding_applications (id TEXT PRIMARY KEY, stream_key TEXT NOT NULL UNIQUE, data_json TEXT NOT NULL, created_at TEXT NOT NULL)").run();return true};
+    const signalApplicationSchema=async()=>{if(!hasD1())return false;await env.DB.prepare("CREATE TABLE IF NOT EXISTS signal_onboarding_applications (id TEXT PRIMARY KEY, stream_key TEXT NOT NULL UNIQUE, data_json TEXT NOT NULL, created_at TEXT NOT NULL)").run();await env.DB.prepare("CREATE TABLE IF NOT EXISTS signal_onboarding_rate_limits (id TEXT PRIMARY KEY, count INTEGER NOT NULL, expires_at INTEGER NOT NULL)").run();return true};
     const signalApplications=async()=>{const legacy=await getArray('signal_onboarding_applications');if(!hasD1())return legacy;await signalApplicationSchema();const rows=await env.DB.prepare("SELECT data_json FROM signal_onboarding_applications ORDER BY created_at DESC LIMIT 2500").all();const current=(rows.results||[]).map(x=>safeJSON(x.data_json,null)).filter(Boolean);const ids=new Set(current.map(x=>x.id));return [...current,...legacy.filter(x=>!ids.has(x.id))]};
     const saveSignalApplication=async(item)=>{if(!hasD1())throw new Error('D1 obligatorio para inscripciones de señales');await signalApplicationSchema();const streamKey=String(item.stream_url||'').replace(/\/$/,'').toLowerCase();await env.DB.prepare("INSERT INTO signal_onboarding_applications(id,stream_key,data_json,created_at) VALUES(?,?,?,?)").bind(item.id,streamKey,JSON.stringify(item),item.created_at).run()};
     const updateSignalApplication=async(item)=>{if(hasD1()){await signalApplicationSchema();const result=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=?").bind(JSON.stringify(item),item.id).run();if(result.meta?.changes)return}const legacy=await getArray('signal_onboarding_applications');const idx=legacy.findIndex(x=>x.id===item.id);if(idx>=0){legacy[idx]=item;await putJSON('signal_onboarding_applications',legacy)}};
@@ -2581,9 +2581,11 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const ip=String(request.headers.get('CF-Connecting-IP')||'').trim();
       if(!ip)return json({error:'No se pudo verificar el origen de la solicitud.'},403);
       const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('signal-apply:'+ip)))).map(x=>x.toString(16).padStart(2,'0')).join('');
-      const rateKey='signal_onboarding_rate_'+digest;
-      const last=await getObject(rateKey),nowMs=Date.now();
-      if(Number(last.until||0)>nowMs&&Number(last.count||0)>=3)return json({error:'Demasiadas solicitudes. Volvé a intentarlo más tarde.'},429);
+      if(!hasD1())return json({error:'Inscripciones temporalmente no disponibles.'},503);
+      await signalApplicationSchema();
+      const rateKey='signal-apply:'+digest,nowMs=Date.now();
+      const limited=await env.DB.prepare("SELECT count,expires_at FROM signal_onboarding_rate_limits WHERE id=?").bind(rateKey).first();
+      if(limited&&Number(limited.expires_at)>nowMs&&Number(limited.count)>=3)return json({error:'Demasiadas solicitudes. Volvé a intentarlo más tarde.'},429);
       const b=await request.json().catch(()=>({}));
       const type=String(b.type||'').toLowerCase();
       if(c.enabled!==true||!(type==='radio'?c.radio===true:type==='tv'&&c.tv===true))return json({error:String(c.closed_message||'Las inscripciones están cerradas.'),closed:true},403);
@@ -2597,8 +2599,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const normalized=stream.replace(/\/$/,'').toLowerCase();
       if(list.some(x=>x.status!=='rejected'&&String(x.stream_url||'').replace(/\/$/,'').toLowerCase()===normalized))return json({error:'Esta señal ya tiene una solicitud en revisión o aprobada.'},409);
       try{await saveSignalApplication(item)}catch(e){if(/UNIQUE|constraint/i.test(String(e)))return json({error:'Esta URL de transmisión ya fue registrada.'},409);return json({error:'No se pudo guardar la solicitud. Intentá más tarde.'},503)}
-      const within=Number(last.until||0)>nowMs;
-      await putJSON(rateKey,{count:within?Number(last.count||0)+1:1,until:within?Number(last.until):nowMs+86400000});
+      await env.DB.prepare("INSERT INTO signal_onboarding_rate_limits(id,count,expires_at) VALUES(?,1,?) ON CONFLICT(id) DO UPDATE SET count=CASE WHEN expires_at<=? THEN 1 ELSE count+1 END,expires_at=CASE WHEN expires_at<=? THEN excluded.expires_at ELSE expires_at END").bind(rateKey,nowMs+86400000,nowMs,nowMs).run();
       return json({success:true,id:item.id,status:'pending'});
     }
 
