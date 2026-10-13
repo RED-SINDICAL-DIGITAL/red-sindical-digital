@@ -16,3 +16,5 @@ test('submission rate limits use D1 counters rather than KV read-modify-write',(
 test('concurrent requests reserve a rate slot atomically before storing the application',()=>{assert.match(worker,/WHERE expires_at<=\? OR count<3 RETURNING count/);assert.ok(worker.indexOf('const reserved=await env.DB.prepare')<worker.indexOf('await saveSignalApplication(item)'));assert.doesNotMatch(worker,/const limited=await env.DB.prepare/)});
 
 test('per-type catalog publishing is serialized by D1 lease',()=>{assert.match(worker,/CREATE TABLE IF NOT EXISTS signal_onboarding_catalog_locks/);assert.match(worker,/WHERE expires_at<\? RETURNING token/);assert.match(worker,/const catalogLock='signal-catalog:'\+application\.type/);assert.match(worker,/DELETE FROM signal_onboarding_catalog_locks WHERE id=\? AND token=\?/)});
+
+test('stale publication recovery is admin-only and supports partial KV reconciliation',()=>{assert.match(worker,/signal-onboarding\/recover'[\s\S]{0,100}if\(!isAdmin\(\)\)/);assert.match(worker,/Date\.now\(\)-attempted<300000/);assert.match(worker,/reconciliation_required:Boolean\(found\)/);assert.match(worker,/const previouslyStored=existing\.find/)});
