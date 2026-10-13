@@ -2556,13 +2556,13 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const key=application.type==='radio'?'radios':'senales_oficiales';
       const existing=await getArray(key);
       const found=existing.find(x=>String(x.onboarding_id||'')===id);
-      if(found)return json({error:'La señal ya existe en el catálogo. Reintentá publicar para conciliarla después de la recuperación.',catalog_id:found.id,reconciliation_required:true},409);
+      // Existing catalog entries are reconciled by the publish endpoint after recovery.
       await signalApplicationSchema();
       const restored={...application,status:'approved',publication_error:'Recuperación manual: publicación interrumpida',publication_attempt_at:isoNow()};
       const changed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing' RETURNING id").bind(JSON.stringify(restored),id).first();
       if(!changed)return json({error:'El estado cambió; actualizá la bandeja'},409);
       await audit('recover_signal_publication','signal',id,{type:application.type});
-      return json({success:true,status:'approved',id});
+      return json({success:true,status:'approved',id,reconciliation_required:Boolean(found)});
     }
     // Publication is a separate, explicit, admin-only step after approval.
     if (path === '/api/signal-onboarding/publish') {
