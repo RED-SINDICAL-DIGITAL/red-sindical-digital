@@ -2551,7 +2551,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(application.status!=='publishing')return json({error:'La solicitud no requiere recuperación'},409);
       const attempted=Date.parse(application.publication_attempt_at||'');
       if(!Number.isFinite(attempted)||Date.now()-attempted<300000)return json({error:'Esperá cinco minutos desde el último intento antes de recuperar.'},409);
-      const lock=await env.DB.prepare("SELECT expires_at FROM signal_onboarding_catalog_locks WHERE id=?").bind('signal-catalog:'+application.type).first().catch(()=>null);
+      await signalApplicationSchema();
+      const lock=await env.DB.prepare("CREATE TABLE IF NOT EXISTS signal_onboarding_catalog_locks (id TEXT PRIMARY KEY, token TEXT NOT NULL, expires_at INTEGER NOT NULL)").run().then(()=>env.DB.prepare("SELECT expires_at FROM signal_onboarding_catalog_locks WHERE id=?").bind('signal-catalog:'+application.type).first());
       if(lock&&Number(lock.expires_at)>Date.now())return json({error:'El catálogo sigue ocupado; reintentá más tarde'},409);
       const key=application.type==='radio'?'radios':'senales_oficiales';
       const existing=await getArray(key);
