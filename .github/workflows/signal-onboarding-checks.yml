@@ -1,0 +1,27 @@
+name: Signal onboarding checks
+on:
+  push:
+    branches:
+      - audit/public-job-status-20261012
+  pull_request:
+    paths:
+      - worker.js
+      - admin.html
+      - suma-tu-senal.html
+      - tests/signal-onboarding-contract.test.cjs
+      - .github/workflows/signal-onboarding-checks.yml
+  workflow_dispatch:
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Worker syntax
+        run: node --check worker.js
+      - name: Signal onboarding contract
+        run: node --test tests/signal-onboarding-contract.test.cjs
