@@ -18,3 +18,6 @@ test('concurrent requests reserve a rate slot atomically before storing the appl
 test('per-type catalog publishing is serialized by D1 lease',()=>{assert.match(worker,/CREATE TABLE IF NOT EXISTS signal_onboarding_catalog_locks/);assert.match(worker,/WHERE expires_at<\? RETURNING token/);assert.match(worker,/const catalogLock='signal-catalog:'\+application\.type/);assert.match(worker,/DELETE FROM signal_onboarding_catalog_locks WHERE id=\? AND token=\?/)});
 
 test('stale publication recovery is admin-only and supports partial KV reconciliation',()=>{assert.match(worker,/signal-onboarding\/recover'[\s\S]{0,100}if\(!isAdmin\(\)\)/);assert.match(worker,/Date\.now\(\)-attempted<300000/);assert.match(worker,/reconciliation_required:Boolean\(found\)/);assert.match(worker,/const previouslyStored=existing\.find/)});
+
+test('admin shows recovery only while publication is in progress',()=>{assert.match(admin,/recoverSignalOnboarding/);assert.match(admin,/x\.status==='publishing'/);assert.match(admin,/signal-onboarding\/recover/)});
+test('recovery does not swallow catalog lock query errors',()=>{assert.doesNotMatch(worker,/SELECT expires_at FROM signal_onboarding_catalog_locks[^\n]*\.catch\(\(\)=>null\)/)});
