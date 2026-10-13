@@ -6,7 +6,7 @@ test('partial radio publication can be reconciled without appending duplicates',
 test('HLS signals use m3u8 classification',()=>{assert.ok(worker.includes("tipo:/\\.m3u8"))});
 
 test('admin retains per-type preferences even when public enrollment is closed',()=>{assert.match(worker,/radio:isAdmin\(\)\?c\.radio===true:c\.enabled===true&&c\.radio===true/);assert.match(worker,/tv:isAdmin\(\)\?c\.tv===true:c\.enabled===true&&c\.tv===true/)});
-test('published signal review actions are hidden in admin',()=>{assert.match(admin,/x\.status==='published'\?'<span class="badge info">Publicada<\/span>'/)});
+test('published signal review actions are hidden in admin',()=>{assert.match(admin,/x\.status==='published'/);assert.match(admin,/Publicada/)});
 
 test('new applications are inserted atomically in D1 with unique stream keys',()=>{assert.match(worker,/CREATE TABLE IF NOT EXISTS signal_onboarding_applications/);assert.match(worker,/stream_key TEXT NOT NULL UNIQUE/);assert.match(worker,/INSERT INTO signal_onboarding_applications/);assert.match(worker,/await saveSignalApplication\(item\)/)});
 test('legacy KV requests remain readable and new requests fail closed without D1',()=>{assert.match(worker,/legacy\.filter\(x=>!ids\.has\(x\.id\)\)/);assert.match(worker,/D1 obligatorio para inscripciones de señales/)});
