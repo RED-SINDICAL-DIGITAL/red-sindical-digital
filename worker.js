@@ -2589,6 +2589,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const catalogClaim=await env.DB.prepare("INSERT INTO signal_onboarding_catalog_locks(id,token,expires_at) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET token=excluded.token,expires_at=excluded.expires_at WHERE expires_at<? RETURNING token").bind(catalogLock,leaseToken,leaseUntil,Date.now()).first();
       if(!catalogClaim){await releasePublication('Catálogo ocupado; reintentar');return json({error:'Otra señal está siendo publicada. Reintentá en unos instantes.',conflict:true},409)}
       const releaseCatalogLock=async()=>env.DB.prepare("DELETE FROM signal_onboarding_catalog_locks WHERE id=? AND token=?").bind(catalogLock,leaseToken).run();
+      try {
       // The existing KV catalogs still require serialization across distinct applications.
       const radio=application.type==='radio',key=radio?'radios':'senales_oficiales';
       const existing=await getArray(key);
@@ -2616,6 +2617,13 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       await audit('publish_signal','signal',application.id,{type:application.type,published_id:id});
       await releaseCatalogLock();
       return json({success:true,id,type:application.type});
+      } catch (error) {
+        // Unexpected failures must not leave a stale lock or a permanently stuck request.
+        await releasePublication('Error inesperado durante publicación').catch(()=>{});
+        return json({error:'La publicación se interrumpió. Revisá la bandeja antes de reintentar.',recoverable:true},503);
+      } finally {
+        await releaseCatalogLock().catch(()=>{});
+      }
     }
     if (path === '/api/signal-onboarding/apply') {
       if (request.method!=='POST')return json({error:'Método no permitido'},405);
