@@ -21,3 +21,5 @@ test('stale publication recovery is admin-only and supports partial KV reconcili
 
 test('admin shows recovery only while publication is in progress',()=>{assert.match(admin,/recoverSignalOnboarding/);assert.match(admin,/x\.status==='publishing'/);assert.match(admin,/signal-onboarding\/recover/)});
 test('recovery does not swallow catalog lock query errors',()=>{assert.doesNotMatch(worker,/SELECT expires_at FROM signal_onboarding_catalog_locks[^\n]*\.catch\(\(\)=>null\)/)});
+
+test('unexpected publish errors release the D1 catalog lease',()=>{assert.match(worker,/finally \{\s*await releaseCatalogLock\(\)\.catch/);assert.match(worker,/releasePublication\('Error inesperado durante publicación'\)/)});
