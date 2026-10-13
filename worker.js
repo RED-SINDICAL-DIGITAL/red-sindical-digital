@@ -2539,6 +2539,31 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       await audit('review_signal_application','signal',String(b.id),{status});
       return json({success:true,item:list[i],publication_pending:true});
     }
+    // Explicit admin recovery for interrupted publications; never auto-publish.
+    if (path === '/api/signal-onboarding/recover') {
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(request.method!=='POST')return json({error:'Método no permitido'},405);
+      if(!hasD1())return json({error:'D1 no disponible'},503);
+      const b=await request.json().catch(()=>({}));
+      const id=String(b.id||'');
+      const requests=await signalApplications(),application=requests.find(x=>x.id===id);
+      if(!application)return json({error:'Solicitud no encontrada'},404);
+      if(application.status!=='publishing')return json({error:'La solicitud no requiere recuperación'},409);
+      const attempted=Date.parse(application.publication_attempt_at||'');
+      if(!Number.isFinite(attempted)||Date.now()-attempted<300000)return json({error:'Esperá cinco minutos desde el último intento antes de recuperar.'},409);
+      const lock=await env.DB.prepare("SELECT expires_at FROM signal_onboarding_catalog_locks WHERE id=?").bind('signal-catalog:'+application.type).first().catch(()=>null);
+      if(lock&&Number(lock.expires_at)>Date.now())return json({error:'El catálogo sigue ocupado; reintentá más tarde'},409);
+      const key=application.type==='radio'?'radios':'senales_oficiales';
+      const existing=await getArray(key);
+      const found=existing.find(x=>String(x.onboarding_id||'')===id);
+      if(found)return json({error:'La señal ya existe en el catálogo. Reintentá publicar para conciliarla después de la recuperación.',catalog_id:found.id,reconciliation_required:true},409);
+      await signalApplicationSchema();
+      const restored={...application,status:'approved',publication_error:'Recuperación manual: publicación interrumpida',publication_attempt_at:isoNow()};
+      const changed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing' RETURNING id").bind(JSON.stringify(restored),id).first();
+      if(!changed)return json({error:'El estado cambió; actualizá la bandeja'},409);
+      await audit('recover_signal_publication','signal',id,{type:application.type});
+      return json({success:true,status:'approved',id});
+    }
     // Publication is a separate, explicit, admin-only step after approval.
     if (path === '/api/signal-onboarding/publish') {
       if (!isAdmin()) return json({error:'No autorizado'},401);
