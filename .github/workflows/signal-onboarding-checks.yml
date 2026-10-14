@@ -8,6 +8,7 @@ on:
       - uadav-artist-account-v142.js
       - tests/artist-tool-access.test.cjs
       - tests/admin-api-retry.test.cjs
+      - tests/serve-admin-preview.mjs
       - tests/artist-pro-integration.mjs
       - tests/artist-claim-lifecycle.mjs
       - tests/pro-payment-fulfillment.mjs
@@ -47,6 +48,8 @@ jobs:
         run: node tests/artist-claim-lifecycle.mjs
       - name: Admin API replay protection
         run: node --test tests/admin-api-retry.test.cjs
+      - name: Isolated Admin preview boundaries
+        run: node tests/serve-admin-preview.mjs --check
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
