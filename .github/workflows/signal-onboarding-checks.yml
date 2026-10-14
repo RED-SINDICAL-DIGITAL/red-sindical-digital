@@ -7,6 +7,8 @@ on:
     paths:
       - uadav-artist-account-v142.js
       - tests/artist-tool-access.test.cjs
+      - tests/account-local-access.test.cjs
+      - uadav-account-sync.js
       - tests/artist-workspace-session.test.cjs
       - mi-espacio-artista.html
       - tests/admin-api-retry.test.cjs
@@ -60,6 +62,8 @@ jobs:
         run: node tests/presskit-publication-privacy.mjs
       - name: Artist public visibility and private metadata
         run: node tests/artist-public-visibility.mjs
+      - name: Local account access and recovery isolation
+        run: node --test tests/account-local-access.test.cjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
