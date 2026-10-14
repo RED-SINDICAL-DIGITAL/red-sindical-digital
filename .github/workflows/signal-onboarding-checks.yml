@@ -12,6 +12,7 @@ on:
       - tests/admin-api-retry.test.cjs
       - tests/serve-admin-preview.mjs
       - tests/artist-pro-integration.mjs
+      - tests/artist-public-visibility.mjs
       - tests/presskit-publication-privacy.mjs
       - tests/artist-claim-lifecycle.mjs
       - tests/pro-payment-fulfillment.mjs
@@ -57,6 +58,8 @@ jobs:
         run: node --test tests/artist-workspace-session.test.cjs
       - name: Press Kit publication privacy
         run: node tests/presskit-publication-privacy.mjs
+      - name: Artist public visibility and private metadata
+        run: node tests/artist-public-visibility.mjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
