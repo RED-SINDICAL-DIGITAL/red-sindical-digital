@@ -3535,7 +3535,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const artist=publicArtistFromItem(found);let kit=null;
       if(kind==='kit'){
         if(found.presskit_enabled===false||!hasD1())return json({error:'Presentación no disponible'},404,{'Cache-Control':'no-store'});
-        try{const row=await env.DB.prepare('SELECT public_json FROM artist_workspaces WHERE artist_id=?').bind(id).first();kit=safeJSON(row?.public_json,null)?.kit}catch{}
+        const plan=await env.DB.prepare('SELECT plan,pro_expires_at FROM artist_plan_state WHERE artist_id=?').bind(id).first();
+        const expires=plan?plan.pro_expires_at:found.pro_expires;
+        if(!(plan?plan.plan==='pro':found.pro_active===true)||(expires&&!(Date.parse(expires)>Date.now())))return json({error:'Presentación no disponible'},404,{'Cache-Control':'no-store'});
+        try{const row=await env.DB.prepare('SELECT public_json FROM artist_workspaces WHERE artist_id=?').bind(id).first();const published=safeJSON(row?.public_json,null);if(published)kit=uadavPublicPresskit(published,id).kit}catch{}
         if(!kit)return json({error:'Presentación no publicada'},404,{'Cache-Control':'no-store'});
       }
       const share=new URL(kind==='kit'?'/share/presskit':'/share/artista',url.origin);share.searchParams.set('id',id);
