@@ -48,6 +48,11 @@ try{
  await assert.rejects(call('admin/artist-claims','PUT',{id:winningClaim.data.id,status:'approved',review_note:'Synthetic recovery',confirm_conflict:true},env.ADMIN_KEY),/Synthetic catalog interruption/);
  assert.equal((await call('admin/artist-claims','PUT',{id:winningClaim.data.id,status:'approved',review_note:'Synthetic recovery',confirm_conflict:true},env.ADMIN_KEY)).status,200);
  const oldSession=await call('account/artist-session','POST',{artist_id:'QA-CLAIM-RACE'},winningAccount);assert.equal(oldSession.status,200);
+ await DB.prepare("CREATE TRIGGER fail_transfer BEFORE INSERT ON artist_owners WHEN NEW.verification_level='admin_transfer' BEGIN SELECT RAISE(ABORT,'Synthetic transfer interruption'); END").run();
+ await assert.rejects(call('admin/artist-ownership/transfer','POST',{claim_id:losingClaim.data.id,reason:'Verified synthetic ownership transfer',confirm_transfer:true},env.ADMIN_KEY),/Synthetic transfer interruption/);
+ await DB.prepare('DROP TRIGGER fail_transfer').run();
+ assert.equal((await DB.prepare("SELECT COUNT(*) n FROM artist_owners WHERE artist_id='QA-CLAIM-RACE' AND status='active'").first()).n,1,'interrupted transfer must retain original owner');
+ assert.equal((await call('account/artist-session','POST',{artist_id:'QA-CLAIM-RACE'},winningAccount)).status,200);
  const transfer=await call('admin/artist-ownership/transfer','POST',{claim_id:losingClaim.data.id,reason:'Verified synthetic ownership transfer',confirm_transfer:true},env.ADMIN_KEY);assert.equal(transfer.status,200);
  assert.equal((await call('account/artists','GET',null,newAccount)).data.artists.filter(a=>a.artist_id==='QA-CLAIM-RACE').length,1);
  assert.equal((await call('account/artist-session','POST',{artist_id:'QA-CLAIM-RACE'},winningAccount)).status,403);
