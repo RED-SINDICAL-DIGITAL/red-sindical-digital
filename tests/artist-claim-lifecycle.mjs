@@ -51,12 +51,22 @@ try{
  await DB.prepare("CREATE TRIGGER fail_transfer BEFORE INSERT ON artist_owners WHEN NEW.verification_level='admin_transfer' BEGIN SELECT RAISE(ABORT,'Synthetic transfer interruption'); END").run();
  await assert.rejects(call('admin/artist-ownership/transfer','POST',{claim_id:losingClaim.data.id,reason:'Verified synthetic ownership transfer',confirm_transfer:true},env.ADMIN_KEY),/Synthetic transfer interruption/);
  await DB.prepare('DROP TRIGGER fail_transfer').run();
+ assert.equal((await DB.prepare('SELECT COUNT(*) n FROM artist_ownership_transfers').first()).n,0,'failed transfer must not leave a committed operation');
  assert.equal((await DB.prepare("SELECT COUNT(*) n FROM artist_owners WHERE artist_id='QA-CLAIM-RACE' AND status='active'").first()).n,1,'interrupted transfer must retain original owner');
  assert.equal((await call('account/artist-session','POST',{artist_id:'QA-CLAIM-RACE'},winningAccount)).status,200);
  const transfer=await call('admin/artist-ownership/transfer','POST',{claim_id:losingClaim.data.id,reason:'Verified synthetic ownership transfer',confirm_transfer:true},env.ADMIN_KEY);assert.equal(transfer.status,200);
+ assert.equal(transfer.data.account_linked,true);
  assert.equal((await call('account/artists','GET',null,newAccount)).data.artists.filter(a=>a.artist_id==='QA-CLAIM-RACE').length,1);
  assert.equal((await call('account/artist-session','POST',{artist_id:'QA-CLAIM-RACE'},winningAccount)).status,403);
  assert.equal((await call('artist/workspace','GET',null,oldSession.data.token)).status,401);
  assert.equal((await call('account/artist-session','POST',{artist_id:'QA-CLAIM-RACE'},newAccount)).status,200);
+ for(const id of ['QA-TRANSFER-ONE','QA-TRANSFER-TWO'])await DB.prepare("INSERT INTO artist_claims(id,artist_id,name,email,status,created_at) VALUES(?,'QA-CLAIM-RACE','Synthetic','transfer@example.invalid','pending',?)").bind(id,new Date().toISOString()).run();
+ let transferReads=0,releaseTransfers;const transferGate=new Promise(resolve=>releaseTransfers=resolve);
+ DB.prepare=sql=>{const statement=prepare(sql);if(sql.startsWith("SELECT * FROM artist_owners WHERE artist_id=? AND status='active'")){const original=statement.first.bind(statement);statement.first=async()=>{const row=await original();transferReads++;if(transferReads===2)releaseTransfers();await transferGate;return row}}return statement};
+ const transfers=await Promise.all(['QA-TRANSFER-ONE','QA-TRANSFER-TWO'].map(claim_id=>call('admin/artist-ownership/transfer','POST',{claim_id,reason:'Synthetic competing transfer',confirm_transfer:true},env.ADMIN_KEY)));
+ DB.prepare=prepare;
+ assert.deepEqual(transfers.map(t=>t.status).sort(),[200,409],'a stale transfer must not overwrite the first completed transfer');
+ assert.equal((await DB.prepare("SELECT COUNT(*) n FROM artist_owners WHERE artist_id='QA-CLAIM-RACE' AND status='active'").first()).n,1);
+ assert.equal((await DB.prepare('SELECT COUNT(*) n FROM artist_ownership_transfers').first()).n,2,'only successful transfers enter the operation ledger');
  console.log('PASS: actual Worker + SQLite: draft rejection removes private access; existing artist claim requires admin verification; approval links automatically; unrelated account denied; owner revocation invalidates both account session and private invitation.');
 }finally{DB.close()}
