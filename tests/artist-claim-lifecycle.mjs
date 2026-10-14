@@ -31,5 +31,16 @@ try{
  assert.equal((await call('account/artist-session','POST',{artist_id:'QA-EXISTING-ARTIST'})).status,403);
  assert.equal((await call('artista/access?token='+issued.data.token)).status,401);
  assert.equal((await call('artista/access?token='+approved.data.token)).status,403);
+ assert.equal((await call('admin/artist-claims','PUT',{id:claim.data.id,status:'approved',review_note:'Stale repeat approval'},env.ADMIN_KEY)).status,409,'repeating approval must not resurrect a revoked owner');
+ const catalog=JSON.parse(kv.get('artistas'));catalog.push({id:'QA-CLAIM-RACE',nombre:'Concurrent synthetic artist',visible:true});kv.set('artistas',JSON.stringify(catalog));
+ const first=await call('artista/claim','POST',{artist_id:'QA-CLAIM-RACE',name:'First',email:'first@example.invalid'});
+ const second=await call('artista/claim','POST',{artist_id:'QA-CLAIM-RACE',name:'Second',email:'second@example.invalid'},other);
+ assert.equal(first.status,200);assert.equal(second.status,200);
+ const prepare=DB.prepare.bind(DB);let reads=0,release;const gate=new Promise(resolve=>release=resolve);
+ DB.prepare=sql=>{const statement=prepare(sql);if(sql.startsWith('SELECT id,claim_id,contact_email FROM artist_owners')){const original=statement.first.bind(statement);statement.first=async()=>{const row=await original();reads++;if(reads===2)release();await gate;return row}}return statement};
+ const results=await Promise.all([first,second].map(c=>call('admin/artist-claims','PUT',{id:c.data.id,status:'approved',review_note:'Synthetic concurrent verification',confirm_conflict:true},env.ADMIN_KEY)));
+ DB.prepare=prepare;
+ assert.deepEqual(results.map(r=>r.status).sort(),[200,409],'only one competing approval may succeed');
+ assert.equal((await DB.prepare("SELECT COUNT(*) n FROM artist_owners WHERE artist_id='QA-CLAIM-RACE' AND status='active'").first()).n,1);
  console.log('PASS: actual Worker + SQLite: draft rejection removes private access; existing artist claim requires admin verification; approval links automatically; unrelated account denied; owner revocation invalidates both account session and private invitation.');
 }finally{DB.close()}
