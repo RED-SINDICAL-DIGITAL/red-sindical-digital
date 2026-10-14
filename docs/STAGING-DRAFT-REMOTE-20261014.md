@@ -14,7 +14,7 @@ Se reutilizó la cuenta ficticia PRUEBA VISUAL y su artista QA 2235.
 - Se abrió el editor desde Mi perfil sin enlace manual.
 - Se guardó biografía ficticia con Guardar borrador; apareció Borrador guardado y el aviso de que aún no estaba publicado.
 - Se salió a Mi cuenta y se reabrió el editor con una nueva carga: se recuperó exactamente el texto de la biografía y el estado Borrador guardado.
-- La acción de envío a revisión se inició; su confirmación visual debe registrarse por separado.
+- Se pulsó Enviar a revisión: apareció En revisión y la confirmación Borrador guardado y enviado a revisión. Tu perfil sigue privado. Se capturó evidencia del texto recuperado, ambos botones y la confirmación.
 
 ## Pendiente
 Aprobación/rechazo real desde Admin, recuperación ante interrupción de aprobación, publicación de artista nuevo, concurrencia entre escritores D1/KV, móvil/tablet/TV, perfil PRO y pagos simulados completos. No se declara terminada la plataforma.
