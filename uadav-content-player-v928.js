@@ -32,16 +32,18 @@ function host(){try{return window.parent?.UADAVShellHost||window.parent?.UADAV_A
 async function resolveYoutube(n){
  const id=youtubeId(n);if(!id)return n;
  try{
-  const r=await fetch(API+'playback/youtube?id='+encodeURIComponent(id),{cache:'no-store'});
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),1800);let r;try{r=await fetch(API+'playback/youtube?id='+encodeURIComponent(id),{cache:'no-store',signal:controller.signal})}finally{clearTimeout(timer)}
   if(!r.ok)return n;
   const d=await r.json();
   return {...n,external_id:id,youtube_id:id,playback:d};
  }catch{return n}
 }
 async function open(item={}){
- let n=normalize(item);n=await resolveYoutube(n);
+ let n=normalize(item);
  const h=host();
+ // The host owns playback resolution; avoid a redundant metadata request here.
  if(h?.playContent){h.playContent(n);return true}
+ n=await resolveYoutube(n);
  try{
   if(window.parent!==window){window.parent.postMessage({type:'uadav:content-play',item:n},location.origin);return true}
  }catch{}
