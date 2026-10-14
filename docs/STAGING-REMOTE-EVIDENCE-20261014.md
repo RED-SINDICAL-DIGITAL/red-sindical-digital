@@ -38,3 +38,9 @@ Nada fusionado ni desplegado en produccion. Los resultados remotos acotados no c
 Captura image(20261014-173414).png: 7/7 comprobaciones completadas. Admin autorizado, consulta D1, inscripciones cerradas, marcador escrito y recuperado desde KV, lectura anonima rechazada. La clave no aparece en los resultados. Esto confirma escritura/lectura API de KV, ademas de la lectura del marcador manual anterior.
 
 Siguiente herramienta: tests/staging-signals-diagnostic.html. Crea dos registros sinteticos que permanecen en staging; migra KV->D1, verifica que pending no publica, separa aprobacion de publicacion, publica radio y TV, prueba dos intentos simultaneos de TV y reintento duplicado, comprueba catalogos y estados finales D1. No reproduce medios, no abre inscripciones y no certifica concurrencia general ni ausencia de todos los fallos KV. Flujo HTML ejecutado localmente contra Worker real + SQLite: PASA (tests/staging-signals-browser-flow.mjs). Ejecucion remota con Admin aun pendiente.
+
+## Radio/TV: circuito remoto completado
+
+Captura P(2).png del usuario: 19/19 comprobaciones completadas. Migracion de ambas solicitudes ficticias, pending denegado, aprobacion sin publicacion automatica, publicacion de radio y TV, doble intento TV con un conflicto, reintento duplicado denegado, una copia por catalogo y estado published confirmado en D1. Inscripciones continuan cerradas.
+
+Verificacion adicional directa de esta sesion: GET /api/radios HTTP200 con una radio sintetica, GET /api/senales_oficiales HTTP200 con una señal sintetica, config enabled/radio/tv=false. Los streams .invalid son ficticios: no se comprobo reproduccion ni disponibilidad de una fuente real. No extrapolar el caso de dos intentos a todas las condiciones de carrera, escritores KV o expiracion de leases.
