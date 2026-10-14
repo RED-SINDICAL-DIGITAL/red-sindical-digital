@@ -9,6 +9,7 @@ on:
       - tests/artist-tool-access.test.cjs
       - tests/artist-pro-integration.mjs
       - tests/pro-payment-fulfillment.mjs
+      - tests/pro-bank-confirmation.mjs
       - worker.js
       - admin.html
       - suma-tu-senal.html
@@ -38,6 +39,8 @@ jobs:
         run: node tests/artist-pro-integration.mjs
       - name: PRO payment fulfillment isolation
         run: node tests/pro-payment-fulfillment.mjs
+      - name: Signed bank adapter and interrupted fulfillment
+        run: node tests/pro-bank-confirmation.mjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
