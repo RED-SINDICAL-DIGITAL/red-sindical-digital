@@ -3,8 +3,18 @@ import assert from 'node:assert/strict';
 import {mkdtemp,writeFile,readFile,mkdir,readdir,rm} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {build,stagingOrigin,transform,API} from '../scripts/build-staging.mjs';
+import vm from 'node:vm';
+import {build,stagingOrigin,transform,stagingRuntime,API} from '../scripts/build-staging.mjs';
 const origin='https://uadav-stream-staging.pages.dev';
+test('relative API writes reach staging once and preserve request body and headers',async()=>{
+ const calls=[];const window={fetch:async(input,init)=>{calls.push({input,init});return new Response('{}');}};
+ const ctx={window,location:{origin,href:origin+'/usuario.html'},document:{addEventListener(){}},Request,URL,Promise,Error};
+ vm.runInNewContext('('+stagingRuntime.toString()+')('+JSON.stringify(origin)+','+JSON.stringify(API)+')',ctx);
+ const request=new Request(origin+'/api/account?x=1',{method:'POST',headers:{Authorization:'Bearer SYNTHETIC'},body:'test-data'});
+ await window.fetch(request);
+ assert.equal(calls.length,1);assert.equal(calls[0].input.url,API+'account?x=1');assert.equal(calls[0].input.method,'POST');assert.equal(calls[0].input.headers.get('Authorization'),'Bearer SYNTHETIC');assert.equal(await calls[0].input.text(),'test-data');
+ await assert.rejects(window.fetch('https://uadav-api.uadavstream.workers.dev/api/account'),/Production request blocked/);assert.equal(calls.length,1);
+});
 test('rejects production, lookalike origins and credential-bearing URLs',()=>{
  for(const s of ['https://uadavstream.com.ar','http://uadav-stream-staging.pages.dev','https://uadav-stream-staging.pages.dev.attacker.invalid','https://user@uadav-stream-staging.pages.dev','https://uadav-stream-staging.pages.dev/?x=1'])assert.throws(()=>stagingOrigin(s));
  assert.equal(stagingOrigin(origin),origin);
