@@ -1,3 +1,4 @@
+function uadavArtistPublicVisible(artist){return !!artist&&artist.visible!==false&&!['suspendido','bloqueado','oculto','suspended','blocked','hidden','deleted','eliminado'].includes(String(artist.estado||artist.status||'').toLowerCase());}
 function uadavPublicPresskit(data,artistId){
  const source=data?.kit||{},hidden=new Set(Array.isArray(source.appearance?.hidden_sections)?source.appearance.hidden_sections.filter(x=>['trajectory','video','shows','contact'].includes(x)):[]);
  const text=value=>typeof value==='string'?value.slice(0,4000):'';
@@ -2751,7 +2752,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
 
     if (path === '/api/artistas') {
-      if (request.method === 'GET') { const arr=await allCanonicalArtists(); return json(isAdmin()?arr:arr.filter(x=>x&&publicArtistFromItem(x).visible!==false)); }
+      if (request.method === 'GET') { const arr=await allCanonicalArtists(); return json(isAdmin()?arr:arr.filter(uadavArtistPublicVisible).map(publicArtistFromItem)); }
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
       const body=await request.json().catch(()=>null); if(!Array.isArray(body))return json({error:'Se esperaba un arreglo de artistas'},400);
       await putJSON('artistas',body); const d1sync=await safeD1('sync_artists',()=>syncArtistsD1(body)); await audit('replace_artists','artists',null,{count:body.length}); return json({success:true,count:body.length,d1_sync:d1sync});
@@ -3184,7 +3185,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const cf=request.cf||{};return json({country:String(cf.country||'AR'),province:String(cf.region||''),city:String(cf.city||''),source:'network'});
     }
     if(path==='/api/public/artistas-regional' && request.method==='GET'){
-      const cf=request.cf||{},province=String(url.searchParams.get('province')||cf.region||'').trim(),city=String(url.searchParams.get('city')||cf.city||'').trim(),limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||40))),norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(),wp=norm(province),wc=norm(city);
+      const cf=request.cf||{},regionMode=String(url.searchParams.get('region_mode')||'auto'),province=String(url.searchParams.get('province')||cf.region||'').trim(),city=String(url.searchParams.get('city')||cf.city||'').trim(),limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||40))),norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(),wp=norm(province),wc=norm(city);
       const arr=(await allCanonicalArtists()).map(publicArtistFromItem).filter(a=>a.visible!==false).map(a=>{const p=norm(a.provincia||a.region||''),ct=norm(a.ciudad||'');return{...a,_territorial_score:(wc&&ct===wc?500:0)+(wp&&p===wp?300:0)}}).sort((a,b)=>b._territorial_score-a._territorial_score);return json({items:arr.slice(0,limit),context:{province,city,mode:regionMode==='argentina'?'argentina':(url.searchParams.get('province')?'manual':'auto')}});
     }
     // --- FEDERACIÓN DE FUENTES EXTERNAS ---
@@ -3287,8 +3288,13 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     function publicArtistFromItem(a){ const canSupport=a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now())&&a.claimed===true&&a.claim_status==='approved'&&a.support_enabled!==false; return ({
       id:a.id||a.token||a.canal||a.nombre||a.nombre_artistico||'',
       nombre:a.nombre_artistico||a.nombre||'Artista',
+      nombre_artistico:a.nombre_artistico||a.nombre||'Artista',
       rubro:a.rubro||'Artista de variedades',
       ciudad:a.ciudad||a.region||'',
+      provincia:a.provincia||a.region||'',
+      pais:a.pais||'Argentina',
+      pro_active:a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now()),
+      pro_expires:a.pro_expires||null,
       foto:a.foto||a.imagen||a.thumbnail||'',
       portada:a.portada||a.banner||a.hero_imagen||'',
       bio:a.bio||'',
@@ -3300,7 +3306,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       youtube_bio:a.youtube_bio||'',
       origen:a.origen||a.source||'',
       stats:a.stats||{},
-      visible:a.visible!==false,
+      visible:uadavArtistPublicVisible(a),
       estado:a.estado||'catalogo',
       afiliado_verificado:a.afiliado_verificado===true,
       donacion_activa:canSupport&&a.donacion_activa===true,
@@ -3486,7 +3492,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if(path==='/api/public/artist-shorts' && request.method==='GET'){
       const raw=String(url.searchParams.get('artist_id')||url.searchParams.get('channel_id')||'').trim();if(!raw)return json([]);
       const artists=await allCanonicalArtists();const artist=artists.find(a=>{const p=publicArtistFromItem(a);return [p.id,p.canal,a.channel_id,a.youtube_id].some(v=>String(v||'')===raw)});if(!artist)return json([]);
-      const p=publicArtistFromItem(artist),channelRef=String(p.canal||'').trim();if(!channelRef)return json([]);const channel=await resolveChannelReference(channelRef).catch(()=>null)||channelRef;
+      const p=publicArtistFromItem(artist),channelRef=String(p.canal||'').trim();if(!p.visible||!channelRef)return json([]);const channel=await resolveChannelReference(channelRef).catch(()=>null)||channelRef;
       const cacheKey='artist_shorts_'+channel.replace(/[^A-Za-z0-9_-]/g,'').slice(0,100);
       try{const cached=await env.UADAV_DB.get(cacheKey,{type:'json'});if(Array.isArray(cached))return json(cached)}catch(_){}
       const vids=await invidiousChannelVideos(channel,36).catch(()=>[]);
@@ -3552,7 +3558,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       let found=arr.find(a=>{const p=publicArtistFromItem(a);const candidates=[a.id,a.token,a.canal,a.channel_id,a.youtube_id,a.nombre,a.nombre_artistico,p.id,p.canal,p.nombre];return candidates.some(v=>norm(v)===id);}) || arr.find(a=>{const p=publicArtistFromItem(a);const name=norm(p.nombre);return id&&name&&name===id.replace(/[_-]+/g,' ');});
       if(!found)found=await artistFromD1(rawId);
       if(!found)return json({error:'Artista no encontrado'},404);
-      const p=publicArtistFromItem(found); if(!p.visible && !p.afiliado_verificado)return json({error:'Perfil no disponible'},404);
+      const p=publicArtistFromItem(found); if(!p.visible)return json({error:'Perfil no disponible'},404,{'Cache-Control':'no-store'});
       if(hasD1())try{const h=await env.DB.prepare('SELECT handle FROM artist_current_handles WHERE artist_id=?').bind(String(p.id)).first();if(h?.handle)p.username=h.handle}catch{}
       return json(p);
     }
