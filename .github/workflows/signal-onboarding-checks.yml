@@ -5,6 +5,7 @@ on:
       - audit/public-job-status-20261012
   pull_request:
     paths:
+      - tests/artist-profile-drafts.mjs
       - soy-artista.html
       - uadav-artist-onboarding-v145.js
       - tests/artist-onboarding-start.test.cjs
@@ -88,6 +89,8 @@ jobs:
         run: UADAV_STAGING_ORIGIN=https://uadav-stream-staging.pages.dev node scripts/build-staging.mjs
       - name: First artist account start
         run: node --test tests/artist-onboarding-start.test.cjs
+      - name: Private profile draft lifecycle
+        run: node tests/artist-profile-drafts.mjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
