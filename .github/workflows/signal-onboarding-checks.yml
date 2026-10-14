@@ -12,6 +12,7 @@ on:
       - tests/signal-review-integration.mjs
       - tests/private-kv-fallback.mjs
       - tests/signal-migration-integration.mjs
+      - tests/signal-publication-lease.mjs
       - tests/sqlite-d1.mjs
       - .github/workflows/signal-onboarding-checks.yml
   workflow_dispatch:
@@ -33,6 +34,8 @@ jobs:
         run: node tests/signal-review-integration.mjs
       - name: Signal migration and failure recovery
         run: node tests/signal-migration-integration.mjs
+      - name: Publication lease and attempt isolation
+        run: node tests/signal-publication-lease.mjs
       - name: Private KV fallback authorization
         run: node tests/private-kv-fallback.mjs
 
