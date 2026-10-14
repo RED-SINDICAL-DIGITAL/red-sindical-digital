@@ -8,6 +8,7 @@ on:
       - uadav-artist-account-v142.js
       - tests/artist-tool-access.test.cjs
       - tests/artist-pro-integration.mjs
+      - tests/artist-claim-lifecycle.mjs
       - tests/pro-payment-fulfillment.mjs
       - tests/pro-bank-confirmation.mjs
       - worker.js
@@ -41,6 +42,8 @@ jobs:
         run: node tests/pro-payment-fulfillment.mjs
       - name: Signed bank adapter and interrupted fulfillment
         run: node tests/pro-bank-confirmation.mjs
+      - name: Artist claim and ownership lifecycle
+        run: node tests/artist-claim-lifecycle.mjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
