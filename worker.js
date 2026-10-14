@@ -5,7 +5,7 @@ async function uadavReadArtistInquiries(env){
   const db=typeof env.DB.withSession==='function'?env.DB.withSession('first-primary'):env.DB;
   const exists=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='contracts'").first();
   if(exists){const rows=await db.prepare("SELECT id,artist_id,data_json,created_at FROM contracts WHERE json_valid(data_json) AND json_extract(data_json,'$.record_type')='artist_inquiry'").all();
-   for(const row of rows.results||[]){let item;try{item=JSON.parse(row.data_json)}catch{continue}items.set(String(row.id),{...item,id:row.id,artist_id:row.artist_id,creado:row.created_at});}
+   for(const row of rows.results||[]){let item;try{item=JSON.parse(row.data_json)}catch{continue}const {record_type,request_fingerprint,...data}=item;items.set(String(row.id),{...data,id:row.id,artist_id:row.artist_id,creado:row.created_at});}
   }
  }
  return [...items.values()];
@@ -3843,7 +3843,28 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if(path==='/api/contrataciones' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); if(!b.artist_id||!b.nombre||!b.email)return json({error:'Artista, nombre y email son obligatorios'},400); if(b.acepta_contrato!==true)return json({error:'Debe aceptar el contrato/condiciones para continuar'},400);
       const artists=await getArray('artistas'); const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(b.artist_id)); if(!artist)return json({error:'Artista no encontrado'},404); const pro=artist.pro_active===true&&(!artist.pro_expires||Date.parse(artist.pro_expires)>Date.now()); if(!uadavArtistPublicVisible(artist)||artist.marketplace_enabled===false)return json({error:'Este perfil no recibe solicitudes de contratación.'},403);
-      if(!hasD1())return json({error:'No pudimos guardar la consulta. El servicio requiere D1.'},503); const list=await uadavReadArtistInquiries(env); const item={id:'CON-'+crypto.randomUUID(),creado:new Date().toISOString(),artist_id:String(b.artist_id),nombre:String(b.nombre).slice(0,140),empresa:String(b.empresa||'').slice(0,160),email:String(b.email).slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),evento:String(b.evento||'').slice(0,220),fecha:String(b.fecha||''),ciudad:String(b.ciudad||'').slice(0,100),honorario:String(b.honorario||'').slice(0,80),detalles:String(b.detalles||'').slice(0,3000),contrato_version:String(b.contrato_version||'CORE-1.0').slice(0,40),contrato_url:String(b.contrato_url||'').slice(0,500),acepta_contrato:true,estado:'pendiente'}; if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);try{await env.DB.prepare('INSERT INTO contracts(id,artist_id,producer_id,status,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?)').bind(item.id,item.artist_id,'',item.estado,JSON.stringify({...item,record_type:'artist_inquiry'}),item.creado,item.creado).run()}catch{return json({error:'No pudimos guardar la consulta. Volvé a intentarlo.',code:'INQUIRY_SAVE_FAILED'},503)} return json({success:true,item});
+      if(!hasD1())return json({error:'No pudimos guardar la consulta. El servicio requiere D1.'},503);
+      const requestId=b.request_id;
+      if(requestId!==undefined&&(typeof requestId!=='string'||! /^[A-Za-z0-9_-]{16,100}$/.test(requestId)))return json({error:'Identificador de envío inválido'},400);
+      const item={id:'CON-'+crypto.randomUUID(),creado:new Date().toISOString(),artist_id:String(b.artist_id),nombre:String(b.nombre).slice(0,140),empresa:String(b.empresa||'').slice(0,160),email:String(b.email).slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),evento:String(b.evento||'').slice(0,220),fecha:String(b.fecha||''),ciudad:String(b.ciudad||'').slice(0,100),honorario:String(b.honorario||'').slice(0,80),detalles:String(b.detalles||'').slice(0,3000),contrato_version:String(b.contrato_version||'CORE-1.0').slice(0,40),contrato_url:String(b.contrato_url||'').slice(0,500),acepta_contrato:true,estado:'pendiente'};
+      const {id:ignoredId,creado:ignoredCreated,...payload}=item;
+      const fingerprint=requestId?await uadavDigest(JSON.stringify(payload)):null;
+      if(requestId)item.id='CON-'+await uadavDigest('artist-inquiry|'+requestId);
+      const replay=async()=>{
+        const row=await env.DB.prepare('SELECT artist_id,data_json FROM contracts WHERE id=?').bind(item.id).first();
+        if(!row)return null;const previous=safeJSON(row.data_json,null);
+        if(previous?.record_type!=='artist_inquiry'||previous.request_fingerprint!==fingerprint||String(row.artist_id)!==item.artist_id)return json({error:'Este envío ya se usó con otros datos. Revisá la solicitud antes de volver a enviarla.',code:'INQUIRY_REQUEST_CONFLICT'},409);
+        const {record_type,request_fingerprint,...saved}=previous;return json({success:true,item:saved,replayed:true});
+      };
+      try{
+        if(requestId){const existing=await replay();if(existing)return existing;}
+        const list=await uadavReadArtistInquiries(env);
+        if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);
+        const result=await env.DB.prepare('INSERT OR IGNORE INTO contracts(id,artist_id,producer_id,status,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?)')
+          .bind(item.id,item.artist_id,'',item.estado,JSON.stringify({...item,record_type:'artist_inquiry',...(requestId?{request_fingerprint:fingerprint}:{})}),item.creado,item.creado).run();
+        if(Number(result.meta?.changes)!==1){if(requestId){const existing=await replay();if(existing)return existing;}return json({error:'No pudimos confirmar el guardado de la consulta.',code:'INQUIRY_SAVE_FAILED'},503);}
+        return json({success:true,item});
+      }catch{return json({error:'No pudimos guardar la consulta. Volvé a intentarlo.',code:'INQUIRY_SAVE_FAILED'},503)}
     }
     if(path==='/api/contrataciones' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await artistInquiries());}
     if(path==='/api/admin/artista_contenido' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await getArray('artista_contenido'));}
