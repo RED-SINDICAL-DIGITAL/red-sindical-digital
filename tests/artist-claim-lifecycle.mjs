@@ -45,7 +45,8 @@ try{
  assert.equal((await DB.prepare("SELECT COUNT(*) n FROM artist_owners WHERE artist_id='QA-CLAIM-RACE' AND status='active'").first()).n,1);
  const winner=results.findIndex(r=>r.status===200),winningClaim=[first,second][winner],losingClaim=[first,second][1-winner],winningAccount=[account,other][winner],newAccount=[account,other][1-winner];
  failCatalog=true;
- await assert.rejects(call('admin/artist-claims','PUT',{id:winningClaim.data.id,status:'approved',review_note:'Synthetic recovery',confirm_conflict:true},env.ADMIN_KEY),/Synthetic catalog interruption/);
+ const interrupted=await call('admin/artist-claims','PUT',{id:winningClaim.data.id,status:'approved',review_note:'Synthetic recovery',confirm_conflict:true},env.ADMIN_KEY);
+ assert.equal(interrupted.status,503);assert.equal(interrupted.data.code,'ARTIST_APPROVAL_SYNC_PENDING');assert.equal(interrupted.data.approval_saved,true);assert.equal(interrupted.data.retryable,true);assert.equal(interrupted.data.claim_id,winningClaim.data.id);assert.equal(interrupted.data.token,undefined);
  assert.equal((await call('admin/artist-claims','PUT',{id:winningClaim.data.id,status:'approved',review_note:'Synthetic recovery',confirm_conflict:true},env.ADMIN_KEY)).status,200);
  const oldSession=await call('account/artist-session','POST',{artist_id:'QA-CLAIM-RACE'},winningAccount);assert.equal(oldSession.status,200);
  await DB.prepare("CREATE TRIGGER fail_transfer BEFORE INSERT ON artist_owners WHEN NEW.verification_level='admin_transfer' BEGIN SELECT RAISE(ABORT,'Synthetic transfer interruption'); END").run();
