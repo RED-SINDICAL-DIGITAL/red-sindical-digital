@@ -38,5 +38,10 @@ try{
  await DB.prepare("CREATE TRIGGER fail_inquiry BEFORE INSERT ON contracts BEGIN SELECT RAISE(ABORT,'Synthetic inquiry interruption'); END").run();
  const failed=await call('contrataciones','POST',{artist_id:'QA-B',nombre:'Synthetic',email:'client@example.invalid',acepta_contrato:true});assert.equal(failed.status,503);assert.equal(failed.data.code,'INQUIRY_SAVE_FAILED');
  await DB.prepare('DROP TRIGGER fail_inquiry').run();assert.equal((await call('artist/inquiries','GET',null,b)).data.items.length,3);
+ const retryBody={request_id:'QA-REQUEST-1234567890123456',artist_id:'QA-B',nombre:'Retry synthetic client',email:'retry@example.invalid',evento:'Idempotent request',acepta_contrato:true};
+ const attempts=await Promise.all([call('contrataciones','POST',retryBody),call('contrataciones','POST',retryBody)]);assert.ok(attempts.every(r=>r.status===200));assert.equal(attempts[0].data.item.id,attempts[1].data.item.id,'same submission key must create only one inquiry');
+ assert.equal((await call('contrataciones','POST',{...retryBody,evento:'Changed payload'})).status,409);
+ assert.equal((await call('contrataciones','POST',{...retryBody,request_id:'short'})).status,400);
+ const finalInbox=await call('artist/inquiries','GET',null,b);assert.equal(finalInbox.data.items.filter(x=>x.evento==='Idempotent request').length,1);
  console.log('PASS: actual Worker + SQLite free inquiry delivery, private recipient-only access, state persistence, invalid state denial and active-owner/suspended profile safeguards.');
 }finally{DB.close()}
