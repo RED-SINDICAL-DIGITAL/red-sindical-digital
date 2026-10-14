@@ -91,6 +91,7 @@ No se fusiono, cerro ni cambio ninguno de estos PR. V11 aparece en la evolucion 
 - node --check worker.js y smoke staging: PASAN.
 - Smoke rechaza expresamente URL de produccion ANTES de hacer red: PASA como prueba negativa.
 - Estas pruebas NO son Cloudflare D1 remoto, KV real, reproduccion ni E2E visual. Tampoco certifican toda la suite historica.
+- Confirmacion remota posterior, commit 5986b35: Actions Signal onboarding 38554758922 PASA, incluido Worker + SQLite y guardia KV; Job status 38554758908 PASA. Se inspeccionaron todos los pasos del job, no solo el estado del PR.
 
 ## Plan de ejecucion
 
