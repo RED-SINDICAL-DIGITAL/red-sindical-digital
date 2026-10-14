@@ -25,3 +25,10 @@ La cuenta se identifica como PRUEBA STAGING · SIN DATOS PERSONALES. Queda un re
 ACCOUNT_ALLOWED_ORIGINS y PUBLIC_SITE_URL deben apuntar al entorno de pruebas. El Worker usa valores de produccion como fallback si no se configuran; no conectar un frontend de pruebas hasta revisar sus URLs hardcoded. No agregar dominios/rutas productivas, cron, pagos, correo ni secretos productivos. La identidad PLATFORM refleja almacenamiento nuevo, no perdida de la configuracion real.
 
 Nada fusionado ni desplegado en produccion. Los resultados remotos acotados no certifican el conjunto de la plataforma.
+
+## Verificaciones adicionales
+
+- ACCOUNT_ALLOWED_ORIGINS y PUBLIC_SITE_URL configurados por el usuario al hostname de staging (captura verificada).
+- API /account con Origin https://uadavstream.com.ar: 403 ORIGIN_NOT_ALLOWED, sin Access-Control-Allow-Origin. Con Origin de staging: 401 por falta de credencial y CORS para el origen correcto. Esto comprueba el control de origen de cuentas, no el de toda la API general.
+- Usuario guardo secciones_version=1 en KV de staging. GET remoto /api/secciones_version: HTTP200, JSON numerico 1. Lectura real de KV comprobada; escritura desde API aun pendiente.
+- Preparado tests/staging-diagnostic.html: destino fijo staging, clave en memoria durante la ejecucion y borrada del campo al terminar, sin dependencias externas ni almacenamiento local. Prueba Admin, consulta D1 y escritura/lectura del marcador staging_kv_probe. Sintaxis revisada; ejecucion interactiva con Admin pendiente. Descargar y abrir localmente; nunca introducir clave de produccion.
