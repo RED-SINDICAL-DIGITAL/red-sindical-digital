@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {webcrypto} from 'node:crypto';
+import {sqliteD1} from './sqlite-d1.mjs';
+globalThis.crypto ||= webcrypto;
+const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url),'utf8')).toString('base64'));
+const DB=sqliteD1(),kv=new Map(),account='UAC-'+'c'.repeat(64),other='UAC-'+'d'.repeat(64);
+const env={DB,ADMIN_KEY:'local-claims-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
+async function call(route,method='GET',body,credential=account){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential},...(body?{body:JSON.stringify(body)}:{})}),env,{});return {status:r.status,data:await r.json()};}
+try{
+ for(const credential of [account,other])assert.equal((await call('account','POST',{data:{uadav_user_v11:{name:'Synthetic claim account'}}},credential)).status,200);
+ const draft=await call('artista/claim','POST',{new_profile:true,artist_name:'Synthetic rejected artist',rubro:'Magia',name:'Ficticio',email:'draft@example.invalid'});assert.equal(draft.status,200);assert.equal(draft.data.private_access,true);
+ const draftSession=await call('account/artist-session','POST',{artist_id:draft.data.artist_id});assert.equal(draftSession.status,200);
+ assert.equal((await call('admin/artist-claims','PUT',{id:draft.data.id,status:'rejected',review_note:'Prueba de rechazo'},env.ADMIN_KEY)).status,200);
+ assert.equal((await call('account/artists')).data.artists.length,0);
+ assert.equal((await call('account/artist-session','POST',{artist_id:draft.data.artist_id})).status,403);
+ assert.equal((await call('artist/workspace','GET',null,draftSession.data.token)).status,401);
+ const list=JSON.parse(kv.get('artistas'));list.push({id:'QA-EXISTING-ARTIST',nombre:'Existing synthetic artist',visible:true});kv.set('artistas',JSON.stringify(list));
+ const claim=await call('artista/claim','POST',{artist_id:'QA-EXISTING-ARTIST',name:'Ficticio',email:'owner@example.invalid'});assert.equal(claim.status,200);assert.equal(claim.data.private_access,false);
+ assert.equal((await call('account/artist-session','POST',{artist_id:'QA-EXISTING-ARTIST'})).status,403);
+ assert.ok((await call('account/artists')).data.claims.some(c=>c.id===claim.data.id));
+ assert.equal((await call('admin/artist-claims','PUT',{id:claim.data.id,status:'approved',review_note:'Verificación sintética'},other)).status,401);
+ assert.equal((await call('admin/artist-claims','PUT',{id:claim.data.id,status:'approved'},env.ADMIN_KEY)).status,400);
+ const approved=await call('admin/artist-claims','PUT',{id:claim.data.id,status:'approved',review_note:'Verificación sintética'},env.ADMIN_KEY);assert.equal(approved.status,200);assert.equal(approved.data.account_linked,true);
+ const linked=await call('account/artists');assert.equal(linked.data.artists.length,1);assert.equal(linked.data.artists[0].artist_id,'QA-EXISTING-ARTIST');
+ const issued=await call('account/artist-session','POST',{artist_id:'QA-EXISTING-ARTIST'});assert.equal(issued.status,200);
+ assert.equal((await call('account/artist-session','POST',{artist_id:'QA-EXISTING-ARTIST'},other)).status,403);
+ assert.equal((await call('artista/access?token='+issued.data.token)).status,200);
+ assert.equal((await call('admin/artist-owners/revoke','POST',{id:'OWN-'+claim.data.id,note:'Revocación sintética'},env.ADMIN_KEY)).status,200);
+ assert.equal((await call('account/artists')).data.artists.length,0);
+ assert.equal((await call('account/artist-session','POST',{artist_id:'QA-EXISTING-ARTIST'})).status,403);
+ assert.equal((await call('artista/access?token='+issued.data.token)).status,401);
+ assert.equal((await call('artista/access?token='+approved.data.token)).status,403);
+ console.log('PASS: actual Worker + SQLite: draft rejection removes private access; existing artist claim requires admin verification; approval links automatically; unrelated account denied; owner revocation invalidates both account session and private invitation.');
+}finally{DB.close()}
