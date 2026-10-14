@@ -7,6 +7,8 @@ on:
     paths:
       - uadav-artist-account-v142.js
       - tests/artist-tool-access.test.cjs
+      - tests/artist-workspace-session.test.cjs
+      - mi-espacio-artista.html
       - tests/admin-api-retry.test.cjs
       - tests/serve-admin-preview.mjs
       - tests/artist-pro-integration.mjs
@@ -50,6 +52,8 @@ jobs:
         run: node --test tests/admin-api-retry.test.cjs
       - name: Isolated Admin preview boundaries
         run: node tests/serve-admin-preview.mjs --check
+      - name: Artist workspace identity isolation
+        run: node --test tests/artist-workspace-session.test.cjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
