@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,writeFile,readFile,mkdir,readdir,rm} from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {build,stagingOrigin,transform,API} from '../scripts/build-staging.mjs';
+const origin='https://uadav-stream-staging.pages.dev';
+test('rejects production, lookalike origins and credential-bearing URLs',()=>{
+ for(const s of ['https://uadavstream.com.ar','http://uadav-stream-staging.pages.dev','https://uadav-stream-staging.pages.dev.attacker.invalid','https://user@uadav-stream-staging.pages.dev','https://uadav-stream-staging.pages.dev/?x=1'])assert.throws(()=>stagingOrigin(s));
+ assert.equal(stagingOrigin(origin),origin);
+});
+test('rewrites absolute and escaped production destinations including www',()=>{
+ const s=transform('https://www.uadavstream.com.ar/a https:\\/\\/uadav-api.uadavstream.workers.dev/api/ https://uadavstream.com.ar',origin);
+ assert(!s.includes('www.uadav-stream'));assert(!s.includes('uadavstream.com.ar'));assert(s.includes(new URL(API).hostname));
+});
+test('build isolates assets without copying backend, deployment metadata or private trees',async()=>{
+ const root=await mkdtemp(path.join(os.tmpdir(),'uadav-build-'));
+ try{
+  for(const p of ['index.html','app.html','usuario.html','gestionar-artista.html'])await writeFile(path.join(root,p),'<html><head><title>T</title></head><body><script>fetch("https://uadav-api.uadavstream.workers.dev/api/")</script></body></html>');
+  await writeFile(path.join(root,'uadav-account-sync.js'),'const api="https://uadav-api.uadavstream.workers.dev/api/";');
+  for(const p of ['worker.js','_worker.js','CNAME','secret.env'])await writeFile(path.join(root,p),'DO NOT PUBLISH');
+  await mkdir(path.join(root,'docs'));await writeFile(path.join(root,'docs','private.html'),'DO NOT PUBLISH');
+  await mkdir(path.join(root,'assets'));await writeFile(path.join(root,'assets','logo.svg'),'<svg/>');
+  const result=await build(root,origin);const names=await readdir(result.out);
+  for(const p of ['worker.js','_worker.js','CNAME','secret.env','docs'])assert(!names.includes(p),p);
+  const page=await readFile(path.join(result.out,'usuario.html'),'utf8');assert(page.includes('noindex'));assert(page.indexOf('staging-bootstrap.js')<page.indexOf('fetch('));assert(!page.includes('uadav-api.uadavstream.workers.dev'));
+  const headers=await readFile(path.join(result.out,'_headers'),'utf8');const connect=headers.match(/connect-src ([^;]+)/)[1];assert(connect.includes(new URL(API).origin));assert(!connect.includes('https:;'));assert(!connect.includes('uadav-api.uadavstream.workers.dev'));
+  assert.equal(await readFile(path.join(root,'worker.js'),'utf8'),'DO NOT PUBLISH');
+  assert(result.manifest.files.every(f=>/^[a-f0-9]{64}$/.test(f.sha256)));
+  await assert.rejects(build(root,origin),/already exists/);
+ }finally{await rm(root,{recursive:true,force:true});}
+});
