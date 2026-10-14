@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src https://uadav-api-staging.uadavstream.workers.dev; base-uri 'none'; form-action 'none'">
+<title>UADAV · Diagnóstico de staging</title>
+<style>body{margin:0;background:#080d16;color:#eef3ff;font:16px/1.6 system-ui}main{max-width:760px;margin:40px auto;padding:24px}section{padding:24px;border:1px solid #334155;border-radius:18px;background:#111827}h1{font-size:28px;line-height:1.2}p,small{color:#b7c5d9}label{display:block;margin-top:20px}input,button{box-sizing:border-box;font:inherit;padding:13px;border-radius:10px}input{width:100%;background:#080d16;border:1px solid #64748b;color:white}button{margin-top:18px;border:0;background:#2f6df6;color:white;font-weight:700;cursor:pointer}button:disabled{opacity:.55;cursor:wait}li{padding:8px 0;overflow-wrap:anywhere}:focus-visible{outline:3px solid #9fc5ff;outline-offset:3px}code{overflow-wrap:anywhere}</style></head>
+<body><main><small>SOLO ENTORNO DE PRUEBAS</small><h1>Comprobar el staging de UADAV</h1>
+<section><p>Destino fijo: <code>uadav-api-staging.uadavstream.workers.dev</code></p>
+<p>Comprueba D1, acceso administrativo y KV. Escribe únicamente la clave de prueba <code>staging_kv_probe</code>. Conserva los datos existentes y no abre inscripciones, publica señales ni envía pagos o notificaciones.</p>
+<label for="secret">ADMIN_KEY del Worker de pruebas</label><input id="secret" type="password" autocomplete="off" spellcheck="false" aria-describedby="privacy">
+<small id="privacy">Se envía por HTTPS únicamente a tu API de staging. No se guarda ni se incluye en los resultados. No uses la clave de producción.</small>
+<br><button id="run" type="button">Ejecutar comprobaciones</button><p id="status" role="status" aria-live="polite">Listo para probar.</p><ol id="results"></ol></section></main>
+<script>
+'use strict';
+const BASE='https://uadav-api-staging.uadavstream.workers.dev/api/';
+const field=document.getElementById('secret'),button=document.getElementById('run'),status=document.getElementById('status'),results=document.getElementById('results');
+button.onclick=async()=>{
+ let secret=field.value.trim();if(!secret){status.textContent='Ingresá la clave de staging.';field.focus();return}
+ button.disabled=true;results.replaceChildren();status.textContent='Ejecutando pruebas…';
+ function passed(label){const li=document.createElement('li');li.textContent='✓ '+label;results.append(li)}
+ async function call(path,{method='GET',body,auth=false}={}){
+  const url=new URL(path,BASE);if(url.origin!==new URL(BASE).origin||!url.pathname.startsWith('/api/'))throw Error('Destino no permitido');
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+  try{const r=await fetch(url,{method,redirect:'error',cache:'no-store',signal:controller.signal,headers:{'Content-Type':'application/json',...(auth?{Authorization:'Bearer '+secret}:{})},...(body?{body:JSON.stringify(body)}:{})});return {status:r.status,body:await r.json()}}finally{clearTimeout(timer)}
+ }
+ function check(condition,message){if(!condition)throw Error(message)}
+ try{
+  const health=await call('health');check(health.status===200&&health.body.kv===true&&health.body.d1===true,'No se confirmaron ambos bindings.');passed('Worker con D1 y KV conectados');
+  const anonymous=await call('signal-onboarding/applications');check(anonymous.status===401,'La bandeja administrativa debe denegar accesos anónimos.');passed('Bandeja privada protegida');
+  const inbox=await call('signal-onboarding/applications',{auth:true});check(inbox.status===200&&Array.isArray(inbox.body),'No se pudo verificar Admin y consultar las solicitudes D1. Revisá la clave de staging.');passed('Admin autorizado y consulta D1 completada');
+  const config=await call('signal-onboarding/config');check(config.status===200&&config.body.enabled===false&&config.body.radio===false&&config.body.tv===false,'Las inscripciones deben permanecer cerradas.');passed('Inscripciones públicas cerradas');
+  const marker={test:'staging-only',nonce:crypto.randomUUID(),created_at:new Date().toISOString()};
+  const write=await call('staging_kv_probe',{method:'POST',body:marker,auth:true});check(write.status===200&&write.body.success===true,'Falló la escritura KV de prueba.');passed('Marcador de prueba escrito en KV');
+  const read=await call('staging_kv_probe',{auth:true});check(read.status===200&&read.body.nonce===marker.nonce,'KV todavía no devolvió el marcador esperado. Puede haber demora de propagación; reintentá más tarde.');passed('Marcador recuperado correctamente desde KV');
+  const denied=await call('staging_kv_probe');check(denied.status===401,'El marcador privado no debe ser público.');passed('Lectura anónima del marcador rechazada');
+  status.textContent='Comprobaciones completadas. Podés compartir una captura de estos resultados.';
+ }catch(error){status.textContent=error.name==='AbortError'?'Una solicitud demoró demasiado. Revisá los pasos completados antes de reintentar.':error.message}
+ finally{secret='';field.value='';button.disabled=false}
+};
+</script></body></html>
