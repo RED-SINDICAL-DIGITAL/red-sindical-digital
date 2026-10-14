@@ -32,3 +32,9 @@ Nada fusionado ni desplegado en produccion. Los resultados remotos acotados no c
 - API /account con Origin https://uadavstream.com.ar: 403 ORIGIN_NOT_ALLOWED, sin Access-Control-Allow-Origin. Con Origin de staging: 401 por falta de credencial y CORS para el origen correcto. Esto comprueba el control de origen de cuentas, no el de toda la API general.
 - Usuario guardo secciones_version=1 en KV de staging. GET remoto /api/secciones_version: HTTP200, JSON numerico 1. Lectura real de KV comprobada; escritura desde API aun pendiente.
 - Preparado tests/staging-diagnostic.html: destino fijo staging, clave en memoria durante la ejecucion y borrada del campo al terminar, sin dependencias externas ni almacenamiento local. Prueba Admin, consulta D1 y escritura/lectura del marcador staging_kv_probe. Sintaxis revisada; ejecucion interactiva con Admin pendiente. Descargar y abrir localmente; nunca introducir clave de produccion.
+
+## Diagnostico administrativo confirmado por el usuario
+
+Captura image(20261014-173414).png: 7/7 comprobaciones completadas. Admin autorizado, consulta D1, inscripciones cerradas, marcador escrito y recuperado desde KV, lectura anonima rechazada. La clave no aparece en los resultados. Esto confirma escritura/lectura API de KV, ademas de la lectura del marcador manual anterior.
+
+Siguiente herramienta: tests/staging-signals-diagnostic.html. Crea dos registros sinteticos que permanecen en staging; migra KV->D1, verifica que pending no publica, separa aprobacion de publicacion, publica radio y TV, prueba dos intentos simultaneos de TV y reintento duplicado, comprueba catalogos y estados finales D1. No reproduce medios, no abre inscripciones y no certifica concurrencia general ni ausencia de todos los fallos KV. Flujo HTML ejecutado localmente contra Worker real + SQLite: PASA (tests/staging-signals-browser-flow.mjs). Ejecucion remota con Admin aun pendiente.
