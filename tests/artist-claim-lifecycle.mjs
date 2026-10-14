@@ -5,7 +5,8 @@ import {sqliteD1} from './sqlite-d1.mjs';
 globalThis.crypto ||= webcrypto;
 const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url),'utf8')).toString('base64'));
 const DB=sqliteD1(),kv=new Map(),account='UAC-'+'c'.repeat(64),other='UAC-'+'d'.repeat(64);
-const env={DB,ADMIN_KEY:'local-claims-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
+let failCatalog=false;
+const env={DB,ADMIN_KEY:'local-claims-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>{if(k==='artistas'&&failCatalog){failCatalog=false;throw Error('Synthetic catalog interruption')}kv.set(k,v)}}};
 async function call(route,method='GET',body,credential=account){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential},...(body?{body:JSON.stringify(body)}:{})}),env,{});return {status:r.status,data:await r.json()};}
 try{
  for(const credential of [account,other])assert.equal((await call('account','POST',{data:{uadav_user_v11:{name:'Synthetic claim account'}}},credential)).status,200);
@@ -42,5 +43,15 @@ try{
  DB.prepare=prepare;
  assert.deepEqual(results.map(r=>r.status).sort(),[200,409],'only one competing approval may succeed');
  assert.equal((await DB.prepare("SELECT COUNT(*) n FROM artist_owners WHERE artist_id='QA-CLAIM-RACE' AND status='active'").first()).n,1);
+ const winner=results.findIndex(r=>r.status===200),winningClaim=[first,second][winner],losingClaim=[first,second][1-winner],winningAccount=[account,other][winner],newAccount=[account,other][1-winner];
+ failCatalog=true;
+ await assert.rejects(call('admin/artist-claims','PUT',{id:winningClaim.data.id,status:'approved',review_note:'Synthetic recovery',confirm_conflict:true},env.ADMIN_KEY),/Synthetic catalog interruption/);
+ assert.equal((await call('admin/artist-claims','PUT',{id:winningClaim.data.id,status:'approved',review_note:'Synthetic recovery',confirm_conflict:true},env.ADMIN_KEY)).status,200);
+ const oldSession=await call('account/artist-session','POST',{artist_id:'QA-CLAIM-RACE'},winningAccount);assert.equal(oldSession.status,200);
+ const transfer=await call('admin/artist-ownership/transfer','POST',{claim_id:losingClaim.data.id,reason:'Verified synthetic ownership transfer',confirm_transfer:true},env.ADMIN_KEY);assert.equal(transfer.status,200);
+ assert.equal((await call('account/artists','GET',null,newAccount)).data.artists.filter(a=>a.artist_id==='QA-CLAIM-RACE').length,1);
+ assert.equal((await call('account/artist-session','POST',{artist_id:'QA-CLAIM-RACE'},winningAccount)).status,403);
+ assert.equal((await call('artist/workspace','GET',null,oldSession.data.token)).status,401);
+ assert.equal((await call('account/artist-session','POST',{artist_id:'QA-CLAIM-RACE'},newAccount)).status,200);
  console.log('PASS: actual Worker + SQLite: draft rejection removes private access; existing artist claim requires admin verification; approval links automatically; unrelated account denied; owner revocation invalidates both account session and private invitation.');
 }finally{DB.close()}
