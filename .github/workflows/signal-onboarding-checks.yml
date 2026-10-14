@@ -7,6 +7,7 @@ on:
     paths:
       - uadav-artist-account-v142.js
       - tests/artist-tool-access.test.cjs
+      - tests/artist-pro-integration.mjs
       - worker.js
       - admin.html
       - suma-tu-senal.html
@@ -32,6 +33,8 @@ jobs:
           node-version: '22'
       - name: Artist tool session isolation
         run: node --test tests/artist-tool-access.test.cjs
+      - name: Artist FREE and PRO permissions with SQLite
+        run: node tests/artist-pro-integration.mjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
