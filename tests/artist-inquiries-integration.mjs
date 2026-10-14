@@ -25,5 +25,18 @@ try{
  await DB.prepare("INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES('QA-OWNER','QA-A','new-owner-claim','owner@example.invalid','owner','active','admin_approved',?,?)").bind(new Date().toISOString(),new Date().toISOString()).run();
  assert.equal((await call('artist/inquiries','GET',null,a)).status,401,'ownerless legacy token must not bypass an active owner');
  assert.equal((await call('contrataciones','POST',{artist_id:'QA-SUSPENDED',nombre:'Synthetic',email:'client@example.invalid',acepta_contrato:true})).status,403);
+ const read=env.UADAV_DB.get;let reads=0,release;const gate=new Promise(resolve=>release=resolve);let racing=true;
+ env.UADAV_DB.get=async key=>{const snapshot=await read(key);if(key==='contrataciones'&&racing){reads++;if(reads===2){racing=false;release()}await gate}return snapshot};
+ const concurrent=await Promise.all(['First concurrent inquiry','Second concurrent inquiry'].map(evento=>call('contrataciones','POST',{artist_id:'QA-B',nombre:'Synthetic',email:'client@example.invalid',evento,acepta_contrato:true})));
+ env.UADAV_DB.get=read;assert.ok(concurrent.every(r=>r.status===200));
+ const inbox=await call('artist/inquiries','GET',null,b);assert.equal(inbox.data.items.length,2,'concurrent submissions must both remain in the recipient inbox');
+ const notices=await call('account/notifications','GET',null,accountB);assert.equal(notices.data.items.filter(n=>n.kind==='inquiry').length,2);
+ const legacy=[{id:'QA-LEGACY-INQUIRY',artist_id:'QA-B',nombre:'Legacy synthetic client',email:'legacy@example.invalid',creado:'2026-01-01T00:00:00Z',estado:'pendiente'},{...concurrent[0].data.item,artist_id:'QA-A',evento:'STALE KV COPY'}];
+ kv.set('contrataciones',JSON.stringify(legacy));const before=kv.get('contrataciones');
+ const merged=await call('artist/inquiries','GET',null,b);assert.equal(merged.data.items.length,3);assert.ok(merged.data.items.some(x=>x.id==='QA-LEGACY-INQUIRY'));assert.equal(merged.data.items.some(x=>x.evento==='STALE KV COPY'),false);
+ assert.equal((await call('artist/inquiries','PATCH',{id:'QA-LEGACY-INQUIRY',estado:'cerrada'},b)).status,200);assert.equal(kv.get('contrataciones'),before,'legacy records must not be overwritten');
+ await DB.prepare("CREATE TRIGGER fail_inquiry BEFORE INSERT ON contracts BEGIN SELECT RAISE(ABORT,'Synthetic inquiry interruption'); END").run();
+ const failed=await call('contrataciones','POST',{artist_id:'QA-B',nombre:'Synthetic',email:'client@example.invalid',acepta_contrato:true});assert.equal(failed.status,503);assert.equal(failed.data.code,'INQUIRY_SAVE_FAILED');
+ await DB.prepare('DROP TRIGGER fail_inquiry').run();assert.equal((await call('artist/inquiries','GET',null,b)).data.items.length,3);
  console.log('PASS: actual Worker + SQLite free inquiry delivery, private recipient-only access, state persistence, invalid state denial and active-owner/suspended profile safeguards.');
 }finally{DB.close()}
