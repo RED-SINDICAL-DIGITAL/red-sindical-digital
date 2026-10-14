@@ -4171,8 +4171,9 @@ async function saveEntityVersion(type,id,data){
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.
     if (path.startsWith('/api/')) {
       const key = path.slice(5).replace(/\//g, '_') || 'config';
-      const privateKey=/^(?:ART-|admin_|artist_access_|artist_session_|account_|audience_|signal_onboarding_|moderation_|notifications?(?:_|$)|push_|audit(?:_|$)|d1_sync_errors$|ticket_orders$|marketplace_requests$|radio_requests$|artist_claims$|artista_claims$|artist_sanctions$|artistas_prospectos$|contrataciones$|postulaciones(?:_|$)|bolsa_trabajo_postulaciones$|eventos_pendientes$|suscriptores$|premium_codes$|prospecting_config$|federated_source_state$|payment_|payments(?:_|$)|pro_orders$|featured_orders$|monetization_campaigns$|cct_financial_config$|cct_assessments$|cct_contract_records$)/i.test(key);
-      if(privateKey&&!isAdmin())return json({error:'No autorizado'},401);
+      // Generic reads are private by default. Public data belongs in explicit routes.
+      const publicLegacyKeys=new Set(['footer_config','landing_config','apariencia','estado_sitio','secciones_version']);
+      if(!isAdmin()&&!publicLegacyKeys.has(key))return json({error:'No autorizado'},401);
       if (request.method === 'GET') return json(await getJSON(key, ['secciones','radios','senales_oficiales','artistas','cartelera_aprobada','eventos_publicados'].includes(key) ? [] : {}));
       if (request.method === 'POST' || request.method === 'PUT') {
         if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
