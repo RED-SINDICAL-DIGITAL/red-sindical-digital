@@ -21,9 +21,13 @@ try{
  assert.equal((await call('artist/workspace')).data.pro,true);
  const saved=await call('artist/workspace','PUT',body);assert.equal(saved.status,200);assert.equal(saved.data.revision,1);
  assert.equal((await call('artist/workspace','PUT',body)).status,409);
+ kv.set('artistas',JSON.stringify([{id,nombre:'Artista ficticio',visible:true,presskit_enabled:true}]));
+ await DB.prepare('UPDATE artist_workspaces SET public_json=? WHERE artist_id=?').bind(JSON.stringify({artist_id:id,kit:{name:'Artista ficticio',bio:'Presentación pública'}}),id).run();
+ assert.equal((await call('public/presskit?artist_id='+id)).status,200);
  await call('admin/artist-plan','PUT',{artist_id:id,plan:'pro',pro_expires_at:'2020-01-01T00:00:00Z',ai_enabled:false},env.ADMIN_KEY);
  const expired=await call('artist/workspace');assert.equal(expired.data.pro,false);assert.equal(expired.data.data.kit.bio,'Presentación ficticia');
  assert.equal((await call('artist/workspace','PUT',{...body,revision:1})).status,403);
+ assert.equal((await call('public/presskit?artist_id='+id)).status,404,'expired PRO must not expose its public Press Kit');
  assert.equal((await call('pro/payment-settings')).data.enabled,false);
  console.log('PASS: actual Worker + isolated SQLite: FREE restrictions, admin authorization, PRO activation, revision conflicts, expired PRO read preservation and blocked writes; payments disabled.');
 }finally{DB.close()}
