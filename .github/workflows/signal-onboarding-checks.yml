@@ -7,6 +7,10 @@ on:
     paths:
       - uadav-artist-account-v142.js
       - tests/artist-tool-access.test.cjs
+      - gestionar-artista.html
+      - tests/artist-manage-api.test.cjs
+      - tests/artist-session-identity.test.cjs
+      - tests/artist-session-paths.test.cjs
       - tests/booking-form-retry.test.cjs
       - contratar-artista.html
       - tests/account-local-access.test.cjs
@@ -71,6 +75,8 @@ jobs:
         run: node tests/artist-inquiries-integration.mjs
       - name: Booking form retry identity
         run: node --test tests/booking-form-retry.test.cjs
+      - name: Artist management session integration
+        run: node --test tests/artist-manage-api.test.cjs tests/artist-session-identity.test.cjs tests/artist-session-paths.test.cjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
