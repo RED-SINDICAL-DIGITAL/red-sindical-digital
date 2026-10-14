@@ -3625,6 +3625,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
           ]);
           if(reserved.some(result=>Number(result.meta?.changes)!==1))return json({error:'El propietario o la solicitud cambió durante la revisión. Actualizá la bandeja.',ownership_conflict:true},409);
         }
+        try{
         const arr=await getArray('artistas'); let i=arr.findIndex(a=>String(publicArtistFromItem(a).id)===String(claim.artist_id)); if(i<0){arr.push(artist);i=arr.length-1;}
         const ident=await platformIdentity(),token=ident.artist_token_prefix+'-'+crypto.randomUUID().replace(/-/g,''); const artistId=String(publicArtistFromItem(arr[i]).id); await env.UADAV_DB.put(artistTokenKey(token),JSON.stringify({artist_id:artistId,claim_id:claimId,email:String(claim.email||'').toLowerCase(),role:'owner',verification:'admin_approved',created:now,expires:Date.now()+1000*60*60*24*365*2}));
         arr[i]={...arr[i],...(arr[i].registration_pending===true?{visible:true,estado:'publicado',registration_pending:false}:{}),claimed:true,claim_status:'approved',claim_email:claim.email||'',claim_name:claim.name||'',claim_at:now,claim_id:claim.id,self_managed:true}; await putJSON('artistas',arr); await syncArtistsD1([arr[i]]);
@@ -3632,6 +3633,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         const ident2=await platformIdentity(),base=String(b.base_url||ident2.origin||url.origin).replace(/\/$/,''); const profileUrl=base+'/gestionar-artista.html?token='+encodeURIComponent(token);
         await emitNotification({event:'ARTIST_CLAIM_APPROVED',template:'artist_claim_approved',to:claim.email,subject:'Tu perfil de '+ident2.name+' fue reclamado',name:claim.name,artist_id:artistId,profileUrl});
         const accountLinked=await uadavAttachClaimAccount(env,claimId);await audit('artist_claim_approved','artist_claim',claimId,{artist_id:artistId,account_linked:accountLinked}); return json({success:true,status:'approved',account_linked:accountLinked,profileUrl,token});
+        }catch(error){return json({success:false,code:hasD1()?'ARTIST_APPROVAL_SYNC_PENDING':'ARTIST_APPROVAL_RETRY',approval_saved:hasD1(),retryable:true,claim_id:claimId,artist_id:String(claim.artist_id),error:hasD1()?'La propiedad quedó aprobada, pero falta completar su sincronización. Actualizá la bandeja y elegí Completar sincronización. No crees otro reclamo.':'No se pudo completar la aprobación. Actualizá la bandeja antes de reintentar.'},503,{'Cache-Control':'no-store'});}
       }
       if(!['rejected','pending'].includes(status))return json({error:'Estado no permitido'},400);
       if(status==='rejected'&&claim.status!=='pending')return json({error:'La solicitud ya fue revisada. Actualizá la bandeja.'},409);
