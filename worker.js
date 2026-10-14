@@ -2534,8 +2534,13 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const list=await signalApplications(),i=list.findIndex(x=>x.id===b.id);
       if(i<0)return json({error:'Solicitud no encontrada'},404);
       if(list[i].published_id||['published','publishing'].includes(list[i].status))return json({error:'La señal ya está publicada o en proceso de publicación; administrala desde el catálogo o recuperá la operación'},409);
-      list[i]={...list[i],status,review_note:String(b.review_note||'').slice(0,500),reviewed_at:isoNow()};
-      await updateSignalApplication(list[i]);
+      if(!hasD1())return json({error:'La revisión segura requiere D1'},503);
+      const previous=list[i];
+      const reviewed={...previous,status,review_note:String(b.review_note||'').slice(0,500),reviewed_at:isoNow()};
+      // Compare the full snapshot, not just the state, to reject concurrent edits.
+      const changed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND data_json=? AND json_extract(data_json,'$.status') NOT IN ('published','publishing') AND json_extract(data_json,'$.published_id') IS NULL RETURNING id").bind(JSON.stringify(reviewed),previous.id,JSON.stringify(previous)).first();
+      if(!changed)return json({error:'La solicitud cambió o necesita migración desde KV. Actualizá la bandeja; no se sobrescribieron datos.',conflict:true},409);
+      list[i]=reviewed;
       await audit('review_signal_application','signal',String(b.id),{status});
       return json({success:true,item:list[i],publication_pending:true});
     }
@@ -4166,6 +4171,8 @@ async function saveEntityVersion(type,id,data){
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.
     if (path.startsWith('/api/')) {
       const key = path.slice(5).replace(/\//g, '_') || 'config';
+      const privateKey=/^(?:ART-|admin_|artist_access_|artist_session_|account_|audience_|signal_onboarding_|moderation_|notifications?(?:_|$)|push_|audit(?:_|$)|d1_sync_errors$|ticket_orders$|marketplace_requests$|radio_requests$|artist_claims$|artista_claims$|artist_sanctions$|artistas_prospectos$|contrataciones$|postulaciones(?:_|$)|bolsa_trabajo_postulaciones$|eventos_pendientes$|suscriptores$|premium_codes$|prospecting_config$|federated_source_state$|payment_|payments(?:_|$)|pro_orders$|featured_orders$|monetization_campaigns$|cct_financial_config$|cct_assessments$|cct_contract_records$)/i.test(key);
+      if(privateKey&&!isAdmin())return json({error:'No autorizado'},401);
       if (request.method === 'GET') return json(await getJSON(key, ['secciones','radios','senales_oficiales','artistas','cartelera_aprobada','eventos_publicados'].includes(key) ? [] : {}));
       if (request.method === 'POST' || request.method === 'PUT') {
         if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
@@ -4194,3 +4201,4 @@ async function saveEntityVersion(type,id,data){
 export {uadavArtistHandle,uadavYouTubePlaylistItems,uadavYouTubeLibrary,uadavProfileDisplay,uadavArtistSharePage,uadavDecodeHTMLText};
 
 export default uadavWorker;
+
