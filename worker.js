@@ -3606,15 +3606,29 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(!claim)return json({error:'Reclamo no encontrado'},404);
       const now=isoNow();
       if(status==='approved'){
+        if(!['pending','approved'].includes(claim.status))return json({error:'Reabrí la solicitud antes de aprobarla.'},409);
         if(hasD1()){await ensureD1Schema();const activeOwner=await env.DB.prepare("SELECT id,claim_id,contact_email FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(String(claim.artist_id)).first();if(activeOwner&&String(activeOwner.claim_id||'')!==claimId)return json({error:'Este perfil ya tiene un propietario activo. La aprobación normal está bloqueada; usá una transferencia de propiedad con motivo y confirmación.',ownership_conflict:true,owner_id:activeOwner.id},409);}
         const conflicts=hasD1()?await env.DB.prepare(`SELECT COUNT(*) count FROM artist_claims WHERE artist_id=? AND status='pending' AND id<>?`).bind(String(claim.artist_id),claimId).first():{count:(await getArray('artist_claims')).filter(x=>String(x.artist_id)===String(claim.artist_id)&&String(x.status)==='pending'&&String(x.id)!==claimId).length};if(Number(conflicts?.count||0)>0&&b.confirm_conflict!==true)return json({error:'Hay otro reclamo pendiente sobre este perfil. Resolvé el conflicto antes de aprobar.',conflict:true},409);if(!String(b.review_note||'').trim())return json({error:'La aprobación requiere una nota de verificación'},400);
         let artist=await artistFromD1(String(claim.artist_id)); if(!artist){const arr=await allCanonicalArtists();artist=arr.find(a=>String(publicArtistFromItem(a).id)===String(claim.artist_id));}
         if(!artist)return json({error:'Artista asociado no encontrado'},404);
+        if(hasD1()){
+          const reserved=await env.DB.batch([
+            env.DB.prepare(`INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at)
+              SELECT ?,c.artist_id,c.id,c.email,'owner','active','admin_approved',?,? FROM artist_claims c
+              WHERE c.id=? AND c.status=? AND NOT EXISTS(SELECT 1 FROM artist_owners o WHERE o.artist_id=c.artist_id AND o.status='active' AND o.claim_id IS NOT c.id)
+              ON CONFLICT(id) DO UPDATE SET contact_email=excluded.contact_email,verification_level=excluded.verification_level,updated_at=excluded.updated_at
+              WHERE artist_owners.status='active' AND artist_owners.claim_id=excluded.claim_id`).bind('OWN-'+claimId,now,now,claimId,claim.status),
+            env.DB.prepare(`UPDATE artist_claims SET status='approved',reviewed_at=?,review_note=? WHERE id=? AND status=?
+              AND EXISTS(SELECT 1 FROM artist_owners o WHERE o.id=? AND o.claim_id=artist_claims.id AND o.status='active' AND o.verification_level='admin_approved')
+              AND NOT EXISTS(SELECT 1 FROM artist_owners o WHERE o.artist_id=artist_claims.artist_id AND o.status='active' AND o.claim_id IS NOT artist_claims.id)`)
+              .bind(now,String(b.review_note).slice(0,1000),claimId,claim.status,'OWN-'+claimId)
+          ]);
+          if(reserved.some(result=>Number(result.meta?.changes)!==1))return json({error:'El propietario o la solicitud cambió durante la revisión. Actualizá la bandeja.',ownership_conflict:true},409);
+        }
         const arr=await getArray('artistas'); let i=arr.findIndex(a=>String(publicArtistFromItem(a).id)===String(claim.artist_id)); if(i<0){arr.push(artist);i=arr.length-1;}
         const ident=await platformIdentity(),token=ident.artist_token_prefix+'-'+crypto.randomUUID().replace(/-/g,''); const artistId=String(publicArtistFromItem(arr[i]).id); await env.UADAV_DB.put(artistTokenKey(token),JSON.stringify({artist_id:artistId,claim_id:claimId,email:String(claim.email||'').toLowerCase(),role:'owner',verification:'admin_approved',created:now,expires:Date.now()+1000*60*60*24*365*2}));
-        arr[i]={...arr[i],...(arr[i].registration_pending===true?{visible:true,estado:'publicado',registration_pending:false}:{}),claimed:true,claim_status:'approved',claim_email:claim.email||'',claim_name:claim.name||'',claim_at:now,claim_id:claim.id,self_managed:true}; await putJSON('artistas',arr); await syncArtistsD1([arr[i]]); if(hasD1())await env.DB.prepare(`INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET artist_id=excluded.artist_id,contact_email=excluded.contact_email,status='active',verification_level=excluded.verification_level,updated_at=excluded.updated_at`).bind('OWN-'+claimId,artistId,claimId,String(claim.email||'').toLowerCase(),'owner','active','admin_approved',now,now).run();
-        if(hasD1()) await env.DB.prepare(`UPDATE artist_claims SET status='approved',reviewed_at=?,review_note=? WHERE id=?`).bind(now,String(b.review_note||'Aprobado por administración').slice(0,1000),claimId).run();
-        else {const list=await getArray('artist_claims');const ix=list.findIndex(x=>String(x.id)===claimId);if(ix>=0){list[ix]={...list[ix],status:'approved',reviewed_at:now,review_note:String(b.review_note||'').slice(0,1000)};await putJSON('artist_claims',list);}}
+        arr[i]={...arr[i],...(arr[i].registration_pending===true?{visible:true,estado:'publicado',registration_pending:false}:{}),claimed:true,claim_status:'approved',claim_email:claim.email||'',claim_name:claim.name||'',claim_at:now,claim_id:claim.id,self_managed:true}; await putJSON('artistas',arr); await syncArtistsD1([arr[i]]);
+        if(!hasD1()){const list=await getArray('artist_claims');const ix=list.findIndex(x=>String(x.id)===claimId);if(ix>=0){list[ix]={...list[ix],status:'approved',reviewed_at:now,review_note:String(b.review_note||'').slice(0,1000)};await putJSON('artist_claims',list);}}
         const ident2=await platformIdentity(),base=String(b.base_url||ident2.origin||url.origin).replace(/\/$/,''); const profileUrl=base+'/gestionar-artista.html?token='+encodeURIComponent(token);
         await emitNotification({event:'ARTIST_CLAIM_APPROVED',template:'artist_claim_approved',to:claim.email,subject:'Tu perfil de '+ident2.name+' fue reclamado',name:claim.name,artist_id:artistId,profileUrl});
         const accountLinked=await uadavAttachClaimAccount(env,claimId);await audit('artist_claim_approved','artist_claim',claimId,{artist_id:artistId,account_linked:accountLinked}); return json({success:true,status:'approved',account_linked:accountLinked,profileUrl,token});
