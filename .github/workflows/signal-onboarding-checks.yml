@@ -5,6 +5,8 @@ on:
       - audit/public-job-status-20261012
   pull_request:
     paths:
+      - uadav-artist-account-v142.js
+      - tests/artist-tool-access.test.cjs
       - worker.js
       - admin.html
       - suma-tu-senal.html
@@ -28,6 +30,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Artist tool session isolation
+        run: node --test tests/artist-tool-access.test.cjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
