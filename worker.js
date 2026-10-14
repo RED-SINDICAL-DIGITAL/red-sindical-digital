@@ -2590,7 +2590,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       // Existing catalog entries are reconciled by the publish endpoint after recovery.
       await signalApplicationSchema();
       const restored={...application,status:'approved',publication_error:'Recuperación manual: publicación interrumpida',publication_attempt_at:isoNow()};
-      const changed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing' RETURNING id").bind(JSON.stringify(restored),id).first();
+      const changed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND data_json=? AND json_extract(data_json,'$.status')='publishing' AND NOT EXISTS (SELECT 1 FROM signal_onboarding_catalog_locks WHERE id=? AND expires_at>?) RETURNING id").bind(JSON.stringify(restored),id,JSON.stringify(application),'signal-catalog:'+application.type,Date.now()).first();
       if(!changed)return json({error:'El estado cambió; actualizá la bandeja'},409);
       await audit('recover_signal_publication','signal',id,{type:application.type});
       return json({success:true,status:'approved',id,reconciliation_required:Boolean(found)});
@@ -2609,9 +2609,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       // Claim publication with a conditional D1 update; only one concurrent admin can win.
       if(!hasD1())return json({error:'Publicación no disponible sin D1'},503);
       await signalApplicationSchema();
-      const claimed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND data_json=? AND json_extract(data_json,'$.status')='approved' RETURNING id").bind(JSON.stringify({...application,status:'publishing',publication_attempt_at:isoNow()}),application.id,JSON.stringify(application)).first();
+      const publicationToken=crypto.randomUUID();
+      const claimed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND data_json=? AND json_extract(data_json,'$.status')='approved' RETURNING id").bind(JSON.stringify({...application,status:'publishing',publication_attempt_at:isoNow(),publication_token:publicationToken}),application.id,JSON.stringify(application)).first();
       if(!claimed)return json({error:'Esta solicitud ya está siendo publicada o cambió de estado. Actualizá la bandeja.',conflict:true},409);
-      const releasePublication=async(error)=>{await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing'").bind(JSON.stringify({...application,status:'approved',publication_error:error,publication_attempt_at:isoNow()}),application.id).run()};
+      const releasePublication=async(error)=>{await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing' AND json_extract(data_json,'$.publication_token')=?").bind(JSON.stringify({...application,status:'approved',publication_error:error,publication_attempt_at:isoNow()}),application.id,publicationToken).run()};
       // Serialize publication across distinct requests that share the same KV catalog.
       // D1 conditional acquisition is atomic; an expired lease can be recovered.
       const catalogLock='signal-catalog:'+application.type,leaseToken=crypto.randomUUID(),leaseUntil=Date.now()+120000;
@@ -2622,6 +2623,17 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       }catch(_){await releasePublication('No se pudo adquirir el bloqueo del catálogo');return json({error:'No se pudo iniciar la publicación. Reintentá más tarde.'},503)}
       if(!catalogClaim){await releasePublication('Catálogo ocupado; reintentar');return json({error:'Otra señal está siendo publicada. Reintentá en unos instantes.',conflict:true},409)}
       const releaseCatalogLock=async()=>env.DB.prepare("DELETE FROM signal_onboarding_catalog_locks WHERE id=? AND token=?").bind(catalogLock,leaseToken).run();
+      const assertPublicationLease=async()=>{
+        const lock=await env.DB.prepare('SELECT token,expires_at FROM signal_onboarding_catalog_locks WHERE id=?').bind(catalogLock).first();
+        const current=await env.DB.prepare('SELECT data_json FROM signal_onboarding_applications WHERE id=?').bind(application.id).first();
+        const state=safeJSON(current?.data_json,{});
+        if(lock?.token!==leaseToken||Number(lock.expires_at)<=Date.now()||state.status!=='publishing'||state.publication_token!==publicationToken)throw Error('Publication ownership or catalog lease lost');
+      };
+      const finishPublication=async(item)=>{
+        await assertPublicationLease();
+        const finished=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing' AND json_extract(data_json,'$.publication_token')=? RETURNING id").bind(JSON.stringify(item),application.id,publicationToken).first();
+        if(!finished)throw Error('Publication ownership changed');
+      };
       try {
       // The existing KV catalogs still require serialization across distinct applications.
       const radio=application.type==='radio',key=radio?'radios':'senales_oficiales';
@@ -2631,7 +2643,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(previouslyStored){
         if(radio){const repair=await safeD1('signal_radio_repair',()=>syncRadiosD1([previouslyStored]));if(!repair.ok){await releaseCatalogLock();await releasePublication('D1 sync pending');return json({error:'La señal ya está en KV, pero D1 sigue sin sincronizar. Revisá la base antes de continuar.',partial:true},503)}}
         requests[i]={...application,published_id:previouslyStored.id,published_at:isoNow(),status:'published'};
-        await updateSignalApplication(requests[i]);
+        await finishPublication(requests[i]);
         await audit('reconcile_signal_publication','signal',application.id,{published_id:previouslyStored.id});
         await releaseCatalogLock();
         return json({success:true,id:previouslyStored.id,reconciled:true});
@@ -2643,10 +2655,11 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         :{id,nombre:application.name,url:application.stream_url,tipo:/\.m3u8(?:[?#]|$)/i.test(application.stream_url)?'m3u8':'generic',activa:true,principal:false,onboarding_id:application.id};
       // Append only: never replace, delete or reorder the existing catalog.
       const updated=[...existing,record];
+      await assertPublicationLease();
       await putJSON(key,updated);
-      if(radio){const d1sync=await safeD1('signal_radio_publish',()=>syncRadiosD1([record]));if(!d1sync.ok){requests[i]={...application,status:'approved',publication_error:'D1 sync pending',publication_attempt_at:isoNow()};await updateSignalApplication(requests[i]);await releaseCatalogLock();return json({error:'Radio guardada en KV pero falta sincronizar D1; revisar antes de reintentar',partial:true,id},503)}}
+      if(radio){const d1sync=await safeD1('signal_radio_publish',()=>syncRadiosD1([record]));if(!d1sync.ok){requests[i]={...application,status:'approved',publication_error:'D1 sync pending',publication_attempt_at:isoNow()};await finishPublication(requests[i]);await releaseCatalogLock();return json({error:'Radio guardada en KV pero falta sincronizar D1; revisar antes de reintentar',partial:true,id},503)}}
       requests[i]={...application,published_id:id,published_at:isoNow(),status:'published'};
-      await updateSignalApplication(requests[i]);
+      await finishPublication(requests[i]);
       await audit('publish_signal','signal',application.id,{type:application.type,published_id:id});
       await releaseCatalogLock();
       return json({success:true,id,type:application.type});
