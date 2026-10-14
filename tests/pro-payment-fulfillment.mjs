@@ -28,5 +28,24 @@ try{
  assert.equal((await call('admin/pro-payment-orders/review',{order_id:'QA-YEAR',decision:'approve'},true)).status,200);
  const second=await DB.prepare('SELECT pro_expires_at FROM artist_plan_state WHERE artist_id=?').bind(artist).first();assert.equal(Date.parse(second.pro_expires_at)-Date.parse(first.pro_expires_at),365*86400000);
  assert.equal((await DB.prepare("SELECT COUNT(*) n FROM pro_feature_credits WHERE order_id='QA-YEAR'").first()).n,12);
+ // Account-bound orders must not activate after their current ownership link changes.
+ const credential='UAC-'+'b'.repeat(64);
+ const accountResponse=await worker.fetch(new Request('https://isolated.example/api/account',{method:'POST',headers:{Authorization:'Bearer '+credential,'Content-Type':'application/json'},body:JSON.stringify({data:{uadav_user_v11:{name:'Synthetic owner'}}})}),env,{});
+ assert.equal(accountResponse.status,200);
+ const account=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(credential)))).map(x=>x.toString(16).padStart(2,'0')).join('');
+ await order('QA-OWNER-CHANGED');
+ await DB.prepare("UPDATE pro_payment_orders SET account_id=?,status='reported' WHERE id='QA-OWNER-CHANGED'").bind(account).run();
+ await DB.prepare('INSERT INTO audience_artist_links(account_id,artist_id,claim_id,expires_at,created_at) VALUES(?,?,?,0,?)').bind(account,artist,'invalid-current-claim',Date.now()).run();
+ assert.equal((await call('admin/pro-payment-orders/review',{order_id:'QA-OWNER-CHANGED',decision:'approve'},true)).status,409,'manual review must respect changed ownership');
+ assert.equal(await DB.prepare("SELECT * FROM pro_payment_fulfillments WHERE order_id='QA-OWNER-CHANGED'").first(),null);
+ await DB.prepare('UPDATE audience_artist_links SET claim_id=NULL WHERE account_id=? AND artist_id=?').bind(account,artist).run();
+ assert.equal((await call('admin/pro-payment-orders/review',{order_id:'QA-OWNER-CHANGED',decision:'approve'},true)).status,200,'valid account link still permits manual review');
+ await order('QA-REJECT-RACE');await DB.prepare("UPDATE pro_payment_orders SET status='reported' WHERE id='QA-REJECT-RACE'").run();
+ const batch=DB.batch.bind(DB);let inject=true;
+ DB.batch=async statements=>{if(inject){inject=false;await DB.prepare("UPDATE pro_payment_orders SET status='rejected' WHERE id='QA-REJECT-RACE'").run()}return batch(statements)};
+ assert.equal((await call('admin/pro-payment-orders/review',{order_id:'QA-REJECT-RACE',decision:'approve'},true)).status,409);
+ DB.batch=batch;
+ assert.equal((await DB.prepare("SELECT status FROM pro_payment_orders WHERE id='QA-REJECT-RACE'").first()).status,'rejected');
+ assert.equal(await DB.prepare("SELECT * FROM pro_payment_fulfillments WHERE order_id='QA-REJECT-RACE'").first(),null);
  console.log('PASS: actual Worker + SQLite; receipt does not activate PRO, disconnected bank rejected, concurrent/repeated approval activates once, renewal stacks once and monthly/yearly feature credits are 1/12. No real payment service used.');
 }finally{DB.close()}
