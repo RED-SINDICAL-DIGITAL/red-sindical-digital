@@ -2525,6 +2525,31 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       await audit('update_signal_onboarding','settings','signal_onboarding_config',{enabled:config.enabled,radio:config.radio,tv:config.tv});
       return json({success:true,config});
     }
+    if (path === '/api/signal-onboarding/migrate') {
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(request.method!=='POST')return json({error:'Método no permitido'},405);
+      if(!hasD1())return json({error:'La migración requiere D1'},503);
+      const body=await request.json().catch(()=>({})),dryRun=body.execute!==true;
+      const legacy=await getArray('signal_onboarding_applications');
+      if(legacy.length>5000)return json({error:'La migración requiere revisar el volumen antes de continuar'},409);
+      await signalApplicationSchema();
+      const counts=new Map(),streams=new Map();for(const item of legacy){counts.set(item?.id,(counts.get(item?.id)||0)+1);const key=String(item?.stream_url||'').replace(/\/$/,'').toLowerCase();streams.set(key,(streams.get(key)||0)+1);}
+      const results=[];
+      for(const item of legacy){
+        const id=typeof item?.id==='string'?item.id:'';
+        let stream;try{stream=new URL(item?.stream_url)}catch{}
+        if(!/^[A-Za-z0-9_-]{1,120}$/.test(id)||counts.get(id)!==1||!['radio','tv'].includes(item?.type)||!['pending','approved','rejected','published'].includes(item?.status)||item?.rights_confirmed!==true||(item?.status==='published'&&!item?.published_id)||!Number.isFinite(Date.parse(item?.created_at))||stream?.protocol!=='https:'||stream?.username||stream?.password){results.push({id,status:'needs_review'});continue}
+        const streamKey=String(item.stream_url).replace(/\/$/,'').toLowerCase();
+        if(streams.get(streamKey)!==1){results.push({id,status:'needs_review'});continue}
+        const existing=await env.DB.prepare('SELECT id,data_json FROM signal_onboarding_applications WHERE id=? OR stream_key=?').bind(id,streamKey).all();
+        if(existing.results?.length){const same=existing.results.some(x=>x.id===id&&x.data_json===JSON.stringify(item));results.push({id,status:same?'already_migrated':'conflict'});continue}
+        if(dryRun){results.push({id,status:'ready'});continue}
+        const inserted=await env.DB.prepare('INSERT INTO signal_onboarding_applications(id,stream_key,data_json,created_at) VALUES(?,?,?,?) ON CONFLICT DO NOTHING').bind(id,streamKey,JSON.stringify(item),item.created_at).run();
+        results.push({id,status:Number(inserted.meta?.changes)===1?'migrated':'conflict'});
+      }
+      if(!dryRun)await audit('migrate_signal_applications','signal','legacy',{migrated:results.filter(x=>x.status==='migrated').length});
+      return json({success:true,dry_run:dryRun,legacy_preserved:true,results});
+    }
     if (path === '/api/signal-onboarding/applications') {
       if (!isAdmin()) return json({error:'No autorizado'},401);
       if (request.method === 'GET') return json(await signalApplications());
@@ -2584,14 +2609,17 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       // Claim publication with a conditional D1 update; only one concurrent admin can win.
       if(!hasD1())return json({error:'Publicación no disponible sin D1'},503);
       await signalApplicationSchema();
-      const claimed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='approved' RETURNING id").bind(JSON.stringify({...application,status:'publishing',publication_attempt_at:isoNow()}),application.id).first();
+      const claimed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND data_json=? AND json_extract(data_json,'$.status')='approved' RETURNING id").bind(JSON.stringify({...application,status:'publishing',publication_attempt_at:isoNow()}),application.id,JSON.stringify(application)).first();
       if(!claimed)return json({error:'Esta solicitud ya está siendo publicada o cambió de estado. Actualizá la bandeja.',conflict:true},409);
       const releasePublication=async(error)=>{await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing'").bind(JSON.stringify({...application,status:'approved',publication_error:error,publication_attempt_at:isoNow()}),application.id).run()};
       // Serialize publication across distinct requests that share the same KV catalog.
       // D1 conditional acquisition is atomic; an expired lease can be recovered.
       const catalogLock='signal-catalog:'+application.type,leaseToken=crypto.randomUUID(),leaseUntil=Date.now()+120000;
+      let catalogClaim;
+      try {
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS signal_onboarding_catalog_locks (id TEXT PRIMARY KEY, token TEXT NOT NULL, expires_at INTEGER NOT NULL)").run();
-      const catalogClaim=await env.DB.prepare("INSERT INTO signal_onboarding_catalog_locks(id,token,expires_at) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET token=excluded.token,expires_at=excluded.expires_at WHERE expires_at<? RETURNING token").bind(catalogLock,leaseToken,leaseUntil,Date.now()).first();
+      catalogClaim=await env.DB.prepare("INSERT INTO signal_onboarding_catalog_locks(id,token,expires_at) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET token=excluded.token,expires_at=excluded.expires_at WHERE expires_at<? RETURNING token").bind(catalogLock,leaseToken,leaseUntil,Date.now()).first();
+      }catch(_){await releasePublication('No se pudo adquirir el bloqueo del catálogo');return json({error:'No se pudo iniciar la publicación. Reintentá más tarde.'},503)}
       if(!catalogClaim){await releasePublication('Catálogo ocupado; reintentar');return json({error:'Otra señal está siendo publicada. Reintentá en unos instantes.',conflict:true},409)}
       const releaseCatalogLock=async()=>env.DB.prepare("DELETE FROM signal_onboarding_catalog_locks WHERE id=? AND token=?").bind(catalogLock,leaseToken).run();
       try {
