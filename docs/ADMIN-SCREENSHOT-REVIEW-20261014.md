@@ -1,0 +1,7 @@
+# Admin screenshot review — 2026-10-14
+
+Inspected six user screenshots image(20261014-210715/210720/210725/210736/210832/210845). Desktop artist lists rendered and recovery action was visible. Opening row actions squeezed columns and split short labels (Gratis, Ubicación). PRO dashboard still advertised Gemini subject to PRO, contrary to the moderation-only product decision. Mobile emulator was 273x523: table cards rendered, but the header used two rows and consumed significant space. These are user-provided screenshots, not an independent physical-device test; the empty filtered console is not proof of complete error-free execution.
+
+Changes: artist tables have stable minimum column sizes with contained horizontal scroll on desktop; short headers/badges avoid word splitting; mobile card conversion retained. Artist secondary controls take less padding. Mobile header uses one row; TV-mode toggle hidden only below 360px, still available on larger viewports. Removed artist Gemini KPI/AI entitlement wording; PRO has three relevant KPIs and a tools/statistics column. Common status badges now use Spanish labels. Versioned changed CSS reference.
+
+Validation: Admin and self-contained preview inline scripts parse; four actual Admin API retry tests pass. New rendering remains unverified pending user/browser screenshots. Updated the same standalone preview artifact for comparison. No production or staging deployment, no functions removed from backend, no real data changed.
