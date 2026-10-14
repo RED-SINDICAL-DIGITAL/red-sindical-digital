@@ -54,5 +54,5 @@ Conservar DB, UADAV_DB y ADMIN_KEY de pruebas. No agregar secretos de producció
 
 ## Evidencia al preparar
 Cuatro pruebas locales verifican orígenes, transformación, exclusión de backend y conservación de una escritura relativa sin duplicación.
-La primera compilación real del repositorio en Actions terminó correctamente (run 38646360818). La variante posterior que incorpora el enrutamiento fetch tiene su propia ejecución pendiente de comprobación.
+La primera compilación real del repositorio en Actions terminó correctamente (run 38646360818). La variante posterior que incorpora el enrutamiento fetch también terminó satisfactoriamente: run 38646454633, incluidas las cuatro pruebas y la compilación del repositorio completo.
 Esto no prueba todavía el sitio publicado, CSS responsive, navegación real, cámara QR, reproducción ni Smart TV.
