@@ -44,3 +44,12 @@ Siguiente herramienta: tests/staging-signals-diagnostic.html. Crea dos registros
 Captura P(2).png del usuario: 19/19 comprobaciones completadas. Migracion de ambas solicitudes ficticias, pending denegado, aprobacion sin publicacion automatica, publicacion de radio y TV, doble intento TV con un conflicto, reintento duplicado denegado, una copia por catalogo y estado published confirmado en D1. Inscripciones continuan cerradas.
 
 Verificacion adicional directa de esta sesion: GET /api/radios HTTP200 con una radio sintetica, GET /api/senales_oficiales HTTP200 con una señal sintetica, config enabled/radio/tv=false. Los streams .invalid son ficticios: no se comprobo reproduccion ni disponibilidad de una fuente real. No extrapolar el caso de dos intentos a todas las condiciones de carrera, escritores KV o expiracion de leases.
+
+
+## Account device integration — 2026-10-14
+
+Executed tests/staging-device-integration.mjs against the isolated remote staging API using the actual account client in two independent VM/localStorage contexts. PASS: device request and approval, separate device credentials, bidirectional profile/library synchronization, two persistent grants with expires_at=0, server-side revocation (401 DEVICE_REVOKED), and local profile preservation. These simulate two browser contexts; they are not physical mobile/desktop visual tests.
+
+The first execution exposed a client state issue: a revoked credential remained locally marked as linked after a rejected sync. Commit a502d28b5e325519124c6a07365ea21916503485 clears rejected DEVICE_REVOKED/RECOVERY_REVOKED credentials and account-derived artist sessions, preserving local content. A second real staging execution with this client passed, including linked=false after revocation. Client syntax check passed.
+
+The client correction is committed on the audit branch only. It has not been deployed to a frontend or production; frontend cache/version integration remains pending. Each test execution retained one synthetic staging account. No credentials were logged, no production resources were used, and no data was deleted. These results do not prove artist reclaim, PRO payments, Press Kit, playback, or physical-device visual behavior.
