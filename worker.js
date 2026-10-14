@@ -3664,6 +3664,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         const id=String(url.searchParams.get('artist_id')||'');
         const artist=(await allCanonicalArtists()).find(a=>String(publicArtistFromItem(a).id)===id);
         if(!artist||publicArtistFromItem(artist).visible===false||artist.presskit_enabled===false)return reply({error:'Presentación no disponible'},404);
+        const plan=await env.DB.prepare('SELECT plan,pro_expires_at FROM artist_plan_state WHERE artist_id=?').bind(id).first();
+        const expires=plan?plan.pro_expires_at:artist.pro_expires;
+        const active=(plan?plan.plan==='pro':artist.pro_active===true)&&(!expires||Date.parse(expires)>Date.now());
+        if(!active)return reply({error:'Presentación no disponible'},404);
         try{const row=await env.DB.prepare('SELECT public_json FROM artist_workspaces WHERE artist_id=?').bind(id).first();const published=safeJSON(row?.public_json,null);return published?reply(published):reply({error:'Presentación no publicada'},404)}catch{return reply({error:'Presentación no publicada'},404)}
       }
       const token=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
