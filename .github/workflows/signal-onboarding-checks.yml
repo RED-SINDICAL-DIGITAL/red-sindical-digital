@@ -9,6 +9,9 @@ on:
       - admin.html
       - suma-tu-senal.html
       - tests/signal-onboarding-contract.test.cjs
+      - tests/signal-review-integration.mjs
+      - tests/private-kv-fallback.mjs
+      - tests/sqlite-d1.mjs
       - .github/workflows/signal-onboarding-checks.yml
   workflow_dispatch:
 jobs:
@@ -25,3 +28,8 @@ jobs:
         run: node --check worker.js
       - name: Signal onboarding contract
         run: node --test tests/signal-onboarding-contract.test.cjs
+      - name: Worker review integration with SQLite
+        run: node tests/signal-review-integration.mjs
+      - name: Private KV fallback authorization
+        run: node tests/private-kv-fallback.mjs
+
