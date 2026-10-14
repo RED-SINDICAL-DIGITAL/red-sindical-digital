@@ -8,6 +8,7 @@ on:
       - uadav-artist-account-v142.js
       - tests/artist-tool-access.test.cjs
       - tests/artist-pro-integration.mjs
+      - tests/pro-payment-fulfillment.mjs
       - worker.js
       - admin.html
       - suma-tu-senal.html
@@ -35,6 +36,8 @@ jobs:
         run: node --test tests/artist-tool-access.test.cjs
       - name: Artist FREE and PRO permissions with SQLite
         run: node tests/artist-pro-integration.mjs
+      - name: PRO payment fulfillment isolation
+        run: node tests/pro-payment-fulfillment.mjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
