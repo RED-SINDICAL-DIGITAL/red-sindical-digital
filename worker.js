@@ -2533,7 +2533,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if (!['approved','rejected','pending'].includes(status))return json({error:'Estado inválido'},400);
       const list=await signalApplications(),i=list.findIndex(x=>x.id===b.id);
       if(i<0)return json({error:'Solicitud no encontrada'},404);
-      if(list[i].published_id||list[i].status==='published')return json({error:'La señal ya está publicada; administrala desde el catálogo'},409);
+      if(list[i].published_id||['published','publishing'].includes(list[i].status))return json({error:'La señal ya está publicada o en proceso de publicación; administrala desde el catálogo o recuperá la operación'},409);
       list[i]={...list[i],status,review_note:String(b.review_note||'').slice(0,500),reviewed_at:isoNow()};
       await updateSignalApplication(list[i]);
       await audit('review_signal_application','signal',String(b.id),{status});
