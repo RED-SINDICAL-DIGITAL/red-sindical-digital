@@ -4,7 +4,7 @@ const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(a
 const DB=sqliteD1(),kv=new Map(),id='QA-KIT-PRIVACY',token='ART-kit-privacy-123456789';
 const env={DB,ADMIN_KEY:'local-kit-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
 kv.set('artistas',JSON.stringify([{id,nombre:'Ficticio',visible:true,presskit_enabled:true}]));kv.set('moderation_settings',JSON.stringify({enabled:false}));kv.set('artist_access_'+token,JSON.stringify({artist_id:id,expires:Date.now()+3600000}));
-async function call(route,method='GET',body,auth=token){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{'Content-Type':'application/json',...(auth?{Authorization:'Bearer '+auth}:{})},...(body?{body:JSON.stringify(body)}:{})}),env,{});return {status:r.status,data:await r.json(),cache:r.headers.get('Cache-Control')};}
+async function call(route,method='GET',body,auth=token){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{'Content-Type':'application/json',...(auth?{Authorization:'Bearer '+auth}:{})},...(body?{body:JSON.stringify(body)}:{})}),env,{});return {status:r.status,data:r.headers.get('Content-Type')?.includes('application/json')?await r.json():await r.text(),cache:r.headers.get('Cache-Control')};}
 try{
  await call('artist/plan?token='+token);
  assert.equal((await call('admin/artist-plan','PUT',{artist_id:id,plan:'pro',pro_expires_at:new Date(Date.now()+86400000).toISOString(),ai_enabled:false},env.ADMIN_KEY)).status,200);
@@ -16,12 +16,15 @@ try{
  const publicKit=await call('public/presskit?artist_id='+id,'GET',null,'');assert.equal(publicKit.status,200);assert.equal(publicKit.cache,'no-store');
  assert.equal(publicKit.data.artist_id,id);assert.equal(publicKit.data.quotes,undefined);assert.equal(publicKit.data.agenda,undefined);assert.equal(publicKit.data.leads,undefined);
  for(const marker of ['HIDDEN-CONTACT','HIDDEN-TRAJECTORY','HIDDEN-VIDEO','HIDDEN-SHOW','PRIVATE-PRICE','PRIVATE-CLIENT','PRIVATE-FEE','PRIVATE-AGENDA','PRIVATE-LEAD'])assert.equal(JSON.stringify(publicKit.data).includes(marker),false,marker+' must stay private');
+ const share=await call('../share/presskit?id='+id,'GET',null,'');assert.equal(share.status,200);assert.ok(share.data.includes('og:image'));assert.ok(share.data.includes('og:description'));assert.equal(share.cache,'no-store');
+ for(const marker of ['HIDDEN-CONTACT','HIDDEN-TRAJECTORY','PRIVATE-CLIENT','PRIVATE-PRICE'])assert.equal(share.data.includes(marker),false);
+ const head=await call('../share/presskit?id='+id,'HEAD',null,'');assert.equal(head.status,200);assert.equal(head.data,'');
  assert.equal((await call('artist/workspace','GET',null,'')).status,401);
  const privateKit=await call('artist/workspace');assert.equal(privateKit.data.data.kit.contact,'HIDDEN-CONTACT');assert.equal(privateKit.data.data.quotes[0].client,'PRIVATE-CLIENT');
  data.kit.bio='Nueva versión privada';await call('artist/workspace','PUT',{revision:1,data});assert.equal((await call('public/presskit?artist_id='+id,'GET',null,'')).data.kit.bio,'Biografía pública');
  kv.set('moderation_settings',JSON.stringify({enabled:true,provider:'groq',daily_limit:10}));
  const pending=await call('artist/workspace','PUT',{revision:2,data,publication:'publish'});assert.equal(pending.data.moderation_pending,true);assert.equal((await call('public/presskit?artist_id='+id,'GET',null,'')).data.kit.bio,'Biografía pública');
- const removed=await call('artist/workspace','PUT',{revision:3,data,publication:'unpublish'});assert.equal(removed.status,200);assert.equal(removed.data.published,false);assert.equal((await call('public/presskit?artist_id='+id,'GET',null,'')).status,404);
+ const removed=await call('artist/workspace','PUT',{revision:3,data,publication:'unpublish'});assert.equal(removed.status,200);assert.equal(removed.data.published,false);assert.equal((await call('public/presskit?artist_id='+id,'GET',null,'')).status,404);assert.equal((await call('../share/presskit?id='+id,'GET',null,'')).status,404);
  assert.equal((await call('artist/workspace')).data.data.kit.contact,'HIDDEN-CONTACT');
  console.log('PASS: actual Worker + SQLite Press Kit privacy, hidden fields absent from public JSON, private tools retained, draft isolation, moderation preserves published version and unpublish retains private data.');
 }finally{DB.close()}
