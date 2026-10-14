@@ -5,6 +5,8 @@ on:
       - audit/public-job-status-20261012
   pull_request:
     paths:
+      - scripts/build-staging.mjs
+      - tests/staging-build.test.mjs
       - uadav-artist-account-v142.js
       - tests/artist-tool-access.test.cjs
       - gestionar-artista.html
@@ -77,6 +79,10 @@ jobs:
         run: node --test tests/booking-form-retry.test.cjs
       - name: Artist management session integration
         run: node --test tests/artist-manage-api.test.cjs tests/artist-session-identity.test.cjs tests/artist-session-paths.test.cjs
+      - name: Staging build isolation tests
+        run: node --test tests/staging-build.test.mjs
+      - name: Build isolated staging frontend
+        run: UADAV_STAGING_ORIGIN=https://uadav-stream-staging.pages.dev node scripts/build-staging.mjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
