@@ -2130,7 +2130,14 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
           SELECT o.id,?,CASE WHEN p.pro_expires_at>? THEN p.pro_expires_at ELSE ? END,
           strftime('%Y-%m-%dT%H:%M:%fZ',CASE WHEN p.pro_expires_at>? THEN p.pro_expires_at ELSE ? END,'+'||o.duration_days||' days'),?,?
           FROM pro_payment_orders o LEFT JOIN artist_plan_state p ON p.artist_id=o.artist_id
-          WHERE o.id=? AND o.status IN (?,?) AND NOT EXISTS(SELECT 1 FROM artist_deletions d WHERE d.artist_id=o.artist_id)`).bind(transactionId,now,now,now,now,source,now,row.id,eligible[0],eligible[1]||eligible[0]),
+          WHERE o.id=? AND o.status IN (?,?) AND NOT EXISTS(SELECT 1 FROM artist_deletions d WHERE d.artist_id=o.artist_id)
+          AND (o.account_id IS NULL OR EXISTS(
+            SELECT 1 FROM audience_artist_links l JOIN audience_accounts a ON a.id=l.account_id
+            WHERE l.account_id=o.account_id AND l.artist_id=o.artist_id AND (l.expires_at=0 OR l.expires_at>?)
+            AND NOT EXISTS(SELECT 1 FROM audience_deletions d WHERE d.account_id=l.account_id)
+            AND ((l.claim_id IS NULL AND NOT EXISTS(SELECT 1 FROM artist_owners own WHERE own.artist_id=l.artist_id AND own.status='active'))
+              OR (l.claim_id IS NOT NULL AND l.claim_id=(SELECT own.claim_id FROM artist_owners own WHERE own.artist_id=l.artist_id AND own.status='active' ORDER BY own.created_at ASC LIMIT 1)))
+          ))`).bind(transactionId,now,now,now,now,source,now,row.id,eligible[0],eligible[1]||eligible[0],Date.now()),
         env.DB.prepare(`INSERT INTO artist_plan_state(artist_id,plan,pro_started_at,pro_expires_at,source,analytics_enabled,ai_enabled,updated_at)
           SELECT o.artist_id,'pro',f.created_at,f.expires_at,f.source,1,0,? FROM pro_payment_fulfillments f JOIN pro_payment_orders o ON o.id=f.order_id
           WHERE o.id=? AND o.status IN (?,?) AND NOT EXISTS(SELECT 1 FROM artist_deletions d WHERE d.artist_id=o.artist_id)
