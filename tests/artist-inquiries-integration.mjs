@@ -21,9 +21,12 @@ try{
  assert.equal((await call('artist/inquiries','PATCH',{id,estado:'leida'},a)).status,200);
  assert.equal((await call('account/notifications','GET',null,accountA)).data.items.some(n=>n.id==='inquiry:'+id),false);
  assert.equal((await call('artist/inquiries','GET',null,a)).data.items[0].estado,'leida');
+ for(const estado of ['respondida','cerrada','pendiente']){const result=await call('artist/inquiries','PATCH',{id,estado},a);assert.equal(result.status,200);assert.equal((await call('artist/inquiries','GET',null,a)).data.items[0].estado,estado);assert.equal((await call('artist/inquiries','GET',null,b)).data.items.length,0)}
+ assert.ok((await call('account/notifications','GET',null,accountA)).data.items.some(n=>n.id==='inquiry:'+id),'reopened inquiry restores its unread notification');
  assert.equal((await call('artist/inquiries','PATCH',{id,estado:'invalid'},a)).status,400);
  await DB.prepare("INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES('QA-OWNER','QA-A','new-owner-claim','owner@example.invalid','owner','active','admin_approved',?,?)").bind(new Date().toISOString(),new Date().toISOString()).run();
  assert.equal((await call('artist/inquiries','GET',null,a)).status,401,'ownerless legacy token must not bypass an active owner');
+ assert.equal((await call('artist/inquiries','PATCH',{id,estado:'cerrada'},a)).status,401,'old ownerless token cannot change private inquiry states');
  assert.equal((await call('contrataciones','POST',{artist_id:'QA-SUSPENDED',nombre:'Synthetic',email:'client@example.invalid',acepta_contrato:true})).status,403);
  const read=env.UADAV_DB.get;let reads=0,release;const gate=new Promise(resolve=>release=resolve);let racing=true;
  env.UADAV_DB.get=async key=>{const snapshot=await read(key);if(key==='contrataciones'&&racing){reads++;if(reads===2){racing=false;release()}await gate}return snapshot};
