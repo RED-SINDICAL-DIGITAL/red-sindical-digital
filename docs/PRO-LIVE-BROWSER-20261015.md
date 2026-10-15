@@ -17,3 +17,7 @@ Nueve pruebas de sesión/visibilidad pasan, también workspace-autosave.mjs incl
 ## Límites
 
 No verifica pago real ni un banco conectado, publicación final del perfil, hardware móvil/tablet/TV ni reproducción simultánea. Se conserva el perfil sintético y la promoción temporal para continuar. Datos y planes previos intactos; producción y Worker sin cambios.
+
+## Corrección desplegada verificada
+
+Manifest de staging confirmó commit 2a08fb5842db6fb761bb2da111977da9a281f143. Se recargó la cuenta del artista PRO: aparece «Presentación aprobada. Tu perfil sigue privado; se podrá compartir cuando se publique.» No se muestran enlaces Abrir/Copiar/Compartir públicos. Texto guardado y edición PRO continúan disponibles. Evidencia visual capturada. Se dejaron las pestañas de artista y Admin abiertas para continuar; esto no garantiza conservación de la sesión del navegador entre reinicios.
