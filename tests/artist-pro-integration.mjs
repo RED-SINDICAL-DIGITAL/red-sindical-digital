@@ -14,12 +14,16 @@ try{
  assert.equal((await call('artist/plan?token='+token)).data.plan,'free');
  const initial=await call('artist/workspace');assert.equal(initial.status,200);assert.equal(initial.data.pro,false);
  const body={revision:0,data:initial.data.data};body.data.kit.bio='Presentación ficticia';
+ body.data.quotes=[{id:'quote-retained',client:'Cliente ficticio privado',fee:'1250',paid:'300',payment_notes:'Nota privada retenida'}];
+ body.data.agenda=[{id:'quote-quote-retained',date:'2026-12-01',time:'18:30',show:'Magia de prueba',status:'Consultada'}];
+ body.data.leads=[{id:'lead-retained',client:'Contacto ficticio',notes:'Seguimiento privado'}];
  assert.equal((await call('artist/workspace','PUT',body)).status,403);
  assert.equal((await call('admin/artist-plan','PUT',{artist_id:id,plan:'pro'})).status,401);
  assert.equal((await call('admin/artist-plan','PUT',{artist_id:id,plan:'pro',pro_expires_at:new Date(Date.now()+86400000).toISOString(),ai_enabled:false},env.ADMIN_KEY)).status,200);
  assert.equal((await call('artist/plan?token='+token)).data.plan,'pro');
  assert.equal((await call('artist/workspace')).data.pro,true);
  const saved=await call('artist/workspace','PUT',body);assert.equal(saved.status,200);assert.equal(saved.data.revision,1);
+ const savedState=(await call('artist/workspace')).data;
  assert.equal((await call('artist/workspace','PUT',body)).status,409);
  kv.set('artistas',JSON.stringify([{id,nombre:'Artista ficticio',visible:true,presskit_enabled:true}]));
  await DB.prepare('UPDATE artist_workspaces SET public_json=? WHERE artist_id=?').bind(JSON.stringify({artist_id:id,kit:{name:'Artista ficticio',bio:'Presentación pública'}}),id).run();
@@ -28,10 +32,17 @@ try{
  assert.equal((await call('../share/presskit?id='+id)).status,200);
  await call('admin/artist-plan','PUT',{artist_id:id,plan:'pro',pro_expires_at:'2020-01-01T00:00:00Z',ai_enabled:false},env.ADMIN_KEY);
  const expired=await call('artist/workspace');assert.equal(expired.data.pro,false);assert.equal(expired.data.data.kit.bio,'Presentación ficticia');
+ assert.deepEqual(expired.data.data,savedState.data);
+ assert.equal(expired.data.data.quotes[0].payment_notes,'Nota privada retenida');
+ assert.equal(expired.data.data.agenda[0].time,'18:30');
+ assert.equal(expired.data.data.leads[0].notes,'Seguimiento privado');
  assert.equal((await call('artist/workspace','PUT',{...body,revision:1})).status,403);
  assert.equal((await call('public/presskit?artist_id='+id)).status,404,'expired PRO must not expose its public Press Kit');
  assert.equal((await call('public/share-link?kind=kit&id='+id)).status,404,'expired PRO must not generate a share preview');
  assert.equal((await call('../share/presskit?id='+id)).status,404);
+ assert.equal((await call('admin/artist-plan','PUT',{artist_id:id,plan:'pro',pro_expires_at:new Date(Date.now()+86400000).toISOString(),ai_enabled:false},env.ADMIN_KEY)).status,200);
+ const renewed=await call('artist/workspace');assert.equal(renewed.data.pro,true);assert.deepEqual(renewed.data.data,expired.data.data);assert.equal(renewed.data.revision,expired.data.revision);
+ const renewedSave=await call('artist/workspace','PUT',{revision:renewed.data.revision,data:renewed.data.data});assert.equal(renewedSave.status,200);assert.equal(renewedSave.data.revision,renewed.data.revision+1);
  assert.equal((await call('pro/payment-settings')).data.enabled,false);
  console.log('PASS: actual Worker + isolated SQLite: FREE restrictions, admin authorization, PRO activation, revision conflicts, expired PRO read preservation and blocked writes; payments disabled.');
 }finally{DB.close()}
