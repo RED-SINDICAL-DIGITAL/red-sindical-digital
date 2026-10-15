@@ -29,7 +29,7 @@ export function stagingRuntime(origin,api){
     }
     return nativeFetch(input,init);
   };
-  document.addEventListener('DOMContentLoaded',()=>{const b=document.createElement('div');b.id='uadav-staging-banner';b.textContent='PRUEBAS · Datos ficticios · No realizar pagos';b.setAttribute('role','status');document.body.appendChild(b);});
+  document.addEventListener('DOMContentLoaded',()=>{if(window.top!==window.self)return;document.documentElement.classList.add('uadav-staging-top');const b=document.createElement('div');b.id='uadav-staging-banner';b.textContent='PRUEBAS · Datos ficticios · No realizar pagos';b.setAttribute('role','status');document.body.appendChild(b);});
 }
 export async function build(root=ROOT,origin=process.env.UADAV_STAGING_ORIGIN){
   origin=stagingOrigin(origin);
@@ -64,7 +64,7 @@ export async function build(root=ROOT,origin=process.env.UADAV_STAGING_ORIGIN){
     }else output.set(rel,bytes);
   }
   output.set('staging-bootstrap.js',Buffer.from('('+stagingRuntime.toString()+')('+JSON.stringify(origin)+','+JSON.stringify(API)+');'));
-  output.set('staging-banner.css',Buffer.from('#uadav-staging-banner{position:fixed;top:0;left:0;right:0;z-index:2147483647;text-align:center;background:#ffe082;color:#171717;padding:4px 8px;font:700 11px/16px system-ui;pointer-events:none}body{padding-top:24px!important}'));
+  output.set('staging-banner.css',Buffer.from('#uadav-staging-banner{position:fixed;top:0;left:0;right:0;z-index:2147483647;text-align:center;background:#ffe082;color:#171717;padding:4px 8px;font:700 11px/16px system-ui;pointer-events:none}.uadav-staging-top body{padding-top:24px!important}'));
   output.set('robots.txt',Buffer.from('User-agent: *\nDisallow: /\n'));
   const csp="default-src 'self'; connect-src 'self' https://uadav-api-staging.uadavstream.workers.dev https://www.googleapis.com https://youtube.googleapis.com https://www.youtube.com https://api.zeno.fm https://stream.zeno.fm; script-src 'self' 'unsafe-inline' https://www.youtube.com https://s.ytimg.com https://challenges.cloudflare.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
   output.set('_headers',Buffer.from('/*\n  X-Robots-Tag: noindex, nofollow, noarchive\n  Cache-Control: no-store\n  Referrer-Policy: strict-origin-when-cross-origin\n  Content-Security-Policy: '+csp+'\n'));
