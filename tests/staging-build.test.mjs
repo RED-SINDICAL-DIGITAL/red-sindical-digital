@@ -40,3 +40,12 @@ test('build isolates assets without copying backend, deployment metadata or priv
   await assert.rejects(build(root,origin),/already exists/);
  }finally{await rm(root,{recursive:true,force:true});}
 });
+
+test('staging banner appears only in the top document, keeping embedded layout unchanged',()=>{
+ for(const embedded of [false,true]){
+  const appended=[],classes=[];let ready;const window={fetch:async()=>new Response('{}')};window.self=window;window.top=embedded?{}:window;
+  const ctx={window,location:{origin,href:origin+'/app.html'},document:{documentElement:{classList:{add:v=>classes.push(v)}},body:{appendChild:b=>appended.push(b)},createElement:()=>({setAttribute(){}}),addEventListener:(event,fn)=>{ready=fn}},Request,URL,Promise,Error};
+  vm.runInNewContext('('+stagingRuntime.toString()+')('+JSON.stringify(origin)+','+JSON.stringify(API)+')',ctx);ready();
+  assert.equal(appended.length,embedded?0:1);assert.equal(classes.length,embedded?0:1);
+ }
+});
