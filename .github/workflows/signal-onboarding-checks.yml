@@ -1,10 +1,14 @@
-name: Signal onboarding checks
+name: Platform integration checks
 on:
   push:
     branches:
       - audit/public-job-status-20261012
   pull_request:
     paths:
+      - 'uadav-*.js'
+      - 'uadav-*.css'
+      - 'platform-*.js'
+      - '*.html'
       - uadav-artist-handle-v140.js
       - tests/artist-handle-ui.test.cjs
       - uadav-artist-inquiries-v130.js
