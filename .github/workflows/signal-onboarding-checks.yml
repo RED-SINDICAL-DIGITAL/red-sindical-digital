@@ -5,6 +5,8 @@ on:
       - audit/public-job-status-20261012
   pull_request:
     paths:
+      - uadav-artist-handle-v140.js
+      - tests/artist-handle-ui.test.cjs
       - uadav-artist-inquiries-v130.js
       - tests/artist-inquiry-account.test.cjs
       - tests/artist-profile-drafts.mjs
@@ -81,6 +83,8 @@ jobs:
         run: node --test tests/account-local-access.test.cjs
       - name: Artist inquiries and account notifications
         run: node tests/artist-inquiries-integration.mjs
+      - name: Username editor privacy and retry
+        run: node --test tests/artist-handle-ui.test.cjs
       - name: Inquiry inbox account isolation
         run: node --test tests/artist-inquiry-account.test.cjs
       - name: Booking form retry identity
