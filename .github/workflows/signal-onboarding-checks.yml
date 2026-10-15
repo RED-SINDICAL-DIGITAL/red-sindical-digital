@@ -5,6 +5,8 @@ on:
       - audit/public-job-status-20261012
   pull_request:
     paths:
+      - uadav-artist-inquiries-v130.js
+      - tests/artist-inquiry-account.test.cjs
       - tests/artist-profile-drafts.mjs
       - soy-artista.html
       - uadav-artist-onboarding-v145.js
@@ -79,6 +81,8 @@ jobs:
         run: node --test tests/account-local-access.test.cjs
       - name: Artist inquiries and account notifications
         run: node tests/artist-inquiries-integration.mjs
+      - name: Inquiry inbox account isolation
+        run: node --test tests/artist-inquiry-account.test.cjs
       - name: Booking form retry identity
         run: node --test tests/booking-form-retry.test.cjs
       - name: Artist management session integration
