@@ -33,13 +33,15 @@ test('build isolates assets without copying backend, deployment metadata or priv
   await mkdir(path.join(root,'assets'));await writeFile(path.join(root,'assets','logo.svg'),'<svg/>');
   await mkdir(path.join(root,'tests'));
   await writeFile(path.join(root,'tests','staging-signals-diagnostic.html'),'<html><head><title>Signal diagnostic</title></head><body>STAGING ONLY</body></html>');
+  await writeFile(path.join(root,'tests','staging-presskit-diagnostic.html'),'<html><head><title>Print diagnostic</title></head><body>SYNTHETIC PRESS KIT</body></html>');
   await writeFile(path.join(root,'tests','private-fixture.json'),'DO NOT PUBLISH');
   const result=await build(root,origin);const names=await readdir(result.out);
   for(const p of ['worker.js','_worker.js','CNAME','secret.env','docs'])assert(!names.includes(p),p);
   const page=await readFile(path.join(result.out,'usuario.html'),'utf8');assert(page.includes('noindex'));assert(page.indexOf('staging-bootstrap.js')<page.indexOf('fetch('));assert(!page.includes('uadav-api.uadavstream.workers.dev'));
   const headers=await readFile(path.join(result.out,'_headers'),'utf8');const connect=headers.match(/connect-src ([^;]+)/)[1];assert(connect.includes(new URL(API).origin));assert(!connect.includes('https:;'));assert(!connect.includes('uadav-api.uadavstream.workers.dev'));
   assert.equal(await readFile(path.join(root,'worker.js'),'utf8'),'DO NOT PUBLISH');
-  assert.deepEqual(await readdir(path.join(result.out,'tests')),['staging-signals-diagnostic.html']);
+  assert.deepEqual((await readdir(path.join(result.out,'tests'))).sort(),['staging-presskit-diagnostic.html','staging-signals-diagnostic.html']);
+  const printDiagnostic=await readFile(path.join(result.out,'tests','staging-presskit-diagnostic.html'),'utf8');assert(printDiagnostic.includes('SYNTHETIC PRESS KIT'));assert(printDiagnostic.includes('noindex'));assert(printDiagnostic.includes('staging-bootstrap.js'));
   const diagnostic=await readFile(path.join(result.out,'tests','staging-signals-diagnostic.html'),'utf8');
   assert(diagnostic.includes('STAGING ONLY'));assert(diagnostic.includes('noindex'));assert(diagnostic.includes('staging-bootstrap.js'));
   assert(result.manifest.files.every(f=>/^[a-f0-9]{64}$/.test(f.sha256)));
