@@ -20,6 +20,10 @@ Worker commit aa8d4b35178ec1a9472795ad8e1cd9849398c629; blob03a02b7c9e92a63b428a
 
 ## Deployment and remaining limits
 
-Not deployed to staging Worker or production. Frontend branch auto-build does not update Worker. Must update only uadav-api-staging and perform actual D1/KV tests before proposing production.
+Owner reported deployment to uadav-api-staging on 2026-10-16. The remote read-only smoke test passed afterward: D1/KV health, enrollment closed, anonymous private endpoints denied. This does not independently identify the deployed Worker binary or validate its new stale-snapshot behavior. Production was not deployed. Authenticated actual D1/KV publication tests remain pending.
 
 This is a fail-closed guard, not a global D1/KV transaction. It protects committed onboarding publications represented in D1. Mixed catalog writers outside this flow and a delayed KV write completing after lease expiration remain unresolved. If an Admin intentionally removed a previously published onboarding entry without reconciling its D1 application, publication will be blocked until that inconsistency is reviewed. Do not bypass guard or erase records automatically.
+
+## Follow-up validation
+
+Radio and TV now each run all five lease/recovery scenarios (ten total), passing locally; test commit e876ca48715b5935202d3b15681871eb8f9e4757. Staging build now includes only tests/staging-signals-diagnostic.html, without traversing/exposing other tests. Five build isolation tests pass. Platform integration checks job 116863345813 for commit 50c7251ee5bff8fac3e2f393322ab82f0f0fc163 completed successfully, including SQLite integration, Worker syntax and staging build. Live diagnostic page rendered successfully at /tests/staging-signals-diagnostic. Secure Admin credential request was declined; no authenticated publication test was executed in this follow-up.
