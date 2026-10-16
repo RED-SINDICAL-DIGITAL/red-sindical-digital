@@ -8,8 +8,8 @@ const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(s
 const realNow=Date.now;
 for(const signalType of ['tv','radio']){
  const catalogKey=signalType==='radio'?'radios':'senales_oficiales';
-for(const scenario of ['normal','expired-before-write','newer-attempt','recovery-changed','stale-catalog-snapshot']){
- const DB=sqliteD1(),values=new Map();let writes=0,staleSnapshot=true;
+for(const scenario of ['normal','expired-before-write','newer-attempt','recovery-changed','stale-catalog-snapshot','kv-ack-lost','d1-finalize-failed']){
+ const DB=sqliteD1(),values=new Map();let writes=0,staleSnapshot=true,faultActive=true;
  const item={id:'LEASE-TEST',type:signalType,status:'approved',name:'Synthetic TV',stream_url:'https://stream.example/test.m3u8',created_at:'2026-10-14T00:00:00Z'};
  const env={DB,ADMIN_KEY:'isolated-admin',UADAV_DB:{get:async key=>{
   if(key===catalogKey&&scenario==='expired-before-write')Date.now=()=>realNow()+121000;
@@ -19,6 +19,7 @@ for(const scenario of ['normal','expired-before-write','newer-attempt','recovery
   values.set(key,value);
   if(key===catalogKey){
    writes++;
+   if(scenario==='kv-ack-lost'&&faultActive){faultActive=false;throw Error('Injected lost KV acknowledgement after storing catalog')}
    if(scenario==='newer-attempt'){
     await DB.prepare('UPDATE signal_onboarding_applications SET data_json=? WHERE id=?').bind(JSON.stringify({...item,status:'publishing',publication_token:'NEWER-ATTEMPT'}),item.id).run();
     await DB.prepare('UPDATE signal_onboarding_catalog_locks SET token=?,expires_at=? WHERE id=?').bind('NEWER-LOCK',realNow()+120000,'signal-catalog:'+signalType).run();
@@ -37,8 +38,20 @@ for(const scenario of ['normal','expired-before-write','newer-attempt','recovery
    assert.equal(JSON.parse((await prepare('SELECT data_json FROM signal_onboarding_applications WHERE id=?').bind(item.id).first()).data_json).publication_token,'NEWER-ATTEMPT');
    continue;
   }
+  if(scenario==='d1-finalize-failed'){
+   const prepare=DB.prepare.bind(DB);DB.prepare=sql=>{const q=prepare(sql);if(sql.startsWith('UPDATE signal_onboarding_applications SET data_json=?')&&sql.includes('RETURNING id')){const first=q.first.bind(q);q.first=async()=>{if(writes>0&&faultActive){faultActive=false;throw Error('Injected D1 finalization failure')}return first()}}return q};
+  }
   const response=await call('signal-onboarding/publish',{id:item.id});
   const current=JSON.parse((await DB.prepare('SELECT data_json FROM signal_onboarding_applications WHERE id=?').bind(item.id).first()).data_json);
+  if(scenario==='kv-ack-lost'||scenario==='d1-finalize-failed'){
+   assert.equal(response.status,503);assert.equal(current.status,'approved');assert.equal(writes,1);
+   const saved=JSON.parse(values.get(catalogKey));assert.equal(saved.length,1);assert.equal(saved[0].onboarding_id,item.id);
+   const retry=await call('signal-onboarding/publish',{id:item.id});assert.equal(retry.status,200);assert.equal((await retry.json()).reconciled,true);
+   assert.equal(writes,1,'reconciliation must not append or rewrite catalog');
+   const final=JSON.parse((await DB.prepare('SELECT data_json FROM signal_onboarding_applications WHERE id=?').bind(item.id).first()).data_json);assert.equal(final.status,'published');assert.equal(final.published_id,saved[0].id);
+   assert.equal((await call('signal-onboarding/publish',{id:item.id})).status,409);
+   assert.equal((await DB.prepare('SELECT COUNT(*) AS n FROM signal_onboarding_catalog_locks').first()).n,0,'lock must be released');
+  }
   if(scenario==='normal'){assert.equal(response.status,200);assert.equal(current.status,'published');assert.equal(writes,1)}
   if(scenario==='stale-catalog-snapshot'){
    assert.equal(response.status,200);
@@ -59,4 +72,4 @@ for(const scenario of ['normal','expired-before-write','newer-attempt','recovery
  }finally{Date.now=realNow;DB.close()}
 }
 }
-console.log('PASS: radio and TV actual Worker + SQLite: normal publication, expired lease, newer ownership, recovery race, stale KV rejection and successful fresh retry');
+console.log('PASS: radio and TV actual Worker + SQLite: normal publication, expired lease, newer ownership, recovery race, stale KV rejection, successful fresh retry, lost KV acknowledgement and interrupted D1 finalization');
