@@ -5,6 +5,8 @@ on:
       - audit/public-job-status-20261012
   pull_request:
     paths:
+      - service-worker.js
+      - tests/legacy-worker-retirement.test.mjs
       - tests/update-notice.test.mjs
       - tests/radio-recovery.test.mjs
       - tests/admin-navigation.test.cjs
@@ -124,7 +126,7 @@ jobs:
       - name: Private profile draft lifecycle
         run: node tests/artist-profile-drafts.mjs
       - name: Update notice persistence
-        run: node --test tests/update-notice.test.mjs
+        run: node --test tests/update-notice.test.mjs tests/legacy-worker-retirement.test.mjs
       - name: Radio error and retry behavior
         run: node --test tests/radio-recovery.test.mjs
       - name: Worker syntax
