@@ -21,6 +21,7 @@ on:
       - tests/artist-inquiry-account.test.cjs
       - app.html
       - tests/artist-shell-route.test.cjs
+      - tests/artist-navigation-follow.test.cjs
       - tests/workspace-daily-tools.test.cjs
       - tests/presskit-render-print.test.mjs
       - tests/workspace-autosave.mjs
@@ -125,7 +126,7 @@ jobs:
       - name: Booking form retry identity
         run: node --test tests/booking-form-retry.test.cjs tests/booking-availability.test.mjs
       - name: Artist shell tab synchronization
-        run: node --test tests/artist-shell-route.test.cjs
+        run: node --test tests/artist-shell-route.test.cjs tests/artist-navigation-follow.test.cjs
       - name: Artist management session integration
         run: node --test tests/artist-manage-api.test.cjs tests/artist-session-identity.test.cjs tests/artist-session-paths.test.cjs
       - name: Staging build isolation tests
