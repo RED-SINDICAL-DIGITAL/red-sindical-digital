@@ -44,6 +44,7 @@ on:
       - tests/booking-form-retry.test.cjs
       - contratar-artista.html
       - tests/account-local-access.test.cjs
+      - tests/account-recovery-deletion.mjs
       - tests/account-sync-conflicts.test.cjs
       - uadav-account-sync.js
       - tests/artist-workspace-session.test.cjs
@@ -110,6 +111,8 @@ jobs:
         run: node tests/artist-public-visibility.mjs
       - name: Local account access and recovery isolation
         run: node --test tests/account-local-access.test.cjs tests/account-sync-conflicts.test.cjs
+      - name: Account recovery and deletion lifecycle
+        run: node tests/account-recovery-deletion.mjs
       - name: Artist inquiries and account notifications
         run: node tests/artist-inquiries-integration.mjs
       - name: Username editor privacy and retry
