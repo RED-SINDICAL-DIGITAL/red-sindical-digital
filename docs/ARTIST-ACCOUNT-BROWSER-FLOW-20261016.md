@@ -41,3 +41,9 @@ Found real expiry drift: selected17Oct2026, saved and reopened editor displayed1
 ## Admin expiry live browser round-trip PASS
 
 Reloaded Admin staging, temporarily enabled PRO on the same hidden synthetic artist with selected date2026-10-17. Saved, reopened: input remained2026-10-17 (previous defect showed18). Saved again without modifying fields and reopened: still2026-10-17; Admin list also showed until17Oct2026. Screenshot captured input. Restored original FREE and cleared expiry, saved and verified list Gratis/Oculto. No payment or publication. Confirms calendar-day stability across two real saves; precise unchanged timestamp preservation is covered separately by unit tests, not by reading hidden browser state. Production unchanged.
+
+## Basic profile accessible labels
+
+Frontend commitd0281efb52adab428939adb9867ce1032923984f gives12 existing basic profile fields explicit stable ids and corresponding label for attributes: artistic name, specialty, city, photo, optional YouTube, Twitch, Kick, fee, availability, support URL, web and bio. Field names, values, submission payloads and FREE/PRO permissions unchanged. Specialty remains editable text with suggestions and YouTube optional. This improves keyboard/assistive identification, not a certification of physical TV/mobile UX.
+
+Two new label contracts plus8 management and9 PRO plan tests pass (19 total); inline syntax passes. CI includes contracts. First staging read still served prior HTML during Pages propagation; visual accessible-name verification pending. No Worker or production changes, no new user records.
