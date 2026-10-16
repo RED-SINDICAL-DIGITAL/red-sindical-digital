@@ -5,6 +5,7 @@ on:
       - audit/public-job-status-20261012
   pull_request:
     paths:
+      - tests/radio-recovery.test.mjs
       - tests/admin-navigation.test.cjs
       - 'uadav-*.js'
       - 'uadav-*.css'
@@ -121,6 +122,8 @@ jobs:
         run: node --test tests/artist-onboarding-start.test.cjs
       - name: Private profile draft lifecycle
         run: node tests/artist-profile-drafts.mjs
+      - name: Radio error and retry behavior
+        run: node --test tests/radio-recovery.test.mjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
