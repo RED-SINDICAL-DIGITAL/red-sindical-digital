@@ -724,12 +724,37 @@ const uadavWorker = {
       }catch(_){ return []; }
     }
 
+    async function officialDiscoveryRequest(resource,params){
+      if(!await youtubeApiEnabled())return null;
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+      try{
+        const query=new URLSearchParams({...params,key:env.YOUTUBE_API_KEY});
+        const response=await fetch('https://www.googleapis.com/youtube/v3/'+resource+'?'+query,{signal:controller.signal});
+        if(!response.ok)return null;
+        const data=await response.json();
+        return Array.isArray(data?.items)?data:null;
+      }catch(_){return null}finally{clearTimeout(timer)}
+    }
+    async function officialDiscoveryChannelSearch(name){
+      const data=await officialDiscoveryRequest('search',{part:'snippet',type:'channel',q:String(name),maxResults:'8'});
+      const item=data?.items.find(x=>/^UC[A-Za-z0-9_-]{22}$/.test(String(x?.id?.channelId||'')));
+      if(!item)return null;
+      const snippet=item.snippet||{};
+      return {channelId:item.id.channelId,nombre:String(snippet.title||name),thumbnail:String(snippet.thumbnails?.high?.url||snippet.thumbnails?.default?.url||''),bio:String(snippet.description||''),source:'youtube'};
+    }
+    async function officialDiscoveryChannelInfo(id){
+      if(!/^UC[A-Za-z0-9_-]{22}$/.test(id))return null;
+      const data=await officialDiscoveryRequest('channels',{part:'snippet,statistics,brandingSettings',id});
+      const item=data?.items.find(x=>x?.id===id);if(!item)return null;
+      const snippet=item.snippet||{},stats=item.statistics||{};
+      return {channelId:id,nombre:String(snippet.title||'Artista'),thumbnail:String(snippet.thumbnails?.high?.url||snippet.thumbnails?.default?.url||''),banner:String(item.brandingSettings?.image?.bannerExternalUrl||''),bio:String(snippet.description||''),subscribers:Number(stats.subscriberCount||0),total_views:Number(stats.viewCount||0),latestVideos:[],source:'youtube'};
+    }
     async function invidiousChannelSearch(name) {
       const arr=await invidiousSearch(name,'channel',8);
       const item=arr.find(x=>x?.authorId||x?.channelId||x?.ucid||x?.id);
-      if(!item) return null;
+      if(!item) return officialDiscoveryChannelSearch(name);
       const channelId=String(item.authorId||item.channelId||item.ucid||item.id||'');
-      if(!channelId) return null;
+      if(!channelId) return officialDiscoveryChannelSearch(name);
       return {channelId,nombre:String(item.author||item.title||name),thumbnail:String(item.authorThumbnails?.[0]?.url||item.videoThumbnails?.[0]?.url||''),bio:String(item.description||''),source:'invidious'};
     }
     async function invidiousChannelInfo(channelId){
@@ -744,7 +769,7 @@ const uadavWorker = {
           return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),subscribers:Number(d.subCount||0),total_views:Number(d.totalViews||0),latestVideos:Array.isArray(d.latestVideos)?d.latestVideos.slice(0,24):[],source:'invidious'};
         }finally{clearTimeout(timer)}
       };
-      try{return await Promise.any(INVIDIOUS_INSTANCES.map(base=>requestOne(base)))}catch(_){return null}
+      try{return await Promise.any(INVIDIOUS_INSTANCES.map(base=>requestOne(base)))}catch(_){return officialDiscoveryChannelInfo(id)}
     }
     async function invidiousVideoInfo(videoId){
       const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
