@@ -35,6 +35,7 @@ on:
       - uadav-artist-account-v142.js
       - tests/artist-tool-access.test.cjs
       - gestionar-artista.html
+      - tests/artist-profile-labels.test.mjs
       - tests/pro-plan-ui.test.mjs
       - tests/artist-manage-api.test.cjs
       - tests/artist-session-identity.test.cjs
@@ -137,7 +138,7 @@ jobs:
       - name: Admin PRO expiry in Tokyo
         run: TZ=Asia/Tokyo node --test tests/admin-pro-expiry.test.mjs
       - name: PRO plan readiness and renewal
-        run: node --test tests/pro-plan-ui.test.mjs
+        run: node --test tests/pro-plan-ui.test.mjs tests/artist-profile-labels.test.mjs
       - name: Worker syntax
         run: node --check worker.js
       - name: Signal onboarding contract
