@@ -6,11 +6,12 @@ globalThis.crypto ||= webcrypto;
 const source=await readFile(new URL('../worker.js',import.meta.url),'utf8');
 const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const realNow=Date.now;
-for(const scenario of ['normal','expired-before-write','newer-attempt','recovery-changed']){
- const DB=sqliteD1(),values=new Map();let writes=0;
+for(const scenario of ['normal','expired-before-write','newer-attempt','recovery-changed','stale-catalog-snapshot']){
+ const DB=sqliteD1(),values=new Map();let writes=0,staleSnapshot=true;
  const item={id:'LEASE-TEST',type:'tv',status:'approved',name:'Synthetic TV',stream_url:'https://stream.example/test.m3u8',created_at:'2026-10-14T00:00:00Z'};
  const env={DB,ADMIN_KEY:'isolated-admin',UADAV_DB:{get:async key=>{
   if(key==='senales_oficiales'&&scenario==='expired-before-write')Date.now=()=>realNow()+121000;
+  if(key==='senales_oficiales'&&scenario==='stale-catalog-snapshot'&&writes>0&&staleSnapshot)return '[]';
   return values.get(key)||null;
  },put:async(key,value)=>{
   values.set(key,value);
@@ -37,6 +38,17 @@ for(const scenario of ['normal','expired-before-write','newer-attempt','recovery
   const response=await call('signal-onboarding/publish',{id:item.id});
   const current=JSON.parse((await DB.prepare('SELECT data_json FROM signal_onboarding_applications WHERE id=?').bind(item.id).first()).data_json);
   if(scenario==='normal'){assert.equal(response.status,200);assert.equal(current.status,'published');assert.equal(writes,1)}
+  if(scenario==='stale-catalog-snapshot'){
+   assert.equal(response.status,200);
+   const next={...item,id:'SECOND-LEASE-TEST',stream_url:'https://stream.example/second.m3u8'};
+   await DB.prepare('INSERT INTO signal_onboarding_applications(id,stream_key,data_json,created_at) VALUES(?,?,?,?)').bind(next.id,next.stream_url,JSON.stringify(next),next.created_at).run();
+   const second=await call('signal-onboarding/publish',{id:next.id});assert.equal(second.status,503,'stale KV snapshot must not overwrite a committed publication');
+   assert.equal((await second.json()).code,'CATALOG_SNAPSHOT_STALE');
+   assert.equal(writes,1);assert.equal(JSON.parse(values.get('senales_oficiales'))[0].onboarding_id,item.id);
+   const retryable=JSON.parse((await DB.prepare('SELECT data_json FROM signal_onboarding_applications WHERE id=?').bind(next.id).first()).data_json);assert.equal(retryable.status,'approved');
+   staleSnapshot=false;assert.equal((await call('signal-onboarding/publish',{id:next.id})).status,200);
+   assert.equal(writes,2);assert.equal(JSON.parse(values.get('senales_oficiales')).length,2,'fresh retry must preserve both catalog entries');
+  }
   if(scenario==='expired-before-write'){assert.equal(response.status,503);assert.equal(current.status,'approved');assert.equal(writes,0,'expired operation must not start a KV write')}
   if(scenario==='newer-attempt'){
    assert.equal(response.status,503);assert.equal(current.status,'publishing');assert.equal(current.publication_token,'NEWER-ATTEMPT');
