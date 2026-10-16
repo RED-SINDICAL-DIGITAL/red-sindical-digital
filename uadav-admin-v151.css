@@ -69,3 +69,10 @@ body[data-page="admin"] .artist-records .stats-grid{grid-template-columns:repeat
 @media(max-width:359px){body[data-page="admin"] #adminTV{display:none}body[data-page="admin"] .artist-records .stats-grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:720px){body[data-page="admin"] .federated-candidate{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}body[data-page="admin"] .federated-candidate .actions{justify-content:flex-start}body[data-page="admin"] .federated-candidate .actions>.btn{flex:1 1 130px}}
 
+
+/* Activity cards: reserve a readable text column; long references use a separate row. */
+body[data-page="admin"] .activity{grid-template-columns:34px minmax(0,1fr);align-items:start}
+body[data-page="admin"] .activity>div{min-width:0}
+body[data-page="admin"] .activity>.badge{grid-column:2;justify-self:start;max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:normal}
+body[data-page="admin"] .activity>div:only-child{grid-column:1/-1}
+body[data-page="admin"] .activity :is(strong,small){line-height:1.5;overflow-wrap:anywhere}
