@@ -9,3 +9,13 @@ Artist page now retries discovery rather than reusing a cached discovered profil
 Validation: Worker syntax passed; actual Worker + SQLite discovery regression passed (fallback metadata, disabled/missing key, official error, no credential exposure, no privilege grant, Invidious success makes no Google calls). Public visibility regression passed; 13 artist pagination/navigation tests passed. New discovery regression added to contract workflow. CI execution and real updated-Worker integration remain pending.
 
 Deployment: frontend branch is staging source; Worker requires a separate staging deployment of worker.js from commit f9ce58a39a78901161535c89924911c9a4b02538. Do not deploy production or merge. After deployment retry MasterboyVEVO profile, channel library pagination and actual playback. Bank payments remain last and disabled.
+
+## Live staging verification after deployment, 23:50 UTC
+
+- Discover MasterboyVEVO now returns HTTP 200 with channel UC9E_blij4oGZb8LTwXzRWjw and public image; no affiliation/ownership grant.
+- Browser initially reused an old empty view; one reload retrieved current frontend. Artist image, Videos, Playlists and Colecciones tabs appeared and videos rendered.
+- Official channel_library videos returned source youtube_api, 29 items, next_cursor null and has_more false. Videos tab displayed all 29. Playlists request finished empty for this channel; no album completeness claim.
+- Opened Show Me Colours official video from artist; native Play clicked. Actual DOM video currentTime 0, readyState 0, paused false, error null. Playback NOT verified; no explicit bot/region diagnosis. Closed player after test.
+- Screenshot shows fallback video thumbnails despite API providing ytimg URLs; investigate image loading separately. Artist portrait/banner loaded. Do not treat this as completed visual QA.
+- GitHub Actions at commit 2f5225941cedea40c183edf49143c591232acb03: Platform integration checks run 569 (38978895273) success; Job status contract checks run 287 (38978895323) success.
+- No production deployment, merge or bank activation performed.
