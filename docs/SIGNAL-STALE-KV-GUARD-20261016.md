@@ -27,3 +27,9 @@ This is a fail-closed guard, not a global D1/KV transaction. It protects committ
 ## Follow-up validation
 
 Radio and TV now each run all five lease/recovery scenarios (ten total), passing locally; test commit e876ca48715b5935202d3b15681871eb8f9e4757. Staging build now includes only tests/staging-signals-diagnostic.html, without traversing/exposing other tests. Five build isolation tests pass. Platform integration checks job 116863345813 for commit 50c7251ee5bff8fac3e2f393322ab82f0f0fc163 completed successfully, including SQLite integration, Worker syntax and staging build. Live diagnostic page rendered successfully at /tests/staging-signals-diagnostic. Secure Admin credential request was declined; no authenticated publication test was executed in this follow-up.
+
+## Actual remote integration PASS — 2026-10-16
+
+Secure browser credential entry succeeded; the diagnostic executed against uadav-api-staging with actual Cloudflare D1/KV. All 19 visible checks passed: protected inbox, closed enrollment, two synthetic KV applications, migration preview and execution to D1, pending publication rejected, independent approval, Radio and TV publication, exactly one successful concurrent TV publication with the other conflicted, duplicate retry rejected, exactly one catalog copy each, and final D1 published states. Enrollment stayed closed. Two synthetic radio/TV records remain in staging; no production changes or existing data deletion. Credential input was cleared by the diagnostic.
+
+This verifies the normal remote publication lifecycle and duplicate/concurrent attempts on one TV application. It does NOT inject stale KV reads remotely, prove cross-application/mixed-writer safety, test delayed writes after lock expiry, or verify media playback. Those limits remain open. Local stale-read regression evidence remains separate.
