@@ -12,7 +12,7 @@ const get=async path=>{
 const health=await get('health');assert.equal(health.response.status,200);assert.equal(health.body.kv,true);assert.equal(health.body.d1,true);
 const config=await get('signal-onboarding/config');assert.equal(config.response.status,200);
 assert.equal(config.body.enabled,false);assert.equal(config.body.radio,false);assert.equal(config.body.tv,false);
-for(const route of ['signal-onboarding/applications','signal_onboarding_applications','ticket_orders','marketplace_requests','postulaciones_trabajo','new_private_key_not_previously_known','custom-owner-token']){
+for(const route of ['artist/inquiries','artist/workspace','account/artists','admin/artist-inquiries','signal-onboarding/applications','signal_onboarding_applications','ticket_orders','marketplace_requests','postulaciones_trabajo','new_private_key_not_previously_known','custom-owner-token']){
  const {response}=await get(route);assert.equal(response.status,401,route);
 }
 console.log('PASS: isolated remote staging health, enrollment closed, anonymous access denied; no writes performed');
