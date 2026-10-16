@@ -15,3 +15,9 @@ Authenticated Admin temporarily published only synthetic ART-e59bee06d32745e9911
 Private FREE inbox refresh showed exactly one new consultation with matching event, requester, message and reference. Changed state Nueva→Leída through artist UI. Full reload retained session, same consultation and Leída, count1received/0new. Email link not clicked; no external reply/message sent. Confirms real Cloudflare delivery and status persistence for account-linked artist, including continued private access after profile hidden again.
 
 New UX finding: public booking URL with an existing hidden artist id still renders an editable form with raw artist id, instead of prechecking visibility and displaying a clear unavailable message. Backend visibility denial is covered by isolated tests; no hidden-profile submission was attempted in this browser run. Frontend availability precheck remains to repair; do not claim full form UX complete.
+
+## Booking availability UX patch
+
+Frontend commit4137148e017f4ea25faa253a8cbe002cd65953d6 checks existing public/artista GET before enabling personal fields and submission. Public profile must have an id, visible not false and marketplace_enabled not false. No PRO requirement. Heading uses textContent with public artist name; unavailable/404/403 and network failures disable fields and show a retry control with15s request timeout. Missing id never requests API. Submit also guards artistReady; backend continues authoritative checking if visibility changes later. No new Worker required.
+
+Eight new availability tests plus three existing booking retry tests pass; inline syntax passes. Platform CI job117110771099 completed successfully for integration commit1eeba22d424bf613e83dea2f223f63c83266baad. First browser reload still served prior form during Pages propagation; do not count that as a passing test of the patch. Live UI confirmation remains pending at this checkpoint.
