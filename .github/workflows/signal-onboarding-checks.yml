@@ -22,6 +22,7 @@ on:
       - app.html
       - tests/artist-shell-route.test.cjs
       - tests/workspace-daily-tools.test.cjs
+      - tests/presskit-render-print.test.mjs
       - tests/workspace-autosave.mjs
       - uadav-community-admin-v144.js
       - uadav-pending-admin-v146.js
@@ -100,7 +101,7 @@ jobs:
       - name: Isolated Admin preview boundaries
         run: node tests/serve-admin-preview.mjs --check
       - name: Quote and agenda daily workflows
-        run: node --test tests/workspace-daily-tools.test.cjs
+        run: node --test tests/workspace-daily-tools.test.cjs tests/presskit-render-print.test.mjs
       - name: Workspace autosave and publication recovery
         run: node tests/workspace-autosave.mjs
       - name: Artist workspace identity isolation
