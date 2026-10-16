@@ -130,6 +130,8 @@ jobs:
         run: node --test tests/artist-inquiry-account.test.cjs
       - name: Booking form retry identity
         run: node --test tests/booking-form-retry.test.cjs tests/booking-availability.test.mjs
+      - name: Frame readiness and isolated fallback search
+        run: node --test tests/mobile-frame-search.test.cjs
       - name: Artist shell tab synchronization
         run: node --test tests/artist-shell-route.test.cjs tests/artist-navigation-follow.test.cjs tests/artist-library-pagination.test.cjs tests/playlist-queue-recovery.test.cjs tests/search-progress-recovery.test.cjs
       - name: Artist management session integration
