@@ -114,6 +114,8 @@ jobs:
         run: node --test tests/artist-workspace-session.test.cjs
       - name: Press Kit publication privacy
         run: node tests/presskit-publication-privacy.mjs
+      - name: Official channel discovery fallback
+        run: node tests/artist-channel-discovery.mjs
       - name: Artist public visibility and private metadata
         run: node tests/artist-public-visibility.mjs
       - name: Local account access and recovery isolation
