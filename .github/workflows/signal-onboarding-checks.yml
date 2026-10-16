@@ -37,6 +37,7 @@ on:
       - tests/artist-manage-api.test.cjs
       - tests/artist-session-identity.test.cjs
       - tests/artist-session-paths.test.cjs
+      - tests/booking-availability.test.mjs
       - tests/booking-form-retry.test.cjs
       - contratar-artista.html
       - tests/account-local-access.test.cjs
@@ -112,7 +113,7 @@ jobs:
       - name: Inquiry inbox account isolation
         run: node --test tests/artist-inquiry-account.test.cjs
       - name: Booking form retry identity
-        run: node --test tests/booking-form-retry.test.cjs
+        run: node --test tests/booking-form-retry.test.cjs tests/booking-availability.test.mjs
       - name: Artist shell tab synchronization
         run: node --test tests/artist-shell-route.test.cjs
       - name: Artist management session integration
