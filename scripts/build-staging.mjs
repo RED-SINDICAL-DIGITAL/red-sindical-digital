@@ -49,6 +49,12 @@ export async function build(root=ROOT,origin=process.env.UADAV_STAGING_ORIGIN){
     }
   }
   await collect();
+  // Only this explicit diagnostic is published, only by the isolated staging build.
+  // Never traverse the tests directory or expose its other fixtures/scripts.
+  const diagnostic='tests/staging-signals-diagnostic.html';
+  const diagnosticInfo=await lstat(path.join(root,diagnostic));
+  if(!diagnosticInfo.isFile()||diagnosticInfo.isSymbolicLink())throw Error('Invalid staging diagnostic');
+  files.push(diagnostic);
   for(const needed of ['index.html','app.html','usuario.html','gestionar-artista.html','uadav-account-sync.js'])if(!files.includes(needed))throw Error('Missing frontend file: '+needed);
   const output=new Map();
   for(const rel of files){
