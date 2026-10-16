@@ -20,9 +20,14 @@ const saved=await save({bio:'PRIVATE-REMOTE-DRAFT-'+suffix,save_only:true,draft_
 const reopened=await access();assert.equal(reopened.data.artist.bio,'PRIVATE-REMOTE-DRAFT-'+suffix);assert.equal(reopened.data.draft.state,'saved');assert.equal(reopened.data.draft.revision,1);
 assert.equal((await call('public/artista?id='+id)).status,404);
 const stale=await save({bio:'SHOULD-NOT-REPLACE',save_only:true,draft_revision:0});assert.equal(stale.status,409);assert.equal(stale.data.code,'DRAFT_REVISION_CONFLICT');
-const pending=await save({bio:'PRIVATE-REMOTE-REVIEW-'+suffix,draft_revision:1});assert.equal(pending.status,202);assert.equal(pending.data.moderation_pending,true);assert.match(pending.data.message,/sigue privado/);
-const again=await access();assert.equal(again.data.artist.bio,'PRIVATE-REMOTE-REVIEW-'+suffix);assert.equal(again.data.draft.state,'pending');assert.equal(again.data.draft.revision,2);
+const raceBodies=['A','B'].map(label=>({bio:'PRIVATE-CONCURRENT-'+label+'-'+suffix,save_only:true,draft_revision:1}));
+const race=await Promise.all(raceBodies.map(save));assert.deepEqual(race.map(x=>x.status).sort(),[200,409]);
+const winner=race.findIndex(x=>x.status===200);assert.equal(race[1-winner].data.code,'DRAFT_REVISION_CONFLICT');
+const afterRace=await access();assert.equal(afterRace.data.draft.revision,2);assert.equal(afterRace.data.artist.bio,raceBodies[winner].bio);
+assert.equal((await call('public/artista?id='+id)).status,404);
+const pending=await save({bio:'PRIVATE-REMOTE-REVIEW-'+suffix,draft_revision:2});assert.equal(pending.status,202);assert.equal(pending.data.moderation_pending,true);assert.match(pending.data.message,/sigue privado/);
+const again=await access();assert.equal(again.data.artist.bio,'PRIVATE-REMOTE-REVIEW-'+suffix);assert.equal(again.data.draft.state,'pending');assert.equal(again.data.draft.revision,3);
 assert.equal((await call('public/artista?id='+id)).status,404);
 assert.equal((await call('account/artists','DELETE',{artist_id:id},secret)).status,200);
 assert.equal((await access()).status,401);
-console.log('PASS: live staging D1 profile draft save/reopen, frontend CORS, revision conflict, review persistence, public isolation and unlink revocation. Synthetic account and private artist retained; one synthetic moderation item pending; no payments or public publication.');
+console.log('PASS: live staging D1 profile draft save/reopen, frontend CORS, revision conflict, concurrent draft write isolation, review persistence, public isolation and unlink revocation. Synthetic account and private artist retained; one synthetic moderation item pending; no payments or public publication.');
