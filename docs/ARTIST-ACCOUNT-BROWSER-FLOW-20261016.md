@@ -47,3 +47,7 @@ Reloaded Admin staging, temporarily enabled PRO on the same hidden synthetic art
 Frontend commitd0281efb52adab428939adb9867ce1032923984f gives12 existing basic profile fields explicit stable ids and corresponding label for attributes: artistic name, specialty, city, photo, optional YouTube, Twitch, Kick, fee, availability, support URL, web and bio. Field names, values, submission payloads and FREE/PRO permissions unchanged. Specialty remains editable text with suggestions and YouTube optional. This improves keyboard/assistive identification, not a certification of physical TV/mobile UX.
 
 Two new label contracts plus8 management and9 PRO plan tests pass (19 total); inline syntax passes. CI includes contracts. First staging read still served prior HTML during Pages propagation; visual accessible-name verification pending. No Worker or production changes, no new user records.
+
+## Accessible field labels live confirmation
+
+Reloaded staging management and opened Perfil. Actual browser accessibility tree now names all12 controls (previously unnamed), including artistic name, specialty combobox, city, optional YouTube, biography; stable ids artist-* match labels. Private saved biography remained unchanged, no submission/write made. Completes live accessible-name verification for this patch, not full screen-reader or physical-device certification.
