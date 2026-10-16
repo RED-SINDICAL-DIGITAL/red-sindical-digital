@@ -2680,6 +2680,13 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const radio=application.type==='radio',key=radio?'radios':'senales_oficiales';
       const existing=await getArray(key);
       if(!Array.isArray(existing)){await releaseCatalogLock();await releasePublication('Catálogo inválido');return json({error:'Catálogo inválido: no se modificó'},503)}
+      // A KV read may lag behind an already committed D1 publication, even under a lease.
+      // Fail closed rather than appending to a snapshot that would erase that entry.
+      const committed=await env.DB.prepare("SELECT id,data_json FROM signal_onboarding_applications WHERE json_extract(data_json,'$.type')=? AND json_extract(data_json,'$.status')='published'").bind(application.type).all();
+      const catalogIds=new Map(existing.map(x=>[String(x.onboarding_id||''),String(x.id||'')]));
+      if((committed.results||[]).some(row=>{const item=safeJSON(row.data_json,{});return !item.published_id||catalogIds.get(String(row.id))!==String(item.published_id)})){
+        const error=new Error('Catalog snapshot is behind committed publications');error.code='CATALOG_SNAPSHOT_STALE';throw error;
+      }
       const previouslyStored=existing.find(x=>String(x.onboarding_id||'')===application.id);
       if(previouslyStored){
         if(radio){const repair=await safeD1('signal_radio_repair',()=>syncRadiosD1([previouslyStored]));if(!repair.ok){await releaseCatalogLock();await releasePublication('D1 sync pending');return json({error:'La señal ya está en KV, pero D1 sigue sin sincronizar. Revisá la base antes de continuar.',partial:true},503)}}
@@ -2707,7 +2714,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       } catch (error) {
         // Unexpected failures must not leave a stale lock or a permanently stuck request.
         await releasePublication('Error inesperado durante publicación').catch(()=>{});
-        return json({error:'La publicación se interrumpió. Revisá la bandeja antes de reintentar.',recoverable:true},503);
+        return json({error:error.code==='CATALOG_SNAPSHOT_STALE'?'El catálogo todavía no refleja una publicación confirmada. No se modificó. Esperá y reintentá; si persiste, revisá el catálogo.':'La publicación se interrumpió. Revisá la bandeja antes de reintentar.',...(error.code==='CATALOG_SNAPSHOT_STALE'?{code:error.code}:{}),recoverable:true},503);
       } finally {
         await releaseCatalogLock().catch(()=>{});
       }
