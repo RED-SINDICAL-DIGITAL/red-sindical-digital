@@ -25,3 +25,9 @@ Eight new availability tests plus three existing booking retry tests pass; inlin
 ## Booking availability actual staging UI PASS
 
 Pages manifest confirmed source4137148e017f4ea25faa253a8cbe002cd65953d6. Reload on the hidden synthetic artist showed the unavailable message before fields, all personal inputs/accept/submission disabled and Comprobar de nuevo available. Temporarily published only this synthetic FREE artist through Admin; clicking Comprobar de nuevo enabled the form without reload and heading Consultar a QA EXPERIENCIA1610. No new inquiry submitted. Restored profile hidden immediately and reloaded: unavailable message and disabled controls returned. Production untouched. Prior checkpoint's pending browser confirmation is now completed for hidden→public FREE→hidden UI; real network-timeout/retry behavior remains separately VM-tested.
+
+## FREE private profile editing and handle
+
+Actual artist UI saved synthetic bio BORRADOR PRIVADO QA1610 via Guardar borrador, confirmed Borrador guardado and changes not published. Full reload retained text and private banner. Anonymous staging public/artista GET returned404 and response did not contain draft marker. Did not send profile to moderation or enable PRO. Username qa-experiencia-1610 saved successfully through same FREE account; public link remains hidden. Existing synthetic profile/data retained.
+
+Found handle-save confirmation recommended sharing even on private profile. Adjusted only confirmation to respect existing publicVisible flag: private save now explains profile remains private until published; public save keeps sharing guidance. Four handle UI regressions pass including actual mocked PUT, hidden public link and private-state message. New wording browser verification pending Pages build; preceding real handle save and draft persistence tests used prior text.
