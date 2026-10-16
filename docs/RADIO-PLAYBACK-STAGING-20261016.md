@@ -9,3 +9,7 @@ Actual Chrome staging shell playback: click BEAT from Radio hub, one top-level r
 Direct navigation to stream was blocked by this browser client (ERR_BLOCKED_BY_CLIENT), but media playback inside the existing staging app succeeded. This was not a provider outage. No bypass/proxy added.
 
 Limits: browser decode/clock advance verified, not human listening fidelity; no physical mobile/tablet/TV testing, background lock-screen behavior, long duration, reconnection, station switching or mute verified yet. Test radio remains in staging. Worker/frontend code unchanged during playback test.
+
+## Radio retry patch
+
+Frontend commit09e817c05a575a7b0704d9d5417b2c829634c5a5 adds resumeRadio: if media error or ended, reload the stable current station source before playing; ordinary paused resume does not reload. Shared state excludes media error and ended. Error pauses audio and displays Sin conexión; ended displays Señal interrumpida. Successful play clears these retry labels. No automatic infinite retry added. Six isolated VM/source tests pass; inline app script syntax passes. Added to CI. Browser regression against this new frontend revision is pending; earlier successful BEAT playback above used the prior revision. No new Worker deployment needed; production untouched.
