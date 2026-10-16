@@ -43,3 +43,7 @@ Navegador staging cargó usuario con account-ui versión20261016-recovery. Abrir
 6. Aprobar producción sólo tras pruebas y autorización expresa del usuario.
 
 Referencias: ARTIST-ACCOUNT-BROWSER-FLOW-20261016.md, PROFILE-CLOSURE-CHECKPOINT-20261016.md, ACCOUNT-RECOVERY-DELETION-20261016.md, PRESSKIT-UPLOADED-PDF-REVIEW-20261016.md. Esta tabla consolida evidencias; no significa sector100% terminado.
+
+## Guardado real de nombre local
+
+En el navegador de staging sin cuenta vinculada, se guardó PRUEBA PERFIL LOCAL desde el formulario, se recargó toda la aplicación y se confirmó el mismo nombre en Mi perfil y cabecera. Después se restauró el nombre Mi cuenta usando el formulario. Sólo datos ficticios locales; no cuenta remota ni artista modificado. Captura del nombre de prueba tras recarga guardada. Cancelar se comprobó por separado antes del guardado. Esto añade evidencia real del guardado básico, sin certificar cambio de cuentas físico ni carga de foto real.
