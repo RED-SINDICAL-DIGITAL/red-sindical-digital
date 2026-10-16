@@ -5,6 +5,7 @@ on:
       - audit/public-job-status-20261012
   pull_request:
     paths:
+      - tests/admin-navigation.test.cjs
       - 'uadav-*.js'
       - 'uadav-*.css'
       - 'platform-*.js'
@@ -70,6 +71,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Admin section and history navigation
+        run: node --test tests/admin-navigation.test.cjs
       - name: Readable Press Kit moderation
         run: node --test tests/admin-kit-review.test.cjs
       - name: Artist tool session isolation
