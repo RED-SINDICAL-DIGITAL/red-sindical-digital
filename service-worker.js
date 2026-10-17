@@ -1,12 +1,7 @@
-// UADAV STREAM V10 CORE — self-destruct service worker
+// UADAV STREAM — retire the legacy offline worker without interrupting open work.
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>{
-  event.waitUntil((async()=>{
-    const names=await caches.keys();
-    await Promise.all(names.map(n=>caches.delete(n)));
-    await self.registration.unregister();
-    const clientsList=await self.clients.matchAll({type:'window'});
-    for(const client of clientsList) client.navigate(client.url);
-  })());
+  // No fetch handler remains, so retained caches cannot be served by this worker.
+  // Do not purge origin-wide caches or reload tabs with unsaved forms/playback.
+  event.waitUntil(self.registration.unregister());
 });
-// Intentionally no fetch handler.

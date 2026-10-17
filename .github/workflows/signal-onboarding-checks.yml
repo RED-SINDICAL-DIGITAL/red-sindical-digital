@@ -1,0 +1,192 @@
+name: Platform integration checks
+on:
+  push:
+    branches:
+      - audit/public-job-status-20261012
+  pull_request:
+    paths:
+      - service-worker.js
+      - tests/legacy-worker-retirement.test.mjs
+      - tests/update-notice.test.mjs
+      - tests/radio-recovery.test.mjs
+      - tests/admin-pro-expiry.test.mjs
+      - tests/admin-navigation.test.cjs
+      - 'uadav-*.js'
+      - 'uadav-*.css'
+      - 'platform-*.js'
+      - '*.html'
+      - uadav-artist-handle-v140.js
+      - tests/artist-handle-ui.test.cjs
+      - uadav-artist-inquiries-v130.js
+      - tests/artist-inquiry-account.test.cjs
+      - tests/artist-inquiry-lifecycle.test.cjs
+      - app.html
+      - tests/artist-shell-route.test.cjs
+      - tests/artist-navigation-follow.test.cjs
+      - tests/artist-library-pagination.test.cjs
+      - tests/playlist-queue-recovery.test.cjs
+      - tests/search-progress-recovery.test.cjs
+      - tests/workspace-daily-tools.test.cjs
+      - tests/presskit-render-print.test.mjs
+      - tests/presentation-recovery.test.cjs
+      - tests/workspace-autosave.mjs
+      - uadav-community-admin-v144.js
+      - uadav-pending-admin-v146.js
+      - tests/admin-kit-review.test.cjs
+      - tests/admin-claim-cancel.test.cjs
+      - tests/admin-claim-safety.test.cjs
+      - tests/admin-navigation-races.test.cjs
+      - tests/admin-global-search.test.cjs
+      - tests/admin-artist-save.test.cjs
+      - tests/admin-inquiry-directory.test.cjs
+      - tests/admin-inquiry-state.test.cjs
+      - tests/admin-pending-inquiry-navigation.test.cjs
+      - tests/artist-profile-drafts.mjs
+      - soy-artista.html
+      - uadav-artist-onboarding-v145.js
+      - tests/artist-onboarding-start.test.cjs
+      - scripts/build-staging.mjs
+      - tests/staging-build.test.mjs
+      - uadav-artist-account-v142.js
+      - tests/artist-tool-access.test.cjs
+      - gestionar-artista.html
+      - tests/artist-profile-labels.test.mjs
+      - tests/pro-plan-ui.test.mjs
+      - tests/artist-manage-api.test.cjs
+      - tests/artist-content-editor.test.cjs
+      - tests/artist-session-identity.test.cjs
+      - tests/artist-session-paths.test.cjs
+      - tests/booking-availability.test.mjs
+      - tests/booking-form-retry.test.cjs
+      - contratar-artista.html
+      - tests/account-local-access.test.cjs
+      - tests/account-ui-recovery.test.cjs
+      - tests/profile-edit-identity.test.cjs
+      - tests/profile-public-link.test.cjs
+      - tests/profile-account-public-identity.test.cjs
+      - tests/profile-artist-opening.test.cjs
+      - tests/artist-account-response.test.cjs
+      - tests/artist-account-recovery.test.cjs
+      - tests/artist-account-client-integration.mjs
+      - tests/account-recovery-deletion.mjs
+      - tests/account-sync-conflicts.test.cjs
+      - uadav-account-sync.js
+      - tests/artist-workspace-session.test.cjs
+      - mi-espacio-artista.html
+      - tests/admin-api-retry.test.cjs
+      - tests/serve-admin-preview.mjs
+      - tests/artist-pro-integration.mjs
+      - tests/artist-inquiries-integration.mjs
+      - tests/artist-public-visibility.mjs
+      - tests/presskit-publication-privacy.mjs
+      - tests/artist-claim-lifecycle.mjs
+      - tests/pro-payment-fulfillment.mjs
+      - tests/pro-bank-confirmation.mjs
+      - worker.js
+      - admin.html
+      - suma-tu-senal.html
+      - tests/signal-onboarding-contract.test.cjs
+      - tests/signal-review-integration.mjs
+      - tests/private-kv-fallback.mjs
+      - tests/signal-migration-integration.mjs
+      - tests/signal-publication-lease.mjs
+      - tests/staging-signals-diagnostic.html
+      - tests/staging-signals-browser-flow.mjs
+      - tests/sqlite-d1.mjs
+      - .github/workflows/signal-onboarding-checks.yml
+  workflow_dispatch:
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Admin section and history navigation
+        run: node --test tests/admin-navigation.test.cjs
+      - name: Readable Press Kit moderation
+        run: node --test tests/admin-kit-review.test.cjs tests/admin-claim-cancel.test.cjs tests/admin-claim-safety.test.cjs tests/admin-navigation-races.test.cjs tests/admin-global-search.test.cjs tests/admin-artist-save.test.cjs tests/admin-inquiry-directory.test.cjs tests/admin-inquiry-state.test.cjs tests/admin-pending-inquiry-navigation.test.cjs
+      - name: Artist tool session isolation
+        run: node --test tests/artist-tool-access.test.cjs
+      - name: Artist FREE and PRO permissions with SQLite
+        run: node tests/artist-pro-integration.mjs
+      - name: PRO payment fulfillment isolation
+        run: node tests/pro-payment-fulfillment.mjs
+      - name: Signed bank adapter and interrupted fulfillment
+        run: node tests/pro-bank-confirmation.mjs
+      - name: Artist claim and ownership lifecycle
+        run: node tests/artist-claim-lifecycle.mjs
+      - name: Admin API replay protection
+        run: node --test tests/admin-api-retry.test.cjs
+      - name: Isolated Admin preview boundaries
+        run: node tests/serve-admin-preview.mjs --check
+      - name: Quote and agenda daily workflows
+        run: node --test tests/workspace-daily-tools.test.cjs tests/presskit-render-print.test.mjs
+      - name: Workspace autosave and publication recovery
+        run: node tests/workspace-autosave.mjs
+      - name: Artist workspace identity isolation
+        run: node --test tests/artist-workspace-session.test.cjs
+      - name: Press Kit publication privacy
+        run: node tests/presskit-publication-privacy.mjs
+      - name: Official channel discovery fallback
+        run: node tests/artist-channel-discovery.mjs
+      - name: Artist content privacy with SQLite
+        run: node tests/artist-content-visibility.mjs
+      - name: Artist public visibility and private metadata
+        run: node tests/artist-public-visibility.mjs
+      - name: Local account access and recovery isolation
+        run: node --test tests/account-local-access.test.cjs tests/account-sync-conflicts.test.cjs tests/account-ui-recovery.test.cjs tests/profile-edit-identity.test.cjs tests/profile-public-link.test.cjs tests/profile-account-public-identity.test.cjs tests/artist-account-response.test.cjs tests/profile-artist-opening.test.cjs tests/artist-account-recovery.test.cjs
+      - name: Artist account client through isolated Worker
+        run: node tests/artist-account-client-integration.mjs
+      - name: Account recovery and deletion lifecycle
+        run: node tests/account-recovery-deletion.mjs
+      - name: Artist inquiries and account notifications
+        run: node tests/artist-inquiries-integration.mjs
+      - name: Username editor privacy and retry
+        run: node --test tests/artist-handle-ui.test.cjs
+      - name: Inquiry inbox account isolation
+        run: node --test tests/artist-inquiry-account.test.cjs
+      - name: Booking form retry identity
+        run: node --test tests/booking-form-retry.test.cjs tests/booking-availability.test.mjs
+      - name: Frame readiness and isolated fallback search
+        run: node --test tests/mobile-frame-search.test.cjs tests/media-source-link.test.cjs tests/video-feedback.test.cjs
+      - name: Artist shell tab synchronization
+        run: node --test tests/artist-shell-route.test.cjs tests/artist-navigation-follow.test.cjs tests/artist-library-pagination.test.cjs tests/playlist-queue-recovery.test.cjs tests/search-progress-recovery.test.cjs
+      - name: Artist management session integration
+        run: node --test tests/artist-manage-api.test.cjs tests/artist-session-identity.test.cjs tests/artist-session-paths.test.cjs
+      - name: Staging build isolation tests
+        run: node --test tests/staging-build.test.mjs
+      - name: Build isolated staging frontend
+        run: UADAV_STAGING_ORIGIN=https://uadav-stream-staging.pages.dev node scripts/build-staging.mjs
+      - name: First artist account start
+        run: node --test tests/artist-onboarding-start.test.cjs
+      - name: Private profile draft lifecycle
+        run: node tests/artist-profile-drafts.mjs
+      - name: Update notice persistence
+        run: node --test tests/update-notice.test.mjs tests/legacy-worker-retirement.test.mjs
+      - name: Radio error and retry behavior
+        run: node --test tests/radio-recovery.test.mjs
+      - name: Admin PRO expiry in Argentina
+        run: TZ=America/Argentina/Buenos_Aires node --test tests/admin-pro-expiry.test.mjs
+      - name: Admin PRO expiry in Tokyo
+        run: TZ=Asia/Tokyo node --test tests/admin-pro-expiry.test.mjs
+      - name: PRO plan readiness and renewal
+        run: node --test tests/pro-plan-ui.test.mjs tests/artist-profile-labels.test.mjs
+      - name: Worker syntax
+        run: node --check worker.js
+      - name: Signal onboarding contract
+        run: node --test tests/signal-onboarding-contract.test.cjs
+      - name: Worker review integration with SQLite
+        run: node tests/signal-review-integration.mjs
+      - name: Signal migration and failure recovery
+        run: node tests/signal-migration-integration.mjs
+      - name: Publication lease and attempt isolation
+        run: node tests/signal-publication-lease.mjs
+      - name: Synthetic radio and TV diagnostic flow
+        run: node tests/staging-signals-browser-flow.mjs
+      - name: Private KV fallback authorization
+        run: node tests/private-kv-fallback.mjs
+

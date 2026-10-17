@@ -1,6 +1,8 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id),service=window.UADAVAccount;
+let healthBusy=false;
+const healthRetry=$('retryAccountHealth')||document.createElement('button');healthRetry.id='retryAccountHealth';healthRetry.className='chip';healthRetry.type='button';healthRetry.textContent='Volver a comprobar conexión';healthRetry.hidden=true;if(!healthRetry.isConnected)$('syncStatus').after(healthRetry);
 let ready=false,pair=null,pairTimer=null,pairBusy=false,pairGeneration=0;
 function update(){const s=service.state();$('syncStatus').textContent=s.message;for(const id of ['showAccountCode','accountDevices','syncNow','unlinkAccount'])$(id).hidden=!s.linked;$('createAccount').hidden=s.linked;$('linkAccount').hidden=s.linked;$('createAccount').disabled=!ready;$('linkAccount').disabled=!ready;$('showAccountCode').disabled=!ready;$('accountDevices').disabled=!ready;$('syncConflict').hidden=!s.conflict;const advanced=$('accountAdvanced');if(advanced)advanced.hidden=!s.linked;}
 function refresh(){try{user={name:'Mi cuenta',avatar:'U',photo:'',preferences:[],...JSON.parse(localStorage.getItem(KEY)||'{}')};paint()}catch{}update()}
@@ -18,10 +20,25 @@ async function devices(){const d=await service.devices();$('deviceList').replace
 $('accountDevices').onclick=async()=>{$('deviceDialog').showModal();$('deviceStatus').textContent='Cargando…';try{await service.upgradeDevice();await devices();$('deviceStatus').textContent=''}catch(e){$('deviceStatus').textContent=e.message}};$('closeDevices').onclick=()=>$('deviceDialog').close();
 $('syncNow').onclick=()=>service.sync();$('unlinkAccount').onclick=()=>{if(confirm('¿Cerrar la cuenta en este dispositivo? Sus datos locales se conservan. Para revocar el permiso en el servidor, usá Mis dispositivos desde otro dispositivo.'))service.disconnect()};
 for(const [id,choice] of [['keepLocal','local'],['keepCloud','cloud']])$(id).onclick=async()=>{try{await service.resolve(choice)}catch(e){$('syncStatus').textContent=e.message}};
-function recovery(view){$('recoveryCode').value=view?service.recovery():'';$('recoveryCode').readOnly=view;$('copyRecovery').hidden=!view;$('applyRecovery').hidden=view;$('recoveryStatus').textContent='';$('recoveryHelp').textContent=view?'Guardalo como respaldo. No lo envíes por chat ni lo compartas públicamente.':'Pegá tu código de recuperación. El perfil de esa cuenta reemplazará al de este navegador.';$('recoveryDialog').showModal()}
+function recovery(view){$('recoveryCode').value=view?service.recovery():'';$('recoveryCode').readOnly=view;$('copyRecovery').hidden=!view;$('applyRecovery').hidden=view;$('recoveryStatus').textContent='';$('recoveryHelp').textContent=view?'Guardalo como respaldo. No lo envíes por chat ni lo compartas públicamente.':'Pegá el respaldo largo que empieza con UAC-. No es la clave del Admin ni el código de seis dígitos. El perfil de esa cuenta reemplazará al de este navegador.';$('recoveryDialog').showModal()}
 $('rotateRecovery').onclick=async()=>{if(!confirm('¿Renovar el respaldo de recuperación? El anterior dejará de funcionar. Guardá el nuevo en un lugar seguro. Los dispositivos vinculados conservan su permiso hasta que los revoques.'))return;const b=$('rotateRecovery');b.disabled=true;try{await service.rotateRecovery();$('deviceDialog').close();recovery(true)}catch(e){$('deviceStatus').textContent=e.message}finally{b.disabled=false}};
 $('showRecovery').onclick=()=>{if(!service.recovery()){$('recoveryNote').textContent='El respaldo está en el dispositivo donde creaste la cuenta. No se copia automáticamente a los dispositivos vinculados.';return}recovery(true)};$('recoverAccount').onclick=()=>recovery(false);$('closeRecovery').onclick=()=>$('recoveryDialog').close();
+$('recoveryDialog').addEventListener('close',()=>{$('recoveryCode').value='';$('recoveryStatus').textContent='';});
 $('copyRecovery').onclick=async()=>{try{await navigator.clipboard.writeText(service.recovery());$('recoveryStatus').textContent='Respaldo copiado.'}catch{$('recoveryCode').select();$('recoveryStatus').textContent='Seleccionado. Copialo desde el menú.'}};
-$('applyRecovery').onclick=async()=>{const code=$('recoveryCode').value.trim();if(!/^UAC-[a-f0-9]{64}$/.test(code)){$('recoveryStatus').textContent='Código de recuperación inválido.';return}const b=$('applyRecovery');b.disabled=true;try{await service.connect(code);await service.upgradeDevice();$('recoveryDialog').close()}catch(e){$('recoveryStatus').textContent=e.message}finally{b.disabled=false}};
-fetch((window.PLATFORM_API_BASE||window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/')+'health',{cache:'no-store'}).then(r=>r.json()).then(h=>{ready=Number(h.build)>=11728&&h.d1===true;update();if(!ready)$('syncStatus').textContent='La vinculación por QR estará disponible al actualizar el servidor a build 11728 con D1.'}).catch(()=>{$('syncStatus').textContent='No pudimos comprobar el servidor. Tus datos locales se conservan.'});
+$('applyRecovery').onclick=async()=>{const code=$('recoveryCode').value.trim();if(!/^UAC-[a-f0-9]{64}$/.test(code)){$('recoveryStatus').textContent='Usá el respaldo completo que empieza con UAC-. La clave del Admin y el código de seis dígitos no sirven para recuperar la cuenta.';return}const b=$('applyRecovery');b.disabled=true;try{await service.connect(code);await service.upgradeDevice();$('recoveryDialog').close()}catch(e){$('recoveryStatus').textContent=e.message}finally{b.disabled=false}};
+async function checkAccountHealth(){
+ if(healthBusy)return;healthBusy=true;healthRetry.disabled=true;
+ const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);
+ try{
+  const response=await fetch((window.PLATFORM_API_BASE||window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/')+'health',{cache:'no-store',signal:ctl.signal});
+  if(!response.ok)throw Error('No pudimos comprobar el servidor.');
+  const health=await response.json();ready=Number(health.build)>=11728&&health.d1===true;
+  if(!ready)throw Error('La sincronización todavía no está disponible. Intentá más tarde.');
+  healthRetry.hidden=true;update();
+ }catch(error){
+  ready=false;update();healthRetry.hidden=false;
+  $('syncStatus').textContent=error.name==='AbortError'?'La conexión tardó demasiado. Tus datos siguen en este dispositivo.':error.message+' Tus datos siguen en este dispositivo.';
+ }finally{clearTimeout(timer);healthBusy=false;healthRetry.disabled=false;}
+}
+healthRetry.onclick=checkAccountHealth;checkAccountHealth();
 })();
