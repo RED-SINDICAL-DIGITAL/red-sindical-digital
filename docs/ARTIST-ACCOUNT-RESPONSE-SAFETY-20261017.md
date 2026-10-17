@@ -21,3 +21,7 @@ CI incorpora ambas pruebas nuevas. Pendiente comprobar el resultado de GitHub Ac
 La primera ejecución completa (Platform integration checks 753) falló en Artist tool session isolation antes de llegar a la integración nueva. Reproducción local: dos fixtures devolvían token sin artist_id y con formato distinto al Worker. Se actualizaron a la respuesta real (artist_id del artista solicitado + token ART válido); no se debilitó la validación de producción ni se quitaron pruebas. Se repitió el conjunto con aislamiento de herramientas: 39 pruebas satisfactorias. La integración real cliente/Worker/SQLite también había pasado, confirmando el formato del servidor.
 
 Pendiente: ejecución completa posterior al ajuste de fixtures. No se debe informar como pasada la ejecución 753 ni sus pasos omitidos.
+
+## Verificación final del incremento
+
+GitHub Actions del commit cdc8bb3ecd2c6bea9623ffbb21764436061c7d1c: Platform integration checks 758 y Job status contract checks 350 satisfactorios. La ejecución completa ya incluye los fixtures corregidos y la integración nueva. Mi perfil de staging respondió HTTP 200 y su HTML referencia uadav-artist-account-v142.js?v=20261017-session-validated y contiene el botón de comprobación. Esto verifica la entrega del HTML, no el uso autenticado del módulo por un propietario en un dispositivo físico. No se requiere despliegue de Worker para estos cambios frontend.
