@@ -50,7 +50,7 @@ on:
       - contratar-artista.html
       - tests/account-local-access.test.cjs
       - tests/account-ui-recovery.test.cjs
-      - tests/profile-edit-identity.test.cjs
+      - tests/profile-edit-identity.test.cjs tests/profile-public-link.test.cjs
       - tests/account-recovery-deletion.mjs
       - tests/account-sync-conflicts.test.cjs
       - uadav-account-sync.js
