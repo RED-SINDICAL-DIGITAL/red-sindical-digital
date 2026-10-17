@@ -18,7 +18,7 @@ on:
       - uadav-artist-handle-v140.js
       - tests/artist-handle-ui.test.cjs
       - uadav-artist-inquiries-v130.js
-      - tests/artist-inquiry-account.test.cjs
+      - tests/artist-inquiry-account.test.cjs tests/artist-inquiry-lifecycle.test.cjs
       - app.html
       - tests/artist-shell-route.test.cjs
       - tests/artist-navigation-follow.test.cjs
