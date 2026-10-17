@@ -8,13 +8,23 @@ function toolDate(v){return /^\d{4}-\d{2}-\d{2}$/.test(v||'')?v.slice(8,10)+'/'+
 async function copyKit(){if(!kitPublicActionsAvailable(state)){ $('status').textContent='La presentación no está disponible para compartir. Revisá Mi PRO y su publicación.';return}await UADAVShare.copy('kit',{name:state.name,artist_id:state.artist_id},$('status'))}
 function field([key,label,type='text',options],value='',prefix='f_'){return `<div class="${type==='textarea'?'wide':''}"><label for="${prefix+key}">${esc(label)}</label>${type==='textarea'?`<textarea id="${prefix+key}" maxlength="4000">${esc(value)}</textarea>`:type==='select'?`<select id="${prefix+key}">${options.map(o=>`<option ${o===value?'selected':''}>${esc(o)}</option>`).join('')}</select>`:`<input id="${prefix+key}" type="${type}" ${type==='number'?'min="0" step="0.01"':''} maxlength="4000" value="${esc(value)}">`}</div>`}
 function fillFromProfile(){if(!state.pro||!profileForKit)return;collectKit();const mapping={name:profileForKit.nombre_artistico||profileForKit.nombre,discipline:profileForKit.rubro,city:profileForKit.ciudad,bio:profileForKit.bio,photo:profileForKit.foto};let count=0;for(const [key,value] of Object.entries(mapping))if(!String(state.data.kit[key]||'').trim()&&value){state.data.kit[key]=String(value);count++}if(count){mark();render();$('status').textContent='Completamos '+count+' campos vacíos con tu perfil. Revisalos. Los cambios se guardan como borrador.'}else $('status').textContent='No hay campos vacíos que completar. Tu texto actual se conserva.'}function appearanceForm(){const a=state.data.kit.appearance||{},h=new Set(a.hidden_sections||[]);return `<fieldset class="wide"><legend>Personalizar mi presentación</legend><label for="kitAccent">Color de acento</label><select id="kitAccent">${[['blue','Azul'],['violet','Violeta'],['teal','Verde azulado']].map(([v,l])=>`<option value="${v}" ${a.accent===v?'selected':''}>${l}</option>`).join('')}</select><p>Elegí qué secciones mostrar. Ocultarlas no borra tus datos.</p>${[['trajectory','Trayectoria'],['video','Video de presentación'],['shows','Espectáculos'],['contact','Contacto público']].map(([v,l])=>`<label style="display:flex;gap:10px;align-items:center;margin:10px 0"><input type="checkbox" data-kit-section="${v}" ${h.has(v)?'':'checked'}> ${l}</label>`).join('')}</fieldset>`}function scheduleAutosave(){clearTimeout(autosaveTimer);if(!state?.pro||!dirty||autosavePaused)return;autosaveTimer=setTimeout(()=>busy?scheduleAutosave():save(undefined,true),1200)}function mark(){dirty=true;editVersion++;if(!autosaveConflict)autosavePaused=false;$('save').disabled=!state.pro||busy;$('status').textContent=autosaveConflict?'Hay cambios locales. Recargá la versión guardada antes de continuar.':'Cambios pendientes · se guardan automáticamente.';scheduleAutosave()}function collectKit(){if(tab==='kit'&&$('k_name'))for(const [key] of kitFields)state.data.kit[key]=$('k_'+key).value.trim();if(tab==='kit'&&$('kitAccent'))state.data.kit.appearance={accent:$('kitAccent').value,hidden_sections:[...document.querySelectorAll('[data-kit-section]')].filter(e=>!e.checked).map(e=>e.dataset.kitSection)}}
+function checkWorkspaceWorker(){
+ if(workerReady)return workerReady;
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),7000);
+ workerReady=fetch(API+'health',{cache:'no-store',signal:controller.signal}).then(async r=>{
+  let h;try{h=await r.json()}catch{throw Error('No pudimos leer el estado del servidor. Intentá guardar nuevamente.')}
+  if(!r.ok)throw Error('No pudimos comprobar el servidor. Intentá guardar nuevamente.');
+  if(!Number.isFinite(Number(h.build))||Number(h.build)<11736)throw Error('Actualizá el servidor para guardar tus herramientas.');
+  return true;
+ }).catch(e=>{workerReady=null;throw Error(e.name==='AbortError'?'La comprobación del servidor demoró demasiado. Tus cambios se conservan; volvé a guardar.':e.message)}).finally(()=>clearTimeout(timer));
+ return workerReady;
+}
 async function call(path,opt={}){
  const expectedArtistId=String(state?.artist_id||new URLSearchParams(location.search).get('artist_id')||'');
  const unchanged=()=>{if(workspaceAccount!==(localStorage.getItem('uadav_account_access_v1')||''))throw Error('La cuenta cambió. Volvé a Mi perfil para abrir el artista correcto.');};
  unchanged();
  if((opt.method||'GET').toUpperCase()==='PUT'){
-  workerReady||=fetch(API+'health',{cache:'no-store'}).then(async r=>{const h=await r.json();if(!r.ok||Number(h.build)<11736)throw Error('Actualizá el servidor para guardar tus herramientas.');return true}).catch(e=>{workerReady=null;throw e});
-  await workerReady;unchanged();
+  await checkWorkspaceWorker();unchanged();
  }
  const c=new AbortController(),t=setTimeout(()=>c.abort(),15000);
  const send=async()=>{unchanged();const r=await fetch(API+(path==='artista/access'?path+'?token='+encodeURIComponent(token):path),{...opt,headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},cache:'no-store',signal:c.signal});const d=await r.json();unchanged();return {r,d};};
