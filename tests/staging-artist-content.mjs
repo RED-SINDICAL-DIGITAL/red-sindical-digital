@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';import {randomBytes} from 'node:crypto';
+const base=new URL(process.env.UADAV_STAGING_API||'');
+assert.equal(base.href,'https://uadav-api-staging.uadavstream.workers.dev/api/','Only isolated staging is allowed');
+const origin='https://uadav-stream-staging.pages.dev',account='UAC-'+randomBytes(32).toString('hex'),suffix=randomBytes(5).toString('hex');
+async function call(route,method='GET',body,auth=''){
+ const target=new URL(route,base);assert.equal(target.origin,base.origin);assert.ok(target.pathname.startsWith('/api/'));
+ const r=await fetch(target,{method,redirect:'error',signal:AbortSignal.timeout(20000),headers:{Origin:origin,'Content-Type':'application/json',...(auth?{Authorization:'Bearer '+auth}:{})},...(body?{body:JSON.stringify(body)}:{})});
+ assert.ok([origin,'*'].includes(r.headers.get('access-control-allow-origin')),'staging frontend CORS');if(route==='account'||route.startsWith('account/'))assert.equal(r.headers.get('access-control-allow-origin'),origin,'account CORS');
+ return{status:r.status,data:await r.json()};
+}
+const settings=await call('pro/payment-settings');assert.equal(settings.status,200);assert.equal(settings.data.enabled,false,'Keep bank payments disabled');
+assert.equal((await call('account','POST',{data:{uadav_user_v11:{name:'QA CONTENT INTEGRATION',avatar:'Q'}}},account)).status,200);
+const created=await call('artista/claim','POST',{new_profile:true,artist_name:'QA CONTENT '+suffix,rubro:'Prueba de contenido',name:'Contacto sintético',email:'qa-'+suffix+'@example.invalid',bio:'Borrador privado sintético. No publicar.'},account);
+assert.equal(created.status,200);assert.equal(created.data.private_access,true);const artistId=created.data.artist_id;assert.ok(artistId);
+const access=await call('account/artist-session','POST',{artist_id:artistId},account);assert.equal(access.status,200);const token=access.data.token;assert.ok(token);
+console.log('PASS checkpoint: synthetic private FREE artist created; no bank activation or publication.');
+const submitted=await call('artista/content','POST',{titulo:'QA ORIGINAL '+suffix,tipo:'video',url:'https://www.youtube.com/watch?v=rtVj-GImpZ8',orden:0},token);
+assert.equal(submitted.status,200);assert.equal(submitted.data.review_required,true);const mediaId=submitted.data.item.id;assert.ok(mediaId);assert.equal(submitted.data.item.estado,'pendiente');
+let own=await call('artista/content','GET',null,token);assert.equal(own.status,200);assert.equal(own.data.filter(x=>x.id===mediaId).length,1);
+const edited=await call('artista/content','PUT',{id:mediaId,titulo:'QA EDITED '+suffix,tipo:'video',url:'https://www.youtube.com/watch?v=rtVj-GImpZ8',orden:7},token);
+assert.equal(edited.status,200);assert.equal(edited.data.item.estado,'pendiente');
+own=await call('artista/content','GET',null,token);assert.equal(own.data.filter(x=>x.id===mediaId).length,1);const saved=own.data.find(x=>x.id===mediaId);assert.equal(saved.titulo,'QA EDITED '+suffix);assert.equal(saved.orden,7);
+console.log('PASS checkpoint: authenticated content create/edit/reopen preserves one item and keeps review state.');
+const foreign=await call('artista/content?artist_id=QA-NOT-OWNED','GET',null,token);assert.equal(foreign.status,200);assert.ok(foreign.data.every(x=>x.artist_id===artistId));
+assert.equal((await call('artista/content','PUT',{id:'NOT-OWNED',url:'https://example.invalid/video.mp4'},token)).status,404);
+assert.equal((await call('artista/content','POST',{titulo:'Invalid URL',url:'javascript:alert(1)'},token)).status,400);
+assert.deepEqual((await call('artista/content?artist_id='+encodeURIComponent(artistId))).data,[]);
+assert.equal((await call('public/artista?id='+encodeURIComponent(artistId))).status,404);
+assert.equal((await call('artist/workspace','GET',null,token)).data.pro,false);
+assert.equal((await call('pro/payment-settings')).data.enabled,false);
+console.log('PASS: live staging content create/edit/reopen, no duplicate on PUT, owner isolation, foreign edit denial, URL validation, anonymous pending-content privacy, private artist visibility, FREE permission and disabled bank payments. Synthetic account/artist/pending item retained; no publication or messages. This does not certify the hidden-profile previously-published-content fixture or browser click behavior.');
