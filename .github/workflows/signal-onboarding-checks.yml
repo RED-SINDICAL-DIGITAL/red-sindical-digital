@@ -33,6 +33,7 @@ on:
       - tests/admin-kit-review.test.cjs
       - tests/admin-claim-cancel.test.cjs
       - tests/admin-artist-save.test.cjs
+      - tests/admin-inquiry-directory.test.cjs
       - tests/artist-profile-drafts.mjs
       - soy-artista.html
       - uadav-artist-onboarding-v145.js
@@ -93,7 +94,7 @@ jobs:
       - name: Admin section and history navigation
         run: node --test tests/admin-navigation.test.cjs
       - name: Readable Press Kit moderation
-        run: node --test tests/admin-kit-review.test.cjs tests/admin-claim-cancel.test.cjs tests/admin-artist-save.test.cjs
+        run: node --test tests/admin-kit-review.test.cjs tests/admin-claim-cancel.test.cjs tests/admin-artist-save.test.cjs tests/admin-inquiry-directory.test.cjs
       - name: Artist tool session isolation
         run: node --test tests/artist-tool-access.test.cjs
       - name: Artist FREE and PRO permissions with SQLite
