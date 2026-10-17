@@ -15,3 +15,11 @@ Public presskit page previously described retry but offered none. Added explicit
 At start, staging manifest identified 8e393e6282db01efe3e5230a7d59f1e32251dd6d. New frontend revisions require live staging verification after Pages update. Existing private browser account is unavailable; do not create duplicate profiles just to replace a lost browser session. Public retry can be checked without private access. Authenticated actual saving with delayed/failed health remains a manual integration gate.
 
 Updated manual.html recovery instructions and guia.html; removed an unverified statistics claim from the public guide. Bank payments stay disabled and last. No production deployment, merge, data deletion, public synthetic publication or messages.
+
+## Live public failure/retry check
+
+GitHub checks at bc860f08753f7d132605450392f61309053c6a98 succeeded: Platform integration 625 (39061849984) and Job status 305 (39061849951).
+
+Browser opened staging presskit?artist_id=ART-266d08434699460d82fd6b042a47df23, the retained synthetic private artist. It showed Presentación no disponible and the new Volver a cargar presentación button; print/share absent. Clicked retry: loading text appeared and retry temporarily disappeared, without exposing print/share. No account/login, mutation or public publication involved. This validates the real unavailable-public-kit path, not a successful public kit or authenticated PRO save.
+
+The workspace readiness timeout is covered by deterministic request/abort/session tests; actual authenticated PRO failure/retry remains unverified because the previous private browser session is unavailable. Production and bank payment settings unchanged.
