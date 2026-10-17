@@ -23,3 +23,9 @@ La nueva pantalla servida muestra los datos como solo lectura y la advertencia d
 Se bloquea el doble envío mientras se guarda, se muestra Guardando… y se restablece el estado previo de los controles al terminar. Ante fallo se conservan los datos y la caché previa; no se reintenta automáticamente. Una respuesta tardía no cierra otro editor ni redibuja una sección distinta. Esto no sustituye el control de concurrencia del catálogo en el servidor ni resuelve una respuesta perdida tras una escritura efectiva.
 
 18 pruebas locales satisfactorias: guardado (4), cancelación de revisión (4), pendientes/revisión (6) y fechas PRO (4). Se incorpora guardado a CI. Pendiente verificar este último cambio de guardado en la UI servida; no se simularon fallos de red en el navegador ni aprobaciones reales.
+
+## Guardado comprobado desde navegador
+
+Se abrió QA DEMO PERFIL 1700 en staging y se guardó sin alterar los campos. La UI mostró Guardando… y deshabilitó los controles. Al terminar cerró el modal y volvió al listado. Reabierto el editor, conservó Pendiente, Oculto, Gratis, sin afiliación verificada y sin vencimiento PRO. No se activaron productos ni se aprobó propiedad.
+
+Mejora posterior: estado accesible y persistente dentro del editor (aSaveStatus), con progreso, error de guardado y validación de nombre con foco. El error ya no depende únicamente del toast de 3,5 segundos. 19 pruebas locales satisfactorias, incluida validación sin petición y conservación del mensaje tras fallo. Pendiente validar este último aviso en Pages y el fallo de red mediante UI real. No se empleó interceptación de red ni se cerró sesión administrativa para provocar errores.
