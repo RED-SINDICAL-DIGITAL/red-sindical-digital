@@ -42,7 +42,7 @@ on:
       - gestionar-artista.html
       - tests/artist-profile-labels.test.mjs
       - tests/pro-plan-ui.test.mjs
-      - tests/artist-manage-api.test.cjs
+      - tests/artist-manage-api.test.cjs tests/artist-content-editor.test.cjs
       - tests/artist-session-identity.test.cjs
       - tests/artist-session-paths.test.cjs
       - tests/booking-availability.test.mjs
