@@ -21,3 +21,11 @@ Manual updated. Full GitHub CI and live authenticated browser validation of this
 ## Initial profile tools flicker
 
 Actual guest browser observation showed Herramientas de artista in initial Mi Perfil HTML and its disappearance after account verification completed. Fixed initial markup to hide unchecked tools and use the current Soy artista > create/claim route from the start. Verified independent legacy artist access explicitly reveals its tools; denied or account-stale responses never do. No permission is granted by this visibility change. Six public-link/tool tests passed, including two new legacy success/denial cases. Final browser verification of the changed initial markup remains pending Pages update. Current guest browser has no linked account, so authenticated inbox UI is still unverified.
+
+## GitHub and live Admin checks after secure sign-in
+
+Both GitHub checks at 14b55bde62a870ad1919c95b00092aaa70569971 passed: Platform integration 643 and Job status 311. Combined local inbox/access/tool suite passed 19 tests.
+
+User completed secure Admin staging sign-in; dashboard positively showed Administrador/Sesión central. Artists catalog contains 10 synthetic records. Opened existing QA DEMO PERFIL 1700 (ART-266d08434699460d82fd6b042a47df23), initially Pendiente/Oculto/No verificado/Gratis with empty expiry. Temporarily selected PRO activo through 2026-10-18 and saved. Table and reopened modal both retained exact date and PRO; artist remained hidden and unverified. Anonymous public/artista returned 404 during the temporary PRO check. Restored Gratis and empty expiry, saved, and re-opened to confirm both plus unchanged Pendiente/Oculto/No verificado. No publishing, affiliation, payment, messages, new account or data deletion. Payment-settings read confirms enabled false.
+
+This proves Admin manual PRO flag/expiry persistence and restoration, not bank fulfillment or artist-side PRO editing. Artist account browser session remains unavailable, so new authenticated inbox lifecycle still requires a browser run. Initial guest tools flicker fix remains pending live initial-markup verification.
