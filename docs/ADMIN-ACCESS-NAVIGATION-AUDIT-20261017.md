@@ -26,3 +26,9 @@ CI del commit 95fc1f9e0279aac9f0d05c45c27c6fa539cc0400: Platform integration che
 La inspección visual encontró que el buscador superior no ocultaba filas de solicitudes: sólo seleccionaba filas con data-search. Se amplía a las filas de tablas de la sección actual, combinando texto visible y metadatos de búsqueda. Informa coincidencias o ausencia de resultados con un estado accesible; borrar la búsqueda restaura las filas. No consulta otros módulos ni descarga registros adicionales del backend. Las vistas sin tablas no muestran un contador confuso.
 
 Con cuatro pruebas nuevas de búsqueda, el conjunto final ejecutado tiene 67 pruebas satisfactorias. Pendiente: CI y verificación visual de esta última búsqueda corregida en Pages. No se han revisado todas las tablas o dispositivos físicos.
+
+## Cierre de verificación del buscador
+
+En la nueva UI de staging, Solicitudes + búsqueda QA DEMO PERFIL 1700 dejó una fila y mostró Coincidencias: 1 de 10 registros. Una búsqueda inexistente ocultó las filas y mostró No hay registros que coincidan con esta búsqueda. Borrar el texto restauró las 10 solicitudes. No hubo escrituras de registros. Evidencia visual del resultado filtrado guardada durante la sesión.
+
+CI del conjunto con buscador (commit 70599fab014d0cc006072928f51459c3a1be8e2e): Platform integration checks 720 y Job status contract checks 337 satisfactorios. 67 pruebas locales del conjunto final y sintaxis inline satisfactorias. Continúan pendientes integración visual desde la cuenta del artista, concurrencia real de operadores, pantallas físicas y pagos reales al final.
