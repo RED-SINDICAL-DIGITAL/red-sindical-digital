@@ -15,3 +15,9 @@ Los detalles técnicos del error en la tarjeta de artistas pasan a Detalles para
 Nueva integración: módulo cliente real cargado en VM → Worker real → SQLite en memoria y KV Map aislados. Se crea una cuenta y artista ficticios locales; el cliente lista al artista, valida y guarda la sesión, abre su perfil privado, recibe 403 para un artista ajeno sin perder el token guardado y, tras rechazo de la solicitud, deja de ver la vinculación y el Worker deniega el acceso anterior. La prueba no usa red externa ni credenciales reales.
 
 CI incorpora ambas pruebas nuevas. Pendiente comprobar el resultado de GitHub Actions y los módulos servidos por Pages. No equivale a una sesión de propietario en navegador, a Cloudflare D1/KV reales ni a una prueba en dispositivos físicos. Worker, producción y pagos permanecen intactos.
+
+## Fallo de CI detectado y resuelto localmente
+
+La primera ejecución completa (Platform integration checks 753) falló en Artist tool session isolation antes de llegar a la integración nueva. Reproducción local: dos fixtures devolvían token sin artist_id y con formato distinto al Worker. Se actualizaron a la respuesta real (artist_id del artista solicitado + token ART válido); no se debilitó la validación de producción ni se quitaron pruebas. Se repitió el conjunto con aislamiento de herramientas: 39 pruebas satisfactorias. La integración real cliente/Worker/SQLite también había pasado, confirmando el formato del servidor.
+
+Pendiente: ejecución completa posterior al ajuste de fixtures. No se debe informar como pasada la ejecución 753 ni sus pasos omitidos.
