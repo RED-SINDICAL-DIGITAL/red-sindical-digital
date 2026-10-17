@@ -64,6 +64,7 @@ on:
       - tests/profile-edit-identity.test.cjs
       - tests/profile-public-link.test.cjs
       - tests/profile-account-public-identity.test.cjs
+      - tests/profile-removal-dialog.test.cjs
       - tests/profile-artist-opening.test.cjs
       - tests/artist-account-response.test.cjs
       - tests/artist-account-recovery.test.cjs
@@ -141,6 +142,8 @@ jobs:
         run: node --test tests/account-local-access.test.cjs tests/account-sync-conflicts.test.cjs tests/account-ui-recovery.test.cjs tests/profile-edit-identity.test.cjs tests/profile-public-link.test.cjs tests/profile-account-public-identity.test.cjs tests/artist-account-response.test.cjs tests/profile-artist-opening.test.cjs tests/artist-account-recovery.test.cjs
       - name: Artist account client through isolated Worker
         run: node tests/artist-account-client-integration.mjs
+      - name: Profile removal confirmation isolation
+        run: node --test tests/profile-removal-dialog.test.cjs
       - name: Account recovery and deletion lifecycle
         run: node tests/account-recovery-deletion.mjs
       - name: Artist inquiries and account notifications
