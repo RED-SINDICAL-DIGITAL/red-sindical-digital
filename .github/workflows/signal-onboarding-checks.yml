@@ -58,7 +58,9 @@ on:
       - contratar-artista.html
       - tests/account-local-access.test.cjs
       - tests/account-ui-recovery.test.cjs
-      - tests/profile-edit-identity.test.cjs tests/profile-public-link.test.cjs
+      - tests/profile-edit-identity.test.cjs
+      - tests/profile-public-link.test.cjs
+      - tests/profile-account-public-identity.test.cjs
       - tests/account-recovery-deletion.mjs
       - tests/account-sync-conflicts.test.cjs
       - uadav-account-sync.js
@@ -129,7 +131,7 @@ jobs:
       - name: Artist public visibility and private metadata
         run: node tests/artist-public-visibility.mjs
       - name: Local account access and recovery isolation
-        run: node --test tests/account-local-access.test.cjs tests/account-sync-conflicts.test.cjs tests/account-ui-recovery.test.cjs tests/profile-edit-identity.test.cjs
+        run: node --test tests/account-local-access.test.cjs tests/account-sync-conflicts.test.cjs tests/account-ui-recovery.test.cjs tests/profile-edit-identity.test.cjs tests/profile-public-link.test.cjs tests/profile-account-public-identity.test.cjs
       - name: Account recovery and deletion lifecycle
         run: node tests/account-recovery-deletion.mjs
       - name: Artist inquiries and account notifications
