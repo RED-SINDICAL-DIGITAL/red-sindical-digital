@@ -14,5 +14,12 @@ try{
  assert.equal((await direct('admin/artist-claims','PUT',{id:draft.data.id,status:'rejected',review_note:'Fin de prueba aislada'},env.ADMIN_KEY)).status,200);
  assert.equal((await client.list()).artists.length,0);await assert.rejects(client.session(id),e=>e.status===403);
  const revoked=await worker.fetch(new Request('https://isolated.example/api/artista/access?token='+encodeURIComponent(token)),env,{});assert.notEqual(revoked.status,200);
- console.log('PASS: real account client + Worker + SQLite: private artist listed, validated session stored, exact private profile opens, unrelated artist denied without overwriting access, rejection removes linkage and revokes access.');
+
+ const recoveryDraft=await direct('artista/claim','POST',{new_profile:true,artist_name:'Artista recuperación aislada',rubro:'Magia',name:'Recuperación ficticia',email:'recovery@example.invalid'});assert.equal(recoveryDraft.status,200);
+ const approval=await direct('admin/artist-claims','PUT',{id:recoveryDraft.data.id,status:'approved',review_note:'Identidad ficticia verificada en prueba aislada'},env.ADMIN_KEY);assert.equal(approval.status,200);assert.equal(typeof approval.data.token,'string');
+ const recoveryId=recoveryDraft.data.artist_id;await DB.prepare('DELETE FROM audience_artist_links WHERE artist_id=?').bind(recoveryId).run();storage.set('uadav_artist_access_token_v1',approval.data.token);storage.delete('uadav_artist_account_session_v1');
+ let linkRequests=0,sessionRequests=0;const originalFetch=context.fetch;context.fetch=async(url,opt)=>{if(url.endsWith('account/artists')&&opt.method==='POST')linkRequests++;if(url.endsWith('account/artist-session'))sessionRequests++;return originalFetch(url,opt)};
+ const restored=await client.restore(approval.data.token);assert.match(restored,/^ART-[A-Za-z0-9_-]{12,116}$/);assert.equal(storage.get('uadav_artist_account_session_v1'),recoveryId);assert.equal(linkRequests,1);assert.equal(sessionRequests,1,'automatic recovery must not mint a redundant session');
+ const recoveredProfile=await worker.fetch(new Request('https://isolated.example/api/artista/access?token='+encodeURIComponent(restored)),env,{});assert.equal(recoveredProfile.status,200);assert.equal((await recoveredProfile.json()).artist.id,recoveryId);
+ console.log('PASS: real account client + Worker + SQLite: private artist listed, validated session stored, exact private profile opens, unrelated artist denied without overwriting access, rejection removes linkage and revokes access; private invitation recovers the exact artist with one link request and one session.');
 }finally{DB.close()}
