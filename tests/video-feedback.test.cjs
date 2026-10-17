@@ -7,3 +7,16 @@ test('non-embeddable or missing source uses external fallback while transient fa
 test('autoplay block requests explicit native play and does not assert media failure',()=>{const h=setup();h.monitor.blocked();assert.match(h.last().text,/Tocá reproducir/);assert.equal(h.last().retry,false);assert.equal(h.callbacks.size,0)});
 test('closed or replaced player ignores late ready/error/state/timer callbacks',()=>{for(const mode of ['dispose','detach']){const h=setup();if(mode==='dispose')h.monitor.dispose();else h.detach();const count=h.renders.length;h.monitor.ready();h.monitor.state(1);h.monitor.error(100);h.monitor.blocked();h.expire();assert.equal(h.renders.length,count)}});
 test('single-video iframe has API identity, referrer policy and separate playlist marker',()=>{const html=fs.readFileSync(new URL('../app.html','file://'+__filename),'utf8'),c={location:{origin:'https://demo.example'},URL,document:{createElement:tag=>({tag,dataset:{}})}};vm.createContext(c);vm.runInContext(html.slice(html.indexOf('function yid('),html.indexOf('function setMediaMode('))+';this.make=node',c);const f=c.make({provider:'youtube',external_id:'rtVj-GImpZ8'}),u=new URL(f.src);assert.equal(u.searchParams.get('enablejsapi'),'1');assert.equal(u.searchParams.get('origin'),'https://demo.example');assert.equal(f.referrerPolicy,'strict-origin-when-cross-origin');assert.equal(f.dataset.uadavVideo,'rtVj-GImpZ8');assert.equal(f.dataset.uadavPlaylist,undefined);const pl=c.make({playlist_id:'PLabcdefghijklmnop'});assert.equal(pl.dataset.uadavPlaylist,'PLabcdefghijklmnop');assert.equal(pl.dataset.uadavVideo,undefined)});
+
+test('adapter ignores old player events after retry and removes feedback on close',async()=>{
+ const observers=[],players=[],timers=new Map();let tick=0,frame;
+ function element(){return{style:{},children:[],isConnected:true,hidden:false,setAttribute(){},append(...items){this.children.push(...items)},remove(){this.isConnected=false}}}
+ function makeFrame(){const f=element();f.cloneNode=()=>makeFrame();f.replaceWith=next=>{f.isConnected=false;frame=next};return f}
+ frame=makeFrame();let panel;const tools={after:p=>panel=p},stage={querySelector:()=>frame};
+ const c={window:{YT:{Player:class{constructor(f,options){this.options=options;players.push(this)}destroy(){this.destroyed=true}}}},document:{getElementById:id=>id==='mediaStage'?stage:id==='libraryTools'?tools:null,createElement:element},MutationObserver:class{constructor(callback){observers.push(callback)}observe(){}},setTimeout:f=>{timers.set(++tick,f);return tick},clearTimeout:id=>timers.delete(id)};
+ vm.createContext(c);vm.runInContext(source,c);await Promise.resolve();await Promise.resolve();assert.equal(players.length,1);
+ players[0].options.events.onStateChange({data:3});const first=panel;assert.match(first.children[0].textContent,/Cargando/);
+ [...timers.values()].at(-1)();first.children[1].onclick();await Promise.resolve();await Promise.resolve();assert.equal(players.length,2);assert.notEqual(panel,first);assert.equal(players[0].destroyed,true);
+ const newest=panel.children[0].textContent;players[0].options.events.onError({data:100});assert.equal(panel.children[0].textContent,newest);
+ frame.isConnected=false;frame=null;observers[0]();assert.equal(panel.isConnected,false);assert.equal(players[1].destroyed,true);
+});
