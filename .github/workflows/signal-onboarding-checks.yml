@@ -64,6 +64,7 @@ on:
       - tests/profile-edit-identity.test.cjs
       - tests/profile-public-link.test.cjs
       - tests/profile-account-public-identity.test.cjs
+      - tests/profile-artist-opening.test.cjs
       - tests/artist-account-response.test.cjs
       - tests/artist-account-client-integration.mjs
       - tests/account-recovery-deletion.mjs
@@ -136,7 +137,7 @@ jobs:
       - name: Artist public visibility and private metadata
         run: node tests/artist-public-visibility.mjs
       - name: Local account access and recovery isolation
-        run: node --test tests/account-local-access.test.cjs tests/account-sync-conflicts.test.cjs tests/account-ui-recovery.test.cjs tests/profile-edit-identity.test.cjs tests/profile-public-link.test.cjs tests/profile-account-public-identity.test.cjs tests/artist-account-response.test.cjs
+        run: node --test tests/account-local-access.test.cjs tests/account-sync-conflicts.test.cjs tests/account-ui-recovery.test.cjs tests/profile-edit-identity.test.cjs tests/profile-public-link.test.cjs tests/profile-account-public-identity.test.cjs tests/artist-account-response.test.cjs tests/profile-artist-opening.test.cjs
       - name: Artist account client through isolated Worker
         run: node tests/artist-account-client-integration.mjs
       - name: Account recovery and deletion lifecycle
