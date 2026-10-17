@@ -29,3 +29,7 @@ Se bloquea el doble envío mientras se guarda, se muestra Guardando… y se rest
 Se abrió QA DEMO PERFIL 1700 en staging y se guardó sin alterar los campos. La UI mostró Guardando… y deshabilitó los controles. Al terminar cerró el modal y volvió al listado. Reabierto el editor, conservó Pendiente, Oculto, Gratis, sin afiliación verificada y sin vencimiento PRO. No se activaron productos ni se aprobó propiedad.
 
 Mejora posterior: estado accesible y persistente dentro del editor (aSaveStatus), con progreso, error de guardado y validación de nombre con foco. El error ya no depende únicamente del toast de 3,5 segundos. 19 pruebas locales satisfactorias, incluida validación sin petición y conservación del mensaje tras fallo. Pendiente validar este último aviso en Pages y el fallo de red mediante UI real. No se empleó interceptación de red ni se cerró sesión administrativa para provocar errores.
+
+### Verificación visual del aviso publicado
+
+Pages sirvió aSaveStatus. Se vació el nombre únicamente en el formulario del artista sintético y se pulsó Guardar: el editor conservó los demás campos, enfocó Nombre artístico y mostró Escribí el nombre artístico antes de guardar dentro del pie fijo del modal. Se canceló la edición y el listado mantuvo QA DEMO PERFIL 1700 con su nombre y estados previos. La prueba de validación no guardó un nombre vacío. Se verificó también la sintaxis del script inline completo de admin.html. Sigue pendiente reproducir una pérdida de conexión en UI real.
