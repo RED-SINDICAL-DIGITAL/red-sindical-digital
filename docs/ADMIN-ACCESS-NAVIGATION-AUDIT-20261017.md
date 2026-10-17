@@ -16,3 +16,13 @@
 Prueba de integración aislada del Worker real + SQLite satisfactoria: rechazo de borrador revoca acceso privado; reclamo de artista existente requiere verificación; aprobación vincula automáticamente; otra cuenta no obtiene acceso; revocar propietario invalida sesión e invitación. Sólo datos en memoria/SQLite local, sin mutaciones remotas.
 
 Pendientes: sintaxis final, CI, revisión visual y cancelación desde la nueva UI de staging, navegación rápida real y uso con dispositivos físicos. No se aprobará una propiedad real para este control. No se modifican Worker, datos de producción, secretos ni pagos. Los guardas del frontend no sustituyen controles del servidor y no garantizan exclusión entre dos operadores independientes.
+
+## Evidencia posterior y corrección del buscador
+
+La nueva lista de Solicitudes se vio en staging con nombres de artistas. Se abrió la solicitud QA DEMO PERFIL 1700, se inició Rechazar y se canceló el diálogo de nota. Conservó Pendiente y el total de solicitudes pendientes siguió en 10. No se aprobaron ni rechazaron accesos remotos. Se recorrió Consultas → Artistas con carga normal; Consultas terminó antes del cambio final, por lo que esa interacción no reproduce una carrera real. Las carreras sólo quedaron verificadas en pruebas automatizadas.
+
+CI del commit 95fc1f9e0279aac9f0d05c45c27c6fa539cc0400: Platform integration checks 715 y Job status contract checks 335 satisfactorios. Sintaxis final comprobada antes del hallazgo siguiente.
+
+La inspección visual encontró que el buscador superior no ocultaba filas de solicitudes: sólo seleccionaba filas con data-search. Se amplía a las filas de tablas de la sección actual, combinando texto visible y metadatos de búsqueda. Informa coincidencias o ausencia de resultados con un estado accesible; borrar la búsqueda restaura las filas. No consulta otros módulos ni descarga registros adicionales del backend. Las vistas sin tablas no muestran un contador confuso.
+
+Con cuatro pruebas nuevas de búsqueda, el conjunto final ejecutado tiene 67 pruebas satisfactorias. Pendiente: CI y verificación visual de esta última búsqueda corregida en Pages. No se han revisado todas las tablas o dispositivos físicos.
