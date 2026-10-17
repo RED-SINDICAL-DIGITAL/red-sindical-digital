@@ -116,6 +116,8 @@ jobs:
         run: node tests/presskit-publication-privacy.mjs
       - name: Official channel discovery fallback
         run: node tests/artist-channel-discovery.mjs
+      - name: Artist content privacy with SQLite
+        run: node tests/artist-content-visibility.mjs
       - name: Artist public visibility and private metadata
         run: node tests/artist-public-visibility.mjs
       - name: Local account access and recovery isolation
