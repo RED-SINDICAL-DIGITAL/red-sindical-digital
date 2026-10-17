@@ -18,7 +18,8 @@ on:
       - uadav-artist-handle-v140.js
       - tests/artist-handle-ui.test.cjs
       - uadav-artist-inquiries-v130.js
-      - tests/artist-inquiry-account.test.cjs tests/artist-inquiry-lifecycle.test.cjs
+      - tests/artist-inquiry-account.test.cjs
+      - tests/artist-inquiry-lifecycle.test.cjs
       - app.html
       - tests/artist-shell-route.test.cjs
       - tests/artist-navigation-follow.test.cjs
@@ -26,7 +27,8 @@ on:
       - tests/playlist-queue-recovery.test.cjs
       - tests/search-progress-recovery.test.cjs
       - tests/workspace-daily-tools.test.cjs
-      - tests/presskit-render-print.test.mjs tests/presentation-recovery.test.cjs
+      - tests/presskit-render-print.test.mjs
+      - tests/presentation-recovery.test.cjs
       - tests/workspace-autosave.mjs
       - uadav-community-admin-v144.js
       - uadav-pending-admin-v146.js
@@ -50,7 +52,8 @@ on:
       - gestionar-artista.html
       - tests/artist-profile-labels.test.mjs
       - tests/pro-plan-ui.test.mjs
-      - tests/artist-manage-api.test.cjs tests/artist-content-editor.test.cjs
+      - tests/artist-manage-api.test.cjs
+      - tests/artist-content-editor.test.cjs
       - tests/artist-session-identity.test.cjs
       - tests/artist-session-paths.test.cjs
       - tests/booking-availability.test.mjs
