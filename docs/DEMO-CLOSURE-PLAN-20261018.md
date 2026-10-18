@@ -36,3 +36,7 @@ Integración aislada con Worker exacto f42c7f1aff03da4cec3ed98789c7b08054959e9c,
 ## Límites que continúan
 
 No existe certificación global de producción. Falta cerrar los cinco recorridos, pruebas de dispositivos, concurrencia relevante D1/KV y recuperación; TV/operadores, Web Push e IA requieren sus verificaciones/configuraciones. Cobros reales y conciliación bancaria se hacen después de aceptar la demo. No se puede dar un porcentaje fiable ni una fecha sin resolver estos recorridos; sumar tests no sustituye la aceptación completa.
+
+## Verificación de CI de este incremento
+
+Sobre 688e9d5e256387d4cbf01e936f37344a4e334db1: Platform integration checks 39111306324 y Job status contract checks 39111306443 satisfactorios. La primera incluye los nuevos pasos de formulario y Worker de postulaciones. Este resultado no reemplaza la publicación/postulación completa en navegador.
