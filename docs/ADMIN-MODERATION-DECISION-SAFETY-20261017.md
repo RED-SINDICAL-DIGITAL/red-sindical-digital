@@ -1,0 +1,7 @@
+# Decisiones de moderación sin duplicados — 17/10/2026
+
+Aprobar y rechazar un mismo envío comparten bloqueo mientras la solicitud está en curso. Se deshabilitan ambos controles, se muestra progreso y se conserva el contenido hasta que el servidor confirme success:true. Una respuesta incompleta o success:false no comunica publicación. Un error conserva el envío y permite un reintento explícito, restableciendo el estado anterior de los botones. Una respuesta de una sección retirada no reemplaza sus tarjetas ni el contenido de la sección nueva. Tras un éxito, referencias antiguas de los botones no repiten la operación. Los envíos publishing siguen sin controles de revisión contradictorios.
+
+Seis regresiones nuevas usan el módulo completo y peticiones simuladas: doble aprobación/rechazo con id exacto, fallo/reintento, respuesta no confirmada, respuesta tardía tras navegación, conservación de controles ya deshabilitados y envío en publicación. 80 pruebas locales del conjunto de Admin satisfactorias; sintaxis del módulo correcta. CI final pendiente al crear este registro.
+
+El navegador conserva la cola y la sesión administrativa. No se pulsaron aprobar/rechazar sobre envíos reales para verificar el bloqueo; esa parte se comprueba con solicitudes aisladas. La referencia del módulo se actualizó a 20261017-review-safe. No hubo aprobaciones, rechazos, cambios de configuración, pagos ni despliegue de producción.
