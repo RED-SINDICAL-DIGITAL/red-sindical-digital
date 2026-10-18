@@ -19,3 +19,14 @@ test('removed preview details are ignored during print cleanup',()=>{
 test('print lifecycle can run again for a subsequent document',()=>{
  const detail={open:false,isConnected:true};const {events}=renderer([detail]);for(let i=0;i<2;i++){events.beforeprint();assert.equal(detail.open,true);events.afterprint();assert.equal(detail.open,false);}
 });
+
+test('incomplete catalog entries do not prevent valid shows from rendering',()=>{
+ const {kit}=renderer();const html=kit.render({kit:{name:'Artista',appearance:{hidden_sections:{}}},shows:[null,false,[],{name:'Show disponible',requirements:'Rider disponible'}]});
+ assert.match(html,/Show disponible/);assert.match(html,/Rider disponible/);assert.doesNotMatch(html,/<h3>Espectáculo<\/h3>/);
+});
+test('malformed hidden-section values never act as a list of private visibility choices',()=>{
+ const {kit}=renderer();for(const hidden_sections of [null,7,'video',{}]){
+  const html=kit.render({kit:{name:'Artista',bio:'Propuesta pública',appearance:{hidden_sections}}});
+  assert.match(html,/Propuesta pública/);
+ }
+});
