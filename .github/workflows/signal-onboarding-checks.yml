@@ -10,6 +10,8 @@ on:
       - tests/update-notice.test.mjs
       - tests/radio-interaction-ui.test.cjs
       - tests/radio-interaction-integration.mjs
+      - tests/radio-studio-integration.mjs
+      - radio-studio.html
       - radio.html
       - tests/radio-recovery.test.mjs
       - tests/admin-pro-expiry.test.mjs
@@ -210,6 +212,8 @@ jobs:
         run: node tests/signal-publication-lease.mjs
       - name: Radio request and chat integration
         run: node tests/radio-interaction-integration.mjs
+      - name: Radio Studio operator isolation
+        run: node tests/radio-studio-integration.mjs
       - name: Synthetic radio and TV diagnostic flow
         run: node tests/staging-signals-browser-flow.mjs
       - name: Private KV fallback authorization
