@@ -15,3 +15,5 @@
 #radioOperatorsHost :is(button,input,select,textarea):focus-visible{outline:3px solid #84baff;outline-offset:3px}
 #radioOperatorsHost button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:600px){#radioOperatorsHost .card{padding:14px}#radioOperatorsHost button{width:100%;margin-right:0}#radioOperatorsHost>button{width:100%}}
+
+#radioOperatorsHost>button{background:#2f6df6;color:#fff;border:1px solid #4b83ff;border-radius:12px;padding:12px 18px;font:inherit;font-weight:700;cursor:pointer}
