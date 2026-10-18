@@ -8,6 +8,8 @@ on:
       - service-worker.js
       - tests/legacy-worker-retirement.test.mjs
       - tests/update-notice.test.mjs
+      - tests/radio-interaction-ui.test.cjs
+      - radio.html
       - tests/radio-recovery.test.mjs
       - tests/admin-pro-expiry.test.mjs
       - tests/admin-navigation.test.cjs
@@ -188,7 +190,7 @@ jobs:
       - name: Update notice persistence
         run: node --test tests/update-notice.test.mjs tests/legacy-worker-retirement.test.mjs
       - name: Radio error and retry behavior
-        run: node --test tests/radio-recovery.test.mjs
+        run: node --test tests/radio-recovery.test.mjs tests/radio-interaction-ui.test.cjs
       - name: Admin PRO expiry in Argentina
         run: TZ=America/Argentina/Buenos_Aires node --test tests/admin-pro-expiry.test.mjs
       - name: Admin PRO expiry in Tokyo
