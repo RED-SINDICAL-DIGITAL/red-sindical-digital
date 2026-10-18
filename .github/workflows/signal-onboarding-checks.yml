@@ -27,6 +27,7 @@ on:
       - tests/playlist-queue-recovery.test.cjs
       - tests/search-progress-recovery.test.cjs
       - tests/workspace-daily-tools.test.cjs
+      - tests/presskit-public-loading.test.cjs
       - tests/presskit-render-print.test.mjs
       - tests/presentation-recovery.test.cjs
       - tests/workspace-autosave.mjs
@@ -132,7 +133,7 @@ jobs:
       - name: Isolated Admin preview boundaries
         run: node tests/serve-admin-preview.mjs --check
       - name: Quote and agenda daily workflows
-        run: node --test tests/workspace-daily-tools.test.cjs tests/presskit-render-print.test.mjs
+        run: node --test tests/workspace-daily-tools.test.cjs tests/presskit-render-print.test.mjs tests/presskit-public-loading.test.cjs
       - name: Workspace autosave and publication recovery
         run: node tests/workspace-autosave.mjs
       - name: Artist workspace identity isolation
