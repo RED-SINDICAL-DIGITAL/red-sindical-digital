@@ -59,6 +59,9 @@ on:
       - tests/booking-availability.test.mjs
       - tests/booking-form-retry.test.cjs
       - contratar-artista.html
+      - publicar-evento.html
+      - tests/event-publication-ui.test.cjs
+      - tests/event-publication-integration.mjs
       - bolsa-trabajo.html
       - tests/job-application-ui.test.cjs
       - tests/job-application-integration.mjs
@@ -155,6 +158,10 @@ jobs:
         run: node --test tests/artist-handle-ui.test.cjs
       - name: Inquiry inbox account isolation
         run: node --test tests/artist-inquiry-account.test.cjs
+      - name: Event publication and result isolation
+        run: node --test tests/event-publication-ui.test.cjs
+      - name: Event Worker catalog and moderation integration
+        run: node tests/event-publication-integration.mjs
       - name: Job application receipt and submission isolation
         run: node --test tests/job-application-ui.test.cjs tests/job-status-contract.test.cjs
       - name: Job application Worker integration
