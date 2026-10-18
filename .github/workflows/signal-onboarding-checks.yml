@@ -13,6 +13,7 @@ on:
       - tests/radio-studio-integration.mjs
       - tests/radio-studio-ui.test.cjs
       - tests/radio-operators-admin.test.cjs
+      - tests/admin-radio-request-state.test.cjs
       - tests/radio-studio-entry.test.cjs
       - uadav-radio-operators-admin.js
       - uadav-radio-studio-entry.js
@@ -220,7 +221,7 @@ jobs:
       - name: Radio Studio operator isolation
         run: |
           node tests/radio-studio-integration.mjs
-          node --test tests/radio-studio-ui.test.cjs tests/radio-operators-admin.test.cjs tests/radio-studio-entry.test.cjs
+          node --test tests/radio-studio-ui.test.cjs tests/radio-operators-admin.test.cjs tests/radio-studio-entry.test.cjs tests/admin-radio-request-state.test.cjs
       - name: Synthetic radio and TV diagnostic flow
         run: node tests/staging-signals-browser-flow.mjs
       - name: Private KV fallback authorization
