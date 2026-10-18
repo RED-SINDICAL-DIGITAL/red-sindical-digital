@@ -22,10 +22,35 @@ try{
  assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:reqA.data.item.id,status:'inventado'},a)).status,400);
  assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:reqA.data.item.id,status:'queued'},a)).status,200);
  assert.equal((await call('radio-studio/requests?radio_id=RAD-A','GET',undefined,a)).data.items[0].status,'queued');
+
  assert.equal((await call('radio/requests','GET',undefined,a)).status,401);
+ assert.equal(JSON.parse(kv.get('radio_requests')).find(x=>x.id===reqA.data.item.id).status,'queued');
+ const originalPut=env.UADAV_DB.put;env.UADAV_DB.put=async(k,v)=>{if(k==='radio_requests')throw Error('Synthetic KV outage');return originalPut(k,v)};
+ const mirrorFailure=await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:reqA.data.item.id,status:'played'},a);assert.equal(mirrorFailure.status,200);assert.equal(mirrorFailure.data.kv_mirror_updated,false);
+ assert.equal((await call('radio-studio/requests?radio_id=RAD-A','GET',undefined,a)).data.items[0].status,'played');env.UADAV_DB.put=originalPut;
+ assert.equal((await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Radio A',mensaje:'Intento ajeno',radio_operator_account_id:await hash(a),radio_operator_radio_id:'RAD-A'},b)).status,403);
+ const listener=await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Oyente',mensaje:'Saludos a la radio'});
+ const foreign=await call('moderar_chat','POST',{id_stream:'radio:RAD-B',alias:'Otra radio',mensaje:'Mensaje ajeno'});
+ assert.equal((await call('radio-studio/chat?radio_id=RAD-A','GET',undefined,b)).status,403);
+ assert.equal((await call('radio-studio/chat?radio_id=RAD-B','GET',undefined,a)).status,403);
+ const reply=await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'Gracias por escuchar',reply_to:listener.data.item.id,radio_id:'RAD-B',alias:'Impostor'},a);
+ assert.equal(reply.status,200);assert.equal(reply.data.radio_id,'RAD-A');assert.equal(reply.data.item.alias,'Radio A');assert.equal(reply.data.item.reply_to,listener.data.item.id);
+ const chat=await call('radio-studio/chat?radio_id=RAD-A','GET',undefined,a);assert(chat.data.items.some(x=>x.id===reply.data.item.id));assert(!chat.data.items.some(x=>x.id===foreign.data.item.id));
+ assert.equal((await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'Respuesta incorrecta',reply_to:foreign.data.item.id},a)).status,400);
+ await call('admin/moderation/settings','PUT',{enabled:true,provider:'gemini',daily_limit:300},admin);
+ const held=await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'Respuesta para revisar'},a);assert.equal(held.status,202);assert.equal(held.data.moderation_pending,true);
+ assert(!(await call('radio-studio/chat?radio_id=RAD-A','GET',undefined,a)).data.items.some(x=>x.mensaje==='Respuesta para revisar'));
+ assert.equal((await call('admin/moderation/review','POST',{id:held.data.moderation_id,decision:'approve'},admin)).status,200);
+ assert((await call('radio-studio/chat?radio_id=RAD-A','GET',undefined,a)).data.items.some(x=>x.mensaje==='Respuesta para revisar'));
+ const revokedPending=await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'No publicar tras revocación'},a);assert.equal(revokedPending.status,202);
+
  assert.equal((await call('admin/radio-operators','PUT',{...grant,action:'revoke'},admin)).status,200);
  assert.equal((await call('radio-studio/requests?radio_id=RAD-A','GET',undefined,a)).status,403);
  assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:reqA.data.item.id,status:'played'},a)).status,403);
  assert.equal((await call('radio-studio','GET',undefined,a)).data.items.length,0);
+ assert.equal((await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'Sin permiso'},a)).status,403);
+ assert.equal((await call('admin/moderation/review','POST',{id:revokedPending.data.moderation_id,decision:'approve'},admin)).status,409);
+ assert(!(await call('chat?id_stream=radio%3ARAD-A')).data.some(x=>x.mensaje==='No publicar tras revocación'));
+
  console.log('PASS: isolated Radio Studio account access, verified Admin grant/revoke, station-scoped inbox/update, cross-station/account denial, no central Admin access and no-store responses. No real permission grants.');
 }finally{DB.close()}
