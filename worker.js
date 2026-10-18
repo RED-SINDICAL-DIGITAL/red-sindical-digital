@@ -4265,6 +4265,41 @@ async function saveEntityVersion(type,id,data){
         return json({success:true,item});
       }
     }
+
+    if(path==='/api/admin/radio-operators'||path==='/api/radio-studio'||path==='/api/radio-studio/requests'){
+      const studioReply=(data,status=200)=>json(data,status,{'Cache-Control':'no-store'});
+      if(!hasD1())return studioReply({error:'Radio Studio requiere D1'},503);
+      await ensureD1Schema();await uadavAccountSchema(env.DB);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS radio_operators(radio_id TEXT NOT NULL,account_id TEXT NOT NULL,status TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(radio_id,account_id))").run();
+      const catalog=await getArray('radios'),station=id=>catalog.find(r=>String(r.id||'')===id&&r.visible!==false&&r.activa!==false&&r.enabled!==false&&!['suspendido','suspended','inactive'].includes(r.estado));
+      if(path==='/api/admin/radio-operators'){
+        if(!isAdmin())return studioReply({error:'No autorizado'},401);
+        if(request.method==='GET'){const rid=String(url.searchParams.get('radio_id')||'');return studioReply({items:(await env.DB.prepare('SELECT radio_id,account_id,status,updated_at FROM radio_operators WHERE radio_id=? ORDER BY updated_at DESC').bind(rid).all()).results||[]})}
+        if(request.method!=='PUT')return studioReply({error:'Método no permitido'},405);
+        const b=await uadavSecurityJSON(request,3000),rid=String(b.radio_id||''),account=String(b.account_id||''),reason=String(b.reason||'').trim();
+        if(!station(rid)||!/^[a-f0-9]{64}$/.test(account)||!['grant','revoke'].includes(b.action)||b.confirm!=='CONFIRMAR'||reason.length<10)return studioReply({error:'Emisora, cuenta, acción, confirmación y motivo de verificación requeridos'},400);
+        if(!await env.DB.prepare('SELECT id FROM audience_accounts WHERE id=? AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)').bind(account,account).first())return studioReply({error:'Cuenta no encontrada'},404);
+        await env.DB.prepare("INSERT INTO radio_operators(radio_id,account_id,status,updated_at) VALUES(?,?,?,?) ON CONFLICT(radio_id,account_id) DO UPDATE SET status=excluded.status,updated_at=excluded.updated_at").bind(rid,account,b.action==='grant'?'active':'revoked',isoNow()).run();
+        await audit('radio_operator_'+b.action,'radio',rid,{account_id:account,reason});return studioReply({success:true});
+      }
+      const check=await uadavAccountRoute(new Request(new URL('/api/account/identity',request.url),{headers:request.headers}),env,true),identity=await check.json();
+      if(!check.ok)return studioReply(identity,check.status);const account=identity.account_id;
+      if(path==='/api/radio-studio'){
+        if(request.method!=='GET')return studioReply({error:'Método no permitido'},405);
+        const grants=(await env.DB.prepare("SELECT radio_id FROM radio_operators WHERE account_id=? AND status='active'").bind(account).all()).results||[];
+        return studioReply({items:grants.map(g=>station(g.radio_id)).filter(Boolean).map(r=>({id:String(r.id),name:String(r.nombre||r.name||'Radio')}))});
+      }
+      const rid=String(url.searchParams.get('radio_id')||'');
+      if(!station(rid)||!await env.DB.prepare("SELECT radio_id FROM radio_operators WHERE radio_id=? AND account_id=? AND status='active'").bind(rid,account).first())return studioReply({error:'No tenés permiso para esta emisora'},403);
+      if(request.method==='GET')return studioReply({radio_id:rid,items:(await env.DB.prepare('SELECT id,radio_id,listener_name,artist,title,dedication,status,created_at,updated_at FROM radio_requests WHERE radio_id=? ORDER BY created_at DESC LIMIT 100').bind(rid).all()).results||[]});
+      if(request.method!=='PATCH')return studioReply({error:'Método no permitido'},405);
+      const b=await uadavSecurityJSON(request,2000),id=String(b.id||''),status=String(b.status||'');
+      if(!id||!['pending','queued','played','rejected'].includes(status))return studioReply({error:'Pedido o estado inválido'},400);
+      const result=await env.DB.prepare("UPDATE radio_requests SET status=?,updated_at=? WHERE id=? AND radio_id=? AND EXISTS(SELECT 1 FROM radio_operators WHERE radio_id=? AND account_id=? AND status='active') AND EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)").bind(status,isoNow(),id,rid,rid,account,account,account).run();
+      if(Number(result.meta?.changes)!==1)return studioReply({error:'El pedido o tu permiso cambió. Actualizá la bandeja.'},409);
+      await audit('radio_request_operator_state','radio',rid,{account_id:account,request_id:id,status});
+      return studioReply({success:true,radio_id:rid,id,status});
+    }
     if(path==='/api/radio/requests'){
       if(request.method==='GET'){
         if(!isAdmin())return json({error:'No autorizado'},401);const rid=String(url.searchParams.get('radio_id')||'');
