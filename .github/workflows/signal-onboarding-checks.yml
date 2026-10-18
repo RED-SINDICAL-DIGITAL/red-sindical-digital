@@ -11,6 +11,7 @@ on:
       - tests/radio-interaction-ui.test.cjs
       - tests/radio-interaction-integration.mjs
       - tests/radio-studio-integration.mjs
+      - tests/radio-studio-ui.test.cjs
       - radio-studio.html
       - radio.html
       - tests/radio-recovery.test.mjs
@@ -213,7 +214,9 @@ jobs:
       - name: Radio request and chat integration
         run: node tests/radio-interaction-integration.mjs
       - name: Radio Studio operator isolation
-        run: node tests/radio-studio-integration.mjs
+        run: |
+          node tests/radio-studio-integration.mjs
+          node --test tests/radio-studio-ui.test.cjs
       - name: Synthetic radio and TV diagnostic flow
         run: node tests/staging-signals-browser-flow.mjs
       - name: Private KV fallback authorization
