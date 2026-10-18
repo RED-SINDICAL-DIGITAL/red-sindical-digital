@@ -4,7 +4,7 @@ if(id)$('profile').href='/artista.html?id='+encodeURIComponent(id);
 let presentationBusy=false;
 async function loadPresentation(){
  if(presentationBusy)return;
- presentationBusy=true;$('retry').hidden=true;$('retry').disabled=true;$('print').hidden=true;$('share').hidden=true;
+ presentationBusy=true;$('app').innerHTML='';$('print').onclick=null;$('share').onclick=null;$('retry').hidden=true;$('retry').disabled=true;$('print').hidden=true;$('share').hidden=true;
  $('status').className='';$('status').textContent='Cargando presentación…';
  const c=new AbortController(),timer=setTimeout(()=>c.abort(),15000);
  try{
@@ -12,13 +12,16 @@ async function loadPresentation(){
   const r=await fetch((window.PLATFORM_API_BASE||window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/')+'public/presskit?artist_id='+encodeURIComponent(id),{cache:'no-store',signal:c.signal});
   let d;try{d=await r.json()}catch{throw Error('No pudimos leer la presentación. Volvé a intentarlo.')}
   if(!r.ok)throw Error(d.error||'Presentación no disponible');
-  if(!d.kit||typeof d.kit!=='object'||Array.isArray(d.kit))throw Error('La presentación llegó incompleta. Volvé a intentarlo.');
+  if(!d||String(d.artist_id||'')!==id||!d.kit||typeof d.kit!=='object'||Array.isArray(d.kit)||typeof d.kit.name!=='string'||!d.kit.name.trim()||typeof d.kit.bio!=='string'||!d.kit.bio.trim())throw Error('La presentación llegó incompleta. Volvé a intentarlo.');
   document.title=(d.kit.name||'Artista')+' · Presentación artística';
   $('app').innerHTML=UADAVPressKit.render({...d,artist_id:id});
   $('app').querySelectorAll('img').forEach(img=>img.onerror=()=>{img.hidden=true});
-  $('status').textContent='';$('print').hidden=false;$('share').hidden=false;
-  $('print').onclick=()=>window.print();UADAVShare.prepare('kit',{...d.kit,artist_id:id});
-  $('share').onclick=()=>UADAVShare.open('kit',{...d.kit,artist_id:id});
+  $('status').textContent='';$('print').hidden=false;
+  $('print').onclick=()=>window.print();
+  if(window.UADAVShare&&typeof UADAVShare.open==='function'){
+   try{if(typeof UADAVShare.prepare==='function')UADAVShare.prepare('kit',{...d.kit,artist_id:id})}catch{}
+   $('share').hidden=false;$('share').onclick=()=>UADAVShare.open('kit',{...d.kit,artist_id:id});
+  }
  }catch(e){
   $('status').className='kit-message';$('status').textContent=e.name==='AbortError'?'La carga demoró demasiado. Podés volver a intentarlo.':e.message;
   $('retry').hidden=!id;
