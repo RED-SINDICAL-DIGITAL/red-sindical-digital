@@ -21,6 +21,7 @@ on:
       - tests/artist-inquiry-account.test.cjs
       - tests/artist-inquiry-lifecycle.test.cjs
       - app.html
+      - radios.html
       - tests/artist-shell-route.test.cjs
       - tests/artist-navigation-follow.test.cjs
       - tests/artist-library-pagination.test.cjs
