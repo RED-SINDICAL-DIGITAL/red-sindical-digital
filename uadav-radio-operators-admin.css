@@ -1,0 +1,17 @@
+/* Radio operator management: scoped to Admin host. */
+#radioOperatorsHost{display:grid;gap:14px;min-width:0}
+#radioOperatorsHost h2,#radioOperatorsHost h3,#radioOperatorsHost p{margin:0;line-height:1.5}
+#radioOperatorsHost>p{color:#a9b6c8}
+#radioOperatorsHost input[type=search],#radioOperatorsHost select,#radioOperatorsHost textarea{display:block;width:100%;min-width:0;max-width:100%;min-height:46px;border:1px solid #34445b;border-radius:12px;background:#0a101b;color:#eef4ff;padding:12px 14px;font:inherit}
+#radioOperatorsHost select{color-scheme:dark}
+#radioOperatorsHost textarea{min-height:110px;resize:vertical;margin:14px 0}
+#radioOperatorsHost button{min-height:44px;justify-self:start}
+#radioOperatorsHost>button{width:auto}
+#radioOperatorsHost .card{margin:12px 0 0;padding:18px;border:1px solid #263449;border-radius:16px;background:#0b111b;min-width:0}
+#radioOperatorsHost .card button{margin-top:12px}
+#radioOperatorsHost section>label{display:flex;align-items:flex-start;gap:10px;margin-top:16px;line-height:1.6}
+#radioOperatorsHost input[type=checkbox]{width:20px;height:20px;flex:0 0 20px;margin-top:3px;accent-color:#4285ff}
+#radioOperatorsHost section>button{margin-right:10px}
+#radioOperatorsHost :is(button,input,select,textarea):focus-visible{outline:3px solid #84baff;outline-offset:3px}
+#radioOperatorsHost button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:600px){#radioOperatorsHost .card{padding:14px}#radioOperatorsHost button{width:100%;margin-right:0}#radioOperatorsHost>button{width:100%}}
