@@ -28,3 +28,18 @@ test('stream error pauses audio and reports a retry state',()=>{
 test('error and ended audio cannot be reported as playing',()=>{
  assert(source.includes('playing:!!currentRadio&&!ra.paused&&!ra.error&&!ra.ended'));
 });
+
+test('radio metadata does not duplicate an artist already included in title',()=>{
+ const body=source.slice(source.indexOf('function radioMetadataLabel('),source.indexOf('function clean('));
+ const ctx={};vm.createContext(ctx);vm.runInContext(body,ctx);
+ for(const title of ['Cyndi Lauper - Girls','CYNDI LAUPER — Girls','Cyndi Lauper – Girls','Cyndi Lauper: Girls','Cyndi Lauper'])assert.equal(ctx.radioMetadataLabel('Cyndi Lauper',title),title);
+ assert.equal(ctx.radioMetadataLabel('Cyndi Lauper','Girls'),'Cyndi Lauper — Girls');
+ assert.equal(ctx.radioMetadataLabel('','Girls'),'Girls');
+ assert.equal(ctx.radioMetadataLabel('Cyndi Lauper',''),'Cyndi Lauper');
+ assert.equal(ctx.radioMetadataLabel('Air','Airborne'),'Air — Airborne');
+});
+test('legacy radios entry preserves station query and hash with local destination',async()=>{
+ const html=await readFile(new URL('../radios.html',import.meta.url),'utf8'),script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+ const link={};let destination;vm.runInNewContext(script,{location:{search:'?id=RAD-TEST',hash:'#history',replace:value=>destination=value},document:{getElementById:()=>link}});
+ assert.equal(destination,'/radio.html?id=RAD-TEST#history');assert.equal(link.href,destination);
+});
