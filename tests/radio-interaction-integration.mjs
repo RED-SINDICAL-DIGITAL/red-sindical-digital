@@ -9,6 +9,17 @@ try{
  const inbox=await call('radio/requests?radio_id=RAD-A','GET',undefined,true);assert(inbox.data.some(x=>x.id===requestId&&x.title==='Tema QA'));
  assert.equal((await call('radio/requests?radio_id=RAD-B','GET',undefined,true)).data.length,0);
  assert.equal((await call('radio/requests','PUT',{id:requestId,status:'done'},true)).status,200);assert.equal((await call('radio/requests?radio_id=RAD-A','GET',undefined,true)).data.find(x=>x.id===requestId).status,'done');
+ for(const status of ['queued','played','rejected','pending','done'])assert.equal((await call('radio/requests','PUT',{id:requestId,status},true)).status,200);
+ assert.equal((await call('radio/requests','PUT',{id:requestId,status:'arbitrary'},true)).status,400);
+ assert.equal((await call('radio/requests','PUT',{id:'REQ-MISSING',status:'played'},true)).status,404);
+ assert.equal((await call('radio/requests','PUT',{status:'played'},true)).status,400);
+ // Exercise KV fallback through an actual database query failure.
+ const originalPrepare=DB.prepare.bind(DB);DB.prepare=sql=>{if(sql.startsWith('SELECT * FROM radio_requests'))throw Error('Synthetic D1 read outage');return originalPrepare(sql)};
+ assert((await call('radio/requests?radio_id=RAD-A','GET',undefined,true)).data.some(x=>x.id===requestId));
+ assert.equal((await call('radio/requests?radio_id=RAD-B','GET',undefined,true)).data.length,0);DB.prepare=originalPrepare;
+ // D1 retains records no longer in bounded KV history.
+ const savedKV=kv.get('radio_requests');kv.set('radio_requests','[]');
+ assert.equal((await call('radio/requests','PUT',{id:requestId,status:'played'},true)).status,200);kv.set('radio_requests',savedKV);
  const message=await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Oyente QA',mensaje:'Mensaje de prueba aislada'});assert.equal(message.status,200);const messageId=message.data.item.id;
  const reply=await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Respuesta QA',mensaje:'Respuesta ficticia',reply_to:messageId});assert.equal(reply.status,200);
  assert.equal((await call('moderar_chat','POST',{id_stream:'radio:RAD-B',alias:'Otra emisora',mensaje:'Respuesta cruzada',reply_to:messageId})).status,400);
