@@ -50,12 +50,12 @@ Entorno autorizado: staging, rama audit/public-job-status-20261012. Producción 
 | `radio-studio.html` | Permisos/aislamiento probados localmente; operador real pendiente de confirmación de cuenta y radio. |
 | `radio.html` | Radio nativa propia y participación probadas previamente; móvil físico y mensajes reales pendientes. |
 | `radios.html` | Alias conserva búsqueda/fragmento y redirige a Radio; verificar navegador. |
-| `reclamar-artista.html` | Inventariada; revisión funcional y visual específica pendiente. |
+| `reclamar-artista.html` | Entrada antigua redirigida a Mi perfil → Mi artista. Sin botón de reclamo en el perfil público. |
 | `shorts.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `soy-artista.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `stream-plus.html` | Página informa retiro de STREAM+; revisar accesos antiguos. |
 | `suma-tu-senal.html` | Corregida; cierre de inscripciones real confirmado en navegador, aviso con codificación antigua corregido en código. Recibo/errores/doble envío simulados; solicitud real y revisión pendientes. |
-| `sumate-artista.html` | Corregida y simplificada a dos campos esenciales; apertura/cierre de datos opcionales y etiquetas comprobados en navegador. Envío/errores/doble envío simulados; alta real y moderación pendientes. |
+| `sumate-artista.html` | Entrada antigua retirada como formulario independiente; redirige a Mi perfil → Mi artista. El nuevo recorrido usa el onboarding con cuenta y revisión. |
 | `terminos.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `trabajo.html` | Acceso al circuito de Bolsa; verificar navegación y dispositivos. |
 | `usuario.html` | Corregida; acceso a Artistas seguido en escritorio; edición con identidad cubierta localmente. Cuenta vinculada real pendiente. |
@@ -90,3 +90,12 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Pruebas nuevas incluidas en CI; algunos runs siguen en cola. No se afirma aprobación completa de CI antes de recibir sus resultados.
 
 - Observación visual pendiente: varias miniaturas de videos muestran el recurso genérico de respaldo en este navegador. Revisar disponibilidad/carga de imágenes externas por dispositivo; no se atribuye todavía una causa ni se declara resuelta.
+
+## Decisión vigente: un solo recorrido de artista
+
+- Mi perfil → Mi artista es la entrada para crear o vincular un artista. Sos artista y la página informativa Para artistas apuntan al mismo espacio.
+- Se eliminó el botón Gestionar este perfil del perfil público, incluso con modo=artista. La navegación pública de descubrimiento y contenido sigue separada de la solicitud de gestión.
+- Los formularios históricos Sumate y Reclamar ahora son páginas de compatibilidad que redirigen al espacio personal; no se reenvían parámetros antiguos ni datos privados.
+- Etiqueta Crear o vincular mi artista coherente en el HTML y en los dos controladores de cuenta. La edición de artistas ya vinculados conserva sus permisos y destinos.
+- 23 pruebas locales de identidad/edición/navegación pasan, y el escenario de menú de cuenta con artista correcto también pasa. Verificación visual del despliegue pendiente.
+- Esto unifica la interfaz. No elimina todavía los endpoints históricos del Worker ni sustituye las verificaciones de titularidad. Su retirada compatible debe tratarse en una próxima entrega de backend, con revisión de consumidores.
