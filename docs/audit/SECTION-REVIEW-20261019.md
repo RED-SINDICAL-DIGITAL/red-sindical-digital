@@ -180,3 +180,5 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Claves de intento guardadas inválidas se regeneran; las válidas se conservan al reintentar y recargar.
 - Consultas recibidas valida success + ID + estado devuelto por PATCH antes de mostrar Estado guardado; una respuesta incompleta conserva la selección anterior y permite Actualizar.
 - 262 pruebas locales CJS + disponibilidad de contratación pasan. Integración del Worker completo con SQLite pasa: entrega, aislamiento entre artistas, avisos privados, estados, concurrencia, persistencia y reintentos idempotentes. Estas pruebas son aisladas; no certifican envío completo en staging ni entre equipos físicos.
+
+- Publicación confirmada: todos los checks y Pages del commit 163e6e23f5c8ca24ea3b45a0e111e18a5b472640 pasan. En navegador, contratar sin artista mantiene el envío deshabilitado y el comprobante oculto (altura cero). El comprobante de éxito y la recuperación frente a respuestas erróneas se validaron con pruebas aisladas; el flujo completo real en staging continúa pendiente. Manual público actualizado.
