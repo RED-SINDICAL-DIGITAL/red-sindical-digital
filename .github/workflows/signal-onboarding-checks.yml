@@ -232,3 +232,9 @@ jobs:
       - name: Private KV fallback authorization
         run: node tests/private-kv-fallback.mjs
 
+
+      - name: Podcast RSS ingestion and catalog fallback
+        run: |
+          node --check uadav-podcast-sources-admin.js
+          node --test tests/podcasts.test.cjs tests/podcast-catalog-loading.test.cjs tests/native-media-session.test.cjs
+          node tests/podcast-rss-integration.mjs
