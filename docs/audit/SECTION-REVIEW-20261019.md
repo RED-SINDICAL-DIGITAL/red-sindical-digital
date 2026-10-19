@@ -21,10 +21,10 @@ Entorno autorizado: staging, rama audit/public-job-status-20261012. Producción 
 | `beneficios.html` | Página informativa de implementación futura; convenios reales pendientes. |
 | `biblioteca.html` | Corregida y probada en escritorio; confirmar limpieza visual y móvil. |
 | `bolsa-trabajo.html` | Publicación/aprobación/postulación/consulta ficticias previas; dispositivos pendientes. |
-| `buscar.html` | Inventariada; revisión funcional y visual específica pendiente. |
+| `buscar.html` | Controles de reproducción y favoritos separados; filtro de artista, guardado sin reproducción, segunda página y retorno desde artista comprobados en staging. YouTube reproducible sigue pendiente. |
 | `cartelera.html` | Publicación ficticia/moderación/detalle/retorno probados antes; revisión visual por dispositivos pendiente. |
 | `contratar-artista.html` | Inventariada; revisión funcional y visual específica pendiente. |
-| `descubrir.html` | Inventariada; revisión funcional y visual específica pendiente. |
+| `descubrir.html` | Música: 24 tarjetas comprobadas en staging. Eventos: fixture y acción Ver evento comprobados. Errores, reintento y cursor repetido cubiertos localmente; dispositivos pendientes. |
 | `documentacion.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `en-vivo.html` | Radio reproducible comprobada; TV autorizada reproducible pendiente. |
 | `evento.html` | Detalle de evento ficticio y retorno probados; dispositivos pendientes. |
@@ -78,3 +78,13 @@ El intento de lectura masiva sin autenticación desde el entorno de comandos dev
 ## Accesibilidad adicional
 
 Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, Artista, Artistas, Buscar y Evento para evitar anuncios repetidos. Sintaxis comprobada y 48 pruebas relevantes posteriores pasan. Queda prueba con lector de pantalla real.
+
+## Búsqueda y Explorar — ampliación
+
+- Búsqueda real «Madonna»: 25 resultados iniciales; Cargar más devolvió 45 resultados (44 contenidos y un artista). Abrir artista y Volver conserva consulta y los 44 contenidos.
+- Hay 24 botones de reproducción y 24 de favoritos separados en la primera página, sin botones anidados dentro de enlaces. Guardar el primer favorito no activó el reproductor. Se restauró el estado anterior del favorito tras comprobarlo.
+- Filtro Artistas conserva perfil descubierto sin mensaje contradictorio de categoría vacía.
+- Explorar muestra 24 propuestas musicales y, en Eventos, el evento ficticio ya autorizado de staging. No se crearon publicaciones nuevas.
+- Respuestas malformadas, fallo primario con fallback vacío, cursor repetido, reintento exitoso, estructura de controles, artista descubierto y títulos codificados tienen regresiones nuevas. La suite combinada con carga progresiva y fallback móvil cubre 18 escenarios.
+- La corrección de entidades en títulos está en código y probada localmente; su comprobación visual final queda pendiente del despliegue.
+- Pruebas nuevas incluidas en CI; algunos runs siguen en cola. No se afirma aprobación completa de CI antes de recibir sus resultados.
