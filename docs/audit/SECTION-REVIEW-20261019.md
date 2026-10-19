@@ -136,3 +136,11 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 
 - Frontend de metadatos comprobado en staging con el Worker anterior: mantiene las 12 listas, muestra «Playlist del canal 1…12», «Cantidad de videos no disponible» y el aviso de datos incompletos. Tabulación comprobada sin activar reproducción. No se afirma recuperación de títulos antes del nuevo Worker.
 - Commit de código efa3e55a0a7c6881b0fc3f1a191b74d6fb675396: todos los checks de CI y Pages terminaron con éxito. 197 pruebas CJS locales pasan. Archivo completo worker-staging-11754.js preparado para despliegue manual, con SHA-256 documentado en WORKER-11754-PLAYLISTS.md.
+
+## Radios favoritas — continuación 2026-10-19
+
+- Radio ahora avisa localmente y al shell del cambio de favoritos después de una escritura confirmada. La sincronización real entre dispositivos sigue pendiente.
+- Botón Favorita refleja aria-pressed y nombre de la emisora. Hay confirmación visible y un error legible si no se pudo guardar.
+- El botón Radios favoritas y las aperturas desde Biblioteca conservan sólo un regreso local validado a tab=radios, con la búsqueda. Emisoras sin ID propio pueden resolverse por su stream guardado.
+- Nuevos favoritos incluyen programa/ubicación; la búsqueda local de Biblioteca contempla esos campos.
+- 218 pruebas CJS locales pasan. Prueba real del recorrido se registra después de publicar staging.
