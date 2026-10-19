@@ -28,5 +28,18 @@ function fromChannelInfo(info){
  return {id:'discover:'+channelId,canal:channelId,nombre:name,nombre_artistico:name,foto:info.foto||info.thumbnail||'',portada:info.portada||info.banner||'',bio:info.bio||info.description||'',rubro:'Creador',visible:true,discovered:true,generated:true,source:'Canal público de YouTube'};
 }
 
-g.UADAVArtistDiscovery={remember,rememberMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo};
+
+function followedProfileHref(a,origin){
+ const copy={...a};let saved=null;
+ try{const u=new URL(a.url||'',origin);if(u.origin===origin&&!u.username&&!u.password&&/^\/artista(?:\.html)?$/.test(u.pathname))saved=u}catch{}
+ const ref=channelRef(a.canal||a.channel_id)||channelRef(String(a.id||'').replace(/^discover:/,''))||channelRef(saved?.searchParams.get('channel'))||channelRef(String(saved?.searchParams.get('id')||'').replace(/^discover:/,''));
+ const stable=a.id&&!String(a.id).startsWith('discover:')&&!channelRef(a.id);
+ if(stable)return profileHref({...copy,discovered:false});
+ if(ref)return profileHref({...copy,canal:ref,discovered:true});
+ const savedId=saved?.searchParams.get('id');
+ if(savedId&&!savedId.startsWith('discover:'))return profileHref({id:savedId});
+ return profileHref({...copy,discovered:true,nombre:saved?.searchParams.get('discover')||a.nombre||a.nombre_artistico||''});
+}
+
+g.UADAVArtistDiscovery={remember,rememberMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,followedProfileHref};
 })(globalThis);

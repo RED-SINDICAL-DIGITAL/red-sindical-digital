@@ -40,3 +40,10 @@ No aplicar al Worker de producción.
 - Diagnóstico de carátulas: la navegación directa del navegador de pruebas a https://i.ytimg.com/vi/X_R2uZdTW0A/hqdefault.jpg muestra “Site Unavailable / Unable to access this site.” No prueba una falla universal del cliente ni permite confirmar imágenes en dispositivos reales. No se agregó un proxy para evitar esa limitación.
 
 - Aceptación publicada del buscador general (07cbc2455da05c009f3bfa0627b816f0491defb3): todos los checks y Pages en success. En navegador: @madonna devuelve un perfil, enlaza el canal UC81VD6eeuLLSfyY_D-N8sVw, permite abrirlo y Volver restaura consulta y filtro Artistas. No se probó reproducción ni dispositivos físicos en esta aceptación.
+
+## Artistas seguidos y regreso a la biblioteca
+
+- Nuevos seguimientos guardan el canal y un enlace público canónico, sin arrastrar el origen de una búsqueda anterior.
+- La biblioteca recupera el canal de registros anteriores cuando existe en el ID o enlace guardado. No abre destinos externos ni secciones ajenas al perfil desde un seguimiento.
+- Ver perfil incluye regreso a Biblioteca / Artistas seguidos y conserva el texto buscado. La biblioteca valida la pestaña inicial contra sus claves propias.
+- 212 pruebas CJS locales pasan. Se mantienen los enlaces a artistas registrados y las notificaciones de sincronización de seguir/dejar de seguir.
