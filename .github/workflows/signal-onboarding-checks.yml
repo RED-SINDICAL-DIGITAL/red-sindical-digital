@@ -191,7 +191,7 @@ jobs:
       - name: Frame readiness and isolated fallback search
         run: node --test tests/mobile-frame-search.test.cjs tests/media-source-link.test.cjs tests/video-feedback.test.cjs
       - name: Artist shell tab synchronization
-        run: node --test tests/artist-shell-route.test.cjs tests/artist-navigation-follow.test.cjs tests/artist-library-pagination.test.cjs tests/youtube-playlist-metadata.test.cjs tests/playlist-queue-recovery.test.cjs tests/search-progress-recovery.test.cjs
+        run: node --test tests/youtube-channel-reference.test.cjs tests/artist-shell-route.test.cjs tests/artist-navigation-follow.test.cjs tests/artist-library-pagination.test.cjs tests/youtube-playlist-metadata.test.cjs tests/playlist-queue-recovery.test.cjs tests/search-progress-recovery.test.cjs
       - name: Artist management session integration
         run: node --test tests/artist-manage-api.test.cjs tests/artist-session-identity.test.cjs tests/artist-session-paths.test.cjs
       - name: Staging build isolation tests
