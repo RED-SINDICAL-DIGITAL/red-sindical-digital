@@ -1,4 +1,6 @@
 # Fuentes de podcasts: carga manual y automática
+
+**Actualización de esta sesión:** RSS/Atom, Admin, sincronización D1 y cron opt-in implementados y probados de forma aislada. Falta desplegar el Worker en staging y aceptar fuentes reales. Ver [entrega y estado actual](PODCAST-RSS-STAGING-DELIVERY-20261019.md). La sección de pipeline inferior conserva el plan original; los adaptadores automáticos de YouTube/Spotify siguen pendientes.
 Fecha: 2026-10-19. Rama audit/public-job-status-20261012. Sin despliegue del Worker ni cambios en producción.
 
 ## Decisión de producto
