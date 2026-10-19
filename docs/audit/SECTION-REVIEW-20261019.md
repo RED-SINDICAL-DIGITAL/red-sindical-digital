@@ -192,3 +192,11 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - 268 pruebas locales pasan. Verificación en navegador y publicación quedan registradas después del despliegue.
 
 - Aceptación publicada: todos los checks y Pages de b356ac623d13c6d4d949b4e83cc1eaeea8a582a5 pasan. Dos pestañas reales del mismo navegador: reproducir audio QA en Podcasts incorpora el episodio al historial visible de Mi perfil sin recargar; guardar favorito actualiza 0→1 y quitarlo restaura 1→0. Ver todo mi historial abre Biblioteca tab=recent y muestra el episodio. Cerrado reproductor y favorito de prueba restaurado. No se verificaron dispositivos físicos distintos ni cuenta sincronizada.
+
+## Cartelera y detalle — filtros y fechas
+
+- Estado de filtros en URL y regreso local validado desde la ficha; Limpiar filtros restaura la agenda. Búsqueda ignora tildes y espacios exteriores.
+- Fechas inválidas/rollover no generan NaN; varias funciones se evalúan para fecha/período. La tarjeta prioriza la próxima función. Esta semana respeta el cierre del domingo y Este mes excluye funciones pasadas.
+- Filtros no sustituyen un fallo de carga con una agenda vacía. Catálogos con registros inválidos no confirman un vacío. Banner genérico sigue presente en HTML sin esperar APIs ni imágenes.
+- Entradas sin dato explícito aparecen a confirmar; no se asumen de pago. Enlaces relacionados conservan el retorno a los filtros.
+- 282 pruebas CJS + disponibilidad de contratación pasan; pruebas de slider/generic fallback pasan. Aceptación real en staging se registra luego.
