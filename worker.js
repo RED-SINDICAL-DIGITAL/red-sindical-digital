@@ -584,6 +584,7 @@ async function uadavSyncPodcast(env,id,requestFetch=fetch) {
 }
 async function uadavPodcastCron(env) {
   if(env.PODCAST_RSS_SYNC_ENABLED!=='true'||!env.DB)return {enabled:false,processed:0};
+  const config=uadavSafeJSON(await env.UADAV_DB.get('config_global'),{});if(config?.modules?.podcasts===false)return {enabled:false,processed:0,reason:'module_disabled'};
   await uadavPodcastSchema(env);
   const rows=(await env.DB.prepare('SELECT id FROM podcast_sources WHERE active=1 AND auto_publish=1 AND next_check_at<=? AND lease_until<? ORDER BY next_check_at ASC LIMIT 3').bind(Date.now(),Date.now()).all()).results||[];
   let processed=0,failed=0;
@@ -634,7 +635,7 @@ const uadavWorker = {
     const platformConfig = () => platformConfigPromise ||= getObject('config_global');
     const platformModules = async () => {
       const cfg = await platformConfig();
-      const defaults = {artists:true,radio:true,podcasts:true,iptv:true,events:true,jobs:true,marketplace:true,ticketing:false,pro:true,ads:true,union:false};
+      const defaults = {"home":true,"discover":true,"profile":true,"library":true,"playlists":true,"media":true,"shorts":true,"artists":true,"radio":true,"radio_requests":true,"radio_chat":true,"radio_studio":true,"podcasts":true,"iptv":true,"events":true,"jobs":true,"marketplace":true,"ticketing":false,"pro":true,"ads":true,"union":false};
       const flags = cfg?.modules || {};
       for (const key of Object.keys(defaults)) if (typeof flags[key] === 'boolean') defaults[key] = flags[key];
       return defaults;
@@ -643,6 +644,25 @@ const uadavWorker = {
     if (/^\/api\/(?:admin\/|artist\/)?cct(?:\/|$)/.test(path)) requiredModules.push('union');
     if (/^\/api\/(?:admin\/)?marketplace(?:\/|$)/.test(path) || path === '/api/contrataciones') requiredModules.push('marketplace');
     if (/^\/api\/(?:admin\/)?ticketing(?:\/|$)/.test(path)) requiredModules.push('events','ticketing');
+
+    if(!isAdmin()){
+      const routeModules=[
+        [/^\/api\/(?:radios|radio\/)/,'radio'],[/^\/api\/radio\/requests(?:\/|$)/,'radio_requests'],
+        [/^\/api\/radio-studio(?:\/|$)/,'radio'],[/^\/api\/radio-studio(?:\/|$)/,'radio_studio'],
+        [/^\/api\/podcasts(?:\/|$)/,'podcasts'],[/^\/api\/(?:senales|senales_oficiales)(?:\/|$)/,'iptv'],
+        [/^\/api\/(?:cartelera|cartelera_aprobada|eventos|eventos_publicados)(?:\/|$)/,'events'],
+        [/^\/api\/bolsa_trabajo(?:\/|$)/,'jobs'],[/^\/api\/artistas(?:\/|$)/,'artists'],
+        [/^\/api\/shorts(?:\/|$)/,'shorts'],[/^\/api\/media(?:\/|$)/,'media'],
+        [/^\/api\/(?:search|buscar)(?:\/|$)/,'discover']
+      ];
+      for(const [pattern,key] of routeModules)if(pattern.test(path))requiredModules.push(key);
+      if(path==='/api/chat'||path==='/api/moderar_chat'){
+        let stream=url.searchParams.get('id_stream')||'';
+        if(request.method==='POST'){const payload=await request.clone().json().catch(()=>({}));stream=String(payload.id_stream||'')}
+        if(stream.startsWith('radio:'))requiredModules.push('radio','radio_chat');
+      }
+    }
+
     if (requiredModules.length) {
       let modules;
       try { modules = await platformModules(); }
