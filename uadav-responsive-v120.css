@@ -274,3 +274,29 @@
  body[data-page="artista"] .hero-inner .bio{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:12px 0!important;line-height:1.5!important}
  body[data-page="artistas"] .brand{display:none!important}
 }
+
+/* Mobile-first: five destinations, one profile entry and generous touch targets. */
+@media screen and (max-width:1024px){
+ body[data-page="app"] #mobile{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+ body[data-page="app"] #top #userBtn{display:none!important}
+ body[data-page="app"] #top .brand{max-width:calc(100% - 60px)}
+ body[data-page="app"] #top .searchbox.open,body[data-page="app"] #top .searchbox:focus-within{width:100%!important}
+ body[data-page="app"] #mediaDock.mini #mediaCard{grid-template-columns:72px minmax(0,1fr) 96px!important}
+ body[data-page="app"] #mediaDock.mini #mediaStage{width:72px!important}
+ body[data-page="app"] #mediaDock.mini .tools{flex-direction:row;align-items:center;gap:4px;padding-right:4px}
+ body[data-page="app"] #mediaDock.mini .tools button{width:44px;height:44px;min-height:44px!important;border-radius:10px}
+ body[data-page="app"] .radioBtn{width:44px;height:44px;min-height:44px}
+ body[data-page="buscar"] .card .save{width:44px;height:44px;min-height:44px;bottom:8px;right:6px}
+ body[data-page="buscar"] .card>b,body[data-page="buscar"] .card>small{padding-right:44px}
+ body[data-page="artista"] .tab,body[data-page="biblioteca"] .tab{min-height:44px}
+}
+@media (prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto!important}
+ body[data-page] *,body[data-page] *::before,body[data-page] *::after{scroll-behavior:auto!important;transition-duration:0s!important}
+}
+
+@media screen and (max-width:1024px){
+ body[data-page="app"] #mobile button{font-size:11px!important;line-height:1.25}
+ body[data-page="app"] #top .searchbox{width:46px;height:46px}
+ body[data-page="app"] #top .searchbox button{width:44px;height:44px;min-height:44px}
+}
