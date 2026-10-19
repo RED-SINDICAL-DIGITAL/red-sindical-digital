@@ -552,7 +552,7 @@ async function uadavFetchPodcast(url,conditions={},requestFetch=fetch) {
 }
 async function uadavPodcastSchema(env) {
   if(!env.DB)throw Error('La importación RSS necesita D1.');
-  await env.DB.prepare("CREATE TABLE IF NOT EXISTS podcast_sources (id TEXT PRIMARY KEY,name TEXT NOT NULL,url TEXT NOT NULL,active INTEGER DEFAULT 0,auto_publish INTEGER DEFAULT 0,interval_hours INTEGER DEFAULT 12,etag TEXT DEFAULT '',last_modified TEXT DEFAULT '',last_check_at TEXT DEFAULT '',last_success_at TEXT DEFAULT '',next_check_at INTEGER DEFAULT 0,last_error TEXT DEFAULT '',lease_until INTEGER DEFAULT 0,revision INTEGER DEFAULT 1,created_at TEXT,updated_at TEXT)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS podcast_sources (id TEXT PRIMARY KEY,name TEXT NOT NULL,url TEXT NOT NULL UNIQUE,active INTEGER DEFAULT 0,auto_publish INTEGER DEFAULT 0,interval_hours INTEGER DEFAULT 12,etag TEXT DEFAULT '',last_modified TEXT DEFAULT '',last_check_at TEXT DEFAULT '',last_success_at TEXT DEFAULT '',next_check_at INTEGER DEFAULT 0,last_error TEXT DEFAULT '',lease_until INTEGER DEFAULT 0,revision INTEGER DEFAULT 1,created_at TEXT,updated_at TEXT)").run();
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS podcast_entries (id TEXT PRIMARY KEY,source_id TEXT NOT NULL,guid TEXT NOT NULL,url TEXT NOT NULL,data_json TEXT NOT NULL,visible INTEGER DEFAULT 1,created_at TEXT,updated_at TEXT,UNIQUE(source_id,guid))").run();
 }
 async function uadavSyncPodcast(env,id,requestFetch=fetch) {
