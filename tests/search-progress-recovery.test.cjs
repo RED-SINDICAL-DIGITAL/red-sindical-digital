@@ -32,3 +32,25 @@ test('late earlier query cannot replace a newer completed search',async()=>{
  let complete;const h=setup(async path=>{if(path==='public/search?q=First')return new Promise(r=>complete=r);if(path.startsWith('public/search'))return{content:[{title:'Second content'}],artists:[{nombre:'Second artist'}],events:[{id:'event'}],radios:[{id:'radio'}]};return[];});
  h.nodes.q.value='First';const old=h.ctx.search();h.nodes.q.value='Second';await h.ctx.search();complete(empty());await old;assert.equal(h.ctx.searchState.q,'Second');assert.equal(h.ctx.searchState.content[0].title,'Second content');assert.equal(h.ctx.searchState.pending,false);
 });
+
+function enableExact(h){
+ const g={URL,Event,dispatchEvent(){},localStorage:{getItem:()=>null,setItem(){}}};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../uadav-artist-discovery-v133.js'),'utf8'),g);
+ h.ctx.UADAVArtistDiscovery=g.UADAVArtistDiscovery;
+}
+test('channel link in general search resolves one exact profile without fuzzy providers',async()=>{
+ const calls=[],channel='UC81VD6eeuLLSfyY_D-N8sVw',h=setup(async p=>{calls.push(p);return{channelId:channel,nombre:'Madonna'}});
+ enableExact(h);h.nodes.q.value='https://www.youtube.com/@madonna';await h.ctx.search();
+ assert.deepEqual(calls,['youtube/channel_library?kind=info&id=%40madonna']);assert.equal(h.ctx.searchState.artists[0].canal,channel);assert.equal(h.ctx.searchState.content.length,0);assert.equal(h.ctx.searchState.hasMore,false);assert.equal(h.ctx.searchState.pending,false);
+});
+test('failed or mismatched exact channel search never substitutes a name match',async()=>{
+ for(const response of [null,{channelId:'UCaaaaaaaaaaaaaaaaaaaaaa',nombre:'Other'}]){
+ const calls=[],h=setup(async p=>{calls.push(p);if(!response)throw Error('Offline');return response});enableExact(h);h.nodes.q.value='UC81VD6eeuLLSfyY_D-N8sVw';await h.ctx.search();
+ assert.equal(calls.length,1);assert.equal(h.ctx.searchState.artists.length,0);assert.equal(h.ctx.searchState.failures,1);assert.equal(h.ctx.searchState.pending,false);
+ }
+});
+test('late channel response cannot overwrite a newer name search',async()=>{
+ let resolve;const h=setup(async p=>p.startsWith('youtube/channel_library')?new Promise(r=>resolve=r):p.startsWith('public/search')?{content:[{title:'Current result'}],artists:[{nombre:'Current artist'}],events:[{id:'event'}],radios:[{id:'radio'}]}:[]);enableExact(h);
+ h.nodes.q.value='@madonna';const old=h.ctx.search();h.nodes.q.value='Current';await h.ctx.search();resolve({channelId:'UC81VD6eeuLLSfyY_D-N8sVw',nombre:'Madonna'});await old;
+ assert.equal(h.ctx.searchState.q,'Current');assert.equal(h.ctx.searchState.artists[0].nombre,'Current artist');
+});

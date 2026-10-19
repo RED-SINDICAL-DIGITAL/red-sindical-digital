@@ -31,3 +31,10 @@ No aplicar al Worker de producción.
 - 205 pruebas CJS locales y todos los checks del cambio frontend pasan. Prueba real: pegar https://www.youtube.com/@madonna en Artistas, abrir el resultado, Playlists y Compartir; identidad exacta y 39 listas confirmadas. No exige otro despliegue de Worker.
 - No soluciona todavía discografía verificada ni reproducción de YouTube en todos los dispositivos.
 - SHA-256 del Worker entregado: 537862113749cd545a0775655472afb460473796273e060a0530444c1f37c9f1.
+
+## Continuidad de búsqueda exacta
+
+- Buscar general ahora resuelve enlaces/@usuario/ID por channel_library kind=info y conserva el canal al abrir el perfil; no consulta fuentes por nombre ni mezcla videos en esa ruta.
+- Respuestas tardías, referencias inexistentes y canales distintos al solicitado no sustituyen el resultado actual ni se muestran como coincidencias válidas.
+- 208 pruebas CJS locales pasan, incluidos éxito, fallo y cambio de búsqueda durante la consulta exacta.
+- Diagnóstico de carátulas: la navegación directa del navegador de pruebas a https://i.ytimg.com/vi/X_R2uZdTW0A/hqdefault.jpg muestra “Site Unavailable / Unable to access this site.” No prueba una falla universal del cliente ni permite confirmar imágenes en dispositivos reales. No se agregó un proxy para evitar esa limitación.
