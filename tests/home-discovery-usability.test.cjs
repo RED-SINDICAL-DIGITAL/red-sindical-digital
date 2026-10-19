@@ -51,3 +51,9 @@ test('Home proposals expose a retry action when all providers fail',async()=>{
  const nodes={trendStatus:{},trendRail:{},trendRetry:{}},ctx={$:id=>nodes[id],yt:async()=>{throw Error('Offline')}};
  vm.runInNewContext(extract('async function loadTrends()','function arr('),ctx);await ctx.loadTrends();assert.match(nodes.trendStatus.textContent,/No pudimos cargar/);assert.match(nodes.trendRail.innerHTML,/Reintentar/);assert.equal(typeof nodes.trendRetry.onclick,'function');
 });
+
+test('artists opened from Home and Explore can return only to validated local origins',()=>{
+ const artist=fs.readFileSync('artista.html','utf8'),a=artist.indexOf('function artistReturnRoute('),b=artist.indexOf('\nfunction navigate(',a),ctx={URL,location:{origin:'https://example.test'}};vm.runInNewContext(artist.slice(a,b),ctx);
+ assert.equal(ctx.artistReturnRoute('/index-v117.html'),'/index-v117.html');assert.equal(ctx.artistReturnRoute('/descubrir.html?kind=escena'),'/descubrir.html?kind=escena');
+ for(const route of ['/descubrir.html?kind=invalid','/descubrir.html?kind=musica&next=evil','/index-v117.html?next=evil','https://evil.test/index-v117.html'])assert.equal(ctx.artistReturnRoute(route),'/artistas.html');
+});
