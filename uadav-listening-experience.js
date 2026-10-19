@@ -7,6 +7,10 @@ function coverURL(value){try{const u=new URL(value,location.origin);return /^htt
 function artwork(img,value){img.alt='';img.src=coverURL(value||'/radio-fallback.svg');img.onerror=()=>{img.onerror=null;img.src='/radio-fallback.svg'}}
 const expand=button('Abrir reproductor de radio','⌃');expand.id='expandRadio';expand.setAttribute('aria-expanded','false');
 dock.insertBefore(expand,dock.firstChild);
+const participate=document.createElement('div');participate.className='radioParticipate';
+for(const [target,label] of [['requestsSection','Pedir una canción'],['chatSection','Mensajes de la radio']]){const b=button(label,label);b.onclick=()=>rootRadioSection(target);participate.append(b)}
+function rootRadioSection(target){window.UADAVShellHost?.openRadioSection?.(target)}
+dock.append(participate);
 let previousFocus=null, inertState=[];
 function expanded(on){
  dock.classList.toggle('listeningExpanded',on);expand.textContent=on?'⌄':'⌃';
