@@ -243,3 +243,6 @@ jobs:
         run: |
           node --test tests/module-policy.test.cjs tests/live-modules-loading.test.cjs tests/radio-player-participation.test.cjs
           node tests/module-gates-integration.mjs
+
+      - name: Manual podcast classification
+        run: node --test tests/admin-podcast-classification.test.cjs
