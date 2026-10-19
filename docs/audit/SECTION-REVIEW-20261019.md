@@ -41,7 +41,7 @@ Entorno autorizado: staging, rama audit/public-job-status-20261012. Producción 
 | `para-artistas.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `peliculas-series.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `planes-artistas.html` | Inventariada; revisión funcional y visual específica pendiente. |
-| `playlists.html` | Corregida; catálogo y recuperación de errores pendientes en navegador. |
+| `playlists.html` | Corregida; estado vacío y búsqueda sin coincidencias comprobados en navegador. Catálogo con contenidos y reintento tras fallo pendientes. |
 | `podcasts.html` | RSS propio audio/video probado en staging; automatización cron y móvil físico pendientes. |
 | `presskit.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `privacidad.html` | Inventariada; revisión funcional y visual específica pendiente. |
@@ -54,8 +54,8 @@ Entorno autorizado: staging, rama audit/public-job-status-20261012. Producción 
 | `shorts.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `soy-artista.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `stream-plus.html` | Página informa retiro de STREAM+; revisar accesos antiguos. |
-| `suma-tu-senal.html` | Corregida; recibo/errores/doble envío simulados; solicitud real y revisión pendientes. |
-| `sumate-artista.html` | Corregida; envío/errores/doble envío simulados; alta real y moderación pendientes. |
+| `suma-tu-senal.html` | Corregida; cierre de inscripciones real confirmado en navegador, aviso con codificación antigua corregido en código. Recibo/errores/doble envío simulados; solicitud real y revisión pendientes. |
+| `sumate-artista.html` | Corregida y simplificada a dos campos esenciales; apertura/cierre de datos opcionales y etiquetas comprobados en navegador. Envío/errores/doble envío simulados; alta real y moderación pendientes. |
 | `terminos.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `trabajo.html` | Acceso al circuito de Bolsa; verificar navegación y dispositivos. |
 | `usuario.html` | Corregida; acceso a Artistas seguido en escritorio; edición con identidad cubierta localmente. Cuenta vinculada real pendiente. |
@@ -70,3 +70,11 @@ Entorno autorizado: staging, rama audit/public-job-status-20261012. Producción 
 - Flujos de cuenta/artista real, TV autorizada y permisos de operadores no están cerrados.
 - Revisión del backend de postulaciones de artista: reforzar validación y persistencia/idempotencia en próxima entrega de Worker. El bloqueo frontend no garantiza idempotencia entre dispositivos.
 - Falta comprobar el resto del inventario; mantener esta tabla actualizada y no declarar la demo terminada mientras existan circuitos principales sin aceptación.
+
+## Alcance de la comprobación HTTP
+
+El intento de lectura masiva sin autenticación desde el entorno de comandos devolvió 403 en las 46 rutas. No es evidencia de 46 fallos del producto: las páginas probadas sí cargan en el navegador. Este intento no se cuenta como aceptación ni como comprobación funcional. Sin intentos de eludir el rechazo.
+
+## Accesibilidad adicional
+
+Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, Artista, Artistas, Buscar y Evento para evitar anuncios repetidos. Sintaxis comprobada y 48 pruebas relevantes posteriores pasan. Queda prueba con lector de pantalla real.
