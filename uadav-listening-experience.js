@@ -8,7 +8,7 @@ function artwork(img,value){img.alt='';img.src=coverURL(value||'/radio-fallback.
 const expand=button('Abrir reproductor de radio','⌃');expand.id='expandRadio';expand.setAttribute('aria-expanded','false');
 dock.insertBefore(expand,dock.firstChild);
 const participate=document.createElement('div');participate.className='radioParticipate';
-for(const [target,label] of [['requestsSection','Pedir una canción'],['chatSection','Mensajes de la radio']]){const b=button(label,label);b.onclick=()=>rootRadioSection(target);participate.append(b)}
+for(const [target,label] of [['requestsSection','Pedir una canción'],['chatSection','Mensajes de la radio']]){const b=button(label,label);b.dataset.module=target==='requestsSection'?'radio_requests':'radio_chat';b.onclick=()=>rootRadioSection(target);participate.append(b)}
 function rootRadioSection(target){window.UADAVShellHost?.openRadioSection?.(target)}
 dock.append(participate);
 let previousFocus=null, inertState=[];
