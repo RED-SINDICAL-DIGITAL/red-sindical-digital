@@ -57,3 +57,27 @@ test('artists opened from Home and Explore can return only to validated local or
  assert.equal(ctx.artistReturnRoute('/index-v117.html'),'/index-v117.html');assert.equal(ctx.artistReturnRoute('/descubrir.html?kind=escena'),'/descubrir.html?kind=escena');
  for(const route of ['/descubrir.html?kind=invalid','/descubrir.html?kind=musica&next=evil','/index-v117.html?next=evil','https://evil.test/index-v117.html'])assert.equal(ctx.artistReturnRoute(route),'/artistas.html');
 });
+
+function rotationHarness({reduced=false,count=3}={}){
+ const nodes={},listeners={},timers=new Map(),shown=[];let seq=0;
+ for(const id of ['hero','heroControls','heroPause','heroPosition','heroPrevious','heroNext'])nodes[id]={style:{},setAttribute(k,v){this[k]=v},addEventListener(k,v){this[k]=v},removeEventListener(k,v){if(this[k]===v)delete this[k]},contains:el=>el===nodes.heroPause};
+ const ctx={$:id=>nodes[id],window:{matchMedia:()=>({matches:reduced})},document:{hidden:false,addEventListener:(k,v)=>listeners[k]=v,removeEventListener:k=>delete listeners[k]},setInterval:fn=>{timers.set(++seq,fn);return seq},clearInterval:id=>timers.delete(id)};
+ vm.runInNewContext(extract('function createHeroRotation(','function applyHero('),ctx);const controller=ctx.createHeroRotation(count,i=>shown.push(i));return {ctx,nodes,listeners,timers,shown,controller};
+}
+test('hero previous, next and pause controls preserve a single bounded timer',()=>{
+ const h=rotationHarness();assert.equal(h.timers.size,1);h.nodes.heroNext.onclick();assert.equal(h.nodes.heroPosition.textContent,'2 de 3');h.nodes.heroPrevious.onclick();assert.equal(h.nodes.heroPosition.textContent,'1 de 3');assert.equal(h.timers.size,1);h.nodes.heroPause.onclick();assert.equal(h.timers.size,0);assert.equal(h.nodes.heroPause['aria-pressed'],'true');h.nodes.heroPause.onclick();assert.equal(h.timers.size,1);
+});
+test('hero never automatically rotates with reduced motion or a single proposal',()=>{
+ assert.equal(rotationHarness({reduced:true}).timers.size,0);const single=rotationHarness({count:1});assert.equal(single.timers.size,0);assert.equal(single.nodes.heroControls.hidden,true);
+});
+test('hero suspends rotation while hidden, hovered or focused and cleans listeners',()=>{
+ const h=rotationHarness();h.ctx.document.hidden=true;h.listeners.visibilitychange();assert.equal(h.timers.size,0);h.ctx.document.hidden=false;h.listeners.visibilitychange();assert.equal(h.timers.size,1);h.nodes.hero.mouseenter();assert.equal(h.timers.size,0);h.nodes.hero.mouseleave();assert.equal(h.timers.size,1);h.nodes.hero.focusin();assert.equal(h.timers.size,0);h.nodes.hero.focusout({relatedTarget:h.nodes.heroPause});assert.equal(h.timers.size,0);h.nodes.hero.focusout({relatedTarget:null});assert.equal(h.timers.size,1);h.controller.destroy();assert.equal(h.timers.size,0);assert.equal(h.nodes.hero.mouseenter,undefined);assert.equal(h.listeners.visibilitychange,undefined);
+});
+test('hero slides cannot inherit the previous description, category or image',()=>{
+ const nodes={};for(const id of ['heroKicker','heroTitle','heroText','back','heroPrimary','heroSecondary'])nodes[id]={style:{}};
+ const ctx={$:id=>nodes[id],heroRotation:null,createHeroRotation:(_count,show)=>{ctx.show=show;return{destroy(){}}}};vm.runInNewContext(extract('function applyHero(','async function applyAdminHome('),ctx);
+ ctx.applyHero({hero_spotlights:[{title:'First',description:'Old copy',category:'Old category',image:'https://example.test/old.jpg'},{title:'Second'}]});ctx.show(1);assert.equal(nodes.heroTitle.textContent,'Second');assert.notEqual(nodes.heroText.textContent,'Old copy');assert.notEqual(nodes.heroKicker.textContent,'Old category');assert.equal(nodes.back.style.backgroundImage,'');
+});
+test('shared readable text decodes once, preserves invalid Unicode and never renders HTML',()=>{
+ const ctx={};vm.runInNewContext(fs.readFileSync('uadav-readable-text.js','utf8'),ctx);assert.equal(ctx.UADAVText.readable('La K&#39;onga &amp; amigos'),"La K'onga & amigos");assert.equal(ctx.UADAVText.readable('&#x1f3b5;'),'🎵');assert.equal(ctx.UADAVText.readable('&amp;lt;'),'&lt;');assert.equal(ctx.UADAVText.readable('&#xD800;'),'&#xD800;');assert.equal(ctx.UADAVText.readable('&#9999999;'),'&#9999999;');
+});

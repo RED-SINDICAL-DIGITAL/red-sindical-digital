@@ -158,3 +158,10 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Artista abierto desde Inicio vuelve a Inicio; desde Explorar / En escena vuelve a kind=escena con esa categoría activa. Los destinos de retorno se validan contra rutas y parámetros permitidos.
 - Audio propio QA de 12 segundos abierto desde Continuar: AUDIO nativo, paused=false, currentTime=10.9/12, sin error; carátula conservada. Cerrado al terminar la comprobación. Esto no certifica reproducción de YouTube ni equipos físicos.
 - Pendiente visual detectado: algunos títulos de propuestas llegan con entidades como &#39; y aún requieren normalización en Inicio. Las playlists sin metadatos del proveedor pueden conservar el título genérico Contenido en historial antiguo.
+
+## Pulido de Inicio y Explorar
+
+- Normalización de entidades en títulos de Inicio/Explorar mediante uadav-readable-text.js: una pasada, Unicode válido, sin insertar HTML; se mantiene escape del renderizado.
+- Banner con controles anterior/siguiente/pausa cuando hay varias propuestas. Pausa con hover, foco dentro del hero, pestaña oculta y preferencia de movimiento reducido (incluido su cambio mientras la página está abierta). Limpieza de temporizador y listeners al reemplazar la configuración.
+- Cada slide reinicia categoría, descripción e imagen cuando faltan, para no atribuir datos de la propuesta anterior.
+- 236 pruebas CJS locales pasan. Controles de múltiples slides probados con fixtures aislados; staging usa hero genérico actualmente. Verificación publicada se registra luego.
