@@ -1,0 +1,1 @@
+Muestras originales generadas con ffmpeg: tonos sintetizados, texto y fondo plano. Sólo para staging. Sin contenido de terceros. MP3 de 12s y MP4 de 10s. No activar cron.

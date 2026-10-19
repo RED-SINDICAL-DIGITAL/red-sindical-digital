@@ -1,0 +1,23 @@
+name = "uadav-api-staging"
+main = "worker.js"
+compatibility_date = "2026-09-28"
+workers_dev = true
+preview_urls = false
+
+# Replace only with newly created STAGING resource IDs. Never use production IDs.
+[[kv_namespaces]]
+binding = "UADAV_DB"
+id = "STAGING_KV_ID_REQUIRED"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "uadav-staging-db"
+database_id = "STAGING_D1_ID_REQUIRED"
+
+[vars]
+ACCOUNT_ALLOWED_ORIGINS = "https://uadav-stream-staging.pages.dev"
+TURNSTILE_ALLOWED_HOSTNAMES = "uadav-stream-staging.pages.dev"
+PUBLIC_SITE_URL = "https://uadav-stream-staging.pages.dev"
+
+# Deliberately no routes, production domains, cron triggers, queues, email,
+# payment webhook, AI API keys or push secrets. ADMIN_KEY must be staging-only.

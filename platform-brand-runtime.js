@@ -2,20 +2,11 @@
 (() => {
   'use strict';
   const API = window.PLATFORM_API_BASE || window.UADAV_API_BASE || '/api/';
-  const routes = {
-    'artistas.html':['artists'], 'artista.html':['artists'],
-    'gestionar-artista.html':['artists'], 'reclamar-artista.html':['artists'],
-    'sumate-artista.html':['artists'], 'para-artistas.html':['artists'],
-    'radio.html':['radio'], 'en-vivo.html':['iptv'],
-    'cartelera.html':['events'], 'evento.html':['events'], 'publicar-evento.html':['events'],
-    'trabajo.html':['jobs'], 'bolsa-trabajo.html':['jobs'],
-    'marketplace.html':['marketplace'], 'contratar-artista.html':['marketplace'],
-    'podcasts.html':['podcasts'], 'planes-artistas.html':['pro']
-  };
-  const defaults = {artists:true,radio:true,podcasts:true,iptv:true,events:true,jobs:true,marketplace:true,ticketing:true,pro:true,ads:true,union:false};
+  const routes = {"index.html":["home"],"index-v117.html":["home"],"descubrir.html":["discover"],"buscar.html":["discover"],"usuario.html":["profile"],"biblioteca.html":["library"],"playlists.html":["playlists"],"peliculas-series.html":["media"],"media.html":["media"],"pelicula.html":["media"],"serie.html":["media"],"shorts.html":["shorts"],"artistas.html":["artists"],"artista.html":["artists"],"gestionar-artista.html":["artists"],"mi-espacio-artista.html":["artists"],"reclamar-artista.html":["artists"],"sumate-artista.html":["artists"],"soy-artista.html":["artists"],"para-artistas.html":["artists"],"radio.html":["radio"],"radio-studio.html":["radio_studio"],"podcasts.html":["podcasts"],"en-vivo.html":["iptv"],"tv.html":["iptv"],"cartelera.html":["events"],"evento.html":["events"],"publicar-evento.html":["events"],"trabajo.html":["jobs"],"bolsa-trabajo.html":["jobs"],"marketplace.html":["marketplace"],"contratar-artista.html":["marketplace"],"planes-artistas.html":["pro"],"cct.html":["union"]};
+  const defaults = {"home":true,"discover":true,"profile":true,"library":true,"playlists":true,"media":true,"shorts":true,"artists":true,"radio":true,"radio_requests":true,"radio_chat":true,"radio_studio":true,"podcasts":true,"iptv":true,"events":true,"jobs":true,"marketplace":true,"ticketing":false,"pro":true,"ads":true,"union":false};
   const unwrap = value => value && typeof value === 'object' ? (value.data || value.config || value) : {};
-  const pageKey = path => path.toLowerCase().split('/').pop();
-  const disabled = key => (routes[key] || []).some(module => window.PlatformModules[module] === false);
+  const pageKey = path => {const name=path.toLowerCase().split('/').pop()||'index';return /\.html$/.test(name)?name:name+'.html'};
+  const disabled = key => key==='en-vivo.html'?window.PlatformModules.radio===false&&window.PlatformModules.iptv===false:window.UADAVModulePolicy?!!window.UADAVModulePolicy.disabled(key,window.PlatformModules):(routes[key] || []).some(module => window.PlatformModules[module] === false);
   const up = (sel, attr, val) => {
     if (val === undefined || val === null) return;
     document.querySelectorAll(sel).forEach(el => attr ? el.setAttribute(attr,val) : el.textContent = val);
@@ -43,16 +34,19 @@
     catch (_) { return {}; } finally { clearTimeout(timer); }
   }
   function applyNavigation(root=document) {
-    root.querySelectorAll('a[href],[data-platform-module]').forEach(el => {
+    root.querySelectorAll('a[href],[data-route],[data-platform-module],[data-module]').forEach(el => {
+      if(el.matches('.brand'))return;
       let off=false;
-      const explicit=el.getAttribute('data-platform-module');
+      const explicit=el.getAttribute('data-platform-module')||el.getAttribute('data-module');
       if (explicit) off=window.PlatformModules[explicit]===false;
+      if(el.hasAttribute('data-route'))off=off||disabled(pageKey(new URL(el.getAttribute('data-route'),location.href).pathname));
       if (el.matches('a[href]')) {
         try { const url=new URL(el.getAttribute('href'),location.href); if(url.origin===location.origin) off=off||disabled(pageKey(url.pathname)); } catch (_) {}
       }
-      if(off) { el.hidden=true; el.setAttribute('aria-hidden','true'); el.setAttribute('data-platform-disabled','true'); }
-      else if(el.hasAttribute('data-platform-disabled')) { el.hidden=false; el.removeAttribute('aria-hidden'); el.removeAttribute('data-platform-disabled'); }
+      if(off) { el.hidden=true;el.style.setProperty('display','none','important'); el.setAttribute('aria-hidden','true'); el.setAttribute('data-platform-disabled','true'); }
+      else if(el.hasAttribute('data-platform-disabled')) { el.hidden=false;el.style.removeProperty('display'); el.removeAttribute('aria-hidden'); el.removeAttribute('data-platform-disabled'); }
     });
+    const mobile=root.getElementById?.('mobile');if(mobile){const count=[...mobile.querySelectorAll('button')].filter(b=>!b.hidden&&b.style.display!=='none').length;mobile.style.setProperty('grid-template-columns','repeat('+Math.max(1,count)+',minmax(0,1fr))','important')}
   }
   function unavailable(brand) {
     // Build with DOM APIs: brand names are text, never executable markup.

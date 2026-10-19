@@ -4,6 +4,24 @@ if(window.top===window.self){const qs=new URLSearchParams(location.search);if(qs
 document.documentElement.classList.add('uadav-app-embedded');
 function simplifyEmbeddedChrome(){if(location.pathname==='/'||/\/index\.html$/i.test(location.pathname)){const s=document.createElement('style');s.id='uadav-shell-owned-nav';s.textContent='.v10-primary-nav{display:none!important}';document.head.appendChild(s)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',simplifyEmbeddedChrome,{once:true});else simplifyEmbeddedChrome();
+
+function applyInstanceModules(){
+ const parentHost=window.parent,policy=parentHost.UADAVModulePolicy,flags=parentHost.PlatformModules;if(!policy||!flags)return;
+ const controls={radio_requests:['requestsSection','requestOpen','sendRequest'],radio_chat:['chatSection','chatOpen','send']};
+ for(const [key,ids] of Object.entries(controls))for(const id of ids){const el=document.getElementById(id);if(el){const off=flags[key]===false||flags.radio===false;el.hidden=off;if(off)el.style.setProperty('display','none','important');else if(el.dataset.moduleOff){el.style.removeProperty('display')}el.dataset.moduleOff=off?'true':''}}
+ document.querySelectorAll('a[href],[data-route],[data-radio-target]').forEach(el=>{
+  let off=false;
+  const target=el.getAttribute('data-radio-target');if(target==='requestsSection')off=flags.radio_requests===false;if(target==='chatSection')off=flags.radio_chat===false;
+  const href=el.getAttribute('href')||el.getAttribute('data-route');
+  if(href){try{const u=new URL(href,location.href);if(u.origin===location.origin)off=off||!!policy.disabled(u.pathname,flags)}catch{}}
+  if(off){el.hidden=true;el.style.setProperty('display','none','important');el.dataset.moduleHidden='true'}
+  else if(el.dataset.moduleHidden){el.hidden=false;el.style.removeProperty('display');delete el.dataset.moduleHidden}
+ });
+}
+try{window.parent.document.addEventListener('platformmodules',applyInstanceModules)}catch{}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyInstanceModules,{once:true});else applyInstanceModules();
+new MutationObserver(entries=>{if(entries.some(e=>e.addedNodes.length))applyInstanceModules()}).observe(document.documentElement,{childList:true,subtree:true});
+
 const API='https://uadav-api.uadavstream.workers.dev/api/';
 const sameOrigin=url=>{try{return new URL(url,location.href).origin===location.origin}catch{return false}};
 const normalizeHref=href=>{const u=new URL(href,location.href);if(u.origin!==location.origin)return'';return u.pathname+u.search+u.hash};

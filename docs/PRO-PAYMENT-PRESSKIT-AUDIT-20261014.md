@@ -1,0 +1,7 @@
+# PRO payments and public Press Kit — 2026-10-14
+
+Found and reproduced: public/presskit returned HTTP 200 for an expired PRO artist although workspace writes were denied. The audit Worker now checks artist visibility, Press Kit switch and current D1 plan before returning the published snapshot. Legacy entitlement is used only when no D1 plan exists. Expired/invalid dates deny access; stored workspace remains available privately. Local regression fails on the old source (200 instead of 404), passes after the fix. This Worker change is not deployed to staging or production.
+
+Actual Worker + local SQLite payment tests PASS: pending approval blocked; receipt reporting leaves FREE; disconnected bank adapter rejects confirmation; simultaneous approvals produce one fulfillment; repeated approval does not extend expiry; renewal adds 365 days once; monthly/yearly credits are 1/12; artist AI entitlement remains off in fulfillment. These tests use synthetic local orders and administrator review, not real bank confirmation or remote Cloudflare payment activation. Bank HMAC verification, transaction collisions, ownership changes during review and failure recovery need further coverage.
+
+Validation: Worker syntax; 29 node:test cases; artist PRO integration; payment fulfillment; signal review, migration, publication lease, private KV authorization and complete synthetic radio/TV diagnostic flow all passed locally. CI configuration updated; latest CI result not yet verified. No main merge, deployment, real payment configuration or production data changes.

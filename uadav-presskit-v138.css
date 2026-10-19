@@ -9,3 +9,6 @@ body[data-page="presskit"] [hidden]{display:none!important}
 .kit-media{margin-bottom:16px}.kit-media iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:16px;background:#000}
 
 .kit-document[data-accent="violet"] .kit-primary{background:#7652ce;border-color:#7652ce}.kit-document[data-accent="teal"] .kit-primary{background:#087f83;border-color:#087f83}.kit-document[data-accent="violet"] .kit-hero{background:linear-gradient(120deg,#251a3e,#090d15)}.kit-document[data-accent="teal"] .kit-hero{background:linear-gradient(120deg,#123234,#090d15)}@media print{.kit-document[data-accent] .kit-hero{background:#fff}}
+
+/* Keep the final responsive photo rules from enlarging printed portraits. */
+@media print{.kit-document .kit-photo{width:120px;height:120px;max-width:120px;flex-shrink:0}}

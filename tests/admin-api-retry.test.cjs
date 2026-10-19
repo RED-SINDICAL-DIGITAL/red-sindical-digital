@@ -1,0 +1,12 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+const path=require('node:path');
+const html=fs.readFileSync(path.join(__dirname,'../admin.html'),'utf8');
+const source=html.slice(html.indexOf('async function api('),html.indexOf('async function saveJSON('));
+function client(fetch){const context={fetch,FormData,API_ACTIVE:'https://first.example/api/',API_REMOTE:'https://second.example/api/',API_LOCAL:'https://local.example/api/',API_USE_LOCAL:false,ADMIN_KEY:'synthetic-key',toast(){}};vm.runInNewContext(source+';globalThis.request=api;',context);return context.request;}
+test('Admin does not replay a mutation after an uncertain network failure',async()=>{let calls=0;const api=client(async()=>{calls++;throw Error('connection lost')});await assert.rejects(api('admin/artist-claims',{method:'PUT',body:{id:'test'}}),/connection lost/);assert.equal(calls,1)});
+test('Admin preserves recoverable server error details without fallback',async()=>{let calls=0;const api=client(async()=>{calls++;return new Response(JSON.stringify({code:'ARTIST_APPROVAL_SYNC_PENDING',error:'Aprobado; falta sincronizar',approval_saved:true}),{status:503,headers:{'Content-Type':'application/json'}})});await assert.rejects(api('admin/artist-claims',{method:'PUT',body:{id:'test'}}),e=>e.status===503&&e.code==='ARTIST_APPROVAL_SYNC_PENDING'&&e.data.approval_saved===true);assert.equal(calls,1)});
+test('Admin can fall back on a read transport failure',async()=>{let calls=0;const api=client(async()=>{calls++;if(calls===1)throw Error('network');return new Response('{"ok":true}',{headers:{'Content-Type':'application/json'}})});assert.equal((await api('health')).ok,true);assert.equal(calls,2)});
+test('Admin does not bypass a forbidden read by changing API destination',async()=>{let calls=0;const api=client(async()=>{calls++;return new Response('{"error":"Forbidden"}',{status:403,headers:{'Content-Type':'application/json'}})});await assert.rejects(api('private'),e=>e.status===403);assert.equal(calls,1)});

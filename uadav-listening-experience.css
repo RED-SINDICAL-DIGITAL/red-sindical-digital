@@ -1,0 +1,54 @@
+/* Shared mobile, desktop and large-screen player presentation. */
+body[data-page="app"] #radioDock #expandRadio{flex:none;width:44px;height:44px;border:1px solid #ffffff24;border-radius:50%;color:#fff;background:#ffffff08;font-size:24px;cursor:pointer}
+body[data-page="app"] #radioDock.listeningExpanded{inset:0;left:0;right:0;bottom:0;width:100%;height:100dvh;transform:none;border:0;border-radius:0;z-index:5100;display:flex;flex-direction:column;justify-content:center;gap:24px;padding:max(64px,env(safe-area-inset-top)) 24px max(32px,env(safe-area-inset-bottom));overflow:auto;background:radial-gradient(ellipse at 25% 0%,#1a3460 0,transparent 65%),#090e16}
+body[data-page="app"] #radioDock.listeningExpanded #expandRadio{position:absolute;top:max(16px,env(safe-area-inset-top));left:20px}
+body[data-page="app"] #radioDock.listeningExpanded #radioArt{width:min(54vh,360px,78vw);height:auto;aspect-ratio:1;object-fit:contain;border-radius:22px;box-shadow:0 24px 70px #0008;background:#121c2b}
+body[data-page="app"] #radioDock.listeningExpanded .radioInfo{flex:none;width:min(100%,540px);text-align:center}
+body[data-page="app"] #radioDock.listeningExpanded .radioInfo b{font-size:clamp(22px,3vw,34px);white-space:normal;line-height:1.2;margin:10px 0}
+body[data-page="app"] #radioDock.listeningExpanded .radioInfo span{font-size:16px;white-space:normal;line-height:1.5}
+body[data-page="app"] #radioDock.listeningExpanded .radioLiveLabel{font-size:11px;letter-spacing:.18em}
+body[data-page="app"] #radioDock.listeningExpanded .radioActions{margin:0;gap:18px;flex-wrap:wrap;justify-content:center}
+body[data-page="app"] #radioDock.listeningExpanded #radioPlay{width:72px;height:72px;font-size:26px}
+body[data-page="app"] #radioDock.listeningExpanded #radioPage{display:block!important;font-size:14px}
+body[data-page="app"] #radioDock.listeningExpanded .radioVol{display:block!important;width:110px;min-height:44px}
+.listeningButton{min-width:44px;min-height:44px;border:1px solid #ffffff24;border-radius:50%;background:#172234;color:#fff;font:700 16px system-ui;cursor:pointer}
+.listeningButton:focus-visible,.nativeListening input:focus-visible{outline:3px solid #9ec5ff;outline-offset:5px}
+.listeningButton:disabled{opacity:.4;cursor:default}
+.nativeListening{display:grid;justify-items:center;gap:18px;padding:28px;background:radial-gradient(ellipse at 30% 0%,#20375a,transparent 80%),#0a101a}
+.listeningEyebrow{font-size:11px;font-weight:800;letter-spacing:.18em;color:#b7cceb;margin:0}
+.nativeListeningCover{width:min(320px,65vw,40vh);aspect-ratio:1;object-fit:contain;background:#111b2a;border-radius:18px;box-shadow:0 18px 50px #0007}
+.nativeListeningControls{display:flex;gap:24px;align-items:center}
+.nativeListening .listeningPlay{width:64px;height:64px;background:#fff;color:#0a101a;font-size:24px}
+.nativeListening input[type=range]{width:min(100%,440px);min-height:44px;accent-color:#80afff}
+.nativeListening .listeningVolume{width:110px}
+.listeningTime{font-size:13px;color:#c4d0e1;font-variant-numeric:tabular-nums}
+.listeningStatus{color:#c4d0e1;font-size:14px;text-align:center;margin:0}
+body[data-page="app"] #mediaDock.listeningAudio #mediaStage{aspect-ratio:auto;height:auto;max-height:none;background:#0a101a}
+body[data-page="app"] #mediaDock.listeningAudio #mediaStage>audio{display:none}
+body[data-page="app"] #mediaDock.listeningAudio.expanded #mediaCard{width:min(680px,94vw);max-height:calc(100dvh - 100px);overflow:auto}
+body[data-page="app"] #mediaDock.listeningAudio .mediaCopy{padding:20px 24px;background:#0a101a}
+body[data-page="app"] #mediaDock.listeningAudio .mediaCopy b{font-size:24px;line-height:1.25}
+body[data-page="app"] #mediaDock.listeningAudio .mediaCopy span{font-size:14px;line-height:1.6}
+body[data-page="app"] #mediaDock.listeningAudio.mini .nativeListening{padding:0;display:block}
+body[data-page="app"] #mediaDock.listeningAudio.mini .nativeListeningCover{width:100%;height:66px;border-radius:0;object-fit:contain}
+body[data-page="app"] #mediaDock.listeningAudio.mini .nativeListening>:not(.nativeListeningCover){display:none}
+body[data-page="app"] #mediaDock:not(.listeningAudio).expanded #mediaStage video{object-fit:contain;background:#000}
+@media(max-width:1024px){
+ body[data-page="app"] #radioDock{gap:8px}
+ body[data-page="app"] #radioDock #radioPlay,body[data-page="app"] #radioDock #radioClose{min-width:44px;min-height:44px}
+ body[data-page="app"] #mediaDock.listeningAudio.expanded #mediaCard{width:100%;max-height:none;min-height:calc(100dvh - 72px);border-radius:0}
+ body[data-page="app"] #mediaDock.listeningAudio .nativeListening{padding-top:64px}
+ body[data-page="app"] #mediaDock.listeningAudio.mini .nativeListening{padding:0}
+ body[data-page="app"] #mediaDock.listeningAudio.mini #mediaCard{grid-template-columns:66px minmax(0,1fr) 96px}
+ body[data-page="app"] #mediaDock.listeningAudio .mediaCopy b{font-size:22px}
+ body[data-page="app"] #mediaDock.listeningAudio.mini .mediaCopy b{font-size:13px}
+}
+@media(min-width:1600px){
+ body[data-page="app"] #mediaDock:not(.listeningAudio).expanded #mediaCard{width:min(1440px,92vw,calc((100dvh - 260px)*16/9))}
+ body[data-page="app"] #mediaDock.expanded .mediaCopy b{font-size:24px}
+ body[data-page="app"] #mediaDock.expanded .mediaCopy span{font-size:16px}
+ body[data-page="app"] #mediaDock.expanded .tools button,body[data-page="app"] #mediaDock.expanded .libBtn{min-height:52px;min-width:52px;font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){.nativeListening *,#radioDock{transition:none!important;animation:none!important}}
+
+body[data-page="app"] #radioDock .radioParticipate{display:none}body[data-page="app"] #radioDock.listeningExpanded .radioParticipate{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}body[data-page="app"] #radioDock .radioParticipate button{border-radius:999px;padding:12px 20px;font-size:14px;background:#ffffff0c}body[data-page="app"] #radioDock.listeningExpanded #expandRadio{top:max(32px,env(safe-area-inset-top))}

@@ -1,0 +1,5 @@
+# Artist claim lifecycle — 2026-10-14
+
+PASS with actual Worker and isolated SQLite/KV: authenticated draft creation grants private draft access; rejection removes its account link and invalidates an already issued session. Existing public artist claim stays pending and grants no artist session. Account lists track the pending claim. Non-admin approval is denied; approval without a verification note is denied. Administrative approval with a note links automatically to the originating account. Another account cannot obtain its session. Revoking the owner removes the artist from account listings and invalidates both the account-derived artist session and the private invitation returned at approval.
+
+Test: node tests/artist-claim-lifecycle.mjs. Added to audit CI; local PASS, latest CI completion not yet checked. No live credentials or external network used. This verifies serialized lifecycle behavior, not simultaneous ownership approvals, transfers interrupted between writes, physical-device visuals or remote Cloudflare claim administration. Those remain open audit items. No production or staging deployment performed.

@@ -1,0 +1,40 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),vm=require('node:vm');
+const channel='UC81VD6eeuLLSfyY_D-N8sVw';
+function helpers(){const ctx={URL,localStorage:{getItem:()=>null},Event,dispatchEvent(){}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('uadav-artist-discovery-v133.js','utf8'),ctx);return ctx.UADAVArtistDiscovery}
+test('explicit channel references accept ids, handles and channel URLs',()=>{const h=helpers();for(const value of [channel,'https://www.youtube.com/channel/'+channel+'/videos'])assert.equal(h.channelRef(value),channel);for(const value of ['@madonna','https://music.youtube.com/@madonna/videos'])assert.equal(h.channelRef(value),'@madonna')});
+test('names, video URLs, aliases and misleading hosts cannot select a guessed channel',()=>{const h=helpers();for(const value of ['Madonna','https://youtube.com.evil.test/@madonna','https://evil.test/youtube.com/@madonna','https://user:pass@youtube.com/@madonna','https://youtube.com/watch?v=123','https://youtube.com/c/madonna','https://youtube.com/user/madonna','javascript:alert(1)','https://youtube.com:8443/@madonna','https://youtube.com/@%ZZ'])assert.equal(h.channelRef(value),'',value)});
+test('discovered links preserve identity while registered artist links retain their record',()=>{const h=helpers();assert.equal(h.profileHref({discovered:true,id:'discover:Madonna',nombre:'Madonna',canal:channel}),'/artista.html?channel='+channel);assert.equal(h.profileHref({id:'ART-123',canal:channel}),'/artista.html?id=ART-123');assert.equal(h.profileHref({discovered:true,nombre:'A & B'}),'/artista.html?discover=A%20%26%20B')});
+test('channel metadata creates an unclaimed public identity and rejects malformed success',()=>{const h=helpers(),a=h.fromChannelInfo({channelId:channel,nombre:'Madonna',thumbnail:'cover',banner:'banner'});assert.equal(a.canal,channel);assert.equal(a.foto,'cover');assert.equal(a.portada,'banner');assert.equal(a.discovered,true);assert.equal(a.claimed,undefined);assert.throws(()=>h.fromChannelInfo({nombre:'Madonna'}))});
+function bootHarness(response,ref=channel){const source=fs.readFileSync('artista.html','utf8');const begin=source.indexOf('async function boot()'),end=source.indexOf('boot();',begin);const calls=[],state={};const ctx={channelQuery:ref,UADAVArtistDiscovery:helpers(),apiFetch:async path=>{calls.push(path);return response},artist:null,render:()=>{state.rendered=true},hydrate:async()=>{state.hydrated=true},document:{getElementById:()=>state},esc:x=>String(x),encodeURIComponent};vm.createContext(ctx);vm.runInContext(source.slice(begin,end),ctx);return {ctx,state,calls}}
+test('explicit profile boot resolves only the selected channel without name discovery',async()=>{const h=bootHarness({channelId:channel,nombre:'Madonna'});await h.ctx.boot();assert.deepEqual(h.calls,['youtube/channel_library?kind=info&id='+channel]);assert.equal(h.ctx.artist.canal,channel);assert.equal(h.state.hydrated,true)});
+test('invalid references and mismatched channel responses never hydrate content',async()=>{for(const h of [bootHarness({},'not a channel'),bootHarness({channelId:'UCaaaaaaaaaaaaaaaaaaaaaa',nombre:'Other'})]){await h.ctx.boot();assert.equal(h.state.hydrated,undefined);assert.match(h.state.innerHTML,/Perfil no disponible/) }});
+test('known channel hydration does not fall back to unrelated name search',async()=>{const source=fs.readFileSync('artista.html','utf8'),begin=source.indexOf('async function hydrate()'),end=source.indexOf('async function boot()',begin);let fuzzy=0;const ctx={artist:{id:'discover:'+channel,canal:channel,nombre:'Madonna',discovered:true},content:[],events:[],addUnique(){},normalizeMedia:x=>x,render(){},channelReference:()=>channel,window:{UADAVArtistLibrary:{}},apiFetch:async()=>[],searchPublicVideos:async()=>{fuzzy++;return []},Promise,Array,String,encodeURIComponent};vm.createContext(ctx);vm.runInContext(source.slice(begin,end),ctx);await ctx.hydrate();assert.equal(fuzzy,0)});
+test('shared discovered profile links retain the resolved channel',()=>{const source=fs.readFileSync('uadav-share-v136.js','utf8'),begin=source.indexOf('function canonical('),end=source.indexOf('\n',begin),ctx={URL,location:{origin:'https://example.test'}};vm.createContext(ctx);vm.runInContext(source.slice(begin,end),ctx);assert.equal(new URL(ctx.canonical('artist',{discovered:true,canal:channel,nombre:'Madonna'})).searchParams.get('channel'),channel)});
+
+test('followed legacy artist records recover channel identity from stored IDs and safe URLs',()=>{
+ const h=helpers(),origin='https://example.test',expected='/artista.html?channel='+channel;
+ for(const a of [{id:'discover:'+channel},{id:channel},{id:'discover:Madonna',url:origin+'/artista.html?channel='+channel},{id:'discover:Madonna',url:'/artista.html?id=discover%3A'+channel},{id:'discover:Madonna',canal:channel}] )assert.equal(h.followedProfileHref(a,origin),expected);
+ assert.equal(h.followedProfileHref({id:'ART-1',canal:channel},origin),'/artista.html?id=ART-1');
+ assert.equal(h.followedProfileHref({nombre:'Legacy',url:'/artista.html?discover=Legacy'},origin),'/artista.html?discover=Legacy');
+});
+test('following navigation ignores external or unrelated stored links',()=>{
+ const h=helpers(),origin='https://example.test';
+ for(const url of ['https://evil.test/artista.html?channel='+channel,'javascript:alert(1)','/admin.html?id=secret','https://example.test.evil.test/artista.html?channel='+channel])assert.equal(h.followedProfileHref({id:'discover:Legacy',nombre:'Legacy',url},origin),'/artista.html?discover=Legacy');
+});
+test('artist return allows only the followed-artists library route and safe search filters',()=>{
+ const source=fs.readFileSync('artista.html','utf8'),start=source.indexOf('function artistReturnRoute('),end=source.indexOf('\nfunction navigate',start),ctx={URL,location:{origin:'https://example.test'}};vm.createContext(ctx);vm.runInContext(source.slice(start,end),ctx);
+ assert.equal(ctx.artistReturnRoute('/biblioteca.html?tab=following&q=Madonna'),'/biblioteca.html?tab=following&q=Madonna');
+ for(const href of ['/biblioteca.html?tab=other','/biblioteca.html?tab=following&redirect=evil','https://evil.test/biblioteca.html?tab=following','/admin.html'])assert.equal(ctx.artistReturnRoute(href),'/artistas.html');
+});
+test('library restores only known tabs and the query on direct return',()=>{
+ const source=fs.readFileSync('biblioteca.html','utf8'),start=source.indexOf('const initialParams='),end=source.indexOf('function refreshLibrary()',start);
+ function run(search){let selected;const tabs=['recent','following'].map(kind=>({dataset:{kind},classList:{toggle(_name,on){if(on)selected=kind}}})),input={value:''},ctx={URLSearchParams,location:{search},KEYS:{recent:'recent',following:'following'},document:{getElementById:()=>input,querySelectorAll:()=>tabs},render:kind=>ctx.rendered=kind};vm.runInNewContext(source.slice(start,end),ctx);return {ctx,input,selected}}
+ const ok=run('?tab=following&q=Madonna');assert.equal(ok.ctx.rendered,'following');assert.equal(ok.selected,'following');assert.equal(ok.input.value,'Madonna');assert.equal(run('?tab=__proto__').ctx.rendered,'recent');
+});
+
+test('library cards display stored artist photos and radio logos',()=>{
+ const source=fs.readFileSync('biblioteca.html','utf8'),start=source.indexOf('function img('),end=source.indexOf('function render(',start),ctx={};vm.runInNewContext(source.slice(start,end),ctx);
+ assert.equal(ctx.img({foto:'artist-photo'}),'artist-photo');assert.equal(ctx.img({logo:'radio-logo'}),'radio-logo');assert.equal(ctx.img({thumbnail:'content-cover',foto:'artist-photo'}),'content-cover');assert.equal(ctx.img({}),'');
+});

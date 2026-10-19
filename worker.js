@@ -1,3 +1,37 @@
+async function uadavArtistDraftSchema(env){
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS artist_profile_drafts(artist_id TEXT PRIMARY KEY,claim_id TEXT,patch_json TEXT NOT NULL,revision INTEGER NOT NULL,state TEXT NOT NULL,updated_at TEXT NOT NULL)").run();
+}
+async function uadavArtistDraft(env,id,claimId){
+ if(!env.DB)return null;
+ await uadavArtistDraftSchema(env);
+ const row=await env.DB.prepare('SELECT * FROM artist_profile_drafts WHERE artist_id=?').bind(String(id)).first();
+ return row&&String(row.claim_id||'')===String(claimId||'')?row:null;
+}
+function uadavDraftPatch(row){
+ if(!row||row.state==='applied')return {};
+ try{return JSON.parse(row.patch_json)||{}}catch{return {}}
+}
+async function uadavReadArtistInquiries(env){
+ let legacy=[];try{legacy=JSON.parse(await env.UADAV_DB?.get('contrataciones')||'[]')}catch{}
+ const items=new Map((Array.isArray(legacy)?legacy:[]).filter(x=>x&&x.id).map(x=>[String(x.id),x]));
+ if(env.DB){
+  const db=typeof env.DB.withSession==='function'?env.DB.withSession('first-primary'):env.DB;
+  const exists=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='contracts'").first();
+  if(exists){const rows=await db.prepare("SELECT id,artist_id,data_json,created_at FROM contracts WHERE json_valid(data_json) AND json_extract(data_json,'$.record_type')='artist_inquiry'").all();
+   for(const row of rows.results||[]){let item;try{item=JSON.parse(row.data_json)}catch{continue}const {record_type,request_fingerprint,...data}=item;items.set(String(row.id),{...data,id:row.id,artist_id:row.artist_id,creado:row.created_at});}
+  }
+ }
+ return [...items.values()];
+}
+function uadavArtistPublicVisible(artist){return !!artist&&artist.visible!==false&&!['suspendido','bloqueado','oculto','suspended','blocked','hidden','deleted','eliminado'].includes(String(artist.estado||artist.status||'').toLowerCase());}
+function uadavPublicPresskit(data,artistId){
+ const source=data?.kit||{},hidden=new Set(Array.isArray(source.appearance?.hidden_sections)?source.appearance.hidden_sections.filter(x=>['trajectory','video','shows','contact'].includes(x)):[]);
+ const text=value=>typeof value==='string'?value.slice(0,4000):'';
+ const kit=Object.fromEntries(['name','discipline','city','bio','contact','trajectory','photo','video'].filter(key=>!hidden.has(key)).map(key=>[key,text(source[key])]));
+ kit.appearance={accent:['blue','violet','teal'].includes(source.appearance?.accent)?source.appearance.accent:'blue',hidden_sections:[...hidden]};
+ const shows=hidden.has('shows')?[]:(Array.isArray(data?.shows)?data.shows.slice(0,200).map(show=>Object.fromEntries(['id','name','duration','audience','members','requirements','setup'].map(key=>[key,text(show?.[key])]))):[]);
+ return {artist_id:String(artistId),kit,shows,updated_at:text(data?.updated_at)};
+}
 async function uadavDigest(value){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),x=>x.toString(16).padStart(2,'0')).join('')}
 async function uadavFeatureSchema(db){await db.prepare("CREATE TABLE IF NOT EXISTS pro_feature_credits(id TEXT PRIMARY KEY,artist_id TEXT NOT NULL,order_id TEXT NOT NULL,cycle_index INTEGER NOT NULL,starts_at TEXT NOT NULL,ends_at TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'available',event_id TEXT,requested_at TEXT,used_at TEXT,UNIQUE(order_id,cycle_index))").run()}
 function uadavMonthAt(start,index){const d=new Date(start),day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+index);const last=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,last));return d.toISOString()}
@@ -62,14 +96,14 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
  if(/^https?:\/\//i.test(reference)){try{const u=new URL(reference);if(!/(^|\.)youtube\.com$/i.test(u.hostname))throw Error();const parts=u.pathname.split('/').filter(Boolean);reference=parts[0]==='channel'?parts[1]:parts[0]?.startsWith('@')?parts[0]:''}catch{return reply({error:'Usá una URL de canal de YouTube'},400)}}
  const isId=/^UC[A-Za-z0-9_-]{22}$/.test(reference);if(!isId&&!/^@[A-Za-z0-9_.-]{1,100}$/.test(reference))return reply({error:'Ingresá el ID UC… o @usuario del canal'},400);
  let cursor=null;const rawCursor=url.searchParams.get('cursor');if(rawCursor){if(rawCursor.length>6000)return reply({error:'Cursor inválido'},400);try{cursor=JSON.parse(atob(rawCursor.replace(/-/g,'+').replace(/_/g,'/')));if(cursor.v!==1||cursor.ref!==reference||cursor.kind!==kind||!['iv','yt'].includes(cursor.provider)||typeof cursor.token!=='string'||cursor.token.length>4000)throw Error();if(cursor.provider==='iv'&&(!Number.isInteger(cursor.base)||cursor.base<0||cursor.base>=instances.length))throw Error()}catch{return reply({error:'Cursor inválido para este canal'},400)}}
- const key='youtube_library_v1_'+encodeURIComponent([reference,kind,rawCursor||'first'].join('|'));
+ const key='youtube_library_v2_'+encodeURIComponent([reference,kind,rawCursor||'first'].join('|'));
  try{const cached=await env.UADAV_DB?.get(key);if(cached)return reply(JSON.parse(cached))}catch{}
  const fetchJSON=async href=>{const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),2800);try{const r=await fetch(href,{signal:ctl.signal,headers:{Accept:'application/json'}});if(!r.ok)throw Error('Proveedor no disponible');const d=await r.json();if(d.error)throw Error('Proveedor no disponible');return d}finally{clearTimeout(timer)}};
  const enabled=async()=>{try{const raw=await env.UADAV_DB?.get('youtube_api_enabled');if(raw!==null&&raw!==undefined){const value=JSON.parse(raw);if(value===false||String(value).toLowerCase()==='false')return false}}catch{}return !!env.YOUTUBE_API_KEY};
  const official=async(resource,params)=>{if(!await enabled())throw Error('API oficial deshabilitada');const qs=new URLSearchParams({...params,key:env.YOUTUBE_API_KEY});return fetchJSON('https://www.googleapis.com/youtube/v3/'+resource+'?'+qs)};
  const thumb=x=>x?.thumbnails?.high?.url||x?.thumbnails?.medium?.url||x?.thumbnails?.default?.url||'';
  const video=(x,provider)=>{const id=String(provider==='iv'?x.videoId:x.contentDetails?.videoId||x.snippet?.resourceId?.videoId||'');if(!/^[A-Za-z0-9_-]{11}$/.test(id))return null;return{id,external_id:id,provider:'youtube',url:'https://www.youtube.com/watch?v='+id,titulo:provider==='iv'?x.title:x.snippet?.title,author:provider==='iv'?x.author:x.snippet?.videoOwnerChannelTitle||x.snippet?.channelTitle,thumbnail:provider==='iv'?x.videoThumbnails?.find?.(t=>t.quality==='medium')?.url||x.videoThumbnails?.[0]?.url||'':thumb(x.snippet),content_type:'video',tipo:'video'}};
- const playlist=(x,provider)=>{const id=String(provider==='iv'?x.playlistId:x.id||'');if(!/^[A-Za-z0-9_-]{10,100}$/.test(id))return null;return{id,playlist_id:id,provider:'youtube',url:'https://www.youtube.com/playlist?list='+id,titulo:provider==='iv'?x.title:x.snippet?.title,thumbnail:provider==='iv'?x.playlistThumbnail||'':thumb(x.snippet),count:provider==='iv'?x.videoCount:x.contentDetails?.itemCount,content_type:'playlist'}};
+ const playlist=(x,provider)=>{const id=String(provider==='iv'?x.playlistId:x.id||'');if(!/^[A-Za-z0-9_-]{10,100}$/.test(id))return null;const title=String((provider==='iv'?x.title:x.snippet?.title)||'').trim(),image=String((provider==='iv'?x.playlistThumbnail:thumb(x.snippet))||''),rawCount=provider==='iv'?x.videoCount:x.contentDetails?.itemCount,count=title&&rawCount!==null&&rawCount!==undefined&&rawCount!==''&&Number.isFinite(Number(rawCount))&&Number(rawCount)>=0?Number(rawCount):null;return{id,playlist_id:id,provider:'youtube',url:'https://www.youtube.com/playlist?list='+id,titulo:title,thumbnail:/\/no_thumbnail\./i.test(image)?'':image,count,content_type:'playlist'}};
  const encode=(provider,token,base)=>token?btoa(JSON.stringify({v:1,ref:reference,kind,provider,token,...(base!==undefined?{base}:{})})).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''):null;
  let info=null,channelId=isId?reference:null;
  const infoKey='youtube_library_info_'+encodeURIComponent(reference);
@@ -88,9 +122,18 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
    if(data){out={channel_id:channelId,kind,source:'invidious',items:data.items.map(x=>(kind==='videos'?video:playlist)(x,'iv')).filter(Boolean),next_cursor:encode('iv',data.data.continuation||null,baseIndex)}}else{
     const params={part:'snippet,contentDetails',maxResults:'50',...(cursor?.token?{pageToken:cursor.token}:{})};const d=kind==='videos'?await official('playlistItems',{...params,playlistId:info?.uploads||'UU'+channelId.slice(2)}):await official('playlists',{...params,channelId});out={channel_id:channelId,kind,source:'youtube_api',items:(d.items||[]).map(x=>(kind==='videos'?video:playlist)(x,'yt')).filter(Boolean),next_cursor:encode('yt',d.nextPageToken||null)};
    }
+   if(kind==='playlists'){
+    const incomplete=out.items.filter(x=>!x.titulo||!x.thumbnail||x.count===null).slice(0,50);
+    if(incomplete.length)try{
+     const details=await official('playlists',{part:'snippet,contentDetails',id:incomplete.map(x=>x.id).join(',')});
+     const byId=new Map((details.items||[]).map(x=>playlist(x,'yt')).filter(Boolean).map(x=>[x.id,x]));
+     out.items=out.items.map(item=>{const detail=byId.get(item.id);if(!detail)return item;return{...item,titulo:detail.titulo||item.titulo,thumbnail:detail.thumbnail||item.thumbnail,count:detail.count!==null?detail.count:item.count}});
+    }catch{}
+    out.metadata_incomplete=out.items.some(x=>!x.titulo||!x.thumbnail||x.count===null);
+   }
    out.has_more=!!out.next_cursor;
   }
-  try{await env.UADAV_DB?.put(key,JSON.stringify(out),{expirationTtl:600})}catch{}
+  try{await env.UADAV_DB?.put(key,JSON.stringify(out),{expirationTtl:out.metadata_incomplete?60:600})}catch{}
   return reply(out);
  }catch(e){return reply({error:String(e.message||'No pudimos consultar YouTube'),retryable:true},503)}
 }
@@ -320,7 +363,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
       const announcements=await db.prepare('SELECT * FROM audience_announcements WHERE expires_at>? AND (account_id IS NULL OR account_id=?) ORDER BY created_at DESC LIMIT 30').bind(new Date(now).toISOString(),accountId).all();for(const a of announcements.results||[])add('announcement:'+a.id,'announcement',a.title,a.message,a.created_at,'/usuario.html');
       const own=new Set();if(names.has('artist_owners')){const links=await db.prepare("SELECT l.artist_id FROM audience_artist_links l WHERE l.account_id=? AND (l.expires_at=0 OR l.expires_at>?) AND ((l.claim_id IS NOT NULL AND EXISTS(SELECT 1 FROM artist_owners o WHERE o.artist_id=l.artist_id AND o.claim_id=l.claim_id AND o.status='active')) OR (l.claim_id IS NULL AND NOT EXISTS(SELECT 1 FROM artist_owners o WHERE o.artist_id=l.artist_id AND o.status='active'))) AND NOT EXISTS(SELECT 1 FROM artist_deletions d WHERE d.artist_id=l.artist_id)").bind(accountId,now).all();for(const x of links.results||[])own.add(x.artist_id)}
       if(names.has('artist_claims')){const claims=await db.prepare('SELECT c.id,c.artist_id,c.status,c.created_at,c.reviewed_at FROM artist_claims c JOIN audience_artist_claims m ON m.claim_id=c.id WHERE m.account_id=? AND NOT EXISTS(SELECT 1 FROM artist_deletions d WHERE d.artist_id=c.artist_id) ORDER BY c.created_at DESC LIMIT 50').bind(accountId).all();for(const c of claims.results||[]){const labels={pending:['Solicitud recibida','Estamos revisando tu solicitud de artista.'],approved:['Tu artista está listo','Ya podés gestionar tu artista desde Mi perfil.'],rejected:['Revisá tu solicitud','La solicitud necesita revisión. Contactá con UADAV.']};const l=labels[c.status];if(l)add('claim:'+c.id+':'+c.status,'profile',...l,c.reviewed_at||c.created_at,'/usuario.html',c.artist_id)}}
-      if(env.UADAV_DB&&own.size){let inquiries=[];try{inquiries=JSON.parse(await env.UADAV_DB.get('contrataciones')||'[]')}catch{}const selected=(Array.isArray(inquiries)?inquiries:[]).filter(c=>own.has(String(c.artist_id))).sort((a,b)=>(Date.parse(b.creado||b.created_at)||0)-(Date.parse(a.creado||a.created_at)||0)).slice(0,100);let states=new Map();if(names.has('artist_inquiry_states')&&selected.length){const rows=await db.prepare('SELECT inquiry_id,artist_id,state FROM artist_inquiry_states WHERE inquiry_id IN ('+selected.map(()=>'?').join(',')+')').bind(...selected.map(c=>String(c.id))).all();states=new Map((rows.results||[]).map(c=>[c.inquiry_id+':'+c.artist_id,c.state]))}for(const c of selected){const status=states.get(String(c.id)+':'+String(c.artist_id))||c.estado||'pendiente';if(status==='pendiente')add('inquiry:'+c.id,'inquiry','Nueva consulta de contratación','Tenés una propuesta para tu espectáculo.',c.creado||c.created_at,'/gestionar-artista.html?artist_id='+encodeURIComponent(c.artist_id)+'&tab=consultas',c.artist_id)}}
+      if(env.UADAV_DB&&own.size){const inquiries=await uadavReadArtistInquiries(env);const selected=(Array.isArray(inquiries)?inquiries:[]).filter(c=>own.has(String(c.artist_id))).sort((a,b)=>(Date.parse(b.creado||b.created_at)||0)-(Date.parse(a.creado||a.created_at)||0)).slice(0,100);let states=new Map();if(names.has('artist_inquiry_states')&&selected.length){const rows=await db.prepare('SELECT inquiry_id,artist_id,state FROM artist_inquiry_states WHERE inquiry_id IN ('+selected.map(()=>'?').join(',')+')').bind(...selected.map(c=>String(c.id))).all();states=new Map((rows.results||[]).map(c=>[c.inquiry_id+':'+c.artist_id,c.state]))}for(const c of selected){const status=states.get(String(c.id)+':'+String(c.artist_id))||c.estado||'pendiente';if(status==='pendiente')add('inquiry:'+c.id,'inquiry','Nueva consulta de contratación','Tenés una propuesta para tu espectáculo.',c.creado||c.created_at,'/gestionar-artista.html?artist_id='+encodeURIComponent(c.artist_id)+'&tab=consultas',c.artist_id)}}
       if(names.has('pro_payment_orders')){const orders=await db.prepare('SELECT id,artist_id,account_id,status,created_at,updated_at FROM pro_payment_orders WHERE account_id=? ORDER BY created_at DESC LIMIT 100').bind(accountId).all();for(const o of orders.results||[])if(own.has(o.artist_id)){const labels={pending:['Pedido PRO creado','Tu pedido está listo para transferir.'],reported:['Pago informado','Tu aviso quedó guardado. Falta confirmar la acreditación.'],approved:['PRO activado','Tus herramientas están disponibles.'],rejected:['Pedido PRO cerrado','Consultá el estado antes de volver a transferir.']},l=labels[o.status];if(l)add('payment:'+o.id+':'+o.status,'payment',...l,o.updated_at||o.created_at,'/gestionar-artista.html?artist_id='+encodeURIComponent(o.artist_id)+'&tab=plan',o.artist_id)}}
       if(names.has('artist_plan_state')&&own.size){const plans=await db.prepare("SELECT p.artist_id,p.pro_expires_at FROM artist_plan_state p JOIN audience_artist_links l ON l.artist_id=p.artist_id WHERE l.account_id=? AND p.plan='pro'").bind(accountId).all();for(const plan of plans.results||[]){const id=plan.artist_id,expires=Date.parse(plan.pro_expires_at||'');if(own.has(id)&&Number.isFinite(expires)&&expires-now<=7*86400000)add('expiry:'+id+':'+plan.pro_expires_at+':'+(expires>now?'soon':'expired'),'expiry',expires>now?'Tu PRO vence pronto':'Tu PRO venció',expires>now?'Revisá tu plan para mantener las herramientas activas.':'Tu perfil gratuito sigue disponible. Podés renovar PRO.',plan.pro_expires_at,'/gestionar-artista.html?artist_id='+encodeURIComponent(id)+'&tab=plan',id)}}
       if(names.has('pro_feature_credits')&&own.size){const credits=await db.prepare("SELECT c.id,c.artist_id,c.status,c.requested_at,c.used_at FROM pro_feature_credits c JOIN audience_artist_links l ON l.artist_id=c.artist_id WHERE l.account_id=? AND c.status IN ('requested','used') ORDER BY c.requested_at DESC LIMIT 100").bind(accountId).all();for(const c of credits.results||[])if(own.has(c.artist_id))add('feature:'+c.id+':'+c.status,'promotion',c.status==='used'?'Destacado publicado':'Destacado solicitado',c.status==='used'?'Tu evento tiene siete días de promoción desde su aprobación.':'La solicitud está guardada para revisión.',c.used_at||c.requested_at,'/mi-espacio-artista.html?artist_id='+encodeURIComponent(c.artist_id)+'&tab=promotion',c.artist_id)}
@@ -406,7 +449,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11753';
+const BUILD = '11754';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -424,6 +467,139 @@ let staleExternalJobs=0,staleExternalEvents=0;
 try{const jobsRaw=await env.UADAV_DB.get('bolsa_trabajo'),jobs=jobsRaw?uadavSafeJSON(jobsRaw,[]):[],grace=72*3600000;let changed=false;for(const j of jobs){if(j?.origen!=='externo'||j?.managed===true||j?.claimed===true||j?.source_auto_sync!==true)continue;const seen=Date.parse(j.last_seen_at||j.actualizado||j.importado_en||0);if(j.activo!==false&&Number.isFinite(seen)&&now-seen>grace){j.activo=false;j.estado='no_confirmada';j.source_status='stale';j.actualizado=iso;staleExternalJobs++;changed=true}}if(changed)await env.UADAV_DB.put('bolsa_trabajo',JSON.stringify(jobs))}catch(_){}
 try{const raw=await env.UADAV_DB.get('cartelera_aprobada'),events=raw?uadavSafeJSON(raw,[]):[],grace=72*3600000;let changed=false;for(const e of events){if(e?.origen!=='externo'||e?.managed===true||e?.claimed===true)continue;const end=Date.parse(e.fecha_fin||e.fecha_inicio||e.fecha||0),seen=Date.parse(e.last_seen_at||e.actualizado||e.importado_en||0);if((Number.isFinite(end)&&end<now-6*3600000)||(e?.source_auto_sync===true&&Number.isFinite(seen)&&now-seen>grace)){e.estado='expired';e.source_status='stale';e.actualizado=iso;staleExternalEvents++;changed=true}}if(changed)await env.UADAV_DB.put('cartelera_aprobada',JSON.stringify(events))}catch(_){}
 const notifications=await uadavFlushQueuedNotifications(env,20);return {expiredFeatures,expiredJobs,staleExternalJobs,staleExternalEvents,notifications}}
+
+
+/* Podcast RSS ingestion: D1 records are separate from manually edited content. */
+function uadavPodcastURL(value) {
+  let u;try{u=new URL(String(value||''))}catch{throw Error('Usá una URL pública HTTPS válida.')}
+  const h=u.hostname.toLowerCase().replace(/\.$/,'');
+  if(u.protocol!=='https:'||u.username||u.password||(u.port&&u.port!=='443')||
+    !h.includes('.')||h.includes(':')||/^\d+(?:\.\d+){3}$/.test(h)||
+    /(^|\.)(localhost|local|internal|lan|home|localdomain|onion)$/.test(h))
+    throw Error('La fuente debe ser pública, HTTPS y sin credenciales.');
+  return u.href;
+}
+function uadavPodcastMediaURL(value,base) {
+  if(!String(value||'').trim())return '';
+  try{const u=new URL(String(value||''),base);return /^https?:$/.test(u.protocol)&&!u.username&&!u.password?u.href:''}catch{return ''}
+}
+function uadavPodcastXML(xml,base) {
+  if(typeof xml!=='string'||xml.length>1048576||/<!DOCTYPE|<!ENTITY/i.test(xml))throw Error('RSS inválido o demasiado grande.');
+  const root={name:'root',attrs:{},children:[],text:''},stack=[root];
+  let cursor=0,nodes=0;
+  const decode=s=>String(s).replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi,(_,e)=>{
+    const named={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"};if(e[0]!=='#')return named[e.toLowerCase()]||'';
+    const n=e[1]?.toLowerCase()==='x'?parseInt(e.slice(2),16):Number(e.slice(1));return n>0&&n<=0x10ffff&&!(n>=0xd800&&n<=0xdfff)?String.fromCodePoint(n):'';
+  });
+  while(cursor<xml.length){
+    if(xml.startsWith('<!--',cursor)){const end=xml.indexOf('-->',cursor+4);if(end<0)throw Error('RSS incompleto.');cursor=end+3;continue}
+    if(xml.startsWith('<![CDATA[',cursor)){const end=xml.indexOf(']]>',cursor+9);if(end<0)throw Error('RSS incompleto.');stack.at(-1).text+=xml.slice(cursor+9,end);cursor=end+3;continue}
+    if(xml[cursor]!=='<'){let end=xml.indexOf('<',cursor);if(end<0)end=xml.length;stack.at(-1).text+=decode(xml.slice(cursor,end));cursor=end;continue}
+    const match=xml.slice(cursor).match(/^<(?:"[^"]*"|'[^']*'|[^'">])*>/);
+    if(!match)throw Error('RSS incompleto.');
+    const tag=match[0];cursor+=tag.length;if(tag.startsWith('<?'))continue;
+    if(tag.startsWith('<!'))throw Error('Declaración XML no admitida.');
+    if(tag.startsWith('</')){const name=tag.slice(2,-1).trim().toLowerCase();if(stack.length<2||stack.at(-1).name!==name)throw Error('RSS mal formado.');stack.pop();continue}
+    const name=tag.match(/^<([A-Za-z_][\w:.-]*)/)?.[1]?.toLowerCase();if(!name)throw Error('RSS mal formado.');
+    if(++nodes>20000||stack.length>64)throw Error('RSS demasiado complejo.');
+    const attrs={};const attrPattern=/([A-Za-z_][\w:.-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;let a;
+    while((a=attrPattern.exec(tag)))attrs[a[1].toLowerCase()]=decode(a[2]??a[3]);
+    const node={name,attrs,children:[],text:''};stack.at(-1).children.push(node);if(!/\/>$/.test(tag))stack.push(node);
+  }
+  if(stack.length!==1||root.children.length!==1)throw Error('RSS mal formado.');
+  const document=root.children[0],local=n=>n.name.split(':').at(-1);
+  if(!['rss','feed'].includes(local(document)))throw Error('La URL no devuelve un feed RSS o Atom.');
+  const channel=document.children.find(n=>local(n)==='channel')||document;
+  const child=(n,...names)=>n.children.find(x=>names.includes(x.name)||names.includes(local(x)));
+  const text=n=>n?decode(n.text+n.children.map(text).join(' ')).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim():'';
+  const image=n=>{const i=child(n,'itunes:image','media:thumbnail');return uadavPodcastMediaURL(i?.attrs.href||i?.attrs.url||text(child(child(n,'image')||{children:[]},'url')),base)};
+  const show=text(child(channel,'title')).slice(0,300),art=image(channel),items=channel.children.filter(n=>['item','entry'].includes(local(n))),seen=new Set(),episodes=[];
+  let skipped=0;
+  for(const item of items.slice(0,1000)){
+    const enclosures=[...item.children,...item.children.filter(n=>n.name==='media:group').flatMap(n=>n.children)].filter(n=>local(n)==='enclosure'||n.name==='media:content'||(local(n)==='link'&&n.attrs.rel==='enclosure'));
+    const media=enclosures.map(n=>({url:uadavPodcastMediaURL(n.attrs.url||n.attrs.href,base),mime:String(n.attrs.type||'').toLowerCase()})).find(n=>n.url&&(/^(audio|video)\//.test(n.mime)||/\.(mp3|m4a|aac|ogg|wav|mp4|webm|m4v)(?:[?#]|$)/i.test(n.url)));
+    if(!media){skipped++;continue}
+    const guid=(text(child(item,'guid','id'))||media.url).slice(0,2048);if(seen.has(guid)){skipped++;continue}seen.add(guid);
+    const kind=media.mime.startsWith('video/')||/\.(mp4|webm|m4v)(?:[?#]|$)/i.test(media.url)?'video':'audio';
+    const linkNode=item.children.find(n=>local(n)==='link'&&n.attrs.rel!=='enclosure');
+    const page=uadavPodcastMediaURL(linkNode?.attrs.href||text(linkNode),base);
+    const date=text(child(item,'pubdate','published','updated')),published=Date.parse(date);
+    episodes.push({guid,url:media.url,titulo:text(child(item,'title')).slice(0,500)||'Episodio',descripcion:text(child(item,'description','summary','content:encoded','content')).slice(0,5000),
+      thumbnail:image(item)||art,media_type:kind,content_type:'podcast',provider:kind,programa:show,author:text(child(item,'itunes:author','author'))||show,
+      duration:text(child(item,'itunes:duration')).slice(0,40),episode_url:page,published_at:Number.isFinite(published)?new Date(published).toISOString():'',source_url:base});
+    if(episodes.length>=200)break;
+  }
+  return {title:show,artwork:art,episodes,skipped,total:items.length,truncated:items.length>1000||episodes.length===200};
+}
+async function uadavFetchPodcast(url,conditions={},requestFetch=fetch) {
+  let current=uadavPodcastURL(url);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+  try{
+    for(let redirects=0;redirects<=3;redirects++){
+      const headers={Accept:'application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9'};
+      if(conditions.etag)headers['If-None-Match']=conditions.etag;
+      if(conditions.last_modified)headers['If-Modified-Since']=conditions.last_modified;
+      const response=await requestFetch(current,{redirect:'manual',signal:controller.signal,headers});
+      if([301,302,303,307,308].includes(response.status)){
+        const next=response.headers.get('location');await response.body?.cancel();
+        if(!next||redirects===3)throw Error('La fuente redirige demasiadas veces.');
+        const nextURL=uadavPodcastURL(new URL(next,current).href);
+        if(new URL(nextURL).origin!==new URL(current).origin)conditions={};
+        current=nextURL;continue;
+      }
+      if(response.status===304)return {unchanged:true};
+      if(!response.ok)throw Error('La fuente RSS no responde correctamente.');
+      if(Number(response.headers.get('content-length'))>1048576){await response.body?.cancel();throw Error('RSS demasiado grande.')}
+      const reader=response.body?.getReader();if(!reader)throw Error('La fuente no devolvió contenido.');
+      const decoder=new TextDecoder();let xml='',size=0;
+      while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>1048576){await reader.cancel();throw Error('RSS demasiado grande.')}xml+=decoder.decode(value,{stream:true})}
+      xml+=decoder.decode();
+      return {...uadavPodcastXML(xml,current),etag:(response.headers.get('etag')||'').slice(0,400),last_modified:(response.headers.get('last-modified')||'').slice(0,100)};
+    }
+  }catch(e){if(e?.name==='AbortError')throw Error('La fuente tardó demasiado en responder.');throw e}
+  finally{clearTimeout(timer)}
+}
+async function uadavPodcastSchema(env) {
+  if(!env.DB)throw Error('La importación RSS necesita D1.');
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS podcast_sources (id TEXT PRIMARY KEY,name TEXT NOT NULL,url TEXT NOT NULL UNIQUE,active INTEGER DEFAULT 0,auto_publish INTEGER DEFAULT 0,interval_hours INTEGER DEFAULT 12,etag TEXT DEFAULT '',last_modified TEXT DEFAULT '',last_check_at TEXT DEFAULT '',last_success_at TEXT DEFAULT '',next_check_at INTEGER DEFAULT 0,last_error TEXT DEFAULT '',lease_until INTEGER DEFAULT 0,revision INTEGER DEFAULT 1,created_at TEXT,updated_at TEXT)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS podcast_entries (id TEXT PRIMARY KEY,source_id TEXT NOT NULL,guid TEXT NOT NULL,url TEXT NOT NULL,data_json TEXT NOT NULL,visible INTEGER DEFAULT 1,created_at TEXT,updated_at TEXT,UNIQUE(source_id,guid))").run();
+}
+async function uadavSyncPodcast(env,id,requestFetch=fetch) {
+  await uadavPodcastSchema(env);
+  const source=await env.DB.prepare('SELECT * FROM podcast_sources WHERE id=?').bind(id).first();if(!source)throw Error('Fuente no encontrada.');
+  const now=Date.now(),iso=new Date(now).toISOString();
+  const lock=await env.DB.prepare('UPDATE podcast_sources SET lease_until=? WHERE id=? AND revision=? AND lease_until<?').bind(now+60000,id,source.revision,now).run();
+  if(!lock.meta?.changes)throw Error('Esta fuente ya se está procesando. Esperá y actualizá.');
+  try{
+    const feed=await uadavFetchPodcast(source.url,{etag:source.etag,last_modified:source.last_modified},requestFetch);
+    let created=0,updated=0,unchanged=0;const statements=[];
+    if(!feed.unchanged){
+      if(!feed.episodes.length)throw Error('El feed no contiene episodios de audio o video compatibles.');
+      const existing=(await env.DB.prepare('SELECT guid,data_json FROM podcast_entries WHERE source_id=?').bind(id).all()).results||[],byGuid=new Map(existing.map(x=>[x.guid,x.data_json]));
+      for(const episode of feed.episodes){
+        const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(id+'\n'+episode.guid)),entryId='POD-'+Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
+        const item={...episode,id:entryId,source_id:id,source_name:source.name,source_kind:'rss',source_auto_sync:true,estado:'published',visible:true};
+        const data=JSON.stringify(item),old=byGuid.get(episode.guid);if(old===data){unchanged++;continue}
+        if(old)updated++;else created++;
+        statements.push(env.DB.prepare('INSERT INTO podcast_entries(id,source_id,guid,url,data_json,visible,created_at,updated_at) VALUES(?,?,?,?,?,1,?,?) ON CONFLICT(source_id,guid) DO UPDATE SET url=excluded.url,data_json=excluded.data_json,updated_at=excluded.updated_at').bind(entryId,id,episode.guid,episode.url,data,iso,iso));
+      }
+    }
+    statements.push(env.DB.prepare("UPDATE podcast_sources SET etag=?,last_modified=?,last_check_at=?,last_success_at=?,next_check_at=?,last_error='',lease_until=0 WHERE id=? AND revision=?").bind(feed.etag??source.etag,feed.last_modified??source.last_modified,iso,iso,now+source.interval_hours*3600000,id,source.revision));
+    await env.DB.batch(statements);
+    return {success:true,created,updated,unchanged,not_modified:!!feed.unchanged,skipped:feed.skipped||0,truncated:!!feed.truncated};
+  }catch(e){
+    await env.DB.prepare('UPDATE podcast_sources SET last_check_at=?,last_error=?,next_check_at=?,lease_until=0 WHERE id=?').bind(iso,String(e?.message||'No se pudo importar el RSS.').slice(0,300),now+Math.max(3600000,source.interval_hours*3600000),id).run();throw e;
+  }
+}
+async function uadavPodcastCron(env) {
+  if(env.PODCAST_RSS_SYNC_ENABLED!=='true'||!env.DB)return {enabled:false,processed:0};
+  const config=uadavSafeJSON(await env.UADAV_DB.get('config_global'),{});if(config?.modules?.podcasts===false)return {enabled:false,processed:0,reason:'module_disabled'};
+  await uadavPodcastSchema(env);
+  const rows=(await env.DB.prepare('SELECT id FROM podcast_sources WHERE active=1 AND auto_publish=1 AND next_check_at<=? AND lease_until<? ORDER BY next_check_at ASC LIMIT 3').bind(Date.now(),Date.now()).all()).results||[];
+  let processed=0,failed=0;
+  for(const row of rows){try{await uadavSyncPodcast(env,row.id);processed++}catch{failed++}}
+  return {enabled:true,processed,failed};
+}
 
 const uadavWorker = {
   async fetch(request, env, ctx) {
@@ -468,7 +644,7 @@ const uadavWorker = {
     const platformConfig = () => platformConfigPromise ||= getObject('config_global');
     const platformModules = async () => {
       const cfg = await platformConfig();
-      const defaults = {artists:true,radio:true,podcasts:true,iptv:true,events:true,jobs:true,marketplace:true,ticketing:false,pro:true,ads:true,union:false};
+      const defaults = {"home":true,"discover":true,"profile":true,"library":true,"playlists":true,"media":true,"shorts":true,"artists":true,"radio":true,"radio_requests":true,"radio_chat":true,"radio_studio":true,"podcasts":true,"iptv":true,"events":true,"jobs":true,"marketplace":true,"ticketing":false,"pro":true,"ads":true,"union":false};
       const flags = cfg?.modules || {};
       for (const key of Object.keys(defaults)) if (typeof flags[key] === 'boolean') defaults[key] = flags[key];
       return defaults;
@@ -477,6 +653,25 @@ const uadavWorker = {
     if (/^\/api\/(?:admin\/|artist\/)?cct(?:\/|$)/.test(path)) requiredModules.push('union');
     if (/^\/api\/(?:admin\/)?marketplace(?:\/|$)/.test(path) || path === '/api/contrataciones') requiredModules.push('marketplace');
     if (/^\/api\/(?:admin\/)?ticketing(?:\/|$)/.test(path)) requiredModules.push('events','ticketing');
+
+    if(!isAdmin()){
+      const routeModules=[
+        [/^\/api\/(?:radios|radio\/)/,'radio'],[/^\/api\/radio\/requests(?:\/|$)/,'radio_requests'],
+        [/^\/api\/radio-studio(?:\/|$)/,'radio'],[/^\/api\/radio-studio(?:\/|$)/,'radio_studio'],
+        [/^\/api\/podcasts(?:\/|$)/,'podcasts'],[/^\/api\/(?:senales|senales_oficiales)(?:\/|$)/,'iptv'],
+        [/^\/api\/(?:cartelera|cartelera_aprobada|eventos|eventos_publicados)(?:\/|$)/,'events'],
+        [/^\/api\/bolsa_trabajo(?:\/|$)/,'jobs'],[/^\/api\/artistas(?:\/|$)/,'artists'],
+        [/^\/api\/shorts(?:\/|$)/,'shorts'],[/^\/api\/media(?:\/|$)/,'media'],
+        [/^\/api\/(?:search|buscar)(?:\/|$)/,'discover']
+      ];
+      for(const [pattern,key] of routeModules)if(pattern.test(path))requiredModules.push(key);
+      if(path==='/api/chat'||path==='/api/moderar_chat'){
+        let stream=url.searchParams.get('id_stream')||'';
+        if(request.method==='POST'){const payload=await request.clone().json().catch(()=>({}));stream=String(payload.id_stream||'')}
+        if(stream.startsWith('radio:'))requiredModules.push('radio','radio_chat');
+      }
+    }
+
     if (requiredModules.length) {
       let modules;
       try { modules = await platformModules(); }
@@ -690,12 +885,37 @@ const uadavWorker = {
       }catch(_){ return []; }
     }
 
+    async function officialDiscoveryRequest(resource,params){
+      if(!await youtubeApiEnabled())return null;
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
+      try{
+        const query=new URLSearchParams({...params,key:env.YOUTUBE_API_KEY});
+        const response=await fetch('https://www.googleapis.com/youtube/v3/'+resource+'?'+query,{signal:controller.signal});
+        if(!response.ok)return null;
+        const data=await response.json();
+        return Array.isArray(data?.items)?data:null;
+      }catch(_){return null}finally{clearTimeout(timer)}
+    }
+    async function officialDiscoveryChannelSearch(name){
+      const data=await officialDiscoveryRequest('search',{part:'snippet',type:'channel',q:String(name),maxResults:'8'});
+      const item=data?.items.find(x=>/^UC[A-Za-z0-9_-]{22}$/.test(String(x?.id?.channelId||'')));
+      if(!item)return null;
+      const snippet=item.snippet||{};
+      return {channelId:item.id.channelId,nombre:String(snippet.title||name),thumbnail:String(snippet.thumbnails?.high?.url||snippet.thumbnails?.default?.url||''),bio:String(snippet.description||''),source:'youtube'};
+    }
+    async function officialDiscoveryChannelInfo(id){
+      if(!/^UC[A-Za-z0-9_-]{22}$/.test(id))return null;
+      const data=await officialDiscoveryRequest('channels',{part:'snippet,statistics,brandingSettings',id});
+      const item=data?.items.find(x=>x?.id===id);if(!item)return null;
+      const snippet=item.snippet||{},stats=item.statistics||{};
+      return {channelId:id,nombre:String(snippet.title||'Artista'),thumbnail:String(snippet.thumbnails?.high?.url||snippet.thumbnails?.default?.url||''),banner:String(item.brandingSettings?.image?.bannerExternalUrl||''),bio:String(snippet.description||''),subscribers:Number(stats.subscriberCount||0),total_views:Number(stats.viewCount||0),latestVideos:[],source:'youtube'};
+    }
     async function invidiousChannelSearch(name) {
       const arr=await invidiousSearch(name,'channel',8);
       const item=arr.find(x=>x?.authorId||x?.channelId||x?.ucid||x?.id);
-      if(!item) return null;
+      if(!item) return officialDiscoveryChannelSearch(name);
       const channelId=String(item.authorId||item.channelId||item.ucid||item.id||'');
-      if(!channelId) return null;
+      if(!channelId) return officialDiscoveryChannelSearch(name);
       return {channelId,nombre:String(item.author||item.title||name),thumbnail:String(item.authorThumbnails?.[0]?.url||item.videoThumbnails?.[0]?.url||''),bio:String(item.description||''),source:'invidious'};
     }
     async function invidiousChannelInfo(channelId){
@@ -710,7 +930,7 @@ const uadavWorker = {
           return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),subscribers:Number(d.subCount||0),total_views:Number(d.totalViews||0),latestVideos:Array.isArray(d.latestVideos)?d.latestVideos.slice(0,24):[],source:'invidious'};
         }finally{clearTimeout(timer)}
       };
-      try{return await Promise.any(INVIDIOUS_INSTANCES.map(base=>requestOne(base)))}catch(_){return null}
+      try{return await Promise.any(INVIDIOUS_INSTANCES.map(base=>requestOne(base)))}catch(_){return officialDiscoveryChannelInfo(id)}
     }
     async function invidiousVideoInfo(videoId){
       const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
@@ -1590,7 +1810,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(path==='/api/admin/moderation/settings'){if(request.method==='GET')return json(await uadavModerationConfig(env),200,{'Cache-Control':'no-store'});if(request.method!=='PUT')return json({error:'Método no permitido'},405);const b=await request.json();if(!['groq','gemini'].includes(b.provider)||!Number.isInteger(b.daily_limit)||b.daily_limit<1||b.daily_limit>1000)return json({error:'Proveedor o límite inválido'},400);await putJSON('moderation_settings',{enabled:b.enabled!==false,provider:b.provider,daily_limit:b.daily_limit});return json({success:true,...await uadavModerationConfig(env)})}
       if(path==='/api/admin/moderation/queue'&&request.method==='GET'){const r=await env.DB.prepare('SELECT * FROM moderation_queue ORDER BY created_at DESC LIMIT 200').all();return json(r.results||[],200,{'Cache-Control':'no-store'})}
       if(path==='/api/admin/moderation/test'&&request.method==='POST'){const d=await uadavModerateText(env,'test',{mensaje:'Hola, estoy disfrutando de la música de esta radio.'},'admin-test');return json({...d,operational:d.decision==='allow'&&d.reason!=='paused'})}
-      if(path==='/api/admin/moderation/review'&&request.method==='POST'){const b=await request.json(),row=await env.DB.prepare('SELECT * FROM moderation_queue WHERE id=?').bind(String(b.id||'')).first();if(!row||row.status!=='pending'||!['approve','reject'].includes(b.decision))return json({error:'La solicitud cambió de estado o la decisión es inválida'},409);if(b.decision==='reject'){const r=await env.DB.prepare("UPDATE moderation_queue SET status='rejected',reviewed_at=? WHERE id=? AND status='pending'").bind(isoNow(),row.id).run();return json({success:Number(r.meta?.changes)===1})}const locked=await env.DB.prepare("UPDATE moderation_queue SET status='publishing' WHERE id=? AND status='pending'").bind(row.id).run();if(Number(locked.meta?.changes)!==1)return json({error:'Otra revisión está en curso'},409);const payload=safeJSON(row.payload_json,{});let result;if(row.scope==='test')result={success:true,test:true};else if(['artist_profile','presskit'].includes(row.scope)){const owner=await env.DB.prepare("SELECT claim_id FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(payload.artist_id).first();if(payload.claim_id?String(owner?.claim_id)!==String(payload.claim_id):!!owner){await env.DB.prepare("UPDATE moderation_queue SET status='rejected',reason='ownership_changed' WHERE id=?").bind(row.id).run();return json({error:'El propietario cambió. No se aplicó el contenido.'},409)}if(row.scope==='presskit'){const written=await env.DB.prepare('UPDATE artist_workspaces SET public_json=?,revision=revision+1,updated_at=? WHERE artist_id=? AND revision=?').bind(JSON.stringify(payload.public_snapshot),isoNow(),payload.artist_id,payload.revision).run();if(Number(written.meta?.changes)!==1){await env.DB.prepare("UPDATE moderation_queue SET status='rejected',reason='workspace_changed' WHERE id=?").bind(row.id).run();return json({error:'La presentación cambió después del envío. Debe volver a publicarse.'},409)}result={success:true,published:true}}else{const artists=await getArray('artistas'),artist=artists.find(x=>String(publicArtistFromItem(x).id)===String(payload.artist_id));if(!artist||(artist.ultima_edicion_artista||null)!==payload.previous_edit){await env.DB.prepare("UPDATE moderation_queue SET status='rejected',reason='profile_changed' WHERE id=?").bind(row.id).run();return json({error:'El perfil cambió después del envío. No se sobrescribieron datos.'},409)}Object.assign(artist,payload.public_patch,{self_managed:true,ultima_edicion_artista:isoNow()});await putJSON('artistas',artists);await syncArtistsD1([artist]);result={success:true,published:true}}}else{const allowed=['/api/moderar_chat','/api/eventos','/api/bolsa_trabajo','/api/radio/requests','/api/artist/audience-chat'];if(!allowed.includes(row.scope))return json({error:'Tipo no publicable'},400);const response=await uadavWorker.fetch(new Request(new URL(row.scope,request.url),{method:'POST',headers:{Authorization:'Bearer '+env.ADMIN_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)}),env,ctx);result=await response.json();if(!response.ok){await env.DB.prepare("UPDATE moderation_queue SET status='pending' WHERE id=? AND status='publishing'").bind(row.id).run();return json({error:result.error||'No se pudo publicar; la solicitud sigue pendiente'},response.status)}}await env.DB.prepare("UPDATE moderation_queue SET status='approved',reviewed_at=?,result_json=? WHERE id=? AND status='publishing'").bind(isoNow(),JSON.stringify(result),row.id).run();await audit('moderation_approved','content',row.id,{scope:row.scope});return json({success:true,published:true,result})}
+      if(path==='/api/admin/moderation/review'&&request.method==='POST'){const b=await request.json(),row=await env.DB.prepare('SELECT * FROM moderation_queue WHERE id=?').bind(String(b.id||'')).first();if(!row||row.status!=='pending'||!['approve','reject'].includes(b.decision))return json({error:'La solicitud cambió de estado o la decisión es inválida'},409);if(b.decision==='reject'){const r=await env.DB.prepare("UPDATE moderation_queue SET status='rejected',reviewed_at=? WHERE id=? AND status='pending'").bind(isoNow(),row.id).run();const payload=safeJSON(row.payload_json,{});if(Number(r.meta?.changes)===1&&row.scope==='artist_profile'&&payload.draft_revision)await env.DB.prepare("UPDATE artist_profile_drafts SET state='rejected' WHERE artist_id=? AND revision=? AND claim_id IS ?").bind(payload.artist_id,payload.draft_revision,payload.claim_id||null).run();return json({success:Number(r.meta?.changes)===1})}const locked=await env.DB.prepare("UPDATE moderation_queue SET status='publishing' WHERE id=? AND status='pending'").bind(row.id).run();if(Number(locked.meta?.changes)!==1)return json({error:'Otra revisión está en curso'},409);const payload=safeJSON(row.payload_json,{});let result;if(row.scope==='test')result={success:true,test:true};else if(['artist_profile','presskit'].includes(row.scope)){const owner=await env.DB.prepare("SELECT claim_id FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(payload.artist_id).first();if(payload.claim_id?String(owner?.claim_id)!==String(payload.claim_id):!!owner){await env.DB.prepare("UPDATE moderation_queue SET status='rejected',reason='ownership_changed' WHERE id=?").bind(row.id).run();return json({error:'El propietario cambió. No se aplicó el contenido.'},409)}if(row.scope==='presskit'){const written=await env.DB.prepare('UPDATE artist_workspaces SET public_json=?,revision=revision+1,updated_at=? WHERE artist_id=? AND revision=?').bind(JSON.stringify(payload.public_snapshot),isoNow(),payload.artist_id,payload.revision).run();if(Number(written.meta?.changes)!==1){await env.DB.prepare("UPDATE moderation_queue SET status='rejected',reason='workspace_changed' WHERE id=?").bind(row.id).run();return json({error:'La presentación cambió después del envío. Debe volver a publicarse.'},409)}result={success:true,published:true}}else{if(payload.draft_revision){const draft=await uadavArtistDraft(env,payload.artist_id,payload.claim_id);if(!draft||draft.revision!==payload.draft_revision){await env.DB.prepare("UPDATE moderation_queue SET status='rejected',reason='draft_changed' WHERE id=?").bind(row.id).run();return json({error:'El artista guardó una versión más reciente. Revisá el último envío.'},409)}}const artists=await getArray('artistas'),artist=artists.find(x=>String(publicArtistFromItem(x).id)===String(payload.artist_id));if(!artist||(artist.ultima_edicion_artista||null)!==payload.previous_edit){await env.DB.prepare("UPDATE moderation_queue SET status='rejected',reason='profile_changed' WHERE id=?").bind(row.id).run();return json({error:'El perfil cambió después del envío. No se sobrescribieron datos.'},409)}Object.assign(artist,payload.public_patch,{self_managed:true,ultima_edicion_artista:isoNow()});await putJSON('artistas',artists);await syncArtistsD1([artist]);if(payload.draft_revision)await env.DB.prepare("UPDATE artist_profile_drafts SET state='applied' WHERE artist_id=? AND revision=?").bind(payload.artist_id,payload.draft_revision).run();result={success:true,published:true}}}else{if(payload.radio_operator_account_id){const operator=await env.DB.prepare("SELECT r.radio_id FROM radio_operators r JOIN audience_accounts a ON a.id=r.account_id WHERE r.radio_id=? AND r.account_id=? AND r.status='active' AND NOT EXISTS(SELECT 1 FROM audience_deletions d WHERE d.account_id=r.account_id)").bind(String(payload.radio_operator_radio_id||''),String(payload.radio_operator_account_id)).first();if(!operator||payload.id_stream!=='radio:'+operator.radio_id){await env.DB.prepare("UPDATE moderation_queue SET status='rejected',reason='operator_permission_changed' WHERE id=?").bind(row.id).run();return json({error:'El permiso del operador cambió. No se publicó la respuesta.'},409)}}const allowed=['/api/moderar_chat','/api/eventos','/api/bolsa_trabajo','/api/radio/requests','/api/artist/audience-chat'];if(!allowed.includes(row.scope))return json({error:'Tipo no publicable'},400);const response=await uadavWorker.fetch(new Request(new URL(row.scope,request.url),{method:'POST',headers:{Authorization:'Bearer '+env.ADMIN_KEY,'Content-Type':'application/json'},body:JSON.stringify(payload)}),env,ctx);result=await response.json();if(!response.ok){await env.DB.prepare("UPDATE moderation_queue SET status='pending' WHERE id=? AND status='publishing'").bind(row.id).run();return json({error:result.error||'No se pudo publicar; la solicitud sigue pendiente'},response.status)}}await env.DB.prepare("UPDATE moderation_queue SET status='approved',reviewed_at=?,result_json=? WHERE id=? AND status='publishing'").bind(isoNow(),JSON.stringify(result),row.id).run();await audit('moderation_approved','content',row.id,{scope:row.scope});return json({success:true,published:true,result})}
       return json({error:'Ruta no disponible'},404);
     }
     if(request.method==='POST'&&!isAdmin()&&['/api/moderar_chat','/api/eventos','/api/bolsa_trabajo','/api/radio/requests','/api/artist/audience-chat'].includes(path)){
@@ -1602,6 +1822,13 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(path==='/api/radio/requests'&&(!b.radio_id||!b.title&&!b.cancion))return json({error:'Radio y canción requeridas'},400);
       if(path==='/api/artist/audience-chat'&&(!b.artist_id||!b.message&&!b.mensaje))return json({error:'Artista y mensaje requeridos'},400);
       const permitted=['id_stream','alias','mensaje','tipo','reply_to','radio_id','listener_name','nombre','artist','title','cancion','dedication','dedicatoria','artist_id','message','titulo','categoria','subcategoria','organizador','productora','productora_id','fecha','fecha_inicio','fecha_fin','lugar','direccion','ciudad','provincia','pais','imagen','poster','portada','trailer','youtube_id','precio','precio_desde','precio_hasta','moneda','es_gratuito','link_compra','link_ticketera','ticketera','descripcion','descripcion_corta','contacto_email','email','contacto','whatsapp','instagram','facebook','web','galeria','funciones','destacado_solicitado','pago_referencia','rubro','empresa','modalidad','fecha_limite','remuneracion','requisitos','contratante_tipo','contacto_tipo'];const clean=Object.fromEntries(permitted.filter(k=>Object.hasOwn(b,k)).map(k=>[k,b[k]]));for(const k of ['token','artist_token','turnstile_token','account_id','moderation_artist_id'])delete clean[k];
+      if(b.radio_operator_account_id){
+        const identityResponse=await uadavAccountRoute(new Request(new URL('/api/account/identity',request.url),{headers:request.headers}),env,true),operatorIdentity=await identityResponse.json();
+        if(!identityResponse.ok||operatorIdentity.account_id!==b.radio_operator_account_id)return json({error:'Acceso de operador inválido'},403);
+        let permission=null;try{permission=await env.DB.prepare("SELECT radio_id FROM radio_operators WHERE radio_id=? AND account_id=? AND status='active'").bind(String(b.radio_operator_radio_id||''),operatorIdentity.account_id).first()}catch{}
+        if(!permission||b.id_stream!=='radio:'+permission.radio_id)return json({error:'Permiso de operador inválido'},403);
+        clean.radio_operator_account_id=operatorIdentity.account_id;clean.radio_operator_radio_id=permission.radio_id;
+      }
       if(path==='/api/eventos'&&b.artist_token){const permission=await uadavArtistPermission(String(b.artist_token),env);if(!permission)return json({error:'Acceso de artista inválido'},401);clean.moderation_artist_id=permission.artist_id}
       const check=await uadavModerateText(env,path,clean,request.headers.get('CF-Connecting-IP')||'unknown');if(check.decision==='published')return json({...check.result,success:true,previously_reviewed:true});if(check.decision==='review')return json({success:true,aprobado:false,moderation_pending:true,moderation_id:check.id,message:'Recibimos tu contenido. Está pendiente de revisión antes de publicarse.'},202);
       if(check.decision==='reject')return json({error:check.reason==='submission_limit'?'Demasiados envíos. Intentá más tarde.':check.reason==='queue_full'?'La revisión está ocupada. Intentá más tarde.':'Este contenido fue rechazado por moderación'},check.reason==='submission_limit'?429:check.reason==='queue_full'?503:422);
@@ -1672,7 +1899,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const kvKeys=['config_global','apariencia','secciones','web_visibility','home_layout','landing_config','footer_config','site_pages','estado_sitio','radios','senales_oficiales','artistas','artistas_prospectos','cartelera','eventos','bolsa_trabajo','content_items','collections','banners'];
       for(const key of kvKeys){try{const raw=await env.UADAV_DB.get(key);out.kv[key]=raw==null?null:safeJSON(raw,raw)}catch(e){out.kv[key]={error:String(e?.message||e)}}}
       if(hasD1()){
-        const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
+        const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
         for(const t of tables){try{const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[]}catch(e){out.tables[t]={error:String(e?.message||e)}}}
       }
       return json(out);
@@ -2130,7 +2357,14 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
           SELECT o.id,?,CASE WHEN p.pro_expires_at>? THEN p.pro_expires_at ELSE ? END,
           strftime('%Y-%m-%dT%H:%M:%fZ',CASE WHEN p.pro_expires_at>? THEN p.pro_expires_at ELSE ? END,'+'||o.duration_days||' days'),?,?
           FROM pro_payment_orders o LEFT JOIN artist_plan_state p ON p.artist_id=o.artist_id
-          WHERE o.id=? AND o.status IN (?,?) AND NOT EXISTS(SELECT 1 FROM artist_deletions d WHERE d.artist_id=o.artist_id)`).bind(transactionId,now,now,now,now,source,now,row.id,eligible[0],eligible[1]||eligible[0]),
+          WHERE o.id=? AND o.status IN (?,?) AND NOT EXISTS(SELECT 1 FROM artist_deletions d WHERE d.artist_id=o.artist_id)
+          AND (o.account_id IS NULL OR EXISTS(
+            SELECT 1 FROM audience_artist_links l JOIN audience_accounts a ON a.id=l.account_id
+            WHERE l.account_id=o.account_id AND l.artist_id=o.artist_id AND (l.expires_at=0 OR l.expires_at>?)
+            AND NOT EXISTS(SELECT 1 FROM audience_deletions d WHERE d.account_id=l.account_id)
+            AND ((l.claim_id IS NULL AND NOT EXISTS(SELECT 1 FROM artist_owners own WHERE own.artist_id=l.artist_id AND own.status='active'))
+              OR (l.claim_id IS NOT NULL AND l.claim_id=(SELECT own.claim_id FROM artist_owners own WHERE own.artist_id=l.artist_id AND own.status='active' ORDER BY own.created_at ASC LIMIT 1)))
+          ))`).bind(transactionId,now,now,now,now,source,now,row.id,eligible[0],eligible[1]||eligible[0],Date.now()),
         env.DB.prepare(`INSERT INTO artist_plan_state(artist_id,plan,pro_started_at,pro_expires_at,source,analytics_enabled,ai_enabled,updated_at)
           SELECT o.artist_id,'pro',f.created_at,f.expires_at,f.source,1,0,? FROM pro_payment_fulfillments f JOIN pro_payment_orders o ON o.id=f.order_id
           WHERE o.id=? AND o.status IN (?,?) AND NOT EXISTS(SELECT 1 FROM artist_deletions d WHERE d.artist_id=o.artist_id)
@@ -2505,6 +2739,209 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       return json({ error:'Método no permitido' },405);
     }
 
+    // Public signal onboarding: admin-controlled, pending review only.
+    // D1 is the transactional source of truth for new onboarding submissions.
+    // Legacy KV entries remain readable for migrations and existing applications.
+    const signalApplicationSchema=async()=>{if(!hasD1())return false;await env.DB.prepare("CREATE TABLE IF NOT EXISTS signal_onboarding_applications (id TEXT PRIMARY KEY, stream_key TEXT NOT NULL UNIQUE, data_json TEXT NOT NULL, created_at TEXT NOT NULL)").run();await env.DB.prepare("CREATE TABLE IF NOT EXISTS signal_onboarding_rate_limits (id TEXT PRIMARY KEY, count INTEGER NOT NULL, expires_at INTEGER NOT NULL)").run();return true};
+    const signalApplications=async()=>{const legacy=await getArray('signal_onboarding_applications');if(!hasD1())return legacy;await signalApplicationSchema();const rows=await env.DB.prepare("SELECT data_json FROM signal_onboarding_applications ORDER BY created_at DESC LIMIT 2500").all();const current=(rows.results||[]).map(x=>safeJSON(x.data_json,null)).filter(Boolean);const ids=new Set(current.map(x=>x.id));return [...current,...legacy.filter(x=>!ids.has(x.id))]};
+    const saveSignalApplication=async(item)=>{if(!hasD1())throw new Error('D1 obligatorio para inscripciones de señales');await signalApplicationSchema();const streamKey=String(item.stream_url||'').replace(/\/$/,'').toLowerCase();await env.DB.prepare("INSERT INTO signal_onboarding_applications(id,stream_key,data_json,created_at) VALUES(?,?,?,?)").bind(item.id,streamKey,JSON.stringify(item),item.created_at).run()};
+    const updateSignalApplication=async(item)=>{if(hasD1()){await signalApplicationSchema();const result=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=?").bind(JSON.stringify(item),item.id).run();if(result.meta?.changes)return}const legacy=await getArray('signal_onboarding_applications');const idx=legacy.findIndex(x=>x.id===item.id);if(idx>=0){legacy[idx]=item;await putJSON('signal_onboarding_applications',legacy)}};
+    if (path === '/api/signal-onboarding/config') {
+      if (request.method === 'GET') {
+        const c=await getObject('signal_onboarding_config');
+        return json({enabled:c.enabled===true,radio:isAdmin()?c.radio===true:c.enabled===true&&c.radio===true,tv:isAdmin()?c.tv===true:c.enabled===true&&c.tv===true,closed_message:String(c.closed_message||'Las inscripciones están temporalmente cerradas.').slice(0,250)});
+      }
+      if (request.method !== 'PUT') return json({error:'Método no permitido'},405);
+      if (!isAdmin()) return json({error:'No autorizado'},401);
+      const b=await request.json().catch(()=>({}));
+      const config={enabled:b.enabled===true,radio:b.radio===true,tv:b.tv===true,closed_message:String(b.closed_message||'Las inscripciones están temporalmente cerradas.').slice(0,250),updated_at:isoNow()};
+      await putJSON('signal_onboarding_config',config);
+      await audit('update_signal_onboarding','settings','signal_onboarding_config',{enabled:config.enabled,radio:config.radio,tv:config.tv});
+      return json({success:true,config});
+    }
+    if (path === '/api/signal-onboarding/migrate') {
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(request.method!=='POST')return json({error:'Método no permitido'},405);
+      if(!hasD1())return json({error:'La migración requiere D1'},503);
+      const body=await request.json().catch(()=>({})),dryRun=body.execute!==true;
+      const legacy=await getArray('signal_onboarding_applications');
+      if(legacy.length>5000)return json({error:'La migración requiere revisar el volumen antes de continuar'},409);
+      await signalApplicationSchema();
+      const counts=new Map(),streams=new Map();for(const item of legacy){counts.set(item?.id,(counts.get(item?.id)||0)+1);const key=String(item?.stream_url||'').replace(/\/$/,'').toLowerCase();streams.set(key,(streams.get(key)||0)+1);}
+      const results=[];
+      for(const item of legacy){
+        const id=typeof item?.id==='string'?item.id:'';
+        let stream;try{stream=new URL(item?.stream_url)}catch{}
+        if(!/^[A-Za-z0-9_-]{1,120}$/.test(id)||counts.get(id)!==1||!['radio','tv'].includes(item?.type)||!['pending','approved','rejected','published'].includes(item?.status)||item?.rights_confirmed!==true||(item?.status==='published'&&!item?.published_id)||!Number.isFinite(Date.parse(item?.created_at))||stream?.protocol!=='https:'||stream?.username||stream?.password){results.push({id,status:'needs_review'});continue}
+        const streamKey=String(item.stream_url).replace(/\/$/,'').toLowerCase();
+        if(streams.get(streamKey)!==1){results.push({id,status:'needs_review'});continue}
+        const existing=await env.DB.prepare('SELECT id,data_json FROM signal_onboarding_applications WHERE id=? OR stream_key=?').bind(id,streamKey).all();
+        if(existing.results?.length){const same=existing.results.some(x=>x.id===id&&x.data_json===JSON.stringify(item));results.push({id,status:same?'already_migrated':'conflict'});continue}
+        if(dryRun){results.push({id,status:'ready'});continue}
+        const inserted=await env.DB.prepare('INSERT INTO signal_onboarding_applications(id,stream_key,data_json,created_at) VALUES(?,?,?,?) ON CONFLICT DO NOTHING').bind(id,streamKey,JSON.stringify(item),item.created_at).run();
+        results.push({id,status:Number(inserted.meta?.changes)===1?'migrated':'conflict'});
+      }
+      if(!dryRun)await audit('migrate_signal_applications','signal','legacy',{migrated:results.filter(x=>x.status==='migrated').length});
+      return json({success:true,dry_run:dryRun,legacy_preserved:true,results});
+    }
+    if (path === '/api/signal-onboarding/applications') {
+      if (!isAdmin()) return json({error:'No autorizado'},401);
+      if (request.method === 'GET') return json(await signalApplications());
+      if (request.method !== 'PATCH') return json({error:'Método no permitido'},405);
+      const b=await request.json().catch(()=>({})),status=String(b.status||'');
+      if (!['approved','rejected','pending'].includes(status))return json({error:'Estado inválido'},400);
+      const list=await signalApplications(),i=list.findIndex(x=>x.id===b.id);
+      if(i<0)return json({error:'Solicitud no encontrada'},404);
+      if(list[i].published_id||['published','publishing'].includes(list[i].status))return json({error:'La señal ya está publicada o en proceso de publicación; administrala desde el catálogo o recuperá la operación'},409);
+      if(!hasD1())return json({error:'La revisión segura requiere D1'},503);
+      const previous=list[i];
+      const reviewed={...previous,status,review_note:String(b.review_note||'').slice(0,500),reviewed_at:isoNow()};
+      // Compare the full snapshot, not just the state, to reject concurrent edits.
+      const changed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND data_json=? AND json_extract(data_json,'$.status') NOT IN ('published','publishing') AND json_extract(data_json,'$.published_id') IS NULL RETURNING id").bind(JSON.stringify(reviewed),previous.id,JSON.stringify(previous)).first();
+      if(!changed)return json({error:'La solicitud cambió o necesita migración desde KV. Actualizá la bandeja; no se sobrescribieron datos.',conflict:true},409);
+      list[i]=reviewed;
+      await audit('review_signal_application','signal',String(b.id),{status});
+      return json({success:true,item:list[i],publication_pending:true});
+    }
+    // Explicit admin recovery for interrupted publications; never auto-publish.
+    if (path === '/api/signal-onboarding/recover') {
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(request.method!=='POST')return json({error:'Método no permitido'},405);
+      if(!hasD1())return json({error:'D1 no disponible'},503);
+      const b=await request.json().catch(()=>({}));
+      const id=String(b.id||'');
+      const requests=await signalApplications(),application=requests.find(x=>x.id===id);
+      if(!application)return json({error:'Solicitud no encontrada'},404);
+      if(application.status!=='publishing')return json({error:'La solicitud no requiere recuperación'},409);
+      const attempted=Date.parse(application.publication_attempt_at||'');
+      if(!Number.isFinite(attempted)||Date.now()-attempted<300000)return json({error:'Esperá cinco minutos desde el último intento antes de recuperar.'},409);
+      await signalApplicationSchema();
+      const lock=await env.DB.prepare("CREATE TABLE IF NOT EXISTS signal_onboarding_catalog_locks (id TEXT PRIMARY KEY, token TEXT NOT NULL, expires_at INTEGER NOT NULL)").run().then(()=>env.DB.prepare("SELECT expires_at FROM signal_onboarding_catalog_locks WHERE id=?").bind('signal-catalog:'+application.type).first());
+      if(lock&&Number(lock.expires_at)>Date.now())return json({error:'El catálogo sigue ocupado; reintentá más tarde'},409);
+      const key=application.type==='radio'?'radios':'senales_oficiales';
+      const existing=await getArray(key);
+      const found=existing.find(x=>String(x.onboarding_id||'')===id);
+      // Existing catalog entries are reconciled by the publish endpoint after recovery.
+      await signalApplicationSchema();
+      const restored={...application,status:'approved',publication_error:'Recuperación manual: publicación interrumpida',publication_attempt_at:isoNow()};
+      const changed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND data_json=? AND json_extract(data_json,'$.status')='publishing' AND NOT EXISTS (SELECT 1 FROM signal_onboarding_catalog_locks WHERE id=? AND expires_at>?) RETURNING id").bind(JSON.stringify(restored),id,JSON.stringify(application),'signal-catalog:'+application.type,Date.now()).first();
+      if(!changed)return json({error:'El estado cambió; actualizá la bandeja'},409);
+      await audit('recover_signal_publication','signal',id,{type:application.type});
+      return json({success:true,status:'approved',id,reconciliation_required:Boolean(found)});
+    }
+    // Publication is a separate, explicit, admin-only step after approval.
+    if (path === '/api/signal-onboarding/publish') {
+      if (!isAdmin()) return json({error:'No autorizado'},401);
+      if (request.method!=='POST') return json({error:'Método no permitido'},405);
+      const b=await request.json().catch(()=>({}));
+      const requests=await signalApplications();
+      const i=requests.findIndex(x=>x.id===b.id);
+      if(i<0)return json({error:'Solicitud no encontrada'},404);
+      const application=requests[i];
+      if(application.status!=='approved')return json({error:'Primero debe aprobarse la solicitud'},409);
+      if(application.published_id)return json({error:'La señal ya fue publicada',published_id:application.published_id},409);
+      // Claim publication with a conditional D1 update; only one concurrent admin can win.
+      if(!hasD1())return json({error:'Publicación no disponible sin D1'},503);
+      await signalApplicationSchema();
+      const publicationToken=crypto.randomUUID();
+      const claimed=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND data_json=? AND json_extract(data_json,'$.status')='approved' RETURNING id").bind(JSON.stringify({...application,status:'publishing',publication_attempt_at:isoNow(),publication_token:publicationToken}),application.id,JSON.stringify(application)).first();
+      if(!claimed)return json({error:'Esta solicitud ya está siendo publicada o cambió de estado. Actualizá la bandeja.',conflict:true},409);
+      const releasePublication=async(error)=>{await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing' AND json_extract(data_json,'$.publication_token')=?").bind(JSON.stringify({...application,status:'approved',publication_error:error,publication_attempt_at:isoNow()}),application.id,publicationToken).run()};
+      // Serialize publication across distinct requests that share the same KV catalog.
+      // D1 conditional acquisition is atomic; an expired lease can be recovered.
+      const catalogLock='signal-catalog:'+application.type,leaseToken=crypto.randomUUID(),leaseUntil=Date.now()+120000;
+      let catalogClaim;
+      try {
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS signal_onboarding_catalog_locks (id TEXT PRIMARY KEY, token TEXT NOT NULL, expires_at INTEGER NOT NULL)").run();
+      catalogClaim=await env.DB.prepare("INSERT INTO signal_onboarding_catalog_locks(id,token,expires_at) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET token=excluded.token,expires_at=excluded.expires_at WHERE expires_at<? RETURNING token").bind(catalogLock,leaseToken,leaseUntil,Date.now()).first();
+      }catch(_){await releasePublication('No se pudo adquirir el bloqueo del catálogo');return json({error:'No se pudo iniciar la publicación. Reintentá más tarde.'},503)}
+      if(!catalogClaim){await releasePublication('Catálogo ocupado; reintentar');return json({error:'Otra señal está siendo publicada. Reintentá en unos instantes.',conflict:true},409)}
+      const releaseCatalogLock=async()=>env.DB.prepare("DELETE FROM signal_onboarding_catalog_locks WHERE id=? AND token=?").bind(catalogLock,leaseToken).run();
+      const assertPublicationLease=async()=>{
+        const lock=await env.DB.prepare('SELECT token,expires_at FROM signal_onboarding_catalog_locks WHERE id=?').bind(catalogLock).first();
+        const current=await env.DB.prepare('SELECT data_json FROM signal_onboarding_applications WHERE id=?').bind(application.id).first();
+        const state=safeJSON(current?.data_json,{});
+        if(lock?.token!==leaseToken||Number(lock.expires_at)<=Date.now()||state.status!=='publishing'||state.publication_token!==publicationToken)throw Error('Publication ownership or catalog lease lost');
+      };
+      const finishPublication=async(item)=>{
+        await assertPublicationLease();
+        const finished=await env.DB.prepare("UPDATE signal_onboarding_applications SET data_json=? WHERE id=? AND json_extract(data_json,'$.status')='publishing' AND json_extract(data_json,'$.publication_token')=? RETURNING id").bind(JSON.stringify(item),application.id,publicationToken).first();
+        if(!finished)throw Error('Publication ownership changed');
+      };
+      try {
+      // The existing KV catalogs still require serialization across distinct applications.
+      const radio=application.type==='radio',key=radio?'radios':'senales_oficiales';
+      const existing=await getArray(key);
+      if(!Array.isArray(existing)){await releaseCatalogLock();await releasePublication('Catálogo inválido');return json({error:'Catálogo inválido: no se modificó'},503)}
+      // A KV read may lag behind an already committed D1 publication, even under a lease.
+      // Fail closed rather than appending to a snapshot that would erase that entry.
+      const committed=await env.DB.prepare("SELECT id,data_json FROM signal_onboarding_applications WHERE json_extract(data_json,'$.type')=? AND json_extract(data_json,'$.status')='published'").bind(application.type).all();
+      const catalogIds=new Map(existing.map(x=>[String(x.onboarding_id||''),String(x.id||'')]));
+      if((committed.results||[]).some(row=>{const item=safeJSON(row.data_json,{});return !item.published_id||catalogIds.get(String(row.id))!==String(item.published_id)})){
+        const error=new Error('Catalog snapshot is behind committed publications');error.code='CATALOG_SNAPSHOT_STALE';throw error;
+      }
+      const previouslyStored=existing.find(x=>String(x.onboarding_id||'')===application.id);
+      if(previouslyStored){
+        if(radio){const repair=await safeD1('signal_radio_repair',()=>syncRadiosD1([previouslyStored]));if(!repair.ok){await releaseCatalogLock();await releasePublication('D1 sync pending');return json({error:'La señal ya está en KV, pero D1 sigue sin sincronizar. Revisá la base antes de continuar.',partial:true},503)}}
+        requests[i]={...application,published_id:previouslyStored.id,published_at:isoNow(),status:'published'};
+        await finishPublication(requests[i]);
+        await audit('reconcile_signal_publication','signal',application.id,{published_id:previouslyStored.id});
+        await releaseCatalogLock();
+        return json({success:true,id:previouslyStored.id,reconciled:true});
+      }
+      if(existing.some(x=>String(x.stream_url||x.url||'').trim().toLowerCase()===String(application.stream_url).trim().toLowerCase())){await releaseCatalogLock();await releasePublication('URL existente');return json({error:'La señal ya existe en el catálogo; revisar antes de publicar'},409)}
+      const id=(radio?'RAD-':'LIVE-')+application.id;
+      const record=radio
+        ?{id,nombre:application.name,stream_url:application.stream_url,provincia:application.province||'',descripcion:application.description||'',pais:'Argentina',estado:'active',destacada:false,pauta_status:'sin_pauta',onboarding_id:application.id}
+        :{id,nombre:application.name,url:application.stream_url,tipo:/\.m3u8(?:[?#]|$)/i.test(application.stream_url)?'m3u8':'generic',activa:true,principal:false,onboarding_id:application.id};
+      // Append only: never replace, delete or reorder the existing catalog.
+      const updated=[...existing,record];
+      await assertPublicationLease();
+      await putJSON(key,updated);
+      if(radio){const d1sync=await safeD1('signal_radio_publish',()=>syncRadiosD1([record]));if(!d1sync.ok){requests[i]={...application,status:'approved',publication_error:'D1 sync pending',publication_attempt_at:isoNow()};await finishPublication(requests[i]);await releaseCatalogLock();return json({error:'Radio guardada en KV pero falta sincronizar D1; revisar antes de reintentar',partial:true,id},503)}}
+      requests[i]={...application,published_id:id,published_at:isoNow(),status:'published'};
+      await finishPublication(requests[i]);
+      await audit('publish_signal','signal',application.id,{type:application.type,published_id:id});
+      await releaseCatalogLock();
+      return json({success:true,id,type:application.type});
+      } catch (error) {
+        // Unexpected failures must not leave a stale lock or a permanently stuck request.
+        await releasePublication('Error inesperado durante publicación').catch(()=>{});
+        return json({error:error.code==='CATALOG_SNAPSHOT_STALE'?'El catálogo todavía no refleja una publicación confirmada. No se modificó. Esperá y reintentá; si persiste, revisá el catálogo.':'La publicación se interrumpió. Revisá la bandeja antes de reintentar.',...(error.code==='CATALOG_SNAPSHOT_STALE'?{code:error.code}:{}),recoverable:true},503);
+      } finally {
+        await releaseCatalogLock().catch(()=>{});
+      }
+    }
+    if (path === '/api/signal-onboarding/apply') {
+      if (request.method!=='POST')return json({error:'Método no permitido'},405);
+      const c=await getObject('signal_onboarding_config');
+      const ip=String(request.headers.get('CF-Connecting-IP')||'').trim();
+      if(!ip)return json({error:'No se pudo verificar el origen de la solicitud.'},403);
+      const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('signal-apply:'+ip)))).map(x=>x.toString(16).padStart(2,'0')).join('');
+      if(!hasD1())return json({error:'Inscripciones temporalmente no disponibles.'},503);
+      await signalApplicationSchema();
+      const rateKey='signal-apply:'+digest,nowMs=Date.now();
+      // Reserve the slot atomically BEFORE accepting a new application.
+      // A rejected or duplicate submission may consume a slot: fail closed against abuse.
+      const reserved=await env.DB.prepare("INSERT INTO signal_onboarding_rate_limits(id,count,expires_at) VALUES(?,1,?) ON CONFLICT(id) DO UPDATE SET count=CASE WHEN expires_at<=? THEN 1 ELSE count+1 END,expires_at=CASE WHEN expires_at<=? THEN excluded.expires_at ELSE expires_at END WHERE expires_at<=? OR count<3 RETURNING count").bind(rateKey,nowMs+86400000,nowMs,nowMs,nowMs).first();
+      if(!reserved)return json({error:'Demasiadas solicitudes. Volvé a intentarlo más tarde.'},429);
+      const b=await request.json().catch(()=>({}));
+      const type=String(b.type||'').toLowerCase();
+      if(c.enabled!==true||!(type==='radio'?c.radio===true:type==='tv'&&c.tv===true))return json({error:String(c.closed_message||'Las inscripciones están cerradas.'),closed:true},403);
+      if(type!=='radio'&&type!=='tv')return json({error:'Tipo inválido'},400);
+      const name=String(b.name||'').trim().slice(0,120),contact=String(b.contact||'').trim().slice(0,180),stream=String(b.stream_url||'').trim().slice(0,1500);
+      if(name.length<3||contact.length<5||!/^https:\/\//i.test(stream)||b.rights_confirmed!==true)return json({error:'Completá nombre, contacto, URL HTTPS y declaración de derechos.'},400);
+      try{const u=new URL(stream);if(u.username||u.password||['localhost','127.0.0.1','0.0.0.0','::1'].includes(u.hostname)||!u.hostname.includes('.'))return json({error:'URL de transmisión inválida'},400)}catch{return json({error:'URL inválida'},400)}
+      const list=await signalApplications();
+      if(list.length>=2000)return json({error:'Bandeja llena; contactá al equipo.'},503);
+      const item={id:crypto.randomUUID(),type,name,contact,stream_url:stream,website:String(b.website||'').slice(0,400),province:String(b.province||'').slice(0,100),description:String(b.description||'').slice(0,900),rights_confirmed:true,status:'pending',created_at:isoNow()};
+      const normalized=stream.replace(/\/$/,'').toLowerCase();
+      if(list.some(x=>x.status!=='rejected'&&String(x.stream_url||'').replace(/\/$/,'').toLowerCase()===normalized))return json({error:'Esta señal ya tiene una solicitud en revisión o aprobada.'},409);
+      try{await saveSignalApplication(item)}catch(e){if(/UNIQUE|constraint/i.test(String(e)))return json({error:'Esta URL de transmisión ya fue registrada.'},409);return json({error:'No se pudo guardar la solicitud. Intentá más tarde.'},503)}
+
+      return json({success:true,id:item.id,status:'pending'});
+    }
+
     if (path === '/api/radios') {
       if (request.method === 'GET') {
         const kv=await getArray('radios'); let d1=[];
@@ -2540,7 +2977,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
 
     if (path === '/api/artistas') {
-      if (request.method === 'GET') { const arr=await allCanonicalArtists(); return json(isAdmin()?arr:arr.filter(x=>x&&publicArtistFromItem(x).visible!==false)); }
+      if (request.method === 'GET') { const arr=await allCanonicalArtists(); return json(isAdmin()?arr:arr.filter(uadavArtistPublicVisible).map(publicArtistFromItem)); }
       if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
       const body=await request.json().catch(()=>null); if(!Array.isArray(body))return json({error:'Se esperaba un arreglo de artistas'},400);
       await putJSON('artistas',body); const d1sync=await safeD1('sync_artists',()=>syncArtistsD1(body)); await audit('replace_artists','artists',null,{count:body.length}); return json({success:true,count:body.length,d1_sync:d1sync});
@@ -2865,6 +3302,25 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(request.method==='PUT'){const b=await request.json().catch(()=>({}));const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'No encontrado'},404);Object.assign(list[i],b,{id:list[i].id});await putJSON('bolsa_trabajo',list); const d1sync=await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('update_job','job',list[i].id,{}); return json({success:true,item:list[i]});}
       if(request.method==='DELETE'){const b=await request.json().catch(()=>({})); const next=list.filter(x=>String(x.id)!==String(b.id)); await putJSON('bolsa_trabajo',next); const d1sync=await safeD1('sync_jobs',()=>syncJobsD1(next)); await audit('delete_job','job',b.id,{}); return json({success:true,d1_sync:d1sync});}
     }
+    // Consulta individual: nunca exponer la lista completa ni datos de contacto.
+    if (path === '/api/bolsa_trabajo/mi-postulacion' && request.method === 'POST') {
+      // Limitación orientativa por IP, con TTL; no almacenar direcciones IP en claro.
+      // KV no ofrece incremento atómico: reforzar con WAF/rate limiting en Cloudflare antes del despliegue.
+      const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();
+      if(!peer)return json({error:'No se pudo validar el origen de la consulta'},403);
+      const bucket='job-status-rate:'+await uadavDigest(peer);
+      const count=Number(await env.UADAV_DB.get(bucket)||0);
+      if(count>=10)return json({error:'Demasiadas consultas. Intentá nuevamente más tarde.'},429);
+      await env.UADAV_DB.put(bucket,String(count+1),{expirationTtl:600});
+      const b=await request.json().catch(()=>({}));
+      const id=String(b.id||'').trim(), secret=String(b.clave||'').trim();
+      if(!/^POST-[A-Z0-9-]{5,60}$/.test(id)||!/^[a-f0-9]{64}$/.test(secret))return json({error:'Credenciales inválidas'},400);
+      const digest=await uadavDigest(secret);
+      const list=await getArray('postulaciones_trabajo');
+      const item=list.find(x=>x.id===id&&x.consulta_hash===digest);
+      if(!item)return json({error:'No se encontró una postulación con esas credenciales'},404);
+      return json({success:true,id:item.id,estado:item.estado||'pendiente',actualizado:item.actualizado||item.creado});
+    }
     if (path === '/api/bolsa_trabajo/postular' && request.method === 'POST') {
       const b=await request.json().catch(()=>({}));
       if(!b.job_id||!b.nombre||!b.email)return json({error:'Oportunidad, nombre y email son obligatorios'},400);
@@ -2880,18 +3336,20 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         }catch(_){}
       }
       const list=await getArray('postulaciones_trabajo');
-      const item={id:'POST-'+Date.now().toString(36).toUpperCase(),job_id:String(b.job_id),artist_id,artist_nombre,nombre:String(b.nombre).slice(0,120),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),portfolio_url:String(b.portfolio_url||b.portfolio||'').slice(0,500),perfil_verificado,origen:artist_id?'perfil_artista':'publico',creado:new Date().toISOString(),estado:'pendiente'};
-      if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('postulaciones_trabajo',list); await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id||null,public:!item.artist_id}); await emitNotification({event:'JOB_APPLICATION',to:String(job.contacto_email||job.email||''),subject:'★ UADAV STREAM · Nueva postulación',text:'Se recibió una postulación a una oportunidad laboral.',entity_id:item.id}); return json({success:true,item});
+      const consultaClave=Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
+      const consultaHash=await uadavDigest(consultaClave);
+      const item={id:'POST-'+Date.now().toString(36).toUpperCase()+'-'+crypto.randomUUID().slice(0,8).toUpperCase(),consulta_hash:consultaHash,job_id:String(b.job_id),artist_id,artist_nombre,nombre:String(b.nombre).slice(0,120),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),portfolio_url:String(b.portfolio_url||b.portfolio||'').slice(0,500),perfil_verificado,origen:artist_id?'perfil_artista':'publico',creado:new Date().toISOString(),estado:'pendiente'};
+      if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('postulaciones_trabajo',list); await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id||null,public:!item.artist_id}); await emitNotification({event:'JOB_APPLICATION',to:String(job.contacto_email||job.email||''),subject:'★ UADAV STREAM · Nueva postulación',text:'Se recibió una postulación a una oportunidad laboral.',entity_id:item.id}); return json({success:true,item:{id:item.id,estado:item.estado,creado:item.creado},clave_consulta:consultaClave});
     }
     if (path === '/api/bolsa_trabajo/postulaciones' && request.method === 'GET') {
-      if(!isAdmin())return json({error:'No autorizado'},401); return json(await getArray('postulaciones_trabajo'));
+      if(!isAdmin())return json({error:'No autorizado'},401); const items=await getArray('postulaciones_trabajo'); return json(items.map(({consulta_hash,...item})=>item));
     }
 
     // --- FUENTES AUTOMÁTICAS / FEDERACIÓN ---
     const defaultFederatedSources=()=>[
       {id:'rosario-cultura',name:'Rosario Cultura',kind:'event',scope:'rosario',country:'Argentina',url:'https://www.rosario.gob.ar/inicio/agenda/buscar',active:true,interval_hours:12,mode:'page_discovery',priority:100,auto_publish:false,publish_limit:6},
       {id:'agenda-cultural-federal',name:'Agenda Cultural Federal',kind:'event',scope:'argentina',country:'Argentina',url:'https://www.cultura.gob.ar/agenda/',active:true,interval_hours:12,mode:'page_discovery',priority:90},
-      {id:'teatro-cervantes-convocatorias',name:'Teatro Nacional Cervantes · Convocatorias',kind:'job',scope:'argentina',country:'Argentina',url:'https://www.teatrocervantes.gob.ar/convocatorias-artisticas/',active:true,interval_hours:12,mode:'page_discovery',priority:95,auto_publish:false,publish_limit:6},
+      {id:'teatro-cervantes-convocatorias',name:'Teatro Nacional Cervantes · Convocatorias',kind:'job',scope:'argentina',country:'Argentina',url:'https://www.teatrocervantes.gob.ar/convocatorias-artisticas/',active:false,interval_hours:12,mode:'page_discovery',priority:95,auto_publish:false,publish_limit:6},
       {id:'alternativa-convocatorias',name:'Alternativa · Convocatorias',kind:'job',scope:'argentina',country:'Argentina',url:'https://alternativa.ar/convocatorias.php',active:false,interval_hours:12,mode:'page_discovery',priority:80}
     ];
     async function federatedSources(){
@@ -2952,7 +3410,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const cf=request.cf||{};return json({country:String(cf.country||'AR'),province:String(cf.region||''),city:String(cf.city||''),source:'network'});
     }
     if(path==='/api/public/artistas-regional' && request.method==='GET'){
-      const cf=request.cf||{},province=String(url.searchParams.get('province')||cf.region||'').trim(),city=String(url.searchParams.get('city')||cf.city||'').trim(),limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||40))),norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(),wp=norm(province),wc=norm(city);
+      const cf=request.cf||{},regionMode=String(url.searchParams.get('region_mode')||'auto'),province=String(url.searchParams.get('province')||cf.region||'').trim(),city=String(url.searchParams.get('city')||cf.city||'').trim(),limit=Math.min(100,Math.max(1,Number(url.searchParams.get('limit')||40))),norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(),wp=norm(province),wc=norm(city);
       const arr=(await allCanonicalArtists()).map(publicArtistFromItem).filter(a=>a.visible!==false).map(a=>{const p=norm(a.provincia||a.region||''),ct=norm(a.ciudad||'');return{...a,_territorial_score:(wc&&ct===wc?500:0)+(wp&&p===wp?300:0)}}).sort((a,b)=>b._territorial_score-a._territorial_score);return json({items:arr.slice(0,limit),context:{province,city,mode:regionMode==='argentina'?'argentina':(url.searchParams.get('province')?'manual':'auto')}});
     }
     // --- FEDERACIÓN DE FUENTES EXTERNAS ---
@@ -2984,11 +3442,25 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       else Object.assign(item,{fecha:String(schema.datePosted||''),fecha_limite:String(schema.validThrough||''),empresa:clean(schema.hiringOrganization?.name||''),ciudad:clean(schema.jobLocation?.address?.addressLocality||''),provincia:clean(schema.jobLocation?.address?.addressRegion||''),pais:clean(schema.jobLocation?.address?.addressCountry?.name||schema.jobLocation?.address?.addressCountry||'Argentina'),modalidad:schema.jobLocationType==='TELECOMMUTE'?'remoto':'presencial',application_mode:'external_url',application_url:target.toString(),region_scope:'argentina'});
       return json({success:true,kind,item,structured:Object.keys(schema).length>0});
     }
+    // Limpieza selectiva de convocatorias importadas: vista previa y confirmación explícita.
+    if(path==='/api/admin/federated/cleanup-jobs' && ['GET','POST'].includes(request.method)){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      const list=await getArray('bolsa_trabajo');
+      const targets=list.filter(x=>x&&x.origen==='externo');
+      if(request.method==='GET')return json({total:targets.length,ids:targets.map(x=>x.id),preserved:list.length-targets.length});
+      const b=await request.json().catch(()=>({}));
+      if(b.confirm!=='ELIMINAR_IMPORTACIONES_EXTERNAS')return json({error:'Confirmación explícita requerida'},400);
+      const keep=list.filter(x=>!x||x.origen!=='externo');
+      await putJSON('bolsa_trabajo',keep);
+      // No se ejecuta DELETE D1 aquí: reconciliar D1 y respaldos antes de cualquier limpieza definitiva.
+      await audit('cleanup_external_jobs','job','external_imports',{removed:targets.length,preserved:keep.length});
+      return json({success:true,removed:targets.length,preserved:keep.length,d1_cleanup_pending:true});
+    }
     if(path==='/api/admin/federated/import' && request.method==='POST'){
       if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({})),kind=String(b.kind||'').toLowerCase(),items=Array.isArray(b.items)?b.items:[];
       if(!['job','event'].includes(kind)||!items.length)return json({error:'kind e items requeridos'},400);
       let imported=0,updated=0;const now=isoNow();
-      if(kind==='job'){const list=await getArray('bolsa_trabajo');for(const raw of items.slice(0,500)){const source=String(raw.source||raw.fuente||'externa').slice(0,100),sourceUrl=String(raw.source_url||raw.url_origen||raw.url||'').slice(0,700);if(!raw.titulo||!sourceUrl)continue;const key=String(raw.external_id||sourceUrl).toLowerCase(),idx=list.findIndex(x=>String(x.external_key||x.source_url||'').toLowerCase()===key);const item={...(idx>=0?list[idx]:{}),id:idx>=0?list[idx].id:'JOB-EXT-'+crypto.randomUUID().slice(0,8),titulo:String(raw.titulo).slice(0,180),descripcion:String(raw.descripcion||raw.resumen||'').slice(0,2500),rubro:String(raw.rubro||raw.categoria||'Artistas').slice(0,100),ciudad:String(raw.ciudad||'').slice(0,120),provincia:String(raw.provincia||'').slice(0,120),pais:String(raw.pais||'Argentina').slice(0,80),region_scope:String(raw.region_scope||'argentina').slice(0,40),modalidad:String(raw.modalidad||'presencial').slice(0,50),remuneracion:String(raw.remuneracion||'no_informada').slice(0,100),fecha:String(raw.fecha||'').slice(0,40),fecha_limite:String(raw.fecha_limite||'').slice(0,40),empresa:String(raw.empresa||raw.organizacion||'').slice(0,180),source,source_url:sourceUrl,external_key:key,last_seen_at:now,source_status:'active',application_mode:String(raw.application_mode||'external_url').slice(0,30),application_url:String(raw.application_url||sourceUrl).slice(0,700),origen:'externo',activo:raw.activo!==false,importado_en:idx>=0?(list[idx].importado_en||now):now,actualizado:now};if(idx>=0){list[idx]=item;updated++}else{list.push(item);imported++}}await putJSON('bolsa_trabajo',list.slice(-5000));await safeD1('sync_jobs',()=>syncJobsD1(list));}
+      if(kind==='job'){const list=await getArray('bolsa_trabajo');for(const raw of items.slice(0,500)){const source=String(raw.source||raw.fuente||'externa').slice(0,100),sourceUrl=String(raw.source_url||raw.url_origen||raw.url||'').slice(0,700);if(!raw.titulo||!sourceUrl)continue;const key=String(raw.external_id||sourceUrl).toLowerCase(),idx=list.findIndex(x=>String(x.external_key||x.source_url||'').toLowerCase()===key);const item={...(idx>=0?list[idx]:{}),id:idx>=0?list[idx].id:'JOB-EXT-'+crypto.randomUUID().slice(0,8),titulo:String(raw.titulo).slice(0,180),descripcion:String(raw.descripcion||raw.resumen||'').slice(0,2500),rubro:String(raw.rubro||raw.categoria||'Artistas').slice(0,100),ciudad:String(raw.ciudad||'').slice(0,120),provincia:String(raw.provincia||'').slice(0,120),pais:String(raw.pais||'Argentina').slice(0,80),region_scope:String(raw.region_scope||'argentina').slice(0,40),modalidad:String(raw.modalidad||'presencial').slice(0,50),remuneracion:String(raw.remuneracion||'no_informada').slice(0,100),fecha:String(raw.fecha||'').slice(0,40),fecha_limite:String(raw.fecha_limite||'').slice(0,40),empresa:String(raw.empresa||raw.organizacion||'').slice(0,180),source,source_url:sourceUrl,external_key:key,last_seen_at:now,source_status:'active',application_mode:String(raw.application_mode||'external_url').slice(0,30),application_url:String(raw.application_url||sourceUrl).slice(0,700),origen:'externo',activo:idx>=0?list[idx].activo===true:false,revision_pendiente:idx>=0?list[idx].revision_pendiente!==false:true,importado_en:idx>=0?(list[idx].importado_en||now):now,actualizado:now};if(idx>=0){list[idx]=item;updated++}else{list.push(item);imported++}}await putJSON('bolsa_trabajo',list.slice(-5000));await safeD1('sync_jobs',()=>syncJobsD1(list));}
       else{const list=await getArray('cartelera_aprobada'),pub=await getArray('eventos_publicados');for(const raw of items.slice(0,500)){const source=String(raw.source||raw.fuente||'externa').slice(0,100),sourceUrl=String(raw.source_url||raw.url_origen||raw.url||'').slice(0,700);if(!raw.titulo||!sourceUrl)continue;const key=String(raw.external_id||sourceUrl).toLowerCase(),idx=list.findIndex(x=>String(x.external_key||x.source_url||'').toLowerCase()===key);const item={...(idx>=0?list[idx]:{}),id:idx>=0?list[idx].id:'EV-EXT-'+crypto.randomUUID().slice(0,8),titulo:String(raw.titulo).slice(0,180),nombre:String(raw.titulo).slice(0,180),categoria:String(raw.categoria||'Eventos').slice(0,100),descripcion_corta:String(raw.descripcion_corta||raw.resumen||'').slice(0,400),fecha:String(raw.fecha||'').slice(0,80),fecha_inicio:String(raw.fecha_inicio||raw.fecha||'').slice(0,80),fecha_fin:String(raw.fecha_fin||'').slice(0,80),lugar:String(raw.lugar||'').slice(0,180),ciudad:String(raw.ciudad||'').slice(0,120),provincia:String(raw.provincia||'').slice(0,120),pais:String(raw.pais||'Argentina').slice(0,80),imagen:String(raw.imagen||raw.poster||'').slice(0,700),source,source_url:sourceUrl,external_key:key,last_seen_at:now,source_status:'active',origen:'externo',estado:'published',destacado_pagado:false,destacado_solicitado:false,claimable:true,importado_en:idx>=0?(list[idx].importado_en||now):now,actualizado:now};if(idx>=0){list[idx]=item;updated++}else{list.push(item);imported++}const pi=pub.findIndex(x=>String(x.id)===String(item.id));if(pi>=0)pub[pi]=item;else pub.push(item)}await putJSON('cartelera_aprobada',list.slice(-5000));await putJSON('eventos_publicados',pub.slice(-5000));await safeD1('sync_event_import',()=>syncEventsD1(list));}
       await audit('federated_import',kind,'batch',{imported,updated,count:items.length});return json({success:true,kind,imported,updated});
     }
@@ -3032,7 +3504,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     // V6.4 — ARTIST CENTER / SELF MANAGEMENT / CONTRACTING
     // ============================================================
     async function artistInquiries(){
-      const list=await getArray('contrataciones');if(!hasD1())return list;
+      const list=await uadavReadArtistInquiries(env);if(!hasD1())return list;
       await env.DB.prepare('CREATE TABLE IF NOT EXISTS artist_inquiry_states(inquiry_id TEXT PRIMARY KEY,artist_id TEXT NOT NULL,state TEXT NOT NULL,updated_at TEXT NOT NULL)').run();
       const rows=await env.DB.prepare('SELECT * FROM artist_inquiry_states').all(),states=new Map((rows.results||[]).map(x=>[x.inquiry_id,x]));
       return list.map(x=>{const state=states.get(String(x.id));return state&&String(state.artist_id)===String(x.artist_id)?{...x,estado:state.state,actualizado:state.updated_at}:x});
@@ -3041,8 +3513,13 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     function publicArtistFromItem(a){ const canSupport=a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now())&&a.claimed===true&&a.claim_status==='approved'&&a.support_enabled!==false; return ({
       id:a.id||a.token||a.canal||a.nombre||a.nombre_artistico||'',
       nombre:a.nombre_artistico||a.nombre||'Artista',
+      nombre_artistico:a.nombre_artistico||a.nombre||'Artista',
       rubro:a.rubro||'Artista de variedades',
       ciudad:a.ciudad||a.region||'',
+      provincia:a.provincia||a.region||'',
+      pais:a.pais||'Argentina',
+      pro_active:a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now()),
+      pro_expires:a.pro_expires||null,
       foto:a.foto||a.imagen||a.thumbnail||'',
       portada:a.portada||a.banner||a.hero_imagen||'',
       bio:a.bio||'',
@@ -3054,7 +3531,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       youtube_bio:a.youtube_bio||'',
       origen:a.origen||a.source||'',
       stats:a.stats||{},
-      visible:a.visible!==false,
+      visible:uadavArtistPublicVisible(a),
       estado:a.estado||'catalogo',
       afiliado_verificado:a.afiliado_verificado===true,
       donacion_activa:canSupport&&a.donacion_activa===true,
@@ -3147,7 +3624,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(!artist&&!previous)return json({error:'Perfil no encontrado'},404);const channel=String(previous?.channel_id||artist?.canal||artist?.youtube_id||artist?.channel_id||''),now=isoNow();
       const tables=new Set((await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results.map(x=>x.name));
       const batch=[env.DB.prepare('INSERT OR IGNORE INTO artist_deletions(artist_id,channel_id,deleted_at,actor) VALUES(?,?,?,?)').bind(id,channel,now,admin?'admin':'owner'),env.DB.prepare("INSERT OR IGNORE INTO artist_deletion_accounts(artist_id,account_id) SELECT l.artist_id,l.account_id FROM audience_artist_links l WHERE l.artist_id=? AND EXISTS(SELECT 1 FROM artist_owners o WHERE o.artist_id=l.artist_id AND o.claim_id=l.claim_id AND o.status='active') UNION SELECT c.artist_id,c.account_id FROM audience_artist_claims c WHERE c.artist_id=? AND EXISTS(SELECT 1 FROM artist_owners o WHERE o.artist_id=c.artist_id AND o.claim_id=c.claim_id AND o.status='active')").bind(id,id),env.DB.prepare('DELETE FROM audience_artist_links WHERE artist_id=?').bind(id),env.DB.prepare('UPDATE audience_artist_claims SET detached_at=? WHERE artist_id=?').bind(Date.now(),id)];
-      for(const table of ['artists','artist_workspaces','artist_plan_state','artist_support_links','artist_ai_reports','artist_current_handles','artist_audience_messages','artist_inquiry_states','pro_feature_credits'])if(tables.has(table))batch.push(env.DB.prepare('DELETE FROM '+table+' WHERE '+(table==='artists'?'id':'artist_id')+'=?').bind(id));
+      for(const table of ['artists','artist_workspaces','artist_profile_drafts','artist_plan_state','artist_support_links','artist_ai_reports','artist_current_handles','artist_audience_messages','artist_inquiry_states','pro_feature_credits'])if(tables.has(table))batch.push(env.DB.prepare('DELETE FROM '+table+' WHERE '+(table==='artists'?'id':'artist_id')+'=?').bind(id));
       if(tables.has('entity_versions'))batch.push(env.DB.prepare("DELETE FROM entity_versions WHERE entity_type='artist' AND entity_id=?").bind(id));
       if(tables.has('artist_owners'))batch.push(env.DB.prepare("UPDATE artist_owners SET status='revoked',contact_email=NULL,revoked_at=?,updated_at=? WHERE artist_id=?").bind(now,now,id));
       if(tables.has('artist_claim_evidence'))batch.push(env.DB.prepare('DELETE FROM artist_claim_evidence WHERE claim_id IN (SELECT id FROM artist_claims WHERE artist_id=?)').bind(id));
@@ -3240,7 +3717,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if(path==='/api/public/artist-shorts' && request.method==='GET'){
       const raw=String(url.searchParams.get('artist_id')||url.searchParams.get('channel_id')||'').trim();if(!raw)return json([]);
       const artists=await allCanonicalArtists();const artist=artists.find(a=>{const p=publicArtistFromItem(a);return [p.id,p.canal,a.channel_id,a.youtube_id].some(v=>String(v||'')===raw)});if(!artist)return json([]);
-      const p=publicArtistFromItem(artist),channelRef=String(p.canal||'').trim();if(!channelRef)return json([]);const channel=await resolveChannelReference(channelRef).catch(()=>null)||channelRef;
+      const p=publicArtistFromItem(artist),channelRef=String(p.canal||'').trim();if(!p.visible||!channelRef)return json([]);const channel=await resolveChannelReference(channelRef).catch(()=>null)||channelRef;
       const cacheKey='artist_shorts_'+channel.replace(/[^A-Za-z0-9_-]/g,'').slice(0,100);
       try{const cached=await env.UADAV_DB.get(cacheKey,{type:'json'});if(Array.isArray(cached))return json(cached)}catch(_){}
       const vids=await invidiousChannelVideos(channel,36).catch(()=>[]);
@@ -3289,7 +3766,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const artist=publicArtistFromItem(found);let kit=null;
       if(kind==='kit'){
         if(found.presskit_enabled===false||!hasD1())return json({error:'Presentación no disponible'},404,{'Cache-Control':'no-store'});
-        try{const row=await env.DB.prepare('SELECT public_json FROM artist_workspaces WHERE artist_id=?').bind(id).first();kit=safeJSON(row?.public_json,null)?.kit}catch{}
+        const plan=await env.DB.prepare('SELECT plan,pro_expires_at FROM artist_plan_state WHERE artist_id=?').bind(id).first();
+        const expires=plan?plan.pro_expires_at:found.pro_expires;
+        if(!(plan?plan.plan==='pro':found.pro_active===true)||(expires&&!(Date.parse(expires)>Date.now())))return json({error:'Presentación no disponible'},404,{'Cache-Control':'no-store'});
+        try{const row=await env.DB.prepare('SELECT public_json FROM artist_workspaces WHERE artist_id=?').bind(id).first();const published=safeJSON(row?.public_json,null);if(published)kit=uadavPublicPresskit(published,id).kit}catch{}
         if(!kit)return json({error:'Presentación no publicada'},404,{'Cache-Control':'no-store'});
       }
       const share=new URL(kind==='kit'?'/share/presskit':'/share/artista',url.origin);share.searchParams.set('id',id);
@@ -3303,7 +3783,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       let found=arr.find(a=>{const p=publicArtistFromItem(a);const candidates=[a.id,a.token,a.canal,a.channel_id,a.youtube_id,a.nombre,a.nombre_artistico,p.id,p.canal,p.nombre];return candidates.some(v=>norm(v)===id);}) || arr.find(a=>{const p=publicArtistFromItem(a);const name=norm(p.nombre);return id&&name&&name===id.replace(/[_-]+/g,' ');});
       if(!found)found=await artistFromD1(rawId);
       if(!found)return json({error:'Artista no encontrado'},404);
-      const p=publicArtistFromItem(found); if(!p.visible && !p.afiliado_verificado)return json({error:'Perfil no disponible'},404);
+      const p=publicArtistFromItem(found); if(!p.visible)return json({error:'Perfil no disponible'},404,{'Cache-Control':'no-store'});
       if(hasD1())try{const h=await env.DB.prepare('SELECT handle FROM artist_current_handles WHERE artist_id=?').bind(String(p.id)).first();if(h?.handle)p.username=h.handle}catch{}
       return json(p);
     }
@@ -3368,18 +3848,34 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(!claim)return json({error:'Reclamo no encontrado'},404);
       const now=isoNow();
       if(status==='approved'){
+        if(!['pending','approved'].includes(claim.status))return json({error:'Reabrí la solicitud antes de aprobarla.'},409);
         if(hasD1()){await ensureD1Schema();const activeOwner=await env.DB.prepare("SELECT id,claim_id,contact_email FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(String(claim.artist_id)).first();if(activeOwner&&String(activeOwner.claim_id||'')!==claimId)return json({error:'Este perfil ya tiene un propietario activo. La aprobación normal está bloqueada; usá una transferencia de propiedad con motivo y confirmación.',ownership_conflict:true,owner_id:activeOwner.id},409);}
         const conflicts=hasD1()?await env.DB.prepare(`SELECT COUNT(*) count FROM artist_claims WHERE artist_id=? AND status='pending' AND id<>?`).bind(String(claim.artist_id),claimId).first():{count:(await getArray('artist_claims')).filter(x=>String(x.artist_id)===String(claim.artist_id)&&String(x.status)==='pending'&&String(x.id)!==claimId).length};if(Number(conflicts?.count||0)>0&&b.confirm_conflict!==true)return json({error:'Hay otro reclamo pendiente sobre este perfil. Resolvé el conflicto antes de aprobar.',conflict:true},409);if(!String(b.review_note||'').trim())return json({error:'La aprobación requiere una nota de verificación'},400);
         let artist=await artistFromD1(String(claim.artist_id)); if(!artist){const arr=await allCanonicalArtists();artist=arr.find(a=>String(publicArtistFromItem(a).id)===String(claim.artist_id));}
         if(!artist)return json({error:'Artista asociado no encontrado'},404);
+        if(hasD1()){
+          const reserved=await env.DB.batch([
+            env.DB.prepare(`INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at)
+              SELECT ?,c.artist_id,c.id,c.email,'owner','active','admin_approved',?,? FROM artist_claims c
+              WHERE c.id=? AND c.status=? AND NOT EXISTS(SELECT 1 FROM artist_owners o WHERE o.artist_id=c.artist_id AND o.status='active' AND o.claim_id IS NOT c.id)
+              ON CONFLICT(id) DO UPDATE SET contact_email=excluded.contact_email,verification_level=excluded.verification_level,updated_at=excluded.updated_at
+              WHERE artist_owners.status='active' AND artist_owners.claim_id=excluded.claim_id`).bind('OWN-'+claimId,now,now,claimId,claim.status),
+            env.DB.prepare(`UPDATE artist_claims SET status='approved',reviewed_at=?,review_note=? WHERE id=? AND status=?
+              AND EXISTS(SELECT 1 FROM artist_owners o WHERE o.id=? AND o.claim_id=artist_claims.id AND o.status='active' AND o.verification_level='admin_approved')
+              AND NOT EXISTS(SELECT 1 FROM artist_owners o WHERE o.artist_id=artist_claims.artist_id AND o.status='active' AND o.claim_id IS NOT artist_claims.id)`)
+              .bind(now,String(b.review_note).slice(0,1000),claimId,claim.status,'OWN-'+claimId)
+          ]);
+          if(reserved.some(result=>Number(result.meta?.changes)!==1))return json({error:'El propietario o la solicitud cambió durante la revisión. Actualizá la bandeja.',ownership_conflict:true},409);
+        }
+        try{
         const arr=await getArray('artistas'); let i=arr.findIndex(a=>String(publicArtistFromItem(a).id)===String(claim.artist_id)); if(i<0){arr.push(artist);i=arr.length-1;}
         const ident=await platformIdentity(),token=ident.artist_token_prefix+'-'+crypto.randomUUID().replace(/-/g,''); const artistId=String(publicArtistFromItem(arr[i]).id); await env.UADAV_DB.put(artistTokenKey(token),JSON.stringify({artist_id:artistId,claim_id:claimId,email:String(claim.email||'').toLowerCase(),role:'owner',verification:'admin_approved',created:now,expires:Date.now()+1000*60*60*24*365*2}));
-        arr[i]={...arr[i],...(arr[i].registration_pending===true?{visible:true,estado:'publicado',registration_pending:false}:{}),claimed:true,claim_status:'approved',claim_email:claim.email||'',claim_name:claim.name||'',claim_at:now,claim_id:claim.id,self_managed:true}; await putJSON('artistas',arr); await syncArtistsD1([arr[i]]); if(hasD1())await env.DB.prepare(`INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET artist_id=excluded.artist_id,contact_email=excluded.contact_email,status='active',verification_level=excluded.verification_level,updated_at=excluded.updated_at`).bind('OWN-'+claimId,artistId,claimId,String(claim.email||'').toLowerCase(),'owner','active','admin_approved',now,now).run();
-        if(hasD1()) await env.DB.prepare(`UPDATE artist_claims SET status='approved',reviewed_at=?,review_note=? WHERE id=?`).bind(now,String(b.review_note||'Aprobado por administración').slice(0,1000),claimId).run();
-        else {const list=await getArray('artist_claims');const ix=list.findIndex(x=>String(x.id)===claimId);if(ix>=0){list[ix]={...list[ix],status:'approved',reviewed_at:now,review_note:String(b.review_note||'').slice(0,1000)};await putJSON('artist_claims',list);}}
+        arr[i]={...arr[i],...(arr[i].registration_pending===true?{visible:true,estado:'publicado',registration_pending:false}:{}),claimed:true,claim_status:'approved',claim_email:claim.email||'',claim_name:claim.name||'',claim_at:now,claim_id:claim.id,self_managed:true}; await putJSON('artistas',arr); await syncArtistsD1([arr[i]]);
+        if(!hasD1()){const list=await getArray('artist_claims');const ix=list.findIndex(x=>String(x.id)===claimId);if(ix>=0){list[ix]={...list[ix],status:'approved',reviewed_at:now,review_note:String(b.review_note||'').slice(0,1000)};await putJSON('artist_claims',list);}}
         const ident2=await platformIdentity(),base=String(b.base_url||ident2.origin||url.origin).replace(/\/$/,''); const profileUrl=base+'/gestionar-artista.html?token='+encodeURIComponent(token);
         await emitNotification({event:'ARTIST_CLAIM_APPROVED',template:'artist_claim_approved',to:claim.email,subject:'Tu perfil de '+ident2.name+' fue reclamado',name:claim.name,artist_id:artistId,profileUrl});
         const accountLinked=await uadavAttachClaimAccount(env,claimId);await audit('artist_claim_approved','artist_claim',claimId,{artist_id:artistId,account_linked:accountLinked}); return json({success:true,status:'approved',account_linked:accountLinked,profileUrl,token});
+        }catch(error){return json({success:false,code:hasD1()?'ARTIST_APPROVAL_SYNC_PENDING':'ARTIST_APPROVAL_RETRY',approval_saved:hasD1(),retryable:true,claim_id:claimId,artist_id:String(claim.artist_id),error:hasD1()?'La propiedad quedó aprobada, pero falta completar su sincronización. Actualizá la bandeja y elegí Completar sincronización. No crees otro reclamo.':'No se pudo completar la aprobación. Actualizá la bandeja antes de reintentar.'},503,{'Cache-Control':'no-store'});}
       }
       if(!['rejected','pending'].includes(status))return json({error:'Estado no permitido'},400);
       if(status==='rejected'&&claim.status!=='pending')return json({error:'La solicitud ya fue revisada. Actualizá la bandeja.'},409);
@@ -3395,7 +3891,27 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(!isAdmin())return json({error:'No autorizado'},401);if(!hasD1())return json({error:'D1 no configurado'},503);await ensureD1Schema();const b=await request.json().catch(()=>({})),id=String(b.id||'').trim(),note=String(b.note||'').trim();if(!id||!note)return json({error:'id y motivo requeridos'},400);const now=isoNow(),owner=await env.DB.prepare('SELECT * FROM artist_owners WHERE id=?').bind(id).first();if(!owner)return json({error:'Propietario no encontrado'},404);await env.DB.prepare("UPDATE artist_owners SET status='revoked',revoked_at=?,updated_at=? WHERE id=?").bind(now,now,id).run();await audit('artist_owner_revoked','artist',owner.artist_id,{owner_id:id,note:note.slice(0,500)});return json({success:true,id,status:'revoked'});
     }
     if(path==='/api/admin/artist-ownership/transfer' && request.method==='POST'){
-      if(!isAdmin())return json({error:'No autorizado'},401);if(!hasD1())return json({error:'D1 no configurado'},503);await ensureD1Schema();const b=await request.json().catch(()=>({})),claimId=String(b.claim_id||'').trim(),reason=String(b.reason||'').trim();if(!claimId||reason.length<10||b.confirm_transfer!==true)return json({error:'La transferencia requiere claim_id, confirmación explícita y un motivo de al menos 10 caracteres'},400);const claim=await env.DB.prepare('SELECT * FROM artist_claims WHERE id=?').bind(claimId).first();if(!claim)return json({error:'Reclamo no encontrado'},404);if(String(claim.status)!=='pending')return json({error:'Sólo puede transferirse desde un reclamo pendiente'},409);const now=isoNow(),artistId=String(claim.artist_id),old=await env.DB.prepare("SELECT * FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(artistId).first();if(!old)return json({error:'No existe propietario activo; usá la aprobación normal del reclamo'},409);await env.DB.prepare("UPDATE artist_owners SET status='revoked',revoked_at=?,updated_at=? WHERE artist_id=? AND status='active'").bind(now,now,artistId).run();const newId='OWN-'+claimId;await env.DB.prepare("INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET contact_email=excluded.contact_email,status='active',verification_level=excluded.verification_level,revoked_at=NULL,updated_at=excluded.updated_at").bind(newId,artistId,claimId,String(claim.email||'').toLowerCase(),'owner','active','admin_transfer',now,now).run();await env.DB.prepare("UPDATE artist_claims SET status='approved',reviewed_at=?,review_note=? WHERE id=?").bind(now,('TRANSFERENCIA: '+reason).slice(0,1000),claimId).run();await audit('artist_ownership_transferred','artist',artistId,{from_owner_id:old.id,to_owner_id:newId,claim_id:claimId,reason});return json({success:true,artist_id:artistId,from_owner_id:old.id,to_owner_id:newId,status:'transferred'});
+      if(!isAdmin())return json({error:'No autorizado'},401);if(!hasD1())return json({error:'D1 no configurado'},503);await ensureD1Schema();const b=await request.json().catch(()=>({})),claimId=String(b.claim_id||'').trim(),reason=String(b.reason||'').trim();if(!claimId||reason.length<10||b.confirm_transfer!==true)return json({error:'La transferencia requiere claim_id, confirmación explícita y un motivo de al menos 10 caracteres'},400);const claim=await env.DB.prepare('SELECT * FROM artist_claims WHERE id=?').bind(claimId).first();if(!claim)return json({error:'Reclamo no encontrado'},404);if(String(claim.status)!=='pending')return json({error:'Sólo puede transferirse desde un reclamo pendiente'},409);const now=isoNow(),artistId=String(claim.artist_id),old=await env.DB.prepare("SELECT * FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(artistId).first();if(!old)return json({error:'No existe propietario activo; usá la aprobación normal del reclamo'},409);const newId='OWN-'+claimId,operationId='TRF-'+crypto.randomUUID();
+      if(old.id===newId)return json({error:'Este reclamo ya corresponde al propietario actual.'},409);
+      await env.DB.prepare('CREATE TABLE IF NOT EXISTS artist_ownership_transfers(id TEXT PRIMARY KEY,artist_id TEXT NOT NULL,from_owner_id TEXT NOT NULL,to_owner_id TEXT NOT NULL,claim_id TEXT NOT NULL,reason TEXT NOT NULL,created_at TEXT NOT NULL)').run();
+      const moved=await env.DB.batch([
+        env.DB.prepare(`INSERT INTO artist_ownership_transfers(id,artist_id,from_owner_id,to_owner_id,claim_id,reason,created_at)
+          SELECT ?,c.artist_id,o.id,?,c.id,?,? FROM artist_claims c JOIN artist_owners o ON o.artist_id=c.artist_id
+          WHERE c.id=? AND c.status='pending' AND o.id=? AND o.status='active' AND o.updated_at IS ?
+          AND NOT EXISTS(SELECT 1 FROM artist_owners other WHERE other.artist_id=c.artist_id AND other.status='active' AND other.id<>o.id)`)
+          .bind(operationId,newId,reason.slice(0,1000),now,claimId,old.id,old.updated_at),
+        env.DB.prepare("UPDATE artist_owners SET status='revoked',revoked_at=?,updated_at=? WHERE id=? AND EXISTS(SELECT 1 FROM artist_ownership_transfers WHERE id=?)")
+          .bind(now,now,old.id,operationId),
+        env.DB.prepare(`INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at)
+          SELECT t.to_owner_id,t.artist_id,c.id,c.email,'owner','active','admin_transfer',?,? FROM artist_ownership_transfers t JOIN artist_claims c ON c.id=t.claim_id WHERE t.id=?
+          ON CONFLICT(id) DO UPDATE SET contact_email=excluded.contact_email,status='active',verification_level=excluded.verification_level,revoked_at=NULL,updated_at=excluded.updated_at`)
+          .bind(now,now,operationId),
+        env.DB.prepare("UPDATE artist_claims SET status='approved',reviewed_at=?,review_note=? WHERE id=? AND EXISTS(SELECT 1 FROM artist_ownership_transfers WHERE id=?)")
+          .bind(now,('TRANSFERENCIA: '+reason).slice(0,1000),claimId,operationId)
+      ]);
+      if(Number(moved[0]?.meta?.changes)!==1)return json({error:'El propietario o el reclamo cambió. Actualizá la bandeja antes de transferir.',ownership_conflict:true},409);
+      const accountLinked=await uadavAttachClaimAccount(env,claimId);
+      await audit('artist_ownership_transferred','artist',artistId,{from_owner_id:old.id,to_owner_id:newId,claim_id:claimId,reason,operation_id:operationId});return json({success:true,artist_id:artistId,from_owner_id:old.id,to_owner_id:newId,status:'transferred',account_linked:accountLinked});
     }
 
     if(path==='/api/admin/artistas/sync' && request.method==='POST'){
@@ -3433,7 +3949,11 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         const id=String(url.searchParams.get('artist_id')||'');
         const artist=(await allCanonicalArtists()).find(a=>String(publicArtistFromItem(a).id)===id);
         if(!artist||publicArtistFromItem(artist).visible===false||artist.presskit_enabled===false)return reply({error:'Presentación no disponible'},404);
-        try{const row=await env.DB.prepare('SELECT public_json FROM artist_workspaces WHERE artist_id=?').bind(id).first();const published=safeJSON(row?.public_json,null);return published?reply(published):reply({error:'Presentación no publicada'},404)}catch{return reply({error:'Presentación no publicada'},404)}
+        const plan=await env.DB.prepare('SELECT plan,pro_expires_at FROM artist_plan_state WHERE artist_id=?').bind(id).first();
+        const expires=plan?plan.pro_expires_at:artist.pro_expires;
+        const active=(plan?plan.plan==='pro':artist.pro_active===true)&&(!expires||Date.parse(expires)>Date.now());
+        if(!active)return reply({error:'Presentación no disponible'},404);
+        try{const row=await env.DB.prepare('SELECT public_json FROM artist_workspaces WHERE artist_id=?').bind(id).first();const published=safeJSON(row?.public_json,null);return published?reply(uadavPublicPresskit(published,id)):reply({error:'Presentación no publicada'},404)}catch{return reply({error:'Presentación no publicada'},404)}
       }
       const token=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
       if(!/^[A-Za-z0-9_-]{12,120}$/.test(token))return reply({error:'Acceso de artista requerido'},401);
@@ -3471,7 +3991,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const clean=(key,keys)=>{const input=b.data?.[key];if(!Array.isArray(input)||input.length>200)throw Error('Máximo 200 registros por herramienta');return input.map(x=>fields(x,keys))};
       let data;try{data={kit,shows:clean('shows',['id','name','duration','audience','members','requirements','setup','price']),quotes:clean('quotes',['id','client','show','date','place','fee','travel','other','valid_until','conditions','status','deposit','paid','payment_notes']),agenda:clean('agenda',['id','date','time','show','place','status','notes']),leads:clean('leads',['id','client','contact','event','date','status','next_date','notes'])}}catch(e){return reply({error:e.message},400)}
       const now=isoNow();let published=row?.public_json||null,publicationModeration=null;
-      if(b.publication==='publish'){if(artist.presskit_enabled===false)return reply({error:'El Press Kit está deshabilitado. Habilitalo desde tu perfil antes de publicar.'},403);if(!kit.name||!kit.bio)return reply({error:'Nombre y biografía son obligatorios para publicar'},400);const snapshot={artist_id:artistId,kit,shows:data.shows.map(({price,...show})=>show),updated_at:now};publicationModeration=await uadavModerateText(env,'presskit',{artist_id:artistId,claim_id:access.claim_id||null,revision:b.revision+1,nombre:kit.name,bio:kit.bio,descripcion:kit.trajectory+' '+snapshot.shows.map(x=>Object.values(x).join(' ')).join(' '),public_snapshot:snapshot},request.headers.get('CF-Connecting-IP')||'unknown');if(publicationModeration.decision==='allow'||publicationModeration.decision==='published')published=JSON.stringify(snapshot);else if(publicationModeration.decision==='reject')return reply({error:'No se pudo enviar a revisión. Intentá más tarde.'},429)}
+      if(b.publication==='publish'){if(artist.presskit_enabled===false)return reply({error:'El Press Kit está deshabilitado. Habilitalo desde tu perfil antes de publicar.'},403);if(!kit.name||!kit.bio)return reply({error:'Nombre y biografía son obligatorios para publicar'},400);const snapshot=uadavPublicPresskit({kit,shows:data.shows,updated_at:now},artistId);publicationModeration=await uadavModerateText(env,'presskit',{artist_id:artistId,claim_id:access.claim_id||null,revision:b.revision+1,nombre:snapshot.kit.name,bio:snapshot.kit.bio,descripcion:(snapshot.kit.trajectory||'')+' '+snapshot.shows.map(x=>Object.values(x).join(' ')).join(' '),public_snapshot:snapshot},request.headers.get('CF-Connecting-IP')||'unknown');if(publicationModeration.decision==='allow'||publicationModeration.decision==='published')published=JSON.stringify(snapshot);else if(publicationModeration.decision==='reject')return reply({error:'No se pudo enviar a revisión. Intentá más tarde.'},429)}
       if(b.publication==='unpublish')published=null;
       const result=row?await env.DB.prepare('UPDATE artist_workspaces SET data_json=?,public_json=?,revision=revision+1,updated_at=? WHERE artist_id=? AND revision=?').bind(JSON.stringify(data),published,now,artistId,b.revision).run():await env.DB.prepare('INSERT OR IGNORE INTO artist_workspaces(artist_id,data_json,public_json,revision,updated_at) VALUES(?,?,?,?,?)').bind(artistId,JSON.stringify(data),published,1,now).run();
       if(Number(result?.meta?.changes??result?.changes??0)!==1)return reply({error:'Otro guardado modificó el espacio. Recargá para conservar los cambios.'},409);
@@ -3479,7 +3999,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
 
     if(path==='/api/artista/access' && request.method==='GET'){
-      const token=String(url.searchParams.get('token')||'').trim(); if(!token)return json({error:'Token requerido'},400); const raw=await uadavReadArtistAccess(token,env); if(!raw)return json({error:'Acceso inválido o vencido'},401); const access=JSON.parse(raw); if(access.expires&&Date.now()>access.expires)return json({error:'Acceso vencido'},401); const arr=await allCanonicalArtists(); const artist=arr.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id)); if(!artist)return json({error:'Perfil no encontrado'},404); if(hasD1()){const owner=await env.DB.prepare("SELECT claim_id FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(String(access.artist_id)).first();if(access.claim_id?String(owner?.claim_id)!==String(access.claim_id):!!owner)return json({error:'Acceso revocado'},403)} return json({artist:privateArtistFromItem(artist),access:{artist_id:access.artist_id,expires:access.expires,role:access.role||(access.claim_id?'owner':'legacy_manager'),verification:access.account_id?'account_linked':access.verification||'legacy_token',claim_id:access.claim_id||null,account_linked:!!access.account_id}});
+      const token=String(url.searchParams.get('token')||'').trim(); if(!token)return json({error:'Token requerido'},400); const raw=await uadavReadArtistAccess(token,env); if(!raw)return json({error:'Acceso inválido o vencido'},401); const access=JSON.parse(raw); if(access.expires&&Date.now()>access.expires)return json({error:'Acceso vencido'},401); const arr=await allCanonicalArtists(); const artist=arr.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id)); if(!artist)return json({error:'Perfil no encontrado'},404); if(hasD1()){const owner=await env.DB.prepare("SELECT claim_id FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(String(access.artist_id)).first();if(access.claim_id?String(owner?.claim_id)!==String(access.claim_id):!!owner)return json({error:'Acceso revocado'},403)} const draft=await uadavArtistDraft(env,access.artist_id,access.claim_id);const response=json({artist:privateArtistFromItem({...artist,...uadavDraftPatch(draft)}),draft:{revision:draft?.revision||0,state:draft?.state||'none',updated_at:draft?.updated_at||null},access:{artist_id:access.artist_id,expires:access.expires,role:access.role||(access.claim_id?'owner':'legacy_manager'),verification:access.account_id?'account_linked':access.verification||'legacy_token',claim_id:access.claim_id||null,account_linked:!!access.account_id}});response.headers.set('Cache-Control','no-store');return response;
     }
     if(path==='/api/artista/access' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); const token=String(b.token||'').trim(); const raw=await uadavReadArtistAccess(token,env); if(!raw)return json({error:'Acceso inválido o vencido'},401); const access=JSON.parse(raw); if(access.expires&&Date.now()>access.expires)return json({error:'Acceso vencido'},401);
@@ -3490,10 +4010,25 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(Object.prototype.hasOwnProperty.call(b,'profile_display')){try{b.profile_display=uadavProfileDisplay(b.profile_display,true)}catch{return json({error:'Opciones del perfil inválidas'},400)}}
       const allowed=['profile_display','nombre','nombre_artistico','rubro','ciudad','foto','bio','canal','twitch','kick','booking_url','donation_url','donacion_url','honorario_desde','disponibilidad','redes','web','support_enabled','support_links','audience_chat_enabled','presskit_enabled','marketplace_enabled','ticketing_enabled'];
       const proNow=a.pro_active===true&&(!a.pro_expires||Date.parse(a.pro_expires)>Date.now()); const proFields=new Set(['support_enabled','support_links','audience_chat_enabled','presskit_enabled','ticketing_enabled']);
-      const patch=Object.fromEntries(allowed.filter(k=>Object.hasOwn(b,k)&&(!proFields.has(k)||proNow)).map(k=>[k,b[k]]));const moderation=await uadavModerateText(env,'artist_profile',{artist_id:access.artist_id,claim_id:access.claim_id||null,previous_edit:a.ultima_edicion_artista||null,nombre:patch.nombre_artistico||patch.nombre||a.nombre,bio:patch.bio||'',public_patch:patch},request.headers.get('CF-Connecting-IP')||'unknown');if(moderation.decision==='review')return json({success:true,moderation_pending:true,moderation_id:moderation.id,message:'Tus cambios están pendientes de revisión. El perfil actual sigue publicado.'},202);if(moderation.decision==='reject')return json({error:'No se pudieron enviar los cambios a revisión. Intentá más tarde.'},429);
-      for(const k of allowed) if(Object.prototype.hasOwnProperty.call(b,k) && (!proFields.has(k)||proNow)) a[k]=b[k];
+      const patch=Object.fromEntries(allowed.filter(k=>Object.hasOwn(b,k)&&(!proFields.has(k)||proNow)).map(k=>[k,b[k]]));
+      if(!hasD1())return json({error:'No podemos guardar tu borrador ahora. Intentá más tarde.'},503);
+      const old=await uadavArtistDraft(env,access.artist_id,access.claim_id);
+      if(Object.hasOwn(b,'draft_revision')&&(!Number.isInteger(b.draft_revision)||b.draft_revision!==(old?.revision||0)))return json({error:'Tu borrador cambió en otro dispositivo. Volvé a abrir el perfil antes de guardar.',code:'DRAFT_REVISION_CONFLICT'},409);
+      const stored=await env.DB.prepare('SELECT revision,claim_id FROM artist_profile_drafts WHERE artist_id=?').bind(String(access.artist_id)).first();
+      if(stored&&String(stored.claim_id||'')===String(access.claim_id||'')&&stored.revision!==(old?.revision||0))return json({error:'Tu borrador cambió mientras guardabas. Volvé a abrir el perfil.',code:'DRAFT_REVISION_CONFLICT'},409);
+      const draftRevision=(stored?.revision||0)+1,mergedPatch={...uadavDraftPatch(old),...patch},draftTime=isoNow();
+      const saved=await env.DB.prepare("INSERT INTO artist_profile_drafts(artist_id,claim_id,patch_json,revision,state,updated_at) SELECT ?,?,?,?,'saved',? WHERE (? IS NOT NULL AND EXISTS(SELECT 1 FROM artist_owners WHERE artist_id=? AND claim_id=? AND status='active')) OR (? IS NULL AND NOT EXISTS(SELECT 1 FROM artist_owners WHERE artist_id=? AND status='active')) ON CONFLICT(artist_id) DO UPDATE SET claim_id=excluded.claim_id,patch_json=excluded.patch_json,revision=excluded.revision,state=excluded.state,updated_at=excluded.updated_at WHERE artist_profile_drafts.revision=?").bind(String(access.artist_id),access.claim_id||null,JSON.stringify(mergedPatch),draftRevision,draftTime,access.claim_id||null,String(access.artist_id),access.claim_id||null,access.claim_id||null,String(access.artist_id),stored?.revision||0).run();
+      if(Number(saved.meta?.changes)!==1)return json({error:'El acceso o el borrador cambió. Volvé a abrir tu perfil.',code:'DRAFT_REVISION_CONFLICT'},409);
+      const draftReply=(extra,status=200)=>{const r=json({success:true,draft_saved:true,artist:privateArtistFromItem({...a,...mergedPatch}),draft:{revision:draftRevision,state:'saved',updated_at:draftTime},...extra},status);r.headers.set('Cache-Control','no-store');return r};
+      if(b.save_only===true)return draftReply({message:'Borrador guardado. Tus cambios todavía no se publicaron.'});
+      let moderation;
+      try{moderation=await uadavModerateText(env,'artist_profile',{artist_id:access.artist_id,claim_id:access.claim_id||null,previous_edit:a.ultima_edicion_artista||null,draft_revision:draftRevision,nombre:mergedPatch.nombre_artistico||mergedPatch.nombre||a.nombre,bio:mergedPatch.bio||'',public_patch:mergedPatch},request.headers.get('CF-Connecting-IP')||'unknown')}
+      catch{return draftReply({publication_error:true,message:'Borrador guardado. No pudimos enviarlo a revisión; podés reintentar sin perderlo.'})}
+      if(moderation.decision==='review'){await env.DB.prepare("UPDATE artist_profile_drafts SET state='pending' WHERE artist_id=? AND revision=?").bind(String(access.artist_id),draftRevision).run();return draftReply({draft:{revision:draftRevision,state:'pending',updated_at:draftTime},moderation_pending:true,moderation_id:moderation.id,message:a.visible===false?'Borrador guardado y enviado a revisión. Tu perfil sigue privado.':'Borrador guardado y enviado a revisión. La versión pública anterior se conserva.'},202);}
+      if(moderation.decision==='reject')return draftReply({publication_error:true,message:'Borrador guardado. No se pudo enviar a revisión; intentá más tarde.'});
+      for(const k of allowed) if(Object.prototype.hasOwnProperty.call(mergedPatch,k) && (!proFields.has(k)||proNow)) a[k]=mergedPatch[k];
       a.self_managed=true; a.ultima_edicion_artista=new Date().toISOString(); a.cambios_pendientes=true; a.estado=a.estado==='aprobado'?'aprobado':(a.estado||'pendiente');
-      await putJSON('artistas',arr); return json({success:true,review_required:true,artist:privateArtistFromItem(a)});
+      await putJSON('artistas',arr); await env.DB.prepare("UPDATE artist_profile_drafts SET state='applied' WHERE artist_id=? AND revision=?").bind(String(access.artist_id),draftRevision).run(); return draftReply({review_required:true,artist:privateArtistFromItem(a),draft:{revision:draftRevision,state:'applied',updated_at:draftTime},message:'Cambios guardados.'});
     }
     if(path==='/api/artista/content'){
       const reply=(data,status=200)=>{const r=json(data,status);r.headers.set('Cache-Control','no-store');return r};
@@ -3503,7 +4038,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(token){access=safeJSON(await uadavReadArtistAccess(token,env),null);if(!access?.artist_id||!access.expires||Number(access.expires)<=Date.now())return reply({error:'Acceso inválido o vencido'},401);
         if(hasD1()){const owner=await env.DB.prepare("SELECT claim_id FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(String(access.artist_id)).first();if(!owner||String(owner.claim_id)!==String(access.claim_id))return reply({error:'Acceso revocado'},403)}}
       const list=await getArray('artista_contenido');
-      if(request.method==='GET'){const id=access?String(access.artist_id):String(url.searchParams.get('artist_id')||'');if(await uadavDeletedArtist(env,id))return reply([]);return reply(list.filter(x=>String(x.artist_id)===id&&(access||x.estado==='publicado')).sort((a,b)=>Number(a.orden||0)-Number(b.orden||0)).map(normalizeContentItem))}
+      if(request.method==='GET'){const id=access?String(access.artist_id):String(url.searchParams.get('artist_id')||'');if(await uadavDeletedArtist(env,id))return reply([]);if(!access){const artists=await getArray('artistas'),publicArtist=artists.find(a=>String(publicArtistFromItem(a).id)===id);if(!publicArtist||!uadavArtistPublicVisible(publicArtist))return reply([])}return reply(list.filter(x=>String(x.artist_id)===id&&(access||x.estado==='publicado')).sort((a,b)=>Number(a.orden||0)-Number(b.orden||0)).map(normalizeContentItem))}
       if(!['POST','PUT'].includes(request.method))return reply({error:'Método no permitido'},405);
       if(!access)return reply({error:'Acceso de artista requerido'},401);
       const artistId=String(access.artist_id),index=list.findIndex(x=>String(x.id)===String(b.id)&&String(x.artist_id)===artistId);
@@ -3523,9 +4058,9 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if(path==='/api/artist/inquiries'){
       const reply=(d,status=200)=>{const r=json(d,status);r.headers.set('Cache-Control','no-store');return r};
       const token=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
-      const access=safeJSON(await uadavReadArtistAccess(token,env),null);
-      if(!access?.artist_id||!access.expires||Number(access.expires)<=Date.now())return reply({error:'Acceso de artista requerido o vencido'},401);
-      if(access.claim_id){if(!hasD1())return reply({error:'Verificación de propietario no disponible'},503);const owner=await env.DB.prepare("SELECT claim_id FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(String(access.artist_id)).first();if(String(owner?.claim_id)!==String(access.claim_id))return reply({error:'Acceso revocado'},403)}
+      if(!hasD1())return reply({error:'La verificación de propietario requiere D1.'},503);
+      const access=await uadavArtistPermission(token,env);
+      if(!access)return reply({error:'Acceso de artista inválido, vencido o revocado'},401);
       const list=await artistInquiries(),own=list.filter(x=>String(x.artist_id)===String(access.artist_id));
       if(request.method==='GET')return reply({items:own.sort((a,b)=>String(b.creado).localeCompare(String(a.creado)))});
       if(request.method!=='PATCH')return reply({error:'Método no permitido'},405);
@@ -3535,8 +4070,29 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
     if(path==='/api/contrataciones' && request.method==='POST'){
       const b=await request.json().catch(()=>({})); if(!b.artist_id||!b.nombre||!b.email)return json({error:'Artista, nombre y email son obligatorios'},400); if(b.acepta_contrato!==true)return json({error:'Debe aceptar el contrato/condiciones para continuar'},400);
-      const artists=await getArray('artistas'); const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(b.artist_id)); if(!artist)return json({error:'Artista no encontrado'},404); const pro=artist.pro_active===true&&(!artist.pro_expires||Date.parse(artist.pro_expires)>Date.now()); if(artist.visible===false||artist.marketplace_enabled===false)return json({error:'Este perfil no recibe solicitudes de contratación.'},403);
-      const list=await getArray('contrataciones'); const item={id:'CON-'+crypto.randomUUID(),creado:new Date().toISOString(),artist_id:String(b.artist_id),nombre:String(b.nombre).slice(0,140),empresa:String(b.empresa||'').slice(0,160),email:String(b.email).slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),evento:String(b.evento||'').slice(0,220),fecha:String(b.fecha||''),ciudad:String(b.ciudad||'').slice(0,100),honorario:String(b.honorario||'').slice(0,80),detalles:String(b.detalles||'').slice(0,3000),contrato_version:String(b.contrato_version||'CORE-1.0').slice(0,40),contrato_url:String(b.contrato_url||'').slice(0,500),acepta_contrato:true,estado:'pendiente'}; if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('contrataciones',list); return json({success:true,item});
+      const artists=await getArray('artistas'); const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(b.artist_id)); if(!artist)return json({error:'Artista no encontrado'},404); const pro=artist.pro_active===true&&(!artist.pro_expires||Date.parse(artist.pro_expires)>Date.now()); if(!uadavArtistPublicVisible(artist)||artist.marketplace_enabled===false)return json({error:'Este perfil no recibe solicitudes de contratación.'},403);
+      if(!hasD1())return json({error:'No pudimos guardar la consulta. El servicio requiere D1.'},503);
+      const requestId=b.request_id;
+      if(requestId!==undefined&&(typeof requestId!=='string'||! /^[A-Za-z0-9_-]{16,100}$/.test(requestId)))return json({error:'Identificador de envío inválido'},400);
+      const item={id:'CON-'+crypto.randomUUID(),creado:new Date().toISOString(),artist_id:String(b.artist_id),nombre:String(b.nombre).slice(0,140),empresa:String(b.empresa||'').slice(0,160),email:String(b.email).slice(0,180),whatsapp:String(b.whatsapp||'').slice(0,60),evento:String(b.evento||'').slice(0,220),fecha:String(b.fecha||''),ciudad:String(b.ciudad||'').slice(0,100),honorario:String(b.honorario||'').slice(0,80),detalles:String(b.detalles||'').slice(0,3000),contrato_version:String(b.contrato_version||'CORE-1.0').slice(0,40),contrato_url:String(b.contrato_url||'').slice(0,500),acepta_contrato:true,estado:'pendiente'};
+      const {id:ignoredId,creado:ignoredCreated,...payload}=item;
+      const fingerprint=requestId?await uadavDigest(JSON.stringify(payload)):null;
+      if(requestId)item.id='CON-'+await uadavDigest('artist-inquiry|'+requestId);
+      const replay=async()=>{
+        const row=await env.DB.prepare('SELECT artist_id,data_json FROM contracts WHERE id=?').bind(item.id).first();
+        if(!row)return null;const previous=safeJSON(row.data_json,null);
+        if(previous?.record_type!=='artist_inquiry'||previous.request_fingerprint!==fingerprint||String(row.artist_id)!==item.artist_id)return json({error:'Este envío ya se usó con otros datos. Revisá la solicitud antes de volver a enviarla.',code:'INQUIRY_REQUEST_CONFLICT'},409);
+        const {record_type,request_fingerprint,...saved}=previous;return json({success:true,item:saved,replayed:true});
+      };
+      try{
+        if(requestId){const existing=await replay();if(existing)return existing;}
+        const list=await uadavReadArtistInquiries(env);
+        if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);
+        const result=await env.DB.prepare('INSERT OR IGNORE INTO contracts(id,artist_id,producer_id,status,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?)')
+          .bind(item.id,item.artist_id,'',item.estado,JSON.stringify({...item,record_type:'artist_inquiry',...(requestId?{request_fingerprint:fingerprint}:{})}),item.creado,item.creado).run();
+        if(Number(result.meta?.changes)!==1){if(requestId){const existing=await replay();if(existing)return existing;}return json({error:'No pudimos confirmar el guardado de la consulta.',code:'INQUIRY_SAVE_FAILED'},503);}
+        return json({success:true,item});
+      }catch{return json({error:'No pudimos guardar la consulta. Volvé a intentarlo.',code:'INQUIRY_SAVE_FAILED'},503)}
     }
     if(path==='/api/contrataciones' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await artistInquiries());}
     if(path==='/api/admin/artista_contenido' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await getArray('artista_contenido'));}
@@ -3632,6 +4188,68 @@ async function saveEntityVersion(type,id,data){
         await env.DB.prepare(`INSERT INTO entity_versions(entity_type,entity_id,version,data_json,created_at) VALUES(?,?,?,?,?)`).bind(type,id,Number(row?.v||1),JSON.stringify(data),isoNow()).run();
       });
     }
+
+    if(path==='/api/podcasts/episodes'&&request.method==='GET'){
+      if(!env.DB)return json([]);
+      try{await uadavPodcastSchema(env);const rows=(await env.DB.prepare('SELECT data_json,visible FROM podcast_entries WHERE visible=1 ORDER BY updated_at DESC,id LIMIT 1000').all()).results||[];
+        return json(rows.map(x=>({...uadavSafeJSON(x.data_json,{}),visible:x.visible===1})));
+      }catch{return json({error:'No pudimos cargar los episodios importados.'},503)}
+    }
+    if(path.startsWith('/api/admin/podcasts/')){
+      if(!isAdmin())return json({error:'No autorizado'},401,{'Cache-Control':'no-store'});
+      try{
+        await uadavPodcastSchema(env);
+        const body=request.method==='GET'?{}:await request.json().catch(()=>({}));
+        const privateJSON=(data,status=200)=>json(data,status,{'Cache-Control':'no-store'});
+        if(path==='/api/admin/podcasts/sources'&&request.method==='GET'){
+          const rows=(await env.DB.prepare('SELECT * FROM podcast_sources ORDER BY created_at DESC,id').all()).results||[];
+          return privateJSON({items:rows.map(({lease_until,etag,last_modified,...s})=>({...s,active:s.active===1,auto_publish:s.auto_publish===1,busy:lease_until>Date.now()})),cron_enabled:env.PODCAST_RSS_SYNC_ENABLED==='true'});
+        }
+        if(path==='/api/admin/podcasts/sources'&&request.method==='POST'){
+          const name=String(body.name||'').trim().slice(0,120),feedURL=uadavPodcastURL(body.url);
+          if(!name)return privateJSON({error:'Escribí el nombre del programa.'},400);
+          const interval=Number(body.interval_hours??12);if(!Number.isFinite(interval)||interval<1||interval>168)return privateJSON({error:'El intervalo debe estar entre 1 y 168 horas.'},400);
+          const old=body.id?await env.DB.prepare('SELECT * FROM podcast_sources WHERE id=?').bind(String(body.id)).first():null;
+          if(body.id&&!old)return privateJSON({error:'Fuente no encontrada.'},404);
+          if(old?.url!==undefined&&old.url!==feedURL)return privateJSON({error:'Para otra URL, creá una fuente nueva. Los episodios anteriores se conservan.'},400);
+          const id=old?.id||'RSS-'+crypto.randomUUID(),iso=isoNow();
+          if(old){
+            const result=await env.DB.prepare('UPDATE podcast_sources SET name=?,active=?,auto_publish=?,interval_hours=?,revision=revision+1,updated_at=? WHERE id=? AND lease_until<?').bind(name,body.active===true?1:0,body.auto_publish===true?1:0,Math.floor(interval),iso,id,Date.now()).run();
+            if(!result.meta?.changes)return privateJSON({error:'La fuente se está sincronizando. Esperá y volvé a guardar.'},409);
+          }else{
+            const duplicate=await env.DB.prepare('SELECT id FROM podcast_sources WHERE url=?').bind(feedURL).first();if(duplicate)return privateJSON({error:'Este RSS ya está registrado. Editá su fuente existente.'},409);
+            const count=await env.DB.prepare('SELECT COUNT(*) AS total FROM podcast_sources').first();
+            if(Number(count?.total)>=100)return privateJSON({error:'Se alcanzó el límite de 100 fuentes. Pausá o reutilizá una fuente existente.'},400);
+            await env.DB.prepare('INSERT INTO podcast_sources(id,name,url,active,auto_publish,interval_hours,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)').bind(id,name,feedURL,body.active===true?1:0,body.auto_publish===true?1:0,Math.floor(interval),iso,iso).run();
+          }
+          await audit('podcast_source_save','podcast_source',id,{active:body.active===true,auto_publish:body.auto_publish===true});
+          return privateJSON({success:true,id});
+        }
+
+        if(path==='/api/admin/podcasts/episodes'&&request.method==='GET'){
+          const sourceId=String(url.searchParams.get('source_id')||'');
+          const rows=(await env.DB.prepare('SELECT id,data_json,visible FROM podcast_entries WHERE source_id=? ORDER BY updated_at DESC,id LIMIT 200').bind(sourceId).all()).results||[];
+          return privateJSON({items:rows.map(x=>({...uadavSafeJSON(x.data_json,{}),id:x.id,visible:x.visible===1}))});
+        }
+        if(path==='/api/admin/podcasts/episodes'&&request.method==='PUT'){
+          if(typeof body.visible!=='boolean')return privateJSON({error:'Indicá si el episodio debe estar visible.'},400);
+          const result=await env.DB.prepare('UPDATE podcast_entries SET visible=? WHERE id=?').bind(body.visible?1:0,String(body.id||'')).run();
+          if(!result.meta?.changes)return privateJSON({error:'Episodio no encontrado.'},404);
+          return privateJSON({success:true,id:String(body.id),visible:body.visible});
+        }
+
+        if(path==='/api/admin/podcasts/preview'&&request.method==='POST'){
+          const feed=await uadavFetchPodcast(body.url);
+          return privateJSON({success:true,title:feed.title,artwork:feed.artwork,episodes:feed.episodes.slice(0,20),parsed:feed.episodes.length,total:feed.total,skipped:feed.skipped,truncated:feed.truncated});
+        }
+        if(path==='/api/admin/podcasts/sync'&&request.method==='POST'){
+          const result=await uadavSyncPodcast(env,String(body.id||''));
+          await audit('podcast_source_sync','podcast_source',String(body.id||''),result);return privateJSON(result);
+        }
+        return privateJSON({error:'Operación de podcasts no disponible.'},404);
+      }catch(e){return json({error:String(e?.message||'No se pudo completar la operación RSS.').slice(0,300)},400,{'Cache-Control':'no-store'})}
+    }
+
     if(path==='/api/admin/content/resolve' && request.method==='POST'){
       if(!isAdmin())return json({error:'No autorizado'},401);
       const b=await request.json().catch(()=>({})); const info=detectProvider(b.url); if(!info.url)return json({error:'URL requerida'},400);
@@ -3877,10 +4495,60 @@ async function saveEntityVersion(type,id,data){
         return json({success:true,item});
       }
     }
+
+    if(path==='/api/admin/radio-operators'||path==='/api/radio-studio'||path==='/api/radio-studio/requests'||path==='/api/radio-studio/chat'){
+      const studioReply=(data,status=200)=>json(data,status,{'Cache-Control':'no-store'});
+      if(!hasD1())return studioReply({error:'Radio Studio requiere D1'},503);
+      await ensureD1Schema();await uadavAccountSchema(env.DB);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS radio_operators(radio_id TEXT NOT NULL,account_id TEXT NOT NULL,status TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(radio_id,account_id))").run();
+      const catalog=await getArray('radios'),station=id=>catalog.find(r=>String(r.id||'')===id&&r.visible!==false&&r.activa!==false&&r.enabled!==false&&!['suspendido','suspended','inactive'].includes(r.estado));
+      if(path==='/api/admin/radio-operators'){
+        if(!isAdmin())return studioReply({error:'No autorizado'},401);
+        if(request.method==='GET'){const rid=String(url.searchParams.get('radio_id')||'');return studioReply({items:(await env.DB.prepare('SELECT radio_id,account_id,status,updated_at FROM radio_operators WHERE radio_id=? ORDER BY updated_at DESC').bind(rid).all()).results||[]})}
+        if(request.method!=='PUT')return studioReply({error:'Método no permitido'},405);
+        const b=await uadavSecurityJSON(request,3000),rid=String(b.radio_id||''),account=String(b.account_id||''),reason=String(b.reason||'').trim();
+        if(!station(rid)||!/^[a-f0-9]{64}$/.test(account)||!['grant','revoke'].includes(b.action)||b.confirm!=='CONFIRMAR'||reason.length<10)return studioReply({error:'Emisora, cuenta, acción, confirmación y motivo de verificación requeridos'},400);
+        if(!await env.DB.prepare('SELECT id FROM audience_accounts WHERE id=? AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)').bind(account,account).first())return studioReply({error:'Cuenta no encontrada'},404);
+        await env.DB.prepare("INSERT INTO radio_operators(radio_id,account_id,status,updated_at) VALUES(?,?,?,?) ON CONFLICT(radio_id,account_id) DO UPDATE SET status=excluded.status,updated_at=excluded.updated_at").bind(rid,account,b.action==='grant'?'active':'revoked',isoNow()).run();
+        await audit('radio_operator_'+b.action,'radio',rid,{account_id:account,reason});return studioReply({success:true});
+      }
+      const check=await uadavAccountRoute(new Request(new URL('/api/account/identity',request.url),{headers:request.headers}),env,true),identity=await check.json();
+      if(!check.ok)return studioReply(identity,check.status);const account=identity.account_id;
+      if(path==='/api/radio-studio'){
+        if(request.method!=='GET')return studioReply({error:'Método no permitido'},405);
+        const grants=(await env.DB.prepare("SELECT radio_id FROM radio_operators WHERE account_id=? AND status='active'").bind(account).all()).results||[];
+        return studioReply({items:grants.map(g=>station(g.radio_id)).filter(Boolean).map(r=>({id:String(r.id),name:String(r.nombre||r.name||'Radio')}))});
+      }
+      const rid=String(url.searchParams.get('radio_id')||'');
+      if(!station(rid)||!await env.DB.prepare("SELECT radio_id FROM radio_operators WHERE radio_id=? AND account_id=? AND status='active'").bind(rid,account).first())return studioReply({error:'No tenés permiso para esta emisora'},403);
+      if(path==='/api/radio-studio/chat'){
+        const stream='radio:'+rid;
+        if(request.method==='GET'){
+          const target=new URL('/api/chat',request.url);target.searchParams.set('id_stream',stream);
+          const response=await uadavWorker.fetch(new Request(target,{headers:request.headers}),env,ctx),messages=await response.json();
+          return response.ok&&Array.isArray(messages)?studioReply({radio_id:rid,items:messages}):studioReply({error:'No pudimos cargar el chat'},response.ok?502:response.status);
+        }
+        if(request.method!=='POST')return studioReply({error:'Método no permitido'},405);
+        const b=await uadavSecurityJSON(request,6000),message=String(b.message||'').trim(),reply=String(b.reply_to||'');
+        if(!message||message.length>1000||reply.length>100)return studioReply({error:'Mensaje entre 1 y 1000 caracteres'},400);
+        const response=await uadavWorker.fetch(new Request(new URL('/api/moderar_chat',request.url),{method:'POST',headers:request.headers,body:JSON.stringify({id_stream:stream,alias:String(station(rid).nombre||station(rid).name||'Emisora').slice(0,40),mensaje:message,reply_to:reply||undefined,tipo:'chat',radio_operator_account_id:account,radio_operator_radio_id:rid})}),env,ctx);
+        const result=await response.json();if(response.ok)await audit('radio_operator_chat','radio',rid,{account_id:account,moderation_pending:result.moderation_pending===true});
+        return studioReply({...result,radio_id:rid},response.status);
+      }
+      if(request.method==='GET')return studioReply({radio_id:rid,items:(await env.DB.prepare('SELECT id,radio_id,listener_name,artist,title,dedication,status,created_at,updated_at FROM radio_requests WHERE radio_id=? ORDER BY created_at DESC LIMIT 100').bind(rid).all()).results||[]});
+      if(request.method!=='PATCH')return studioReply({error:'Método no permitido'},405);
+      const b=await uadavSecurityJSON(request,2000),id=String(b.id||''),status=String(b.status||'');
+      if(!id||!['pending','queued','played','rejected'].includes(status))return studioReply({error:'Pedido o estado inválido'},400);
+      const result=await env.DB.prepare("UPDATE radio_requests SET status=?,updated_at=? WHERE id=? AND radio_id=? AND EXISTS(SELECT 1 FROM radio_operators WHERE radio_id=? AND account_id=? AND status='active') AND EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)").bind(status,isoNow(),id,rid,rid,account,account,account).run();
+      if(Number(result.meta?.changes)!==1)return studioReply({error:'El pedido o tu permiso cambió. Actualizá la bandeja.'},409);
+      let mirrorUpdated=true;try{const mirror=await getArray('radio_requests'),index=mirror.findIndex(x=>String(x.id)===id&&String(x.radio_id)===rid);if(index>=0){mirror[index]={...mirror[index],status,updated_at:isoNow()};await putJSON('radio_requests',mirror)}}catch{mirrorUpdated=false}
+      await audit('radio_request_operator_state','radio',rid,{account_id:account,request_id:id,status,kv_mirror_updated:mirrorUpdated});
+      return studioReply({success:true,radio_id:rid,id,status,kv_mirror_updated:mirrorUpdated});
+    }
     if(path==='/api/radio/requests'){
       if(request.method==='GET'){
         if(!isAdmin())return json({error:'No autorizado'},401);const rid=String(url.searchParams.get('radio_id')||'');
-        if(hasD1()){try{const st=await ensureD1Schema();if(st.ready){const q=rid?`SELECT * FROM radio_requests WHERE radio_id=? ORDER BY created_at DESC LIMIT 500`:`SELECT * FROM radio_requests ORDER BY created_at DESC LIMIT 500`;const r=rid?await env.DB.prepare(q).bind(rid).all():await env.DB.prepare(q).all();return json((r.results||[]).map(x=>({...safeJSON(x.data_json,{}),id:x.id,radio_id:x.radio_id,listener_name:x.listener_name,artist:x.artist,title:x.title,dedication:x.dedication,status:x.status,created_at:x.created_at,updated_at:x.updated_at})));}}catch(_){ }}return json(await getArray('radio_requests'));
+        if(hasD1()){try{const st=await ensureD1Schema();if(st.ready){const q=rid?`SELECT * FROM radio_requests WHERE radio_id=? ORDER BY created_at DESC LIMIT 500`:`SELECT * FROM radio_requests ORDER BY created_at DESC LIMIT 500`;const r=rid?await env.DB.prepare(q).bind(rid).all():await env.DB.prepare(q).all();return json((r.results||[]).map(x=>({...safeJSON(x.data_json,{}),id:x.id,radio_id:x.radio_id,listener_name:x.listener_name,artist:x.artist,title:x.title,dedication:x.dedication,status:x.status,created_at:x.created_at,updated_at:x.updated_at})));}}catch(_){ }}const fallback=await getArray('radio_requests');return json(rid?fallback.filter(x=>String(x?.radio_id||'')===rid):fallback);
       }
       const b=await request.json().catch(()=>({}));
       if(request.method==='POST'){
@@ -3888,7 +4556,7 @@ async function saveEntityVersion(type,id,data){
         const list=await getArray('radio_requests');list.unshift(item);await putJSON('radio_requests',list.slice(0,3000));await safeD1('radio_request',()=>env.DB.prepare(`INSERT INTO radio_requests(id,radio_id,listener_name,artist,title,dedication,status,created_at,updated_at,data_json) VALUES(?,?,?,?,?,?,?,?,?,?)`).bind(item.id,item.radio_id,item.listener_name,item.artist,item.title,item.dedication,item.status,item.created_at,item.updated_at,JSON.stringify(item)).run());return json({success:true,item});
       }
       if(request.method==='PUT'){
-        if(!isAdmin())return json({error:'No autorizado'},401);const id=String(b.id||''),status=String(b.status||'pending');const list=await getArray('radio_requests');const i=list.findIndex(x=>String(x.id)===id);if(i>=0){list[i]={...list[i],status,updated_at:isoNow()};await putJSON('radio_requests',list);}await safeD1('radio_request_update',()=>env.DB.prepare(`UPDATE radio_requests SET status=?,updated_at=? WHERE id=?`).bind(status,isoNow(),id).run());return json({success:true});
+        if(!isAdmin())return json({error:'No autorizado'},401);const id=String(b.id||'').trim(),status=String(b.status||'pending');if(!id||!['pending','queued','played','rejected','done'].includes(status))return json({error:'Pedido o estado inválido'},400);const list=await getArray('radio_requests');const i=list.findIndex(x=>String(x.id)===id);if(i<0){let found=null;if(hasD1()){try{const st=await ensureD1Schema();if(!st.ready)return json({error:'No pudimos comprobar el pedido. Intentá nuevamente.'},503);found=await env.DB.prepare('SELECT id FROM radio_requests WHERE id=?').bind(id).first()}catch{return json({error:'No pudimos comprobar el pedido. Intentá nuevamente.'},503)}}if(!found)return json({error:'Pedido no encontrado'},404)}const updatedAt=isoNow();if(i>=0){list[i]={...list[i],status,updated_at:updatedAt};await putJSON('radio_requests',list);}await safeD1('radio_request_update',()=>env.DB.prepare(`UPDATE radio_requests SET status=?,updated_at=? WHERE id=?`).bind(status,updatedAt,id).run());return json({success:true});
       }
     }
 
@@ -3981,6 +4649,9 @@ async function saveEntityVersion(type,id,data){
     // Fallback KV: keeps the existing Admin compatible with previously stored keys.
     if (path.startsWith('/api/')) {
       const key = path.slice(5).replace(/\//g, '_') || 'config';
+      // Generic reads are private by default. Public data belongs in explicit routes.
+      const publicLegacyKeys=new Set(['footer_config','landing_config','apariencia','estado_sitio','secciones_version']);
+      if(!isAdmin()&&!publicLegacyKeys.has(key))return json({error:'No autorizado'},401);
       if (request.method === 'GET') return json(await getJSON(key, ['secciones','radios','senales_oficiales','artistas','cartelera_aprobada','eventos_publicados'].includes(key) ? [] : {}));
       if (request.method === 'POST' || request.method === 'PUT') {
         if (!isAdmin()) return json({ error: 'No autorizado' }, 401);
@@ -3992,7 +4663,7 @@ async function saveEntityVersion(type,id,data){
     return json({ error: 'Ruta no encontrada' }, 404);
   },
   async scheduled(_event, env, ctx) {
-    const task=Promise.all([uadavMaintenance(env),uadavPushFlush(env)]); if(ctx?.waitUntil) ctx.waitUntil(task); else await task;
+    const task=Promise.all([uadavMaintenance(env),uadavPushFlush(env),uadavPodcastCron(env)]); if(ctx?.waitUntil) ctx.waitUntil(task); else await task;
   },
   async queue(batch, env, ctx) {
     const run = async()=>{
@@ -4006,6 +4677,7 @@ async function saveEntityVersion(type,id,data){
 };
 
 
-export {uadavArtistHandle,uadavYouTubePlaylistItems,uadavYouTubeLibrary,uadavProfileDisplay,uadavArtistSharePage,uadavDecodeHTMLText};
+export {uadavPodcastURL,uadavPodcastXML,uadavFetchPodcast,uadavSyncPodcast,uadavPodcastCron,uadavArtistHandle,uadavYouTubePlaylistItems,uadavYouTubeLibrary,uadavProfileDisplay,uadavArtistSharePage,uadavDecodeHTMLText};
 
 export default uadavWorker;
+
