@@ -50,3 +50,5 @@ body[data-page="app"] #mediaDock:not(.listeningAudio).expanded #mediaStage video
  body[data-page="app"] #mediaDock.expanded .tools button,body[data-page="app"] #mediaDock.expanded .libBtn{min-height:52px;min-width:52px;font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){.nativeListening *,#radioDock{transition:none!important;animation:none!important}}
+
+body[data-page="app"] #radioDock .radioParticipate{display:none}body[data-page="app"] #radioDock.listeningExpanded .radioParticipate{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}body[data-page="app"] #radioDock .radioParticipate button{border-radius:999px;padding:12px 20px;font-size:14px;background:#ffffff0c}body[data-page="app"] #radioDock.listeningExpanded #expandRadio{top:max(32px,env(safe-area-inset-top))}
