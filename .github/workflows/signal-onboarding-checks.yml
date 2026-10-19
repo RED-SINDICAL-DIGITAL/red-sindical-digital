@@ -58,6 +58,7 @@ on:
       - soy-artista.html
       - uadav-artist-onboarding-v145.js
       - tests/artist-onboarding-start.test.cjs
+      - tests/artist-onboarding-safety.test.cjs
       - scripts/build-staging.mjs
       - tests/staging-build.test.mjs
       - uadav-artist-account-v142.js
@@ -198,7 +199,7 @@ jobs:
       - name: Build isolated staging frontend
         run: UADAV_STAGING_ORIGIN=https://uadav-stream-staging.pages.dev node scripts/build-staging.mjs
       - name: First artist account start
-        run: node --test tests/artist-onboarding-start.test.cjs
+        run: node --test tests/artist-onboarding-start.test.cjs tests/artist-onboarding-safety.test.cjs
       - name: Private profile draft lifecycle
         run: node tests/artist-profile-drafts.mjs
       - name: Update notice persistence

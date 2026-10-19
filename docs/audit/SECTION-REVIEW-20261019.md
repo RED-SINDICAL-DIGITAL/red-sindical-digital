@@ -99,3 +99,12 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Etiqueta Crear o vincular mi artista coherente en el HTML y en los dos controladores de cuenta. La edición de artistas ya vinculados conserva sus permisos y destinos.
 - 23 pruebas locales de identidad/edición/navegación pasan, y el escenario de menú de cuenta con artista correcto también pasa. Comprobado en staging: Sos artista llega a Mi artista y desplaza a la sección; su enlace inicia el onboarding con cuenta; el perfil público con modo=artista no contiene control de reclamo; los dos enlaces antiguos llegan al mismo espacio. Sin crear cuentas ni solicitudes reales en esta comprobación.
 - Esto unifica la interfaz. No elimina todavía los endpoints históricos del Worker ni sustituye las verificaciones de titularidad. Su retirada compatible debe tratarse en una próxima entrega de backend, con revisión de consumidores.
+
+## Solicitud privada de artista: confirmación e identidad
+
+- El formulario conserva una copia de la selección y de los datos al iniciar el envío. Impide envíos simultáneos y cambios de selección durante el proceso.
+- Exige una respuesta confirmada: success, referencia, artista, estado pendiente, seguimiento en cuenta y tipo de acceso privado. En solicitudes de perfiles existentes, el artista devuelto debe coincidir con el elegido.
+- Una respuesta incompleta conserva el formulario y no muestra éxito. El recibo confirmado muestra una referencia y distingue borrador privado de solicitud de gestión pendiente.
+- Búsquedas inválidas no se presentan como cero coincidencias ni habilitan crear por error. Se eliminó el recorte silencioso de 30 coincidencias.
+- Cambio de cuenta, cierre en otra pestaña y precarga de selección descartan respuestas antiguas y limpian datos de contacto y selección.
+- 14 pruebas locales de onboarding pasan; ciclo real del Worker en SQLite aislado también pasa (alta privada, rechazo, aprobación, aislamiento y revocación). Sin cuentas ni solicitudes reales creadas en navegador para esta ampliación.
