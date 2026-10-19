@@ -30,7 +30,7 @@ Entorno autorizado: staging, rama audit/public-job-status-20261012. Producción 
 | `evento.html` | Detalle de evento ficticio y retorno probados; dispositivos pendientes. |
 | `gestionar-artista.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `guia.html` | Inventariada; revisión funcional y visual específica pendiente. |
-| `index-v117.html` | Inventariada; revisión funcional y visual específica pendiente. |
+| `index-v117.html` | Carga independiente, búsqueda general, favoritos sin reproducción, audio propio desde Continuar y regreso desde artista comprobados en staging. Revisión completa por dispositivos y pulido visual pendientes. |
 | `index.html` | Entrada/redirección; verificar modos desde configuración sin cambiar producción. |
 | `manual.html` | Actualizada con Biblioteca; verificar anclas. |
 | `marketplace.html` | Página informativa de productos/servicios, catálogo aún no implementado; no confundir con contratación de artistas. |
@@ -154,4 +154,7 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Inicio y artistas recientes de Explorar usan el canal exacto mediante profileHref. Los enlaces de radio admiten id, nombre o señal para registros sin ID.
 - Favoritos en Inicio/Explorar avisan al shell después de guardar. No se certifica sincronización entre dispositivos.
 - Propuestas distingue respuesta vacía confirmada de fuentes caídas y ofrece Reintentar.
-- 230 pruebas CJS locales pasan; aceptación visual real queda pendiente de publicar este cambio.
+- 231 pruebas CJS locales y todos los checks/Pages de ambos cambios pasan. Aceptación real: Inicio → Buscar @madonna abre búsqueda general y canal exacto; Guardar/Quitar en Continuar cambia aria-pressed sin reproducir (audio pausado y src vacío); Explorar carga 24 propuestas y ofrece perfiles exactos de Madonna y Topic.
+- Artista abierto desde Inicio vuelve a Inicio; desde Explorar / En escena vuelve a kind=escena con esa categoría activa. Los destinos de retorno se validan contra rutas y parámetros permitidos.
+- Audio propio QA de 12 segundos abierto desde Continuar: AUDIO nativo, paused=false, currentTime=10.9/12, sin error; carátula conservada. Cerrado al terminar la comprobación. Esto no certifica reproducción de YouTube ni equipos físicos.
+- Pendiente visual detectado: algunos títulos de propuestas llegan con entidades como &#39; y aún requieren normalización en Inicio. Las playlists sin metadatos del proveedor pueden conservar el título genérico Contenido en historial antiguo.
