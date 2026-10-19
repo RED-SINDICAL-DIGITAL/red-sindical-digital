@@ -218,3 +218,9 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 
 - Aceptación navegador en staging: «  musica  » encuentra la convocatoria ficticia de Música; consulta sin coincidencias muestra explicación y Limpiar filtros restaura 1 oportunidad. Sin envíos nuevos ni cambios de ofertas.
 - 25 pruebas locales de interfaz y contrato privado aprobadas; todos los controles remotos del código `06c16ce57cbf98fbffe7eb59375f9b66d41e68bf` aprobados, incluido Pages. Evidencia: uadav-jobs-filters-20261019.jpg.
+
+
+### Comprobante de postulación y controles móviles
+- Copiar comprobante confirma únicamente después de completar la escritura; informa permisos denegados o API ausente sin perder los datos. Respuestas tardías no anuncian éxito para otra postulación.
+- Controles de 44 px, campos con fuente de 16 px y desplazamiento del diálogo limitado a la altura de pantalla.
+- 29 pruebas locales de interfaz y contrato privado aprobadas. Comportamiento real del portapapeles y dispositivos físicos pendiente; sin nuevas postulaciones públicas.
