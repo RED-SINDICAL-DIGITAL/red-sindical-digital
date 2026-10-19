@@ -190,3 +190,5 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Actualizaciones account-data/storage refrescan sólo si cambió la vista; un cambio de perfil invalida cargas de foto anteriores y una actualización de biblioteca no invalida una foto en edición.
 - Retirado el acceso optimista por token legado: los accesos de artista siguen bajo comprobación de cuenta. Reproducción reciente admite shell alternativo o postMessage al origen local.
 - 268 pruebas locales pasan. Verificación en navegador y publicación quedan registradas después del despliegue.
+
+- Aceptación publicada: todos los checks y Pages de b356ac623d13c6d4d949b4e83cc1eaeea8a582a5 pasan. Dos pestañas reales del mismo navegador: reproducir audio QA en Podcasts incorpora el episodio al historial visible de Mi perfil sin recargar; guardar favorito actualiza 0→1 y quitarlo restaura 1→0. Ver todo mi historial abre Biblioteca tab=recent y muestra el episodio. Cerrado reproductor y favorito de prueba restaurado. No se verificaron dispositivos físicos distintos ni cuenta sincronizada.
