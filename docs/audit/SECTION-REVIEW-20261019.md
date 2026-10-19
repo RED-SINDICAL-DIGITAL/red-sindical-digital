@@ -208,3 +208,10 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Una búsqueda sin coincidencias muestra 0 eventos y una explicación; Limpiar filtros restaura la consulta vacía, Todos seleccionado y 1 evento.
 - La ficha QA actualmente tiene fecha 2026-12-01. Fechas inválidas, múltiples funciones y límites de semana/mes se verificaron con pruebas automatizadas, no con modificaciones de registros públicos.
 - Evidencia visual: uadav-cartelera-filters-20261019.jpg. Pendiente aceptación en móviles y Smart TV físicos.
+
+
+### Bolsa de trabajo — búsqueda y carga
+- Búsqueda sin diferencias de tildes, mayúsculas o espacios; Limpiar filtros y cantidad de resultados anunciada.
+- Un catálogo malformado no se presenta como lista vacía; la preferencia regional inaccesible no bloquea la carga.
+- Enlaces externos limitados a HTTP/HTTPS sin credenciales incrustadas.
+- 21 pruebas de interfaz/postulación aprobadas; vencimientos no modificados en esta revisión.
