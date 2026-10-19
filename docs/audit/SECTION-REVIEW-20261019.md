@@ -23,7 +23,7 @@ Entorno autorizado: staging, rama audit/public-job-status-20261012. Producción 
 | `bolsa-trabajo.html` | Publicación/aprobación/postulación/consulta ficticias previas; dispositivos pendientes. |
 | `buscar.html` | Controles de reproducción y favoritos separados; filtro de artista, guardado sin reproducción, segunda página y retorno desde artista comprobados en staging. YouTube reproducible sigue pendiente. |
 | `cartelera.html` | Publicación ficticia/moderación/detalle/retorno probados antes; revisión visual por dispositivos pendiente. |
-| `contratar-artista.html` | Inventariada; revisión funcional y visual específica pendiente. |
+| `contratar-artista.html` | Verifica identidad exacta y disponibilidad; muestra nombre público, controla condiciones y reintentos sin duplicar. Falta completar envío real a un artista de prueba y dispositivos. |
 | `descubrir.html` | Música: 24 tarjetas comprobadas en staging. Eventos: fixture y acción Ver evento comprobados. Errores, reintento y cursor repetido cubiertos localmente; dispositivos pendientes. |
 | `documentacion.html` | Inventariada; revisión funcional y visual específica pendiente. |
 | `en-vivo.html` | Radio reproducible comprobada; TV autorizada reproducible pendiente. |
@@ -157,7 +157,7 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - 231 pruebas CJS locales y todos los checks/Pages de ambos cambios pasan. Aceptación real: Inicio → Buscar @madonna abre búsqueda general y canal exacto; Guardar/Quitar en Continuar cambia aria-pressed sin reproducir (audio pausado y src vacío); Explorar carga 24 propuestas y ofrece perfiles exactos de Madonna y Topic.
 - Artista abierto desde Inicio vuelve a Inicio; desde Explorar / En escena vuelve a kind=escena con esa categoría activa. Los destinos de retorno se validan contra rutas y parámetros permitidos.
 - Audio propio QA de 12 segundos abierto desde Continuar: AUDIO nativo, paused=false, currentTime=10.9/12, sin error; carátula conservada. Cerrado al terminar la comprobación. Esto no certifica reproducción de YouTube ni equipos físicos.
-- Pendiente visual detectado: algunos títulos de propuestas llegan con entidades como &#39; y aún requieren normalización en Inicio. Las playlists sin metadatos del proveedor pueden conservar el título genérico Contenido en historial antiguo.
+- Títulos con entidades HTML corregidos y comprobados en la siguiente pasada. Las playlists sin metadatos del proveedor pueden conservar el título genérico Contenido en historial antiguo.
 
 ## Pulido de Inicio y Explorar
 
@@ -165,3 +165,10 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Banner con controles anterior/siguiente/pausa cuando hay varias propuestas. Pausa con hover, foco dentro del hero, pestaña oculta y preferencia de movimiento reducido (incluido su cambio mientras la página está abierta). Limpieza de temporizador y listeners al reemplazar la configuración.
 - Cada slide reinicia categoría, descripción e imagen cuando faltan, para no atribuir datos de la propuesta anterior.
 - 236 pruebas CJS locales pasan. Controles de múltiples slides probados con fixtures aislados; staging usa hero genérico actualmente. Verificación publicada se registra luego.
+
+## Aceptación de pulido y contratación
+
+- Staging: La K\'onga y Show 90\'s aparecen sin entidades visibles en Inicio. Hero genérico comprobado con controles ocultos; rotación multi-slide comprobada mediante fixtures, no con cambios de configuración reales.
+- Contratación verifica profile.id contra el artista solicitado, muestra su nombre en vez del ID técnico y bloquea enviar hasta artista confirmado + condiciones marcadas. Tras reset vuelve a bloquear enviar.
+- Sin artista seleccionado: campo visible “Sin artista seleccionado”, datos personales deshabilitados, botón Enviar solicitud deshabilitado y explicación verificadas en navegador. No se envió una consulta real ni se aceptaron condiciones durante esta revisión.
+- 249 pruebas locales pasan (incluye 10 de disponibilidad de contratación y 3 de reintentos) y todos los checks/Pages del commit 693b228c1fbcb0b049371edfed497a1de5f92b57 pasan. Sin nuevo Worker ni producción.
