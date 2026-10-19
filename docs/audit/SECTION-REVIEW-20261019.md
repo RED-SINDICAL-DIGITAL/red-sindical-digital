@@ -86,5 +86,7 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Filtro Artistas conserva perfil descubierto sin mensaje contradictorio de categoría vacía.
 - Explorar muestra 24 propuestas musicales y, en Eventos, el evento ficticio ya autorizado de staging. No se crearon publicaciones nuevas.
 - Respuestas malformadas, fallo primario con fallback vacío, cursor repetido, reintento exitoso, estructura de controles, artista descubierto y títulos codificados tienen regresiones nuevas. La suite combinada con carga progresiva y fallback móvil cubre 18 escenarios.
-- La corrección de entidades en títulos está en código y probada localmente; su comprobación visual final queda pendiente del despliegue.
+- La corrección de entidades en títulos pasó las pruebas locales y quedó comprobada tras el despliegue: «Madonna - Papa Don't Preach (Official Video) [HD]» aparece con apóstrofe legible.
 - Pruebas nuevas incluidas en CI; algunos runs siguen en cola. No se afirma aprobación completa de CI antes de recibir sus resultados.
+
+- Observación visual pendiente: varias miniaturas de videos muestran el recurso genérico de respaldo en este navegador. Revisar disponibilidad/carga de imágenes externas por dispositivo; no se atribuye todavía una causa ni se declara resuelta.
