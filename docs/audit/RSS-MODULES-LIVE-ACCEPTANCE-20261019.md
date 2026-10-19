@@ -22,3 +22,14 @@ Entorno: uadav-stream-staging.pages.dev y uadav-api-staging.uadavstream.workers.
 
 ## No acreditado por esta prueba
 Cron automático real (no se activó), feeds de terceros, importación automática YouTube/Spotify, pantallas bloqueadas, dispositivos físicos móviles/tablets/TV, mandos remotos y AirPlay/Cast. La reproducción de estas muestras nativas no resuelve la incidencia previa de YouTube en el navegador de nube.
+
+
+## Biblioteca y playlists — ampliación del 19 de octubre
+
+- Selector accesible de playlists en el reproductor: nombres visibles, creación directa, validación de nombre vacío y aviso sin duplicar contenido.
+- Comprobado en staging con el audio propio QA: crear lista, guardar, guardar por segunda vez, abrir lista y volver a reproducir; Favoritos y Ver más tarde muestran el audio guardado.
+- La playlist abierta se conserva ante actualizaciones de historial y sincronización. Prueba local cubre cambio de orden y desaparición de la lista.
+- Búsqueda dentro de la playlist sin salir de ella, insensible a tildes. Prueba local verifica que quitar un resultado filtrado conserva los contenidos ocultos por la búsqueda. Verificación visual en staging: buscar «audio» conserva la lista y devuelve el episodio.
+- Los botones Biblioteca/Favoritos/Más tarde y Playlists del reproductor usan sus módulos de marca blanca. Guardar revisa nuevamente el módulo playlists. Sin alterar configuraciones reales para esta comprobación.
+- Controles de 44 px como mínimo, estado aria-pressed para favoritos y guardado posterior. Validación en navegador de escritorio; celular físico y Smart TV pendientes.
+- La lista «DEMO QA · Mi primera playlist» y los dos guardados son datos de prueba del navegador. No se eliminó contenido del usuario. Reproducción cerrada al terminar.
