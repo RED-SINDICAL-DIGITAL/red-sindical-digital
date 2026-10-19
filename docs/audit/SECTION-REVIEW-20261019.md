@@ -215,3 +215,6 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Un catálogo malformado no se presenta como lista vacía; la preferencia regional inaccesible no bloquea la carga.
 - Enlaces externos limitados a HTTP/HTTPS sin credenciales incrustadas.
 - 21 pruebas de interfaz/postulación aprobadas; vencimientos no modificados en esta revisión.
+
+- Aceptación navegador en staging: «  musica  » encuentra la convocatoria ficticia de Música; consulta sin coincidencias muestra explicación y Limpiar filtros restaura 1 oportunidad. Sin envíos nuevos ni cambios de ofertas.
+- 25 pruebas locales de interfaz y contrato privado aprobadas; todos los controles remotos del código `06c16ce57cbf98fbffe7eb59375f9b66d41e68bf` aprobados, incluido Pages. Evidencia: uadav-jobs-filters-20261019.jpg.
