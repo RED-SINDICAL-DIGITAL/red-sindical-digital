@@ -238,3 +238,8 @@ jobs:
           node --check uadav-podcast-sources-admin.js
           node --test tests/podcasts.test.cjs tests/podcast-catalog-loading.test.cjs tests/native-media-session.test.cjs
           node tests/podcast-rss-integration.mjs
+
+      - name: White label section controls and live availability
+        run: |
+          node --test tests/module-policy.test.cjs tests/live-modules-loading.test.cjs tests/radio-player-participation.test.cjs
+          node tests/module-gates-integration.mjs
