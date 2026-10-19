@@ -200,3 +200,11 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Filtros no sustituyen un fallo de carga con una agenda vacía. Catálogos con registros inválidos no confirman un vacío. Banner genérico sigue presente en HTML sin esperar APIs ni imágenes.
 - Entradas sin dato explícito aparecen a confirmar; no se asumen de pago. Enlaces relacionados conservan el retorno a los filtros.
 - 282 pruebas CJS + disponibilidad de contratación pasan; pruebas de slider/generic fallback pasan. Aceptación real en staging se registra luego.
+
+
+### Aceptación en navegador — Cartelera y detalle
+- Código verificado: `a4e17018783412f394ed2754dc16d3f5c9c24274`; cuatro controles remotos completados con éxito, incluido Cloudflare Pages.
+- Demo staging: buscar DEMO muestra el evento ficticio EV-MVF91D41; abrir su ficha mantiene la identidad y «← Cartelera» conserva q=DEMO. Al regresar, el campo contiene DEMO y la agenda mantiene un resultado.
+- Una búsqueda sin coincidencias muestra 0 eventos y una explicación; Limpiar filtros restaura la consulta vacía, Todos seleccionado y 1 evento.
+- La ficha QA actualmente tiene fecha 2026-12-01. Fechas inválidas, múltiples funciones y límites de semana/mes se verificaron con pruebas automatizadas, no con modificaciones de registros públicos.
+- Evidencia visual: uadav-cartelera-filters-20261019.jpg. Pendiente aceptación en móviles y Smart TV físicos.
