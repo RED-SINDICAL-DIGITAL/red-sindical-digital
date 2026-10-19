@@ -459,6 +459,138 @@ try{const jobsRaw=await env.UADAV_DB.get('bolsa_trabajo'),jobs=jobsRaw?uadavSafe
 try{const raw=await env.UADAV_DB.get('cartelera_aprobada'),events=raw?uadavSafeJSON(raw,[]):[],grace=72*3600000;let changed=false;for(const e of events){if(e?.origen!=='externo'||e?.managed===true||e?.claimed===true)continue;const end=Date.parse(e.fecha_fin||e.fecha_inicio||e.fecha||0),seen=Date.parse(e.last_seen_at||e.actualizado||e.importado_en||0);if((Number.isFinite(end)&&end<now-6*3600000)||(e?.source_auto_sync===true&&Number.isFinite(seen)&&now-seen>grace)){e.estado='expired';e.source_status='stale';e.actualizado=iso;staleExternalEvents++;changed=true}}if(changed)await env.UADAV_DB.put('cartelera_aprobada',JSON.stringify(events))}catch(_){}
 const notifications=await uadavFlushQueuedNotifications(env,20);return {expiredFeatures,expiredJobs,staleExternalJobs,staleExternalEvents,notifications}}
 
+
+/* Podcast RSS ingestion: D1 records are separate from manually edited content. */
+function uadavPodcastURL(value) {
+  let u;try{u=new URL(String(value||''))}catch{throw Error('Usá una URL pública HTTPS válida.')}
+  const h=u.hostname.toLowerCase().replace(/\.$/,'');
+  if(u.protocol!=='https:'||u.username||u.password||(u.port&&u.port!=='443')||
+    !h.includes('.')||h.includes(':')||/^\d+(?:\.\d+){3}$/.test(h)||
+    /(^|\.)(localhost|local|internal|lan|home|localdomain|onion)$/.test(h))
+    throw Error('La fuente debe ser pública, HTTPS y sin credenciales.');
+  return u.href;
+}
+function uadavPodcastMediaURL(value,base) {
+  if(!String(value||'').trim())return '';
+  try{const u=new URL(String(value||''),base);return /^https?:$/.test(u.protocol)&&!u.username&&!u.password?u.href:''}catch{return ''}
+}
+function uadavPodcastXML(xml,base) {
+  if(typeof xml!=='string'||xml.length>1048576||/<!DOCTYPE|<!ENTITY/i.test(xml))throw Error('RSS inválido o demasiado grande.');
+  const root={name:'root',attrs:{},children:[],text:''},stack=[root];
+  let cursor=0,nodes=0;
+  const decode=s=>String(s).replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi,(_,e)=>{
+    const named={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"};if(e[0]!=='#')return named[e.toLowerCase()]||'';
+    const n=e[1]?.toLowerCase()==='x'?parseInt(e.slice(2),16):Number(e.slice(1));return n>0&&n<=0x10ffff&&!(n>=0xd800&&n<=0xdfff)?String.fromCodePoint(n):'';
+  });
+  while(cursor<xml.length){
+    if(xml.startsWith('<!--',cursor)){const end=xml.indexOf('-->',cursor+4);if(end<0)throw Error('RSS incompleto.');cursor=end+3;continue}
+    if(xml.startsWith('<![CDATA[',cursor)){const end=xml.indexOf(']]>',cursor+9);if(end<0)throw Error('RSS incompleto.');stack.at(-1).text+=xml.slice(cursor+9,end);cursor=end+3;continue}
+    if(xml[cursor]!=='<'){let end=xml.indexOf('<',cursor);if(end<0)end=xml.length;stack.at(-1).text+=decode(xml.slice(cursor,end));cursor=end;continue}
+    const match=xml.slice(cursor).match(/^<(?:"[^"]*"|'[^']*'|[^'">])*>/);
+    if(!match)throw Error('RSS incompleto.');
+    const tag=match[0];cursor+=tag.length;if(tag.startsWith('<?'))continue;
+    if(tag.startsWith('<!'))throw Error('Declaración XML no admitida.');
+    if(tag.startsWith('</')){const name=tag.slice(2,-1).trim().toLowerCase();if(stack.length<2||stack.at(-1).name!==name)throw Error('RSS mal formado.');stack.pop();continue}
+    const name=tag.match(/^<([A-Za-z_][\w:.-]*)/)?.[1]?.toLowerCase();if(!name)throw Error('RSS mal formado.');
+    if(++nodes>20000||stack.length>64)throw Error('RSS demasiado complejo.');
+    const attrs={};const attrPattern=/([A-Za-z_][\w:.-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;let a;
+    while((a=attrPattern.exec(tag)))attrs[a[1].toLowerCase()]=decode(a[2]??a[3]);
+    const node={name,attrs,children:[],text:''};stack.at(-1).children.push(node);if(!/\/>$/.test(tag))stack.push(node);
+  }
+  if(stack.length!==1||root.children.length!==1)throw Error('RSS mal formado.');
+  const document=root.children[0],local=n=>n.name.split(':').at(-1);
+  if(!['rss','feed'].includes(local(document)))throw Error('La URL no devuelve un feed RSS o Atom.');
+  const channel=document.children.find(n=>local(n)==='channel')||document;
+  const child=(n,...names)=>n.children.find(x=>names.includes(x.name)||names.includes(local(x)));
+  const text=n=>n?decode(n.text+n.children.map(text).join(' ')).replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim():'';
+  const image=n=>{const i=child(n,'itunes:image','media:thumbnail');return uadavPodcastMediaURL(i?.attrs.href||i?.attrs.url||text(child(child(n,'image')||{children:[]},'url')),base)};
+  const show=text(child(channel,'title')).slice(0,300),art=image(channel),items=channel.children.filter(n=>['item','entry'].includes(local(n))),seen=new Set(),episodes=[];
+  let skipped=0;
+  for(const item of items.slice(0,1000)){
+    const enclosures=[...item.children,...item.children.filter(n=>n.name==='media:group').flatMap(n=>n.children)].filter(n=>local(n)==='enclosure'||n.name==='media:content'||(local(n)==='link'&&n.attrs.rel==='enclosure'));
+    const media=enclosures.map(n=>({url:uadavPodcastMediaURL(n.attrs.url||n.attrs.href,base),mime:String(n.attrs.type||'').toLowerCase()})).find(n=>n.url&&(/^(audio|video)\//.test(n.mime)||/\.(mp3|m4a|aac|ogg|wav|mp4|webm|m4v)(?:[?#]|$)/i.test(n.url)));
+    if(!media){skipped++;continue}
+    const guid=(text(child(item,'guid','id'))||media.url).slice(0,2048);if(seen.has(guid)){skipped++;continue}seen.add(guid);
+    const kind=media.mime.startsWith('video/')||/\.(mp4|webm|m4v)(?:[?#]|$)/i.test(media.url)?'video':'audio';
+    const linkNode=item.children.find(n=>local(n)==='link'&&n.attrs.rel!=='enclosure');
+    const page=uadavPodcastMediaURL(linkNode?.attrs.href||text(linkNode),base);
+    const date=text(child(item,'pubdate','published','updated')),published=Date.parse(date);
+    episodes.push({guid,url:media.url,titulo:text(child(item,'title')).slice(0,500)||'Episodio',descripcion:text(child(item,'description','summary','content:encoded','content')).slice(0,5000),
+      thumbnail:image(item)||art,media_type:kind,content_type:'podcast',provider:kind,programa:show,author:text(child(item,'itunes:author','author'))||show,
+      duration:text(child(item,'itunes:duration')).slice(0,40),episode_url:page,published_at:Number.isFinite(published)?new Date(published).toISOString():'',source_url:base});
+    if(episodes.length>=200)break;
+  }
+  return {title:show,artwork:art,episodes,skipped,total:items.length,truncated:items.length>1000||episodes.length===200};
+}
+async function uadavFetchPodcast(url,conditions={},requestFetch=fetch) {
+  let current=uadavPodcastURL(url);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
+  try{
+    for(let redirects=0;redirects<=3;redirects++){
+      const headers={Accept:'application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9'};
+      if(conditions.etag)headers['If-None-Match']=conditions.etag;
+      if(conditions.last_modified)headers['If-Modified-Since']=conditions.last_modified;
+      const response=await requestFetch(current,{redirect:'manual',signal:controller.signal,headers});
+      if([301,302,303,307,308].includes(response.status)){
+        const next=response.headers.get('location');await response.body?.cancel();
+        if(!next||redirects===3)throw Error('La fuente redirige demasiadas veces.');
+        const nextURL=uadavPodcastURL(new URL(next,current).href);
+        if(new URL(nextURL).origin!==new URL(current).origin)conditions={};
+        current=nextURL;continue;
+      }
+      if(response.status===304)return {unchanged:true};
+      if(!response.ok)throw Error('La fuente RSS no responde correctamente.');
+      if(Number(response.headers.get('content-length'))>1048576){await response.body?.cancel();throw Error('RSS demasiado grande.')}
+      const reader=response.body?.getReader();if(!reader)throw Error('La fuente no devolvió contenido.');
+      const decoder=new TextDecoder();let xml='',size=0;
+      while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>1048576){await reader.cancel();throw Error('RSS demasiado grande.')}xml+=decoder.decode(value,{stream:true})}
+      xml+=decoder.decode();
+      return {...uadavPodcastXML(xml,current),etag:(response.headers.get('etag')||'').slice(0,400),last_modified:(response.headers.get('last-modified')||'').slice(0,100)};
+    }
+  }catch(e){if(e?.name==='AbortError')throw Error('La fuente tardó demasiado en responder.');throw e}
+  finally{clearTimeout(timer)}
+}
+async function uadavPodcastSchema(env) {
+  if(!env.DB)throw Error('La importación RSS necesita D1.');
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS podcast_sources (id TEXT PRIMARY KEY,name TEXT NOT NULL,url TEXT NOT NULL,active INTEGER DEFAULT 0,auto_publish INTEGER DEFAULT 0,interval_hours INTEGER DEFAULT 12,etag TEXT DEFAULT '',last_modified TEXT DEFAULT '',last_check_at TEXT DEFAULT '',last_success_at TEXT DEFAULT '',next_check_at INTEGER DEFAULT 0,last_error TEXT DEFAULT '',lease_until INTEGER DEFAULT 0,revision INTEGER DEFAULT 1,created_at TEXT,updated_at TEXT)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS podcast_entries (id TEXT PRIMARY KEY,source_id TEXT NOT NULL,guid TEXT NOT NULL,url TEXT NOT NULL,data_json TEXT NOT NULL,visible INTEGER DEFAULT 1,created_at TEXT,updated_at TEXT,UNIQUE(source_id,guid))").run();
+}
+async function uadavSyncPodcast(env,id,requestFetch=fetch) {
+  await uadavPodcastSchema(env);
+  const source=await env.DB.prepare('SELECT * FROM podcast_sources WHERE id=?').bind(id).first();if(!source)throw Error('Fuente no encontrada.');
+  const now=Date.now(),iso=new Date(now).toISOString();
+  const lock=await env.DB.prepare('UPDATE podcast_sources SET lease_until=? WHERE id=? AND revision=? AND lease_until<?').bind(now+60000,id,source.revision,now).run();
+  if(!lock.meta?.changes)throw Error('Esta fuente ya se está procesando. Esperá y actualizá.');
+  try{
+    const feed=await uadavFetchPodcast(source.url,{etag:source.etag,last_modified:source.last_modified},requestFetch);
+    let created=0,updated=0,unchanged=0;const statements=[];
+    if(!feed.unchanged){
+      if(!feed.episodes.length)throw Error('El feed no contiene episodios de audio o video compatibles.');
+      const existing=(await env.DB.prepare('SELECT guid,data_json FROM podcast_entries WHERE source_id=?').bind(id).all()).results||[],byGuid=new Map(existing.map(x=>[x.guid,x.data_json]));
+      for(const episode of feed.episodes){
+        const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(id+'\n'+episode.guid)),entryId='POD-'+Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,'0')).join('');
+        const item={...episode,id:entryId,source_id:id,source_name:source.name,source_kind:'rss',source_auto_sync:true,estado:'published',visible:true};
+        const data=JSON.stringify(item),old=byGuid.get(episode.guid);if(old===data){unchanged++;continue}
+        if(old)updated++;else created++;
+        statements.push(env.DB.prepare('INSERT INTO podcast_entries(id,source_id,guid,url,data_json,visible,created_at,updated_at) VALUES(?,?,?,?,?,1,?,?) ON CONFLICT(source_id,guid) DO UPDATE SET url=excluded.url,data_json=excluded.data_json,updated_at=excluded.updated_at').bind(entryId,id,episode.guid,episode.url,data,iso,iso));
+      }
+    }
+    statements.push(env.DB.prepare("UPDATE podcast_sources SET etag=?,last_modified=?,last_check_at=?,last_success_at=?,next_check_at=?,last_error='',lease_until=0 WHERE id=? AND revision=?").bind(feed.etag??source.etag,feed.last_modified??source.last_modified,iso,iso,now+source.interval_hours*3600000,id,source.revision));
+    await env.DB.batch(statements);
+    return {success:true,created,updated,unchanged,not_modified:!!feed.unchanged,skipped:feed.skipped||0,truncated:!!feed.truncated};
+  }catch(e){
+    await env.DB.prepare('UPDATE podcast_sources SET last_check_at=?,last_error=?,next_check_at=?,lease_until=0 WHERE id=?').bind(iso,String(e?.message||'No se pudo importar el RSS.').slice(0,300),now+Math.max(3600000,source.interval_hours*3600000),id).run();throw e;
+  }
+}
+async function uadavPodcastCron(env) {
+  if(env.PODCAST_RSS_SYNC_ENABLED!=='true'||!env.DB)return {enabled:false,processed:0};
+  await uadavPodcastSchema(env);
+  const rows=(await env.DB.prepare('SELECT id FROM podcast_sources WHERE active=1 AND auto_publish=1 AND next_check_at<=? AND lease_until<? ORDER BY next_check_at ASC LIMIT 3').bind(Date.now(),Date.now()).all()).results||[];
+  let processed=0,failed=0;
+  for(const row of rows){try{await uadavSyncPodcast(env,row.id);processed++}catch{failed++}}
+  return {enabled:true,processed,failed};
+}
+
 const uadavWorker = {
   async fetch(request, env, ctx) {
     const cors = {
@@ -4027,6 +4159,68 @@ async function saveEntityVersion(type,id,data){
         await env.DB.prepare(`INSERT INTO entity_versions(entity_type,entity_id,version,data_json,created_at) VALUES(?,?,?,?,?)`).bind(type,id,Number(row?.v||1),JSON.stringify(data),isoNow()).run();
       });
     }
+
+    if(path==='/api/podcasts/episodes'&&request.method==='GET'){
+      if(!env.DB)return json([]);
+      try{await uadavPodcastSchema(env);const rows=(await env.DB.prepare('SELECT data_json,visible FROM podcast_entries WHERE visible=1 ORDER BY updated_at DESC,id LIMIT 1000').all()).results||[];
+        return json(rows.map(x=>({...uadavSafeJSON(x.data_json,{}),visible:x.visible===1})));
+      }catch{return json({error:'No pudimos cargar los episodios importados.'},503)}
+    }
+    if(path.startsWith('/api/admin/podcasts/')){
+      if(!isAdmin())return json({error:'No autorizado'},401,{'Cache-Control':'no-store'});
+      try{
+        await uadavPodcastSchema(env);
+        const body=request.method==='GET'?{}:await request.json().catch(()=>({}));
+        const privateJSON=(data,status=200)=>json(data,status,{'Cache-Control':'no-store'});
+        if(path==='/api/admin/podcasts/sources'&&request.method==='GET'){
+          const rows=(await env.DB.prepare('SELECT * FROM podcast_sources ORDER BY created_at DESC,id').all()).results||[];
+          return privateJSON({items:rows.map(({lease_until,etag,last_modified,...s})=>({...s,active:s.active===1,auto_publish:s.auto_publish===1,busy:lease_until>Date.now()})),cron_enabled:env.PODCAST_RSS_SYNC_ENABLED==='true'});
+        }
+        if(path==='/api/admin/podcasts/sources'&&request.method==='POST'){
+          const name=String(body.name||'').trim().slice(0,120),feedURL=uadavPodcastURL(body.url);
+          if(!name)return privateJSON({error:'Escribí el nombre del programa.'},400);
+          const interval=Number(body.interval_hours??12);if(!Number.isFinite(interval)||interval<1||interval>168)return privateJSON({error:'El intervalo debe estar entre 1 y 168 horas.'},400);
+          const old=body.id?await env.DB.prepare('SELECT * FROM podcast_sources WHERE id=?').bind(String(body.id)).first():null;
+          if(body.id&&!old)return privateJSON({error:'Fuente no encontrada.'},404);
+          if(old?.url!==undefined&&old.url!==feedURL)return privateJSON({error:'Para otra URL, creá una fuente nueva. Los episodios anteriores se conservan.'},400);
+          const id=old?.id||'RSS-'+crypto.randomUUID(),iso=isoNow();
+          if(old){
+            const result=await env.DB.prepare('UPDATE podcast_sources SET name=?,active=?,auto_publish=?,interval_hours=?,revision=revision+1,updated_at=? WHERE id=? AND lease_until<?').bind(name,body.active===true?1:0,body.auto_publish===true?1:0,Math.floor(interval),iso,id,Date.now()).run();
+            if(!result.meta?.changes)return privateJSON({error:'La fuente se está sincronizando. Esperá y volvé a guardar.'},409);
+          }else{
+            const duplicate=await env.DB.prepare('SELECT id FROM podcast_sources WHERE url=?').bind(feedURL).first();if(duplicate)return privateJSON({error:'Este RSS ya está registrado. Editá su fuente existente.'},409);
+            const count=await env.DB.prepare('SELECT COUNT(*) AS total FROM podcast_sources').first();
+            if(Number(count?.total)>=100)return privateJSON({error:'Se alcanzó el límite de 100 fuentes. Pausá o reutilizá una fuente existente.'},400);
+            await env.DB.prepare('INSERT INTO podcast_sources(id,name,url,active,auto_publish,interval_hours,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?)').bind(id,name,feedURL,body.active===true?1:0,body.auto_publish===true?1:0,Math.floor(interval),iso,iso).run();
+          }
+          await audit('podcast_source_save','podcast_source',id,{active:body.active===true,auto_publish:body.auto_publish===true});
+          return privateJSON({success:true,id});
+        }
+
+        if(path==='/api/admin/podcasts/episodes'&&request.method==='GET'){
+          const sourceId=String(url.searchParams.get('source_id')||'');
+          const rows=(await env.DB.prepare('SELECT id,data_json,visible FROM podcast_entries WHERE source_id=? ORDER BY updated_at DESC,id LIMIT 200').bind(sourceId).all()).results||[];
+          return privateJSON({items:rows.map(x=>({...uadavSafeJSON(x.data_json,{}),id:x.id,visible:x.visible===1}))});
+        }
+        if(path==='/api/admin/podcasts/episodes'&&request.method==='PUT'){
+          if(typeof body.visible!=='boolean')return privateJSON({error:'Indicá si el episodio debe estar visible.'},400);
+          const result=await env.DB.prepare('UPDATE podcast_entries SET visible=? WHERE id=?').bind(body.visible?1:0,String(body.id||'')).run();
+          if(!result.meta?.changes)return privateJSON({error:'Episodio no encontrado.'},404);
+          return privateJSON({success:true,id:String(body.id),visible:body.visible});
+        }
+
+        if(path==='/api/admin/podcasts/preview'&&request.method==='POST'){
+          const feed=await uadavFetchPodcast(body.url);
+          return privateJSON({success:true,title:feed.title,artwork:feed.artwork,episodes:feed.episodes.slice(0,20),parsed:feed.episodes.length,total:feed.total,skipped:feed.skipped,truncated:feed.truncated});
+        }
+        if(path==='/api/admin/podcasts/sync'&&request.method==='POST'){
+          const result=await uadavSyncPodcast(env,String(body.id||''));
+          await audit('podcast_source_sync','podcast_source',String(body.id||''),result);return privateJSON(result);
+        }
+        return privateJSON({error:'Operación de podcasts no disponible.'},404);
+      }catch(e){return json({error:String(e?.message||'No se pudo completar la operación RSS.').slice(0,300)},400,{'Cache-Control':'no-store'})}
+    }
+
     if(path==='/api/admin/content/resolve' && request.method==='POST'){
       if(!isAdmin())return json({error:'No autorizado'},401);
       const b=await request.json().catch(()=>({})); const info=detectProvider(b.url); if(!info.url)return json({error:'URL requerida'},400);
@@ -4440,7 +4634,7 @@ async function saveEntityVersion(type,id,data){
     return json({ error: 'Ruta no encontrada' }, 404);
   },
   async scheduled(_event, env, ctx) {
-    const task=Promise.all([uadavMaintenance(env),uadavPushFlush(env)]); if(ctx?.waitUntil) ctx.waitUntil(task); else await task;
+    const task=Promise.all([uadavMaintenance(env),uadavPushFlush(env),uadavPodcastCron(env)]); if(ctx?.waitUntil) ctx.waitUntil(task); else await task;
   },
   async queue(batch, env, ctx) {
     const run = async()=>{
@@ -4454,7 +4648,7 @@ async function saveEntityVersion(type,id,data){
 };
 
 
-export {uadavArtistHandle,uadavYouTubePlaylistItems,uadavYouTubeLibrary,uadavProfileDisplay,uadavArtistSharePage,uadavDecodeHTMLText};
+export {uadavPodcastURL,uadavPodcastXML,uadavFetchPodcast,uadavSyncPodcast,uadavPodcastCron,uadavArtistHandle,uadavYouTubePlaylistItems,uadavYouTubeLibrary,uadavProfileDisplay,uadavArtistSharePage,uadavDecodeHTMLText};
 
 export default uadavWorker;
 
