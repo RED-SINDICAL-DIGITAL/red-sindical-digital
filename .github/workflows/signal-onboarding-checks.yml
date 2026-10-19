@@ -246,3 +246,6 @@ jobs:
 
       - name: Manual podcast classification
         run: node --test tests/admin-podcast-classification.test.cjs
+
+      - name: Search and Explore controls and recovery
+        run: node --test tests/search-explore-usability.test.cjs
