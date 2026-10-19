@@ -74,6 +74,9 @@ on:
       - contratar-artista.html
       - publicar-evento.html
       - tests/event-detail-identity.test.cjs
+      - cartelera.html
+      - tests/cartelera-loading.test.cjs
+      - tests/cartelera-slider.mjs
       - tests/event-publication-ui.test.cjs
       - tests/event-publication-integration.mjs
       - bolsa-trabajo.html
@@ -173,7 +176,9 @@ jobs:
       - name: Inquiry inbox account isolation
         run: node --test tests/artist-inquiry-account.test.cjs
       - name: Event publication and result isolation
-        run: node --test tests/event-publication-ui.test.cjs tests/event-detail-identity.test.cjs
+        run: node --test tests/event-publication-ui.test.cjs tests/event-detail-identity.test.cjs tests/cartelera-loading.test.cjs
+      - name: Cartelera slider regression
+        run: node tests/cartelera-slider.mjs
       - name: Event Worker catalog and moderation integration
         run: node tests/event-publication-integration.mjs
       - name: Job application receipt and submission isolation
