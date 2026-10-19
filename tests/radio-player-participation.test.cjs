@@ -1,6 +1,8 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const vm=require('node:vm');const fs=require('node:fs');
 const source=fs.readFileSync('app.html','utf8').match(/function openRadioSection\(section\)\{[\s\S]*?return true\}/)[0];
-function setup(radio){const routes=[],ctx={currentRadio:radio,nav:v=>routes.push(v)};vm.createContext(ctx);vm.runInContext(source,ctx);return {ctx,routes}}
+function setup(radio){const routes=[],ctx={currentRadio:radio,platformModules:{},nav:v=>routes.push(v)};vm.createContext(ctx);vm.runInContext(source,ctx);return {ctx,routes}}
 test('player participation routes to the selected station and requested section',()=>{const {ctx,routes}=setup({id:'RAD/A ?'});assert.equal(ctx.openRadioSection('requestsSection'),true);assert.equal(routes[0],'/radio.html?id=RAD%2FA%20%3F#requestsSection');ctx.openRadioSection('chatSection');assert.ok(routes[1].endsWith('#chatSection'))});
 test('no station or unrecognized section cannot navigate',()=>{let {ctx,routes}=setup(null);assert.equal(ctx.openRadioSection('chatSection'),false);assert.deepEqual(routes,[]);({ctx,routes}=setup({id:'A'}));assert.equal(ctx.openRadioSection('https://other.test'),false);assert.deepEqual(routes,[])});
 test('station change uses current identity instead of a stale destination',()=>{const {ctx,routes}=setup({id:'A'});ctx.openRadioSection('chatSection');ctx.currentRadio={id:'B'};ctx.openRadioSection('requestsSection');assert.ok(routes[1].includes('id=B#'));ctx.currentRadio=null;assert.equal(ctx.openRadioSection('chatSection'),false)});
+
+test('disabled radio participation cannot navigate through the player',()=>{const {ctx,routes}=setup({id:'A'});ctx.platformModules.radio_requests=false;assert.equal(ctx.openRadioSection('requestsSection'),false);assert.equal(ctx.openRadioSection('chatSection'),true);ctx.platformModules.radio=false;assert.equal(ctx.openRadioSection('chatSection'),false);assert.equal(routes.length,1)});
