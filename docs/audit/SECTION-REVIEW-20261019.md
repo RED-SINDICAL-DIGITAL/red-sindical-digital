@@ -143,4 +143,4 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Botón Favorita refleja aria-pressed y nombre de la emisora. Hay confirmación visible y un error legible si no se pudo guardar.
 - El botón Radios favoritas y las aperturas desde Biblioteca conservan sólo un regreso local validado a tab=radios, con la búsqueda. Emisoras sin ID propio pueden resolverse por su stream guardado.
 - Nuevos favoritos incluyen programa/ubicación; la búsqueda local de Biblioteca contempla esos campos.
-- 218 pruebas CJS locales pasan. Prueba real del recorrido se registra después de publicar staging.
+- 218 pruebas CJS locales y todos los checks/Pages pasan. Aceptación real en staging: BEAT DIGITAL RADIO · PRUEBA → Favorita confirma guardado y aria-pressed=true → Radios favoritas → buscar BEAT → Abrir radio conserva RAD-MVB7AHVS-TP0Y → Radios favoritas restaura pestaña y filtro. Quitar/reagregar también confirma estado false/true. No se inició reproducción ni se enviaron mensajes o pedidos en esta pasada. No requiere otro Worker.
