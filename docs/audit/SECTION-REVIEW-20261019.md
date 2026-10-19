@@ -115,3 +115,12 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Commit de corrección: 7271cb77a52011cc5715a79367a372de20cd8050. Sus pasos del job Platform integration checks terminaron con éxito, incluidos onboarding, navegación, ciclos de propiedad, catálogo, radio, RSS y módulos. No se ocultó ni desactivó una prueba.
 - Las 177 pruebas CJS disponibles en el entorno local pasaron. El ciclo de propiedad del Worker con SQLite aislado pasó.
 - Staging carga uadav-artist-onboarding-v145.js?v=20261019-safety y muestra el acceso con cuenta. No se creó una cuenta ni se envió una solicitud real en este navegador. La aceptación completa con cuenta real y dispositivos continúa pendiente.
+
+## Catálogo público del canal: continuidad y estados vacíos
+
+- Videos y playlists descartan respuestas/errores tardíos cuando dejó de estar activo ese canal. Un cambio de canal durante el render tampoco inserta controles viejos.
+- La paginación recuerda los cursores aceptados y detecta ciclos de varias páginas, conservando el catálogo y la página válida para reintentar.
+- Cada canal conserva su pestaña; la selección se anuncia con aria-pressed. Las miniaturas tienen respaldo ante error.
+- Colecciones sólo aparece cuando las playlists cargadas tienen candidatos identificables. Sigue siendo una agrupación por título, no una discografía verificada ni una solución de álbumes automáticos.
+- Los catálogos vacíos confirmados muestran mensajes específicos para videos y playlists; un error sigue ofreciendo reintento.
+- 19 pruebas locales de paginación y navegación del artista pasan. La aceptación visual y de carga contra staging se realiza después del despliegue; reproducción real de YouTube y dispositivos siguen pendientes.
