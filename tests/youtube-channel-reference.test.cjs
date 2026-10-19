@@ -33,3 +33,8 @@ test('library restores only known tabs and the query on direct return',()=>{
  function run(search){let selected;const tabs=['recent','following'].map(kind=>({dataset:{kind},classList:{toggle(_name,on){if(on)selected=kind}}})),input={value:''},ctx={URLSearchParams,location:{search},KEYS:{recent:'recent',following:'following'},document:{getElementById:()=>input,querySelectorAll:()=>tabs},render:kind=>ctx.rendered=kind};vm.runInNewContext(source.slice(start,end),ctx);return {ctx,input,selected}}
  const ok=run('?tab=following&q=Madonna');assert.equal(ok.ctx.rendered,'following');assert.equal(ok.selected,'following');assert.equal(ok.input.value,'Madonna');assert.equal(run('?tab=__proto__').ctx.rendered,'recent');
 });
+
+test('library cards display stored artist photos and radio logos',()=>{
+ const source=fs.readFileSync('biblioteca.html','utf8'),start=source.indexOf('function img('),end=source.indexOf('function render(',start),ctx={};vm.runInNewContext(source.slice(start,end),ctx);
+ assert.equal(ctx.img({foto:'artist-photo'}),'artist-photo');assert.equal(ctx.img({logo:'radio-logo'}),'radio-logo');assert.equal(ctx.img({thumbnail:'content-cover',foto:'artist-photo'}),'content-cover');assert.equal(ctx.img({}),'');
+});
