@@ -24,6 +24,10 @@ No aplicar al Worker de producción.
 ## Validación y límites
 
 - 197 pruebas CJS locales pasan; integraciones aisladas de módulos, RSS y titularidad pasan.
-- La prueba real actual detectó 12 playlists con título vacío y cantidad cero. La recuperación real está pendiente del despliegue de este Worker. No se garantiza que el proveedor entregue todos los metadatos.
+- Despliegue confirmado el 2026-10-19: /api/health informa build 11754, KV y D1 activos.
+- El canal Madonna - Topic (UCo4CrqhIV_tSOGdDWfVyCsg) sigue devolviendo 12 playlists sin título ni imagen, count:null y metadata_incomplete:true. La recuperación no completó esos metadatos.
+- El canal Madonna (@madonna, UC81VD6eeuLLSfyY_D-N8sVw) devuelve 39 playlists con títulos, cantidades y URLs de miniaturas; metadata_incomplete:false. La demo muestra los 39 títulos y cantidades, pero las imágenes visibles son de respaldo. No se considera resuelta la carga real de carátulas.
+- Mejora frontend fa83040557c953d3ba26d2bbc35f3430f6338486: el directorio acepta enlace/@usuario/ID de canal, el perfil y compartir conservan ese canal, y la hidratación no mezcla búsquedas por nombre si ya conoce el canal. Búsqueda simple por nombre sigue sin ofrecer todas las coincidencias posibles.
+- 205 pruebas CJS locales y todos los checks del cambio frontend pasan. Prueba real: pegar https://www.youtube.com/@madonna en Artistas, abrir el resultado, Playlists y Compartir; identidad exacta y 39 listas confirmadas. No exige otro despliegue de Worker.
 - No soluciona todavía discografía verificada ni reproducción de YouTube en todos los dispositivos.
 - SHA-256 del Worker entregado: 537862113749cd545a0775655472afb460473796273e060a0530444c1f37c9f1.
