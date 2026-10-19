@@ -108,3 +108,10 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Búsquedas inválidas no se presentan como cero coincidencias ni habilitan crear por error. Se eliminó el recorte silencioso de 30 coincidencias.
 - Cambio de cuenta, cierre en otra pestaña y precarga de selección descartan respuestas antiguas y limpian datos de contacto y selección.
 - 14 pruebas locales de onboarding pasan; ciclo real del Worker en SQLite aislado también pasa (alta privada, rechazo, aprobación, aislamiento y revocación). Sin cuentas ni solicitudes reales creadas en navegador para esta ampliación.
+
+### Cierre de controles de esta ampliación
+
+- CI detectó tres fallos del arnés de restauración de pestañas: extraía código hasta openClaimFlow, función retirada con el botón público. Se actualizó el límite a addUnique, conservando las cinco comprobaciones de navegación/seguimiento.
+- Commit de corrección: 7271cb77a52011cc5715a79367a372de20cd8050. Sus pasos del job Platform integration checks terminaron con éxito, incluidos onboarding, navegación, ciclos de propiedad, catálogo, radio, RSS y módulos. No se ocultó ni desactivó una prueba.
+- Las 177 pruebas CJS disponibles en el entorno local pasaron. El ciclo de propiedad del Worker con SQLite aislado pasó.
+- Staging carga uadav-artist-onboarding-v145.js?v=20261019-safety y muestra el acceso con cuenta. No se creó una cuenta ni se envió una solicitud real en este navegador. La aceptación completa con cuenta real y dispositivos continúa pendiente.
