@@ -38,3 +38,5 @@ No aplicar al Worker de producción.
 - Respuestas tardías, referencias inexistentes y canales distintos al solicitado no sustituyen el resultado actual ni se muestran como coincidencias válidas.
 - 208 pruebas CJS locales pasan, incluidos éxito, fallo y cambio de búsqueda durante la consulta exacta.
 - Diagnóstico de carátulas: la navegación directa del navegador de pruebas a https://i.ytimg.com/vi/X_R2uZdTW0A/hqdefault.jpg muestra “Site Unavailable / Unable to access this site.” No prueba una falla universal del cliente ni permite confirmar imágenes en dispositivos reales. No se agregó un proxy para evitar esa limitación.
+
+- Aceptación publicada del buscador general (07cbc2455da05c009f3bfa0627b816f0491defb3): todos los checks y Pages en success. En navegador: @madonna devuelve un perfil, enlaza el canal UC81VD6eeuLLSfyY_D-N8sVw, permite abrirlo y Volver restaura consulta y filtro Artistas. No se probó reproducción ni dispositivos físicos en esta aceptación.
