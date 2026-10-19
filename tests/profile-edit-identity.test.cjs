@@ -24,3 +24,29 @@ test('same-account name edit remains available',()=>{
 test('failed image read preserves existing photo and explains how to retry',()=>{
  const h=setup();h.ctx.loadProfilePhoto();h.readers[0].onerror();assert.equal(h.writes(),0);assert.equal(h.ctx.user.photo,'original');assert.match(h.alerts[0],/otra foto/);
 });
+
+const profileHelpers=page.slice(page.indexOf('function normalizeProfile('),page.indexOf('let user=readProfile();'));
+test('optional damaged profile fields cannot break the profile view',()=>{
+ const ctx={};vm.runInNewContext(profileHelpers,ctx);
+ for(const raw of [null,[],false,'text']){const result=ctx.normalizeProfile(raw);assert.equal(result.name,'Mi cuenta');assert.equal(result.photo,'');assert.equal(result.preferences.length,0)}
+ const result=ctx.normalizeProfile({name:' Name ',avatar:{},photo:12,preferences:['Música',null,' Música ','Radio'],email:'synthetic@example.invalid'});
+ assert.equal(result.name,'Name');assert.equal(result.avatar,'Na');assert.equal(result.photo,'');assert.deepEqual(Array.from(result.preferences),['Música','Radio']);assert.equal(result.email,'synthetic@example.invalid');
+});
+test('profile history ignores malformed records without losing valid media',()=>{
+ const ctx={localStorage:{getItem:()=>JSON.stringify([null,12,[],{}, {title:'Valid audio',url:'https://example.test/audio.mp3'}])}};vm.runInNewContext(page.slice(page.indexOf('function recent(){'),page.indexOf('function openRecent(')),ctx);assert.equal(ctx.recent().length,1);assert.equal(ctx.recent()[0].title,'Valid audio');
+});
+test('profile data refresh updates changed identity and preserves unchanged editing state',()=>{
+ const storage=new Map([['user',JSON.stringify({name:'First'})]]),ctx={KEY:'user',photoEditVersion:0,localStorage:{getItem:k=>storage.get(k)||null},paints:0};vm.createContext(ctx);vm.runInContext(profileHelpers,ctx);ctx.user=ctx.readProfile();ctx.paint=()=>{ctx.paints++;vm.runInContext('profilePaintSignature=profileViewSignature(user)',ctx)};
+ ctx.refreshProfileView();ctx.refreshProfileView();assert.equal(ctx.paints,1);assert.equal(ctx.photoEditVersion,0);
+ storage.set('user',JSON.stringify({name:'Second'}));ctx.refreshProfileView();assert.equal(ctx.user.name,'Second');assert.equal(ctx.photoEditVersion,1);assert.equal(ctx.paints,2);
+ storage.set('uadav_radio_favorites_v1','[{"id":"radio"}]');ctx.refreshProfileView();assert.equal(ctx.paints,3);assert.equal(ctx.photoEditVersion,1);
+});
+test('profile recent playback can use the supported alternate shell and retains media kind',()=>{
+ const item={provider:'audio',content_type:'podcast',url:'https://example.test/audio.mp3'},played=[],ctx={window:{parent:{UADAV_APP:{playContent:x=>played.push(x)}}}};vm.runInNewContext(page.slice(page.indexOf('function openRecent('),page.indexOf('function paint(')),ctx);ctx.openRecent(item);assert.equal(played[0].provider,'audio');assert.equal(played[0].content_type,'podcast');
+});
+test('profile recent playback falls back to the same-origin shell bridge',()=>{
+ const sent=[],ctx={window:{parent:{postMessage:(data,origin)=>sent.push({data,origin})}},location:{origin:'https://example.test'}};vm.runInNewContext(page.slice(page.indexOf('function openRecent('),page.indexOf('function paint(')),ctx);ctx.openRecent({title:'Audio'});assert.equal(sent[0].data.type,'uadav:content-play');assert.equal(sent[0].origin,'https://example.test');
+});
+test('profile has complete history access and no optimistic legacy artist-session link',()=>{
+ assert.match(page,/href="\/biblioteca.html\?tab=recent"/);assert.doesNotMatch(page,/try\{const token=localStorage.getItem\('uadav_artist_access_token_v1'\)/);
+});

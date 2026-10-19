@@ -182,3 +182,11 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - 262 pruebas locales CJS + disponibilidad de contratación pasan. Integración del Worker completo con SQLite pasa: entrega, aislamiento entre artistas, avisos privados, estados, concurrencia, persistencia y reintentos idempotentes. Estas pruebas son aisladas; no certifican envío completo en staging ni entre equipos físicos.
 
 - Publicación confirmada: todos los checks y Pages del commit 163e6e23f5c8ca24ea3b45a0e111e18a5b472640 pasan. En navegador, contratar sin artista mantiene el envío deshabilitado y el comprobante oculto (altura cero). El comprobante de éxito y la recuperación frente a respuestas erróneas se validaron con pruebas aisladas; el flujo completo real en staging continúa pendiente. Manual público actualizado.
+
+## Mi perfil — datos, biblioteca y accesos
+
+- Normaliza nombre/avatar/foto/intereses antes de pintar; mantiene campos adicionales de perfil y evita fallos con tipos inválidos. Historial filtra registros dañados o sin referencia reproducible.
+- Resumen incluye radios favoritas y singular/plural correctos. Continuar ofrece Ver todo mi historial; títulos usan normalización legible y carátulas aceptan más campos del catálogo.
+- Actualizaciones account-data/storage refrescan sólo si cambió la vista; un cambio de perfil invalida cargas de foto anteriores y una actualización de biblioteca no invalida una foto en edición.
+- Retirado el acceso optimista por token legado: los accesos de artista siguen bajo comprobación de cuenta. Reproducción reciente admite shell alternativo o postMessage al origen local.
+- 268 pruebas locales pasan. Verificación en navegador y publicación quedan registradas después del despliegue.
