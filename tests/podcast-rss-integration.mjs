@@ -49,5 +49,6 @@ try{
  const beforeCron=fetches;assert.equal((await uadavPodcastCron(env)).enabled,false);assert.equal(fetches,beforeCron);
  const cron=await uadavPodcastCron({...env,PODCAST_RSS_SYNC_ENABLED:'true'});assert.equal(cron.processed,1);assert.equal((await uadavPodcastCron({...env,PODCAST_RSS_SYNC_ENABLED:'true'})).processed,0);
  assert.equal((await call('podcasts/episodes','GET',undefined,false)).data.length,1);
+ const duplicates=await Promise.all([call('admin/podcasts/sources','POST',{name:'Concurrent A',url:'https://another.example.org/feed'}),call('admin/podcasts/sources','POST',{name:'Concurrent B',url:'https://another.example.org/feed'})]);assert.equal(duplicates.filter(x=>x.status===200).length,1);assert.equal(duplicates.filter(x=>x.status>=400).length,1);
  console.log('PASS: RSS/Atom parsing, URL/XML rejection, bounded fetch, private preview, D1 idempotent imports, isolation from manual content, preserved visibility, 304, failures, locks and opt-in cron. No remote calls.');
 }finally{globalThis.fetch=originalFetch;DB.close()}
