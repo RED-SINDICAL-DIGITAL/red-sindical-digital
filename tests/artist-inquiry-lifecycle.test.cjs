@@ -33,7 +33,7 @@ test('failed status update restores previous selection; success changes status w
  const h=harness(),first=h.mount();h.pending[0].resolve(response([item()]));await first;const n=h.nodes(),select=n.inquiryList.selects[0];select.value='respondida';const failed=select.onchange();
  assert.equal(h.pending[1].options.method,'PATCH');assert.deepEqual(JSON.parse(h.pending[1].options.body),{id:'QA',estado:'respondida'});
  h.pending[1].reject(Error('No guardado'));await failed;assert.equal(select.value,'pendiente');assert.match(n.inquiryStatus.textContent,/No guardado/);
- select.value='respondida';const saved=select.onchange();h.pending[2].resolve({ok:true,json:async()=>({success:true})});await saved;assert.match(n.inquiryStatus.textContent,/No se envió ningún mensaje/);assert.match(n.inquiryList.innerHTML,/Respondida/);assert.equal(h.pending.length,3);
+ select.value='respondida';const saved=select.onchange();h.pending[2].resolve({ok:true,json:async()=>({success:true,item:{id:'QA',estado:'respondida'}})});await saved;assert.match(n.inquiryStatus.textContent,/No se envió ningún mensaje/);assert.match(n.inquiryList.innerHTML,/Respondida/);assert.equal(h.pending.length,3);
 });
 test('account change discards data and aborts inbox lifecycle',async()=>{
  const h=harness(),first=h.mount();h.pending[0].resolve(response([item()]));await first;const n=h.nodes();h.storage.set('uadav_account_access_v1','B');for(const entry of [...h.listeners])if(entry.name==='uadav:account')entry.fn();
@@ -43,4 +43,11 @@ test('account change discards data and aborts inbox lifecycle',async()=>{
 test('detached host also disposes its listeners when a delayed request finishes',async()=>{
  const h=harness(),task=h.mount(),old=h.nodes();h.host.isConnected=false;h.pending[0].resolve(response([item('LATE','DETACHED PRIVATE DATA')]));await task;
  assert.equal(h.listeners.size,0);assert.equal(h.observers[0].off,true);assert.doesNotMatch(old.inquiryList.innerHTML,/DETACHED PRIVATE DATA/);
+});
+
+test('malformed or wrong-inquiry PATCH success cannot report a saved state',async()=>{
+ for(const data of [{success:true},{success:true,item:{id:'OTHER',estado:'respondida'}},{success:true,item:{id:'QA',estado:'cerrada'}}]){
+ const h=harness(),first=h.mount();h.pending[0].resolve(response([item()]));await first;const n=h.nodes(),select=n.inquiryList.selects[0];select.value='respondida';const update=select.onchange();h.pending[1].resolve({ok:true,json:async()=>data});await update;
+ assert.equal(select.value,'pendiente');assert.match(n.inquiryStatus.textContent,/No pudimos confirmar/);assert.doesNotMatch(n.inquiryStatus.textContent,/Estado guardado/);assert.equal(n.inquiryRefresh.disabled,false);
+ }
 });

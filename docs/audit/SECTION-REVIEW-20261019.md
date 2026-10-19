@@ -172,3 +172,11 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Contratación verifica profile.id contra el artista solicitado, muestra su nombre en vez del ID técnico y bloquea enviar hasta artista confirmado + condiciones marcadas. Tras reset vuelve a bloquear enviar.
 - Sin artista seleccionado: campo visible “Sin artista seleccionado”, datos personales deshabilitados, botón Enviar solicitud deshabilitado y explicación verificadas en navegador. No se envió una consulta real ni se aceptaron condiciones durante esta revisión.
 - 249 pruebas locales pasan (incluye 10 de disponibilidad de contratación y 3 de reintentos) y todos los checks/Pages del commit 693b228c1fbcb0b049371edfed497a1de5f92b57 pasan. Sin nuevo Worker ni producción.
+
+## Confirmación de consultas y gestión de estados
+
+- POST público acotado a 15 segundos, sin reenvío automático a otra API. Una respuesta ambigua conserva el formulario y la clave del intento para reintentar sin crear otra consulta.
+- Confirmación exige success=true, referencia de texto no vacía, artista exacto y estado pendiente. Sólo entonces se limpia el intento, se oculta el formulario y se muestra un comprobante con referencia copiable. Una nueva consulta se inicia expresamente.
+- Claves de intento guardadas inválidas se regeneran; las válidas se conservan al reintentar y recargar.
+- Consultas recibidas valida success + ID + estado devuelto por PATCH antes de mostrar Estado guardado; una respuesta incompleta conserva la selección anterior y permite Actualizar.
+- 262 pruebas locales CJS + disponibilidad de contratación pasan. Integración del Worker completo con SQLite pasa: entrega, aislamiento entre artistas, avisos privados, estados, concurrencia, persistencia y reintentos idempotentes. Estas pruebas son aisladas; no certifican envío completo en staging ni entre equipos físicos.
