@@ -144,3 +144,14 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - El botón Radios favoritas y las aperturas desde Biblioteca conservan sólo un regreso local validado a tab=radios, con la búsqueda. Emisoras sin ID propio pueden resolverse por su stream guardado.
 - Nuevos favoritos incluyen programa/ubicación; la búsqueda local de Biblioteca contempla esos campos.
 - 218 pruebas CJS locales y todos los checks/Pages pasan. Aceptación real en staging: BEAT DIGITAL RADIO · PRUEBA → Favorita confirma guardado y aria-pressed=true → Radios favoritas → buscar BEAT → Abrir radio conserva RAD-MVB7AHVS-TP0Y → Radios favoritas restaura pestaña y filtro. Quitar/reagregar también confirma estado false/true. No se inició reproducción ni se enviaron mensajes o pedidos en esta pasada. No requiere otro Worker.
+
+## Inicio y Explorar — continuación 2026-10-19
+
+- Inicio inicia sus catálogos sin esperar landing_config/web_visibility/home_layout. La configuración se aplica cuando llega; se mantienen los controles de módulos de la plataforma.
+- Buscar desde Inicio lleva a la búsqueda general; se retiró la segunda lista de resultados limitada de la portada.
+- Reproducir y Guardar son botones nativos separados, con foco y controles de 44 px. El teclado de botones de hero utiliza el click vigente después de cambios editoriales.
+- Historial local null/no-array/dañado se trata como lista vacía, conserva carátula y tipo; un fallo de almacenamiento no deriva en otra reproducción de respaldo.
+- Inicio y artistas recientes de Explorar usan el canal exacto mediante profileHref. Los enlaces de radio admiten id, nombre o señal para registros sin ID.
+- Favoritos en Inicio/Explorar avisan al shell después de guardar. No se certifica sincronización entre dispositivos.
+- Propuestas distingue respuesta vacía confirmada de fuentes caídas y ofrece Reintentar.
+- 230 pruebas CJS locales pasan; aceptación visual real queda pendiente de publicar este cambio.
