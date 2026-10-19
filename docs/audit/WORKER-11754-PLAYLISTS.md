@@ -47,3 +47,7 @@ No aplicar al Worker de producción.
 - La biblioteca recupera el canal de registros anteriores cuando existe en el ID o enlace guardado. No abre destinos externos ni secciones ajenas al perfil desde un seguimiento.
 - Ver perfil incluye regreso a Biblioteca / Artistas seguidos y conserva el texto buscado. La biblioteca valida la pestaña inicial contra sus claves propias.
 - 212 pruebas CJS locales pasan. Se mantienen los enlaces a artistas registrados y las notificaciones de sincronización de seguir/dejar de seguir.
+
+- Aceptación real de Artistas seguidos: seguir → Mi perfil → Biblioteca → Artistas seguidos → buscar Madonna → Ver perfil abre UC81VD6eeuLLSfyY_D-N8sVw → Volver restaura pestaña y texto Madonna.
+- Corregida tarjeta de Biblioteca: img() omitía foto/avatar/logo. Foto pública de Madonna cargada y comprobada con naturalWidth > 0; esto no resuelve la limitación de miniaturas i.ytimg.com de playlists.
+- 213 pruebas CJS y todos los checks/Pages del último cambio pasan. No requiere otro Worker. No se probó sincronización entre equipos físicos en esta pasada.

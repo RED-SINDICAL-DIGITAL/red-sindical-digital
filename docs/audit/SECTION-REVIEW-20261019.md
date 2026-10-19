@@ -16,10 +16,10 @@ Entorno autorizado: staging, rama audit/public-job-status-20261012. Producción 
 |---|---|
 | `admin.html` | Moderación/RSS/módulos probados antes y controles locales pasan; revisión visual completa y operadores pendientes. |
 | `app.html` | Inventariada; revisión funcional y visual específica pendiente. |
-| `artista.html` | Inventariada; revisión funcional y visual específica pendiente. |
-| `artistas.html` | Inventariada; revisión funcional y visual específica pendiente. |
+| `artista.html` | Canal exacto, 39 playlists con nombres/cantidades, compartir y seguir/abrir/volver desde Biblioteca comprobados en staging. Carátulas externas, discografía y dispositivos pendientes. |
+| `artistas.html` | Búsqueda por enlace/@usuario y apertura del canal exacto comprobadas en staging; selección entre todas las coincidencias por nombre y categorías completas pendientes. |
 | `beneficios.html` | Página informativa de implementación futura; convenios reales pendientes. |
-| `biblioteca.html` | Corregida y probada en escritorio; confirmar limpieza visual y móvil. |
+| `biblioteca.html` | Artistas seguidos conserva canal y regreso con pestaña/búsqueda; prueba real completa desde Mi perfil en escritorio. Móvil y sincronización entre dispositivos reales pendientes. |
 | `bolsa-trabajo.html` | Publicación/aprobación/postulación/consulta ficticias previas; dispositivos pendientes. |
 | `buscar.html` | Controles de reproducción y favoritos separados; filtro de artista, guardado sin reproducción, segunda página y retorno desde artista comprobados en staging. YouTube reproducible sigue pendiente. |
 | `cartelera.html` | Publicación ficticia/moderación/detalle/retorno probados antes; revisión visual por dispositivos pendiente. |
