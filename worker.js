@@ -96,14 +96,14 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
  if(/^https?:\/\//i.test(reference)){try{const u=new URL(reference);if(!/(^|\.)youtube\.com$/i.test(u.hostname))throw Error();const parts=u.pathname.split('/').filter(Boolean);reference=parts[0]==='channel'?parts[1]:parts[0]?.startsWith('@')?parts[0]:''}catch{return reply({error:'Usá una URL de canal de YouTube'},400)}}
  const isId=/^UC[A-Za-z0-9_-]{22}$/.test(reference);if(!isId&&!/^@[A-Za-z0-9_.-]{1,100}$/.test(reference))return reply({error:'Ingresá el ID UC… o @usuario del canal'},400);
  let cursor=null;const rawCursor=url.searchParams.get('cursor');if(rawCursor){if(rawCursor.length>6000)return reply({error:'Cursor inválido'},400);try{cursor=JSON.parse(atob(rawCursor.replace(/-/g,'+').replace(/_/g,'/')));if(cursor.v!==1||cursor.ref!==reference||cursor.kind!==kind||!['iv','yt'].includes(cursor.provider)||typeof cursor.token!=='string'||cursor.token.length>4000)throw Error();if(cursor.provider==='iv'&&(!Number.isInteger(cursor.base)||cursor.base<0||cursor.base>=instances.length))throw Error()}catch{return reply({error:'Cursor inválido para este canal'},400)}}
- const key='youtube_library_v1_'+encodeURIComponent([reference,kind,rawCursor||'first'].join('|'));
+ const key='youtube_library_v2_'+encodeURIComponent([reference,kind,rawCursor||'first'].join('|'));
  try{const cached=await env.UADAV_DB?.get(key);if(cached)return reply(JSON.parse(cached))}catch{}
  const fetchJSON=async href=>{const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),2800);try{const r=await fetch(href,{signal:ctl.signal,headers:{Accept:'application/json'}});if(!r.ok)throw Error('Proveedor no disponible');const d=await r.json();if(d.error)throw Error('Proveedor no disponible');return d}finally{clearTimeout(timer)}};
  const enabled=async()=>{try{const raw=await env.UADAV_DB?.get('youtube_api_enabled');if(raw!==null&&raw!==undefined){const value=JSON.parse(raw);if(value===false||String(value).toLowerCase()==='false')return false}}catch{}return !!env.YOUTUBE_API_KEY};
  const official=async(resource,params)=>{if(!await enabled())throw Error('API oficial deshabilitada');const qs=new URLSearchParams({...params,key:env.YOUTUBE_API_KEY});return fetchJSON('https://www.googleapis.com/youtube/v3/'+resource+'?'+qs)};
  const thumb=x=>x?.thumbnails?.high?.url||x?.thumbnails?.medium?.url||x?.thumbnails?.default?.url||'';
  const video=(x,provider)=>{const id=String(provider==='iv'?x.videoId:x.contentDetails?.videoId||x.snippet?.resourceId?.videoId||'');if(!/^[A-Za-z0-9_-]{11}$/.test(id))return null;return{id,external_id:id,provider:'youtube',url:'https://www.youtube.com/watch?v='+id,titulo:provider==='iv'?x.title:x.snippet?.title,author:provider==='iv'?x.author:x.snippet?.videoOwnerChannelTitle||x.snippet?.channelTitle,thumbnail:provider==='iv'?x.videoThumbnails?.find?.(t=>t.quality==='medium')?.url||x.videoThumbnails?.[0]?.url||'':thumb(x.snippet),content_type:'video',tipo:'video'}};
- const playlist=(x,provider)=>{const id=String(provider==='iv'?x.playlistId:x.id||'');if(!/^[A-Za-z0-9_-]{10,100}$/.test(id))return null;return{id,playlist_id:id,provider:'youtube',url:'https://www.youtube.com/playlist?list='+id,titulo:provider==='iv'?x.title:x.snippet?.title,thumbnail:provider==='iv'?x.playlistThumbnail||'':thumb(x.snippet),count:provider==='iv'?x.videoCount:x.contentDetails?.itemCount,content_type:'playlist'}};
+ const playlist=(x,provider)=>{const id=String(provider==='iv'?x.playlistId:x.id||'');if(!/^[A-Za-z0-9_-]{10,100}$/.test(id))return null;const title=String((provider==='iv'?x.title:x.snippet?.title)||'').trim(),image=String((provider==='iv'?x.playlistThumbnail:thumb(x.snippet))||''),rawCount=provider==='iv'?x.videoCount:x.contentDetails?.itemCount,count=title&&rawCount!==null&&rawCount!==undefined&&rawCount!==''&&Number.isFinite(Number(rawCount))&&Number(rawCount)>=0?Number(rawCount):null;return{id,playlist_id:id,provider:'youtube',url:'https://www.youtube.com/playlist?list='+id,titulo:title,thumbnail:/\/no_thumbnail\./i.test(image)?'':image,count,content_type:'playlist'}};
  const encode=(provider,token,base)=>token?btoa(JSON.stringify({v:1,ref:reference,kind,provider,token,...(base!==undefined?{base}:{})})).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''):null;
  let info=null,channelId=isId?reference:null;
  const infoKey='youtube_library_info_'+encodeURIComponent(reference);
@@ -122,9 +122,18 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
    if(data){out={channel_id:channelId,kind,source:'invidious',items:data.items.map(x=>(kind==='videos'?video:playlist)(x,'iv')).filter(Boolean),next_cursor:encode('iv',data.data.continuation||null,baseIndex)}}else{
     const params={part:'snippet,contentDetails',maxResults:'50',...(cursor?.token?{pageToken:cursor.token}:{})};const d=kind==='videos'?await official('playlistItems',{...params,playlistId:info?.uploads||'UU'+channelId.slice(2)}):await official('playlists',{...params,channelId});out={channel_id:channelId,kind,source:'youtube_api',items:(d.items||[]).map(x=>(kind==='videos'?video:playlist)(x,'yt')).filter(Boolean),next_cursor:encode('yt',d.nextPageToken||null)};
    }
+   if(kind==='playlists'){
+    const incomplete=out.items.filter(x=>!x.titulo||!x.thumbnail||x.count===null).slice(0,50);
+    if(incomplete.length)try{
+     const details=await official('playlists',{part:'snippet,contentDetails',id:incomplete.map(x=>x.id).join(',')});
+     const byId=new Map((details.items||[]).map(x=>playlist(x,'yt')).filter(Boolean).map(x=>[x.id,x]));
+     out.items=out.items.map(item=>{const detail=byId.get(item.id);if(!detail)return item;return{...item,titulo:detail.titulo||item.titulo,thumbnail:detail.thumbnail||item.thumbnail,count:detail.count!==null?detail.count:item.count}});
+    }catch{}
+    out.metadata_incomplete=out.items.some(x=>!x.titulo||!x.thumbnail||x.count===null);
+   }
    out.has_more=!!out.next_cursor;
   }
-  try{await env.UADAV_DB?.put(key,JSON.stringify(out),{expirationTtl:600})}catch{}
+  try{await env.UADAV_DB?.put(key,JSON.stringify(out),{expirationTtl:out.metadata_incomplete?60:600})}catch{}
   return reply(out);
  }catch(e){return reply({error:String(e.message||'No pudimos consultar YouTube'),retryable:true},503)}
 }
@@ -440,7 +449,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11753';
+const BUILD = '11754';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];

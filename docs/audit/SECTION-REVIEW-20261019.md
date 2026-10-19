@@ -124,3 +124,12 @@ Se marcaron como decorativas las miniaturas acompañadas por títulos en Admin, 
 - Colecciones sólo aparece cuando las playlists cargadas tienen candidatos identificables. Sigue siendo una agrupación por título, no una discografía verificada ni una solución de álbumes automáticos.
 - Los catálogos vacíos confirmados muestran mensajes específicos para videos y playlists; un error sigue ofreciendo reintento.
 - 19 pruebas locales de paginación y navegación del artista pasan. La aceptación visual y de carga contra staging se realiza después del despliegue; reproducción real de YouTube y dispositivos siguen pendientes.
+
+### Aceptación real y metadatos incompletos
+
+- Canal público comprobado: UCo4CrqhIV_tSOGdDWfVyCsg. Videos pasa de 64 a 114 contenidos con Ver más, manteniendo visible la pestaña.
+- Playlists devuelve 12 registros. La respuesta directa de /api/youtube/channel_library confirma títulos vacíos, thumbnail no_thumbnail.jpg y count:0. La interfaz y el reproductor mostraban títulos genéricos. No se declara resuelto por aparecer tarjetas.
+- Frontend: nombre alternativo si llega title/name, nombre de respaldo distinguible, contador desconocido sin fingir cero, aviso de metadatos incompletos. Cache de playlists de 10 segundos para no retener durante cinco minutos la información dañada.
+- Worker 11754 preparado: cache nueva v2; normaliza metadatos ausentes como desconocidos y solicita una sola tanda oficial de hasta 50 IDs si faltan título, imagen o cantidad. Sólo mezcla IDs presentes en la página. Las respuestas parciales se conservan con metadata_incomplete y cache de 60 segundos, sin inventar títulos ni discografías.
+- Documentación oficial consultada: https://developers.google.com/youtube/v3/docs/playlists/list (part=snippet,contentDetails y filtro id).
+- 25 pruebas locales de biblioteca, navegación y recuperación de metadatos pasan. La recuperación real de metadatos permanece pendiente de despliegue manual del Worker 11754 en staging y de una nueva lectura de la API. La limitación puede persistir si el proveedor no devuelve los detalles; la interfaz debe decirlo.
