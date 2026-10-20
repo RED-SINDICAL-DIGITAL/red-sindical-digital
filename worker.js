@@ -255,7 +255,8 @@ async function uadavAccountRoute(request,env,identityOnly=false){
   };
   try{
     // Cache schema initialization on the underlying binding, not on per-request sessions.
-    await uadavAccountSchema(env.DB);
+    // Identity-only checks use existing account tables; do not run schema DDL/migrations on every Studio refresh.
+    if(!identityOnly)await uadavAccountSchema(env.DB);
     if(path==='/api/account/pair/join'){
       if(request.method!=='POST')return reply({error:'Método no permitido'},405);
       await rate('pair-join',8,600000);
@@ -449,7 +450,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11755';
+const BUILD = '11756';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
