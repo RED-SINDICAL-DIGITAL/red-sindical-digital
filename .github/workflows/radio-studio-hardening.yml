@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - audit/radio-studio-hardening-20261020
+      - release/radio-studio-staging-rc-20261020
   workflow_dispatch:
 jobs:
   radio-studio-tests:
