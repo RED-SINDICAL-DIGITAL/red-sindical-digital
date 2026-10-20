@@ -4496,7 +4496,7 @@ async function saveEntityVersion(type,id,data){
       }
     }
 
-    if(path==='/api/admin/radio-operators'||path==='/api/radio-studio'||path==='/api/radio-studio/requests'||path==='/api/radio-studio/chat'||path==='/api/radio-studio/moderation'){
+    if(path==='/api/admin/radio-operators'||path==='/api/radio-studio'||path==='/api/radio-studio/requests'||path==='/api/radio-studio/chat'||path==='/api/radio-studio/moderation'||path==='/api/radio-studio/settings'){
       const studioReply=(data,status=200)=>json(data,status,{'Cache-Control':'no-store'});
       if(!hasD1())return studioReply({error:'Radio Studio requiere D1'},503);
       await ensureD1Schema();await uadavAccountSchema(env.DB);
@@ -4521,6 +4521,20 @@ async function saveEntityVersion(type,id,data){
       }
       const rid=String(url.searchParams.get('radio_id')||'');
       if(!station(rid)||!await env.DB.prepare("SELECT radio_id FROM radio_operators WHERE radio_id=? AND account_id=? AND status='active'").bind(rid,account).first())return studioReply({error:'No tenés permiso para esta emisora'},403);
+      if(path==='/api/radio-studio/settings'){
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS radio_moderation_settings(radio_id TEXT PRIMARY KEY,mode TEXT NOT NULL DEFAULT 'manual',updated_by TEXT,updated_at TEXT NOT NULL)").run();
+        if(request.method==='GET'){
+          const setting=await env.DB.prepare('SELECT mode,updated_at FROM radio_moderation_settings WHERE radio_id=?').bind(rid).first();
+          return studioReply({radio_id:rid,mode:setting?.mode||'manual',updated_at:setting?.updated_at||null});
+        }
+        if(request.method!=='PUT')return studioReply({error:'Método no permitido'},405);
+        const body=await uadavSecurityJSON(request,1000),mode=String(body.mode||'');
+        if(!['manual','automatic','paused'].includes(mode))return studioReply({error:'Modo no válido'},400);
+        const result=await env.DB.prepare("INSERT INTO radio_moderation_settings(radio_id,mode,updated_by,updated_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM radio_operators WHERE radio_id=? AND account_id=? AND status='active') ON CONFLICT(radio_id) DO UPDATE SET mode=excluded.mode,updated_by=excluded.updated_by,updated_at=excluded.updated_at").bind(rid,mode,account,isoNow(),rid,account).run();
+        if(Number(result.meta?.changes)!==1)return studioReply({error:'Permiso modificado. Actualizá tu sesión.'},403);
+        await audit('radio_moderation_mode','radio',rid,{account_id:account,mode});
+        return studioReply({success:true,radio_id:rid,mode});
+      }
       if(path==='/api/radio-studio/moderation'){
         const belongs=row=>{const p=safeJSON(row.payload_json,{});return row.scope==='/api/radio/requests'?String(p.radio_id||'')===rid:row.scope==='/api/moderar_chat'&&String(p.id_stream||'')==='radio:'+rid};
         if(request.method==='GET'){
