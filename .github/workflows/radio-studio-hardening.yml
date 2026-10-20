@@ -1,0 +1,20 @@
+name: Radio Studio security checks
+on:
+  push:
+    branches:
+      - audit/radio-studio-hardening-20261020
+  workflow_dispatch:
+jobs:
+  radio-studio-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static regression suite
+        run: node --test scripts/test-radio-studio-hardening.mjs
+      - name: Worker syntax
+        run: node --check worker.js
