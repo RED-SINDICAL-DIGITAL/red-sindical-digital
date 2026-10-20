@@ -1830,7 +1830,26 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         clean.radio_operator_account_id=operatorIdentity.account_id;clean.radio_operator_radio_id=permission.radio_id;
       }
       if(path==='/api/eventos'&&b.artist_token){const permission=await uadavArtistPermission(String(b.artist_token),env);if(!permission)return json({error:'Acceso de artista inválido'},401);clean.moderation_artist_id=permission.artist_id}
-      const check=await uadavModerateText(env,path,clean,request.headers.get('CF-Connecting-IP')||'unknown');if(check.decision==='published')return json({...check.result,success:true,previously_reviewed:true});if(check.decision==='review')return json({success:true,aprobado:false,moderation_pending:true,moderation_id:check.id,message:'Recibimos tu contenido. Está pendiente de revisión antes de publicarse.'},202);
+      let stationMode='manual',stationScope='';
+      if(path==='/api/radio/requests')stationScope=String(clean.radio_id||'');
+      else if(path==='/api/moderar_chat'&&String(clean.id_stream||'').startsWith('radio:'))stationScope=String(clean.id_stream).slice(6);
+      if(stationScope&&hasD1()){
+        await env.DB.prepare("CREATE TABLE IF NOT EXISTS radio_moderation_settings(radio_id TEXT PRIMARY KEY,mode TEXT NOT NULL DEFAULT 'manual',updated_by TEXT,updated_at TEXT NOT NULL)").run();
+        const cfg=await env.DB.prepare('SELECT mode FROM radio_moderation_settings WHERE radio_id=?').bind(stationScope).first();
+        stationMode=cfg?.mode||'manual';
+        if(stationMode==='paused'&&!clean.radio_operator_account_id)return json({error:'Esta emisora pausó temporalmente los mensajes y pedidos'},423);
+      }
+      const check=await uadavModerateText(env,path,clean,request.headers.get('CF-Connecting-IP')||'unknown');if(check.decision==='published')return json({...check.result,success:true,previously_reviewed:true});if(check.decision==='review'){
+        if(stationScope&&stationMode==='automatic'&&check.reason==='provider_not_configured'&&check.id&&!clean.radio_operator_account_id){
+          const content=[clean.mensaje,clean.alias,clean.listener_name,clean.artist,clean.title,clean.cancion,clean.dedication].filter(Boolean).join(' ');
+          const unsafe=/https?:|www\\.|@|\\b(?:whatsapp|telegram|t\\.me|bit\\.ly|casino|apuesta|premio|contrase(?:ñ|n)a|token|transferencia|cbu|cv[u]|sexo|amenaz|matar|odio)\\b/i.test(content);
+          if(content.length>0&&content.length<=280&&!unsafe){
+            const auto=await uadavWorker.fetch(new Request(new URL('/api/admin/moderation/review',request.url),{method:'POST',headers:{Authorization:'Bearer '+env.ADMIN_KEY,'Content-Type':'application/json'},body:JSON.stringify({id:check.id,decision:'approve'})}),env,ctx);
+            if(auto.ok){const result=await auto.json();if(result.success===true)return json({success:true,auto_published:true,result:result.result});}
+          }
+        }
+        return json({success:true,aprobado:false,moderation_pending:true,moderation_id:check.id,message:'Recibimos tu contenido. Está pendiente de revisión antes de publicarse.'},202);
+      }
       if(check.decision==='reject')return json({error:check.reason==='submission_limit'?'Demasiados envíos. Intentá más tarde.':check.reason==='queue_full'?'La revisión está ocupada. Intentá más tarde.':'Este contenido fue rechazado por moderación'},check.reason==='submission_limit'?429:check.reason==='queue_full'?503:422);
     }
     if (path === '/api/health') {
