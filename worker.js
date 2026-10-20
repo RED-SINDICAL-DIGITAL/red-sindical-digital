@@ -1849,8 +1849,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const check=await uadavModerateText(env,path,clean,request.headers.get('CF-Connecting-IP')||'unknown',!!stationScope&&(stationMode==='manual'||stationMode==='automatic'));if(check.decision==='published')return json({...check.result,success:true,previously_reviewed:true});if(check.decision==='review'){
         if(stationScope&&stationMode==='automatic'&&check.reason==='provider_not_configured'&&check.id&&!clean.radio_operator_account_id){
           const content=[clean.mensaje,clean.alias,clean.listener_name,clean.artist,clean.title,clean.cancion,clean.dedication].filter(Boolean).join(' ');
-          const unsafe=/https?:|www\.|@|\b(?:whatsapp|telegram|t\.me|bit\.ly|casino|apuesta|premio|contrase(?:ñ|n)a|token|transferencia|cbu|cv[u]|sexo|amenaz|matar|odio)\b/i.test(content);
-          if(content.length>0&&content.length<=280&&!unsafe){
+          const normalized=content.normalize('NFKC').replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g,'').toLowerCase();
+          const unsafe=/https?:|www\.|@|(?:[a-z0-9-]+\.)+(?:com|net|org|ar|io|app|ly)\b|\b(?:whatsapp|telegram|casino|apuesta|premio|contrase(?:ñ|n)a|token|transferencia|cbu|cvu|sexo|amenaz|matar|odio)\b/i.test(normalized);
+          const unusual=/[<>\[\]{}\\]|(?:\d[\s.-]*){7,}|(?:[!?]){5,}/.test(normalized);
+          if(normalized.trim().length>=3&&normalized.length<=200&&!unsafe&&!unusual){
             const auto=await uadavWorker.fetch(new Request(new URL('/api/admin/moderation/review',request.url),{method:'POST',headers:{Authorization:'Bearer '+env.ADMIN_KEY,'Content-Type':'application/json'},body:JSON.stringify({id:check.id,decision:'approve',automatic:true})}),env,ctx);
             if(auto.ok){const result=await auto.json();if(result.success===true)return json({success:true,auto_published:true,result:result.result});}
           }
