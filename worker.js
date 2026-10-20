@@ -4564,9 +4564,13 @@ async function saveEntityVersion(type,id,data){
       if(path==='/api/radio-studio/moderation'){
         const belongs=row=>{const p=safeJSON(row.payload_json,{});return row.scope==='/api/radio/requests'?String(p.radio_id||'')===rid:row.scope==='/api/moderar_chat'&&String(p.id_stream||'')==='radio:'+rid};
         if(request.method==='GET'){
-          const page=Math.max(0,Math.min(10000,Number.parseInt(url.searchParams.get('page')||'0',10)||0)),limit=50,offset=page*limit;
-          const rows=(await env.DB.prepare("SELECT id,scope,payload_json,reason,created_at FROM moderation_queue WHERE status='pending' AND ((scope='/api/radio/requests' AND json_extract(payload_json,'$.radio_id')=?) OR (scope='/api/moderar_chat' AND json_extract(payload_json,'$.id_stream')=?)) ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?").bind(rid,'radio:'+rid,limit+1,offset).all()).results||[];
-          return studioReply({radio_id:rid,page,has_more:rows.length>limit,items:rows.slice(0,limit).filter(belongs).map(row=>{const p=safeJSON(row.payload_json,{});return{id:row.id,scope:row.scope,created_at:row.created_at,reason:row.reason,kind:row.scope==='/api/radio/requests'?'request':'chat',summary:row.scope==='/api/radio/requests'?[p.artist,p.title].filter(Boolean).join(' — '):String(p.mensaje||'').slice(0,1000),sender:String(p.listener_name||p.alias||'Oyente').slice(0,80)}})});
+          const limit=50,cursor=String(url.searchParams.get('cursor')||'');
+          let cursorDate='',cursorId='';
+          if(cursor){try{const parsed=JSON.parse(cursor);cursorDate=String(parsed.created_at||'');cursorId=String(parsed.id||'');if(!cursorDate||!cursorId||cursor.length>300)throw Error('invalid')}catch{return studioReply({error:'Cursor inválido'},400)}}
+          const sql="SELECT id,scope,payload_json,reason,created_at FROM moderation_queue WHERE status='pending' AND ((scope='/api/radio/requests' AND json_extract(payload_json,'$.radio_id')=?) OR (scope='/api/moderar_chat' AND json_extract(payload_json,'$.id_stream')=?))"+(cursor?" AND (created_at<? OR (created_at=? AND id<?))":"")+" ORDER BY created_at DESC,id DESC LIMIT ?";
+          const query=env.DB.prepare(sql),rows=(await (cursor?query.bind(rid,'radio:'+rid,cursorDate,cursorDate,cursorId,limit+1):query.bind(rid,'radio:'+rid,limit+1)).all()).results||[];
+          const displayed=rows.slice(0,limit),last=displayed[displayed.length-1];
+          return studioReply({radio_id:rid,has_more:rows.length>limit,next_cursor:rows.length>limit&&last?JSON.stringify({created_at:last.created_at,id:last.id}):null,items:displayed.filter(belongs).map(row=>{const p=safeJSON(row.payload_json,{});return{id:row.id,scope:row.scope,created_at:row.created_at,reason:row.reason,kind:row.scope==='/api/radio/requests'?'request':'chat',summary:row.scope==='/api/radio/requests'?[p.artist,p.title].filter(Boolean).join(' — '):String(p.mensaje||'').slice(0,1000),sender:String(p.listener_name||p.alias||'Oyente').slice(0,80)}})});
         }
         if(request.method!=='POST')return studioReply({error:'Método no permitido'},405);
         const body=await uadavSecurityJSON(request,1000),id=String(body.id||''),decision=String(body.decision||'');
