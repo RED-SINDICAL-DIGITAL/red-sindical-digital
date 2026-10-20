@@ -2,7 +2,6 @@
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createRequire} from 'node:module';
 const worker=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
 const studio=readFileSync(new URL('../radio-studio.html',import.meta.url),'utf8');
 const inline=[...studio.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(x=>x[1]);
