@@ -4496,7 +4496,7 @@ async function saveEntityVersion(type,id,data){
       }
     }
 
-    if(path==='/api/admin/radio-operators'||path==='/api/radio-studio'||path==='/api/radio-studio/requests'||path==='/api/radio-studio/chat'){
+    if(path==='/api/admin/radio-operators'||path==='/api/radio-studio'||path==='/api/radio-studio/requests'||path==='/api/radio-studio/chat'||path==='/api/radio-studio/moderation'){
       const studioReply=(data,status=200)=>json(data,status,{'Cache-Control':'no-store'});
       if(!hasD1())return studioReply({error:'Radio Studio requiere D1'},503);
       await ensureD1Schema();await uadavAccountSchema(env.DB);
@@ -4521,6 +4521,23 @@ async function saveEntityVersion(type,id,data){
       }
       const rid=String(url.searchParams.get('radio_id')||'');
       if(!station(rid)||!await env.DB.prepare("SELECT radio_id FROM radio_operators WHERE radio_id=? AND account_id=? AND status='active'").bind(rid,account).first())return studioReply({error:'No tenés permiso para esta emisora'},403);
+      if(path==='/api/radio-studio/moderation'){
+        const belongs=row=>{const p=safeJSON(row.payload_json,{});return row.scope==='/api/radio/requests'?String(p.radio_id||'')===rid:row.scope==='/api/moderar_chat'&&String(p.id_stream||'')==='radio:'+rid};
+        if(request.method==='GET'){
+          const rows=(await env.DB.prepare("SELECT id,scope,payload_json,reason,created_at FROM moderation_queue WHERE status='pending' AND scope IN ('/api/radio/requests','/api/moderar_chat') ORDER BY created_at DESC LIMIT 200").all()).results||[];
+          return studioReply({radio_id:rid,items:rows.filter(belongs).slice(0,100).map(row=>{const p=safeJSON(row.payload_json,{});return{id:row.id,scope:row.scope,created_at:row.created_at,reason:row.reason,kind:row.scope==='/api/radio/requests'?'request':'chat',summary:row.scope==='/api/radio/requests'?[p.artist,p.title].filter(Boolean).join(' — '):String(p.mensaje||'').slice(0,1000),sender:String(p.listener_name||p.alias||'Oyente').slice(0,80)}})});
+        }
+        if(request.method!=='POST')return studioReply({error:'Método no permitido'},405);
+        const body=await uadavSecurityJSON(request,1000),id=String(body.id||''),decision=String(body.decision||'');
+        if(!/^[A-Za-z0-9-]{10,100}$/.test(id)||!['approve','reject'].includes(decision))return studioReply({error:'Solicitud o decisión inválida'},400);
+        const row=await env.DB.prepare('SELECT id,scope,payload_json,status FROM moderation_queue WHERE id=?').bind(id).first();
+        if(!row||row.status!=='pending'||!belongs(row))return studioReply({error:'Solicitud no disponible para esta emisora'},404);
+        if(!await env.DB.prepare("SELECT 1 FROM radio_operators WHERE radio_id=? AND account_id=? AND status='active'").bind(rid,account).first())return studioReply({error:'Permiso revocado'},403);
+        const review=await uadavWorker.fetch(new Request(new URL('/api/admin/moderation/review',request.url),{method:'POST',headers:{Authorization:'Bearer '+env.ADMIN_KEY,'Content-Type':'application/json'},body:JSON.stringify({id,decision})}),env,ctx);
+        const response=await review.json();
+        if(review.ok)await audit('radio_operator_moderation_'+decision,'radio',rid,{account_id:account,moderation_id:id,scope:row.scope});
+        return studioReply({success:review.ok&&response.success===true,radio_id:rid,...(review.ok?{result:response}:{error:response.error||'No se pudo revisar'})},review.status);
+      }
       if(path==='/api/radio-studio/chat'){
         const stream='radio:'+rid;
         if(request.method==='GET'){
