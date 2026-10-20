@@ -4527,8 +4527,8 @@ async function saveEntityVersion(type,id,data){
     if(path==='/api/admin/radio-operators'||path==='/api/radio-studio'||path==='/api/radio-studio/requests'||path==='/api/radio-studio/chat'||path==='/api/radio-studio/moderation'||path==='/api/radio-studio/settings'){
       const studioReply=(data,status=200)=>json(data,status,{'Cache-Control':'no-store'});
       if(!hasD1())return studioReply({error:'Radio Studio requiere D1'},503);
-      await ensureD1Schema();await uadavAccountSchema(env.DB);
-      await env.DB.prepare("CREATE TABLE IF NOT EXISTS radio_operators(radio_id TEXT NOT NULL,account_id TEXT NOT NULL,status TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(radio_id,account_id))").run();
+      // Studio tables are provisioned in staging; never run the full platform bootstrap on a read request.
+      // The identity and permission queries below still fail closed if a required table is missing.
       const catalog=await getArray('radios'),station=id=>catalog.find(r=>String(r.id||'')===id&&r.visible!==false&&r.activa!==false&&r.enabled!==false&&!['suspendido','suspended','inactive'].includes(r.estado));
       if(path==='/api/admin/radio-operators'){
         if(!isAdmin())return studioReply({error:'No autorizado'},401);
