@@ -1833,6 +1833,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       let stationMode='manual',stationScope='';
       if(path==='/api/radio/requests')stationScope=String(clean.radio_id||'');
       else if(path==='/api/moderar_chat'&&String(clean.id_stream||'').startsWith('radio:'))stationScope=String(clean.id_stream).slice(6);
+      if(stationScope&&!hasD1())return json({error:'La moderación de radio no está disponible temporalmente'},503);
       if(stationScope&&hasD1()){
         await env.DB.prepare("CREATE TABLE IF NOT EXISTS radio_moderation_settings(radio_id TEXT PRIMARY KEY,mode TEXT NOT NULL DEFAULT 'manual',updated_by TEXT,updated_at TEXT NOT NULL)").run();
         const cfg=await env.DB.prepare('SELECT mode FROM radio_moderation_settings WHERE radio_id=?').bind(stationScope).first();
