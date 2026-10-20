@@ -15,3 +15,6 @@ test('moderation cursor and return controls are present',()=>{assert.match(worke
 test('automatic moderation fails closed when D1 is unavailable',()=>{assert.match(worker,/stationScope&&!hasD1\(\)/)});
 test('request final states and transitions enforced in D1',()=>{assert.match(worker,/status='pending' AND \? IN \('queued','played','rejected'\)/);assert.match(worker,/status='queued' AND \? IN \('played','rejected'\)/)});
 test('staging hostname switches to staging API',()=>{assert.match(studio,/uadav-stream-staging\.pages\.dev/);assert.match(studio,/uadav-api-staging/)})
+
+test('studio read path does not run global D1 schema bootstrap',()=>{const route=worker.slice(worker.indexOf("if(path==='/api/admin/radio-operators'||"));assert.ok(route.includes("if(!hasD1())return studioReply"));assert.doesNotMatch(route.slice(0,650),/await ensureD1Schema\(|await uadavAccountSchema\(/)});
+test('identity-only auth does not perform schema migrations',()=>{assert.match(worker,/if\(!identityOnly\)await uadavAccountSchema\(env\.DB\)/)});
