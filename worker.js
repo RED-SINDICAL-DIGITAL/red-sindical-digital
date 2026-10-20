@@ -4564,7 +4564,7 @@ async function saveEntityVersion(type,id,data){
       if(path==='/api/radio-studio/moderation'){
         const belongs=row=>{const p=safeJSON(row.payload_json,{});return row.scope==='/api/radio/requests'?String(p.radio_id||'')===rid:row.scope==='/api/moderar_chat'&&String(p.id_stream||'')==='radio:'+rid};
         if(request.method==='GET'){
-          const rows=(await env.DB.prepare("SELECT id,scope,payload_json,reason,created_at FROM moderation_queue WHERE status='pending' AND scope IN ('/api/radio/requests','/api/moderar_chat') ORDER BY created_at DESC LIMIT 200").all()).results||[];
+          const rows=(await env.DB.prepare("SELECT id,scope,payload_json,reason,created_at FROM moderation_queue WHERE status='pending' AND ((scope='/api/radio/requests' AND json_extract(payload_json,'$.radio_id')=?) OR (scope='/api/moderar_chat' AND json_extract(payload_json,'$.id_stream')=?)) ORDER BY created_at DESC LIMIT 100").bind(rid,'radio:'+rid).all()).results||[];
           return studioReply({radio_id:rid,items:rows.filter(belongs).slice(0,100).map(row=>{const p=safeJSON(row.payload_json,{});return{id:row.id,scope:row.scope,created_at:row.created_at,reason:row.reason,kind:row.scope==='/api/radio/requests'?'request':'chat',summary:row.scope==='/api/radio/requests'?[p.artist,p.title].filter(Boolean).join(' — '):String(p.mensaje||'').slice(0,1000),sender:String(p.listener_name||p.alias||'Oyente').slice(0,80)}})});
         }
         if(request.method!=='POST')return studioReply({error:'Método no permitido'},405);
