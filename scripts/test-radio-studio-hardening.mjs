@@ -15,4 +15,4 @@ test('operator inbox does not accept unscoped arbitrary moderation IDs',()=>{ass
 test('moderation cursor and return controls are present',()=>{assert.match(worker,/next_cursor/);assert.match(studio,/moderationMore/);assert.match(studio,/moderationCursor/)});
 test('automatic moderation fails closed when D1 is unavailable',()=>{assert.match(worker,/stationScope&&!hasD1\(\)/)});
 test('request final states and transitions enforced in D1',()=>{assert.match(worker,/status='pending' AND \? IN \('queued','played','rejected'\)/);assert.match(worker,/status='queued' AND \? IN \('played','rejected'\)/)});
-test('no direct production hostname hardcoded in operator moderation UI',()=>{assert.doesNotMatch(studio,/https:\/\/uadav-api\.uadavstream\.workers\.dev\/api\//)});
+test('staging hostname switches to staging API',()=>{assert.match(studio,/uadav-stream-staging\\.pages\\.dev/);assert.match(studio,/uadav-api-staging/)})
