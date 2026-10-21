@@ -12,7 +12,7 @@ const foldJob=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').t
 function jobRows(data){const rows=Array.isArray(data)?data:data?.items;if(!Array.isArray(rows)||rows.some(x=>!x||typeof x!=='object'||Array.isArray(x)||x.id==null||!String(x.id).trim()))throw Error('Respuesta incompleta');return rows}
 function jobExternalUrl(job){try{const u=new URL(job?.application_url||job?.source_url||'');return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password?u.href:''}catch{return ''}}
 let jobsVersion=0;async function load(){const version=++jobsVersion;try{
-  let pref='';try{pref=localStorage.getItem('uadav_region_preference')||''}catch{};let a;try{const fd=await apiFetch('public/federated-feed?kind=job&limit=100'+(pref?'&province='+encodeURIComponent(pref):''));a=jobRows(fd)}catch(_){a=jobRows(await apiFetch('bolsa_trabajo'))}
+  let pref='';try{pref=localStorage.getItem('uadav_region_preference')||''}catch{};let a=[];try{const fd=await apiFetch('public/federated-feed?kind=job&limit=100'+(pref?'&province='+encodeURIComponent(pref):''));a=jobRows(fd)}catch(_){}if(!a.length){a=jobRows(await apiFetch('bolsa_trabajo'))}
   const q=foldJob(document.getElementById('q').value);
   const city=foldJob(document.getElementById('city').value);
   const rubro=document.getElementById('rubro').value;
