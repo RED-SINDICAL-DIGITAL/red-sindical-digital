@@ -80,7 +80,13 @@ let replyTo='';
 async function loadChat(){try{const id='radio:'+(radio.id||radio.nombre||radio.stream_url),a=await apiJson('chat?id_stream='+encodeURIComponent(id)),box=document.getElementById('messages'),nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60,oldTop=box.scrollTop,messages=Array.isArray(a)?a:[];box.innerHTML=messages.slice(-100).map(x=>{const parent=messages.find(y=>y.id===x.reply_to);return '<div class="msg">'+(parent?'<small>Respuesta a '+esc(parent.alias||'Oyente')+': '+esc(String(parent.mensaje||'').slice(0,100))+'</small><br>':'')+'<b>'+esc(x.alias||'Espectador')+'</b> · '+esc(x.mensaje||'')+(x.id?'<br><button type="button" class="btn" data-chat-reply="'+esc(x.id)+'">Responder</button>':'')+'</div>'}).join('')||'<div class="muted">Todavía no hay mensajes. Sé el primero.</div>';box.querySelectorAll('[data-chat-reply]').forEach(button=>button.onclick=()=>{replyTo=button.dataset.chatReply;const parent=messages.find(x=>x.id===replyTo);document.getElementById('status').textContent='Respondiendo a '+(parent?.alias||'Oyente')+'. Podés cancelar la respuesta.';document.getElementById('message').focus();let cancel=document.getElementById('cancelChatReply');if(!cancel){cancel=document.createElement('button');cancel.id='cancelChatReply';cancel.type='button';cancel.className='btn';cancel.textContent='Cancelar respuesta';document.getElementById('status').after(cancel)}cancel.hidden=false;cancel.onclick=()=>{replyTo='';cancel.hidden=true;document.getElementById('status').textContent=''}});box.scrollTop=nearBottom?box.scrollHeight:oldTop}catch{}}
 const radioSending={chat:false,request:false};
 async function submitRadioInteraction(kind){
- if(radioSending[kind])return;if(participationPaused){const warning=document.getElementById(kind==='chat'?'status':'requestStatus');if(warning)warning.textContent='Esta emisora pausó temporalmente los mensajes y pedidos. Podés seguir escuchando la radio.';return;}
+ if(radioSending[kind])return;
+ const live=await refreshParticipationMode();
+ if(live!==true){
+  const warning=document.getElementById(kind==='chat'?'status':'requestStatus');
+  if(warning)warning.textContent=participationPaused?'Esta emisora pausó temporalmente los mensajes y pedidos. Podés seguir escuchando la radio.':'No se pudo verificar si la emisora recibe mensajes. Intentá nuevamente en unos instantes.';
+  return;
+ }
  const chat=kind==='chat',ids=chat?['alias','message','send']:['reqName','reqArtist','reqTitle','reqDedication','sendRequest'];
  const nodes=ids.map(id=>document.getElementById(id)),status=document.getElementById(chat?'status':'requestStatus');
  const value=id=>String(document.getElementById(id)?.value||'').trim();
@@ -96,29 +102,46 @@ async function submitRadioInteraction(kind){
   if(chat){document.getElementById('message').value='';replyTo='';const cancel=document.getElementById('cancelChatReply');if(cancel)cancel.hidden=true;status.textContent=pending?'Mensaje recibido. Está pendiente de revisión.':'Mensaje publicado.';if(!pending)await loadChat()}
   else{['reqArtist','reqTitle','reqDedication'].forEach(id=>document.getElementById(id).value='');status.textContent=pending?'Pedido recibido. Está pendiente de revisión.':'✓ Pedido registrado para esta emisora. No garantiza su reproducción.'}
  }catch(e){if(e?.code==='RADIO_PAUSED'){showParticipationMode(true);refreshParticipationMode()}if(nodes.every(n=>n.isConnected!==false))status.textContent=e?.code==='RADIO_PAUSED'?'Esta emisora pausó temporalmente los mensajes y pedidos. Podés seguir escuchando la radio e intentar más tarde.':'No pudimos confirmar el envío. Conservamos lo que escribiste. Antes de reintentar, comprobá si ya aparece registrado.'}
- finally{radioSending[kind]=false;nodes.forEach((n,i)=>{if(n.isConnected!==false)n.disabled=disabled[i]||(participationPaused&&(n.id==='send'||n.id==='sendRequest'))})}
+ finally{radioSending[kind]=false;nodes.forEach((n,i)=>{if(n.isConnected!==false)n.disabled=disabled[i]||participationPaused||!participationModeVerified})}
 }
-let participationModeTimer=null,participationModeSeq=0,participationPaused=false;
-function showParticipationMode(paused){
+let participationModeTimer=null,participationModeSeq=0,participationPaused=true,participationModeVerified=false;
+function showParticipationMode(paused,verified=true){
  participationPaused=paused;
- for(const id of ['send','sendRequest']){
-  const btn=document.getElementById(id);if(btn){btn.disabled=paused;btn.title=paused?'Recepción pausada temporalmente':''}
+ participationModeVerified=verified;
+ const locked=paused||!verified;
+ for(const id of ['alias','message','send','reqName','reqArtist','reqTitle','reqDedication','sendRequest']){
+  const el=document.getElementById(id);
+  if(!el)continue;
+  el.disabled=locked||Boolean(radioSending[id==='send'?'chat':'request']);
+  el.title=paused&&verified?'Recepción pausada temporalmente':!verified?'Verificando recepción de la emisora':'';
  }
+ const message=paused&&verified?'Esta emisora pausó temporalmente los mensajes y pedidos. Podés seguir escuchando la radio.':!verified?'Verificando si la emisora está recibiendo mensajes y pedidos…':'';
  for(const id of ['status','requestStatus']){
-  const el=document.getElementById(id);if(el&&paused)el.textContent='Esta emisora pausó temporalmente los mensajes y pedidos. Podés seguir escuchando la radio.';
-  else if(el&&el.textContent.startsWith('Esta emisora pausó temporalmente'))el.textContent='';
+  const el=document.getElementById(id);
+  if(el&&(message||el.textContent.startsWith('Esta emisora pausó temporalmente')||el.textContent.startsWith('Verificando si la emisora')))el.textContent=message;
  }
 }
 async function refreshParticipationMode(){
- const rid=String(radio?.id||radio?.nombre||radio?.stream_url||'');if(!rid)return;
+ const rid=String(radio?.id||radio?.nombre||radio?.stream_url||'');
+ if(!rid){showParticipationMode(false,false);return false}
  const seq=++participationModeSeq;
  try{
   const data=await apiJson('radio/moderation-mode?radio_id='+encodeURIComponent(rid));
-  if(seq!==participationModeSeq||rid!==String(radio?.id||radio?.nombre||radio?.stream_url||''))return;
-  showParticipationMode(data?.mode==='paused');
- }catch{/* Sin confirmación, el servidor conserva la validación obligatoria al enviar. */}
+  if(seq!==participationModeSeq||rid!==String(radio?.id||radio?.nombre||radio?.stream_url||''))return false;
+  if(!['manual','automatic','paused'].includes(data?.mode)){showParticipationMode(false,false);return false}
+  showParticipationMode(data.mode==='paused',true);
+  return data.mode!=='paused';
+ }catch{
+  if(seq===participationModeSeq)showParticipationMode(false,false);
+  return false;
+ }
 }
-function startParticipationMode(){if(participationModeTimer)clearInterval(participationModeTimer);showParticipationMode(false);refreshParticipationMode();participationModeTimer=setInterval(refreshParticipationMode,30000)}
+function startParticipationMode(){
+ if(participationModeTimer)clearInterval(participationModeTimer);
+ showParticipationMode(false,false);
+ refreshParticipationMode();
+ participationModeTimer=setInterval(refreshParticipationMode,30000);
+}
 async function sendMessage(){return submitRadioInteraction('chat')}
 async function sendSongRequest(){return submitRadioInteraction('request')}
 function goBack(){try{const h=window.parent!==window&&(window.parent.UADAVShellHost||window.parent.UADAV_APP||window.parent.UADAVShell);if(h?.navigate){h.navigate('/index-v117.html');return}if(window.parent!==window){window.parent.postMessage({type:'uadav:navigate',href:'/index-v117.html'},location.origin);return}}catch{}location.href='/index-v117.html'}
