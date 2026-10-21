@@ -3381,6 +3381,25 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(!isAdmin())return json({error:'No autorizado'},401); const items=await getArray('postulaciones_trabajo'); return json(items.map(({consulta_hash,...item})=>item));
     }
 
+    // Gestión privada de postulaciones: el solicitante consulta solo su propia clave.
+    if (path === '/api/bolsa_trabajo/postulaciones/estado' && request.method === 'POST') {
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      const b=await uadavSecurityJSON(request,12000).catch(()=>null);
+      if(!b||typeof b!=='object')return json({error:'Solicitud inválida'},400);
+      const id=String(b.id||'').trim(),estado=String(b.estado||'').trim().toLowerCase();
+      const allowed=new Set(['pendiente','en_revision','en_proceso','aprobada','rechazada','aceptada','finalizada']);
+      if(!/^POST-[A-Z0-9-]{5,60}$/.test(id)||!allowed.has(estado))return json({error:'Identificador o estado inválido'},400);
+      const list=await getArray('postulaciones_trabajo'),i=list.findIndex(x=>x.id===id);
+      if(i<0)return json({error:'Postulación no encontrada'},404);
+      if(list[i].estado===estado)return json({success:true,id,estado,actualizado:list[i].actualizado||list[i].creado,unchanged:true});
+      const previous=list[i].estado||'pendiente',updated=new Date().toISOString();
+      list[i]={...list[i],estado,actualizado:updated};
+      await putJSON('postulaciones_trabajo',list);
+      await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list));
+      await audit('update_job_application_status','job_application',id,{previous,estado});
+      return json({success:true,id,estado,actualizado:updated});
+    }
+
     // --- FUENTES AUTOMÁTICAS / FEDERACIÓN ---
     const defaultFederatedSources=()=>[
       {id:'rosario-cultura',name:'Rosario Cultura',kind:'event',scope:'rosario',country:'Argentina',url:'https://www.rosario.gob.ar/inicio/agenda/buscar',active:true,interval_hours:12,mode:'page_discovery',priority:100,auto_publish:false,publish_limit:6},
