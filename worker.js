@@ -3374,7 +3374,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const list=await getArray('postulaciones_trabajo');
       const consultaClave=Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
       const consultaHash=await uadavDigest(consultaClave);
-      const item={id:'POST-'+Date.now().toString(36).toUpperCase()+'-'+crypto.randomUUID().slice(0,8).toUpperCase(),consulta_hash:consultaHash,job_id:String(b.job_id),artist_id,artist_nombre,nombre:String(b.nombre).slice(0,120),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),portfolio_url:String(b.portfolio_url||b.portfolio||'').slice(0,500),perfil_verificado,origen:artist_id?'perfil_artista':'publico',creado:new Date().toISOString(),estado:'pendiente'};
+      const item={id:'POST-'+Date.now().toString(36).toUpperCase()+'-'+crypto.randomUUID().slice(0,8).toUpperCase(),consulta_hash:consultaHash,job_id:String(b.job_id),artist_id,artist_nombre,nombre:String(b.nombre).slice(0,120),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),portfolio_url:String(b.portfolio_url||b.portfolio||'').slice(0,500),perfil_verificado,origen:artist_id?'perfil_artista':'publico',creado:new Date().toISOString(),estado:'recibida',moderacion:'sin_revision'};
       if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('postulaciones_trabajo',list); await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id||null,public:!item.artist_id}); await emitNotification({event:'JOB_APPLICATION',to:String(job.contacto_email||job.email||''),subject:'★ UADAV STREAM · Nueva postulación',text:'Se recibió una postulación a una oportunidad laboral.',entity_id:item.id}); return json({success:true,item:{id:item.id,estado:item.estado,creado:item.creado},clave_consulta:consultaClave});
     }
     if (path === '/api/bolsa_trabajo/postulaciones' && request.method === 'GET') {
@@ -3387,7 +3387,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const b=await uadavSecurityJSON(request,12000).catch(()=>null);
       if(!b||typeof b!=='object')return json({error:'Solicitud inválida'},400);
       const id=String(b.id||'').trim(),estado=String(b.estado||'').trim().toLowerCase();
-      const allowed=new Set(['pendiente','en_revision','en_proceso','aprobada','rechazada','aceptada','finalizada']);
+      const allowed=new Set(['recibida','pendiente','en_revision','en_proceso','aprobada','rechazada','aceptada','finalizada']);
       if(!/^POST-[A-Z0-9-]{5,60}$/.test(id)||!allowed.has(estado))return json({error:'Identificador o estado inválido'},400);
       const list=await getArray('postulaciones_trabajo'),i=list.findIndex(x=>x.id===id);
       if(i<0)return json({error:'Postulación no encontrada'},404);
