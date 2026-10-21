@@ -121,7 +121,7 @@ function showParticipationMode(paused,verified=true){
  const message=paused&&verified?'Esta emisora pausó temporalmente los mensajes y pedidos. Podés seguir escuchando la radio.':!verified?'Verificando si la emisora está recibiendo mensajes y pedidos…':'';
  for(const id of ['status','requestStatus']){
   const el=document.getElementById(id);
-  if(el&&(message||el.textContent.startsWith('Esta emisora pausó temporalmente')||el.textContent.startsWith('Verificando si la emisora')))el.textContent=message;
+  if(el&&((!radioSending.chat&&!radioSending.request&&message)||el.textContent.startsWith('Esta emisora pausó temporalmente')||el.textContent.startsWith('Verificando si la emisora')))el.textContent=message;
  }
 }
 async function refreshParticipationMode(){
@@ -136,7 +136,7 @@ async function refreshParticipationMode(){
   showParticipationMode(data.mode==='paused',true);
   return data.mode!=='paused';
  }catch{
-  if(seq===participationModeSeq)showParticipationMode(false,false);
+  if(seq===participationModeSeq&&rid===String(radio?.id||radio?.nombre||radio?.stream_url||''))showParticipationMode(false,false);
   return false;
  }
 }
