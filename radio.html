@@ -79,12 +79,15 @@ async function loadServerHistory(){try{const rid=String(radio.id||radio.nombre||
 let replyTo='';
 async function loadChat(){try{const id='radio:'+(radio.id||radio.nombre||radio.stream_url),a=await apiJson('chat?id_stream='+encodeURIComponent(id)),box=document.getElementById('messages'),nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60,oldTop=box.scrollTop,messages=Array.isArray(a)?a:[];box.innerHTML=messages.slice(-100).map(x=>{const parent=messages.find(y=>y.id===x.reply_to);return '<div class="msg">'+(parent?'<small>Respuesta a '+esc(parent.alias||'Oyente')+': '+esc(String(parent.mensaje||'').slice(0,100))+'</small><br>':'')+'<b>'+esc(x.alias||'Espectador')+'</b> · '+esc(x.mensaje||'')+(x.id?'<br><button type="button" class="btn" data-chat-reply="'+esc(x.id)+'">Responder</button>':'')+'</div>'}).join('')||'<div class="muted">Todavía no hay mensajes. Sé el primero.</div>';box.querySelectorAll('[data-chat-reply]').forEach(button=>button.onclick=()=>{replyTo=button.dataset.chatReply;const parent=messages.find(x=>x.id===replyTo);document.getElementById('status').textContent='Respondiendo a '+(parent?.alias||'Oyente')+'. Podés cancelar la respuesta.';document.getElementById('message').focus();let cancel=document.getElementById('cancelChatReply');if(!cancel){cancel=document.createElement('button');cancel.id='cancelChatReply';cancel.type='button';cancel.className='btn';cancel.textContent='Cancelar respuesta';document.getElementById('status').after(cancel)}cancel.hidden=false;cancel.onclick=()=>{replyTo='';cancel.hidden=true;document.getElementById('status').textContent=''}});box.scrollTop=nearBottom?box.scrollHeight:oldTop}catch{}}
 const radioSending={chat:false,request:false};
+const radioPreflight={chat:false,request:false};
 async function submitRadioInteraction(kind){
- if(radioSending[kind])return;
- const live=await refreshParticipationMode();
+ if(radioSending[kind]||radioPreflight[kind])return;
+ radioPreflight[kind]=true;
+ let live=false;
+ try{live=await refreshParticipationMode()}finally{radioPreflight[kind]=false}
  if(live!==true){
   const warning=document.getElementById(kind==='chat'?'status':'requestStatus');
-  if(warning)warning.textContent=participationPaused?'Esta emisora pausó temporalmente los mensajes y pedidos. Podés seguir escuchando la radio.':'No se pudo verificar si la emisora recibe mensajes. Intentá nuevamente en unos instantes.';
+  if(warning)warning.textContent=participationModeVerified&&participationPaused?'Esta emisora pausó temporalmente los mensajes y pedidos. Podés seguir escuchando la radio.':'No se pudo verificar si la emisora recibe mensajes. Intentá nuevamente en unos instantes.';
   return;
  }
  const chat=kind==='chat',ids=chat?['alias','message','send']:['reqName','reqArtist','reqTitle','reqDedication','sendRequest'];
