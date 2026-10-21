@@ -11,7 +11,7 @@ function searchEmptyHTML(s){
  if(s.failures)return '<div class="empty">No pudimos completar todas las consultas. Volvé a buscar; no es necesario crear otra cuenta.</div>';
  return '<div class="empty">No encontramos resultados para “'+esc(s.q)+'” en las fuentes disponibles.</div>';
 }
-const SEARCH_SNAPSHOT_KEY='uadav_public_search_return_v1';
+const SEARCH_SNAPSHOT_KEY='uadav_public_search_return_v2_'+(API.includes('uadav-api-staging.')?'staging':'production');
 function saveSearchSnapshot(){try{if(searchState.pending||!searchState.q)return;const raw=JSON.stringify({at:Date.now(),state:searchState,filter:activeFilter});if(raw.length<=1000000)sessionStorage.setItem(SEARCH_SNAPSHOT_KEY,raw)}catch{}}
 function restoreSearchSnapshot(q){try{const saved=JSON.parse(sessionStorage.getItem(SEARCH_SNAPSHOT_KEY)||'null'),s=saved?.state;if(!saved||Date.now()-saved.at>600000||Date.now()<saved.at||s?.q!==q||s.pending||!['content','artists','events','radios'].every(k=>Array.isArray(s[k])))return false;searchState=s;activeFilter=['','Contenido','Artistas','Cartelera','Radios'].includes(saved.filter)?saved.filter:'';renderSearch();return true}catch{return false}}
 function artistReturnHref(href){try{const u=new URL(href,location.origin);if(u.origin===location.origin&&/^\/artista(?:\.html)?$/.test(u.pathname))u.searchParams.set('from','/buscar.html?q='+encodeURIComponent(searchState.q));return u.pathname+u.search+u.hash}catch{return href}}
