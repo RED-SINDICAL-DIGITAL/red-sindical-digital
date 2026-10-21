@@ -450,7 +450,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11756';
+const BUILD = '11757';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -4523,6 +4523,19 @@ async function saveEntityVersion(type,id,data){
         await safeD1('radio_track',()=>env.DB.prepare(`INSERT INTO radio_tracks(id,radio_id,artist,title,artwork,played_at,data_json) VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET artwork=excluded.artwork,played_at=excluded.played_at,data_json=excluded.data_json`).bind(id,rid,artist,title,item.artwork,item.played_at,JSON.stringify(item)).run());
         return json({success:true,item});
       }
+    }
+
+    if(path==='/api/radio/moderation-mode'){
+      if(request.method!=='GET')return json({error:'Método no permitido'},405);
+      const rid=String(url.searchParams.get('radio_id')||'');
+      if(!rid||rid.length>160)return json({error:'Emisora inválida'},400);
+      if(!hasD1())return json({error:'Estado no disponible'},503,{'Cache-Control':'no-store'});
+      try{
+        const radioList=await getArray('radios');
+        if(!radioList.some(r=>String(r.id||r.nombre||r.stream_url||'')===rid))return json({error:'Emisora no encontrada'},404,{'Cache-Control':'no-store'});
+        const row=await env.DB.prepare('SELECT mode FROM radio_moderation_settings WHERE radio_id=?').bind(rid).first();
+        return json({radio_id:rid,mode:row?.mode||'manual'},200,{'Cache-Control':'no-store'});
+      }catch{return json({error:'No se pudo consultar la recepción'},503,{'Cache-Control':'no-store'})}
     }
 
     if(path==='/api/admin/radio-operators'||path==='/api/radio-studio'||path==='/api/radio-studio/requests'||path==='/api/radio-studio/chat'||path==='/api/radio-studio/moderation'||path==='/api/radio-studio/settings'){
