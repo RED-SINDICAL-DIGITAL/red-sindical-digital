@@ -96,7 +96,7 @@ async function submitRadioInteraction(kind){
   if(chat){document.getElementById('message').value='';replyTo='';const cancel=document.getElementById('cancelChatReply');if(cancel)cancel.hidden=true;status.textContent=pending?'Mensaje recibido. Está pendiente de revisión.':'Mensaje publicado.';if(!pending)await loadChat()}
   else{['reqArtist','reqTitle','reqDedication'].forEach(id=>document.getElementById(id).value='');status.textContent=pending?'Pedido recibido. Está pendiente de revisión.':'✓ Pedido registrado para esta emisora. No garantiza su reproducción.'}
  }catch(e){if(e?.code==='RADIO_PAUSED'){showParticipationMode(true);refreshParticipationMode()}if(nodes.every(n=>n.isConnected!==false))status.textContent=e?.code==='RADIO_PAUSED'?'Esta emisora pausó temporalmente los mensajes y pedidos. Podés seguir escuchando la radio e intentar más tarde.':'No pudimos confirmar el envío. Conservamos lo que escribiste. Antes de reintentar, comprobá si ya aparece registrado.'}
- finally{radioSending[kind]=false;nodes.forEach((n,i)=>{if(n.isConnected!==false)n.disabled=disabled[i]})}
+ finally{radioSending[kind]=false;nodes.forEach((n,i)=>{if(n.isConnected!==false)n.disabled=disabled[i]||(participationPaused&&(n.id==='send'||n.id==='sendRequest'))})}
 }
 let participationModeTimer=null,participationModeSeq=0,participationPaused=false;
 function showParticipationMode(paused){
