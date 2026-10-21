@@ -26,7 +26,9 @@ let jobsVersion=0;async function load(){const version=++jobsVersion;try{
 }catch(err){if(version!==jobsVersion)return;document.getElementById('jobCount').textContent='';document.getElementById('list').innerHTML='<p role="status">No pudimos cargar las oportunidades. Volvé a tocar Buscar para reintentar.</p>'}}
 let applyBusy=false,applyComplete=false;
 async function postular(id){
-  if(applyBusy)return;applyComplete=false;document.getElementById('applyReceiptCopyStatus').textContent='';document.getElementById('applyReceipt').hidden=true;document.getElementById('applyReceiptId').value='';document.getElementById('applyReceiptKey').value='';document.getElementById('applyForm').querySelector('button[type="submit"]').disabled=false;
+  if(applyBusy)return;
+  if(applyComplete&&document.getElementById('applyReceiptKey').value&&!window.confirm('Ya tenés una postulación enviada. ¿Guardaste el identificador y la clave privada? Si continuás, este comprobante dejará de mostrarse.'))return;
+  applyComplete=false;document.getElementById('applyReceiptCopyStatus').textContent='';document.getElementById('applyReceipt').hidden=true;document.getElementById('applyReceiptId').value='';document.getElementById('applyReceiptKey').value='';document.getElementById('applyForm').querySelector('button[type="submit"]').disabled=false;
   const job=(window.__jobs||[]).find(x=>String(x.id)===String(id));document.getElementById('applyJobId').value=id;document.getElementById('applyTitle').textContent=job?.titulo||'Postularme';document.getElementById('applyStatus').textContent='';document.getElementById('applyDialog').showModal()
 }
 load();
