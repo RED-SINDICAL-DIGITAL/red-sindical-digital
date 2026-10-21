@@ -378,14 +378,14 @@ VIEWS.jobs=async(force)=>{const [jobs,apps]=await Promise.all([cache('jobs',()=>
 function renderJobs(){const jobs=arr(S.cache.jobs),apps=arr(S.cache.jobApps),tab=S.jobTab||'jobs';const body=tab==='jobs'?table(['Oportunidad','Rubro','Ciudad','Fecha','Estado','Acciones'],jobs.map((j,i)=>`<tr><td><strong>${esc(j.titulo)}</strong><small style="display:block;color:var(--muted)">${esc(j.creado_por||'')}</small></td><td>${esc(j.rubro||'—')}</td><td>${esc(j.ciudad||'—')}</td><td>${esc(j.fecha||'—')}</td><td>${j.activo!==false?'<span class="badge ok">Activa</span>':'<span class="badge bad">Oculta</span>'}</td><td><div class="actions"><button class="btn btn-secondary btn-sm" onclick="editJob(${i})">Editar</button><button class="btn btn-danger btn-sm" onclick="deleteJob(${i})">Eliminar</button></div></td></tr>`)):table(['Oportunidad','Artista','Contacto','Fecha','Estado','Gestión'],apps.map((a,i)=>`<tr><td>${esc(a.job_id)}</td><td><strong>${esc(a.artist_nombre||a.nombre||'—')}</strong></td><td>${esc(a.email||'—')}</td><td>${fmtDate(a.creado)}</td><td>${statusBadge(a.estado||'pendiente')}</td><td><button type="button" class="btn btn-secondary btn-sm" onclick="manageJobApplication(${i})">Gestionar</button></td></tr>`));$('main').innerHTML=head('Bolsa de trabajo','Publicación y postulación gratuitas para todos.',`<button class="btn btn-primary" onclick="editJob(-1)">+ Publicar oportunidad</button>`)+`<div class="toolbar"><div class="tabs"><button class="tab ${tab==='jobs'?'active':''}" onclick="S.jobTab='jobs';renderJobs()">Oportunidades ${jobs.length}</button><button class="tab ${tab==='apps'?'active':''}" onclick="S.jobTab='apps';renderJobs()">Postulaciones ${apps.length}</button></div></div>${body}`}
 window.manageJobApplication=i=>{
  const item=arr(S.cache.jobApps)[i];if(!item)return;
- const options=[['pendiente','Pendiente'],['en_revision','En revisión'],['en_proceso','En proceso'],['aprobada','Aprobada'],['rechazada','Rechazada'],['aceptada','Aceptada'],['finalizada','Finalizada']];
+ const options=[['recibida','Recibida automáticamente'],['pendiente','Pendiente'],['en_revision','En revisión'],['en_proceso','En proceso'],['aprobada','Aprobada'],['rechazada','Rechazada'],['aceptada','Aceptada'],['finalizada','Finalizada']];
  const current=String(item.estado||'pendiente');
  modal('Gestionar postulación',`<div class="form-grid"><p class="span-2"><strong>${esc(item.artist_nombre||item.nombre||'Postulante')}</strong> · ${esc(item.job_id||'')}</p>${sel('applicationStatus','Estado',current,options)}</div>`,`<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveJobApplicationStatus(${i})">Guardar estado</button>`);
 };
 window.saveJobApplicationStatus=async i=>{
  const item=arr(S.cache.jobApps)[i],field=$('applicationStatus');
  if(!item||!field)return;
- const estado=field.value,allowed=['pendiente','en_revision','en_proceso','aprobada','rechazada','aceptada','finalizada'];
+ const estado=field.value,allowed=['recibida','pendiente','en_revision','en_proceso','aprobada','rechazada','aceptada','finalizada'];
  if(!allowed.includes(estado)){toast('Seleccioná un estado válido','bad');return}
  if(estado===String(item.estado||'pendiente')){closeModal();return}
  try{
