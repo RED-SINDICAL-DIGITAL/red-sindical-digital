@@ -18,6 +18,27 @@
 @media(min-width:960px) and (hover:none){#tab-videos .rail{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;overflow:visible}#tab-videos .tile{width:100%;min-width:0}}
 @media(min-width:1200px) and (pointer:coarse){body.tv-mode #tab-videos .rail{display:flex;overflow-x:auto}body.tv-mode #tab-videos .tile{flex:0 0 300px}}
 .hero-bg{background-size:cover;background-position:center 30%}
+</style><style id="artist-profile-polish-117">
+/* Desktop-first artist hub: readable hero, editorial video grid, TV remains horizontal. */
+@media(min-width:761px){
+ .hero{min-height:clamp(400px,48vw,620px)}
+ .hero-inner{min-height:clamp(400px,48vw,620px);padding-bottom:46px}
+ .title{font-size:clamp(44px,5vw,76px);line-height:1;overflow-wrap:anywhere}
+ .artist-head{align-items:center}
+ .bio{max-width:750px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+ #tab-videos .tile-media,#tab-musica .tile-media{aspect-ratio:16/9}
+ #tab-videos .tile,#tab-musica .tile{transition:transform .2s,border-color .2s}
+ #tab-videos .tile:hover,#tab-musica .tile:hover{transform:translateY(-3px);border-color:#4c78d7}
+ #tab-videos .tile-title,#tab-musica .tile-title{font-size:14px}
+}
+@media(max-width:760px){
+ .hero{min-height:0}.hero-inner{padding-top:88px;padding-bottom:28px}
+ .title{font-size:clamp(34px,10vw,52px);overflow-wrap:anywhere}
+ .bio{font-size:14px}
+ .tabs{scrollbar-width:thin}
+}
+.tile button:focus-visible,.tab:focus-visible{outline:3px solid #9bbfff;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){#tab-videos .tile,#tab-musica .tile{transition:none!important}}
 </style></head><body data-page="artista"><div id="app"><div class="empty" style="margin:30vh auto;width:min(500px,90vw)">Cargando perfil…</div></div>
 <script>
 const API_REMOTE=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';async function apiFetchNetwork(path,opt={}){const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);try{const r=await fetch(API_REMOTE+path,{...opt,cache:'no-store',signal:opt.signal||ctl.signal}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d}finally{clearTimeout(timer)}}
