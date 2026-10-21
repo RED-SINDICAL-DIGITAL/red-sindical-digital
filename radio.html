@@ -97,7 +97,7 @@ async function submitRadioInteraction(kind){
  try{
   const d=await apiJson(chat?'moderar_chat':'radio/requests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const pending=d?.moderation_pending===true;
-  if(d?.success!==true||(d.moderation_pending!==undefined&&typeof d.moderation_pending!=='boolean')||(!pending&&!d.item?.id))throw Error('Respuesta incompleta');
+  if(d?.success!==true||(d.moderation_pending!==undefined&&typeof d.moderation_pending!=='boolean')||(!pending&&!d.auto_published&&!d.item?.id))throw Error('Respuesta incompleta');
   if(!nodes.every(n=>n.isConnected!==false)||String(radio.id||radio.nombre||radio.stream_url||'')!==rid)return;
   if(chat){document.getElementById('message').value='';replyTo='';const cancel=document.getElementById('cancelChatReply');if(cancel)cancel.hidden=true;status.textContent=pending?'Mensaje recibido. Está pendiente de revisión.':'Mensaje publicado.';if(!pending)await loadChat()}
   else{['reqArtist','reqTitle','reqDedication'].forEach(id=>document.getElementById(id).value='');status.textContent=pending?'Pedido recibido. Está pendiente de revisión.':'✓ Pedido registrado para esta emisora. No garantiza su reproducción.'}
