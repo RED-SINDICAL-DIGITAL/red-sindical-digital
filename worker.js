@@ -1840,12 +1840,19 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       let stationMode='manual',stationScope='';
       if(path==='/api/radio/requests')stationScope=String(clean.radio_id||'');
       else if(path==='/api/moderar_chat'&&String(clean.id_stream||'').startsWith('radio:'))stationScope=String(clean.id_stream).slice(6);
+      if(stationScope){
+        if(stationScope.length>160)return json({error:'Emisora inválida'},400);
+        const radioCatalog=await getArray('radios');
+        const validStation=radioCatalog.some(r=>String(r.id||r.nombre||r.stream_url||'')===stationScope&&r.visible!==false&&r.activa!==false&&r.enabled!==false&&!['suspendido','suspended','inactive'].includes(r.estado));
+        if(!validStation)return json({error:'Emisora no disponible'},404);
+        if(clean.radio_operator_account_id&&clean.radio_operator_radio_id!==stationScope)return json({error:'El operador no pertenece a esta emisora'},403);
+      }
       if(stationScope&&!hasD1())return json({error:'La moderación de radio no está disponible temporalmente'},503);
       if(stationScope&&hasD1()){
         await env.DB.prepare("CREATE TABLE IF NOT EXISTS radio_moderation_settings(radio_id TEXT PRIMARY KEY,mode TEXT NOT NULL DEFAULT 'manual',updated_by TEXT,updated_at TEXT NOT NULL)").run();
         const cfg=await env.DB.prepare('SELECT mode FROM radio_moderation_settings WHERE radio_id=?').bind(stationScope).first();
         stationMode=cfg?.mode||'manual';
-        if(stationMode==='paused'&&!clean.radio_operator_account_id)return json({error:'Esta emisora pausó temporalmente los mensajes y pedidos'},423);
+        if(stationMode==='paused'&&!(path==='/api/moderar_chat'&&clean.radio_operator_account_id))return json({error:'Esta emisora pausó temporalmente los mensajes y pedidos',code:'RADIO_PAUSED'},423,{'Cache-Control':'no-store'});
       }
       const check=await uadavModerateText(env,path,clean,request.headers.get('CF-Connecting-IP')||'unknown',!!stationScope&&(stationMode==='manual'||stationMode==='automatic'));if(check.decision==='published')return json({...check.result,success:true,previously_reviewed:true});if(check.decision==='review'){
         if(stationScope&&stationMode==='automatic'&&check.reason==='provider_not_configured'&&check.id&&!clean.radio_operator_account_id){
