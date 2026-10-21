@@ -3360,6 +3360,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if (path === '/api/bolsa_trabajo/postular' && request.method === 'POST') {
       const b=await request.json().catch(()=>({}));
       if(!b.job_id||!b.nombre||!b.email)return json({error:'Oportunidad, nombre y email son obligatorios'},400);
+      if(b.consent_scope!=='job_application_v1'||!b.consent_at)return json({error:'Confirmá que autorizás el envío de la postulación.'},400);
       const jobList=await getArray('bolsa_trabajo');
       const job=jobList.find(x=>String(x.id)===String(b.job_id)&&x.activo!==false);
       if(!job)return json({error:'Oportunidad no disponible'},404);
