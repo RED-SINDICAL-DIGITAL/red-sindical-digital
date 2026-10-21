@@ -3360,6 +3360,11 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if (path === '/api/bolsa_trabajo/postular' && request.method === 'POST') {
       const b=await request.json().catch(()=>({}));
       if(!b.job_id||!b.nombre||!b.email)return json({error:'Oportunidad, nombre y email son obligatorios'},400);
+      const allowedFields=new Set(['nombre','email','whatsapp','portfolio_url','mensaje','artist_profile']);
+      const shared=Array.isArray(b.shared_fields)?b.shared_fields:[];
+      if(b.consent_scope!=='job_application_v1'||!Number.isFinite(Date.parse(b.consent_at||''))||Math.abs(Date.now()-Date.parse(b.consent_at))>600000||!shared.includes('nombre')||!shared.includes('email')||shared.some(k=>!allowedFields.has(k))||new Set(shared).size!==shared.length)return json({error:'Revisá y confirmá los datos autorizados antes de enviar.'},400);
+      for(const [field,value] of [['whatsapp',b.whatsapp],['portfolio_url',b.portfolio_url],['mensaje',b.mensaje],['artist_profile',b.artist_token]])if(value&&!shared.includes(field))return json({error:'El envío incluye datos no autorizados.'},400);
+      if(shared.includes('artist_profile')&&!b.artist_token)return json({error:'Vinculá tu perfil antes de enviar.'},400);
       const jobList=await getArray('bolsa_trabajo');
       const job=jobList.find(x=>String(x.id)===String(b.job_id)&&x.activo!==false);
       if(!job)return json({error:'Oportunidad no disponible'},404);
@@ -3370,11 +3375,12 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
           const raw=await uadavReadArtistAccess(token,env);
           if(raw){const access=JSON.parse(raw);if(!access.expires||Date.now()<=access.expires){const artists=await getArray('artistas');const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id));if(artist){artist_id=String(access.artist_id);artist_nombre=String(artist.nombre_artistico||artist.nombre||'');perfil_verificado=artist.afiliado_verificado===true||artist.claimed===true}}}
         }catch(_){}
+        if(!artist_id)return json({error:'El perfil artístico no pudo validarse. Desmarcá la vinculación o volvé a Mi Perfil.'},403);
       }
       const list=await getArray('postulaciones_trabajo');
       const consultaClave=Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
       const consultaHash=await uadavDigest(consultaClave);
-      const item={id:'POST-'+Date.now().toString(36).toUpperCase()+'-'+crypto.randomUUID().slice(0,8).toUpperCase(),consulta_hash:consultaHash,job_id:String(b.job_id),artist_id,artist_nombre,nombre:String(b.nombre).slice(0,120),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),portfolio_url:String(b.portfolio_url||b.portfolio||'').slice(0,500),perfil_verificado,origen:artist_id?'perfil_artista':'publico',creado:new Date().toISOString(),estado:'recibida',moderacion:'sin_revision'};
+      const item={id:'POST-'+Date.now().toString(36).toUpperCase()+'-'+crypto.randomUUID().slice(0,8).toUpperCase(),consulta_hash:consultaHash,job_id:String(b.job_id),artist_id,artist_nombre,nombre:String(b.nombre).slice(0,120),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),portfolio_url:String(b.portfolio_url||b.portfolio||'').slice(0,500),perfil_verificado,consent_scope:'job_application_v1',consent_at:new Date().toISOString(),shared_fields:shared,origen:artist_id?'perfil_artista':'publico',creado:new Date().toISOString(),estado:'recibida',moderacion:'sin_revision'};
       if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('postulaciones_trabajo',list); await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id||null,public:!item.artist_id}); await emitNotification({event:'JOB_APPLICATION',to:String(job.contacto_email||job.email||''),subject:'★ UADAV STREAM · Nueva postulación',text:'Se recibió una postulación a una oportunidad laboral.',entity_id:item.id}); return json({success:true,item:{id:item.id,estado:item.estado,creado:item.creado},clave_consulta:consultaClave});
     }
     if (path === '/api/bolsa_trabajo/postulaciones' && request.method === 'GET') {
