@@ -3332,11 +3332,35 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     // --- BOLSA DE TRABAJO ---
     if (path === '/api/bolsa_trabajo') {
       const list=await getArray('bolsa_trabajo');
-      if(request.method==='GET') return json(list.filter(x=>x&&x.activo!==false).map(({contacto,contacto_email,whatsapp,consulta_hash,token,turnstile_token,...publicJob})=>publicJob));
-      if(request.method==='POST'){ const b=await request.json().catch(()=>({})); if(!b.titulo||!b.descripcion||!b.contacto)return json({error:'Título, descripción y contacto son obligatorios'},400); const item={id:'JOB-'+Date.now().toString(36).toUpperCase(),creado:new Date().toISOString(),creado_por:isAdmin()?'admin':'publico',titulo:String(b.titulo).slice(0,160),rubro:String(b.rubro||'').slice(0,80),tipo:String(b.tipo||'busqueda_artista').slice(0,50),contratante_tipo:String(b.contratante_tipo||'productora').slice(0,50),empresa:String(b.empresa||'').slice(0,160),logo_url:(()=>{try{const u=new URL(String(b.logo_url||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href.slice(0,500):''}catch{return ''}})(),modalidad:String(b.modalidad||'presencial').slice(0,50),ciudad:String(b.ciudad||'').slice(0,100),provincia:String(b.provincia||'').slice(0,100),pais:String(b.pais||'Argentina').slice(0,80),fecha:String(b.fecha||'').slice(0,30),fecha_limite:String(b.fecha_limite||'').slice(0,30),remuneracion:String(b.remuneracion||'a_convenir').slice(0,80),descripcion:String(b.descripcion).slice(0,2500),requisitos:String(b.requisitos||'').slice(0,2000),contacto:String(b.contacto).slice(0,300),contacto_email:String(b.contacto_email||b.email||'').slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,60),contacto_tipo:String(b.contacto_tipo||'').slice(0,30),activo:true}; if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('bolsa_trabajo',list); const d1sync=await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('create_job','job',item.id,{title:item.titulo}); return json({success:true,item,d1_sync:d1sync}); }
+      if(request.method==='GET') return json(list.filter(x=>x&&x.activo!==false).map(({contacto,contacto_email,whatsapp,owner_access_hash,consulta_hash,token,turnstile_token,...publicJob})=>publicJob));
+      if(request.method==='POST'){ const b=await request.json().catch(()=>({})); if(!b.titulo||!b.descripcion||!b.contacto)return json({error:'Título, descripción y contacto son obligatorios'},400); const item={id:'JOB-'+Date.now().toString(36).toUpperCase(),creado:new Date().toISOString(),creado_por:isAdmin()?'admin':'publico',titulo:String(b.titulo).slice(0,160),rubro:String(b.rubro||'').slice(0,80),tipo:String(b.tipo||'busqueda_artista').slice(0,50),contratante_tipo:String(b.contratante_tipo||'productora').slice(0,50),empresa:String(b.empresa||'').slice(0,160),logo_url:(()=>{try{const u=new URL(String(b.logo_url||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href.slice(0,500):''}catch{return ''}})(),modalidad:String(b.modalidad||'presencial').slice(0,50),ciudad:String(b.ciudad||'').slice(0,100),provincia:String(b.provincia||'').slice(0,100),pais:String(b.pais||'Argentina').slice(0,80),fecha:String(b.fecha||'').slice(0,30),fecha_limite:String(b.fecha_limite||'').slice(0,30),remuneracion:String(b.remuneracion||'a_convenir').slice(0,80),descripcion:String(b.descripcion).slice(0,2500),requisitos:String(b.requisitos||'').slice(0,2000),contacto:String(b.contacto).slice(0,300),contacto_email:String(b.contacto_email||b.email||'').slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,60),contacto_tipo:String(b.contacto_tipo||'').slice(0,30),activo:true}; const ownerKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');item.owner_access_hash=await uadavDigest(ownerKey); if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('bolsa_trabajo',list); const d1sync=await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('create_job','job',item.id,{title:item.titulo}); return json({success:true,item:(({owner_access_hash,contacto,contacto_email,whatsapp,...safe})=>safe)(item),clave_contratante:ownerKey,d1_sync:d1sync}); }
       if(!isAdmin())return json({error:'No autorizado'},401);
       if(request.method==='PUT'){const b=await request.json().catch(()=>({}));const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'No encontrado'},404);Object.assign(list[i],b,{id:list[i].id});await putJSON('bolsa_trabajo',list); const d1sync=await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('update_job','job',list[i].id,{}); return json({success:true,item:list[i]});}
       if(request.method==='DELETE'){const b=await request.json().catch(()=>({})); const next=list.filter(x=>String(x.id)!==String(b.id)); await putJSON('bolsa_trabajo',next); const d1sync=await safeD1('sync_jobs',()=>syncJobsD1(next)); await audit('delete_job','job',b.id,{}); return json({success:true,d1_sync:d1sync});}
+    }
+    // Bandeja privada del contratante: acceso por clave aleatoria entregada al publicar.
+    // Nunca incluir claves ni hashes en la respuesta pública.
+    if(path==='/api/bolsa_trabajo/mis-postulantes' && request.method==='POST'){
+      const b=await uadavSecurityJSON(request,4096).catch(()=>null);
+      const id=String(b?.job_id||'').trim(),key=String(b?.clave||'').trim();
+      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!/^[a-f0-9]{64}$/.test(key))return json({error:'Credenciales inválidas'},400);
+      const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();
+      if(!peer)return json({error:'Origen no verificable'},403);
+      const bucket='job-owner-rate:'+await uadavDigest(peer);
+      const hits=Number(await env.UADAV_DB.get(bucket)||0);
+      if(hits>=12)return json({error:'Demasiadas consultas. Intentá más tarde.'},429);
+      await env.UADAV_DB.put(bucket,String(hits+1),{expirationTtl:600});
+      const job=(await getArray('bolsa_trabajo')).find(x=>String(x.id)===id);
+      if(!job?.owner_access_hash||job.owner_access_hash!==await uadavDigest(key))return json({error:'No se encontró el acceso a esta oportunidad'},404);
+      const list=(await getArray('postulaciones_trabajo')).filter(x=>String(x.job_id)===id).map(x=>({
+        id:x.id,nombre:x.nombre,email:x.email,
+        whatsapp:Array.isArray(x.shared_fields)&&x.shared_fields.includes('whatsapp')?x.whatsapp:'',
+        portfolio_url:Array.isArray(x.shared_fields)&&x.shared_fields.includes('portfolio_url')?x.portfolio_url:'',
+        mensaje:Array.isArray(x.shared_fields)&&x.shared_fields.includes('mensaje')?x.mensaje:'',
+        artist_id:Array.isArray(x.shared_fields)&&x.shared_fields.includes('artist_profile')?x.artist_id:'',
+        creado:x.creado,estado:x.estado||'recibida',perfil_verificado:!!x.perfil_verificado
+      }));
+      return json({success:true,job:{id:job.id,titulo:job.titulo},items:list});
     }
     // Consulta individual: nunca exponer la lista completa ni datos de contacto.
     if (path === '/api/bolsa_trabajo/mi-postulacion' && request.method === 'POST') {
