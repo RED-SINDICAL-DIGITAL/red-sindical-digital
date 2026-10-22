@@ -131,12 +131,13 @@ function moduleValues(prefix){const values={...obj(S.cache.config?.modules)};for
 const nowId=p=>p+'-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
 
 const NAV=[
- {g:'RESUMEN',items:[['dashboard','◫','Visión general'],['pending','☷','Pendientes'],['requests','◎','Consultas y comunidad']]},
- {g:'PERSONAS',items:[['announcements','🔔','Mensajes a usuarios'],['accounts','♙','Cuentas personales'],['artists','★','Artistas y perfiles'],['producers','◆','Productoras'],['jobs','✦','Bolsa de Trabajo gratuita'],['work','▦','Contratación gratuita']]},
- {g:'CONTENIDO',items:[['home','⌂','Portada'],['content','▶','Videos y música'],['collections','▦','Colecciones y categorías'],['events','▣','Cartelera'],['radios','◉','Radio'],['live','◍','En vivo'],['playlists','♫','Playlists'],['podcasts','◉','Podcasts'],['media','▤','Cine y series']]},
- {g:'INGRESOS',items:[['monetization','◆','Cobros y destacados'],['ads','▰','Publicidad']]},
+ {g:'INICIO Y TAREAS',items:[['dashboard','◫','Resumen de hoy'],['pending','☷','Pendientes'],['requests','◎','Consultas'],['announcements','🔔','Avisos a usuarios']]},
+ {g:'ARTISTAS Y COMUNIDAD',items:[['artists','★','Artistas y perfiles'],['accounts','♙','Cuentas'],['producers','◆','Productoras'],['jobs','✦','Bolsa de Trabajo'],['work','▦','Contrataciones'],['events','▣','Cartelera']]},
+ {g:'ENTRETENIMIENTO',items:[['content','▶','Videos y música'],['collections','▦','Categorías y colecciones'],['radios','◉','Radios y operadores'],['live','◍','En Vivo y TV'],['playlists','♫','Playlists'],['podcasts','◉','Podcasts'],['media','▤','Películas y series']]},
+ {g:'PUBLICIDAD E INGRESOS',items:[['ads','▰','Campañas y banners'],['monetization','◆','Cobros y destacados']]},
+ {g:'DISEÑO Y PORTADA',items:[['home','⌂','Portada y destacados'],['pages','⌘','Identidad, colores, íconos y SEO']]},
  {g:'GESTIÓN SINDICAL',items:[['cct','⚖','Convenio y fiscalización']]},
- {g:'CONFIGURACIÓN',items:[['sources','◎','Fuentes automáticas'],['imports','⇅','Importar y exportar'],['prospecting','⌕','Descubrimiento'],['pages','⌘','Páginas y SEO'],['restrictions','⊘','Restricciones'],['moderation','◉','Moderación'],['system','⚙','Sistema'],['audit','≡','Auditoría'],['diagnostics','✚','Diagnóstico'],['manuals','?','Ayuda']]}
+ {g:'ADMINISTRACIÓN TÉCNICA',items:[['sources','◎','Fuentes automáticas'],['imports','⇅','Importar y exportar'],['prospecting','⌕','Descubrimiento'],['restrictions','⊘','Restricciones'],['moderation','◉','Moderación'],['system','⚙','Sistema'],['audit','≡','Auditoría'],['diagnostics','✚','Diagnóstico'],['manuals','?','Ayuda']]}
 ];
 const TITLES={announcements:"Mensajes a usuarios",accounts:'Cuentas personales',pending:'Pendientes',moderation:'Moderación de la comunidad',dashboard:'Visión general',home:'Inicio / Home',content:'Contenido',collections:'Colecciones y categorías',playlists:'Playlists',podcasts:'Podcast',pages:'Mi perfil / páginas / SEO',artists:'Artistas y perfiles',producers:'Productoras',radios:'Radio',live:'En vivo / IPTV autorizada',events:'Cartelera y eventos',media:'Cine & Historias',jobs:'Bolsa de trabajo',work:'Trabajo y Marketplace',cct:'Convenio y fiscalización',prospecting:'Descubrimiento / Prospección',restrictions:'Restricciones',ads:'Publicidad',monetization:'Cobros y destacados',requests:'Consultas y comunidad',sources:'Fuentes automáticas',imports:'Importar / exportar',manuals:'Ayuda y manuales',system:'Sistema y automatización',audit:'Historial de cambios',diagnostics:'Diagnóstico'};
 const PLATFORM_TAXONOMY={
