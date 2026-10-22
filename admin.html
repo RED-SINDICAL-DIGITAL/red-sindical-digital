@@ -110,10 +110,10 @@ summary.nav-group-title{cursor:pointer;list-style:none;padding:14px 12px!importa
 'use strict';
 const ADMIN_STAGING_HOST=window.UADAV_ENV==='staging'||window.PLATFORM_ENV==='staging'||/(?:^|[.-])(?:staging|preview)(?:[.-]|$)/i.test(location.hostname);
 const ADMIN_STAGING_API='https://uadav-api-staging.uadavstream.workers.dev/api/';
-const API_REMOTE=window.PLATFORM_API_BASE||window.UADAV_API_BASE||(ADMIN_STAGING_HOST?ADMIN_STAGING_API:'https://uadav-api.uadavstream.workers.dev/api/');
+const API_REMOTE=ADMIN_STAGING_HOST?ADMIN_STAGING_API:(window.PLATFORM_API_BASE||window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/');
 let API_ACTIVE=API_REMOTE;
 const API_LOCAL=location.origin.replace(/\/$/,'')+'/api/';
-const API_USE_LOCAL=window.PLATFORM_USE_LOCAL_API===true||window.UADAV_USE_LOCAL_API===true;
+const API_USE_LOCAL=!ADMIN_STAGING_HOST&&(window.PLATFORM_USE_LOCAL_API===true||window.UADAV_USE_LOCAL_API===true);
 let PUBLIC_BRAND={};
 async function preloadPublicBrand(){const read=async url=>{const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);try{const r=await fetch(url,{cache:'no-store',signal:ctl.signal});return r.ok?await r.json():{}}catch(_){return{}}finally{clearTimeout(timer)}};const [c,instance]=await Promise.all([read(API_REMOTE+'config'),read('/platform-instance.json')]);PUBLIC_BRAND={...obj(instance.branding),...obj(c.branding||c.platform)};const n=PUBLIC_BRAND.name;if(n){for(const id of ['loginBrandName','brandName','topBrandName'])if($(id))$(id).textContent=n;document.title=n+' — Centro de Control'}const pc=PUBLIC_BRAND.primary_color;if(/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(pc||''))document.documentElement.style.setProperty('--blue',pc)}
 
