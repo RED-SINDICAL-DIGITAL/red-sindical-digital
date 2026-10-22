@@ -172,7 +172,8 @@ async function api(path,opt={}){
   if(opt.auth!==false && key)headers.Authorization='Bearer '+key;
   let body=opt.body;
   if(body!==undefined && !(body instanceof FormData) && typeof body!=='string'){headers['Content-Type']='application/json';body=JSON.stringify(body)}
-  const bases=[...new Set([API_ACTIVE,API_REMOTE,API_USE_LOCAL?API_LOCAL:null].filter(Boolean))];
+  const bases=[...new Set([API_ACTIVE,API_REMOTE,API_USE_LOCAL?API_LOCAL:null].filter(Boolean))].filter(base=>!ADMIN_STAGING_HOST||!/^https:\/\/uadav-api\.uadavstream\.workers\.dev\/api\//i.test(base));
+  if(!bases.length)throw new Error('No hay API de pruebas válida configurada para este Admin.');
   let lastErr=null;
   for(const base of bases){
     try{
