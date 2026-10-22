@@ -108,7 +108,7 @@ summary.nav-group-title{cursor:pointer;list-style:none;padding:14px 12px!importa
 <script>
 (() => {
 'use strict';
-const ADMIN_STAGING_HOST=/(?:^|[.-])(?:staging|preview)(?:[.-]|$)|\.pages\.dev$/i.test(location.hostname);
+const ADMIN_STAGING_HOST=window.UADAV_ENV==='staging'||window.PLATFORM_ENV==='staging'||/(?:^|[.-])(?:staging|preview)(?:[.-]|$)/i.test(location.hostname);
 const ADMIN_STAGING_API='https://uadav-api-staging.uadavstream.workers.dev/api/';
 const API_REMOTE=window.PLATFORM_API_BASE||window.UADAV_API_BASE||(ADMIN_STAGING_HOST?ADMIN_STAGING_API:'https://uadav-api.uadavstream.workers.dev/api/');
 let API_ACTIVE=API_REMOTE;
