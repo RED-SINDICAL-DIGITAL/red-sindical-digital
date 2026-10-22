@@ -177,6 +177,7 @@ async function api(path,opt={}){
   let lastErr=null;
   for(const base of bases){
     try{
+      if(ADMIN_STAGING_HOST && !['GET','HEAD','OPTIONS'].includes(String(method).toUpperCase()) && new URL(base,location.origin).origin!==new URL(ADMIN_STAGING_API).origin){throw Object.assign(new Error('Operación cancelada: el entorno de pruebas solo admite escrituras en el Worker de staging.'),{status:403})}
       const res=await fetch(base+path,{method,headers,body,cache:'no-store'});
       const ct=res.headers.get('content-type')||'';
       if(base===API_LOCAL && (res.status===404 || !ct.includes('json'))){ if(method==='GET'||method==='HEAD'||res.status===404)continue; }
