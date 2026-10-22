@@ -12,6 +12,12 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "/uadav-app-icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ],
   "scope": "/",
@@ -19,7 +25,7 @@
     {
       "name": "Radio",
       "short_name": "Radio",
-      "url": "/index.html#radios"
+      "url": "/app.html?view=%2Fradio.html"
     },
     {
       "name": "Cartelera",
@@ -41,5 +47,12 @@
       "short_name": "Mi perfil",
       "url": "/usuario.html"
     }
+  ],
+  "id": "/app.html",
+  "lang": "es-AR",
+  "categories": [
+    "entertainment",
+    "music",
+    "lifestyle"
   ]
 }
