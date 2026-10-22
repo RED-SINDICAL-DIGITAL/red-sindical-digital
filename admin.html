@@ -108,7 +108,9 @@ summary.nav-group-title{cursor:pointer;list-style:none;padding:14px 12px!importa
 <script>
 (() => {
 'use strict';
-const API_REMOTE=window.PLATFORM_API_BASE||window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';
+const ADMIN_STAGING_HOST=/(?:^|[.-])(?:staging|preview)(?:[.-]|$)|\.pages\.dev$/i.test(location.hostname);
+const ADMIN_STAGING_API='https://uadav-api-staging.uadavstream.workers.dev/api/';
+const API_REMOTE=window.PLATFORM_API_BASE||window.UADAV_API_BASE||(ADMIN_STAGING_HOST?ADMIN_STAGING_API:'https://uadav-api.uadavstream.workers.dev/api/');
 let API_ACTIVE=API_REMOTE;
 const API_LOCAL=location.origin.replace(/\/$/,'')+'/api/';
 const API_USE_LOCAL=window.PLATFORM_USE_LOCAL_API===true||window.UADAV_USE_LOCAL_API===true;
@@ -166,6 +168,7 @@ function img(url,round=false){return `<img class="thumb ${round?'round':''}" src
 async function api(path,opt={}){
   const method=opt.method||'GET', headers={Accept:'application/json',...(opt.headers||{})};
   const key=opt.keyOverride!==undefined?opt.keyOverride:ADMIN_KEY;
+  if(ADMIN_STAGING_HOST && /\/\/uadav-api\.uadavstream\.workers\.dev\//i.test(String(API_REMOTE))){throw new Error('Protección staging: API de producción bloqueada en este entorno. Configurá la URL del Worker de pruebas.')}
   if(opt.auth!==false && key)headers.Authorization='Bearer '+key;
   let body=opt.body;
   if(body!==undefined && !(body instanceof FormData) && typeof body!=='string'){headers['Content-Type']='application/json';body=JSON.stringify(body)}
