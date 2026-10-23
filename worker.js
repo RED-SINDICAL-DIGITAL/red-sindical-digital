@@ -3482,6 +3482,24 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const missing=jobs.filter(x=>x?.owner_access_hash&&!ids.has(String(x.id))).length;
       return json({success:true,total_jobs:jobs.length,active_jobs:active.length,legacy_credentials:jobs.filter(x=>!!x?.owner_access_hash).length,d1_credentials:ids.size,missing_d1:missing,d1_authority_enabled:env.JOB_OWNER_D1_READS==='true'});
     }
+    // Dry-run administrativo previo a migración: no escribe ni expone credenciales.
+    if(path==='/api/bolsa_trabajo/credenciales/simular' && request.method==='GET'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(!hasD1())return json({error:'D1 no disponible'},503);
+      let rows;
+      try{rows=await env.DB.prepare('SELECT job_id FROM job_owner_credentials').all();}
+      catch{return json({error:'Instalá primero el esquema SQL en D1 staging'},503);}
+      const available=new Set((rows.results||[]).map(x=>String(x.job_id)));
+      const jobs=await getArray('bolsa_trabajo');
+      let missing=0,invalid=0,covered=0;
+      for(const j of jobs){
+        if(!j||!j.owner_access_hash)continue;
+        if(!/^JOB-[A-Z0-9-]{3,80}$/.test(String(j.id||''))||!/^[a-f0-9]{64}$/.test(String(j.owner_access_hash)))invalid++;
+        else if(available.has(String(j.id)))covered++;
+        else missing++;
+      }
+      return json({success:true,dry_run:true,read_only:true,covered,missing,invalid,ready_for_cutover:missing===0&&invalid===0});
+    }
     // Bandeja privada del contratante: acceso por clave aleatoria entregada al publicar.
     // Nunca incluir claves ni hashes en la respuesta pública.
     if(path==='/api/bolsa_trabajo/mis-postulantes' && request.method==='POST'){
