@@ -3438,18 +3438,20 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       let rows;
       try{rows=await env.DB.prepare('SELECT job_id,secret_hash FROM job_owner_credentials').all();}
       catch{return json({error:'Instalá primero el esquema SQL en D1 staging'},503);}
+      if(rows.meta?.has_more||rows.results?.length>=1000)return json({error:'Diagnóstico incompleto por paginación D1: no activar credenciales hasta revisar todas las filas'},503);
       const authority=new Map((rows.results||[]).map(x=>[String(x.job_id),String(x.secret_hash||'')]));
       const jobs=await getArray('bolsa_trabajo');
-      let missing=0,invalid=0,matched=0,mismatched=0;
+      let missing=0,invalid=0,matched=0,mismatched=0;const seenLegacy=new Set();
       for(const j of jobs){
         if(!j||!j.owner_access_hash)continue;
         const id=String(j.id||''),legacy=String(j.owner_access_hash);
         if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!/^[a-f0-9]{64}$/.test(legacy)){invalid++;continue;}
+        seenLegacy.add(id);
         if(!authority.has(id))missing++;
         else if(authority.get(id)===legacy)matched++;
         else mismatched++;
       }
-      return json({success:true,dry_run:true,read_only:true,matched,missing,invalid,mismatched,orphan_d1_rows:Math.max(0,authority.size-matched-mismatched),integrity_check_passed:missing===0&&invalid===0&&mismatched===0&&matched>0,ready_for_cutover:false,notice:'La coincidencia de hashes no habilita D1: faltan la escritura de nuevas ofertas, la rotación transaccional y las pruebas.'});
+      return json({success:true,dry_run:true,read_only:true,matched,missing,invalid,mismatched,orphan_d1_rows:[...authority.keys()].filter(id=>!seenLegacy.has(id)).length,integrity_check_passed:missing===0&&invalid===0&&mismatched===0&&matched>0,ready_for_cutover:false,notice:'La coincidencia de hashes no habilita D1: faltan la escritura de nuevas ofertas, la rotación transaccional y las pruebas.'});
     }
     // Bandeja privada del contratante: acceso por clave aleatoria entregada al publicar.
     // Nunca incluir claves ni hashes en la respuesta pública.
