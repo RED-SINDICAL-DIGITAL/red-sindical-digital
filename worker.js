@@ -766,6 +766,9 @@ const uadavWorker = {
       // y comprobar el resultado; si algo falla, intentar revertir ambas colecciones.
       const applied=[],rollbackErrors=[];
       const fingerprint=rows=>JSON.stringify(rows);
+      // Revalidar las colecciones justo antes de comenzar: si recibieron nuevas escrituras,
+      // cancelar en vez de reconstruirlas desde una copia obsoleta.
+      for(const name of names){if(fingerprint(await getArray(name))!==fingerprint(existing[name]))return json({error:'Los datos cambiaron durante la revisión. Volvé a comparar el respaldo antes de recuperar.'},409)}
       try{
         for(const name of ['bolsa_trabajo','postulaciones_trabajo']){
           if(!additions[name].length)continue;
@@ -775,7 +778,7 @@ const uadavWorker = {
           if(fingerprint(verified)!==fingerprint([...existing[name],...additions[name]]))throw Error('La verificación de '+name+' no coincide');
         }
       }catch(e){
-        for(const name of applied.slice().reverse()){try{await putJSON(name,existing[name]);const confirmed=await getArray(name);if(fingerprint(confirmed)!==fingerprint(existing[name]))throw Error('Lectura posterior diferente')}catch(re){rollbackErrors.push({coleccion:name,error:String(re?.message||re)})}}
+        for(const name of applied.slice().reverse()){try{const expected=[...existing[name],...additions[name]],live=await getArray(name);if(fingerprint(live)!==fingerprint(expected))throw Error('Cambios concurrentes detectados: reversión automática suspendida para no borrar datos nuevos');await putJSON(name,existing[name]);const confirmed=await getArray(name);if(fingerprint(confirmed)!==fingerprint(existing[name]))throw Error('Lectura posterior diferente')}catch(re){rollbackErrors.push({coleccion:name,error:String(re?.message||re)})}}
         await audit('restore_missing_jobs_failed','backup','bolsa_trabajo',{applied,rollbackErrors,error:String(e?.message||e)}).catch(()=>{});
         return json({error:rollbackErrors.length?'Recuperación fallida y reversión incompleta: intervención manual necesaria':'Recuperación fallida; reversión intentada y verificada',colecciones_escritas:applied,reversion_incompleta:rollbackErrors.length>0},500);
       }
