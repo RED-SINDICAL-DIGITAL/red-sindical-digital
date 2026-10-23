@@ -3396,6 +3396,53 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       records.sort((a,b)=>a.email.localeCompare(b.email)||a.rol.localeCompare(b.rol)||a.fecha_registro.localeCompare(b.fecha_registro));
       return json({success:true,items:records,total:records.length,notice:'Datos para gestión laboral. No implica consentimiento para comunicaciones comerciales.'});
     }
+    // Recuperación de acceso por correo: token de un solo uso; nunca se envía la antigua clave.
+    // Requiere EMAIL_AUTOMATION_URL y STAGING_SITE_URL configuradas. Exclusivo en staging.
+    if(path==='/api/bolsa_trabajo/acceso/solicitar' && request.method==='POST'){
+      if(!env.EMAIL_AUTOMATION_URL||!env.STAGING_SITE_URL)return json({error:'La recuperación por correo todavía no está habilitada'},503);
+      const b=await uadavSecurityJSON(request,2048).catch(()=>null);
+      const email=String(b?.email||'').trim().toLowerCase(),id=String(b?.job_id||'').trim();
+      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||! /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))return json({error:'Ingresá un identificador y correo válidos'},400);
+      const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();if(!peer)return json({error:'Origen no verificable'},403);
+      const ipBucket='job-recover-ip:'+await uadavDigest(peer);
+      const emailBucket='job-recover-mail:'+await uadavDigest(email+':'+id);
+      const [ipCount,mailCount]=await Promise.all([env.UADAV_DB.get(ipBucket),env.UADAV_DB.get(emailBucket)]);
+      if(Number(ipCount||0)>=5||Number(mailCount||0)>=3)return json({error:'Demasiados intentos. Probá más tarde'},429);
+      await Promise.all([env.UADAV_DB.put(ipBucket,String(Number(ipCount||0)+1),{expirationTtl:3600}),env.UADAV_DB.put(emailBucket,String(Number(mailCount||0)+1),{expirationTtl:3600})]);
+      const generic={success:true,message:'Si el correo corresponde a esa oferta, recibirás instrucciones.'};
+      const job=(await getArray('bolsa_trabajo')).find(x=>String(x.id)===id);
+      if(!job||String(job.contacto_email||'').trim().toLowerCase()!==email)return json(generic);
+      let site;try{site=new URL(String(env.STAGING_SITE_URL));if(site.protocol!=='https:'||!/(?:\\.|^)(?:pages\\.dev|workers\\.dev)$/.test(site.hostname))throw Error('site');}catch{return json({error:'URL de staging no válida'},503)}
+      const token=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');
+      const digest=await uadavDigest(token),storageKey='job-recovery:'+digest;
+      const url=new URL('/bolsa-trabajo.html',site.origin);url.hash='recuperar='+encodeURIComponent(id+'|'+token);
+      await env.UADAV_DB.put(storageKey,JSON.stringify({job_id:id,email,created_at:Date.now()}),{expirationTtl:900});
+      const sent=await uadavDeliverNotification({event:'job_owner_access_recovery',template:'job_owner_access_recovery',to:email,subject:'Recuperá tu acceso · UADAV STREAM',payload:{job_id:id,recovery_url:url.href,expires_minutes:15}},env);
+      if(!sent.sent){await env.UADAV_DB.delete(storageKey);return json({error:'El servicio de correo no pudo confirmar el envío'},503)}
+      return json(generic);
+    }
+    if(path==='/api/bolsa_trabajo/acceso/restablecer' && request.method==='POST'){
+      if(!env.EMAIL_AUTOMATION_URL||!env.STAGING_SITE_URL)return json({error:'Recuperación no habilitada'},503);
+      const b=await uadavSecurityJSON(request,2048).catch(()=>null),id=String(b?.job_id||''),token=String(b?.token||'');
+      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!/^[a-f0-9]{64}$/.test(token))return json({error:'Enlace inválido'},400);
+      const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();if(!peer)return json({error:'Origen no verificable'},403);
+      const bucket='job-recovery-redeem:'+await uadavDigest(peer),count=Number(await env.UADAV_DB.get(bucket)||0);
+      if(count>=8)return json({error:'Demasiados intentos'},429);
+      await env.UADAV_DB.put(bucket,String(count+1),{expirationTtl:900});
+      const key='job-recovery:'+await uadavDigest(token);
+      const saved=await env.UADAV_DB.get(key);const ticket=saved?uadavSafeJSON(saved,null):null;
+      if(!ticket||ticket.job_id!==id||Date.now()-Number(ticket.created_at||0)>900000)return json({error:'Enlace vencido o inválido'},400);
+      const rows=await getArray('bolsa_trabajo'),index=rows.findIndex(x=>String(x.id)===id&&String(x.contacto_email||'').trim().toLowerCase()===ticket.email);
+      if(index<0)return json({error:'Enlace inválido'},400);
+      // Invalidar antes de devolver la clave; una petición repetida no debe servir.
+      await env.UADAV_DB.delete(key);
+      const next=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');
+      rows[index].owner_access_hash=await uadavDigest(next);rows[index].actualizado=new Date().toISOString();
+      await putJSON('bolsa_trabajo',rows);
+      await safeD1('sync_jobs',()=>syncJobsD1(rows));
+      await audit('recover_owned_job','job',id,{});
+      return json({success:true,job_id:id,clave_contratante:next});
+    }
     // Bandeja privada del contratante: acceso por clave aleatoria entregada al publicar.
     // Nunca incluir claves ni hashes en la respuesta pública.
     if(path==='/api/bolsa_trabajo/mis-postulantes' && request.method==='POST'){
