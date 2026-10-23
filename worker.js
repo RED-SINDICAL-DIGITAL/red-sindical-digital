@@ -3500,7 +3500,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         else if(authority.get(id)===legacy)matched++;
         else mismatched++;
       }
-      return json({success:true,dry_run:true,read_only:true,matched,missing,invalid,mismatched,orphan_d1_rows:Math.max(0,authority.size-matched-mismatched),ready_for_cutover:missing===0&&invalid===0&&mismatched===0&&matched>0,notice:'La simulación no habilita D1 ni sustituye las pruebas de concurrencia.'});
+      return json({success:true,dry_run:true,read_only:true,matched,missing,invalid,mismatched,orphan_d1_rows:Math.max(0,authority.size-matched-mismatched),integrity_check_passed:missing===0&&invalid===0&&mismatched===0&&matched>0,ready_for_cutover:false,notice:'La coincidencia de hashes no habilita D1: faltan la escritura de nuevas ofertas, la rotación transaccional y las pruebas.'});
     }
     // Bandeja privada del contratante: acceso por clave aleatoria entregada al publicar.
     // Nunca incluir claves ni hashes en la respuesta pública.
