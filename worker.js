@@ -742,6 +742,25 @@ const uadavWorker = {
       producers: 'productora espectaculos Argentina'
     };
     const categoryLabel = (key) => ({all:'Artistas',solista:'Solistas',banda:'Bandas / Grupos',circo:'Circo',teatro:'Teatro',danza:'Danza',magia:'Magia',humor:'Humor',animacion:'Animación',locucion:'Locución / Conducción',grupo:'Compañías / Elencos',sala:'Salas / Espacios',productora:'Productoras',creador:'Creadores / YouTubers',music:'Música',rock:'Rock',pop:'Pop',tropical:'Tropical / Cumbia',folklore:'Folklore',tango:'Tango',urbano:'Urbano',dj:'DJ',theatre:'Teatro',circus:'Circo',dance:'Danza',magic:'Magia',creators:'Creadores / YouTubers',venues:'Salas / Espacios',producers:'Productoras'}[key] || 'Artistas');
+    // Restitución conservadora: sólo inserta IDs faltantes, nunca sobrescribe.
+    if(path==='/api/admin/backup/jobs/restore-missing' && request.method==='POST'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      const body=await uadavSecurityJSON(request,3500000).catch(()=>null);
+      if(!body||body.confirm!=='RECUPERAR FALTANTES'||!body.backup||typeof body.backup!=='object')return json({error:'Confirmación o respaldo inválido'},400);
+      const kv=body.backup.kv||{},names=['bolsa_trabajo','postulaciones_trabajo'];
+      if(body.backup.backup_integrity?.complete===false||names.some(n=>!Array.isArray(kv[n])||kv[n].length>2000))return json({error:'El respaldo está incompleto o excede el límite seguro'},400);
+      const existing={};for(const name of names)existing[name]=await getArray(name);
+      const additions={};for(const name of names){const ids=new Set(existing[name].map(x=>String(x?.id||''))),seen=new Set();additions[name]=[];for(const x of kv[name]){const id=String(x?.id||'');if(!id||seen.has(id))return json({error:'Respaldo con identificadores ausentes o duplicados'},409);seen.add(id);if(!ids.has(id))additions[name].push(x)}}
+      if(body.dry_run!==false)return json({success:true,dry_run:true,ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
+      if(body.confirm_second!=='APLICAR RECUPERACION')return json({error:'Se requiere segunda confirmación'},400);
+      if(additions.bolsa_trabajo.length+additions.postulaciones_trabajo.length===0)return json({success:true,ofertas:0,postulaciones:0});
+      // No ejecutar escrituras sin un respaldo externo ya confirmado.
+      if(body.external_backup_confirmed!==true)return json({error:'Creá y conservá un respaldo actual antes de continuar'},412);
+      for(const name of names){if(additions[name].length){await putJSON(name,[...existing[name],...additions[name]])}}
+      await audit('restore_missing_jobs','backup','bolsa_trabajo',{ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
+      return json({success:true,ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
+    }
+
     // ============================================================
     // V9 · CCT 340/75 · clasificación, orientación y fiscalización
     // Las denominaciones se conservan para mapear el texto del convenio.
