@@ -762,9 +762,23 @@ const uadavWorker = {
       if(additions.bolsa_trabajo.length+additions.postulaciones_trabajo.length===0)return json({success:true,ofertas:0,postulaciones:0});
       // No ejecutar escrituras sin un respaldo externo ya confirmado.
       if(body.external_backup_confirmed!==true)return json({error:'Creá y conservá un respaldo actual antes de continuar'},412);
-      // Escribir postulaciones primero: ante un fallo posterior no se publican ofertas incompletas.
-      const applied=[];
-      try{for(const name of ['postulaciones_trabajo','bolsa_trabajo']){if(additions[name].length){await putJSON(name,[...existing[name],...additions[name]]);applied.push(name)}}}catch(e){await audit('restore_missing_jobs_partial','backup','bolsa_trabajo',{applied,error:String(e?.message||e)}).catch(()=>{});return json({error:'Recuperación parcial o fallida: verificá ambas colecciones antes de reintentar',colecciones_escritas:applied},500)}
+      // KV no ofrece transacciones entre claves. Guardar copias previas verificables
+      // y comprobar el resultado; si algo falla, intentar revertir ambas colecciones.
+      const applied=[],rollbackErrors=[];
+      const fingerprint=rows=>JSON.stringify(rows);
+      try{
+        for(const name of ['bolsa_trabajo','postulaciones_trabajo']){
+          if(!additions[name].length)continue;
+          await putJSON(name,[...existing[name],...additions[name]]);
+          applied.push(name);
+          const verified=await getArray(name);
+          if(fingerprint(verified)!==fingerprint([...existing[name],...additions[name]]))throw Error('La verificación de '+name+' no coincide');
+        }
+      }catch(e){
+        for(const name of applied.slice().reverse()){try{await putJSON(name,existing[name]);const confirmed=await getArray(name);if(fingerprint(confirmed)!==fingerprint(existing[name]))throw Error('Lectura posterior diferente')}catch(re){rollbackErrors.push({coleccion:name,error:String(re?.message||re)})}}
+        await audit('restore_missing_jobs_failed','backup','bolsa_trabajo',{applied,rollbackErrors,error:String(e?.message||e)}).catch(()=>{});
+        return json({error:rollbackErrors.length?'Recuperación fallida y reversión incompleta: intervención manual necesaria':'Recuperación fallida; reversión intentada y verificada',colecciones_escritas:applied,reversion_incompleta:rollbackErrors.length>0},500);
+      }
       await audit('restore_missing_jobs','backup','bolsa_trabajo',{ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
       return json({success:true,ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
     }
