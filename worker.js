@@ -3402,7 +3402,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(!env.EMAIL_AUTOMATION_URL||!env.STAGING_SITE_URL)return json({error:'La recuperación por correo todavía no está habilitada'},503);
       const b=await uadavSecurityJSON(request,2048).catch(()=>null);
       const email=String(b?.email||'').trim().toLowerCase(),id=String(b?.job_id||'').trim();
-      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||! /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))return json({error:'Ingresá un identificador y correo válidos'},400);
+      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return json({error:'Ingresá un identificador y correo válidos'},400);
       const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();if(!peer)return json({error:'Origen no verificable'},403);
       const ipBucket='job-recover-ip:'+await uadavDigest(peer);
       const emailBucket='job-recover-mail:'+await uadavDigest(email+':'+id);
@@ -3412,7 +3412,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const generic={success:true,message:'Si el correo corresponde a esa oferta, recibirás instrucciones.'};
       const job=(await getArray('bolsa_trabajo')).find(x=>String(x.id)===id);
       if(!job||String(job.contacto_email||'').trim().toLowerCase()!==email)return json(generic);
-      let site;try{site=new URL(String(env.STAGING_SITE_URL));if(site.protocol!=='https:'||!/(?:\\.|^)(?:pages\\.dev|workers\\.dev)$/.test(site.hostname))throw Error('site');}catch{return json({error:'URL de staging no válida'},503)}
+      let site;try{site=new URL(String(env.STAGING_SITE_URL));if(site.protocol!=='https:'||!/(?:\.|^)(?:pages\.dev|workers\.dev)$/.test(site.hostname))throw Error('site');}catch{return json({error:'URL de staging no válida'},503)}
       const token=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');
       const digest=await uadavDigest(token),storageKey='job-recovery:'+digest;
       const url=new URL('/bolsa-trabajo.html',site.origin);url.hash='recuperar='+encodeURIComponent(id+'|'+token);
