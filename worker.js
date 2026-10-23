@@ -3399,6 +3399,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     // Recuperación de acceso por correo: token de un solo uso; nunca se envía la antigua clave.
     // Requiere EMAIL_AUTOMATION_URL y STAGING_SITE_URL configuradas. Exclusivo en staging.
     if(path==='/api/bolsa_trabajo/acceso/solicitar' && request.method==='POST'){
+      // Cierre preventivo: no habilitar hasta garantizar consumo y rotación atómicos en D1.
+      if(env.JOB_RECOVERY_SAFE_READY!=='true')return json({error:'Recuperación por correo temporalmente deshabilitada. Usá tu comprobante privado o contactá a soporte.'},503);
       if(!env.EMAIL_AUTOMATION_URL||!env.STAGING_SITE_URL)return json({error:'La recuperación por correo todavía no está habilitada'},503);
       const b=await uadavSecurityJSON(request,2048).catch(()=>null);
       const email=String(b?.email||'').trim().toLowerCase(),id=String(b?.job_id||'').trim();
@@ -3422,6 +3424,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       return json(generic);
     }
     if(path==='/api/bolsa_trabajo/acceso/restablecer' && request.method==='POST'){
+      // Cierre preventivo: no habilitar hasta garantizar consumo y rotación atómicos en D1.
+      if(env.JOB_RECOVERY_SAFE_READY!=='true')return json({error:'Recuperación por correo temporalmente deshabilitada. Usá tu comprobante privado o contactá a soporte.'},503);
       if(!env.EMAIL_AUTOMATION_URL||!env.STAGING_SITE_URL)return json({error:'Recuperación no habilitada'},503);
       const b=await uadavSecurityJSON(request,2048).catch(()=>null),id=String(b?.job_id||''),token=String(b?.token||'');
       if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!/^[a-f0-9]{64}$/.test(token))return json({error:'Enlace inválido'},400);
