@@ -758,6 +758,8 @@ const uadavWorker = {
       for(const job of additions.bolsa_trabajo){if(!/^JOB-[A-Z0-9-]{3,80}$/.test(String(job.id||'')))return json({error:'Identificador de oferta inválido'},400)}
       for(const app of additions.postulaciones_trabajo){if(!/^POST-[A-Z0-9-]{5,80}$/.test(String(app.id||'')))return json({error:'Identificador de postulación inválido'},400)}
       if(body.dry_run!==false)return json({success:true,dry_run:true,ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
+      // Modo seguro por defecto: la escritura KV debe habilitarse explícitamente en staging tras pruebas controladas.
+      if(String(env.ENABLE_JOB_KV_RESTORE||'')!=='staging-tested')return json({error:'La comparación está disponible, pero la restauración KV permanece deshabilitada hasta completar las pruebas de seguridad.',code:'RESTORE_LOCKED'},423);
       if(body.confirm_second!=='APLICAR RECUPERACION')return json({error:'Se requiere segunda confirmación'},400);
       if(additions.bolsa_trabajo.length+additions.postulaciones_trabajo.length===0)return json({success:true,ofertas:0,postulaciones:0});
       // No ejecutar escrituras sin un respaldo externo ya confirmado.
