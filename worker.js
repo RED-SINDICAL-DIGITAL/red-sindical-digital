@@ -751,12 +751,20 @@ const uadavWorker = {
       if(body.backup.backup_integrity?.complete===false||names.some(n=>!Array.isArray(kv[n])||kv[n].length>2000))return json({error:'El respaldo está incompleto o excede el límite seguro'},400);
       const existing={};for(const name of names)existing[name]=await getArray(name);
       const additions={};for(const name of names){const ids=new Set(existing[name].map(x=>String(x?.id||''))),seen=new Set();additions[name]=[];for(const x of kv[name]){const id=String(x?.id||'');if(!id||seen.has(id))return json({error:'Respaldo con identificadores ausentes o duplicados'},409);seen.add(id);if(!ids.has(id))additions[name].push(x)}}
+      const validJobIds=new Set([...existing.bolsa_trabajo,...additions.bolsa_trabajo].map(x=>String(x?.id||'')));
+      const orphanApps=additions.postulaciones_trabajo.filter(x=>!validJobIds.has(String(x?.job_id||'')));
+      if(orphanApps.length)return json({error:'El respaldo contiene postulaciones sin su oferta asociada; recuperación bloqueada',postulaciones_huerfanas:orphanApps.length},409);
+      if(names.some(n=>existing[n].length+additions[n].length>2000))return json({error:'La recuperación excede la capacidad segura de la colección'},413);
+      for(const job of additions.bolsa_trabajo){if(!/^JOB-[A-Z0-9-]{3,80}$/.test(String(job.id||'')))return json({error:'Identificador de oferta inválido'},400)}
+      for(const app of additions.postulaciones_trabajo){if(!/^POST-[A-Z0-9-]{5,80}$/.test(String(app.id||'')))return json({error:'Identificador de postulación inválido'},400)}
       if(body.dry_run!==false)return json({success:true,dry_run:true,ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
       if(body.confirm_second!=='APLICAR RECUPERACION')return json({error:'Se requiere segunda confirmación'},400);
       if(additions.bolsa_trabajo.length+additions.postulaciones_trabajo.length===0)return json({success:true,ofertas:0,postulaciones:0});
       // No ejecutar escrituras sin un respaldo externo ya confirmado.
       if(body.external_backup_confirmed!==true)return json({error:'Creá y conservá un respaldo actual antes de continuar'},412);
-      for(const name of names){if(additions[name].length){await putJSON(name,[...existing[name],...additions[name]])}}
+      // Escribir postulaciones primero: ante un fallo posterior no se publican ofertas incompletas.
+      const applied=[];
+      try{for(const name of ['postulaciones_trabajo','bolsa_trabajo']){if(additions[name].length){await putJSON(name,[...existing[name],...additions[name]]);applied.push(name)}}}catch(e){await audit('restore_missing_jobs_partial','backup','bolsa_trabajo',{applied,error:String(e?.message||e)}).catch(()=>{});return json({error:'Recuperación parcial o fallida: verificá ambas colecciones antes de reintentar',colecciones_escritas:applied},500)}
       await audit('restore_missing_jobs','backup','bolsa_trabajo',{ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
       return json({success:true,ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
     }
