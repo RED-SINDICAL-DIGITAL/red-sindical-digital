@@ -3487,18 +3487,20 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(!isAdmin())return json({error:'No autorizado'},401);
       if(!hasD1())return json({error:'D1 no disponible'},503);
       let rows;
-      try{rows=await env.DB.prepare('SELECT job_id FROM job_owner_credentials').all();}
+      try{rows=await env.DB.prepare('SELECT job_id,secret_hash FROM job_owner_credentials').all();}
       catch{return json({error:'Instalá primero el esquema SQL en D1 staging'},503);}
-      const available=new Set((rows.results||[]).map(x=>String(x.job_id)));
+      const authority=new Map((rows.results||[]).map(x=>[String(x.job_id),String(x.secret_hash||'')]));
       const jobs=await getArray('bolsa_trabajo');
-      let missing=0,invalid=0,covered=0;
+      let missing=0,invalid=0,matched=0,mismatched=0;
       for(const j of jobs){
         if(!j||!j.owner_access_hash)continue;
-        if(!/^JOB-[A-Z0-9-]{3,80}$/.test(String(j.id||''))||!/^[a-f0-9]{64}$/.test(String(j.owner_access_hash)))invalid++;
-        else if(available.has(String(j.id)))covered++;
-        else missing++;
+        const id=String(j.id||''),legacy=String(j.owner_access_hash);
+        if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!/^[a-f0-9]{64}$/.test(legacy)){invalid++;continue;}
+        if(!authority.has(id))missing++;
+        else if(authority.get(id)===legacy)matched++;
+        else mismatched++;
       }
-      return json({success:true,dry_run:true,read_only:true,covered,missing,invalid,ready_for_cutover:missing===0&&invalid===0});
+      return json({success:true,dry_run:true,read_only:true,matched,missing,invalid,mismatched,orphan_d1_rows:Math.max(0,authority.size-matched-mismatched),ready_for_cutover:missing===0&&invalid===0&&mismatched===0&&matched>0,notice:'La simulación no habilita D1 ni sustituye las pruebas de concurrencia.'});
     }
     // Bandeja privada del contratante: acceso por clave aleatoria entregada al publicar.
     // Nunca incluir claves ni hashes en la respuesta pública.
