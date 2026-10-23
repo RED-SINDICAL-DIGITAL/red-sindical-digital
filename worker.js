@@ -3469,6 +3469,19 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       }
       return !!job.owner_access_hash&&job.owner_access_hash===digest;
     }
+    // Admin-only audit for staging migration. Read-only, never exposes hashes or email addresses.
+    if(path==='/api/bolsa_trabajo/credenciales/diagnostico' && request.method==='GET'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(!hasD1())return json({error:'D1 no disponible'},503);
+      const jobs=await getArray('bolsa_trabajo');
+      let d1Rows;
+      try{d1Rows=await env.DB.prepare('SELECT job_id FROM job_owner_credentials').all();}
+      catch{return json({error:'La migración de credenciales todavía no está instalada'},503);}
+      const ids=new Set((d1Rows.results||[]).map(x=>String(x.job_id)));
+      const active=jobs.filter(x=>x&&x.activo!==false);
+      const missing=jobs.filter(x=>x?.owner_access_hash&&!ids.has(String(x.id))).length;
+      return json({success:true,total_jobs:jobs.length,active_jobs:active.length,legacy_credentials:jobs.filter(x=>!!x?.owner_access_hash).length,d1_credentials:ids.size,missing_d1:missing,d1_authority_enabled:env.JOB_OWNER_D1_READS==='true'});
+    }
     // Bandeja privada del contratante: acceso por clave aleatoria entregada al publicar.
     // Nunca incluir claves ni hashes en la respuesta pública.
     if(path==='/api/bolsa_trabajo/mis-postulantes' && request.method==='POST'){
