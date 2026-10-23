@@ -3434,7 +3434,15 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(!ticket||ticket.job_id!==id||Date.now()-Number(ticket.created_at||0)>900000)return json({error:'Enlace vencido o inválido'},400);
       const rows=await getArray('bolsa_trabajo'),index=rows.findIndex(x=>String(x.id)===id&&String(x.contacto_email||'').trim().toLowerCase()===ticket.email);
       if(index<0)return json({error:'Enlace inválido'},400);
-      // Invalidar antes de devolver la clave; una petición repetida no debe servir.
+      // Consumo atómico del token mediante clave única D1: KV por sí solo no garantiza exclusión simultánea.
+      if(!hasD1())return json({error:'Recuperación temporalmente no disponible'},503);
+      try{
+        await env.DB.prepare('CREATE TABLE IF NOT EXISTS job_recovery_consumed (token_hash TEXT PRIMARY KEY, job_id TEXT NOT NULL, consumed_at TEXT NOT NULL)').run();
+        await env.DB.prepare('INSERT INTO job_recovery_consumed(token_hash,job_id,consumed_at) VALUES(?,?,?)').bind(await uadavDigest(token),id,new Date().toISOString()).run();
+      }catch(error){
+        if(/UNIQUE|constraint/i.test(String(error?.message||error)))return json({error:'El enlace ya fue utilizado'},409);
+        return json({error:'No se pudo verificar el enlace de forma segura'},503);
+      }
       await env.UADAV_DB.delete(key);
       const next=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');
       rows[index].owner_access_hash=await uadavDigest(next);rows[index].actualizado=new Date().toISOString();
