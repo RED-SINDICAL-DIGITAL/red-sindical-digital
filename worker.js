@@ -3338,6 +3338,17 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(request.method==='PUT'){const b=await request.json().catch(()=>({}));const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'No encontrado'},404);const editable={};for(const field of ['titulo','descripcion','rubro','tipo','contratante_tipo','empresa','logo_url','modalidad','ciudad','provincia','pais','fecha','fecha_limite','remuneracion','requisitos','contacto','contacto_email','whatsapp','contacto_tipo','activo'])if(Object.hasOwn(b,field))editable[field]=b[field];if(Object.hasOwn(editable,'fecha_limite')&&editable.fecha_limite&&(!/^\d{4}-\d{2}-\d{2}$/.test(String(editable.fecha_limite))||editable.fecha_limite<new Date().toISOString().slice(0,10)))return json({error:'Fecha de caducidad inválida o vencida'},400);if(Object.hasOwn(editable,'activo'))editable.activo=editable.activo===true;Object.assign(list[i],editable);list[i].actualizado=new Date().toISOString();await putJSON('bolsa_trabajo',list); const d1sync=await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('update_job','job',list[i].id,{}); return json({success:true,item:(({owner_access_hash,...safe})=>safe)(list[i])});}
       if(request.method==='DELETE'){const b=await request.json().catch(()=>({})); const next=list.filter(x=>String(x.id)!==String(b.id)); await putJSON('bolsa_trabajo',next); const d1sync=await safeD1('sync_jobs',()=>syncJobsD1(next)); await audit('delete_job','job',b.id,{}); return json({success:true,d1_sync:d1sync});}
     }
+    // Exportación administrativa de contactos laborales, exclusivamente para gestión de publicaciones.
+    // NO concede permiso de marketing ni incluye secretos, mensajes o credenciales.
+    if(path==='/api/admin/jobs/contactos' && request.method==='GET'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      const jobs=await getArray('bolsa_trabajo'),applications=await getArray('postulaciones_trabajo');
+      const records=[];
+      for(const x of jobs){const email=String(x.contacto_email||(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(x.contacto||''))?x.contacto:'')).trim().toLowerCase();if(email)records.push({nombre:String(x.empresa||'').slice(0,160),apellido:'',email,rol:'contratante',origen:'bolsa_publicacion',referencia:String(x.id||''),fecha_registro:String(x.creado||''),consentimiento:'gestion_de_convocatoria',marketing_autorizado:false});}
+      for(const x of applications){const email=String(x.email||'').trim().toLowerCase();if(email)records.push({nombre:String(x.nombre||'').slice(0,120),apellido:'',email,rol:'postulante',origen:'bolsa_postulacion',referencia:String(x.job_id||''),fecha_registro:String(x.creado||''),consentimiento:String(x.consent_scope||'no_registrado'),marketing_autorizado:false});}
+      records.sort((a,b)=>a.email.localeCompare(b.email)||a.rol.localeCompare(b.rol)||a.fecha_registro.localeCompare(b.fecha_registro));
+      return json({success:true,items:records,total:records.length,notice:'Datos para gestión laboral. No implica consentimiento para comunicaciones comerciales.'});
+    }
     // Bandeja privada del contratante: acceso por clave aleatoria entregada al publicar.
     // Nunca incluir claves ni hashes en la respuesta pública.
     if(path==='/api/bolsa_trabajo/mis-postulantes' && request.method==='POST'){
