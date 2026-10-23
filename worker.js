@@ -3455,6 +3455,20 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       await audit('recover_owned_job','job',id,{});
       return json({success:true,job_id:id,clave_contratante:next});
     }
+    // Credential lookup is read-only until staged D1 migration and backfill pass QA.
+    async function uadavJobOwnerAccessMatches(job,secret){
+      if(!job||!/^[a-f0-9]{64}$/.test(String(secret||'')))return false;
+      const digest=await uadavDigest(secret);
+      if(env.JOB_OWNER_D1_READS==='true'){
+        if(!hasD1())return false;
+        try{
+          const row=await env.DB.prepare('SELECT secret_hash FROM job_owner_credentials WHERE job_id=?').bind(String(job.id)).first();
+          // Fail closed: never silently fall back to KV after D1 authority is enabled.
+          return !!row&&row.secret_hash===digest;
+        }catch{return false}
+      }
+      return !!job.owner_access_hash&&job.owner_access_hash===digest;
+    }
     // Bandeja privada del contratante: acceso por clave aleatoria entregada al publicar.
     // Nunca incluir claves ni hashes en la respuesta pública.
     if(path==='/api/bolsa_trabajo/mis-postulantes' && request.method==='POST'){
@@ -3468,7 +3482,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(hits>=12)return json({error:'Demasiadas consultas. Intentá más tarde.'},429);
       await env.UADAV_DB.put(bucket,String(hits+1),{expirationTtl:600});
       const job=(await getArray('bolsa_trabajo')).find(x=>String(x.id)===id);
-      if(!job?.owner_access_hash||job.owner_access_hash!==await uadavDigest(key))return json({error:'No se encontró el acceso a esta oportunidad'},404);
+      if(!await uadavJobOwnerAccessMatches(job,key))return json({error:'No se encontró el acceso a esta oportunidad'},404);
       const list=(await getArray('postulaciones_trabajo')).filter(x=>String(x.job_id)===id).map(x=>({
         id:x.id,nombre:x.nombre,email:x.email,
         whatsapp:Array.isArray(x.shared_fields)&&x.shared_fields.includes('whatsapp')?x.whatsapp:'',
@@ -3491,7 +3505,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(count>=8)return json({error:'Demasiados intentos. Volvé a probar más tarde'},429);
       await env.UADAV_DB.put(bucket,String(count+1),{expirationTtl:600});
       const rows=await getArray('bolsa_trabajo'),i=rows.findIndex(x=>String(x.id)===id);
-      if(i<0||!rows[i].owner_access_hash||rows[i].owner_access_hash!==await uadavDigest(secret))return json({error:'No se encontró la oferta con ese acceso privado'},404);
+      if(i<0||!await uadavJobOwnerAccessMatches(rows[i],secret))return json({error:'No se encontró la oferta con ese acceso privado'},404);
       if(action==='cerrar'){rows[i].activo=false;rows[i].estado='cerrada_por_contratante';}
       else {const days=Number(b.dias||30);if(![7,15,30,60].includes(days))return json({error:'Duración inválida'},400);rows[i].fecha_limite=new Date(Date.now()+days*86400000).toISOString().slice(0,10);rows[i].activo=true;rows[i].estado='activa';}
       rows[i].actualizado=new Date().toISOString();
