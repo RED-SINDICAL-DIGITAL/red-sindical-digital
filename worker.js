@@ -3362,6 +3362,27 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       }));
       return json({success:true,job:{id:job.id,titulo:job.titulo},items:list});
     }
+    // Gestionar una oferta propia sin cuenta: requiere el acceso privado original.
+    if(path==='/api/bolsa_trabajo/mi-oferta/gestionar' && request.method==='POST'){
+      const b=await uadavSecurityJSON(request,4096).catch(()=>null);
+      const id=String(b?.job_id||'').trim(),secret=String(b?.clave||'').trim(),action=String(b?.accion||'');
+      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!/^[a-f0-9]{64}$/.test(secret)||!['cerrar','renovar'].includes(action))return json({error:'Solicitud inválida'},400);
+      const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();
+      if(!peer)return json({error:'No se pudo validar el origen'},403);
+      const bucket='job-owner-manage-rate:'+await uadavDigest(peer);
+      const count=Number(await env.UADAV_DB.get(bucket)||0);
+      if(count>=8)return json({error:'Demasiados intentos. Volvé a probar más tarde'},429);
+      await env.UADAV_DB.put(bucket,String(count+1),{expirationTtl:600});
+      const rows=await getArray('bolsa_trabajo'),i=rows.findIndex(x=>String(x.id)===id);
+      if(i<0||!rows[i].owner_access_hash||rows[i].owner_access_hash!==await uadavDigest(secret))return json({error:'No se encontró la oferta con ese acceso privado'},404);
+      if(action==='cerrar'){rows[i].activo=false;rows[i].estado='cerrada_por_contratante';}
+      else {const days=Number(b.dias||30);if(![7,15,30,60].includes(days))return json({error:'Duración inválida'},400);rows[i].fecha_limite=new Date(Date.now()+days*86400000).toISOString().slice(0,10);rows[i].activo=true;rows[i].estado='activa';}
+      rows[i].actualizado=new Date().toISOString();
+      await putJSON('bolsa_trabajo',rows);
+      await safeD1('sync_jobs',()=>syncJobsD1(rows));
+      await audit('manage_owned_job','job',id,{accion:action});
+      return json({success:true,id,activo:rows[i].activo,fecha_limite:rows[i].fecha_limite||null});
+    }
     // Consulta individual: nunca exponer la lista completa ni datos de contacto.
     if (path === '/api/bolsa_trabajo/mi-postulacion' && request.method === 'POST') {
       // Limitación orientativa por IP, con TTL; no almacenar direcciones IP en claro.
