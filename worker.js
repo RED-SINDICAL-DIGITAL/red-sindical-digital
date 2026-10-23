@@ -3399,61 +3399,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     // Recuperación de acceso por correo: token de un solo uso; nunca se envía la antigua clave.
     // Requiere EMAIL_AUTOMATION_URL y STAGING_SITE_URL configuradas. Exclusivo en staging.
     if(path==='/api/bolsa_trabajo/acceso/solicitar' && request.method==='POST'){
-      // Cierre preventivo: no habilitar hasta garantizar consumo y rotación atómicos en D1.
-      return json({error:'Recuperación por correo temporalmente deshabilitada hasta completar las pruebas de seguridad. Usá tu comprobante privado.'},503);
-      if(!env.EMAIL_AUTOMATION_URL||!env.STAGING_SITE_URL)return json({error:'La recuperación por correo todavía no está habilitada'},503);
-      const b=await uadavSecurityJSON(request,2048).catch(()=>null);
-      const email=String(b?.email||'').trim().toLowerCase(),id=String(b?.job_id||'').trim();
-      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return json({error:'Ingresá un identificador y correo válidos'},400);
-      const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();if(!peer)return json({error:'Origen no verificable'},403);
-      const ipBucket='job-recover-ip:'+await uadavDigest(peer);
-      const emailBucket='job-recover-mail:'+await uadavDigest(email+':'+id);
-      const [ipCount,mailCount]=await Promise.all([env.UADAV_DB.get(ipBucket),env.UADAV_DB.get(emailBucket)]);
-      if(Number(ipCount||0)>=5||Number(mailCount||0)>=3)return json({error:'Demasiados intentos. Probá más tarde'},429);
-      await Promise.all([env.UADAV_DB.put(ipBucket,String(Number(ipCount||0)+1),{expirationTtl:3600}),env.UADAV_DB.put(emailBucket,String(Number(mailCount||0)+1),{expirationTtl:3600})]);
-      const generic={success:true,message:'Si el correo corresponde a esa oferta, recibirás instrucciones.'};
-      const job=(await getArray('bolsa_trabajo')).find(x=>String(x.id)===id);
-      if(!job||String(job.contacto_email||'').trim().toLowerCase()!==email)return json(generic);
-      let site;try{site=new URL(String(env.STAGING_SITE_URL));if(site.protocol!=='https:'||!/(?:\.|^)(?:pages\.dev|workers\.dev)$/.test(site.hostname))throw Error('site');}catch{return json({error:'URL de staging no válida'},503)}
-      const token=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');
-      const digest=await uadavDigest(token),storageKey='job-recovery:'+digest;
-      const url=new URL('/bolsa-trabajo.html',site.origin);url.hash='recuperar='+encodeURIComponent(id+'|'+token);
-      await env.UADAV_DB.put(storageKey,JSON.stringify({job_id:id,email,created_at:Date.now()}),{expirationTtl:900});
-      const sent=await uadavDeliverNotification({event:'job_owner_access_recovery',template:'job_owner_access_recovery',to:email,subject:'Recuperá tu acceso · UADAV STREAM',payload:{job_id:id,recovery_url:url.href,expires_minutes:15}},env);
-      if(!sent.sent){await env.UADAV_DB.delete(storageKey);return json({error:'El servicio de correo no pudo confirmar el envío'},503)}
-      return json(generic);
+      return json({error:'Recuperación por correo deshabilitada hasta completar migración D1 y pruebas.'},503);
     }
     if(path==='/api/bolsa_trabajo/acceso/restablecer' && request.method==='POST'){
-      // Cierre preventivo: no habilitar hasta garantizar consumo y rotación atómicos en D1.
-      return json({error:'Recuperación por correo temporalmente deshabilitada hasta completar las pruebas de seguridad. Usá tu comprobante privado.'},503);
-      if(!env.EMAIL_AUTOMATION_URL||!env.STAGING_SITE_URL)return json({error:'Recuperación no habilitada'},503);
-      const b=await uadavSecurityJSON(request,2048).catch(()=>null),id=String(b?.job_id||''),token=String(b?.token||'');
-      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!/^[a-f0-9]{64}$/.test(token))return json({error:'Enlace inválido'},400);
-      const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();if(!peer)return json({error:'Origen no verificable'},403);
-      const bucket='job-recovery-redeem:'+await uadavDigest(peer),count=Number(await env.UADAV_DB.get(bucket)||0);
-      if(count>=8)return json({error:'Demasiados intentos'},429);
-      await env.UADAV_DB.put(bucket,String(count+1),{expirationTtl:900});
-      const key='job-recovery:'+await uadavDigest(token);
-      const saved=await env.UADAV_DB.get(key);const ticket=saved?uadavSafeJSON(saved,null):null;
-      if(!ticket||ticket.job_id!==id||Date.now()-Number(ticket.created_at||0)>900000)return json({error:'Enlace vencido o inválido'},400);
-      const rows=await getArray('bolsa_trabajo'),index=rows.findIndex(x=>String(x.id)===id&&String(x.contacto_email||'').trim().toLowerCase()===ticket.email);
-      if(index<0)return json({error:'Enlace inválido'},400);
-      // Consumo atómico del token mediante clave única D1: KV por sí solo no garantiza exclusión simultánea.
-      if(!hasD1())return json({error:'Recuperación temporalmente no disponible'},503);
-      try{
-        await env.DB.prepare('CREATE TABLE IF NOT EXISTS job_recovery_consumed (token_hash TEXT PRIMARY KEY, job_id TEXT NOT NULL, consumed_at TEXT NOT NULL)').run();
-        await env.DB.prepare('INSERT INTO job_recovery_consumed(token_hash,job_id,consumed_at) VALUES(?,?,?)').bind(await uadavDigest(token),id,new Date().toISOString()).run();
-      }catch(error){
-        if(/UNIQUE|constraint/i.test(String(error?.message||error)))return json({error:'El enlace ya fue utilizado'},409);
-        return json({error:'No se pudo verificar el enlace de forma segura'},503);
-      }
-      await env.UADAV_DB.delete(key);
-      const next=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');
-      rows[index].owner_access_hash=await uadavDigest(next);rows[index].actualizado=new Date().toISOString();
-      await putJSON('bolsa_trabajo',rows);
-      await safeD1('sync_jobs',()=>syncJobsD1(rows));
-      await audit('recover_owned_job','job',id,{});
-      return json({success:true,job_id:id,clave_contratante:next});
+      return json({error:'Recuperación por correo deshabilitada hasta completar migración D1 y pruebas.'},503);
     }
     // Credential lookup is read-only until staged D1 migration and backfill pass QA.
     async function uadavJobOwnerAccessMatches(job,secret){
