@@ -41,7 +41,7 @@ const id=document.getElementById('profileJobId').value.trim().toUpperCase(),key=
 if(!/^POST-[A-Z0-9-]{5,60}$/.test(id)||!/^[a-f0-9]{64}$/i.test(key)){out.textContent='Revisá el identificador POST-… y la clave de tu comprobante.';return;}
 busy=true;const submit=form.querySelector('[type=submit]');submit.disabled=true;out.textContent='Consultando…';
 try{
-const api=window.UADAV_ENV==='staging'||/(?:staging|preview|pages\.dev)/i.test(location.hostname)?'https://uadav-api-staging.uadavstream.workers.dev/api/':'/api/';
+const api='https://uadav-api-staging.uadavstream.workers.dev/api/';
 const res=await fetch(api+'bolsa_trabajo/mi-postulacion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,clave:key}),cache:'no-store'});
 const data=await res.json().catch(()=>({}));
 if(!res.ok||data.success!==true||data.id!==id)throw Error(data.error||'No pudimos confirmar esta postulación.');
