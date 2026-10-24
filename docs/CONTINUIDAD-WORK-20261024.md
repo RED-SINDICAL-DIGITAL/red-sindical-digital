@@ -49,7 +49,7 @@ El modo nuevo requiere **`JOB_STORE_D1=true` y una migración validada**. El usu
 
 ## Lo que falta para terminar Bolsa
 
-**Avance posterior:** el usuario confirmó `already-d1`, 6 ofertas, 6 postulaciones y respaldo D1 consistente. Se preparó el Worker 11759 para vincular gestiones a cuentas, generar avisos internos y respaldar/restaurar asociaciones. Falta su instalación/despliegue y QA remoto; ver `docs/BOLSA-11759-MI-PERFIL-STAGING.md`. El Worker publicado observado sigue siendo 11758 hasta esa intervención.
+**Avance posterior:** el usuario confirmó `already-d1`, 6 ofertas, 6 postulaciones y respaldo D1 consistente. El Worker 11759 para vincular gestiones a cuentas, generar avisos internos y respaldar/restaurar asociaciones ya responde en staging después del despliegue manual. Las cinco ofertas públicas y la privacidad siguen comprobadas. Falta confirmar la tabla adicional y el circuito autenticado después de que el usuario cree la cuenta ficticia en el navegador de Work; ver `docs/BOLSA-11759-MI-PERFIL-STAGING.md`.
 
 1. Conservar y comprobar el respaldo D1 posterior a las nuevas escrituras; validar restauración en una base desechable. El despliegue 11758, el esquema y la migración inicial ya se completaron en staging.
 2. Probar acceso remoto con un comprobante legado de QA. El acceso de una oferta nueva y el rechazo de clave incorrecta ya fueron comprobados.

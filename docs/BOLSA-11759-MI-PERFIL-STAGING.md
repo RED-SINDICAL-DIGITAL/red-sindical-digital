@@ -4,7 +4,7 @@
 
 El usuario confirmó el informe `already-d1`: 6 ofertas, 6 postulaciones, origen D1 y respaldo consistente con descarga solicitada. Incluye la oferta ficticia cerrada y su única postulación. Conservar el JSON descargado en privado. La descarga solicitada no demuestra por sí sola que el archivo se haya guardado en el equipo.
 
-La última versión del Worker observada en el navegador fue **11758**. El código **11759** de esta actualización requiere despliegue manual y una tabla adicional. Las pruebas locales/CI no equivalen a funciones ya desplegadas. No se cambió producción ni se mezclaron ramas.
+El usuario desplegó **11759** y el navegador de Work lo confirmó en el hostname exacto de staging, con D1 activo, correo y cola desactivados. La captura del usuario muestra la ejecución del SQL adicional sin un listado final de filas; la presencia de la tabla todavía debe confirmarse con el circuito autenticado. Las pruebas locales/CI no equivalen a circuitos remotos aprobados. No se cambió producción ni se mezclaron ramas.
 
 ## Cambios preparados
 
@@ -37,3 +37,14 @@ Si una sesión de cuenta recibe `ORIGIN_NOT_ALLOWED`, comprobar la variable **de
 - La prueba con 2.000 ofertas y 1.999 postulaciones comprueba el presupuesto de subsolicitudes D1 con cuenta y perfil artístico. Es una prueba local, no una prueba de carga remota. Referencia: https://developers.cloudflare.com/d1/platform/limits/. Un `batch()` cuenta como una subsolicitud a efectos del límite por invocación.
 
 Antes de dar por validada esta versión, probar en Cloudflare con datos ficticios: cuenta A/publicador, cuenta B/postulante, segundo dispositivo aprobado, vinculación de un comprobante anterior, aislamiento, cierre/renovación y avisos leídos. Repetir en móvil y guardar un backup posterior. La restauración remota requiere una base desechable; mantener `ENABLE_JOB_D1_RESTORE` ausente hasta completar esa prueba. La entrega por correo y los avisos de vencimiento siguen pendientes; no se activan con este despliegue.
+
+## Comprobaciones remotas posteriores al despliegue
+
+- `/api/health`: build 11759, D1 disponible, correo y cola desactivados.
+- Catálogo público: 5 ofertas y 5 IDs únicos; sin claves, hashes, contactos, correo, WhatsApp ni identificadores de solicitud.
+- `/api/bolsa_trabajo/cuenta` sin sesión: devuelve `JOB_ACCOUNT_AUTH` y «Acceso privado requerido», sin datos de gestiones.
+- Mi Perfil carga la nueva sección y conserva las consultas por comprobante. El navegador de Work no tiene una cuenta vinculada.
+
+Se preparó únicamente el nombre local ficticio «Contratante QA 11759 · Ficticio» y se dejó visible **Crear mi cuenta**. El control `browserAuth` exige intervención humana para crear cuentas: no se completó el alta ni se inspeccionaron credenciales. Después de la creación manual hay que verificar el estado firmado y continuar las pruebas; no dar por confirmada la tabla por la sola ejecución del lote SQL.
+
+[Pantalla preparada sin credenciales](evidence/bolsa-11759-crear-cuenta-qa-20261024.jpg).
