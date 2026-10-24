@@ -49,15 +49,17 @@ El modo nuevo requiere **`JOB_STORE_D1=true` y una migración validada**. El usu
 
 ## Lo que falta para terminar Bolsa
 
-**Avance posterior:** el usuario confirmó `already-d1`, 6 ofertas, 6 postulaciones y respaldo D1 consistente. El Worker 11759 para vincular gestiones a cuentas, generar avisos internos y respaldar/restaurar asociaciones ya responde en staging después del despliegue manual. Las cinco ofertas públicas y la privacidad siguen comprobadas. Falta confirmar la tabla adicional y el circuito autenticado después de que el usuario cree la cuenta ficticia en el navegador de Work; ver `docs/BOLSA-11759-MI-PERFIL-STAGING.md`.
+**Avance posterior:** el Worker 11759 y la tabla adicional ya se comprobaron mediante el circuito autenticado de una cuenta ficticia creada manualmente por el usuario. En PC de Work se probaron guardado voluntario, una postulación sin vincular, persistencia, privacidad de campos opcionales, acceso a candidatos, cierre/renovación, cambio de estado desde Admin y avisos leídos. Dos defectos detectados en Pages se corrigieron y se verificaron publicados en `43f60b7f6e49e66a95ac659124bd85bd042f1dd8`; CI `40118351789` aprobado con 84 pruebas. El backup posterior privado contiene 7 ofertas, 8 postulaciones y 2 asociaciones consistentes. Las cinco ofertas públicas originales permanecen iguales. Ver `docs/BOLSA-11759-MI-PERFIL-STAGING.md` y su captura de evidencia.
 
-1. Conservar y comprobar el respaldo D1 posterior a las nuevas escrituras; validar restauración en una base desechable. El despliegue 11758, el esquema y la migración inicial ya se completaron en staging.
+1. Conservar el respaldo D1 posterior, ya descargado y verificado; validar restauración en una base desechable. El despliegue 11758, el esquema y la migración inicial ya se completaron en staging.
 2. Probar acceso remoto con un comprobante legado de QA. El acceso de una oferta nueva y el rechazo de clave incorrecta ya fueron comprobados.
 3. Probar concurrencia HTTP independiente en Cloudflare. El doble clic de la interfaz y la concurrencia local/CI están comprobados.
 4. Repetir circuitos reales en móvil/tablet/Smart TV. En PC de Work ya se completaron publicación, postulación, privacidad, seguimiento, cierre, rechazo desde pantalla desactualizada y renovación con datos ficticios.
-5. Desplegar y validar el vínculo explícito con Mi Perfil preparado en 11759. No vincula por coincidencia de correo; conserva el seguimiento por comprobante privado.
+5. Completar el vínculo explícito con Mi Perfil en una segunda cuenta independiente, con un dispositivo aprobado y un comprobante anterior. El circuito de cuenta A ya está desplegado y validado en PC. No vincula por coincidencia de correo; conserva el seguimiento por comprobante privado.
 6. Completar el circuito de entrega de correo: proveedor, token, límites, reintentos y entrega confirmada. El núcleo SQL aprobado no prueba entrega de email.
-7. Completar seguimiento de notificaciones, avisos de estado/vencimiento, importación masiva desde Admin y prueba real de restauración. El código nuevo no habilita automáticamente estos servicios.
+7. Completar avisos de vencimiento, entrega externa de notificaciones, importación masiva desde Admin y prueba real de restauración. Los avisos internos de nuevas postulaciones y cambios de estado ya se probaron en PC; el código no habilita automáticamente correo.
+
+**Auditoría ampliada de Pages:** todos los `*.test.cjs` arrojaron 509/555 aprobadas y 46 fallas, reproducidas también en el commit base `0075f41` sin los últimos ajustes visuales. Mantener este pendiente de otros módulos separado de las 84 pruebas específicas aprobadas. No afirmar que toda la plataforma pasa las pruebas.
 
 **Bolsa todavía no está terminada ni validada de punta a punta.** Cartelera queda después de esta puerta de salida. No hay despliegue productivo autorizado.
 
