@@ -39,3 +39,15 @@ Si falta el SQL, se informa que la función no está preparada y no se rompe la 
 **92 pruebas de Pages/Admin/aislamiento** aprobadas localmente: incluyen las ocho pruebas adicionales de revisión, confirmación, doble clic, respuestas incompletas, red incierta, salida de la vista y respaldo del historial. La validación de código y CI no equivale a despliegue o entrega remota de avisos.
 
 Los endpoints de recuperación por correo **siguen devolviendo 503**. Este cambio no despacha correos ni prueba un proveedor transaccional. Continúan pendientes la prueba remota de los avisos, cuenta B y segundo dispositivo, restauración en una base desechable, entrega segura de correo, importaciones reales desde Admin y los dispositivos restantes. Bolsa todavía no está cerrada de punta a punta.
+
+## CI y comprobación del frontend publicado
+
+- Fuente Worker: `83f8cb307260d0d105f1ff6d7ed9f6a14a139006`. CI Bolsa `40134086445` y controles de Radio `40134086349`: aprobados.
+- Pages publicado: `03d985688d72ae3a9c2dd7c6ad5b37a90f0f21e7`, confirmado por `staging-build.json`. CI `40135267258`: 92 pruebas aprobadas. Módulo de avisos con versión de caché `11760.1`.
+- El navegador de Work comprobó la carga autenticada del módulo en Auditoría. Una respuesta que no corresponde a la revisión esperada del Worker anterior se rechaza: aparece «Los avisos de vencimiento no están disponibles. Volvé a revisar más tarde.» y el envío permanece deshabilitado. Se añadió cobertura de respuestas legadas vacías además del caso 404. No se envió ningún aviso real.
+- El comprobador de respaldos nuevo sigue aceptando el export actual de 11759: se generó y descargó un respaldo de compatibilidad con 8 ofertas y 9 postulaciones, origen D1, sin repetir la migración. El JSON privado no se incorpora al repositorio.
+- Health del Worker observado: **11759**, KV/D1 disponibles, correo y cola desactivados. El SQL adicional y el despliegue 11760 no fueron aplicados por el asistente. Siguen pendientes la instalación manual y la prueba de emisión real.
+
+[Panel publicado con el envío bloqueado mientras falta el nuevo Worker](evidence/bolsa-11760-panel-pendiente-worker-20261024.jpg).
+
+Este registro posterior solo agrega documentación y evidencia; no cambia el archivo Worker aprobado ni requiere otro despliegue.
