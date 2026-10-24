@@ -1,0 +1,28 @@
+name: Bolsa UI staging checks
+on:
+  workflow_dispatch:
+  push:
+    branches: [audit/continuidad-demo-20261019]
+    paths:
+      - bolsa-trabajo.html
+      - tests/job-application-ui.test.cjs
+      - scripts/build-staging.mjs
+      - .github/workflows/bolsa-ui-staging.yml
+  pull_request:
+    paths:
+      - bolsa-trabajo.html
+      - tests/job-application-ui.test.cjs
+      - scripts/build-staging.mjs
+      - .github/workflows/bolsa-ui-staging.yml
+permissions:
+  contents: read
+jobs:
+  ui-and-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/job-application-ui.test.cjs tests/job-status-contract.test.cjs tests/staging-build.test.mjs
