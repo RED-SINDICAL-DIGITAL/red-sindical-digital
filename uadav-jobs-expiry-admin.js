@@ -15,7 +15,7 @@
     async function review(){
       if(state.busy||!alive())return;
       state={...state,busy:true,preview:null,confirmed:false,message:'Revisando vencimientos…'};emit();
-      try{const data=await request('admin/jobs/expiry-notices',{method:'GET'});if(!alive())return;if(!validPreview(data))throw Error('No se confirmó la revisión. Volvé a revisar antes de enviar.');state.preview=data;state.message=data.pending?data.pending+' ofertas tienen avisos pendientes. Esta revisión permite enviar hasta '+data.batch_size+'.':'No hay avisos pendientes para las cuentas vinculadas.'}
+      try{const data=await request('admin/jobs/expiry-notices',{method:'GET'});if(!alive())return;if(!validPreview(data))throw Error('Los avisos de vencimiento no están disponibles. Volvé a revisar más tarde.');state.preview=data;state.message=data.pending?data.pending+' ofertas tienen avisos pendientes. Esta revisión permite enviar hasta '+data.batch_size+'.':'No hay avisos pendientes para las cuentas vinculadas.'}
       catch(error){if(alive())state.message=error?.status===404?'Los avisos de vencimiento todavía no están preparados en staging.':error?.message||'No se pudo completar la revisión.'}
       finally{state.busy=false;emit()}
     }

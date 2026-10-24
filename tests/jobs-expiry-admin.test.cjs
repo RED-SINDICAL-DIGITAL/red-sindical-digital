@@ -36,8 +36,9 @@ test('uncertain or unconfirmed writes are never retried and always require a fre
 });
 test('an older Worker gives an actionable fallback and detached views ignore late private responses',async()=>{
   const older=fixture({read:()=>{throw Object.assign(Error('Ruta no encontrada'),{status:404})}});await older.flow.review();assert.match(older.flow.getState().message,/todavía no están preparados/);assert.equal(older.flow.canSend(),false);
+  for(const reply of [null,{},[]]){const legacy=fixture({read:()=>reply});await legacy.flow.review();assert.match(legacy.flow.getState().message,/no están disponibles/);legacy.flow.confirm(true);await legacy.flow.send();assert.equal(legacy.calls.length,1);assert.equal(legacy.flow.canSend(),false);}
   let finish;const x=fixture({read:()=>new Promise(resolve=>finish=resolve)}),pending=x.flow.review();x.leave();finish(preview());await pending;assert.equal(x.flow.getState().preview,null);x.flow.confirm(true);await x.flow.send();assert.equal(x.calls.length,1);
 });
 test('Admin mounts the expiry tools inside its private audit view',()=>{
-  const html=fs.readFileSync(require('node:path').join(__dirname,'../admin.html'),'utf8');assert.match(html,/src="\/uadav-jobs-expiry-admin\.js\?v=11760"/);assert.match(html,/id="jobsExpiryReview"/);assert.match(html,/UADAVJobsExpiry\?\.mount\(\$\('jobsExpiryReview'\),\{request:api,apiBase:API_REMOTE\}\)/);
+  const html=fs.readFileSync(require('node:path').join(__dirname,'../admin.html'),'utf8');assert.match(html,/src="\/uadav-jobs-expiry-admin\.js\?v=11760\.1"/);assert.match(html,/id="jobsExpiryReview"/);assert.match(html,/UADAVJobsExpiry\?\.mount\(\$\('jobsExpiryReview'\),\{request:api,apiBase:API_REMOTE\}\)/);
 });
