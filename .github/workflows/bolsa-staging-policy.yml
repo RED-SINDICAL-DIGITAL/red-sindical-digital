@@ -1,0 +1,23 @@
+name: Bolsa staging policy checks
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'worker.js'
+      - 'tests/bolsa-public-policy.test.cjs'
+      - '.github/workflows/bolsa-staging-policy.yml'
+permissions:
+  contents: read
+jobs:
+  public-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate worker JavaScript
+        run: node --check worker.js
+      - name: Run public Bolsa regression tests
+        run: node tests/bolsa-public-policy.test.cjs
