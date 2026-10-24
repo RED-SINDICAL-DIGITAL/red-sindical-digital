@@ -2,7 +2,7 @@
 
 ## Estado de la entrega
 
-Código preparado en `release/radio-studio-staging-rc-20261020`. El frontend está en `audit/continuidad-demo-20261019`. No fusionar ramas ni aplicar estos cambios en producción. Hasta que se complete el paso manual, el Worker publicado sigue siendo **11759** y estos avisos no están validados en Cloudflare.
+Código en `release/radio-studio-staging-rc-20261020`. El frontend está en `audit/continuidad-demo-20261019`. No fusionar ramas ni aplicar estos cambios en producción. **El usuario completó el paso manual y el navegador verificó el Worker 11760 y la revisión de vencimientos operativa.** La entrega de un aviso a una cuenta todavía está pendiente; la comprobación de infraestructura no acredita ese circuito.
 
 El usuario completó desde su celular el recorrido de publicar, postularse, abrir el archivo del contratante, consultar candidatos, cerrar la oferta y consultar después la candidatura con su propio comprobante. El servidor y Admin corroboraron el cierre y la conservación de la postulación; la consulta final del archivo en el teléfono es una confirmación del usuario. El backup privado posterior contiene 8 ofertas, 9 postulaciones y 2 asociaciones. El detalle está en `BOLSA-11759-MI-PERFIL-STAGING.md`.
 
@@ -51,3 +51,15 @@ Los endpoints de recuperación por correo **siguen devolviendo 503**. Este cambi
 [Panel publicado con el envío bloqueado mientras falta el nuevo Worker](evidence/bolsa-11760-panel-pendiente-worker-20261024.jpg).
 
 Este registro posterior solo agrega documentación y evidencia; no cambia el archivo Worker aprobado ni requiere otro despliegue.
+
+## Confirmación del despliegue 11760 · 24/10/2026
+
+El usuario confirmó instalar el SQL y desplegar el Worker. El navegador observó `/api/health`: build **11760**, KV/D1 disponibles, `email_automation:false` y `queue:false`. La revisión autenticada desde Admin devolvió «No hay avisos pendientes para las cuentas vinculadas». Esto confirma que el esquema adicional y las tablas de cuenta requeridas se reconocen; no se detectó un error de instalación.
+
+No se emitieron avisos en esta comprobación. Las ofertas anteriores de QA siguen cerradas y no se creó otra oferta sin cuenta. El siguiente ensayo necesita una oferta ficticia guardada en una cuenta para comprobar aviso próximo, deduplicación y aviso de vencimiento, y terminar con el registro cerrado.
+
+La sesión de Mi Perfil del navegador de Work no tiene una cuenta vinculada. Se preparó únicamente el nombre local «QA Avisos 11760 · Ficticio», se abrió Configuración y dispositivos y se dejó habilitado **Crear mi cuenta**. El alta debe completarla el usuario mediante el control manual del navegador; no se generaron ni inspeccionaron credenciales. Después hay que comprobar el estado autenticado y la lista de Mis trabajos antes de publicar el ensayo.
+
+[Pantalla de alta preparada con datos ficticios](evidence/bolsa-11760-cuenta-qa-preparada-20261024.jpg).
+
+Esta intervención es para la cuenta personal de pruebas, no para iniciar recuperación por correo. Los endpoints de correo siguen bloqueados. El esquema y el Worker no necesitan repetirse para continuar esta QA.
