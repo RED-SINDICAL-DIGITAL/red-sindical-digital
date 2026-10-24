@@ -22,4 +22,10 @@ El panel Admin sigue descargando el backup actual de D1. Si el Worker informa as
 
 El Worker 11759 y `migrations/staging/20261024_job_accounts.sql` se encuentran en la rama Worker. Requieren intervención manual en Cloudflare; la guía está en `docs/BOLSA-11759-MI-PERFIL-STAGING.md` de esa rama. Mantener los flags actuales de D1 y la recuperación por correo deshabilitada.
 
-Las 83 pruebas de Pages están aprobadas localmente. La prueba remota detectó que las acciones de la postulación están dentro del cuerpo del modal: la opción de cuenta debe insertarse en ese contenedor, no directamente en el formulario. Se corrigió la inserción y el fixture ahora reproduce esa estructura y rechaza referencias que no son hijas del contenedor. El circuito autenticado debe volver a probarse con la corrección y repetirse en móvil. No declarar Bolsa terminada ni pasar a producción por la sola presencia de esta interfaz.
+Las 84 pruebas de Pages están aprobadas localmente. La prueba remota detectó que las acciones de la postulación están dentro del cuerpo del modal: la opción de cuenta debe insertarse en ese contenedor, no directamente en el formulario. Se corrigió la inserción y el fixture ahora reproduce esa estructura y rechaza referencias que no son hijas del contenedor.
+
+El circuito de cuenta se probó en el navegador de PC de Work: oferta y postulación guardadas, una segunda candidatura sin vincular, persistencia tras recargar, campos opcionales excluidos, cierre/renovación y avisos leídos. Desde Admin se pasó únicamente la candidatura ficticia a «En revisión» y la cuenta recibió el estado y el aviso correspondiente.
+
+Esta prueba también detectó que Actualizar mis trabajos conservaba un panel anterior de postulantes. El refresco ahora lo retira e invalida respuestas de bandeja que empezaron antes, para que no vuelvan a pintar un estado obsoleto. Los tests cubren tanto una bandeja ya recibida como una respuesta pendiente. Se corrigieron además los textos de una única gestión y una única postulación.
+
+Falta repetir en móvil y con una segunda cuenta independiente, probar un comprobante previo y la restauración remota en una base desechable. No declarar Bolsa terminada ni pasar a producción por la sola presencia de esta interfaz.

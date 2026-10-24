@@ -81,6 +81,18 @@ test('switching accounts removes old cards and prevents a late private inbox res
   const pending=button.handlers.click({currentTarget:button});x.switch(B);await tick();finish(reply({success:true,items:[{nombre:'PRIVATE_A',email:'private-a@example.invalid'}]}));await pending;
   assert(!x.nodes['mis-trabajos'].textContent.includes('PRIVATE_A'));assert(!x.nodes['mis-trabajos'].textContent.includes('Old account offer'));
 });
+test('refresh clears completed candidate panels and rejects inbox replies that started before that refresh',async()=>{
+  for(const mode of ['completed','pending']){
+    let finish;const x=await mount({profile:true,transport:async url=>url.endsWith('mis-postulantes')?(mode==='pending'?new Promise(resolve=>finish=resolve):reply({success:true,items:[{nombre:'STALE_CANDIDATE',estado:'recibida'}]})):reply({...empty(),items:[item()]})});
+    assert.match(x.nodes['mis-trabajos'].textContent,/1 gestión guardada/);
+    const inboxButton=walk(x.nodes['mis-trabajos']).find(n=>n.tag==='button'&&n.textContent==='Ver postulantes');
+    const inbox=inboxButton.handlers.click({currentTarget:inboxButton});
+    if(mode==='completed'){await inbox;assert.match(x.nodes['mis-trabajos'].textContent,/1 postulación recibida/);assert(x.nodes['mis-trabajos'].textContent.includes('STALE_CANDIDATE'))}
+    const refresh=walk(x.nodes['mis-trabajos']).find(n=>n.tag==='button'&&n.textContent==='Actualizar mis trabajos');await refresh.handlers.click();
+    if(mode==='pending')finish(reply({success:true,items:[{nombre:'STALE_CANDIDATE',estado:'recibida'}]}));await inbox;
+    assert(!x.nodes['mis-trabajos'].textContent.includes('STALE_CANDIDATE'));
+  }
+});
 test('both pages load the same account module and keep existing private receipt tools',()=>{
   for(const file of ['usuario.html','bolsa-trabajo.html']){const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');assert.match(html,/src="\/uadav-jobs-account\.js/);for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(script[1])}
   assert.match(fs.readFileSync(path.join(__dirname,'../usuario.html'),'utf8'),/id="profileJobLookup"/);

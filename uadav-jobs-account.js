@@ -39,7 +39,7 @@
   root.UADAVJobsAccount={createClient,parseProof};
   if(!root.document||root.location?.origin!==ORIGIN)return;
   const doc=root.document,credential=()=>root.UADAVAccount?.code?.()||'',element=(tag,text)=>{const node=doc.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
-  let generation=0,current=credential(),turn=0,next=null,items=[],busy=false,profile=null;
+  let generation=0,current=credential(),turn=0,inboxTurn=0,next=null,items=[],busy=false,profile=null;
   const client=createClient({origin:root.location.origin,getCredential:credential,getGeneration:()=>generation,transport:(...args)=>root.fetch(...args)}),choices=new Map();
   root.UADAVJobsAccount.selection=kind=>client.selection(choices.get(kind)?.input.checked===true);
   root.UADAVJobsAccount.assertCurrent=client.assertCurrent;
@@ -62,10 +62,10 @@
       const actions=element('div');actions.className='job-account-actions';
       if(item.tipo==='oferta'){
         actions.append(button('Ver postulantes',async event=>{
-          const target=event.currentTarget,ctx=client.selection(false);target.disabled=true;profile.status.textContent='Consultando postulantes…';
-          try{const data=await client.inbox(item.id);client.assertCurrent(ctx);if(!Array.isArray(data.items))throw Error('No se confirmó la lista de postulantes.');if(!profile.host.isConnected)return;profile.inbox.replaceChildren(element('h3',item.titulo));profile.status.textContent=data.items.length+' postulaciones recibidas';
+          const target=event.currentTarget,ctx=client.selection(false),attempt=++inboxTurn;target.disabled=true;profile.status.textContent='Consultando postulantes…';
+          try{const data=await client.inbox(item.id);client.assertCurrent(ctx);if(!Array.isArray(data.items))throw Error('No se confirmó la lista de postulantes.');if(attempt!==inboxTurn||!profile.host.isConnected)return;profile.inbox.replaceChildren(element('h3',item.titulo));profile.status.textContent=data.items.length===1?'1 postulación recibida':data.items.length+' postulaciones recibidas';
             for(const applicant of data.items){const row=element('article');row.className='job-account-card';row.append(element('strong',applicant.nombre||'Postulante'),element('p',stateLabel(applicant.estado)));if(applicant.mensaje)row.append(element('p',applicant.mensaje));const links=element('div');links.className='job-account-actions';const link=(text,url)=>{const anchor=element('a',text);anchor.className='chip job-account-button';anchor.href=url;anchor.target='_blank';anchor.rel='noopener noreferrer';links.append(anchor);};if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(applicant.email||''))link('Enviar email','mailto:'+encodeURIComponent(applicant.email));const digits=String(applicant.whatsapp||'').replace(/\D/g,'');if(digits.length>=9&&digits.length<=15)link('WhatsApp','https://wa.me/'+digits);try{const url=new URL(applicant.portfolio_url);if(['https:','http:'].includes(url.protocol)&&!url.username&&!url.password)link('Ver portfolio',url.href)}catch{}if(applicant.artist_id&&String(applicant.artist_id).length<=160)link('Ver perfil artístico',ORIGIN+'/artista.html?id='+encodeURIComponent(applicant.artist_id));row.append(links);profile.inbox.append(row);}
-          }catch(error){if(profile.host.isConnected)profile.status.textContent=error.message}finally{target.disabled=false}
+          }catch(error){if(attempt===inboxTurn&&profile.host.isConnected)profile.status.textContent=error.message}finally{target.disabled=false}
         }));
         for(const [action,text] of [['cerrar','Cerrar oferta'],['renovar','Renovar 30 días']]){
           if(action==='cerrar'&&!item.recibe_postulaciones)continue;
@@ -80,8 +80,8 @@
   async function load(more=false){
     const secret=credential();if(secret!==current){current=secret;generation++;turn++;busy=false;items=[];next=null;showChoices(false);if(profile){profile.list.replaceChildren();profile.inbox.replaceChildren();profile.proof.value='';profile.consent.checked=false;}}
     if(!credentialPattern.test(secret)){showChoices(false);if(profile){profile.tools.hidden=true;profile.status.textContent='Creá o vinculá tu cuenta para guardar tus trabajos entre dispositivos. Los comprobantes privados siguen funcionando abajo.';}return;}
-    if(busy)return;const attempt=++turn;busy=true;if(profile){profile.tools.hidden=false;profile.refresh.disabled=true;profile.more.disabled=true;profile.status.textContent='Consultando Mis trabajos…';}
-    try{const data=await client.list(more?next||0:0);if(attempt!==turn||profile&&!profile.host.isConnected)return;showChoices(true);items=more?[...new Map([...items,...data.items].map(item=>[item.tipo+'|'+item.id,item])).values()]:data.items;next=data.next_offset;if(profile){profile.status.textContent=items.length?items.length+' gestiones guardadas en esta cuenta.':'Todavía no guardaste trabajos en esta cuenta. Podés vincular un comprobante anterior.';render();}}
+    if(busy)return;if(!more){inboxTurn++;if(profile)profile.inbox.replaceChildren()}const attempt=++turn;busy=true;if(profile){profile.tools.hidden=false;profile.refresh.disabled=true;profile.more.disabled=true;profile.status.textContent='Consultando Mis trabajos…';}
+    try{const data=await client.list(more?next||0:0);if(attempt!==turn||profile&&!profile.host.isConnected)return;showChoices(true);items=more?[...new Map([...items,...data.items].map(item=>[item.tipo+'|'+item.id,item])).values()]:data.items;next=data.next_offset;if(profile){profile.status.textContent=items.length===1?'1 gestión guardada en esta cuenta.':items.length?items.length+' gestiones guardadas en esta cuenta.':'Todavía no guardaste trabajos en esta cuenta. Podés vincular un comprobante anterior.';render();}}
     catch(error){if(attempt===turn){showChoices(false);if(profile?.host.isConnected){items=[];next=null;profile.list.replaceChildren();profile.inbox.replaceChildren();profile.more.hidden=true;profile.status.textContent=error.message;}}}
     finally{if(attempt===turn){busy=false;if(profile){profile.refresh.disabled=false;profile.more.disabled=false}}}
   }
