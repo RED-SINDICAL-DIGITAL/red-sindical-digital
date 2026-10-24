@@ -32,3 +32,16 @@ La primera revisión remota no escribió datos: rechazó una fecha que el lector
 Admin reemplaza SheetJS 0.18.5 del CDN npm por la distribución oficial **0.20.3**, incluida localmente con su licencia Apache 2.0. Fuente: <https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js>. SHA-256 de los bytes originales: `cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41` (951.904 bytes). No se cambia la CSP para habilitar otro servidor de scripts.
 
 Referencias del proveedor: [instalación y distribución oficial](https://docs.sheetjs.com/docs/getting-started/installation/standalone/), [lectura sin conversiones implícitas](https://docs.sheetjs.com/docs/api/parse-options/) y [aviso de seguridad y versión corregida](https://cdn.sheetjs.com/advisories/CVE-2024-22363). El cambio de dependencia evita seguir utilizando una versión afectada; no equivale a una auditoría completa de todos los formatos de planilla.
+
+## QA remota confirmada · 24/10/2026
+
+Pages `9967c6c038f8ad0725ce4825adbd31f3a0b8d339` se confirmó por manifest y hash del lector local. CI `40143976001` aprobado: 120 pruebas focalizadas y el control de importación/exportación. El mismo CSV que falló antes pasó a mostrar correctamente acentos y fecha 2026-11-23.
+
+1. Primera ficha ficticia: revisión con `revisado_por_admin:false`; confirmación `imported:1, updated:0`. El catálogo siguió con cinco ofertas y no mostró la ficha oculta.
+2. Repetición del mismo archivo: `imported:0, updated:1`. No se creó otra oferta.
+3. Segunda ficha ficticia: revisión con publicación explícita y plazo vigente; `imported:1, updated:0`. Apareció como «Convocatoria externa» y el botón abrió el origen de QA correcto en otra pestaña.
+4. Se ocultó esta segunda ficha desde Admin. Ambas importaciones quedaron ocultas y el catálogo público volvió a las cinco ofertas originales. No se borraron registros.
+
+Se actualizaron la guía pública y la ayuda interna sobre guardado voluntario, comprobantes, avisos internos, importación externa, fechas/acentos y respaldo D1. El respaldo posterior se verificó: 11 ofertas, 10 postulaciones, tres vínculos y una marca de aviso. Son 21 registros D1 consistentes con el export lógico, dos URLs externas únicas, ambas fichas ocultas, candidatura nativa conservada y aviso leído. Guardado como versión 3 del mismo respaldo privado: 258.655 bytes, SHA-256 `f3fcfe8f2960be20de3341c36bdc16fa13990bd758cbae9bfeabb2375df904d2`. El JSON privado no se incluye en el repositorio.
+
+Esta QA prueba importación real por CSV hacia el Worker de staging con datos sintéticos. No prueba extracción HTML, scraping automático ni vigencia de convocatorias reales de terceros. No activa tareas programadas o correo.
