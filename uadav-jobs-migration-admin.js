@@ -48,6 +48,17 @@
           linked.add(key);
         }
       }
+      if(backup.job_expiry_notices_available===true){
+        if(!Array.isArray(backup.tables.job_expiry_notices)||backup.tables.job_expiry_notices.length>20000||!Array.isArray(backup.tables.audience_accounts)||!Array.isArray(backup.tables.audience_announcements))mismatch();
+        const accounts=new Set(backup.tables.audience_accounts.map(x=>x?.id)),ids=new Map(),keys=new Set();
+        const validDay=value=>/^\d{4}-\d{2}-\d{2}$/.test(String(value))&&Number.isFinite(Date.parse(value+'T12:00:00Z'))&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;
+        for(const row of backup.tables.job_expiry_notices){
+          const key=JSON.stringify([row?.job_id,row?.deadline,row?.kind,row?.account_id]);
+          if(!/^job-expiry:[a-f0-9]{64}$/.test(row?.notice_id||'')||ids.has(row.notice_id)||keys.has(key)||!/^JOB-[A-Z0-9-]{3,80}$/i.test(row.job_id||'')||!validDay(row.deadline)||!['soon','expired'].includes(row.kind)||!accounts.has(row.account_id)||typeof row.run_id!=='string'||!row.run_id||row.run_id.length>80||!Number.isFinite(Date.parse(row.created_at||'')))mismatch();
+          ids.set(row.notice_id,row);keys.add(key);
+        }
+        for(const notice of backup.tables.audience_announcements){if(String(notice?.id||'').startsWith('job-expiry:')&&(!ids.has(notice.id)||ids.get(notice.id).account_id!==notice.account_id))mismatch()}
+      }else if(backup.tables.job_expiry_notices?.length)mismatch();
     }
     return {counts:Object.fromEntries(COLLECTIONS.map(key=>[key,backup.kv[key].length])),missing,source:backup.job_storage||'kv',generated_at:backup.generated_at};
   }

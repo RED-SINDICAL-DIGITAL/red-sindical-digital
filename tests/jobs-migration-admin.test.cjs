@@ -89,6 +89,13 @@ test('an empty D1 store and retained orphan credentials can still produce consis
   await x.flow.prepare();assert.equal(x.downloads.length,1);assert.equal(x.flow.getState().phase,'already-d1');
 });
 
+test('expiry history backups require complete, unique account markers and consistent visible announcements',async()=>{
+  const setup=()=>{const x=fixture({source:'d1'}),account='a'.repeat(64),id='job-expiry:'+'c'.repeat(64);x.backup.job_expiry_notices_available=true;x.backup.tables.audience_accounts=[{id:account}];x.backup.tables.audience_announcements=[{id,account_id:account}];x.backup.tables.job_expiry_notices=[{notice_id:id,job_id:'JOB-DELETED-HISTORY',deadline:'2026-10-24',kind:'soon',account_id:account,run_id:'synthetic-run',created_at:'2026-10-22T12:00:00.000Z'}];return x;};
+  const good=setup();await good.flow.prepare();assert.equal(good.downloads.length,1,'markers for an old deleted offer remain valid for deduplication');
+  const removed=setup();removed.backup.tables.audience_announcements=[];await removed.flow.prepare();assert.equal(removed.downloads.length,1,'deleting a visible notice preserves its marker');
+  for(const mutate of [x=>delete x.backup.tables.job_expiry_notices,x=>x.backup.tables.audience_accounts.pop(),x=>x.backup.tables.job_expiry_notices.push({...x.backup.tables.job_expiry_notices[0]}),x=>x.backup.tables.job_expiry_notices[0].deadline='2026-02-30',x=>x.backup.tables.audience_announcements[0].account_id='wrong',x=>x.backup.tables.job_expiry_notices.pop(),x=>x.backup.job_expiry_notices_available=false]){const x=setup();mutate(x);await x.flow.prepare();assert.equal(x.downloads.length,0);assert.equal(x.flow.getState().phase,'error');}
+});
+
 test('backups with account links also require their records and accounts to be present exactly once',async()=>{
   const setup=()=>{const x=fixture({source:'d1'});x.backup.job_accounts_available=true;x.backup.tables.audience_accounts=[{id:'synthetic-account'}];x.backup.tables.job_account_links=[{collection:'bolsa_trabajo',record_id:x.backup.kv.bolsa_trabajo[0].id,account_id:'synthetic-account',linked_at:new Date().toISOString()}];return x;};
   const good=setup();await good.flow.prepare();assert.equal(good.downloads.length,1);

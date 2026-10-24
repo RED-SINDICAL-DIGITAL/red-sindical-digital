@@ -7,6 +7,8 @@ on:
       - bolsa-trabajo.html
       - admin.html
       - uadav-jobs-migration-admin.js
+      - uadav-jobs-expiry-admin.js
+      - tests/jobs-expiry-admin.test.cjs
       - uadav-jobs-account.js
       - usuario.html
       - tests/jobs-account-ui.test.cjs
@@ -22,6 +24,8 @@ on:
       - bolsa-trabajo.html
       - admin.html
       - uadav-jobs-migration-admin.js
+      - uadav-jobs-expiry-admin.js
+      - tests/jobs-expiry-admin.test.cjs
       - uadav-jobs-account.js
       - usuario.html
       - tests/jobs-account-ui.test.cjs
@@ -43,4 +47,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/job-application-ui.test.cjs tests/job-status-contract.test.cjs tests/staging-build.test.mjs tests/jobs-migration-admin.test.cjs tests/jobs-account-ui.test.cjs tests/admin-api-retry.test.cjs tests/admin-navigation.test.cjs tests/admin-navigation-races.test.cjs
+      - run: node --test tests/job-application-ui.test.cjs tests/job-status-contract.test.cjs tests/staging-build.test.mjs tests/jobs-migration-admin.test.cjs tests/jobs-account-ui.test.cjs tests/jobs-expiry-admin.test.cjs tests/admin-api-retry.test.cjs tests/admin-navigation.test.cjs tests/admin-navigation-races.test.cjs
