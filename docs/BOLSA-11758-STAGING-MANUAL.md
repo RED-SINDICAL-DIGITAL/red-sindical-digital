@@ -2,6 +2,8 @@
 
 Esta guía prepara el cambio; **no declara aprobado el corte a D1**. La recuperación por correo permanece deshabilitada en todo momento.
 
+**Actualización comprobada:** el Worker staging ya devuelve 11758 después del despliegue manual. Para los pasos siguientes se agregó el panel **Admin → Historial de cambios → Preparar Bolsa en D1**, documentado en `docs/BOLSA-11758-PASOS-ADMIN.md` de la rama Pages. El SQL unificado `migrations/staging/20261024_bolsa_completa.sql` reúne ambos esquemas indicados abajo y muestra siete tablas al terminar. No requiere volver a desplegar el Worker.
+
 ## Primera intervención: desplegar código sin activar D1
 
 1. En la cuenta de UADAV, abrir Workers & Pages → **uadav-api-staging**. Verificar el nombre, no usar `uadav-api`.
