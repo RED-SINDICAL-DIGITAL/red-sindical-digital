@@ -78,3 +78,7 @@ El usuario completó el alta manual de «QA Avisos 11760 · Ficticio» después 
 [Oferta cerrada y postulación conservada](evidence/bolsa-11760-cierre-y-postulacion-verificados-20261024.jpg).
 
 El aviso **posterior al vencimiento** está cubierto localmente/CI, pero este ensayo remoto no lo acredita: el editor impide fechas pasadas. Tampoco acredita ejecución automática, entrega por correo/push, dos conexiones HTTP simultáneas, restauración remota o el acceso de un segundo dispositivo. La cuenta actual no vio las gestiones de la cuenta de QA previa; la suplantación con dos sesiones independientes aún debe probarse. No se habilitaron correos ni restauración y no se cambió producción.
+
+## Respaldo posterior a las importaciones
+
+El ensayo posterior de planillas se registra en [BOLSA-11760-IMPORTACIONES-QA.md](BOLSA-11760-IMPORTACIONES-QA.md). El respaldo más reciente ya es la versión 3: 11 ofertas, 10 postulaciones, tres vínculos y la misma única marca de aviso. Las dos importaciones ficticias quedaron ocultas y las cinco ofertas públicas originales permanecen iguales. El backup de nueve ofertas descrito arriba se conserva como versión histórica de la fase de avisos.
