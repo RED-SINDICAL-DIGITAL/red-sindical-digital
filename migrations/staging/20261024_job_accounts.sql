@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS job_account_links (collection TEXT NOT NULL CHECK(collection IN ('bolsa_trabajo','postulaciones_trabajo')), record_id TEXT NOT NULL, account_id TEXT NOT NULL, linked_at TEXT NOT NULL, PRIMARY KEY(collection,record_id), FOREIGN KEY(collection,record_id) REFERENCES job_store_records(collection,id) ON DELETE CASCADE, FOREIGN KEY(account_id) REFERENCES audience_accounts(id) ON DELETE CASCADE);
+CREATE INDEX IF NOT EXISTS idx_job_account_links_account ON job_account_links(account_id,linked_at DESC);
+SELECT name FROM sqlite_master WHERE type='table' AND name='job_account_links';

@@ -49,11 +49,13 @@ El modo nuevo requiere **`JOB_STORE_D1=true` y una migración validada**. El usu
 
 ## Lo que falta para terminar Bolsa
 
+**Avance posterior:** el usuario confirmó `already-d1`, 6 ofertas, 6 postulaciones y respaldo D1 consistente. Se preparó el Worker 11759 para vincular gestiones a cuentas, generar avisos internos y respaldar/restaurar asociaciones. Falta su instalación/despliegue y QA remoto; ver `docs/BOLSA-11759-MI-PERFIL-STAGING.md`. El Worker publicado observado sigue siendo 11758 hasta esa intervención.
+
 1. Conservar y comprobar el respaldo D1 posterior a las nuevas escrituras; validar restauración en una base desechable. El despliegue 11758, el esquema y la migración inicial ya se completaron en staging.
 2. Probar acceso remoto con un comprobante legado de QA. El acceso de una oferta nueva y el rechazo de clave incorrecta ya fueron comprobados.
 3. Probar concurrencia HTTP independiente en Cloudflare. El doble clic de la interfaz y la concurrencia local/CI están comprobados.
 4. Repetir circuitos reales en móvil/tablet/Smart TV. En PC de Work ya se completaron publicación, postulación, privacidad, seguimiento, cierre, rechazo desde pantalla desactualizada y renovación con datos ficticios.
-5. Vincular comprobantes explícitamente a Mi Perfil/cuenta. No vincular por coincidencia de correo. Actualmente continúa el seguimiento por comprobante privado.
+5. Desplegar y validar el vínculo explícito con Mi Perfil preparado en 11759. No vincula por coincidencia de correo; conserva el seguimiento por comprobante privado.
 6. Completar el circuito de entrega de correo: proveedor, token, límites, reintentos y entrega confirmada. El núcleo SQL aprobado no prueba entrega de email.
 7. Completar seguimiento de notificaciones, avisos de estado/vencimiento, importación masiva desde Admin y prueba real de restauración. El código nuevo no habilita automáticamente estos servicios.
 

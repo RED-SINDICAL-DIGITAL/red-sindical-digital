@@ -450,7 +450,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11758';
+const BUILD = '11759';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -635,10 +635,10 @@ function uadavJobGuard(db, condition, args=[]) {
 async function uadavJobRows(db, collection) {
   const records=[];
   for(let offset=0;;offset+=250){
-    const page=await db.prepare('SELECT r.*,c.secret_hash FROM job_store_records r LEFT JOIN job_owner_credentials c ON r.collection=\'bolsa_trabajo\' AND c.job_id=r.id WHERE r.collection=? ORDER BY r.id LIMIT 250 OFFSET ?').bind(collection,offset).all();
-    records.push(...(page.results||[]));
-    if(records.length>2000)throw uadavJobError('JOB_CAPACITY','La colección requiere revisión administrativa.');
-    if((page.results||[]).length<250)break;
+    const page=await db.prepare('SELECT r.*,c.secret_hash FROM job_store_records r LEFT JOIN job_owner_credentials c ON r.collection=\'bolsa_trabajo\' AND c.job_id=r.id WHERE r.collection=? ORDER BY r.id LIMIT 251 OFFSET ?').bind(collection,offset).all();
+    const rows=page.results||[];records.push(...rows.slice(0,250));
+    if(records.length>2000||records.length===2000&&rows.length>250)throw uadavJobError('JOB_CAPACITY','La colección requiere revisión administrativa.');
+    if(rows.length<=250)break;
   }
   return records;
 }
@@ -656,9 +656,16 @@ function uadavJobStore(env) {
     snapshots.set(collection,new Map(rows.map(r=>[r.id,{...r}])));
     return rows.map(r=>({...JSON.parse(r.data_json),...(r.secret_hash?{owner_access_hash:r.secret_hash}:{})}));
   }
-  async function writeCollections(collections,{restoring=false}={}){
+  async function writeCollections(collections,{restoring=false,accountLink=null,accountAuthorization=null,restoreAccountLinks=[]}={}){
     await checkReady();
     const statements=[];
+    const accountFeatures=await uadavJobAccountFeatures(db);
+    for(const link of [accountLink,accountAuthorization].filter(Boolean)){
+      if(!accountFeatures)throw uadavJobError('JOB_ACCOUNT_SCHEMA_REQUIRED','Mis trabajos todavía no está preparado.',503);
+      if(!UADAV_JOB_COLLECTIONS.includes(link.collection)||!collections[link.collection]?.some(item=>item.id===link.recordId))throw uadavJobError('JOB_ACCOUNT_RECORD','Gestión de cuenta inválida.',400);
+      statements.push(...uadavJobAccountGuards(db,link.identity));
+      if(link===accountAuthorization)statements.push(...uadavJobAccountMembershipGuard(db,link.identity,link.collection,link.recordId));
+    }
     for(const [collection,values] of Object.entries(collections)){
       if(!UADAV_JOB_COLLECTIONS.includes(collection)||!Array.isArray(values))throw uadavJobError('JOB_INVALID_COLLECTION','Colección inválida.',400);
       const before=snapshots.get(collection);
@@ -672,6 +679,7 @@ function uadavJobStore(env) {
         if(old){
           statements.push(...uadavJobGuard(db,'EXISTS(SELECT 1 FROM job_store_records WHERE collection=? AND id=? AND revision=?)',[collection,item.id,old.revision]));
           statements.push(db.prepare('UPDATE job_store_records SET data_json=?,request_id=?,revision=revision+1,updated_at=? WHERE collection=? AND id=?').bind(data,requestId,new Date().toISOString(),collection,item.id));
+          if(accountFeatures&&collection==='postulaciones_trabajo'&&JSON.parse(old.data_json).estado!==item.estado)statements.push(uadavJobAccountNotice(db,{id:'job-status:'+item.id+':'+(old.revision+1),collection,recordId:item.id,title:'Cambió el estado de tu postulación',message:'Tu postulación tiene una actualización. Abrí Mis trabajos en Mi Perfil para consultar el estado.'}));
         }else{
           statements.push(...uadavJobGuard(db,'(SELECT COUNT(*) FROM job_store_records WHERE collection=?) < 2000',[collection]));
           if(collection==='postulaciones_trabajo'){
@@ -690,6 +698,8 @@ function uadavJobStore(env) {
             statements.push(...uadavJobGuard(db,'NOT EXISTS(SELECT 1 FROM job_owner_credentials WHERE job_id=? AND secret_hash<>?)',[item.id,item.owner_access_hash]));
             statements.push(db.prepare('INSERT OR IGNORE INTO job_owner_credentials(job_id,secret_hash,revision,updated_at) VALUES(?,?,1,?)').bind(item.id,item.owner_access_hash,new Date().toISOString()));
           }
+          if(accountLink?.collection===collection&&accountLink.recordId===item.id)statements.push(db.prepare('INSERT INTO job_account_links(collection,record_id,account_id,linked_at) VALUES(?,?,?,?)').bind(collection,item.id,accountLink.identity.accountId,new Date().toISOString()));
+          if(accountFeatures&&!restoring&&collection==='postulaciones_trabajo')statements.push(uadavJobAccountNotice(db,{id:'job-application:'+item.id,collection:'bolsa_trabajo',recordId:String(item.job_id),title:'Tu oferta recibió una postulación',message:'Tenés una nueva postulación. Abrí Mis trabajos en Mi Perfil para revisar los datos autorizados.'}));
         }
       }
       for(const [id,old] of before)if(!ids.has(id)){
@@ -698,14 +708,26 @@ function uadavJobStore(env) {
         // Preserve credentials and applications for audit/explicit restoration.
       }
     }
-    if(!statements.length)return;
-    try{await db.batch(statements)}catch(e){
+    const restoredIndices=[];
+    if(restoreAccountLinks.length){
+      if(!restoring||!accountFeatures||restoreAccountLinks.length>5)throw uadavJobError('JOB_ACCOUNT_RESTORE','No se preparó la restauración de vínculos de cuenta.',400);
+      for(const link of restoreAccountLinks){
+        if(snapshots.get(link.collection)?.has(link.record_id)||!collections[link.collection]?.some(item=>item.id===link.record_id))throw uadavJobError('JOB_ACCOUNT_RESTORE','Solo se pueden recuperar vínculos junto con sus registros faltantes.',409);
+        statements.push(...uadavJobGuard(db,'NOT EXISTS(SELECT 1 FROM job_account_links WHERE collection=? AND record_id=? AND account_id<>?)',[link.collection,link.record_id,link.account_id]));
+        restoredIndices.push(statements.length);
+        statements.push(db.prepare('INSERT OR IGNORE INTO job_account_links(collection,record_id,account_id,linked_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)').bind(link.collection,link.record_id,link.account_id,link.linked_at,link.account_id,link.account_id));
+      }
+    }
+    if(!statements.length)return {account_links_restored:0};
+    let results;
+    try{results=await db.batch(statements)}catch(e){
       if(String(e?.message||'').includes('job_store_records.collection, job_store_records.request_id'))throw uadavJobError('JOB_REQUEST_EXISTS','Esta solicitud ya fue recibida. No vuelvas a enviarla.',409);
       throw uadavJobError('JOB_WRITE_CONFLICT','No se confirmó el guardado. Los datos pudieron cambiar; recargá antes de volver a intentar.',409);
     }
     for(const collection of Object.keys(collections))await read(collection);
+    return {account_links_restored:restoredIndices.reduce((sum,index)=>sum+Number(results[index]?.meta?.changes||0),0)};
   }
-  return {read,write:(collection,values)=>writeCollections({[collection]:values}),writeCollections};
+  return {read,write:(collection,values,options)=>writeCollections({[collection]:values},options),writeCollections};
 }
 async function uadavJobRate(env, bucket, limit, windowMs) {
   const db=uadavJobDB(env),now=Date.now();
@@ -735,6 +757,7 @@ async function uadavJobRedeemRecovery(db, {jobId,tokenHash,newSecretHash,now=Dat
   const statements=[...uadavJobGuard(db,'EXISTS(SELECT 1 FROM job_owner_recovery_v2 t JOIN job_owner_credentials c ON c.job_id=t.job_id AND c.revision=t.credential_revision WHERE t.token_hash=? AND t.job_id=? AND t.consumed_at IS NULL AND t.expires_at>? AND c.revision=?)',[tokenHash,jobId,now,row.credential_revision]),
     db.prepare('UPDATE job_owner_recovery_v2 SET consumed_at=? WHERE token_hash=?').bind(now,tokenHash),
     db.prepare('UPDATE job_owner_credentials SET secret_hash=?,revision=revision+1,updated_at=? WHERE job_id=?').bind(newSecretHash,new Date(now).toISOString(),jobId)];
+  if(await uadavJobAccountFeatures(db))statements.push(db.prepare("DELETE FROM job_account_links WHERE collection='bolsa_trabajo' AND record_id=?").bind(jobId));
   try{await db.batch(statements)}catch{throw uadavJobError('JOB_RECOVERY_INVALID','No se confirmó la recuperación. El enlace pudo ser utilizado.',409)}
   return {job_id:jobId,revision:row.credential_revision+1};
 }
@@ -783,6 +806,85 @@ async function uadavJobMigration(env,body={}) {
     await db.prepare("INSERT INTO job_store_meta(key,value) VALUES('migration_ready','true') ON CONFLICT(key) DO UPDATE SET value='true'").run();complete=true;
   }
   return {success:true,dry_run:false,processed:next-offset,next_offset:complete?null:next,complete,fingerprint};
+}
+
+/* Explicit account associations. No receipt keys or email-based matching. */
+const UADAV_JOB_ACCOUNT_TABLES=['job_account_links','audience_accounts','audience_devices','audience_recovery_keys','audience_deletions','audience_announcements'];
+async function uadavJobAccountFeatures(db){
+  const row=await db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN ("+UADAV_JOB_ACCOUNT_TABLES.map(()=>'?').join(',')+")").bind(...UADAV_JOB_ACCOUNT_TABLES).first();
+  return Number(row?.n)===UADAV_JOB_ACCOUNT_TABLES.length;
+}
+async function uadavJobAccountIdentity(request,env){
+  if(env.JOB_STORE_D1!=='true')throw uadavJobError('JOB_ACCOUNT_UNAVAILABLE','Usá tu comprobante privado mientras preparamos Mis trabajos.',503);
+  const result=await uadavAccountRoute(new Request(new URL('/api/account/identity',request.url),{headers:request.headers}),env,true);
+  const data=await result.json();
+  if(!result.ok)throw uadavJobError(data.code||'JOB_ACCOUNT_AUTH',data.error||'Volvé a ingresar a Mi Perfil.',result.status);
+  const credential=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
+  if(!/^[a-f0-9]{64}$/.test(data.account_id||'')||!/^UA[CD]-[a-f0-9]{64}$/.test(credential))throw uadavJobError('JOB_ACCOUNT_AUTH','Volvé a ingresar a Mi Perfil.',401);
+  if(!await uadavJobAccountFeatures(uadavJobDB(env)))throw uadavJobError('JOB_ACCOUNT_SCHEMA_REQUIRED','Mis trabajos todavía no está preparado. Conservá tu comprobante privado.',503);
+  return {accountId:data.account_id,credentialHash:await uadavDigest(credential),device:credential.startsWith('UAD-')};
+}
+async function uadavJobAccountSelection(request,env,body){
+  if(Object.hasOwn(body,'save_to_account')&&typeof body.save_to_account!=='boolean')throw uadavJobError('JOB_ACCOUNT_CONFIRM','Revisá si querés guardar esta gestión en Mi Perfil.',400);
+  return body.save_to_account===true?uadavJobAccountIdentity(request,env):null;
+}
+function uadavJobAccountGuards(db,identity){
+  const {accountId,credentialHash,device}=identity;
+  if(!/^[a-f0-9]{64}$/.test(accountId||'')||!/^[a-f0-9]{64}$/.test(credentialHash||''))throw uadavJobError('JOB_ACCOUNT_AUTH','Acceso de cuenta inválido.',401);
+  const permission=device?"EXISTS(SELECT 1 FROM audience_devices WHERE credential_hash=? AND account_id=? AND revoked_at IS NULL AND (expires_at=0 OR expires_at>?))":"(EXISTS(SELECT 1 FROM audience_recovery_keys WHERE credential_hash=? AND account_id=? AND revoked_at IS NULL) OR (?=? AND NOT EXISTS(SELECT 1 FROM audience_recovery_keys WHERE credential_hash=?)))";
+  const args=device?[credentialHash,accountId,Date.now()]:[credentialHash,accountId,credentialHash,accountId,credentialHash];
+  return uadavJobGuard(db,'EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?) AND '+permission,[accountId,accountId,...args]);
+}
+function uadavJobAccountMembershipGuard(db,identity,collection,id){
+  return uadavJobGuard(db,'EXISTS(SELECT 1 FROM job_account_links WHERE account_id=? AND collection=? AND record_id=?)',[identity.accountId,collection,id]);
+}
+async function uadavJobAccountOwns(db,identity,collection,id){
+  const row=await db.prepare('SELECT record_id FROM job_account_links WHERE account_id=? AND collection=? AND record_id=?').bind(identity.accountId,collection,id).first();
+  return !!row;
+}
+async function uadavJobAccountList(request,env){
+  const identity=await uadavJobAccountIdentity(request,env),url=new URL(request.url),offset=Number(url.searchParams.get('offset')||0);
+  if(!Number.isInteger(offset)||offset<0||offset>4000)throw uadavJobError('JOB_ACCOUNT_PAGE','Página inválida.',400);
+  const rows=await uadavJobDB(env).prepare("SELECT l.collection,r.id,r.data_json,r.updated_at,json_extract(j.data_json,'$.titulo') AS job_title FROM job_account_links l JOIN job_store_records r ON r.collection=l.collection AND r.id=l.record_id LEFT JOIN job_store_records j ON j.collection='bolsa_trabajo' AND j.id=json_extract(r.data_json,'$.job_id') WHERE l.account_id=? ORDER BY l.linked_at DESC,l.collection,l.record_id LIMIT 51 OFFSET ?").bind(identity.accountId,offset).all();
+  const items=(rows.results||[]).slice(0,50).map(row=>{
+    const item=JSON.parse(row.data_json),offer=row.collection==='bolsa_trabajo';
+    return {tipo:offer?'oferta':'postulacion',id:row.id,titulo:String(offer?item.titulo:row.job_title||'Oportunidad').slice(0,160),estado:String(item.estado||(offer?(uadavJobIsPublic(item)?'activa':'cerrada'):'recibida')),creado:item.creado||null,actualizado:row.updated_at,...(offer?{fecha_limite:item.fecha_limite||null,recibe_postulaciones:uadavJobIsPublic(item)}:{job_id:String(item.job_id||'')})};
+  });
+  return {success:true,enabled:true,items,next_offset:(rows.results||[]).length>50?offset+50:null};
+}
+async function uadavJobAccountLink(request,env,body){
+  const identity=await uadavJobAccountIdentity(request,env),db=uadavJobDB(env);
+  const collection=body?.tipo==='oferta'?'bolsa_trabajo':body?.tipo==='postulacion'?'postulaciones_trabajo':'';
+  const id=String(body?.id||'').trim(),key=String(body?.clave||'').trim();
+  if(body?.confirm!=='VINCULAR_A_MI_CUENTA'||!collection||!(collection==='bolsa_trabajo'?/^JOB-[A-Z0-9-]{3,80}$/:/^POST-[A-Z0-9-]{5,80}$/).test(id)||!/^[a-f0-9]{64}$/.test(key))throw uadavJobError('JOB_ACCOUNT_PROOF','Revisá el comprobante privado y confirmá que querés guardarlo en esta cuenta.',400);
+  if(!await uadavJobRate(env,'job-account-link:'+identity.accountId,12,600000))throw uadavJobError('JOB_ACCOUNT_RATE','Demasiados intentos. Esperá unos minutos.',429);
+  const row=await db.prepare('SELECT data_json,revision FROM job_store_records WHERE collection=? AND id=?').bind(collection,id).first(),hash=await uadavDigest(key);
+  const credential=collection==='bolsa_trabajo'?await db.prepare('SELECT secret_hash FROM job_owner_credentials WHERE job_id=?').bind(id).first():null;
+  if(!row||(collection==='bolsa_trabajo'?credential?.secret_hash:JSON.parse(row.data_json).consulta_hash)!==hash)throw uadavJobError('JOB_ACCOUNT_PROOF','No se encontró una gestión con ese comprobante privado.',404);
+  const proof=collection==='bolsa_trabajo'?"EXISTS(SELECT 1 FROM job_owner_credentials WHERE job_id=? AND secret_hash=?)":"EXISTS(SELECT 1 FROM job_store_records WHERE collection='postulaciones_trabajo' AND id=? AND json_extract(data_json,'$.consulta_hash')=?)";
+  const statements=[...uadavJobAccountGuards(db,identity),...uadavJobGuard(db,'EXISTS(SELECT 1 FROM job_store_records WHERE collection=? AND id=? AND revision=?)',[collection,id,row.revision]),...uadavJobGuard(db,proof,[id,hash]),...uadavJobGuard(db,'NOT EXISTS(SELECT 1 FROM job_account_links WHERE collection=? AND record_id=? AND account_id<>?)',[collection,id,identity.accountId]),db.prepare('INSERT OR IGNORE INTO job_account_links(collection,record_id,account_id,linked_at) VALUES(?,?,?,?)').bind(collection,id,identity.accountId,new Date().toISOString())];
+  try{await db.batch(statements)}catch{throw uadavJobError('JOB_ACCOUNT_CONFLICT','No se confirmó el vínculo. La gestión, la cuenta o sus permisos pudieron cambiar.',409)}
+  return {success:true,tipo:body.tipo,id};
+}
+async function uadavJobAccountUnlink(request,env,body){
+  const identity=await uadavJobAccountIdentity(request,env),db=uadavJobDB(env),collection=body?.tipo==='oferta'?'bolsa_trabajo':body?.tipo==='postulacion'?'postulaciones_trabajo':'';
+  if(body?.confirm!=='QUITAR_DE_MI_CUENTA'||!collection||typeof body.id!=='string'||body.id.length>100)throw uadavJobError('JOB_ACCOUNT_CONFIRM','Confirmá que querés quitar esta gestión de Mi Perfil.',400);
+  try{await db.batch([...uadavJobAccountGuards(db,identity),db.prepare('DELETE FROM job_account_links WHERE collection=? AND record_id=? AND account_id=?').bind(collection,body.id,identity.accountId)])}catch{throw uadavJobError('JOB_ACCOUNT_CONFLICT','No se confirmó el cambio. Volvé a ingresar a Mi Perfil.',409)}
+  return {success:true};
+}
+function uadavJobAccountNotice(db,{id,collection,recordId,title,message}){
+  const now=new Date().toISOString(),expires=new Date(Date.now()+90*86400000).toISOString();
+  return db.prepare('INSERT OR IGNORE INTO audience_announcements(id,title,message,account_id,created_at,expires_at) SELECT ?,?,?,l.account_id,?,? FROM job_account_links l JOIN audience_accounts a ON a.id=l.account_id WHERE l.collection=? AND l.record_id=? AND NOT EXISTS(SELECT 1 FROM audience_deletions x WHERE x.account_id=l.account_id)').bind(id,title,message,now,expires,collection,recordId);
+}
+async function uadavJobAccountRestoreProof(db,backup,additions){
+  if(!await uadavJobAccountFeatures(db)||backup.job_storage!=='d1'||!Array.isArray(backup.tables?.job_account_links)||backup.tables.job_account_links.length>4000)throw uadavJobError('JOB_ACCOUNT_RESTORE','El respaldo no permite validar los vínculos de Mi Perfil.',400);
+  const wanted=new Set(Object.entries(additions).flatMap(([collection,items])=>items.map(item=>collection+'|'+item.id))),seen=new Set(),links=[];
+  for(const link of backup.tables.job_account_links){
+    const key=link?.collection+'|'+link?.record_id;
+    if(!UADAV_JOB_COLLECTIONS.includes(link?.collection)||typeof link.record_id!=='string'||!/^[a-f0-9]{64}$/.test(link.account_id||'')||!Number.isFinite(Date.parse(link.linked_at||''))||seen.has(key))throw uadavJobError('JOB_ACCOUNT_RESTORE','El respaldo contiene vínculos de cuenta inválidos o duplicados.',400);
+    seen.add(key);if(wanted.has(key))links.push(link);
+  }
+  return links;
 }
 
 /* END JOB STORE STAGING */
@@ -950,9 +1052,12 @@ const uadavWorker = {
         if(url.hostname!=='uadav-api-staging.uadavstream.workers.dev'||env.ENABLE_JOB_D1_RESTORE!=='staging-tested')return json({error:'Restauración D1 deshabilitada hasta validar Cloudflare.',code:'RESTORE_LOCKED'},423);
         if(body.confirm_second!=='APLICAR RECUPERACION'||body.external_backup_confirmed!==true)return json({error:'Confirmá el respaldo externo y la recuperación.'},412);
         if(additions.bolsa_trabajo.length+additions.postulaciones_trabajo.length>5)return json({error:'Recuperá hasta 5 registros por lote.',max_batch:5},413);
-        await jobStore.writeCollections(Object.fromEntries(names.map(n=>[n,[...existing[n],...additions[n]]])),{restoring:true});
-        await audit('restore_missing_jobs_d1','backup','bolsa_trabajo',{ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
-        return json({success:true,storage:'d1',ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length});
+        if(Object.hasOwn(body,'restore_account_links')&&typeof body.restore_account_links!=='boolean')return json({error:'Confirmá si querés restaurar también los vínculos de Mi Perfil.'},400);
+        const restoreLinks=body.restore_account_links===true?await uadavJobAccountRestoreProof(uadavJobDB(env),body.backup,additions):[];
+        const restored=await jobStore.writeCollections(Object.fromEntries(names.map(n=>[n,[...existing[n],...additions[n]]])),{restoring:true,restoreAccountLinks:restoreLinks});
+        const restoredLinks=restored?.account_links_restored||0;
+        await audit('restore_missing_jobs_d1','backup','bolsa_trabajo',{ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length,account_links:restoredLinks});
+        return json({success:true,storage:'d1',ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length,account_links_requested:body.restore_account_links===true,account_links_restored:restoredLinks,account_links_skipped:restoreLinks.length-restoredLinks});
       }
       // Modo seguro por defecto: la escritura KV debe habilitarse explícitamente en staging tras pruebas controladas.
       if(String(env.ENABLE_JOB_KV_RESTORE||'')!=='staging-tested')return json({error:'La comparación está disponible, pero la restauración KV permanece deshabilitada hasta completar las pruebas de seguridad.',code:'RESTORE_LOCKED'},423);
@@ -2177,9 +2282,9 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const kvKeys=['config_global','apariencia','secciones','web_visibility','home_layout','landing_config','footer_config','site_pages','estado_sitio','radios','senales_oficiales','artistas','artistas_prospectos','cartelera','eventos','bolsa_trabajo','postulaciones_trabajo','federated_sources','federated_source_state','content_items','collections','banners'];
       for(const key of kvKeys){try{if(jobStore&&UADAV_JOB_COLLECTIONS.includes(key)){out.kv[key]=await getArray(key);continue}const raw=await env.UADAV_DB.get(key);out.kv[key]=raw==null?(['bolsa_trabajo','postulaciones_trabajo'].includes(key)?[]:null):safeJSON(raw,raw)}catch(e){out.kv[key]={error:String(e?.message||e)}}}
       if(hasD1()){
-        const tables=['job_store_meta','job_store_records','job_store_rates','job_owner_credentials','job_owner_recovery_tokens','job_owner_recovery_v2','sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
+        const tables=['job_account_links','job_store_meta','job_store_records','job_store_rates','job_owner_credentials','job_owner_recovery_tokens','job_owner_recovery_v2','sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
         let existingTables=null;try{const inventory=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all();existingTables=new Set((inventory.results||[]).map(x=>String(x.name)))}catch(e){out.table_inventory_error=String(e?.message||e)}
-        out.missing_schema_tables=[];for(const t of tables){if(existingTables&&!existingTables.has(t)){out.missing_schema_tables.push(t);continue}try{const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[]}catch(e){out.tables[t]={error:String(e?.message||e)}}}
+        out.job_accounts_available=!!existingTables&&UADAV_JOB_ACCOUNT_TABLES.every(name=>existingTables.has(name));out.missing_schema_tables=[];for(const t of tables){if(existingTables&&!existingTables.has(t)){out.missing_schema_tables.push(t);continue}try{const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[]}catch(e){out.tables[t]={error:String(e?.message||e)}}}
       }
       out.backup_integrity={kv_errors:Object.entries(out.kv).filter(([key,value])=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===1&&Object.hasOwn(value,'error')).map(([key])=>key),table_errors:Object.entries(out.tables).filter(([key,value])=>!Array.isArray(value)).map(([key])=>key)};out.backup_integrity.missing_critical_kv=['bolsa_trabajo','postulaciones_trabajo'].filter(k=>!Array.isArray(out.kv[k]));out.backup_integrity.d1_configured=hasD1();out.backup_integrity.missing_schema_tables=out.missing_schema_tables||[];out.backup_integrity.inventory_error=out.table_inventory_error||null;out.backup_integrity.complete=hasD1()&&!out.backup_integrity.inventory_error&&!out.backup_integrity.kv_errors.length&&!out.backup_integrity.table_errors.length&&!out.backup_integrity.missing_critical_kv.length;return json(out);
     }
@@ -3572,6 +3677,11 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       }
     }
 
+    if(path==='/api/bolsa_trabajo/cuenta'&&request.method==='GET')return json(await uadavJobAccountList(request,env));
+    if(['/api/bolsa_trabajo/cuenta/vincular','/api/bolsa_trabajo/cuenta/quitar'].includes(path)&&request.method==='POST'){
+      const body=await uadavSecurityJSON(request,4096);
+      return json(path.endsWith('/vincular')?await uadavJobAccountLink(request,env,body):await uadavJobAccountUnlink(request,env,body));
+    }
     if(path==='/api/admin/jobs/migration'&&['GET','POST'].includes(request.method)){
       if(!isAdmin())return json({error:'No autorizado'},401);
       if(url.hostname!=='uadav-api-staging.uadavstream.workers.dev')return json({error:'Operación exclusiva de staging'},403);
@@ -3588,7 +3698,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if (path === '/api/bolsa_trabajo') {
       const list=await getArray('bolsa_trabajo');
       if(request.method==='GET') return isAdmin()?json(list.map(({owner_access_hash,...adminJob})=>adminJob)):json(list.filter(jobIsPublic).map(publicJob));
-      if(request.method==='POST'){ let b;try{b=await uadavSecurityJSON(request,18000)}catch{return json({error:'Solicitud inválida o demasiado grande'},400)} if(!b.titulo||!b.descripcion||!b.contacto)return json({error:'Título, descripción y contacto son obligatorios'},400); const requestId=String(b.request_id||'');if(jobStore&&!requestId)return json({error:'Actualizá la página antes de publicar.'},400);if(requestId&&!/^[a-f0-9-]{36}$/i.test(requestId))return json({error:'Identificador de solicitud inválido'},400);if(requestId){const prior=list.find(x=>x.request_id===requestId);if(prior)return json({error:'Esta solicitud ya fue recibida. No vuelvas a publicarla. Referencia: '+prior.id,existing_job_id:prior.id},409);} const item={id:'JOB-'+Date.now().toString(36).toUpperCase()+'-'+Array.from(crypto.getRandomValues(new Uint8Array(6)),v=>v.toString(16).padStart(2,'0')).join('').toUpperCase(),creado:new Date().toISOString(),creado_por:isAdmin()?'admin':'publico',request_id:requestId||undefined,titulo:String(b.titulo).slice(0,160),rubro:String(b.rubro||'').slice(0,80),tipo:String(b.tipo||'busqueda_artista').slice(0,50),contratante_tipo:String(b.contratante_tipo||'productora').slice(0,50),empresa:String(b.empresa||'').slice(0,160),contacto_nombre:String(b.contacto_nombre||'').slice(0,100),contacto_apellido:String(b.contacto_apellido||'').slice(0,100),logo_url:(()=>{try{const u=new URL(String(b.logo_url||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href.slice(0,500):''}catch{return ''}})(),modalidad:String(b.modalidad||'presencial').slice(0,50),ciudad:String(b.ciudad||'').slice(0,100),provincia:String(b.provincia||'').slice(0,100),pais:String(b.pais||'Argentina').slice(0,80),fecha:String(b.fecha||'').slice(0,30),fecha_limite:String(b.fecha_limite||'').slice(0,30),remuneracion:String(b.remuneracion||'a_convenir').slice(0,80),descripcion:String(b.descripcion).slice(0,2500),requisitos:String(b.requisitos||'').slice(0,2000),contacto:String(b.contacto).slice(0,300),contacto_email:String(b.contacto_email||b.email||'').trim().toLowerCase().slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,60),contacto_tipo:String(b.contacto_tipo||'').slice(0,30),activo:true}; const today=uadavJobToday();if(!item.fecha_limite){const deadline=new Date(Date.now()+30*86400000);item.fecha_limite=deadline.toISOString().slice(0,10);}if(!uadavJobValidDate(item.fecha_limite)||item.fecha_limite<today)return json({error:'Elegí una fecha de caducidad válida, igual o posterior a hoy'},400); if(item.contacto_email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.contacto_email))return json({error:'El correo del responsable no es válido'},400); const ownerKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');item.owner_access_hash=await uadavDigest(ownerKey); if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('bolsa_trabajo',list); let credential_shadow='disabled'; if(!jobStore&&env.JOB_OWNER_D1_SHADOW==='true'&&hasD1()){try{const wr=await env.DB.prepare('INSERT OR IGNORE INTO job_owner_credentials(job_id,secret_hash,revision,updated_at) VALUES(?,?,1,?)').bind(String(item.id),String(item.owner_access_hash),new Date().toISOString()).run();credential_shadow=wr.meta?.changes===1?'inserted':'existing';}catch{credential_shadow='failed';}} const d1sync=jobStore?{ok:true,authority:'job_store_records'}:await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('create_job','job',item.id,{title:item.titulo}).catch(()=>{}); return json({success:true,item:(({owner_access_hash,contacto,contacto_email,whatsapp,...safe})=>safe)(item),clave_contratante:ownerKey,d1_sync:d1sync,credential_sync_status:credential_shadow}); }
+      if(request.method==='POST'){ let b;try{b=await uadavSecurityJSON(request,18000)}catch{return json({error:'Solicitud inválida o demasiado grande'},400)} if(!b.titulo||!b.descripcion||!b.contacto)return json({error:'Título, descripción y contacto son obligatorios'},400); const accountIdentity=await uadavJobAccountSelection(request,env,b); const requestId=String(b.request_id||'');if(jobStore&&!requestId)return json({error:'Actualizá la página antes de publicar.'},400);if(requestId&&!/^[a-f0-9-]{36}$/i.test(requestId))return json({error:'Identificador de solicitud inválido'},400);if(requestId){const prior=list.find(x=>x.request_id===requestId);if(prior)return json({error:'Esta solicitud ya fue recibida. No vuelvas a publicarla. Referencia: '+prior.id,existing_job_id:prior.id},409);} const item={id:'JOB-'+Date.now().toString(36).toUpperCase()+'-'+Array.from(crypto.getRandomValues(new Uint8Array(6)),v=>v.toString(16).padStart(2,'0')).join('').toUpperCase(),creado:new Date().toISOString(),creado_por:isAdmin()?'admin':'publico',request_id:requestId||undefined,titulo:String(b.titulo).slice(0,160),rubro:String(b.rubro||'').slice(0,80),tipo:String(b.tipo||'busqueda_artista').slice(0,50),contratante_tipo:String(b.contratante_tipo||'productora').slice(0,50),empresa:String(b.empresa||'').slice(0,160),contacto_nombre:String(b.contacto_nombre||'').slice(0,100),contacto_apellido:String(b.contacto_apellido||'').slice(0,100),logo_url:(()=>{try{const u=new URL(String(b.logo_url||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href.slice(0,500):''}catch{return ''}})(),modalidad:String(b.modalidad||'presencial').slice(0,50),ciudad:String(b.ciudad||'').slice(0,100),provincia:String(b.provincia||'').slice(0,100),pais:String(b.pais||'Argentina').slice(0,80),fecha:String(b.fecha||'').slice(0,30),fecha_limite:String(b.fecha_limite||'').slice(0,30),remuneracion:String(b.remuneracion||'a_convenir').slice(0,80),descripcion:String(b.descripcion).slice(0,2500),requisitos:String(b.requisitos||'').slice(0,2000),contacto:String(b.contacto).slice(0,300),contacto_email:String(b.contacto_email||b.email||'').trim().toLowerCase().slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,60),contacto_tipo:String(b.contacto_tipo||'').slice(0,30),activo:true}; const today=uadavJobToday();if(!item.fecha_limite){const deadline=new Date(Date.now()+30*86400000);item.fecha_limite=deadline.toISOString().slice(0,10);}if(!uadavJobValidDate(item.fecha_limite)||item.fecha_limite<today)return json({error:'Elegí una fecha de caducidad válida, igual o posterior a hoy'},400); if(item.contacto_email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.contacto_email))return json({error:'El correo del responsable no es válido'},400); const ownerKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');item.owner_access_hash=await uadavDigest(ownerKey); if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); if(jobStore)await jobStore.write('bolsa_trabajo',list,accountIdentity?{accountLink:{identity:accountIdentity,collection:'bolsa_trabajo',recordId:item.id}}:undefined);else await putJSON('bolsa_trabajo',list); let credential_shadow='disabled'; if(!jobStore&&env.JOB_OWNER_D1_SHADOW==='true'&&hasD1()){try{const wr=await env.DB.prepare('INSERT OR IGNORE INTO job_owner_credentials(job_id,secret_hash,revision,updated_at) VALUES(?,?,1,?)').bind(String(item.id),String(item.owner_access_hash),new Date().toISOString()).run();credential_shadow=wr.meta?.changes===1?'inserted':'existing';}catch{credential_shadow='failed';}} const d1sync=jobStore?{ok:true,authority:'job_store_records'}:await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('create_job','job',item.id,{title:item.titulo}).catch(()=>{}); return json({success:true,item:(({owner_access_hash,contacto,contacto_email,whatsapp,...safe})=>safe)(item),clave_contratante:ownerKey,account_saved:!!accountIdentity,d1_sync:d1sync,credential_sync_status:credential_shadow}); }
       if(!isAdmin())return json({error:'No autorizado'},401);
       if(request.method==='PUT'){const b=await request.json().catch(()=>({}));const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'No encontrado'},404);const editable={};for(const field of ['titulo','descripcion','rubro','tipo','contratante_tipo','empresa','contacto_nombre','contacto_apellido','logo_url','modalidad','ciudad','provincia','pais','fecha','fecha_limite','remuneracion','requisitos','contacto','contacto_email','whatsapp','contacto_tipo','activo'])if(Object.hasOwn(b,field))editable[field]=b[field];if(Object.hasOwn(editable,'fecha_limite')&&editable.fecha_limite&&(!/^\d{4}-\d{2}-\d{2}$/.test(String(editable.fecha_limite))||editable.fecha_limite<new Date().toISOString().slice(0,10)))return json({error:'Fecha de caducidad inválida o vencida'},400);if(Object.hasOwn(editable,'activo'))editable.activo=editable.activo===true;Object.assign(list[i],editable);list[i].actualizado=new Date().toISOString();await putJSON('bolsa_trabajo',list); const d1sync=jobStore?{ok:true,authority:'job_store_records'}:await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('update_job','job',list[i].id,{}); return json({success:true,item:(({owner_access_hash,...safe})=>safe)(list[i])});}
       if(request.method==='DELETE'){const b=await request.json().catch(()=>({})); const next=list.filter(x=>String(x.id)!==String(b.id)); await putJSON('bolsa_trabajo',next); const d1sync=jobStore?{ok:true,authority:'job_store_records'}:await safeD1('sync_jobs',()=>syncJobsD1(next)); await audit('delete_job','job',b.id,{}); return json({success:true,d1_sync:d1sync});}
@@ -3666,7 +3776,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if(path==='/api/bolsa_trabajo/mis-postulantes' && request.method==='POST'){
       const b=await uadavSecurityJSON(request,4096).catch(()=>null);
       const id=String(b?.job_id||'').trim(),key=String(b?.clave||'').trim();
-      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!/^[a-f0-9]{64}$/.test(key))return json({error:'Credenciales inválidas'},400);
+      const accountIdentity=b?.cuenta===true?await uadavJobAccountIdentity(request,env):null;
+      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!accountIdentity&&!/^[a-f0-9]{64}$/.test(key))return json({error:'Credenciales inválidas'},400);
       const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();
       if(!peer)return json({error:'Origen no verificable'},403);
       const bucket='job-owner-rate:'+await uadavDigest(peer);
@@ -3676,7 +3787,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       await env.UADAV_DB.put(bucket,String(hits+1),{expirationTtl:600});
       }
       const job=(await getArray('bolsa_trabajo')).find(x=>String(x.id)===id);
-      if(!await uadavJobOwnerAccessMatches(job,key))return json({error:'No se encontró el acceso a esta oportunidad'},404);
+      if(!job||!(accountIdentity?await uadavJobAccountOwns(uadavJobDB(env),accountIdentity,'bolsa_trabajo',id):await uadavJobOwnerAccessMatches(job,key)))return json({error:'No se encontró el acceso a esta oportunidad'},404);
       const list=(await getArray('postulaciones_trabajo')).filter(x=>String(x.job_id)===id).map(x=>({
         id:x.id,nombre:x.nombre,email:x.email,
         whatsapp:Array.isArray(x.shared_fields)&&x.shared_fields.includes('whatsapp')?x.whatsapp:'',
@@ -3691,7 +3802,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if(path==='/api/bolsa_trabajo/mi-oferta/gestionar' && request.method==='POST'){
       const b=await uadavSecurityJSON(request,4096).catch(()=>null);
       const id=String(b?.job_id||'').trim(),secret=String(b?.clave||'').trim(),action=String(b?.accion||'');
-      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!/^[a-f0-9]{64}$/.test(secret)||!['cerrar','renovar'].includes(action))return json({error:'Solicitud inválida'},400);
+      const accountIdentity=b?.cuenta===true?await uadavJobAccountIdentity(request,env):null;
+      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!accountIdentity&&!/^[a-f0-9]{64}$/.test(secret)||!['cerrar','renovar'].includes(action))return json({error:'Solicitud inválida'},400);
       const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();
       if(!peer)return json({error:'No se pudo validar el origen'},403);
       const bucket='job-owner-manage-rate:'+await uadavDigest(peer);
@@ -3701,13 +3813,13 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       await env.UADAV_DB.put(bucket,String(count+1),{expirationTtl:600});
       }
       const rows=await getArray('bolsa_trabajo'),i=rows.findIndex(x=>String(x.id)===id);
-      if(i<0||!await uadavJobOwnerAccessMatches(rows[i],secret))return json({error:'No se encontró la oferta con ese acceso privado'},404);
+      if(i<0||!(accountIdentity?await uadavJobAccountOwns(uadavJobDB(env),accountIdentity,'bolsa_trabajo',id):await uadavJobOwnerAccessMatches(rows[i],secret)))return json({error:'No se encontró la oferta con ese acceso privado'},404);
       if(action==='cerrar'){rows[i].activo=false;rows[i].estado='cerrada_por_contratante';}
       else {const days=Number(b.dias||30);if(![7,15,30,60].includes(days))return json({error:'Duración inválida'},400);rows[i].fecha_limite=new Date(Date.now()+days*86400000).toISOString().slice(0,10);rows[i].activo=true;rows[i].estado='activa';}
       rows[i].actualizado=new Date().toISOString();
-      await putJSON('bolsa_trabajo',rows);
+      if(accountIdentity)await jobStore.write('bolsa_trabajo',rows,{accountAuthorization:{identity:accountIdentity,collection:'bolsa_trabajo',recordId:id}});else await putJSON('bolsa_trabajo',rows);
       if(!jobStore)await safeD1('sync_jobs',()=>syncJobsD1(rows));
-      await audit('manage_owned_job','job',id,{accion:action});
+      await audit('manage_owned_job','job',id,{accion:action}).catch(()=>{});
       return json({success:true,id,activo:rows[i].activo,fecha_limite:rows[i].fecha_limite||null});
     }
     // Consulta individual: nunca exponer la lista completa ni datos de contacto.
@@ -3734,6 +3846,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if (path === '/api/bolsa_trabajo/postular' && request.method === 'POST') {
       let b;try{b=await uadavSecurityJSON(request,14000)}catch{return json({error:'Solicitud inválida o demasiado grande'},400)}
       if(!b.job_id||!b.nombre||!b.email)return json({error:'Oportunidad, nombre y email son obligatorios'},400);
+      const accountIdentity=await uadavJobAccountSelection(request,env,b);
       if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(b.email).trim())||String(b.email).length>160)return json({error:'El correo no es válido'},400);
       const applicationRequestId=String(b.request_id||'');if(jobStore&&!applicationRequestId)return json({error:'Actualizá la página antes de postularte.'},400);if(applicationRequestId&&!/^[a-f0-9-]{36}$/i.test(applicationRequestId))return json({error:'Identificador de solicitud inválido'},400);
       const allowedFields=new Set(['nombre','email','whatsapp','portfolio_url','mensaje','artist_profile']);
@@ -3758,7 +3871,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const consultaHash=await uadavDigest(consultaClave);
       if(applicationRequestId&&list.some(x=>x.request_id===applicationRequestId))return json({error:'Esta solicitud ya fue recibida. No vuelvas a enviarla.',code:'JOB_REQUEST_EXISTS'},409);
       const item={request_id:applicationRequestId||undefined,id:'POST-'+Date.now().toString(36).toUpperCase()+'-'+crypto.randomUUID().slice(0,8).toUpperCase(),consulta_hash:consultaHash,job_id:String(b.job_id),artist_id,artist_nombre,nombre:String(b.nombre).slice(0,120),apellido:String(b.apellido||'').slice(0,100),email:String(b.email).slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,50),mensaje:String(b.mensaje||'').slice(0,2000),portfolio_url:String(b.portfolio_url||'').slice(0,500),perfil_verificado,consent_scope:'job_application_v1',consent_at:new Date().toISOString(),shared_fields:shared,origen:artist_id?'perfil_artista':'publico',creado:new Date().toISOString(),estado:'recibida',moderacion:'sin_revision'};
-      if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); await putJSON('postulaciones_trabajo',list); if(!jobStore)await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id||null,public:!item.artist_id}).catch(()=>{}); const recipient=String(job.contacto_email||job.email||(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(job.contacto||'').trim())?job.contacto:'')).trim(); if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)){await emitNotification({event:'JOB_APPLICATION',to:recipient,subject:'★ UADAV STREAM · Nueva postulación a '+item.job_id,text:'Recibiste una postulación para «'+String(job.titulo||'tu oportunidad')+'». Postulante: '+item.nombre+'. Consultá las postulaciones desde el panel de UADAV STREAM. Compartió sus datos para esta oportunidad; no difundas su información personal.',entity_id:item.id,job_id:item.job_id}).catch(()=>{});} return json({success:true,item:{id:item.id,estado:item.estado,creado:item.creado},clave_consulta:consultaClave});
+      if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); if(jobStore)await jobStore.write('postulaciones_trabajo',list,accountIdentity?{accountLink:{identity:accountIdentity,collection:'postulaciones_trabajo',recordId:item.id}}:undefined);else await putJSON('postulaciones_trabajo',list); if(!jobStore)await safeD1('sync_job_applications',()=>syncJobApplicationsD1(list)); await audit('create_job_application','job_application',item.id,{job_id:item.job_id,artist_id:item.artist_id||null,public:!item.artist_id}).catch(()=>{}); const recipient=String(job.contacto_email||job.email||(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(job.contacto||'').trim())?job.contacto:'')).trim(); if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)){await emitNotification({event:'JOB_APPLICATION',to:recipient,subject:'★ UADAV STREAM · Nueva postulación a '+item.job_id,text:'Recibiste una postulación para «'+String(job.titulo||'tu oportunidad')+'». Postulante: '+item.nombre+'. Consultá las postulaciones desde el panel de UADAV STREAM. Compartió sus datos para esta oportunidad; no difundas su información personal.',entity_id:item.id,job_id:item.job_id}).catch(()=>{});} return json({success:true,item:{id:item.id,estado:item.estado,creado:item.creado},clave_consulta:consultaClave,account_saved:!!accountIdentity});
     }
     if (path === '/api/bolsa_trabajo/postulaciones' && request.method === 'GET') {
       if(!isAdmin())return json({error:'No autorizado'},401); const items=await getArray('postulaciones_trabajo'); return json(items.map(({consulta_hash,...item})=>item));

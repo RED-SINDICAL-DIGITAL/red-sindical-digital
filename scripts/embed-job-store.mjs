@@ -1,6 +1,6 @@
 import {readFile,writeFile} from 'node:fs/promises';
 const root=new URL('../',import.meta.url),target=new URL('worker.js',root);
-const source=await readFile(new URL('scripts/job-store-runtime.js',root),'utf8');
+const source=(await Promise.all(['scripts/job-store-runtime.js','scripts/job-account-runtime.js'].map(file=>readFile(new URL(file,root),'utf8')))).join('\n');
 const start='/* BEGIN JOB STORE STAGING */',end='/* END JOB STORE STAGING */';
 let worker=await readFile(target,'utf8');
 const block=start+'\n'+source+'\n'+end;

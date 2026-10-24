@@ -30,10 +30,10 @@ function uadavJobGuard(db, condition, args=[]) {
 async function uadavJobRows(db, collection) {
   const records=[];
   for(let offset=0;;offset+=250){
-    const page=await db.prepare('SELECT r.*,c.secret_hash FROM job_store_records r LEFT JOIN job_owner_credentials c ON r.collection=\'bolsa_trabajo\' AND c.job_id=r.id WHERE r.collection=? ORDER BY r.id LIMIT 250 OFFSET ?').bind(collection,offset).all();
-    records.push(...(page.results||[]));
-    if(records.length>2000)throw uadavJobError('JOB_CAPACITY','La colección requiere revisión administrativa.');
-    if((page.results||[]).length<250)break;
+    const page=await db.prepare('SELECT r.*,c.secret_hash FROM job_store_records r LEFT JOIN job_owner_credentials c ON r.collection=\'bolsa_trabajo\' AND c.job_id=r.id WHERE r.collection=? ORDER BY r.id LIMIT 251 OFFSET ?').bind(collection,offset).all();
+    const rows=page.results||[];records.push(...rows.slice(0,250));
+    if(records.length>2000||records.length===2000&&rows.length>250)throw uadavJobError('JOB_CAPACITY','La colección requiere revisión administrativa.');
+    if(rows.length<=250)break;
   }
   return records;
 }
@@ -51,9 +51,16 @@ function uadavJobStore(env) {
     snapshots.set(collection,new Map(rows.map(r=>[r.id,{...r}])));
     return rows.map(r=>({...JSON.parse(r.data_json),...(r.secret_hash?{owner_access_hash:r.secret_hash}:{})}));
   }
-  async function writeCollections(collections,{restoring=false}={}){
+  async function writeCollections(collections,{restoring=false,accountLink=null,accountAuthorization=null,restoreAccountLinks=[]}={}){
     await checkReady();
     const statements=[];
+    const accountFeatures=await uadavJobAccountFeatures(db);
+    for(const link of [accountLink,accountAuthorization].filter(Boolean)){
+      if(!accountFeatures)throw uadavJobError('JOB_ACCOUNT_SCHEMA_REQUIRED','Mis trabajos todavía no está preparado.',503);
+      if(!UADAV_JOB_COLLECTIONS.includes(link.collection)||!collections[link.collection]?.some(item=>item.id===link.recordId))throw uadavJobError('JOB_ACCOUNT_RECORD','Gestión de cuenta inválida.',400);
+      statements.push(...uadavJobAccountGuards(db,link.identity));
+      if(link===accountAuthorization)statements.push(...uadavJobAccountMembershipGuard(db,link.identity,link.collection,link.recordId));
+    }
     for(const [collection,values] of Object.entries(collections)){
       if(!UADAV_JOB_COLLECTIONS.includes(collection)||!Array.isArray(values))throw uadavJobError('JOB_INVALID_COLLECTION','Colección inválida.',400);
       const before=snapshots.get(collection);
@@ -67,6 +74,7 @@ function uadavJobStore(env) {
         if(old){
           statements.push(...uadavJobGuard(db,'EXISTS(SELECT 1 FROM job_store_records WHERE collection=? AND id=? AND revision=?)',[collection,item.id,old.revision]));
           statements.push(db.prepare('UPDATE job_store_records SET data_json=?,request_id=?,revision=revision+1,updated_at=? WHERE collection=? AND id=?').bind(data,requestId,new Date().toISOString(),collection,item.id));
+          if(accountFeatures&&collection==='postulaciones_trabajo'&&JSON.parse(old.data_json).estado!==item.estado)statements.push(uadavJobAccountNotice(db,{id:'job-status:'+item.id+':'+(old.revision+1),collection,recordId:item.id,title:'Cambió el estado de tu postulación',message:'Tu postulación tiene una actualización. Abrí Mis trabajos en Mi Perfil para consultar el estado.'}));
         }else{
           statements.push(...uadavJobGuard(db,'(SELECT COUNT(*) FROM job_store_records WHERE collection=?) < 2000',[collection]));
           if(collection==='postulaciones_trabajo'){
@@ -85,6 +93,8 @@ function uadavJobStore(env) {
             statements.push(...uadavJobGuard(db,'NOT EXISTS(SELECT 1 FROM job_owner_credentials WHERE job_id=? AND secret_hash<>?)',[item.id,item.owner_access_hash]));
             statements.push(db.prepare('INSERT OR IGNORE INTO job_owner_credentials(job_id,secret_hash,revision,updated_at) VALUES(?,?,1,?)').bind(item.id,item.owner_access_hash,new Date().toISOString()));
           }
+          if(accountLink?.collection===collection&&accountLink.recordId===item.id)statements.push(db.prepare('INSERT INTO job_account_links(collection,record_id,account_id,linked_at) VALUES(?,?,?,?)').bind(collection,item.id,accountLink.identity.accountId,new Date().toISOString()));
+          if(accountFeatures&&!restoring&&collection==='postulaciones_trabajo')statements.push(uadavJobAccountNotice(db,{id:'job-application:'+item.id,collection:'bolsa_trabajo',recordId:String(item.job_id),title:'Tu oferta recibió una postulación',message:'Tenés una nueva postulación. Abrí Mis trabajos en Mi Perfil para revisar los datos autorizados.'}));
         }
       }
       for(const [id,old] of before)if(!ids.has(id)){
@@ -93,14 +103,26 @@ function uadavJobStore(env) {
         // Preserve credentials and applications for audit/explicit restoration.
       }
     }
-    if(!statements.length)return;
-    try{await db.batch(statements)}catch(e){
+    const restoredIndices=[];
+    if(restoreAccountLinks.length){
+      if(!restoring||!accountFeatures||restoreAccountLinks.length>5)throw uadavJobError('JOB_ACCOUNT_RESTORE','No se preparó la restauración de vínculos de cuenta.',400);
+      for(const link of restoreAccountLinks){
+        if(snapshots.get(link.collection)?.has(link.record_id)||!collections[link.collection]?.some(item=>item.id===link.record_id))throw uadavJobError('JOB_ACCOUNT_RESTORE','Solo se pueden recuperar vínculos junto con sus registros faltantes.',409);
+        statements.push(...uadavJobGuard(db,'NOT EXISTS(SELECT 1 FROM job_account_links WHERE collection=? AND record_id=? AND account_id<>?)',[link.collection,link.record_id,link.account_id]));
+        restoredIndices.push(statements.length);
+        statements.push(db.prepare('INSERT OR IGNORE INTO job_account_links(collection,record_id,account_id,linked_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)').bind(link.collection,link.record_id,link.account_id,link.linked_at,link.account_id,link.account_id));
+      }
+    }
+    if(!statements.length)return {account_links_restored:0};
+    let results;
+    try{results=await db.batch(statements)}catch(e){
       if(String(e?.message||'').includes('job_store_records.collection, job_store_records.request_id'))throw uadavJobError('JOB_REQUEST_EXISTS','Esta solicitud ya fue recibida. No vuelvas a enviarla.',409);
       throw uadavJobError('JOB_WRITE_CONFLICT','No se confirmó el guardado. Los datos pudieron cambiar; recargá antes de volver a intentar.',409);
     }
     for(const collection of Object.keys(collections))await read(collection);
+    return {account_links_restored:restoredIndices.reduce((sum,index)=>sum+Number(results[index]?.meta?.changes||0),0)};
   }
-  return {read,write:(collection,values)=>writeCollections({[collection]:values}),writeCollections};
+  return {read,write:(collection,values,options)=>writeCollections({[collection]:values},options),writeCollections};
 }
 async function uadavJobRate(env, bucket, limit, windowMs) {
   const db=uadavJobDB(env),now=Date.now();
@@ -130,6 +152,7 @@ async function uadavJobRedeemRecovery(db, {jobId,tokenHash,newSecretHash,now=Dat
   const statements=[...uadavJobGuard(db,'EXISTS(SELECT 1 FROM job_owner_recovery_v2 t JOIN job_owner_credentials c ON c.job_id=t.job_id AND c.revision=t.credential_revision WHERE t.token_hash=? AND t.job_id=? AND t.consumed_at IS NULL AND t.expires_at>? AND c.revision=?)',[tokenHash,jobId,now,row.credential_revision]),
     db.prepare('UPDATE job_owner_recovery_v2 SET consumed_at=? WHERE token_hash=?').bind(now,tokenHash),
     db.prepare('UPDATE job_owner_credentials SET secret_hash=?,revision=revision+1,updated_at=? WHERE job_id=?').bind(newSecretHash,new Date(now).toISOString(),jobId)];
+  if(await uadavJobAccountFeatures(db))statements.push(db.prepare("DELETE FROM job_account_links WHERE collection='bolsa_trabajo' AND record_id=?").bind(jobId));
   try{await db.batch(statements)}catch{throw uadavJobError('JOB_RECOVERY_INVALID','No se confirmó la recuperación. El enlace pudo ser utilizado.',409)}
   return {job_id:jobId,revision:row.credential_revision+1};
 }
