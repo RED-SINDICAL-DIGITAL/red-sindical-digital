@@ -69,3 +69,13 @@ La herramienta Admin generó y descargó un JSON actual de D1: **7 ofertas, 8 po
 El inventario informa ausentes `artist_ai_usage` y `artist_ownership_transfers`, ajenas al esquema de Bolsa. No se interpreta este backup de Bolsa consistente como una prueba integral de recuperación de toda la plataforma.
 
 Una ejecución adicional de todos los `*.test.cjs` de Pages dio 509 aprobadas y 46 fallas. Se reprodujeron exactamente las mismas fallas en el commit base `0075f41`, sin los ajustes visuales posteriores. Incluyen fixtures de Radio, búsqueda, acceso/eliminación de artista y video; quedan registradas para la continuidad y no invalidan el resultado de las 84 pruebas específicas ni equivalen a integración global aprobada.
+
+### Prueba móvil en curso · 24/10/2026
+
+El usuario confirmó haber publicado desde su celular una oferta ficticia y descargado el acceso privado. El catálogo público de staging corroboró una única oferta nueva: `JOB-MVMT57YC-897E34406860`, «PRUEBA MOVIL NO CONTRATAR», activa, sin logo y con vencimiento `2026-11-23`. Fue creada a las 16:44 de Argentina. El catálogo pasó de cinco a seis ofertas visibles.
+
+Después el usuario confirmó el envío de una candidatura desde el celular y la descarga de su comprobante. Se volvió a autenticar Admin mediante el formulario seguro, sin inspeccionar la clave. En la lista privada se comprobó exactamente una fila asociada a esa oferta, con estado «Recibida automáticamente». Los totales administrativos son ahora **8 ofertas y 9 postulaciones**. No se modificaron estados desde Admin en esta comprobación.
+
+La realización en el teléfono y las descargas son confirmaciones del usuario; las verificaciones independientes observan la publicación pública y la recepción privada en el servidor. Todavía falta comprobar desde el celular la apertura del archivo del contratante, la lectura de candidatos, el cierre, el rechazo de nuevas postulaciones a esa oferta y el seguimiento con el archivo de la candidatura. No declarar aprobado todo el circuito móvil por el envío inicial.
+
+El respaldo privado de 7 ofertas y 8 postulaciones documentado arriba es anterior a esta prueba móvil. Generar y comprobar otro respaldo al terminar las nuevas escrituras. El Worker continúa en 11759; este registro no requiere despliegue.
