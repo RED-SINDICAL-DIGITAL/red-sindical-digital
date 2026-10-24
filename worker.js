@@ -450,7 +450,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11759';
+const BUILD = '11760';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -607,8 +607,8 @@ async function uadavPodcastCron(env) {
  * scripts/embed-job-store.mjs; never deployed separately. STAGING ONLY. */
 const UADAV_JOB_COLLECTIONS = ['bolsa_trabajo','postulaciones_trabajo'];
 const UADAV_JOB_CLOSED_STATES = new Set(['closed','cerrado','cerrada','cancelled','cancelado','cancelada','deleted','eliminado','eliminada','expired','vencido','vencida','hidden','oculto','oculta','paused','pausado','pausada','cerrada_por_contratante','cerrado_por_contratante','archivada','archivado','rejected','rechazada','rechazado','no_confirmada','pendiente_revision','pending_review','pending']);
-function uadavJobToday(){
-  return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Argentina/Buenos_Aires'}).format(new Date());
+function uadavJobToday(now=Date.now()){
+  return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Argentina/Buenos_Aires'}).format(new Date(now));
 }
 function uadavJobValidDate(value){
   return /^\d{4}-\d{2}-\d{2}$/.test(String(value))&&Number.isFinite(Date.parse(value+'T12:00:00Z'))&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;
@@ -656,7 +656,7 @@ function uadavJobStore(env) {
     snapshots.set(collection,new Map(rows.map(r=>[r.id,{...r}])));
     return rows.map(r=>({...JSON.parse(r.data_json),...(r.secret_hash?{owner_access_hash:r.secret_hash}:{})}));
   }
-  async function writeCollections(collections,{restoring=false,accountLink=null,accountAuthorization=null,restoreAccountLinks=[]}={}){
+  async function writeCollections(collections,{restoring=false,accountLink=null,accountAuthorization=null,restoreAccountLinks=[],restoreExpiryNotices=[]}={}){
     await checkReady();
     const statements=[];
     const accountFeatures=await uadavJobAccountFeatures(db);
@@ -718,14 +718,23 @@ function uadavJobStore(env) {
         statements.push(db.prepare('INSERT OR IGNORE INTO job_account_links(collection,record_id,account_id,linked_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)').bind(link.collection,link.record_id,link.account_id,link.linked_at,link.account_id,link.account_id));
       }
     }
-    if(!statements.length)return {account_links_restored:0};
+    const expiryIndices=[];
+    if(restoreExpiryNotices.length){
+      if(!restoring||!await uadavJobExpiryAvailable(db)||restoreExpiryNotices.length>100)throw uadavJobError('JOB_EXPIRY_RESTORE','No se preparó la recuperación del historial de avisos.',400);
+      for(const row of restoreExpiryNotices){
+        if(snapshots.get('bolsa_trabajo')?.has(row.job_id)||!collections.bolsa_trabajo?.some(item=>item.id===row.job_id))throw uadavJobError('JOB_EXPIRY_RESTORE','Solo se recupera el historial junto con sus ofertas faltantes.',409);
+        expiryIndices.push(statements.length);
+        statements.push(db.prepare('INSERT OR IGNORE INTO job_expiry_notices(notice_id,job_id,deadline,kind,account_id,run_id,created_at) SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)').bind(row.notice_id,row.job_id,row.deadline,row.kind,row.account_id,row.run_id,row.created_at,row.account_id,row.account_id));
+      }
+    }
+    if(!statements.length)return {account_links_restored:0,expiry_notices_restored:0};
     let results;
     try{results=await db.batch(statements)}catch(e){
       if(String(e?.message||'').includes('job_store_records.collection, job_store_records.request_id'))throw uadavJobError('JOB_REQUEST_EXISTS','Esta solicitud ya fue recibida. No vuelvas a enviarla.',409);
       throw uadavJobError('JOB_WRITE_CONFLICT','No se confirmó el guardado. Los datos pudieron cambiar; recargá antes de volver a intentar.',409);
     }
     for(const collection of Object.keys(collections))await read(collection);
-    return {account_links_restored:restoredIndices.reduce((sum,index)=>sum+Number(results[index]?.meta?.changes||0),0)};
+    return {account_links_restored:restoredIndices.reduce((sum,index)=>sum+Number(results[index]?.meta?.changes||0),0),expiry_notices_restored:expiryIndices.reduce((sum,index)=>sum+Number(results[index]?.meta?.changes||0),0)};
   }
   return {read,write:(collection,values,options)=>writeCollections({[collection]:values},options),writeCollections};
 }
@@ -747,7 +756,8 @@ async function uadavJobMaintenance(env){
     uadavJobDB(env).prepare('DELETE FROM job_store_rates WHERE resets_at<?').bind(now-86400000),
     uadavJobDB(env).prepare('DELETE FROM job_owner_recovery_v2 WHERE expires_at<?').bind(now-86400000)
   ]);
-  return {processed};
+  const notices=await uadavJobExpiryAvailable(uadavJobDB(env))?await uadavJobExpiryReview(env,{dryRun:false}):{available:false};
+  return {processed,notices};
 }
 // Not exposed by an HTTP route. Email recovery remains disabled until remote QA.
 async function uadavJobRedeemRecovery(db, {jobId,tokenHash,newSecretHash,now=Date.now()}) {
@@ -847,8 +857,9 @@ async function uadavJobAccountList(request,env){
   if(!Number.isInteger(offset)||offset<0||offset>4000)throw uadavJobError('JOB_ACCOUNT_PAGE','Página inválida.',400);
   const rows=await uadavJobDB(env).prepare("SELECT l.collection,r.id,r.data_json,r.updated_at,json_extract(j.data_json,'$.titulo') AS job_title FROM job_account_links l JOIN job_store_records r ON r.collection=l.collection AND r.id=l.record_id LEFT JOIN job_store_records j ON j.collection='bolsa_trabajo' AND j.id=json_extract(r.data_json,'$.job_id') WHERE l.account_id=? ORDER BY l.linked_at DESC,l.collection,l.record_id LIMIT 51 OFFSET ?").bind(identity.accountId,offset).all();
   const items=(rows.results||[]).slice(0,50).map(row=>{
-    const item=JSON.parse(row.data_json),offer=row.collection==='bolsa_trabajo';
-    return {tipo:offer?'oferta':'postulacion',id:row.id,titulo:String(offer?item.titulo:row.job_title||'Oportunidad').slice(0,160),estado:String(item.estado||(offer?(uadavJobIsPublic(item)?'activa':'cerrada'):'recibida')),creado:item.creado||null,actualizado:row.updated_at,...(offer?{fecha_limite:item.fecha_limite||null,recibe_postulaciones:uadavJobIsPublic(item)}:{job_id:String(item.job_id||'')})};
+    const item=JSON.parse(row.data_json),offer=row.collection==='bolsa_trabajo',today=uadavJobToday();
+    const state=offer&&uadavJobExpiryKind(item,today,today,Date.now())==='expired'?'vencida':String(item.estado||(offer?(uadavJobIsPublic(item)?'activa':'cerrada'):'recibida'));
+    return {tipo:offer?'oferta':'postulacion',id:row.id,titulo:String(offer?item.titulo:row.job_title||'Oportunidad').slice(0,160),estado:state,creado:item.creado||null,actualizado:row.updated_at,...(offer?{fecha_limite:item.fecha_limite||null,recibe_postulaciones:uadavJobIsPublic(item)}:{job_id:String(item.job_id||'')})};
   });
   return {success:true,enabled:true,items,next_offset:(rows.results||[]).length>50?offset+50:null};
 }
@@ -885,6 +896,89 @@ async function uadavJobAccountRestoreProof(db,backup,additions){
     seen.add(key);if(wanted.has(key))links.push(link);
   }
   return links;
+}
+
+/* Internal account reminders only. No email, push dispatch or cron creation. */
+const UADAV_JOB_EXPIRY_DAYS=3;
+const UADAV_JOB_EXPIRED_STATES=new Set(['expired','vencido','vencida']);
+async function uadavJobExpiryAvailable(db){
+  const row=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='job_expiry_notices'").first();
+  return !!row&&await uadavJobAccountFeatures(db);
+}
+function uadavJobExpiryKind(job,today,until,now){
+  if(!uadavJobValidDate(job?.fecha_limite))return null;
+  const states=[job.estado,job.status].map(x=>String(x||'').trim().toLowerCase());
+  if(states.some(x=>UADAV_JOB_CLOSED_STATES.has(x)&&!UADAV_JOB_EXPIRED_STATES.has(x)))return null;
+  const active=job.activo!==false&&job.activo!==0;
+  const stale=job.origen==='externo'&&job.managed!==true&&job.claimed!==true&&job.source_auto_sync===true&&now-Date.parse(job.last_seen_at||job.actualizado||job.importado_en||0)>72*3600000;
+  if(stale)return null;
+  if(job.fecha_limite<today&&(active||states.some(x=>UADAV_JOB_EXPIRED_STATES.has(x))))return 'expired';
+  if(active&&!states.some(x=>UADAV_JOB_EXPIRED_STATES.has(x))&&job.fecha_limite>=today&&job.fecha_limite<=until)return 'soon';
+  return null;
+}
+async function uadavJobExpiryId(jobId,deadline,kind,accountId){
+  return 'job-expiry:'+await uadavDigest(JSON.stringify([jobId,deadline,kind,accountId]));
+}
+async function uadavJobExpiryReview(env,{dryRun=true,now=Date.now(),fingerprint}={}){
+  if(env.JOB_STORE_D1!=='true')throw uadavJobError('JOB_EXPIRY_UNAVAILABLE','Los avisos de ofertas todavía no están preparados.',503);
+  if(!dryRun&&env.JOB_STORE_MAINTENANCE==='true')throw uadavJobError('JOB_MAINTENANCE','Bolsa está en mantenimiento. No se enviaron avisos.',423);
+  const db=uadavJobDB(env);
+  if(!await uadavJobExpiryAvailable(db))throw uadavJobError('JOB_EXPIRY_SCHEMA_REQUIRED','Los avisos de ofertas todavía no están preparados en staging.',503);
+  const ready=await db.prepare("SELECT value FROM job_store_meta WHERE key='migration_ready'").first();
+  if(ready?.value!=='true')throw uadavJobError('JOB_MIGRATION_REQUIRED','La migración laboral todavía no está validada.',503);
+  const today=uadavJobToday(now),until=new Date(Date.parse(today+'T12:00:00Z')+UADAV_JOB_EXPIRY_DAYS*86400000).toISOString().slice(0,10),candidates=[];
+  for(let offset=0;;offset+=250){
+    const result=await db.prepare(`SELECT r.id,r.data_json,r.revision,l.account_id,l.linked_at FROM job_store_records r
+      JOIN job_account_links l ON l.collection=r.collection AND l.record_id=r.id
+      JOIN audience_accounts a ON a.id=l.account_id
+      LEFT JOIN job_expiry_notices n ON n.job_id=r.id AND n.deadline=json_extract(r.data_json,'$.fecha_limite') AND n.account_id=l.account_id
+        AND n.kind=CASE WHEN json_extract(r.data_json,'$.fecha_limite')<? THEN 'expired' ELSE 'soon' END
+      WHERE r.collection='bolsa_trabajo' AND n.notice_id IS NULL
+        AND json_extract(r.data_json,'$.fecha_limite')<=?
+        AND NOT EXISTS(SELECT 1 FROM audience_deletions d WHERE d.account_id=a.id)
+      ORDER BY json_extract(r.data_json,'$.fecha_limite'),r.id LIMIT 251 OFFSET ?`).bind(today,until,offset).all();
+    const rows=result.results||[];
+    if(offset+rows.length>2000)throw uadavJobError('JOB_CAPACITY','La colección requiere revisión administrativa.',503);
+    for(const row of rows.slice(0,250)){
+      const job=JSON.parse(row.data_json),kind=uadavJobExpiryKind(job,today,until,now);
+      if(kind)candidates.push({...row,deadline:job.fecha_limite,kind,title:String(job.titulo||'Oportunidad').slice(0,160)});
+    }
+    if(rows.length<=250)break;
+  }
+  const expected=await uadavDigest(JSON.stringify([today,until,candidates.map(x=>[x.id,x.revision,x.account_id,x.linked_at,x.deadline,x.kind])]));
+  const selected=candidates.slice(0,5),preview={success:true,dry_run:true,day:today,advance_days:UADAV_JOB_EXPIRY_DAYS,pending:candidates.length,batch_size:selected.length,more_pending:candidates.length>5,fingerprint:expected,items:selected.map(x=>({job_id:x.id,title:x.title,deadline:x.deadline,kind:x.kind}))};
+  if(dryRun)return preview;
+  if(fingerprint!==undefined&&fingerprint!==expected)throw uadavJobError('JOB_EXPIRY_CHANGED','La revisión cambió. Volvé a revisar antes de enviar los avisos.',409);
+  if(!selected.length)return {...preview,dry_run:false,emitted:0,recorded:0};
+  const statements=[],ledgerIndices=[],noticeIndices=[],runId=crypto.randomUUID(),iso=new Date(now).toISOString(),expires=new Date(now+90*86400000).toISOString();
+  for(const item of selected){
+    const noticeId=await uadavJobExpiryId(item.id,item.deadline,item.kind,item.account_id);
+    statements.push(...uadavJobGuard(db,"EXISTS(SELECT 1 FROM job_store_records WHERE collection='bolsa_trabajo' AND id=? AND revision=?) AND EXISTS(SELECT 1 FROM job_account_links l JOIN audience_accounts a ON a.id=l.account_id WHERE l.collection='bolsa_trabajo' AND l.record_id=? AND l.account_id=? AND l.linked_at=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)",[item.id,item.revision,item.id,item.account_id,item.linked_at,item.account_id]));
+    ledgerIndices.push(statements.length);
+    statements.push(db.prepare('INSERT OR IGNORE INTO job_expiry_notices(notice_id,job_id,deadline,kind,account_id,run_id,created_at) VALUES(?,?,?,?,?,?,?)').bind(noticeId,item.id,item.deadline,item.kind,item.account_id,runId,iso));
+    noticeIndices.push(statements.length);
+    statements.push(db.prepare('INSERT OR IGNORE INTO audience_announcements(id,title,message,account_id,created_at,expires_at) SELECT ?,?,?,account_id,?,? FROM job_expiry_notices WHERE notice_id=? AND run_id=?').bind(noticeId,item.kind==='soon'?'Una de tus ofertas está por vencer':'Una de tus ofertas venció',item.kind==='soon'?'Una de tus ofertas vence el '+item.deadline+'. Abrí Mis trabajos en Mi Perfil para revisarla, cerrarla o renovarla.':'Una de tus ofertas ya no recibe postulaciones. Conservás sus candidaturas. Abrí Mis trabajos en Mi Perfil para consultarla o renovarla.',iso,expires,noticeId,runId));
+  }
+  let result;try{result=await db.batch(statements)}catch{throw uadavJobError('JOB_EXPIRY_CONFLICT','No se confirmó el envío. Las ofertas o sus cuentas pudieron cambiar. Volvé a revisar.',409)}
+  const changes=indices=>indices.reduce((sum,index)=>sum+Number(result[index]?.meta?.changes||0),0);
+  return {...preview,dry_run:false,recorded:changes(ledgerIndices),emitted:changes(noticeIndices)};
+}
+async function uadavJobExpiryRestoreProof(db,backup,additions){
+  if(backup.job_expiry_notices_available!==true){
+    if(backup.tables?.job_expiry_notices?.length)throw uadavJobError('JOB_EXPIRY_RESTORE','El respaldo no confirma su historial de avisos.',400);
+    return [];
+  }
+  const rows=backup.tables?.job_expiry_notices;
+  if(!await uadavJobExpiryAvailable(db)||!Array.isArray(rows)||rows.length>20000)throw uadavJobError('JOB_EXPIRY_RESTORE','No se pudo validar el historial de avisos del respaldo.',400);
+  const wanted=new Set(additions.bolsa_trabajo.map(x=>x.id)),seen=new Set(),selected=[];
+  for(const row of rows){
+    if(!/^JOB-[A-Z0-9-]{3,80}$/i.test(row?.job_id||'')||!uadavJobValidDate(row.deadline)||!['soon','expired'].includes(row.kind)||!/^[a-f0-9]{64}$/.test(row.account_id||'')||typeof row.run_id!=='string'||!row.run_id||row.run_id.length>80||!Number.isFinite(Date.parse(row.created_at||'')))throw uadavJobError('JOB_EXPIRY_RESTORE','El respaldo contiene un historial de avisos inválido.',400);
+    const id=await uadavJobExpiryId(row.job_id,row.deadline,row.kind,row.account_id);
+    if(row.notice_id!==id||seen.has(id))throw uadavJobError('JOB_EXPIRY_RESTORE','El respaldo contiene avisos inválidos o duplicados.',400);
+    seen.add(id);if(wanted.has(row.job_id))selected.push(row);
+  }
+  if(selected.length>100)throw uadavJobError('JOB_EXPIRY_RESTORE','Recuperá menos ofertas por lote para conservar todo su historial de avisos.',413);
+  return selected;
 }
 
 /* END JOB STORE STAGING */
@@ -1054,10 +1148,11 @@ const uadavWorker = {
         if(additions.bolsa_trabajo.length+additions.postulaciones_trabajo.length>5)return json({error:'Recuperá hasta 5 registros por lote.',max_batch:5},413);
         if(Object.hasOwn(body,'restore_account_links')&&typeof body.restore_account_links!=='boolean')return json({error:'Confirmá si querés restaurar también los vínculos de Mi Perfil.'},400);
         const restoreLinks=body.restore_account_links===true?await uadavJobAccountRestoreProof(uadavJobDB(env),body.backup,additions):[];
-        const restored=await jobStore.writeCollections(Object.fromEntries(names.map(n=>[n,[...existing[n],...additions[n]]])),{restoring:true,restoreAccountLinks:restoreLinks});
+        const expiryNotices=await uadavJobExpiryRestoreProof(uadavJobDB(env),body.backup,additions);
+        const restored=await jobStore.writeCollections(Object.fromEntries(names.map(n=>[n,[...existing[n],...additions[n]]])),{restoring:true,restoreAccountLinks:restoreLinks,restoreExpiryNotices:expiryNotices});
         const restoredLinks=restored?.account_links_restored||0;
         await audit('restore_missing_jobs_d1','backup','bolsa_trabajo',{ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length,account_links:restoredLinks});
-        return json({success:true,storage:'d1',ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length,account_links_requested:body.restore_account_links===true,account_links_restored:restoredLinks,account_links_skipped:restoreLinks.length-restoredLinks});
+        return json({success:true,storage:'d1',ofertas:additions.bolsa_trabajo.length,postulaciones:additions.postulaciones_trabajo.length,account_links_requested:body.restore_account_links===true,account_links_restored:restoredLinks,account_links_skipped:restoreLinks.length-restoredLinks,expiry_notices_restored:restored?.expiry_notices_restored||0,expiry_notices_skipped:expiryNotices.length-(restored?.expiry_notices_restored||0)});
       }
       // Modo seguro por defecto: la escritura KV debe habilitarse explícitamente en staging tras pruebas controladas.
       if(String(env.ENABLE_JOB_KV_RESTORE||'')!=='staging-tested')return json({error:'La comparación está disponible, pero la restauración KV permanece deshabilitada hasta completar las pruebas de seguridad.',code:'RESTORE_LOCKED'},423);
@@ -2282,9 +2377,9 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const kvKeys=['config_global','apariencia','secciones','web_visibility','home_layout','landing_config','footer_config','site_pages','estado_sitio','radios','senales_oficiales','artistas','artistas_prospectos','cartelera','eventos','bolsa_trabajo','postulaciones_trabajo','federated_sources','federated_source_state','content_items','collections','banners'];
       for(const key of kvKeys){try{if(jobStore&&UADAV_JOB_COLLECTIONS.includes(key)){out.kv[key]=await getArray(key);continue}const raw=await env.UADAV_DB.get(key);out.kv[key]=raw==null?(['bolsa_trabajo','postulaciones_trabajo'].includes(key)?[]:null):safeJSON(raw,raw)}catch(e){out.kv[key]={error:String(e?.message||e)}}}
       if(hasD1()){
-        const tables=['job_account_links','job_store_meta','job_store_records','job_store_rates','job_owner_credentials','job_owner_recovery_tokens','job_owner_recovery_v2','sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
+        const tables=['job_expiry_notices','job_account_links','job_store_meta','job_store_records','job_store_rates','job_owner_credentials','job_owner_recovery_tokens','job_owner_recovery_v2','sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
         let existingTables=null;try{const inventory=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all();existingTables=new Set((inventory.results||[]).map(x=>String(x.name)))}catch(e){out.table_inventory_error=String(e?.message||e)}
-        out.job_accounts_available=!!existingTables&&UADAV_JOB_ACCOUNT_TABLES.every(name=>existingTables.has(name));out.missing_schema_tables=[];for(const t of tables){if(existingTables&&!existingTables.has(t)){out.missing_schema_tables.push(t);continue}try{const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[]}catch(e){out.tables[t]={error:String(e?.message||e)}}}
+        out.job_accounts_available=!!existingTables&&UADAV_JOB_ACCOUNT_TABLES.every(name=>existingTables.has(name));out.job_expiry_notices_available=!!existingTables&&existingTables.has('job_expiry_notices');out.missing_schema_tables=[];for(const t of tables){if(existingTables&&!existingTables.has(t)){out.missing_schema_tables.push(t);continue}try{const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[]}catch(e){out.tables[t]={error:String(e?.message||e)}}}
       }
       out.backup_integrity={kv_errors:Object.entries(out.kv).filter(([key,value])=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length===1&&Object.hasOwn(value,'error')).map(([key])=>key),table_errors:Object.entries(out.tables).filter(([key,value])=>!Array.isArray(value)).map(([key])=>key)};out.backup_integrity.missing_critical_kv=['bolsa_trabajo','postulaciones_trabajo'].filter(k=>!Array.isArray(out.kv[k]));out.backup_integrity.d1_configured=hasD1();out.backup_integrity.missing_schema_tables=out.missing_schema_tables||[];out.backup_integrity.inventory_error=out.table_inventory_error||null;out.backup_integrity.complete=hasD1()&&!out.backup_integrity.inventory_error&&!out.backup_integrity.kv_errors.length&&!out.backup_integrity.table_errors.length&&!out.backup_integrity.missing_critical_kv.length;return json(out);
     }
@@ -3681,6 +3776,16 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if(['/api/bolsa_trabajo/cuenta/vincular','/api/bolsa_trabajo/cuenta/quitar'].includes(path)&&request.method==='POST'){
       const body=await uadavSecurityJSON(request,4096);
       return json(path.endsWith('/vincular')?await uadavJobAccountLink(request,env,body):await uadavJobAccountUnlink(request,env,body));
+    }
+    if(path==='/api/admin/jobs/expiry-notices'&&['GET','POST'].includes(request.method)){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(url.hostname!=='uadav-api-staging.uadavstream.workers.dev')return json({error:'Operación exclusiva de staging'},403);
+      if(request.method==='GET')return json(await uadavJobExpiryReview(env));
+      const body=await uadavSecurityJSON(request,4096);
+      if(body?.confirm!=='EMITIR_AVISOS_VENCIMIENTO_STAGING'||!/^[a-f0-9]{64}$/.test(body?.fingerprint||''))return json({error:'Revisá y confirmá los avisos antes de enviarlos.'},412);
+      const result=await uadavJobExpiryReview(env,{dryRun:false,fingerprint:body.fingerprint});
+      await audit('job_expiry_notices','staging','bolsa',{emitted:result.emitted,recorded:result.recorded}).catch(()=>{});
+      return json(result);
     }
     if(path==='/api/admin/jobs/migration'&&['GET','POST'].includes(request.method)){
       if(!isAdmin())return json({error:'No autorizado'},401);
@@ -5296,6 +5401,6 @@ const uadavStagingWorker={...uadavWorker,async fetch(request,env,ctx){
     return response({error:error?.jobCode?error.message:'No se pudo confirmar la operación. Intentá más tarde.',code:error?.jobCode||'SERVICE_UNAVAILABLE'},error?.jobCode?error.status:503);
   }
 }};
-export {uadavJobStore,uadavJobMigration,uadavJobRedeemRecovery,uadavJobRate,uadavJobMaintenance};
+export {uadavJobStore,uadavJobMigration,uadavJobRedeemRecovery,uadavJobRate,uadavJobMaintenance,uadavJobExpiryReview,uadavJobExpiryKind,uadavJobToday};
 export default uadavStagingWorker;
 

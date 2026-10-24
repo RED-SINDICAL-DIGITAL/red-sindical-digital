@@ -37,8 +37,9 @@ async function uadavJobAccountList(request,env){
   if(!Number.isInteger(offset)||offset<0||offset>4000)throw uadavJobError('JOB_ACCOUNT_PAGE','Página inválida.',400);
   const rows=await uadavJobDB(env).prepare("SELECT l.collection,r.id,r.data_json,r.updated_at,json_extract(j.data_json,'$.titulo') AS job_title FROM job_account_links l JOIN job_store_records r ON r.collection=l.collection AND r.id=l.record_id LEFT JOIN job_store_records j ON j.collection='bolsa_trabajo' AND j.id=json_extract(r.data_json,'$.job_id') WHERE l.account_id=? ORDER BY l.linked_at DESC,l.collection,l.record_id LIMIT 51 OFFSET ?").bind(identity.accountId,offset).all();
   const items=(rows.results||[]).slice(0,50).map(row=>{
-    const item=JSON.parse(row.data_json),offer=row.collection==='bolsa_trabajo';
-    return {tipo:offer?'oferta':'postulacion',id:row.id,titulo:String(offer?item.titulo:row.job_title||'Oportunidad').slice(0,160),estado:String(item.estado||(offer?(uadavJobIsPublic(item)?'activa':'cerrada'):'recibida')),creado:item.creado||null,actualizado:row.updated_at,...(offer?{fecha_limite:item.fecha_limite||null,recibe_postulaciones:uadavJobIsPublic(item)}:{job_id:String(item.job_id||'')})};
+    const item=JSON.parse(row.data_json),offer=row.collection==='bolsa_trabajo',today=uadavJobToday();
+    const state=offer&&uadavJobExpiryKind(item,today,today,Date.now())==='expired'?'vencida':String(item.estado||(offer?(uadavJobIsPublic(item)?'activa':'cerrada'):'recibida'));
+    return {tipo:offer?'oferta':'postulacion',id:row.id,titulo:String(offer?item.titulo:row.job_title||'Oportunidad').slice(0,160),estado:state,creado:item.creado||null,actualizado:row.updated_at,...(offer?{fecha_limite:item.fecha_limite||null,recibe_postulaciones:uadavJobIsPublic(item)}:{job_id:String(item.job_id||'')})};
   });
   return {success:true,enabled:true,items,next_offset:(rows.results||[]).length>50?offset+50:null};
 }

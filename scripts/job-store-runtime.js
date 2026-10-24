@@ -2,8 +2,8 @@
  * scripts/embed-job-store.mjs; never deployed separately. STAGING ONLY. */
 const UADAV_JOB_COLLECTIONS = ['bolsa_trabajo','postulaciones_trabajo'];
 const UADAV_JOB_CLOSED_STATES = new Set(['closed','cerrado','cerrada','cancelled','cancelado','cancelada','deleted','eliminado','eliminada','expired','vencido','vencida','hidden','oculto','oculta','paused','pausado','pausada','cerrada_por_contratante','cerrado_por_contratante','archivada','archivado','rejected','rechazada','rechazado','no_confirmada','pendiente_revision','pending_review','pending']);
-function uadavJobToday(){
-  return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Argentina/Buenos_Aires'}).format(new Date());
+function uadavJobToday(now=Date.now()){
+  return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Argentina/Buenos_Aires'}).format(new Date(now));
 }
 function uadavJobValidDate(value){
   return /^\d{4}-\d{2}-\d{2}$/.test(String(value))&&Number.isFinite(Date.parse(value+'T12:00:00Z'))&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;
@@ -51,7 +51,7 @@ function uadavJobStore(env) {
     snapshots.set(collection,new Map(rows.map(r=>[r.id,{...r}])));
     return rows.map(r=>({...JSON.parse(r.data_json),...(r.secret_hash?{owner_access_hash:r.secret_hash}:{})}));
   }
-  async function writeCollections(collections,{restoring=false,accountLink=null,accountAuthorization=null,restoreAccountLinks=[]}={}){
+  async function writeCollections(collections,{restoring=false,accountLink=null,accountAuthorization=null,restoreAccountLinks=[],restoreExpiryNotices=[]}={}){
     await checkReady();
     const statements=[];
     const accountFeatures=await uadavJobAccountFeatures(db);
@@ -113,14 +113,23 @@ function uadavJobStore(env) {
         statements.push(db.prepare('INSERT OR IGNORE INTO job_account_links(collection,record_id,account_id,linked_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)').bind(link.collection,link.record_id,link.account_id,link.linked_at,link.account_id,link.account_id));
       }
     }
-    if(!statements.length)return {account_links_restored:0};
+    const expiryIndices=[];
+    if(restoreExpiryNotices.length){
+      if(!restoring||!await uadavJobExpiryAvailable(db)||restoreExpiryNotices.length>100)throw uadavJobError('JOB_EXPIRY_RESTORE','No se preparó la recuperación del historial de avisos.',400);
+      for(const row of restoreExpiryNotices){
+        if(snapshots.get('bolsa_trabajo')?.has(row.job_id)||!collections.bolsa_trabajo?.some(item=>item.id===row.job_id))throw uadavJobError('JOB_EXPIRY_RESTORE','Solo se recupera el historial junto con sus ofertas faltantes.',409);
+        expiryIndices.push(statements.length);
+        statements.push(db.prepare('INSERT OR IGNORE INTO job_expiry_notices(notice_id,job_id,deadline,kind,account_id,run_id,created_at) SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)').bind(row.notice_id,row.job_id,row.deadline,row.kind,row.account_id,row.run_id,row.created_at,row.account_id,row.account_id));
+      }
+    }
+    if(!statements.length)return {account_links_restored:0,expiry_notices_restored:0};
     let results;
     try{results=await db.batch(statements)}catch(e){
       if(String(e?.message||'').includes('job_store_records.collection, job_store_records.request_id'))throw uadavJobError('JOB_REQUEST_EXISTS','Esta solicitud ya fue recibida. No vuelvas a enviarla.',409);
       throw uadavJobError('JOB_WRITE_CONFLICT','No se confirmó el guardado. Los datos pudieron cambiar; recargá antes de volver a intentar.',409);
     }
     for(const collection of Object.keys(collections))await read(collection);
-    return {account_links_restored:restoredIndices.reduce((sum,index)=>sum+Number(results[index]?.meta?.changes||0),0)};
+    return {account_links_restored:restoredIndices.reduce((sum,index)=>sum+Number(results[index]?.meta?.changes||0),0),expiry_notices_restored:expiryIndices.reduce((sum,index)=>sum+Number(results[index]?.meta?.changes||0),0)};
   }
   return {read,write:(collection,values,options)=>writeCollections({[collection]:values},options),writeCollections};
 }
@@ -142,7 +151,8 @@ async function uadavJobMaintenance(env){
     uadavJobDB(env).prepare('DELETE FROM job_store_rates WHERE resets_at<?').bind(now-86400000),
     uadavJobDB(env).prepare('DELETE FROM job_owner_recovery_v2 WHERE expires_at<?').bind(now-86400000)
   ]);
-  return {processed};
+  const notices=await uadavJobExpiryAvailable(uadavJobDB(env))?await uadavJobExpiryReview(env,{dryRun:false}):{available:false};
+  return {processed,notices};
 }
 // Not exposed by an HTTP route. Email recovery remains disabled until remote QA.
 async function uadavJobRedeemRecovery(db, {jobId,tokenHash,newSecretHash,now=Date.now()}) {
