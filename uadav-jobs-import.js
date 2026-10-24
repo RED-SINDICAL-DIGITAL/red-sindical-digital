@@ -46,6 +46,28 @@
     }
     return result;
   }
+  async function readWorkbook(file,reader){
+    if(/\.(csv|tsv|txt)$/i.test(file.name)){
+      const content=(await file.text()).replace(/^\uFEFF/,'');
+      if(content.includes('\uFFFD'))throw Error('No se pudo leer el texto. Guardá la planilla como CSV UTF-8 y volvé a elegirla.');
+      return reader.read(content,{type:'string',raw:true});
+    }
+    return reader.read(await file.arrayBuffer(),{type:'array'});
+  }
+  function sheetRows(workbook,name,entity,reader){
+    const rows=reader.utils.sheet_to_json(workbook.Sheets[name],{defval:''});
+    if(entity!=='jobs')return rows;
+    return rows.map(row=>{
+      const result={...row};
+      for(const key of ['fecha_limite','Fecha límite','fecha','Fecha']){
+        if(typeof result[key]!=='number')continue;
+        const date=reader.SSF.parse_date_code(result[key],{date1904:workbook.Workbook?.WBProps?.date1904===true});
+        if(!date)throw Error('No se pudo interpretar una fecha de Excel. Usá una fecha calendario o AAAA-MM-DD.');
+        result[key]=String(date.y).padStart(4,'0')+'-'+String(date.m).padStart(2,'0')+'-'+String(date.d).padStart(2,'0');
+      }
+      return result;
+    });
+  }
   async function sendBatch(batch,{origin,request}){
     if(origin!==ORIGIN)throw Error('La importación de Bolsa solo está preparada en staging.');
     if(batch?.entity!=='jobs'||!Array.isArray(batch.rows)||!batch.rows.length||batch.rows.length>5)throw Error('Revisá un lote de hasta cinco ofertas externas.');
@@ -53,5 +75,5 @@
     if(result?.success!==true||result.kind!=='job'||!Number.isInteger(result.imported)||!Number.isInteger(result.updated)||result.imported<0||result.updated<0||result.imported+result.updated!==batch.rows.length)throw Error('El servidor no confirmó todas las ofertas de este lote. Revisá la lista antes de repetirlo.');
     return result;
   }
-  root.UADAVJobsImport={normalize,splitBatches,sendBatch,today};
+  root.UADAVJobsImport={normalize,splitBatches,sendBatch,today,readWorkbook,sheetRows};
 })(window);

@@ -9,6 +9,7 @@ on:
       - uadav-jobs-migration-admin.js
       - uadav-jobs-expiry-admin.js
       - tests/jobs-expiry-admin.test.cjs
+      - vendor/xlsx-0.20.3.full.min.js
       - uadav-jobs-import.js
       - tests/jobs-import-admin.test.cjs
       - tests/admin-import-export.mjs
@@ -30,6 +31,7 @@ on:
       - uadav-jobs-migration-admin.js
       - uadav-jobs-expiry-admin.js
       - tests/jobs-expiry-admin.test.cjs
+      - vendor/xlsx-0.20.3.full.min.js
       - uadav-jobs-import.js
       - tests/jobs-import-admin.test.cjs
       - tests/admin-import-export.mjs

@@ -7,6 +7,7 @@ const source=fs.readFileSync(path.join(__dirname,'../uadav-jobs-import.js'),'utf
 const html=fs.readFileSync(path.join(__dirname,'../admin.html'),'utf8');
 const context={window:{},URL,Intl,Date};vm.runInNewContext(source,context);
 const jobs=context.window.UADAVJobsImport,origin='https://uadav-stream-staging.pages.dev';
+const XLSX=require('../vendor/xlsx-0.20.3.full.min.js');
 const now=Date.parse('2026-10-25T01:30:00Z');
 const raw={titulo:'Oferta externa QA',descripcion:'Prueba de importación',source_url:'https://fuente.example/convocatoria/uno',fecha_limite:'2026-10-24'};
 const normalize=(row=raw,options={})=>jobs.normalize(row,{now,...options});
@@ -97,7 +98,7 @@ test('leaving the import view or replacing the preview stops later batches witho
   }
 });
 test('Admin loads the shared importer, validates the whole preview, and exposes external-source requirements',()=>{
-  assert.match(html,/uadav-jobs-import\.js\?v=11760\.1/);
+  assert.match(html,/uadav-jobs-import\.js\?v=11760\.2/);
   assert.match(html,/UADAVJobsImport\.normalize\(r,\{visible,source:origin\}\)/);
   assert.match(html,/UADAVJobsImport\.splitBatches\(batches\)/);
   assert.match(html,/source_url/);assert.match(html,/las existentes conservan su estado/);
@@ -133,4 +134,36 @@ test('the candidate editor uses its actual source to render the expiry date inst
   vm.runInNewContext(handler,c);await c.window.publishCandidate('qa',0);
   assert.equal(modals.length,1);assert.match(modals[0][1],/externalJobDeadline/);assert.match(modals[0][1],/value="2026-10-24" required/);
   assert.equal(toasts.filter(x=>x[1]==='bad').length,0);
+});
+test('the actual CSV fixture retains UTF-8 accents, URLs and calendar dates without automatic numeric conversion',async()=>{
+  const content=fs.readFileSync(path.join(__dirname,'fixtures/bolsa-import-11760-oculta.csv'),'utf8');
+  const workbook=await jobs.readWorkbook({name:'qa.csv',text:async()=>content},XLSX);
+  const rows=jobs.sheetRows(workbook,workbook.SheetNames[0],'jobs',XLSX);
+  assert.equal(rows[0].titulo,'QA 11760 · Importación externa oculta · NO CONTRATAR');
+  assert.equal(rows[0].fecha_limite,'2026-11-23');assert.equal(rows[0].ciudad,'Rosario · PRUEBA');
+  assert.equal(normalize(rows[0]).fecha_limite,'2026-11-23');
+});
+test('UTF-8 BOM, semicolon delimiters and leading zeros survive CSV parsing; invalid UTF-8 asks for a corrected file',async()=>{
+  const content='\uFEFFtitulo;descripcion;source_url;fecha_limite;referencia\r\n"Música; teatro";"Convocatoria, ficticia";https://fuente.example/qa;2026-11-23;00123\r\n';
+  const workbook=await jobs.readWorkbook({name:'qa.csv',text:async()=>content},XLSX);
+  const row=jobs.sheetRows(workbook,workbook.SheetNames[0],'jobs',XLSX)[0];
+  assert.equal(row.titulo,'Música; teatro');assert.equal(row.referencia,'00123');assert.equal(row.fecha_limite,'2026-11-23');
+  await assert.rejects(jobs.readWorkbook({name:'qa.csv',text:async()=> 'M\uFFFDsica'},XLSX),/CSV UTF-8/);
+});
+test('real Excel date cells in both workbook epochs become the same calendar date for jobs',async()=>{
+  for(const date1904 of [false,true]){
+    const sheet=XLSX.utils.json_to_sheet([{...raw,fecha_limite:date1904?44887:46349}]);
+    sheet.D2.z='yyyy-mm-dd';
+    const workbook=XLSX.utils.book_new();XLSX.utils.book_append_sheet(workbook,sheet,'Bolsa');
+    workbook.Workbook={WBProps:{date1904}};
+    const bytes=XLSX.write(workbook,{type:'buffer',bookType:'xlsx'});
+    const parsed=await jobs.readWorkbook({name:'qa.xlsx',arrayBuffer:async()=>bytes},XLSX);
+    const row=jobs.sheetRows(parsed,'Bolsa','jobs',XLSX)[0];
+    assert.equal(row.fecha_limite,'2026-11-23');assert.equal(normalize(row).fecha_limite,'2026-11-23');
+    assert.equal(typeof jobs.sheetRows(parsed,'Bolsa','artists',XLSX)[0].fecha_limite,'number');
+  }
+});
+test('Admin serves the pinned supported spreadsheet library locally and removes the obsolete npm CDN version',()=>{
+  assert.equal(XLSX.version,'0.20.3');assert.match(html,/src="\/vendor\/xlsx-0\.20\.3\.full\.min\.js"/);
+  assert.doesNotMatch(html,/xlsx@0\.18\.5/);
 });
