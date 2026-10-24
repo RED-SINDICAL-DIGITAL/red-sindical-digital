@@ -39,6 +39,15 @@
         }
       }
       if(total!==records.size)mismatch();
+      if(backup.job_accounts_available===true){
+        if(!Array.isArray(backup.tables.job_account_links)||!Array.isArray(backup.tables.audience_accounts))mismatch();
+        const accounts=new Set(backup.tables.audience_accounts.map(row=>row?.id)),linked=new Set();
+        for(const link of backup.tables.job_account_links){
+          const key=link?.collection+'|'+link?.record_id;
+          if(!records.has(key)||linked.has(key)||!accounts.has(link?.account_id)||!Number.isFinite(Date.parse(link.linked_at||'')))mismatch();
+          linked.add(key);
+        }
+      }
     }
     return {counts:Object.fromEntries(COLLECTIONS.map(key=>[key,backup.kv[key].length])),missing,source:backup.job_storage||'kv',generated_at:backup.generated_at};
   }

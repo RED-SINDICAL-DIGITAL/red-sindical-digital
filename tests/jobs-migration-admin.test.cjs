@@ -89,6 +89,14 @@ test('an empty D1 store and retained orphan credentials can still produce consis
   await x.flow.prepare();assert.equal(x.downloads.length,1);assert.equal(x.flow.getState().phase,'already-d1');
 });
 
+test('backups with account links also require their records and accounts to be present exactly once',async()=>{
+  const setup=()=>{const x=fixture({source:'d1'});x.backup.job_accounts_available=true;x.backup.tables.audience_accounts=[{id:'synthetic-account'}];x.backup.tables.job_account_links=[{collection:'bolsa_trabajo',record_id:x.backup.kv.bolsa_trabajo[0].id,account_id:'synthetic-account',linked_at:new Date().toISOString()}];return x;};
+  const good=setup();await good.flow.prepare();assert.equal(good.downloads.length,1);
+  for(const mutate of [x=>delete x.backup.tables.job_account_links,x=>x.backup.tables.audience_accounts.pop(),x=>x.backup.tables.job_account_links[0].record_id='missing',x=>x.backup.tables.job_account_links.push({...x.backup.tables.job_account_links[0]})]){
+    const x=setup();mutate(x);await x.flow.prepare();assert.equal(x.downloads.length,0);assert.equal(x.flow.getState().phase,'error');
+  }
+});
+
 test('mismatched counts or invalid fingerprints do not generate a misleading backup',async()=>{
   for(const mutate of [x=>x.preview.counts.bolsa_trabajo++,x=>x.preview.fingerprint='bad']){
     const x=fixture();mutate(x);await x.flow.prepare();x.confirm();await x.flow.run();assert.equal(x.downloads.length,0);assert.equal(x.flow.getState().phase,'error');assert(x.calls.every(c=>c.options.method==='GET'));
