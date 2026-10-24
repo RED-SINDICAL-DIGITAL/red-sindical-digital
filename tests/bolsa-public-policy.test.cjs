@@ -11,9 +11,10 @@ const extract=(name)=>{
   assert.ok(end>start,'unterminated '+name);
   return worker.slice(start,end+1);
 };
-const source=[extract('jobPublicKeys'),extract('jobIsPublic'),extract('publicJob'),
+const runtime=fs.readFileSync(require('node:path').join(__dirname,'..','scripts/job-store-runtime.js'),'utf8');
+const source=[runtime,extract('jobPublicKeys'),extract('jobIsPublic'),extract('publicJob'),
  '({jobIsPublic,publicJob})'].join('\n');
-const {jobIsPublic,publicJob}=vm.runInNewContext(source,{Date,Set,Object,String});
+const {jobIsPublic,publicJob}=vm.runInNewContext(source,{Date,Intl,Set,Object,String});
 const job={id:'JOB-QA',titulo:'Casting',activo:true,estado:'activa',fecha_limite:'2099-12-31',ciudad:'Rosario',
  contacto:'privado',contacto_email:'privado@example.invalid',owner_access_hash:'secret',request_id:'req',token:'secret',clave_contratante:'secret',email:'private@example.invalid',turnstile_token:'private'};
 assert.equal(jobIsPublic(job),true);
@@ -26,6 +27,9 @@ assert.equal(jobIsPublic({...job,estado:'activa',fecha_limite:'not-a-date'}),fal
 assert.equal(jobIsPublic({...job,estado:'activa',fecha_limite:''}),true);
 assert.equal(jobIsPublic({...job,estado:'activa',activo:true}),true);
 assert.equal(jobIsPublic({...job,estado:'cancelada'}),false);
+assert.equal(jobIsPublic({...job,estado:'activa',status:'closed'}),false);
+assert.equal(jobIsPublic({...job,fecha_limite:'2099-02-31'}),false);
+assert.equal(jobIsPublic({...job,estado:'pendiente_revision'}),false);
 // El estado real emitido por gestionar/cerrar debe estar oculto, aunque activo fuese true por error.
 assert.ok(worker.includes("rows[i].estado='cerrada_por_contratante'"),'missing owner close status');
 assert.ok(worker.includes("rows[i].estado='activa'"),'missing owner renew status');

@@ -7,11 +7,25 @@ on:
     paths:
       - 'worker.js'
       - 'tests/bolsa-public-policy.test.cjs'
+      - 'tests/job-store-integration.test.mjs'
+      - 'tests/job-application-integration.mjs'
+      - 'tests/sqlite-d1.mjs'
+      - 'tests/load-worker.mjs'
+      - 'scripts/job-store-runtime.js'
+      - 'scripts/embed-job-store.mjs'
+      - 'migrations/staging/*.sql'
       - '.github/workflows/bolsa-staging-policy.yml'
   pull_request:
     paths:
       - 'worker.js'
       - 'tests/bolsa-public-policy.test.cjs'
+      - 'tests/job-store-integration.test.mjs'
+      - 'tests/job-application-integration.mjs'
+      - 'tests/sqlite-d1.mjs'
+      - 'tests/load-worker.mjs'
+      - 'scripts/job-store-runtime.js'
+      - 'scripts/embed-job-store.mjs'
+      - 'migrations/staging/*.sql'
       - '.github/workflows/bolsa-staging-policy.yml'
 permissions:
   contents: read
@@ -26,5 +40,11 @@ jobs:
           node-version: '22'
       - name: Validate worker JavaScript
         run: node --check worker.js
+      - name: Verify standalone source is current
+        run: node scripts/embed-job-store.mjs --check
       - name: Run public Bolsa regression tests
         run: node tests/bolsa-public-policy.test.cjs
+      - name: Run SQLite transaction, concurrency, migration and recovery checks
+        run: node --test tests/job-store-integration.test.mjs
+      - name: Run KV compatibility checks with current publication policy
+        run: node tests/job-application-integration.mjs
