@@ -49,15 +49,15 @@ test('link and management calls require confirmed replies and send no account cr
 class Node{
   constructor(tag='div',text=''){this.tag=tag;this.children=[];this.handlers={};this.style={};this.hidden=false;this.disabled=false;this.checked=false;this.value='';this.isConnected=true;this._text=text;}
   get textContent(){return this._text+this.children.map(n=>n.textContent).join(' ')}set textContent(value){this._text=value;this.children=[]}
-  append(...nodes){this.children.push(...nodes)}replaceChildren(...nodes){this._text='';this.children=[...nodes]}
-  insertBefore(node,before){const index=this.children.indexOf(before);if(index<0)this.children.push(node);else this.children.splice(index,0,node)}
+  append(...nodes){for(const node of nodes){node.parentNode=this;this.children.push(node)}}replaceChildren(...nodes){for(const node of this.children)node.parentNode=null;this._text='';this.children=[];this.append(...nodes)}
+  insertBefore(node,before){if(before==null){this.append(node);return}const index=this.children.indexOf(before);if(index<0)throw Error('NotFoundError: reference is not a child');node.parentNode=this;this.children.splice(index,0,node)}
   addEventListener(name,callback){this.handlers[name]=callback}setAttribute(name,value){this[name]=value}
-  querySelector(selector){return selector==='.actions'?this.children.find(n=>n.className==='actions')||null:null}
+  querySelector(selector){return selector==='.actions'?this.children.flatMap(walk).find(n=>n.className==='actions')||null:null}
 }
 const walk=node=>[node,...node.children.flatMap(walk)];
 async function mount({profile=false,initial=A,transport}={}){
   const nodes={},handlers={},fetches=[];let credential=initial;
-  for(const id of ['jobPostForm','applyForm']){const form=new Node('form'),actions=new Node();actions.className='actions';form.append(actions);nodes[id]=form}
+  for(const id of ['jobPostForm','applyForm']){const form=new Node('form'),actions=new Node();actions.className='actions';if(id==='applyForm'){const body=new Node();body.className='modal-body';body.append(actions);form.append(body)}else form.append(actions);nodes[id]=form}
   if(profile){nodes['mis-trabajos']=new Node('section');nodes['mis-trabajos'].append(new Node('h2'),new Node('p'),new Node('div'))}
   const root={location:{origin:ORIGIN},UADAVAccount:{code:()=>credential},addEventListener:(name,callback)=>handlers[name]=callback,fetch:async(url,options)=>{fetches.push({url,options});return transport?transport(url,options):reply(empty())}};
   const document={readyState:'loading',head:new Node('head'),createElement:tag=>new Node(tag),getElementById:id=>nodes[id]||null,addEventListener:(name,callback)=>handlers[name]=callback};root.document=document;
@@ -71,6 +71,9 @@ test('refreshing capabilities preserves an explicit choice not to save; switchin
 });
 test('anonymous visitors keep receipt tools and do not make private account requests',async()=>{
   const x=await mount({initial:''});assert.equal(x.fetches.length,0);assert.equal(x.choice('oferta').checked,false);assert.equal(x.choice('postulacion').checked,false);
+});
+test('account choices mount beside the actual actions even when application actions are nested in the modal body',async()=>{
+  const x=await mount();assert.equal(x.choice('oferta').parentNode.parentNode,x.nodes.jobPostForm);assert.equal(x.choice('postulacion').parentNode.parentNode.className,'modal-body');assert.equal(x.choice('postulacion').checked,true);
 });
 test('switching accounts removes old cards and prevents a late private inbox response from rendering',async()=>{
   let finish;const x=await mount({profile:true,transport:async(url,options)=>url.endsWith('mis-postulantes')?new Promise(resolve=>finish=resolve):reply({...empty(),items:options.headers.Authorization==='Bearer '+A?[item('Old account offer')]:[]})});

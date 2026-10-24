@@ -22,4 +22,4 @@ El panel Admin sigue descargando el backup actual de D1. Si el Worker informa as
 
 El Worker 11759 y `migrations/staging/20261024_job_accounts.sql` se encuentran en la rama Worker. Requieren intervención manual en Cloudflare; la guía está en `docs/BOLSA-11759-MI-PERFIL-STAGING.md` de esa rama. Mantener los flags actuales de D1 y la recuperación por correo deshabilitada.
 
-Las 82 pruebas de Pages están aprobadas localmente. El circuito autenticado nuevo todavía debe probarse en Cloudflare después del despliegue del Worker y repetirse en móvil. No declarar Bolsa terminada ni pasar a producción por la sola presencia de esta interfaz.
+Las 83 pruebas de Pages están aprobadas localmente. La prueba remota detectó que las acciones de la postulación están dentro del cuerpo del modal: la opción de cuenta debe insertarse en ese contenedor, no directamente en el formulario. Se corrigió la inserción y el fixture ahora reproduce esa estructura y rechaza referencias que no son hijas del contenedor. El circuito autenticado debe volver a probarse con la corrección y repetirse en móvil. No declarar Bolsa terminada ni pasar a producción por la sola presencia de esta interfaz.

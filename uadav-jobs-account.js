@@ -48,7 +48,7 @@
     const form=doc.getElementById(formId);if(!form)return;
     const row=element('label');row.className='job-account-save';row.hidden=true;row.style.display='none';
     const input=element('input');input.type='checkbox';input.id='saveJobAccount-'+kind;
-    row.append(input,element('span',label));const actions=form.querySelector('.actions');if(actions)form.insertBefore(row,actions);else form.append(row);
+    row.append(input,element('span',label));const actions=form.querySelector('.actions');if(actions)actions.parentNode.insertBefore(row,actions);else form.append(row);
     choices.set(kind,{row,input});
   }
   function button(text,action){const node=element('button',text);node.type='button';node.className='chip job-account-button';node.addEventListener('click',action);return node;}
