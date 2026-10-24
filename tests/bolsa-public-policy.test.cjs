@@ -26,6 +26,17 @@ assert.equal(jobIsPublic({...job,estado:'activa',fecha_limite:'not-a-date'}),fal
 assert.equal(jobIsPublic({...job,estado:'activa',fecha_limite:''}),true);
 assert.equal(jobIsPublic({...job,estado:'activa',activo:true}),true);
 assert.equal(jobIsPublic({...job,estado:'cancelada'}),false);
+// El estado real emitido por gestionar/cerrar debe estar oculto, aunque activo fuese true por error.
+assert.ok(worker.includes("rows[i].estado='cerrada_por_contratante'"),'missing owner close status');
+assert.ok(worker.includes("rows[i].estado='activa'"),'missing owner renew status');
+assert.equal(jobIsPublic({...job,estado:'cerrada_por_contratante',activo:true}),false);
+assert.equal(jobIsPublic({...job,estado:'activa',activo:true,fecha_limite:'2099-12-31'}),true);
+// Las convocatorias externas conservan metadatos públicos indispensables.
+const external=publicJob({...job,source:'Organismo público',application_mode:'external_url',region_scope:'international',source_url:'https://example.org/oferta'});
+assert.equal(external.source,'Organismo público');
+assert.equal(external.application_mode,'external_url');
+assert.equal(external.region_scope,'international');
+assert.equal(external.source_url,'https://example.org/oferta');
 const safe=publicJob(job);
 assert.equal(safe.id,'JOB-QA');
 assert.equal(safe.ciudad,'Rosario');
