@@ -13,6 +13,33 @@
     if(Object.values(backup.tables).some(rows=>!Array.isArray(rows)))throw Error('El respaldo tiene tablas sin verificar.');
     if(!['kv','d1'].includes(backup.job_storage))throw Error('El Worker no informa el origen de Bolsa. Verificá el build 11758.');
     const missing=TABLES.filter(name=>!Array.isArray(backup.tables[name]));
+    if(backup.job_storage==='d1'){
+      const mismatch=()=>{throw Error('El respaldo de D1 no coincide con todos sus registros y credenciales. Repetí el respaldo; si vuelve a fallar, pausá las escrituras de staging para revisarlo.');};
+      if(missing.length||!backup.tables.job_store_meta.some(row=>row?.key==='migration_ready'&&row.value==='true'))mismatch();
+      const records=new Map(),credentials=new Map();
+      for(const row of backup.tables.job_store_records){
+        const key=row?.collection+'|'+row?.id;
+        if(!COLLECTIONS.includes(row?.collection)||typeof row.id!=='string'||records.has(key))mismatch();
+        records.set(key,row);
+      }
+      for(const row of backup.tables.job_owner_credentials){
+        if(typeof row?.job_id!=='string'||credentials.has(row.job_id))mismatch();
+        credentials.set(row.job_id,row.secret_hash);
+      }
+      let total=0;
+      for(const collection of COLLECTIONS){
+        const seen=new Set();
+        for(const item of backup.kv[collection]){
+          if(!item||typeof item.id!=='string'||seen.has(item.id))mismatch();
+          seen.add(item.id);total++;
+          const row=records.get(collection+'|'+item.id),{owner_access_hash,...payload}=item;
+          if(!row||row.data_json!==JSON.stringify(payload)||String(row.request_id||'')!==String(item.request_id||''))mismatch();
+          if(collection==='bolsa_trabajo'&&credentials.has(item.id)!==Boolean(owner_access_hash))mismatch();
+          if(owner_access_hash&&(!/^[a-f0-9]{64}$/.test(owner_access_hash)||credentials.get(item.id)!==owner_access_hash))mismatch();
+        }
+      }
+      if(total!==records.size)mismatch();
+    }
     return {counts:Object.fromEntries(COLLECTIONS.map(key=>[key,backup.kv[key].length])),missing,source:backup.job_storage||'kv',generated_at:backup.generated_at};
   }
   function controller({origin,apiBase,request,download,onChange=()=>{},alive=()=>true}){
@@ -29,7 +56,9 @@
         const backup=await request('v7/export',{method:'GET'});
         const checked=verifyBackup(backup);
         if(checked.source==='d1'){
-          state.backup=checked;state.phase='already-d1';state.message='Bolsa ya usa D1. No corresponde repetir la migración desde KV.';return;
+          if(!alive())return;
+          await download(backup);
+          state.backup=checked;state.phase='already-d1';state.message='Respaldo actual de D1 verificado y descarga solicitada. Guardá el archivo. Bolsa ya usa D1. No corresponde repetir la migración desde KV.';return;
         }
         const preview=await request('admin/jobs/migration',{method:'GET'});
         if(!validPreview(preview)||COLLECTIONS.some(key=>preview.counts[key]!==checked.counts[key]))throw Error('Bolsa cambió o la respuesta está incompleta. Generá de nuevo el respaldo.');
@@ -68,8 +97,8 @@
     }
     function pause(){if(state.busy&&state.phase==='copying'){stopped=true;state.message='Se pausará cuando termine el lote en curso.';emit()}}
     function report(){
-      const p=state.preview;
-      return ['UADAV STREAM · Bolsa staging','Resultado: '+state.phase,'Ofertas: '+(p?.counts.bolsa_trabajo??'sin revisar'),'Postulaciones: '+(p?.counts.postulaciones_trabajo??'sin revisar'),'Registros confirmados: '+state.offset,'Comparación final: '+(state.complete?'confirmada':'pendiente'),'Activación D1: no realizada por esta herramienta','Recuperación por correo: no habilitada por esta herramienta'].join('\n');
+      const counts=state.preview?.counts||state.backup?.counts,d1=state.backup?.source==='d1';
+      return ['UADAV STREAM · Bolsa staging','Resultado: '+state.phase,'Ofertas: '+(counts?.bolsa_trabajo??'sin revisar'),'Postulaciones: '+(counts?.postulaciones_trabajo??'sin revisar'),'Almacenamiento observado: '+(state.backup?.source?.toUpperCase()||'sin revisar'),'Respaldo actual: '+(state.backup?'verificado; descarga solicitada':'sin generar'),'Registros confirmados: '+(d1?'no aplica; D1 en uso':state.offset),'Comparación final: '+(d1?'respaldo D1 consistente':state.complete?'confirmada':'pendiente'),'Activación D1: no realizada por esta herramienta','Recuperación por correo: no habilitada por esta herramienta'].join('\n');
     }
     return {prepare,confirm,run,pause,report,canRun,getState:()=>({...state,checks:{...state.checks}})};
   }
@@ -77,13 +106,18 @@
     if(!host||location.origin!==ORIGIN||apiBase!==API)return;
     host.className='card card-pad';host.style.marginTop='16px';
     host.innerHTML='<div class="section-title"><div><h2>Preparar Bolsa en D1 · Solo staging</h2><small>Respaldo, revisión y copia guiada. La activación sigue siendo manual.</small></div></div><p>Primero descargá el respaldo. Instalá el SQL en la base vinculada al Worker de pruebas y volvé a revisar. Esta pantalla copia ofertas y postulaciones; conserva KV.</p><div class="actions" style="display:flex;flex-wrap:wrap;gap:10px"><button type="button" class="btn btn-primary" data-job="prepare">Generar respaldo y revisar</button><a class="btn btn-secondary" href="https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/blob/release/radio-studio-staging-rc-20261020/migrations/staging/20261024_bolsa_completa.sql" target="_blank" rel="noopener noreferrer">Abrir SQL de staging</a></div><p data-job="counts" class="muted"></p><p data-job="schema" class="muted"></p><fieldset style="border:1px solid var(--border,#30425e);border-radius:12px;padding:14px;display:grid;gap:12px;margin:14px 0"><legend>Confirmaciones antes de copiar</legend><label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" data-job="backup">Guardé el respaldo actual que acaba de generar esta pantalla.</label><label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" data-job="isolation">Verifiqué en Cloudflare que DB pertenece a staging y es distinta de producción.</label><label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" data-job="maintenance">Activé JOB_STORE_MAINTENANCE=true y dejé JOB_STORE_D1 desactivado en el Worker staging. Las solicitudes anteriores ya terminaron.</label></fieldset><div class="actions" style="display:flex;flex-wrap:wrap;gap:10px"><button type="button" class="btn btn-primary" data-job="run" disabled>Copiar Bolsa a D1</button><button type="button" class="btn btn-secondary" data-job="pause" disabled>Pausar después del lote</button><button type="button" class="btn btn-secondary" data-job="report">Copiar resultado sin datos privados</button></div><p class="callout" data-job="status" role="status" aria-live="polite"></p><p class="muted" data-job="copy-status" role="status"></p><p class="muted">La recuperación por correo y la restauración siguen bloqueadas. Al terminar, dejá la activación D1 pendiente para validar los accesos.</p>';
-    const get=name=>host.querySelector('[data-job="'+name+'"]');let flow;
+    const get=name=>host.querySelector('[data-job="'+name+'"]'),confirmations=host.querySelector('fieldset'),notice=host.lastElementChild;let flow;
+    notice.textContent='Esta herramienta no habilita recuperación por correo ni restauración. La activación de D1 requiere validar los accesos.';
     flow=controller({origin:location.origin,apiBase,request,alive:()=>host.isConnected,download:async data=>download(new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'}),'uadav-bolsa-staging-backup-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json'),onChange:state=>{
       if(!host.isConnected)return;
       get('status').textContent=state.message;get('prepare').disabled=state.busy;get('run').disabled=!flow.canRun();get('pause').disabled=!state.busy||state.phase!=='copying';
       get('run').textContent=state.offset&&!state.complete?'Continuar copia':'Copiar Bolsa a D1';
       for(const key of ['backup','isolation','maintenance']){get(key).disabled=state.busy;get(key).checked=state.checks[key]}
-      get('counts').textContent=state.preview?'Ofertas: '+state.preview.counts.bolsa_trabajo+' · Postulaciones: '+state.preview.counts.postulaciones_trabajo+' · Registros confirmados: '+state.offset:'';
+      const counts=state.preview?.counts||state.backup?.counts;
+      get('counts').textContent=counts?'Ofertas: '+counts.bolsa_trabajo+' · Postulaciones: '+counts.postulaciones_trabajo+(state.backup?.source==='d1'?' · Origen actual: D1':' · Registros confirmados: '+state.offset):'';
+      const d1=state.backup?.source==='d1';confirmations.hidden=d1;confirmations.style.display=d1?'none':'grid';
+      for(const name of ['run','pause']){get(name).hidden=d1;get(name).style.display=d1?'none':''}
+      notice.textContent=d1?'Bolsa ya usa D1. Conservá este respaldo actual. Volver a KV requiere reconciliar los datos escritos desde el cambio. Esta herramienta no habilita recuperación por correo ni restauración.':'Esta herramienta no habilita recuperación por correo ni restauración. La activación de D1 requiere validar los accesos.';
       get('schema').textContent=state.backup?.missing.length?'Tablas pendientes: '+state.backup.missing.join(', '):state.backup?'Tablas de respaldo requeridas: presentes.':'';
     }});
     get('prepare').addEventListener('click',()=>flow.prepare());

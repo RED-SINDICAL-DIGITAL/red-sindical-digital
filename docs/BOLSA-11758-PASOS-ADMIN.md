@@ -26,4 +26,15 @@ El panel no activa D1, no quita mantenimiento ni habilita recuperación. Al term
 - Se probaron en local la ausencia de escrituras durante el análisis, el bloqueo fuera de staging, la validación del respaldo, los lotes secuenciales, doble clic, pausa/continuación, respuestas incompletas, navegación a otra vista y el informe sin datos privados.
 - El panel necesita autenticación de Admin. No se completó su circuito autenticado en el navegador del asistente.
 - La presencia de tablas en un backup no sustituye la comprobación del binding ni las pruebas remotas de restauración.
-- La copia SQL preparada no se ejecutó desde el asistente. El almacenamiento D1 sigue pendiente de activación y QA remota.
+- La instalación SQL y la migración fueron ejecutadas por el usuario en Cloudflare/Admin. El informe final confirmó 5 ofertas y 5 postulaciones, 10 registros y comparación completa. La captura posterior del Admin confirmó que Bolsa ya usaba D1.
+- Después de que el usuario desactivara mantenimiento se probó en el navegador de PC de Work: publicación inmediata, consentimiento obligatorio en el formulario, una sola postulación ante doble clic, seguimiento privado, rechazo de clave incorrecta, respeto de campos opcionales excluidos, cierre, rechazo desde una pantalla desactualizada y renovación. La oferta ficticia se dejó cerrada al terminar. La prueba móvil, el acceso con un comprobante anterior a la migración y la restauración remota siguen pendientes.
+
+## Respaldar después de activar D1
+
+**Generar respaldo y revisar** también solicita descargar el backup actual cuando Bolsa ya usa D1. Comprueba que las ofertas y postulaciones exportadas coincidan con todos los registros de almacenamiento y sus credenciales actuales, además de verificar las tablas y la marca de migración. Si hay truncamiento o cambios entre las lecturas del export, detiene la descarga y pide repetir la operación. Si vuelve a fallar, pausar las escrituras de staging antes de revisar el respaldo.
+
+El informe muestra el origen D1 y sus cantidades, sin nombres, correos, hashes ni claves. Se ocultan las confirmaciones y los botones para copiar KV, porque no corresponde repetir la migración. El mensaje de descarga solicitada no prueba que el usuario haya conservado el archivo: hay que guardarlo y comprobar que exista en el equipo.
+
+Con D1 en uso, el KV anterior deja de recibir las escrituras de Bolsa. No desactivar `JOB_STORE_D1` para volver a esa copia: una reversión requiere mantenimiento y reconciliación/exportación del estado actual de D1. La recuperación por correo y la restauración no se habilitan desde este panel.
+
+La corrección del respaldo se verificó con la suite de 68 pruebas de Pages, incluida la detección de datos inconsistentes, credenciales distintas, filas duplicadas, descarga fallida y navegación fuera del Admin. La descarga autenticada desde la sesión del usuario debe verificarse después del despliegue de Pages.

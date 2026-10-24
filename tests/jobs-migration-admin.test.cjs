@@ -9,8 +9,13 @@ const {controller}=context.window.UADAVJobsMigration;
 const ORIGIN='https://uadav-stream-staging.pages.dev',API='https://uadav-api-staging.uadavstream.workers.dev/api/';
 const tables=['job_store_meta','job_store_records','job_store_rates','job_owner_credentials','job_owner_recovery_tokens','job_owner_recovery_v2'];
 const fingerprint='f'.repeat(64);
-function fixture({offers=3,applications=2,missing=false,complete=true,source='kv',post}={}){
-  const backup={generated_at:new Date().toISOString(),job_storage:source,backup_integrity:{complete},kv:{bolsa_trabajo:Array.from({length:offers},()=>({contacto_email:'private@example.invalid',owner_access_hash:'never-log-this-hash'})),postulaciones_trabajo:Array.from({length:applications},()=>({nombre:'Persona privada'}))},tables:Object.fromEntries((missing?tables.slice(1):tables).map(t=>[t,[]]))};
+function fixture({offers=3,applications=2,missing=false,complete=true,source='kv',post,downloadError}={}){
+  const backup={generated_at:new Date().toISOString(),job_storage:source,backup_integrity:{complete},kv:{bolsa_trabajo:Array.from({length:offers},(_,i)=>({id:'JOB-QA-'+i,contacto_email:'private@example.invalid',owner_access_hash:'b'.repeat(64)})),postulaciones_trabajo:Array.from({length:applications},(_,i)=>({id:'POST-QA-'+i,nombre:'Persona privada'}))},tables:Object.fromEntries((missing?tables.slice(1):tables).map(t=>[t,[]]))};
+  if(source==='d1'&&!missing){
+    backup.tables.job_store_meta=[{key:'migration_ready',value:'true'}];
+    backup.tables.job_owner_credentials=backup.kv.bolsa_trabajo.map(item=>({job_id:item.id,secret_hash:item.owner_access_hash}));
+    backup.tables.job_store_records=Object.entries(backup.kv).flatMap(([collection,items])=>items.map(({owner_access_hash,...item})=>({collection,id:item.id,data_json:JSON.stringify(item),request_id:null})));
+  }
   const preview={success:true,dry_run:true,fingerprint,counts:{bolsa_trabajo:offers,postulaciones_trabajo:applications}};
   const calls=[],downloads=[];let alive=true;
   const request=async(route,options)=>{
@@ -20,7 +25,7 @@ function fixture({offers=3,applications=2,missing=false,complete=true,source='kv
     const offset=options.body.offset,total=offers+applications,processed=Math.min(3,total-offset),next=offset+processed;
     return {success:true,dry_run:false,fingerprint,processed,complete:next===total,next_offset:next===total?null:next};
   };
-  const flow=controller({origin:ORIGIN,apiBase:API,request,download:async x=>downloads.push(x),alive:()=>alive});
+  const flow=controller({origin:ORIGIN,apiBase:API,request,download:async x=>{if(downloadError)throw Error(downloadError);downloads.push(x)},alive:()=>alive});
   const confirm=()=>{for(const key of ['backup','isolation','maintenance'])flow.confirm(key,true)};
   return {flow,calls,downloads,backup,preview,confirm,leave:()=>alive=false};
 }
@@ -48,8 +53,40 @@ test('missing tables or incomplete backup block the copy',async()=>{
   }
 });
 
-test('a source already using D1 is never copied again from old KV',async()=>{
-  const x=fixture({source:'d1'});await x.flow.prepare();x.confirm();await x.flow.run();assert.equal(x.flow.getState().phase,'already-d1');assert.equal(x.calls.length,1);assert.equal(x.downloads.length,0);
+test('D1 generates its current backup and safe counts without ever copying old KV again',async()=>{
+  const x=fixture({source:'d1'});await x.flow.prepare();x.confirm();await x.flow.run();
+  assert.equal(x.flow.getState().phase,'already-d1');assert.equal(x.calls.length,1);assert.equal(x.downloads.length,1);assert.equal(x.downloads[0],x.backup);
+  assert.match(x.flow.report(),/Ofertas: 3/);assert.match(x.flow.report(),/Postulaciones: 2/);assert.match(x.flow.report(),/Almacenamiento observado: D1/);assert.match(x.flow.report(),/Comparación final: respaldo D1 consistente/);assert(!x.flow.report().includes('private@example.invalid'));assert(!x.flow.report().includes('b'.repeat(64)));
+});
+
+test('D1 backup rejects missing schema, concurrent changes, truncation and credential mismatches before download',async()=>{
+  const mutations=[
+    x=>delete x.backup.tables.job_store_meta,
+    x=>x.backup.tables.job_store_meta[0].value='false',
+    x=>x.backup.tables.job_store_records.pop(),
+    x=>x.backup.kv.bolsa_trabajo[0].contacto_email='changed@example.invalid',
+    x=>x.backup.tables.job_store_records[0].request_id='another-request',
+    x=>x.backup.tables.job_owner_credentials[0].secret_hash='c'.repeat(64),
+    x=>delete x.backup.kv.bolsa_trabajo[0].owner_access_hash,
+    x=>x.backup.tables.job_store_records.push({...x.backup.tables.job_store_records[0]}),
+    x=>x.backup.kv.bolsa_trabajo.push({...x.backup.kv.bolsa_trabajo[0]})
+  ];
+  for(const mutate of mutations){
+    const x=fixture({source:'d1'});mutate(x);await x.flow.prepare();x.confirm();await x.flow.run();
+    assert.equal(x.flow.getState().phase,'error');assert.equal(x.downloads.length,0);assert(x.calls.every(c=>c.options.method==='GET'));assert(!x.flow.report().includes('Almacenamiento observado: D1'));
+  }
+});
+
+test('D1 does not report a generated backup if its download fails or the Admin view has closed',async()=>{
+  for(const options of [{downloadError:'Descarga bloqueada'},{}]){
+    const x=fixture({source:'d1',...options});if(!options.downloadError)x.leave();await x.flow.prepare();
+    assert.equal(x.downloads.length,0);assert.equal(x.flow.getState().backup,null);assert.match(x.flow.report(),/Respaldo actual: sin generar/);
+  }
+});
+
+test('an empty D1 store and retained orphan credentials can still produce consistent backups',async()=>{
+  const x=fixture({source:'d1',offers:0,applications:0});x.backup.tables.job_owner_credentials.push({job_id:'JOB-DELETED',secret_hash:'c'.repeat(64)});
+  await x.flow.prepare();assert.equal(x.downloads.length,1);assert.equal(x.flow.getState().phase,'already-d1');
 });
 
 test('mismatched counts or invalid fingerprints do not generate a misleading backup',async()=>{
@@ -78,7 +115,7 @@ test('leaving the Admin view prevents additional batches',async()=>{
 
 test('the shareable report excludes personal information, credentials and fingerprints',async()=>{
   const x=fixture();await x.flow.prepare();x.confirm();await x.flow.run();const report=x.flow.report();
-  for(const privateValue of ['private@example.invalid','Persona privada','never-log-this-hash',fingerprint])assert(!report.includes(privateValue));
+  for(const privateValue of ['private@example.invalid','Persona privada','b'.repeat(64),fingerprint])assert(!report.includes(privateValue));
   assert.match(report,/Comparación final: confirmada/);assert.match(report,/no realizada/);
 });
 
