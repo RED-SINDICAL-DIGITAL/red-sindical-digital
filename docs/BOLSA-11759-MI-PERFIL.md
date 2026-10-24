@@ -20,12 +20,16 @@ El panel Admin sigue descargando el backup actual de D1. Si el Worker informa as
 
 ## Activación y verificación pendientes
 
-El Worker 11759 y `migrations/staging/20261024_job_accounts.sql` se encuentran en la rama Worker. Requieren intervención manual en Cloudflare; la guía está en `docs/BOLSA-11759-MI-PERFIL-STAGING.md` de esa rama. Mantener los flags actuales de D1 y la recuperación por correo deshabilitada.
+El usuario desplegó el Worker 11759 e instaló `migrations/staging/20261024_job_accounts.sql` en Cloudflare staging. La prueba autenticada confirmó lecturas y escrituras de asociaciones. La guía está en `docs/BOLSA-11759-MI-PERFIL-STAGING.md` de la rama Worker. Mantener los flags actuales de D1 y la recuperación por correo deshabilitada.
 
 Las 84 pruebas de Pages están aprobadas localmente. La prueba remota detectó que las acciones de la postulación están dentro del cuerpo del modal: la opción de cuenta debe insertarse en ese contenedor, no directamente en el formulario. Se corrigió la inserción y el fixture ahora reproduce esa estructura y rechaza referencias que no son hijas del contenedor.
 
 El circuito de cuenta se probó en el navegador de PC de Work: oferta y postulación guardadas, una segunda candidatura sin vincular, persistencia tras recargar, campos opcionales excluidos, cierre/renovación y avisos leídos. Desde Admin se pasó únicamente la candidatura ficticia a «En revisión» y la cuenta recibió el estado y el aviso correspondiente.
 
 Esta prueba también detectó que Actualizar mis trabajos conservaba un panel anterior de postulantes. El refresco ahora lo retira e invalida respuestas de bandeja que empezaron antes, para que no vuelvan a pintar un estado obsoleto. Los tests cubren tanto una bandeja ya recibida como una respuesta pendiente. Se corrigieron además los textos de una única gestión y una única postulación.
+
+La corrección del refresco se volvió a probar en Pages publicado (`0075f41`): al refrescar la bandeja desaparece y al abrirla de nuevo devuelve el estado vigente. La lectura del aviso de cambio de estado persiste después de recargar. Se descargó y comprobó en privado un respaldo posterior: 7 ofertas, 8 postulaciones y 2 asociaciones, sin errores de lectura y con referencias consistentes. El JSON no se incorpora al repositorio.
+
+La revisión visual coloca el título de la bandeja a todo el ancho de la grilla y aclara el acceso desde la cuenta o mediante comprobante. Las 84 pruebas específicas de Bolsa/Admin/aislamiento siguen aprobadas. Una ejecución adicional de todos los `*.test.cjs` obtuvo 509/555: las mismas 46 fallas se reproducen en el commit base `0075f41`, sin las correcciones visuales. Corresponden a otros circuitos y se mantienen pendientes; no equivale a una validación integral de toda la plataforma.
 
 Falta repetir en móvil y con una segunda cuenta independiente, probar un comprobante previo y la restauración remota en una base desechable. No declarar Bolsa terminada ni pasar a producción por la sola presencia de esta interfaz.
