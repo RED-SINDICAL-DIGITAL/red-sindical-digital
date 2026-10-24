@@ -14,6 +14,10 @@ No se cambia la validación de fechas del Worker ni se habilitan correo, restaur
 
 ## Validación
 
-Ocho casos nuevos de regresión cubren el rechazo real, conservación del formulario y caché, doble clic, respuesta incierta o incorrecta, editor/sección reemplazados y solicitud identificada para una nueva oferta. El workflow de Bolsa incluye este archivo. Total previsto del grupo focalizado: 100 pruebas.
+Ocho casos nuevos de regresión cubren el rechazo real, conservación del formulario y caché, doble clic, respuesta incierta o incorrecta, editor/sección reemplazados y solicitud identificada para una nueva oferta. El workflow de Bolsa incluye este archivo. Total ejecutado del grupo focalizado: **100 pruebas aprobadas** localmente y en CI `40142314409`.
 
-Pendiente antes de dar por verificada la corrección remota: publicación automática de Pages, manifest de origen, repetición del rechazo con el nuevo estado visible y guardado válido. La oferta ficticia debe terminar cerrada, con candidatura conservada y un respaldo actual verificado. No se requiere un nuevo despliegue del Worker 11760.
+El manifest público confirmó `1ab6a4f8b6acc15199a72f09f1007ef4bbb50eb0`, con el nuevo `admin.html`. En la repetición remota, el editor mostró «Fecha de caducidad inválida o vencida», conservó la fecha del borrador y volvió a habilitar Guardar. Corregida a una fecha válida, el guardado cerró el modal y actualizó la lista. La creación identificada desde Admin tiene prueba local/CI; en este ensayo solo se creó desde el formulario público, para evitar sumar otro registro innecesario.
+
+La oferta se renovó hasta 2026-11-23 y luego se cerró. Mi Perfil conservó la candidatura «Recibida» y el catálogo público volvió a las cinco ofertas originales. La revisión final dio cero avisos pendientes. El respaldo D1 posterior contiene 9 ofertas, 10 postulaciones, 3 vínculos y una marca de aviso, validada junto con su anuncio y lectura. El respaldo privado no está en git. No se requiere otro despliegue del Worker 11760.
+
+El aviso de una oferta ya vencida y el cron real siguen sin verificar remotamente. La recuperación por correo permanece deshabilitada y producción permanece sin cambios.
