@@ -36,7 +36,7 @@ Si una sesión de cuenta recibe `ORIGIN_NOT_ALLOWED`, comprobar la variable **de
 - Compatibilidad KV, política pública, sincronización de cuentas y 12 controles estáticos de Radio Studio aprobados.
 - La prueba con 2.000 ofertas y 1.999 postulaciones comprueba el presupuesto de subsolicitudes D1 con cuenta y perfil artístico. Es una prueba local, no una prueba de carga remota. Referencia: https://developers.cloudflare.com/d1/platform/limits/. Un `batch()` cuenta como una subsolicitud a efectos del límite por invocación.
 
-Antes de dar por validada esta versión, completar la prueba con una cuenta B independiente, un segundo dispositivo aprobado y un comprobante anterior; repetir en móvil. La cuenta A, cierre/renovación, cambios de estado, avisos y backup posterior ya se probaron en PC de Work. La restauración remota requiere una base desechable; mantener `ENABLE_JOB_D1_RESTORE` ausente hasta completar esa prueba. La entrega por correo y los avisos de vencimiento siguen pendientes; no se activan con este despliegue.
+Antes de dar por validada esta versión, completar la prueba con una cuenta B independiente, un segundo dispositivo aprobado y un comprobante anterior; extender en móvil los casos de cuenta y seguimiento. La cuenta A, cierre/renovación, cambios de estado, avisos y backup posterior ya se probaron en PC de Work. El usuario también completó publicación, postulación, bandeja del contratante y cierre desde su celular, corroborados abajo. La restauración remota requiere una base desechable; mantener `ENABLE_JOB_D1_RESTORE` ausente hasta completar esa prueba. La entrega por correo y los avisos de vencimiento siguen pendientes; no se activan con este despliegue.
 
 ## Comprobaciones remotas posteriores al despliegue
 
@@ -70,12 +70,20 @@ El inventario informa ausentes `artist_ai_usage` y `artist_ownership_transfers`,
 
 Una ejecución adicional de todos los `*.test.cjs` de Pages dio 509 aprobadas y 46 fallas. Se reprodujeron exactamente las mismas fallas en el commit base `0075f41`, sin los ajustes visuales posteriores. Incluyen fixtures de Radio, búsqueda, acceso/eliminación de artista y video; quedan registradas para la continuidad y no invalidan el resultado de las 84 pruebas específicas ni equivalen a integración global aprobada.
 
-### Prueba móvil en curso · 24/10/2026
+### Publicación, postulación y cierre desde móvil · 24/10/2026
 
 El usuario confirmó haber publicado desde su celular una oferta ficticia y descargado el acceso privado. El catálogo público de staging corroboró una única oferta nueva: `JOB-MVMT57YC-897E34406860`, «PRUEBA MOVIL NO CONTRATAR», activa, sin logo y con vencimiento `2026-11-23`. Fue creada a las 16:44 de Argentina. El catálogo pasó de cinco a seis ofertas visibles.
 
 Después el usuario confirmó el envío de una candidatura desde el celular y la descarga de su comprobante. Se volvió a autenticar Admin mediante el formulario seguro, sin inspeccionar la clave. En la lista privada se comprobó exactamente una fila asociada a esa oferta, con estado «Recibida automáticamente». Los totales administrativos son ahora **8 ofertas y 9 postulaciones**. No se modificaron estados desde Admin en esta comprobación.
 
-La realización en el teléfono y las descargas son confirmaciones del usuario; las verificaciones independientes observan la publicación pública y la recepción privada en el servidor. Todavía falta comprobar desde el celular la apertura del archivo del contratante, la lectura de candidatos, el cierre, el rechazo de nuevas postulaciones a esa oferta y el seguimiento con el archivo de la candidatura. No declarar aprobado todo el circuito móvil por el envío inicial.
+El usuario confirmó además abrir en el celular el archivo privado del contratante, ver la candidatura, cerrar la oferta y comprobar su desaparición después de actualizar la búsqueda. Se corroboró de forma independiente que el catálogo vuelve a los cinco IDs originales y que Admin conserva la oferta como oculta/reactivable junto con su candidatura recibida. El respaldo confirma `activo:false`, `estado:cerrada_por_contratante` y la postulación `POST-MVMT9Y4B-F51EE764`, en estado `recibida`, con consentimiento `job_application_v1` y fecha registrados. No se publican datos de contacto ni claves.
 
-El respaldo privado de 7 ofertas y 8 postulaciones documentado arriba es anterior a esta prueba móvil. Generar y comprobar otro respaldo al terminar las nuevas escrituras. El Worker continúa en 11759; este registro no requiere despliegue.
+La realización en el teléfono, la apertura del archivo y las descargas son confirmaciones del usuario; las verificaciones independientes observan los registros del servidor, el catálogo público y Admin. Falta el seguimiento desde el celular con el archivo de la candidatura, los casos de cuenta/dispositivo y la prueba de envío desde una pantalla móvil desactualizada. No declarar aprobado todo el circuito móvil por estos resultados.
+
+Se generó, descargó y comprobó un segundo respaldo posterior al cierre: **8 ofertas, 9 postulaciones y 2 asociaciones**, 17 registros D1, 240.345 bytes. La proyección compatible coincide registro por registro con D1, no hay IDs duplicados ni referencias rotas entre asociaciones, registros y cuentas; `backup_integrity.complete:true`, sin errores de lectura ni inventario. Se actualizó el archivo privado del usuario conservando su versión anterior. El respaldo de 7 ofertas y 8 postulaciones documentado arriba queda como evidencia histórica. El JSON sigue fuera de git.
+
+[Oferta móvil cerrada y conservada en Admin staging](evidence/bolsa-11759-oferta-movil-cerrada-20261024.jpg).
+
+Al recargar, Admin puede mostrar momentáneamente el acceso antes de restaurar automáticamente la sesión. Esperar la comprobación visible del estado final antes de solicitar credenciales otra vez. No leer claves ni extraerlas del almacenamiento del navegador.
+
+El Worker continúa en 11759 y Pages en `43f60b7f6e49e66a95ac659124bd85bd042f1dd8`; este registro no cambia código ni requiere despliegue. Producción permanece intacta y la recuperación por correo continúa bloqueada.
