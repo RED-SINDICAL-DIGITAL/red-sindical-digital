@@ -2,7 +2,7 @@
 
 ## Estado de la entrega
 
-Código en `release/radio-studio-staging-rc-20261020`. El frontend está en `audit/continuidad-demo-20261019`. No fusionar ramas ni aplicar estos cambios en producción. **El usuario completó el paso manual y el navegador verificó el Worker 11760 y la revisión de vencimientos operativa.** La entrega de un aviso a una cuenta todavía está pendiente; la comprobación de infraestructura no acredita ese circuito.
+Código en `release/radio-studio-staging-rc-20261020`. El frontend está en `audit/continuidad-demo-20261019`. No fusionar ramas ni aplicar estos cambios en producción. **El usuario completó el paso manual y el navegador verificó el Worker 11760 y la revisión de vencimientos operativa.** El aviso próximo a vencer se entregó a una cuenta ficticia y se comprobaron deduplicación, lectura, renovación y cierre. El aviso de una oferta cuyo día límite ya pasó y la ejecución real del cron siguen pendientes.
 
 El usuario completó desde su celular el recorrido de publicar, postularse, abrir el archivo del contratante, consultar candidatos, cerrar la oferta y consultar después la candidatura con su propio comprobante. El servidor y Admin corroboraron el cierre y la conservación de la postulación; la consulta final del archivo en el teléfono es una confirmación del usuario. El backup privado posterior contiene 8 ofertas, 9 postulaciones y 2 asociaciones. El detalle está en `BOLSA-11759-MI-PERFIL-STAGING.md`.
 
@@ -38,9 +38,9 @@ Si falta el SQL, se informa que la función no está preparada y no se rompe la 
 
 **92 pruebas de Pages/Admin/aislamiento** aprobadas localmente: incluyen las ocho pruebas adicionales de revisión, confirmación, doble clic, respuestas incompletas, red incierta, salida de la vista y respaldo del historial. La validación de código y CI no equivale a despliegue o entrega remota de avisos.
 
-Los endpoints de recuperación por correo **siguen devolviendo 503**. Este cambio no despacha correos ni prueba un proveedor transaccional. Continúan pendientes la prueba remota de los avisos, cuenta B y segundo dispositivo, restauración en una base desechable, entrega segura de correo, importaciones reales desde Admin y los dispositivos restantes. Bolsa todavía no está cerrada de punta a punta.
+Los endpoints de recuperación por correo **siguen devolviendo 503**. Este cambio no despacha correos ni prueba un proveedor transaccional. Continúan pendientes el aviso remoto posterior al vencimiento, aislamiento entre cuentas con credenciales independientes y segundo dispositivo, restauración en una base desechable, entrega segura de correo, importaciones reales desde Admin y los dispositivos restantes. Bolsa todavía no está cerrada de punta a punta.
 
-## CI y comprobación del frontend publicado
+## Registro previo al despliegue del Worker 11760
 
 - Fuente Worker: `83f8cb307260d0d105f1ff6d7ed9f6a14a139006`. CI Bolsa `40134086445` y controles de Radio `40134086349`: aprobados.
 - Pages publicado: `03d985688d72ae3a9c2dd7c6ad5b37a90f0f21e7`, confirmado por `staging-build.json`. CI `40135267258`: 92 pruebas aprobadas. Módulo de avisos con versión de caché `11760.1`.
@@ -58,8 +58,23 @@ El usuario confirmó instalar el SQL y desplegar el Worker. El navegador observ�
 
 No se emitieron avisos en esta comprobación. Las ofertas anteriores de QA siguen cerradas y no se creó otra oferta sin cuenta. El siguiente ensayo necesita una oferta ficticia guardada en una cuenta para comprobar aviso próximo, deduplicación y aviso de vencimiento, y terminar con el registro cerrado.
 
-La sesión de Mi Perfil del navegador de Work no tiene una cuenta vinculada. Se preparó únicamente el nombre local «QA Avisos 11760 · Ficticio», se abrió Configuración y dispositivos y se dejó habilitado **Crear mi cuenta**. El alta debe completarla el usuario mediante el control manual del navegador; no se generaron ni inspeccionaron credenciales. Después hay que comprobar el estado autenticado y la lista de Mis trabajos antes de publicar el ensayo.
+En esa primera comprobación, la sesión de Mi Perfil del navegador de Work no tenía una cuenta vinculada. Se preparó únicamente el nombre local «QA Avisos 11760 · Ficticio», se abrió Configuración y dispositivos y se dejó habilitado **Crear mi cuenta**. El alta debe completarla el usuario mediante el control manual del navegador; no se generaron ni inspeccionaron credenciales. Después hay que comprobar el estado autenticado y la lista de Mis trabajos antes de publicar el ensayo.
 
 [Pantalla de alta preparada con datos ficticios](evidence/bolsa-11760-cuenta-qa-preparada-20261024.jpg).
 
 Esta intervención es para la cuenta personal de pruebas, no para iniciar recuperación por correo. Los endpoints de correo siguen bloqueados. El esquema y el Worker no necesitan repetirse para continuar esta QA.
+
+## QA real de aviso próximo · 24/10/2026
+
+El usuario completó el alta manual de «QA Avisos 11760 · Ficticio» después de reabrir una sesión caducada. La sesión mostró una cuenta vinculada y cero gestiones iniciales. El diálogo del respaldo privado se cerró sin inspeccionar su código.
+
+- Se publicó `JOB-MVN0OQA5-28B033C1422D`, «QA 11760 · Avisos de vencimiento · 24-10», con plazo 2026-10-24 y guardado explícito en Mi Perfil. Quedó pública de inmediato.
+- Se envió `POST-MVN0P9GO-56F2C26E` con consentimiento y sin guardarla en la cuenta. Los campos opcionales quedaron vacíos. El contratante vio una candidatura «Recibida» en su acceso privado.
+- Admin revisó exactamente un aviso «Por vencer» y, después de la confirmación, informó un aviso generado. Mi Perfil mostró el aviso y el de nueva candidatura. Una revisión nueva devolvió cero pendientes. Marcar leídos persistió.
+- El intento de poner un plazo anterior al día actual fue rechazado por el servidor. El Admin anterior dejaba el error sin mostrar; se corrigió en la rama Pages con `1ab6a4f8b6acc15199a72f09f1007ef4bbb50eb0`. CI `40142314409`: **100 pruebas aprobadas**. El manifest publicado confirmó ese commit. La repetición remota mostró el rechazo en el formulario, conservó el borrador y habilitó un guardado válido. No se relajó la validación del Worker para fabricar un vencimiento.
+- Renovar dio vigencia hasta 2026-11-23. El acceso privado conservó la candidatura. Se cerró la oferta y se volvió a comprobar «Cerrada» con candidatura «Recibida». La Bolsa pública volvió a las cinco ofertas originales, sin el ensayo.
+- La revisión final no tuvo pendientes. El respaldo posterior de 11760 contiene **9 ofertas, 10 postulaciones, 3 vínculos y 1 marca de aviso próximo**; la marca, el aviso visible y la lectura son consistentes. Coinciden los 19 registros del export lógico con D1 y sus credenciales separadas. Tamaño: 251.506 bytes; SHA-256 `61f75c56f1b50bcd29ed097cf5d93f0b992a2613167480db7214cd9425c08395`. El archivo privado conserva su identidad e historial, ahora versión 2. No se incorpora a git.
+
+[Oferta cerrada y postulación conservada](evidence/bolsa-11760-cierre-y-postulacion-verificados-20261024.jpg).
+
+El aviso **posterior al vencimiento** está cubierto localmente/CI, pero este ensayo remoto no lo acredita: el editor impide fechas pasadas. Tampoco acredita ejecución automática, entrega por correo/push, dos conexiones HTTP simultáneas, restauración remota o el acceso de un segundo dispositivo. La cuenta actual no vio las gestiones de la cuenta de QA previa; la suplantación con dos sesiones independientes aún debe probarse. No se habilitaron correos ni restauración y no se cambió producción.
