@@ -14,7 +14,7 @@ No se fusionaron ramas ni se modificó `main`.
 | Cloudflare | El panel redirige al inicio de sesión. No se instalaron migraciones ni variables |
 | CI previo | Run `40056120973`: política de Bolsa aprobada; run `40056120964`: controles estáticos Radio aprobados |
 
-## Código preparado: build 11758, todavía no desplegado
+## Código build 11758 · desplegado solo en staging
 
 - Fuente mantenible `scripts/job-store-runtime.js`, incorporada al Worker de un solo archivo con `scripts/embed-job-store.mjs`.
 - Almacenamiento D1 por registro para ofertas y postulaciones; credenciales de contratantes en tabla independiente.
@@ -31,7 +31,7 @@ No se fusionaron ramas ni se modificó `main`.
 - No se ejecuta el bootstrap general de D1 como requisito de una escritura laboral en el nuevo modo.
 - Importación externa en modo D1: hasta cinco ofertas por lote, origen HTTPS validado e identificador determinista para evitar duplicados simultáneos.
 
-El modo nuevo requiere **`JOB_STORE_D1=true` y una migración validada**. No se habilitó ninguna variable. No usarlo en producción. La protección por hostname rechaza su uso fuera del Worker staging.
+El modo nuevo requiere **`JOB_STORE_D1=true` y una migración validada**. El usuario instaló las tablas, completó la copia de 5 ofertas y 5 postulaciones y activó D1 en staging. Después retiró mantenimiento y el navegador de Work comprobó escrituras y lecturas nuevas. El detalle y la evidencia están en `docs/BOLSA-11758-POST-DEPLOY.md`. No usarlo en producción. La protección por hostname rechaza su uso fuera del Worker staging.
 
 ## Pruebas ejecutadas localmente
 
@@ -49,10 +49,10 @@ El modo nuevo requiere **`JOB_STORE_D1=true` y una migración validada**. No se 
 
 ## Lo que falta para terminar Bolsa
 
-1. Desplegar 11758 solo en staging y confirmar acceso y bindings a recursos exclusivos de pruebas.
-2. Respaldo externo actual; instalar ambos SQL de staging y validar recuperación en una base desechable.
-3. Ejecutar migración controlada, revisar comparación y probar acceso legado/nuevo antes de activar D1.
-4. Repetir circuitos reales PC y móvil. No se realizaron publicaciones nuevas desde el navegador en este turno.
+1. Conservar y comprobar el respaldo D1 posterior a las nuevas escrituras; validar restauración en una base desechable. El despliegue 11758, el esquema y la migración inicial ya se completaron en staging.
+2. Probar acceso remoto con un comprobante legado de QA. El acceso de una oferta nueva y el rechazo de clave incorrecta ya fueron comprobados.
+3. Probar concurrencia HTTP independiente en Cloudflare. El doble clic de la interfaz y la concurrencia local/CI están comprobados.
+4. Repetir circuitos reales en móvil/tablet/Smart TV. En PC de Work ya se completaron publicación, postulación, privacidad, seguimiento, cierre, rechazo desde pantalla desactualizada y renovación con datos ficticios.
 5. Vincular comprobantes explícitamente a Mi Perfil/cuenta. No vincular por coincidencia de correo. Actualmente continúa el seguimiento por comprobante privado.
 6. Completar el circuito de entrega de correo: proveedor, token, límites, reintentos y entrega confirmada. El núcleo SQL aprobado no prueba entrega de email.
 7. Completar seguimiento de notificaciones, avisos de estado/vencimiento, importación masiva desde Admin y prueba real de restauración. El código nuevo no habilita automáticamente estos servicios.
