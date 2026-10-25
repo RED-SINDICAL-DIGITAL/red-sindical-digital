@@ -76,3 +76,8 @@ Al iniciar esta entrega el navegador observó todavía 11760, correo y cola apag
 
 
 **Entrega registrada:** Worker código `dab7e96fd0a71553e91bcc093329fde966b9e418` (54 pruebas y CI Bolsa/Radio verdes); Pages `fcb77c56fcddfc7136f05748aea532756c415958` (132 pruebas y CI verde), desplegado y cotejado por manifiesto. Worker remoto todavía **11760** a las 23:34 del 24 de octubre en Argentina; ZIP 11761 verificado y despliegue manual pendiente. No hubo escritura de datos remotos. Ver `BOLSA-11761-ENTREGA-20261024.md`.
+
+
+## Verificación real del 25 de octubre: 11761 desplegado
+
+Health confirma 11761 a las 17:19 de Argentina, D1/KV disponibles, correo y cola apagados. Público conserva cinco ofertas y se restableció Admin de forma segura. La lectura por URL falló tanto en la fuente sintética Pages como en la página pública del propio repositorio; no hubo incorporación ni otras escrituras de Bolsa. Causa sin determinar: no atribuirla a Cloudflare o DNS ni dar por validado el capturador. Quedan seis bloques de cierre detallados en `BOLSA-ESTADO-Y-CIERRE-20261025.md`, con estimación provisional de 3–5 jornadas efectivas condicionadas a accesos/proveedor/dispositivos. No se habilitó correo, restauración, cron ni producción.

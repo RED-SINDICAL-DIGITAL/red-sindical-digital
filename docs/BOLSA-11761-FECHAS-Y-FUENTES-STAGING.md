@@ -2,7 +2,7 @@
 
 ## Estado
 
-Entrega preparada en `release/radio-studio-staging-rc-20261020`. El frontend está en `audit/continuidad-demo-20261019`. El navegador comprobó que el Worker publicado sigue en **11760**, con D1/KV disponibles, correo y cola apagados. Este documento no acredita despliegue o QA remota de 11761.
+**Actualización del 25 de octubre:** el usuario desplegó 11761 y health lo confirma, con D1/KV disponibles y correo/cola apagados. Pages está publicado en su rama separada. La prueba remota de captura por URL falló antes de incorporar datos; **no está aprobada**. Ver `BOLSA-ESTADO-Y-CIERRE-20261025.md` para evidencia y los seis bloques pendientes. Las instrucciones de despliegue de más abajo corresponden a la entrega original del 24 y ya fueron ejecutadas para 11761.
 
 No cambia el esquema ni requiere SQL, variables, credenciales, bindings o cron nuevos. No se habilita recuperación por correo o restauración. No fusionar ramas ni aplicar en producción.
 
