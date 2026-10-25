@@ -2,7 +2,7 @@
 
 ## Estado
 
-Preparado para probar en Cloudflare. **Todavía no está desplegado ni valida D1 remoto.** El Worker principal de staging está en 11762 y su captura por URL ya aprobó QA real. Este ensayo usa un Worker nuevo y una base nueva: no reemplaza `uadav-api-staging`, no cambia su binding DB ni habilita su restauración.
+El usuario proporcionó el enlace **https://uadav-restore-qa.uadavstream.workers.dev/** y el 25/10/2026 se observó la interfaz desplegada. Health informa versión `11762-restore-qa-1`, núcleo SHA256 `94e6603f4f9d44f6cfaa6f152c4670f27335ef9fdd7c52e90c3985b4ecdaab98`, `enabled:true` y `database_bound:true`. **La prueba D1 remota todavía no se ejecutó ni está aprobada**: el acceso devolvió «Configurá una clave exclusiva de QA de al menos 32 caracteres». El binding DB existe, pero aún no se comprobó su identidad ni que esté vacío. El Worker principal de staging permanece en 11762; este ensayo no cambia sus bindings ni habilita su restauración.
 
 ## Preparación manual en Cloudflare
 
@@ -88,4 +88,12 @@ Commit del adaptador y del registro de captura: [`37e1cfb`](https://github.com/R
 - [Bolsa staging policy checks · 40238857214](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40238857214): **success**; fuente generada, políticas, 65 pruebas focalizadas, 12 comprobaciones workerd y compatibilidad KV aprobadas.
 - [Radio Studio security checks · 40238857246](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40238857246): **success**.
 
-Estos resultados prueban el código guardado. El Worker `uadav-restore-qa` y la D1 `uadav-bolsa-restore-qa` **todavía no están creados, vinculados ni desplegados por esta sesión**. La prueba D1 remota sigue pendiente. El Worker principal 11762, Pages, producción y la recuperación por correo no cambiaron.
+Estos resultados prueban el código guardado. El despliegue independiente se observó después de esa CI; su estado actual figura al comienzo de esta guía. Las seis fases D1 remotas siguen pendientes. El Worker principal 11762, Pages, producción y la recuperación por correo no cambiaron.
+
+## Bloqueo de configuración observado · 25/10/2026
+
+El acceso se intentó una sola vez mediante browserAuth, sin revelar ni registrar la clave. El mensaje se origina en la validación de `env.QA_RESTORE_KEY`: esa variable falta o tiene menos de 32 o más de 256 caracteres. Esa comprobación precede a cualquier consulta D1, por lo que **esta sesión no consultó, preparó ni restauró la base**. No se rebajó el requisito de autenticación ni se modificó el código.
+
+Intervención necesaria: únicamente en **uadav-restore-qa → Settings → Variables and Secrets**, crear o editar el Secret de nombre exacto `QA_RESTORE_KEY` con una clave exclusiva, aleatoria, de 32–256 caracteres ASCII. Guardar y desplegar el cambio. No compartir el valor en el chat ni tocar el Worker principal o las bases existentes. Después se retomará el acceso seguro y la comprobación de base vacía.
+
+Evidencia del mensaje, con el campo de clave vacío: [captura de configuración](evidence/bolsa-restore-qa-clave-pendiente-20261025.jpg).

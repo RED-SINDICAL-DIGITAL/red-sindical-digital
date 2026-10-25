@@ -100,3 +100,7 @@ Se dejó preparado un Worker de restauración QA aparte, compilado desde el core
 ### Confirmación de GitHub para el siguiente paso
 
 Adaptador y QA guardados en `37e1cfbd9c10c7a8800d4a38b0b4b3ada0623f64`. CI Bolsa **40238857214** y Radio **40238857246**: **success**. El código principal sigue intacto. Continuar por `docs/BOLSA-11762-RESTAURACION-D1-DESECHABLE.md`: creación manual de **Worker y D1 nuevos**, no reemplazar staging. Todavía no hay URL de Visit verificada ni prueba D1 remota del adaptador. La sesión Admin queda preservada en Auditoría con el respaldo 12/10 ya confirmado; no generar otra migración ni habilitar correo.
+
+### Worker QA desplegado; configuración de clave pendiente · 25/10/2026
+
+URL proporcionada y observada: https://uadav-restore-qa.uadavstream.workers.dev/. Health: `11762-restore-qa-1`, núcleo SHA256 `94e6603f4f9d44f6cfaa6f152c4670f27335ef9fdd7c52e90c3985b4ecdaab98`, modo QA y binding DB presentes. Un único intento de acceso seguro devolvió el error de configuración de `QA_RESTORE_KEY` (variable ausente o longitud fuera de 32–256). No se consultó ni preparó D1 y no se ejecutaron las seis fases; la identidad/vacío de la base siguen sin comprobar. Corregir solo el Secret del Worker nuevo, guardar y desplegar; después retomar browserAuth sin pedir la clave en el chat. Sesiones Admin y QA preservadas. Main y Pages siguen en sus SHAs anteriores. Ver guía `BOLSA-11762-RESTAURACION-D1-DESECHABLE.md` y su evidencia. No volver a solicitar un despliegue del Worker principal.
