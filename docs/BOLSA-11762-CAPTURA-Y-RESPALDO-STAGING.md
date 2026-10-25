@@ -2,7 +2,7 @@
 
 ## Estado de esta entrega
 
-Código preparado exclusivamente en `release/radio-studio-staging-rc-20261020`. Frontend separado en `audit/continuidad-demo-20261019`. Worker remoto observado por último en **11761**, D1/KV disponibles, correo y cola apagados. **11762 todavía requiere despliegue manual y QA remota.** No se modificó producción, cuyo head se comprobó en `fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd`.
+**Actualización posterior:** el usuario desplegó 11762 y la captura puntual con fuente sintética propia aprobó la QA remota: revisión, alta, repetición sin duplicar, apertura del origen, ocultamiento y reimportación que conserva la ocultación. El respaldo actual es versión 4: 12 ofertas, 10 postulaciones, 22 registros. Ver `BOLSA-11762-CAPTURA-QA-20261025.md`. La entrega original y sus pruebas de preparación se documentan más abajo. Producción no se modificó.
 
 ## Causa reproducida y corrección
 

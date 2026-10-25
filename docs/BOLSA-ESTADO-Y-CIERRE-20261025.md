@@ -43,3 +43,10 @@ La siguiente prioridad es el fallo real del capturador. Correo, restauración y 
 ## Actualización posterior: 11762 preparada y ensayada
 
 La causa concreta se reprodujo en workerd: `redirect: "error"` del resolvedor DNS no es compatible. La corrección 11762 usa manual y rechaza cualquier 3xx. Se verificaron 57 pruebas Worker, nueve comprobaciones del motor y 134 de Pages, con CI verde. Pages `e90f40a8b80d25bbaf8e1722d5b9a1d27884632c` ya está publicado; Worker `a98be118050af80c3325c1a7f01f3ee966b6c747` sigue pendiente de despliegue manual. También pasó el ensayo íntegro del respaldo privado versión 3 en SQLite local, con repetición, interrupción y reintento. No prueba D1 remoto. Los seis bloques permanecen abiertos para sus comprobaciones restantes. Ver `BOLSA-11762-ENTREGA-20261025.md`.
+
+
+## Captura 11762 aprobada en Cloudflare
+
+El despliegue se verificó y la captura puntual aprobó con la fuente propia. Se creó una ficha, se repitió sin duplicar, se abrió su origen, se ocultó y se reimportó con fragmento sin reactivarla. El catálogo conserva las cinco ofertas originales. Total D1: 12 ofertas y 10 postulaciones, con seis credenciales, tres vínculos y una marca de aviso. Respaldo privado versión 4 guardado y cotejado: los 21 registros previos no cambiaron. La nueva copia también pasó el ensayo local de restauración. Ver `BOLSA-11762-CAPTURA-QA-20261025.md`.
+
+Siguiente comprobación preparada: Worker independiente `uadav-restore-qa` y D1 nueva `uadav-bolsa-restore-qa`, solo fixtures. Ocho grupos de QA local aprobados; suite total 65 y doce comprobaciones en workerd. Su creación y ejecución remota todavía requieren Cloudflare. No se habilita restauración sobre la base de staging existente. Ver `BOLSA-11762-RESTAURACION-D1-DESECHABLE.md`.

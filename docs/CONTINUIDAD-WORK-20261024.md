@@ -89,3 +89,10 @@ Se encontró una incompatibilidad concreta: `redirect: "error"` de la consulta D
 
 
 **Cierre de entrega 11762:** código Worker `a98be118050af80c3325c1a7f01f3ee966b6c747`, CI Bolsa 40233822004 y Radio 40233822014 verdes. Pages `e90f40a8b80d25bbaf8e1722d5b9a1d27884632c`, CI 40233847181 verde, manifiesto y guía publicados comprobados. Health remoto todavía 11761 a las 18:07 del 25/10 en Argentina; falta un despliegue manual del ZIP 11762 sin SQL o variables. No se escribieron ofertas/postulaciones remotas. Ver `BOLSA-11762-ENTREGA-20261025.md`.
+
+
+## 25/10: captura 11762 validada y ensayo D1 independiente preparado
+
+Health 11762 confirmado a las 18:30 de Argentina. Captura por URL completada en Admin: ficha `JOB-EXT-93C1A556`, revisión con acentos y fecha 2026-11-24, publicada como externa, origen correcto, repetición sin duplicar, ocultamiento y reimportación con fragmento que no la reactiva. El catálogo conserva cinco ofertas originales. 12 ofertas/10 postulaciones/22 registros; seis credenciales, tres vínculos y un ledger sin cambios. Respaldo privado versión 4, 262907 bytes, SHA256 `699d2fc97626d0b7562043626f8655d9cb3293dc118b42d9d6f829f4d0db7968`, mismo archivo e historial, cotejo de los 21 registros previos exacto. Ensayo local del archivo nuevo también aprobado. Ver `BOLSA-11762-CAPTURA-QA-20261025.md`.
+
+Se dejó preparado un Worker de restauración QA aparte, compilado desde el core actual pero con entrypoint externo restringido, D1 vacía y secreto propios. Usa solo datos ficticios, llama internamente al handler original con la base desechable y no contacta por HTTP al staging. Rechaza bases con datos y comprueba ese vacío dentro del batch de inicialización; prueba bloqueo, restauración, idempotencia, rollback, reintento e integridad en seis pasos. Ocho pruebas nuevas aprobadas localmente: total 65, más doce comprobaciones en workerd. Su despliegue exige recursos nuevos `uadav-restore-qa` y `uadav-bolsa-restore-qa`. El Worker real de staging sigue en 11762 y no se vuelve a reemplazar. Ver la guía desechable. Correo, restore actual, cron y producción siguen sin cambios.

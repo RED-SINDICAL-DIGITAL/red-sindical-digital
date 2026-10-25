@@ -1,0 +1,17 @@
+# OPTIONAL CLI TEMPLATE. QA ONLY; never reuse an existing database ID.
+name = "uadav-restore-qa"
+main = "releases/uadav-bolsa-restore-qa-11762.js"
+compatibility_date = "2026-09-28"
+workers_dev = true
+preview_urls = false
+
+[vars]
+QA_RESTORE_ONLY = "true"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "uadav-bolsa-restore-qa"
+database_id = "NEW_DISPOSABLE_QA_DATABASE_ID_REQUIRED"
+
+# Set QA_RESTORE_KEY as a dedicated Worker Secret; never put a value here.
+# No KV, existing service binding, cron, queue, routes or production domains.

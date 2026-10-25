@@ -7,6 +7,7 @@ import {spawnSync} from 'node:child_process';
 const binary=process.env.UADAV_WORKERD_BIN||'workerd';
 const dir=await mkdtemp(join(tmpdir(),'uadav-external-workerd-'));
 const entry=`import worker,{uadavExternalFetchHTML,uadavExternalPreview} from './worker.mjs';
+import qaWorker from './restore-qa.mjs';
 function check(ok,message){if(!ok)throw Error(message)}
 async function rejected(url,code){try{await uadavExternalFetchHTML(url,{timeoutMs:25});throw Error('Expected rejection: '+code)}catch(error){check(error.externalCode===code,'Expected '+code+', received '+error.externalCode)}}
 export default {async test(){
@@ -37,6 +38,14 @@ export default {async test(){
  const response=await worker.fetch(request(true),env,{}),data=await response.json();
  check(response.status===200&&data.success===true&&data.item.titulo===preview.item.titulo,'standalone authenticated preview route');
  console.log('PASS workerd: standalone Admin route, authentication and public preview');
+ const qaEnv={QA_RESTORE_ONLY:'true',QA_RESTORE_KEY:'synthetic-qa-key-'+'x'.repeat(48),DB:{prepare(){throw Error('QA database must not be touched')}}},qaOrigin='https://uadav-restore-qa.uadavstream.workers.dev';
+ const wrongHost=await qaWorker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/health'),qaEnv,{});check(wrongHost.status===403,'QA adapter must reject the live staging hostname');
+ console.log('PASS workerd: isolated QA rejects existing platform hosts');
+ const denied=await qaWorker.fetch(new Request(qaOrigin+'/status',{method:'POST',headers:{Authorization:'Bearer incorrect'}}),qaEnv,{});check(denied.status===401,'QA authentication before DB access');
+ console.log('PASS workerd: QA authentication cannot touch a DB before authorization');
+ const qaPage=await qaWorker.fetch(new Request(qaOrigin+'/'),qaEnv,{}),qaHealth=await qaWorker.fetch(new Request(qaOrigin+'/health'),qaEnv,{});
+ check(qaPage.status===200&&(await qaPage.text()).includes('SOLO BASE NUEVA DE QA'),'QA interface');check((await qaHealth.json()).purpose==='disposable-d1-rehearsal','QA purpose');
+ console.log('PASS workerd: isolated QA interface and health');
 }};
 `;
 const mock=`const html='<script type="application/ld+json">'+JSON.stringify({'@type':'JobPosting',title:'QA workerd · Música',description:'<b>Prueba ficticia</b>',validThrough:'2099-12-31',jobLocation:{address:{addressLocality:'Rosario'}}})+'</script>';
@@ -62,11 +71,12 @@ export default {async fetch(request){
 try{
  const source=await readFile(new URL('../worker.js',import.meta.url));
  await writeFile(join(dir,'worker.mjs'),source);
+ await writeFile(join(dir,'restore-qa.mjs'),await readFile(new URL('../releases/uadav-bolsa-restore-qa-11762.js',import.meta.url)));
  await writeFile(join(dir,'entry.mjs'),entry);
  await writeFile(join(dir,'mock.mjs'),mock);
  await writeFile(join(dir,'config.capnp'),`using Workerd = import "/workerd/workerd.capnp";
 const config :Workerd.Config = (services = [
-(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
+(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
 (name = "mock", worker = (modules = [(name = "mock.mjs", esModule = embed "mock.mjs")],compatibilityDate = "2026-09-28"))
 ]);`);
  const result=spawnSync(binary,['test',join(dir,'config.capnp'),'main'],{encoding:'utf8',timeout:30000});
