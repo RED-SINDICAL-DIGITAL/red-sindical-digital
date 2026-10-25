@@ -73,3 +73,6 @@ Documentación técnica utilizada: https://developers.cloudflare.com/d1/worker-a
 El usuario pidió continuar. Se prepararon correcciones de fechas de Argentina (incluido plazo por defecto/renovación), captura de fuentes con controles DNS/redirección/tamaño/tiempo e identidad externa segura, con conservación de cierres y guardas transaccionales. Admin unifica la revisión por URL y candidato, conserva el borrador y exige un Worker nuevo antes de consultar HTML. Fuente sintética propia lista para el ensayo. Ver `BOLSA-11761-FECHAS-Y-FUENTES-STAGING.md`.
 
 Al iniciar esta entrega el navegador observó todavía 11760, correo y cola apagados. El despliegue 11761 es manual y no requiere SQL, flags o credenciales nuevas. El respaldo de datos verificado sigue siendo 11760 versión 3. No se modificó producción. La consulta DNS previa no equivale a pinning de la conexión: la seguridad productiva de ese egreso sigue pendiente.
+
+
+**Entrega registrada:** Worker código `dab7e96fd0a71553e91bcc093329fde966b9e418` (54 pruebas y CI Bolsa/Radio verdes); Pages `fcb77c56fcddfc7136f05748aea532756c415958` (132 pruebas y CI verde), desplegado y cotejado por manifiesto. Worker remoto todavía **11760** a las 23:34 del 24 de octubre en Argentina; ZIP 11761 verificado y despliegue manual pendiente. No hubo escritura de datos remotos. Ver `BOLSA-11761-ENTREGA-20261024.md`.
