@@ -98,7 +98,7 @@ test('leaving the import view or replacing the preview stops later batches witho
   }
 });
 test('Admin loads the shared importer, validates the whole preview, and exposes external-source requirements',()=>{
-  assert.match(html,/uadav-jobs-import\.js\?v=11760\.2/);
+  assert.match(html,/uadav-jobs-import\.js\?v=11761\.1/);
   assert.match(html,/UADAVJobsImport\.normalize\(r,\{visible,source:origin\}\)/);
   assert.match(html,/UADAVJobsImport\.splitBatches\(batches\)/);
   assert.match(html,/source_url/);assert.match(html,/las existentes conservan su estado/);
@@ -126,14 +126,12 @@ test('an older file read cannot replace a newer reviewed file',async()=>{
   assert.equal(x.c.S.importRows[0].titulo,'Nuevo');assert.equal(x.fields.importCommit.disabled,false);
   assert.match(x.fields.importPreview.textContent,/Nuevo/);assert.doesNotMatch(x.fields.importPreview.textContent,/Anterior/);
 });
-test('the candidate editor uses its actual source to render the expiry date instead of an undefined variable',async()=>{
-  const handler=html.slice(html.indexOf('window.publishCandidate=async'),html.indexOf('\nwindow.confirmPublishCandidate='));
-  const modals=[],toasts=[];
-  const c={window:{__federatedSources:[{id:'qa',kind:'job',name:'Fuente QA',last_check:{candidates:[{titulo:'Candidata QA',source_url:raw.source_url}]}}]},
-    api:async()=>({item:{titulo:'Candidata QA',fecha_limite:'2026-10-24',descripcion:'Ficticia'}}),esc:x=>String(x||''),toast:(...x)=>toasts.push(x),modal:(...x)=>modals.push(x)};
+test('candidate review delegates to the shared URL editor with its actual source',async()=>{
+  const handler=html.slice(html.indexOf('window.publishCandidate=async'),html.indexOf('\nwindow.discardCandidate='));
+  const opened=[],reads=[],c={window:{__federatedSources:[{id:'qa',kind:'job',name:'Fuente QA',last_check:{candidates:[{titulo:'Candidata QA',source_url:raw.source_url}]}}]},toast(){}};
+  c.window.openUrlImport=options=>opened.push(options);c.window.analyzeImportUrl=async()=>reads.push('read');
   vm.runInNewContext(handler,c);await c.window.publishCandidate('qa',0);
-  assert.equal(modals.length,1);assert.match(modals[0][1],/externalJobDeadline/);assert.match(modals[0][1],/value="2026-10-24" required/);
-  assert.equal(toasts.filter(x=>x[1]==='bad').length,0);
+  assert.equal(opened.length,1);assert.equal(opened[0].source.id,'qa');assert.equal(opened[0].url,raw.source_url);assert.equal(reads.length,1);
 });
 test('the actual CSV fixture retains UTF-8 accents, URLs and calendar dates without automatic numeric conversion',async()=>{
   const content=fs.readFileSync(path.join(__dirname,'fixtures/bolsa-import-11760-oculta.csv'),'utf8');

@@ -51,7 +51,7 @@ export async function build(root=ROOT,origin=process.env.UADAV_STAGING_ORIGIN){
   await collect();
   // Only these explicit synthetic diagnostics are published by the isolated staging build.
   // Never traverse the tests directory or expose its other fixtures/scripts.
-  for(const diagnostic of ['tests/staging-signals-diagnostic.html','tests/staging-presskit-diagnostic.html']){
+  for(const diagnostic of ['tests/staging-signals-diagnostic.html','tests/staging-presskit-diagnostic.html','tests/staging-job-source.html']){
     const diagnosticInfo=await lstat(path.join(root,diagnostic));
     if(!diagnosticInfo.isFile()||diagnosticInfo.isSymbolicLink())throw Error('Invalid staging diagnostic');
     files.push(diagnostic);

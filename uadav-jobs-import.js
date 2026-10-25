@@ -37,6 +37,35 @@
       ciudad:text(val('ciudad','Ciudad'),120),provincia:text(val('provincia','Provincia'),120),pais:text(val('pais','País')||'Argentina',80),
       fecha:text(val('fecha','Fecha'),40),remuneracion:text(val('remuneracion')||'no_informada',100)};
   }
+  function prepareReview(reply,kind,source){
+    if(!['job','event'].includes(kind)||reply?.success!==true||reply.kind!==kind||!reply.item||typeof reply.item.titulo!=='string'||!reply.item.titulo.trim())throw Error('No se confirmó una ficha válida para revisar.');
+    const input=reply.item,item={};
+    for(const key of ['titulo','descripcion','ciudad','provincia','pais','fecha','fecha_inicio','fecha_fin','fecha_limite','lugar','categoria','empresa','modalidad','source','region_scope'])item[key]=typeof input[key]==='string'?text(input[key],key==='descripcion'?2500:180):'';
+    item.source_url=publicUrl(input.source_url,'Origen');item.external_id=item.source_url;
+    item.application_url=item.source_url;item.application_mode='external_url';item.origen='externo';
+    if(source){item.source=text(source.name,100);item.source_id=text(source.id,80);item.source_auto_sync=true;}
+    return {kind,item};
+  }
+  function captureReady(health){
+    if(health?.ok!==true||health.success!==true||health.d1!==true||!/^\d+$/.test(String(health.build||''))||Number(health.build)<11761)throw Error('La revisión de enlaces requiere el Worker de staging 11761 o posterior. Actualizalo y volvé a revisar.');
+  }
+  function reviewedItem(review,{title,description,deadline},now=Date.now()){
+    const item={...review.item,titulo:text(title,180),descripcion:text(description,2500)};
+    if(!item.titulo||!item.descripcion)throw Error('Completá el título y la descripción antes de incorporar.');
+    item.source_url=publicUrl(item.source_url,'Origen');item.external_id=item.source_url;item.application_url=item.source_url;
+    if(review.kind==='job'){
+      if(!validDate(deadline)||deadline<today(now))throw Error('Elegí una fecha límite válida y vigente.');
+      item.fecha_limite=deadline;item.revisado_por_admin=true;
+    }
+    return item;
+  }
+  async function sendReviewed(kind,item,{origin,request}){
+    if(origin!==ORIGIN)throw Error('La revisión externa solo está preparada en staging.');
+    if(!['job','event'].includes(kind))throw Error('Elegí Bolsa o Cartelera.');
+    const result=await request('admin/federated/import',{method:'POST',body:{kind,items:[item]}});
+    if(result?.success!==true||result.kind!==kind||!Number.isInteger(result.imported)||!Number.isInteger(result.updated)||result.imported<0||result.updated<0||result.imported+result.updated!==1)throw Error('No se confirmó la incorporación. Comprobá la lista antes de repetirla.');
+    return result;
+  }
   function splitBatches(batches){
     const seen=new Set(),result=[];
     for(const batch of batches){
@@ -75,5 +104,5 @@
     if(result?.success!==true||result.kind!=='job'||!Number.isInteger(result.imported)||!Number.isInteger(result.updated)||result.imported<0||result.updated<0||result.imported+result.updated!==batch.rows.length)throw Error('El servidor no confirmó todas las ofertas de este lote. Revisá la lista antes de repetirlo.');
     return result;
   }
-  root.UADAVJobsImport={normalize,splitBatches,sendBatch,today,readWorkbook,sheetRows};
+  root.UADAVJobsImport={normalize,splitBatches,sendBatch,today,readWorkbook,sheetRows,prepareReview,captureReady,reviewedItem,sendReviewed,publicUrl};
 })(window);
