@@ -80,3 +80,12 @@ Referencias oficiales revisadas: [crear y vincular D1](https://developers.cloudf
 ## Qué no cierra este ensayo por sí solo
 
 Si pasa en remoto, acreditará el handler y las transacciones D1 con fixtures. No será recuperación integral de cuentas, mensajes o de toda la plataforma. No habilitará el endpoint de restauración del Worker principal, correo o cron. Para habilitar una recuperación real seguirá siendo necesario un alcance explícito y un respaldo vigente cotejado.
+
+## Código guardado y CI confirmada
+
+Commit del adaptador y del registro de captura: [`37e1cfb`](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/commit/37e1cfbd9c10c7a8800d4a38b0b4b3ada0623f64), únicamente en `release/radio-studio-staging-rc-20261020`.
+
+- [Bolsa staging policy checks · 40238857214](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40238857214): **success**; fuente generada, políticas, 65 pruebas focalizadas, 12 comprobaciones workerd y compatibilidad KV aprobadas.
+- [Radio Studio security checks · 40238857246](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40238857246): **success**.
+
+Estos resultados prueban el código guardado. El Worker `uadav-restore-qa` y la D1 `uadav-bolsa-restore-qa` **todavía no están creados, vinculados ni desplegados por esta sesión**. La prueba D1 remota sigue pendiente. El Worker principal 11762, Pages, producción y la recuperación por correo no cambiaron.

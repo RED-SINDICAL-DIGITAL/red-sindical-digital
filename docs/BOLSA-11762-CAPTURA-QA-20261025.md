@@ -40,3 +40,12 @@ El JSON privado no está en git. No se habilitaron recuperación por correo, res
 La captura puntual con fuente sintética propia queda validada. Siguen pendientes las fuentes reales autorizadas y la salida pública controlada frente a rebinding, el correo transaccional, la restauración remota desechable, avisos vencidos/cron, cuentas y concurrencia independientes y dispositivos restantes. No declarar terminada Bolsa ni pasar todavía a Cartelera.
 
 Se preparó un **Worker independiente de ensayo**, sin tocar `worker.js`, para ejecutar las rutas exactas de restauración sobre una D1 nueva y solo con fixtures. Ver `BOLSA-11762-RESTAURACION-D1-DESECHABLE.md`. No reemplaza el Worker principal y su despliegue remoto queda pendiente de la creación manual de esos recursos QA.
+
+## Código guardado y CI confirmada
+
+Commit del adaptador y del registro de captura: [`37e1cfb`](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/commit/37e1cfbd9c10c7a8800d4a38b0b4b3ada0623f64), únicamente en `release/radio-studio-staging-rc-20261020`.
+
+- [Bolsa staging policy checks · 40238857214](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40238857214): **success**; fuente generada, políticas, 65 pruebas focalizadas, 12 comprobaciones workerd y compatibilidad KV aprobadas.
+- [Radio Studio security checks · 40238857246](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40238857246): **success**.
+
+Estos resultados prueban el código guardado. El Worker `uadav-restore-qa` y la D1 `uadav-bolsa-restore-qa` **todavía no están creados, vinculados ni desplegados por esta sesión**. La prueba D1 remota sigue pendiente. El Worker principal 11762, Pages, producción y la recuperación por correo no cambiaron.
