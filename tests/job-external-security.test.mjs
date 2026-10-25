@@ -36,7 +36,26 @@ test('a public read verifies A and AAAA, follows no automatic redirects and forw
   assert.equal(result.url,source);assert.match(result.html,/Convocatoria QA/);assert.equal(n.calls.length,3);
   assert.deepEqual(n.calls.slice(0,2).map(x=>new URL(x.url).searchParams.get('type')),['A','AAAA']);
   for(const call of n.calls){assert(!Object.keys(call.options.headers).some(k=>/authorization|cookie|key|origin|referer/i.test(k)));assert(call.options.signal)}
+  assert(n.calls.every(call=>call.options.redirect==='manual'),'Workers supports manual redirects; resolver redirects must be rejected explicitly');
   assert.equal(n.pages()[0].options.redirect,'manual');
+});
+test('DNS resolver redirects are rejected without following a Location or requesting the source',async()=>{
+  for(const status of [301,302,303,304,307,308,399]){
+    let calls=0,canceled=false;
+    await assert.rejects(uadavExternalFetchHTML(source,{requestFetch:async(url,options)=>{
+      calls++;assert.equal(new URL(url).hostname,'cloudflare-dns.com');assert.equal(options.redirect,'manual');
+      const body=status===304?null:new ReadableStream({cancel(){canceled=true}});
+      return new Response(body,{status,headers:{Location:'https://127.0.0.1/private'}});
+    }}),error=>error.externalCode==='EXTERNAL_DNS_REDIRECT');
+    assert.equal(calls,1);if(status!==304)assert(canceled);
+  }
+});
+test('invalid DNS JSON and transport failures have safe distinct messages without echoing upstream details',async()=>{
+  const secret='private transport detail 169.254.169.254';
+  for(const [requestFetch,code] of [
+    [async()=>{throw Error(secret)},'EXTERNAL_DNS_FETCH'],
+    [async()=>new Response(secret),'EXTERNAL_DNS_FORMAT']
+  ])await assert.rejects(uadavExternalFetchHTML(source,{requestFetch}),error=>error.externalCode===code&&!error.message.includes(secret)&&!error.message.includes('169.254'));
 });
 test('mixed public/private DNS answers and an unavailable resolver stop before the source HTTP request',async()=>{
   for(const dns of [(host,type)=>type==='A'?[{type:1,data:'127.0.0.1'}]:[],(host,type)=>type==='A'?[{type:1,data:'93.184.215.14'}]:[{type:28,data:'fc00::1'}],()=>[]]){
@@ -70,6 +89,17 @@ test('timeouts cover both resolution and a stalled source body without exposing 
   await assert.rejects(uadavExternalFetchHTML(source,{requestFetch:()=>new Promise(()=>{}),timeoutMs:10}),e=>e.externalCode==='EXTERNAL_TIMEOUT');
   const n=network({page:()=>new Response(new ReadableStream({start(){},cancel(){}}),{headers:{'content-type':'text/html'}})});
   await assert.rejects(uadavExternalFetchHTML(source,{requestFetch:n.requestFetch,timeoutMs:10}),e=>e.externalCode==='EXTERNAL_TIMEOUT');
+});
+test('timeout and size rejection do not wait for an unresponsive body cancellation', {timeout:500},async()=>{
+  let canceled=0;
+  const cancel=()=>{canceled++;return new Promise(()=>{})};
+  const cases=[
+    {page:()=>new Response(new ReadableStream({start(){},cancel}),{headers:{'content-type':'text/html'}}),code:'EXTERNAL_TIMEOUT'},
+    {page:()=>new Response(new ReadableStream({start(c){c.enqueue(new Uint8Array(750001))},cancel}),{headers:{'content-type':'text/html'}}),code:'EXTERNAL_SIZE'},
+    {page:()=>new Response(new ReadableStream({start(){},cancel}),{headers:{'content-type':'text/html','content-length':'750001'}}),code:'EXTERNAL_SIZE'}
+  ];
+  for(const value of cases){const n=network(value);await assert.rejects(uadavExternalFetchHTML(source,{requestFetch:n.requestFetch,timeoutMs:10}),e=>e.externalCode===value.code)}
+  assert.equal(canceled,3);
 });
 test('JSON-LD and metadata become a bounded public preview, with canonical identity and calendar dates',()=>{
   const html='<title>Fallback</title><script type="application/ld+json">'+JSON.stringify({'@graph':[{'@type':['JobPosting','CreativeWork'],title:'Música &amp; teatro',description:'<b>Ficticia</b>',identifier:{value:'123'},validThrough:'2026-11-23T23:59:59-03:00',hiringOrganization:{name:'Fuente QA'},jobLocation:{address:{addressLocality:'Rosario',addressRegion:'Santa Fe'}},image:'javascript:alert(1)'}]})+'</script>';

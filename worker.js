@@ -450,7 +450,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11761';
+const BUILD = '11762';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -1017,8 +1017,12 @@ function uadavExternalAwait(promise,signal){
     Promise.resolve(promise).then(value=>{signal?.removeEventListener('abort',abort);resolve(value)},error=>{signal?.removeEventListener('abort',abort);reject(error)});
   });
 }
+function uadavExternalCancel(body){
+  // Cleanup must not make an error or timeout wait on an unresponsive peer.
+  try{Promise.resolve(body?.cancel()).catch(()=>{})}catch{}
+}
 async function uadavExternalRead(response,limit,signal){
-  if(Number(response.headers.get('content-length'))>limit){await response.body?.cancel();throw uadavExternalError('EXTERNAL_SIZE','La página es demasiado grande. Usá CSV o carga manual.')}
+  if(Number(response.headers.get('content-length'))>limit){uadavExternalCancel(response.body);throw uadavExternalError('EXTERNAL_SIZE','La página es demasiado grande. Usá CSV o carga manual.')}
   const reader=response.body?.getReader();if(!reader)throw uadavExternalError('EXTERNAL_EMPTY','La fuente no devolvió contenido.');
   const decoder=new TextDecoder();let text='',size=0;
   try{
@@ -1029,7 +1033,7 @@ async function uadavExternalRead(response,limit,signal){
       text+=decoder.decode(value,{stream:true});
     }
     return text+decoder.decode();
-  }catch(error){await reader.cancel().catch(()=>{});throw error}finally{reader.releaseLock()}
+  }catch(error){uadavExternalCancel(reader);throw error}finally{try{reader.releaseLock()}catch{}}
 }
 // Preflight validates both address families; it does not pin fetch() to those IPs.
 // Production still requires verified public-only egress against DNS rebinding.
@@ -1037,9 +1041,15 @@ async function uadavExternalDNS(host,requestFetch,signal){
   let count=0;
   for(const type of ['A','AAAA']){
     const url='https://cloudflare-dns.com/dns-query?name='+encodeURIComponent(host)+'&type='+type;
-    const response=await uadavExternalAwait(requestFetch(url,{redirect:'error',signal,headers:{Accept:'application/dns-json'}}),signal);
-    if(!response.ok){await response.body?.cancel();throw uadavExternalError('EXTERNAL_DNS','No pudimos comprobar que la fuente sea pública. Usá CSV.')}
-    const data=JSON.parse(await uadavExternalRead(response,16384,signal));
+    let response;
+    try{response=await uadavExternalAwait(requestFetch(url,{redirect:'manual',signal,headers:{Accept:'application/dns-json'}}),signal)}
+    catch(error){if(error.externalCode)throw error;throw uadavExternalError('EXTERNAL_DNS_FETCH','No pudimos consultar el verificador público de la fuente. Usá CSV.')}
+    // Workers rejects redirect:"error". Manual mode plus an explicit rejection
+    // preserves the no-redirect resolver policy in both Node and workerd.
+    if(response.status>=300&&response.status<400){uadavExternalCancel(response.body);throw uadavExternalError('EXTERNAL_DNS_REDIRECT','El verificador público redirigió la consulta. No se leyó la fuente. Usá CSV.')}
+    if(!response.ok){uadavExternalCancel(response.body);throw uadavExternalError('EXTERNAL_DNS','No pudimos comprobar que la fuente sea pública. Usá CSV.')}
+    let data;const content=await uadavExternalRead(response,16384,signal);
+    try{data=JSON.parse(content)}catch{throw uadavExternalError('EXTERNAL_DNS_FORMAT','El verificador público devolvió una respuesta inválida. Usá CSV.')}
     if(data?.Status!==0||data.Answer!==undefined&&(!Array.isArray(data.Answer)||data.Answer.length>32))throw uadavExternalError('EXTERNAL_DNS','No pudimos comprobar que la fuente sea pública. Usá CSV.');
     for(const answer of data.Answer||[]){
       if(![1,28].includes(answer.type))continue;
@@ -1057,12 +1067,12 @@ async function uadavExternalFetchHTML(value,{requestFetch=fetch,timeoutMs=8000}=
       await uadavExternalDNS(new URL(current).hostname,requestFetch,controller.signal);
       const response=await uadavExternalAwait(requestFetch(current,{redirect:'manual',signal:controller.signal,headers:{Accept:'text/html, application/xhtml+xml;q=0.9','User-Agent':'UADAVSTREAM/1.0'}}),controller.signal);
       if([301,302,303,307,308].includes(response.status)){
-        const location=response.headers.get('location');await response.body?.cancel();
+        const location=response.headers.get('location');uadavExternalCancel(response.body);
         if(!location||redirects===3)throw uadavExternalError('EXTERNAL_REDIRECT','La fuente redirige demasiadas veces. Usá la dirección final o CSV.');
         current=uadavExternalURL(new URL(location,current).href);continue;
       }
-      if(!response.ok){await response.body?.cancel();throw uadavExternalError('EXTERNAL_HTTP','La página de origen no respondió correctamente. Usá CSV o carga manual.')}
-      if(!/^(?:text\/html|application\/xhtml\+xml)(?:\s*;|$)/i.test(response.headers.get('content-type')||'')){await response.body?.cancel();throw uadavExternalError('EXTERNAL_TYPE','La URL no entrega una página HTML importable.',400)}
+      if(!response.ok){uadavExternalCancel(response.body);throw uadavExternalError('EXTERNAL_HTTP','La página de origen no respondió correctamente. Usá CSV o carga manual.')}
+      if(!/^(?:text\/html|application\/xhtml\+xml)(?:\s*;|$)/i.test(response.headers.get('content-type')||'')){uadavExternalCancel(response.body);throw uadavExternalError('EXTERNAL_TYPE','La URL no entrega una página HTML importable.',400)}
       return {url:current,html:await uadavExternalRead(response,750000,controller.signal)};
     }
   }catch(error){

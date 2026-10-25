@@ -18,6 +18,7 @@ on:
       - 'scripts/job-expiry-runtime.js'
       - 'scripts/job-external-runtime.js'
       - 'tests/job-external-security.test.mjs'
+      - 'scripts/test-job-external-workerd.mjs'
       - 'tests/job-expiry-integration.test.mjs'
       - 'scripts/embed-job-store.mjs'
       - 'migrations/staging/*.sql'
@@ -37,6 +38,7 @@ on:
       - 'scripts/job-expiry-runtime.js'
       - 'scripts/job-external-runtime.js'
       - 'tests/job-external-security.test.mjs'
+      - 'scripts/test-job-external-workerd.mjs'
       - 'tests/job-expiry-integration.test.mjs'
       - 'scripts/embed-job-store.mjs'
       - 'migrations/staging/*.sql'
@@ -58,6 +60,10 @@ jobs:
         run: node scripts/embed-job-store.mjs --check
       - name: Run public Bolsa regression tests
         run: node tests/bolsa-public-policy.test.cjs
+      - name: Install pinned Cloudflare test engine (no package scripts)
+        run: npm install --prefix "$RUNNER_TEMP/uadav-workerd" --ignore-scripts --no-package-lock --no-audit --no-fund @cloudflare/workerd-linux-64@1.20261025.1
+      - name: Run standalone external-source checks inside Cloudflare engine
+        run: UADAV_WORKERD_BIN="$RUNNER_TEMP/uadav-workerd/node_modules/@cloudflare/workerd-linux-64/bin/workerd" node scripts/test-job-external-workerd.mjs
       - name: Run SQLite transaction, concurrency, migration and recovery checks
         run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs
       - name: Run KV compatibility checks with current publication policy

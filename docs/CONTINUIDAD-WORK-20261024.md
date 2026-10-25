@@ -81,3 +81,8 @@ Al iniciar esta entrega el navegador observó todavía 11760, correo y cola apag
 ## Verificación real del 25 de octubre: 11761 desplegado
 
 Health confirma 11761 a las 17:19 de Argentina, D1/KV disponibles, correo y cola apagados. Público conserva cinco ofertas y se restableció Admin de forma segura. La lectura por URL falló tanto en la fuente sintética Pages como en la página pública del propio repositorio; no hubo incorporación ni otras escrituras de Bolsa. Causa sin determinar: no atribuirla a Cloudflare o DNS ni dar por validado el capturador. Quedan seis bloques de cierre detallados en `BOLSA-ESTADO-Y-CIERRE-20261025.md`, con estimación provisional de 3–5 jornadas efectivas condicionadas a accesos/proveedor/dispositivos. No se habilitó correo, restauración, cron ni producción.
+
+
+## 11762 preparada: corrección reproducida en workerd y ensayo del respaldo
+
+Se encontró una incompatibilidad concreta: `redirect: "error"` de la consulta DNS es rechazado por workerd. 11762 usa manual y rechaza 3xx, sin relajar la política. 57 pruebas Worker, nueve comprobaciones del motor, 134 Pages y controles adicionales locales aprobados. Se ensayó el respaldo privado versión 3 en SQLite en memoria: 11 ofertas, 10 postulaciones, 6 credenciales, 3 vínculos y 1 ledger, cotejo íntegro, repetición e interrupción/reintento correctos. No equivale a D1 remoto. Miniflare local no produjo prueba utilizable y no se cuenta como aprobado. Nuevo script de ensayo no contiene datos privados. Worker remoto sigue observado en11761; ZIP11762 verificado, despliegue manual pendiente. Pages exige11762 para capturar y normaliza identidad CSV como el Worker. Ver `BOLSA-11762-CAPTURA-Y-RESPALDO-STAGING.md`. Producción, correo, restore y cron sin cambios.
