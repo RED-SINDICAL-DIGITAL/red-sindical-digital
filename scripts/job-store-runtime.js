@@ -5,6 +5,9 @@ const UADAV_JOB_CLOSED_STATES = new Set(['closed','cerrado','cerrada','cancelled
 function uadavJobToday(now=Date.now()){
   return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Argentina/Buenos_Aires'}).format(new Date(now));
 }
+function uadavJobDeadlineAfter(days=30,now=Date.now()){
+  return new Date(Date.parse(uadavJobToday(now)+'T12:00:00Z')+days*86400000).toISOString().slice(0,10);
+}
 function uadavJobValidDate(value){
   return /^\d{4}-\d{2}-\d{2}$/.test(String(value))&&Number.isFinite(Date.parse(value+'T12:00:00Z'))&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;
 }

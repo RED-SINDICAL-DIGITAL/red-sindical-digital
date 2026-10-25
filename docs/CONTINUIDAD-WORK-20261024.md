@@ -67,3 +67,9 @@ El modo nuevo requiere **`JOB_STORE_D1=true` y una migración validada**. El usu
 **Bolsa todavía no está terminada ni validada de punta a punta.** Cartelera queda después de esta puerta de salida. No hay despliegue productivo autorizado.
 
 Documentación técnica utilizada: https://developers.cloudflare.com/d1/worker-api/d1-database/ y https://developers.cloudflare.com/d1/platform/limits/.
+
+## Entrega siguiente preparada: 11761
+
+El usuario pidió continuar. Se prepararon correcciones de fechas de Argentina (incluido plazo por defecto/renovación), captura de fuentes con controles DNS/redirección/tamaño/tiempo e identidad externa segura, con conservación de cierres y guardas transaccionales. Admin unifica la revisión por URL y candidato, conserva el borrador y exige un Worker nuevo antes de consultar HTML. Fuente sintética propia lista para el ensayo. Ver `BOLSA-11761-FECHAS-Y-FUENTES-STAGING.md`.
+
+Al iniciar esta entrega el navegador observó todavía 11760, correo y cola apagados. El despliegue 11761 es manual y no requiere SQL, flags o credenciales nuevas. El respaldo de datos verificado sigue siendo 11760 versión 3. No se modificó producción. La consulta DNS previa no equivale a pinning de la conexión: la seguridad productiva de ese egreso sigue pendiente.

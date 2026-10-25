@@ -16,6 +16,8 @@ on:
       - 'scripts/job-store-runtime.js'
       - 'scripts/job-account-runtime.js'
       - 'scripts/job-expiry-runtime.js'
+      - 'scripts/job-external-runtime.js'
+      - 'tests/job-external-security.test.mjs'
       - 'tests/job-expiry-integration.test.mjs'
       - 'scripts/embed-job-store.mjs'
       - 'migrations/staging/*.sql'
@@ -33,6 +35,8 @@ on:
       - 'scripts/job-store-runtime.js'
       - 'scripts/job-account-runtime.js'
       - 'scripts/job-expiry-runtime.js'
+      - 'scripts/job-external-runtime.js'
+      - 'tests/job-external-security.test.mjs'
       - 'tests/job-expiry-integration.test.mjs'
       - 'scripts/embed-job-store.mjs'
       - 'migrations/staging/*.sql'
@@ -55,6 +59,6 @@ jobs:
       - name: Run public Bolsa regression tests
         run: node tests/bolsa-public-policy.test.cjs
       - name: Run SQLite transaction, concurrency, migration and recovery checks
-        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs
+        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs
       - name: Run KV compatibility checks with current publication policy
         run: node tests/job-application-integration.mjs

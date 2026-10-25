@@ -192,7 +192,7 @@ test('importaciones externas: revisión posterior identificada, origen validado 
   const f=await fixture();
   try{
     await f.migrate();
-    const external={titulo:'DEMO · Convocatoria externa',source:'Fuente QA',source_url:'https://example.org/convocatoria',fecha_limite:'2099-12-31',revisado_por_admin:true};
+    const external={titulo:'DEMO · Convocatoria externa',descripcion:'Convocatoria ficticia para probar la importación externa.',source:'Fuente QA',source_url:'https://example.org/convocatoria',fecha_limite:'2099-12-31',revisado_por_admin:true};
     assert.equal((await f.call('admin/federated/import','POST',{kind:'job',items:[external]})).status,401);
     const responses=await Promise.all([f.call('admin/federated/import','POST',{kind:'job',items:[external]},true),f.call('admin/federated/import','POST',{kind:'job',items:[external]},true)]);
     assert(responses.some(x=>x.status===200));

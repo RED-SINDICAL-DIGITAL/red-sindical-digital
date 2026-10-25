@@ -450,7 +450,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11760';
+const BUILD = '11761';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -609,6 +609,9 @@ const UADAV_JOB_COLLECTIONS = ['bolsa_trabajo','postulaciones_trabajo'];
 const UADAV_JOB_CLOSED_STATES = new Set(['closed','cerrado','cerrada','cancelled','cancelado','cancelada','deleted','eliminado','eliminada','expired','vencido','vencida','hidden','oculto','oculta','paused','pausado','pausada','cerrada_por_contratante','cerrado_por_contratante','archivada','archivado','rejected','rechazada','rechazado','no_confirmada','pendiente_revision','pending_review','pending']);
 function uadavJobToday(now=Date.now()){
   return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Argentina/Buenos_Aires'}).format(new Date(now));
+}
+function uadavJobDeadlineAfter(days=30,now=Date.now()){
+  return new Date(Date.parse(uadavJobToday(now)+'T12:00:00Z')+days*86400000).toISOString().slice(0,10);
 }
 function uadavJobValidDate(value){
   return /^\d{4}-\d{2}-\d{2}$/.test(String(value))&&Number.isFinite(Date.parse(value+'T12:00:00Z'))&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;
@@ -979,6 +982,152 @@ async function uadavJobExpiryRestoreProof(db,backup,additions){
   }
   if(selected.length>100)throw uadavJobError('JOB_EXPIRY_RESTORE','Recuperá menos ofertas por lote para conservar todo su historial de avisos.',413);
   return selected;
+}
+
+/* Maintained source for public-source reads and external jobs. No credentials are forwarded. */
+function uadavExternalError(code,message,status=422){return Object.assign(Error(message),{externalCode:code,externalStatus:status})}
+async function uadavExternalBody(request,max=65536){
+  let body;try{body=await uadavSecurityJSON(request,max)}catch(error){throw uadavExternalError('EXTERNAL_BODY',error.status===413?'La solicitud es demasiado grande.':'La solicitud no contiene datos válidos.',error.status===413?413:400)}
+  if(!body||typeof body!=='object'||Array.isArray(body))throw uadavExternalError('EXTERNAL_BODY','La solicitud no contiene un objeto válido.',400);
+  return body;
+}
+function uadavExternalURL(value){
+  let url;try{url=new URL(uadavPodcastURL(value))}catch{throw uadavExternalError('EXTERNAL_URL','Usá el dominio público de la publicación, con HTTPS y sin credenciales.',400)}
+  const host=url.hostname.toLowerCase().replace(/\.$/,'');
+  if(url.href.length>700||host.length>253||!host.split('.').every(part=>/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(part)))throw uadavExternalError('EXTERNAL_URL','La dirección de origen no es válida.',400);
+  url.hostname=host;url.hash='';return url.href;
+}
+function uadavExternalPublicAddress(value){
+  const address=String(value||'').toLowerCase();
+  if(/^\d{1,3}(?:\.\d{1,3}){3}$/.test(address)){
+    const [a,b,c,...rest]=address.split('.').map(Number);
+    if([a,b,c,...rest].some(n=>n>255))return false;
+    return !(a===0||a===10||a===127||a>=224||a===100&&b>=64&&b<=127||a===169&&b===254||a===172&&b>=16&&b<=31||a===192&&(b===168||b===0&&(c===0||c===2)||b===88&&c===99)||a===198&&(b===18||b===19||b===51&&c===100)||a===203&&b===0&&c===113);
+  }
+  // Only global unicast IPv6. Reject mapped IPv4, local/special ranges and transition tunnels.
+  if(!/^[23][0-9a-f]{3}:[0-9a-f:]+$/.test(address))return false;
+  const [first,second]=address.split(':').map(part=>parseInt(part||'0',16));
+  return !(first===0x2002||first===0x3fff||first===0x2001&&(second<0x200||second===0xdb8));
+}
+function uadavExternalAwait(promise,signal){
+  return new Promise((resolve,reject)=>{
+    const abort=()=>{signal?.removeEventListener('abort',abort);reject(uadavExternalError('EXTERNAL_TIMEOUT','La fuente tardó demasiado. Podés usar CSV.'))};
+    if(signal?.aborted){abort();return}
+    signal?.addEventListener('abort',abort,{once:true});
+    Promise.resolve(promise).then(value=>{signal?.removeEventListener('abort',abort);resolve(value)},error=>{signal?.removeEventListener('abort',abort);reject(error)});
+  });
+}
+async function uadavExternalRead(response,limit,signal){
+  if(Number(response.headers.get('content-length'))>limit){await response.body?.cancel();throw uadavExternalError('EXTERNAL_SIZE','La página es demasiado grande. Usá CSV o carga manual.')}
+  const reader=response.body?.getReader();if(!reader)throw uadavExternalError('EXTERNAL_EMPTY','La fuente no devolvió contenido.');
+  const decoder=new TextDecoder();let text='',size=0;
+  try{
+    while(true){
+      if(signal?.aborted)throw uadavExternalError('EXTERNAL_TIMEOUT','La fuente tardó demasiado. Podés usar CSV.');
+      const {done,value}=await uadavExternalAwait(reader.read(),signal);if(done)break;
+      size+=value.byteLength;if(size>limit)throw uadavExternalError('EXTERNAL_SIZE','La página es demasiado grande. Usá CSV o carga manual.');
+      text+=decoder.decode(value,{stream:true});
+    }
+    return text+decoder.decode();
+  }catch(error){await reader.cancel().catch(()=>{});throw error}finally{reader.releaseLock()}
+}
+// Preflight validates both address families; it does not pin fetch() to those IPs.
+// Production still requires verified public-only egress against DNS rebinding.
+async function uadavExternalDNS(host,requestFetch,signal){
+  let count=0;
+  for(const type of ['A','AAAA']){
+    const url='https://cloudflare-dns.com/dns-query?name='+encodeURIComponent(host)+'&type='+type;
+    const response=await uadavExternalAwait(requestFetch(url,{redirect:'error',signal,headers:{Accept:'application/dns-json'}}),signal);
+    if(!response.ok){await response.body?.cancel();throw uadavExternalError('EXTERNAL_DNS','No pudimos comprobar que la fuente sea pública. Usá CSV.')}
+    const data=JSON.parse(await uadavExternalRead(response,16384,signal));
+    if(data?.Status!==0||data.Answer!==undefined&&(!Array.isArray(data.Answer)||data.Answer.length>32))throw uadavExternalError('EXTERNAL_DNS','No pudimos comprobar que la fuente sea pública. Usá CSV.');
+    for(const answer of data.Answer||[]){
+      if(![1,28].includes(answer.type))continue;
+      if(!uadavExternalPublicAddress(answer.data))throw uadavExternalError('EXTERNAL_DNS_PRIVATE','La fuente no es un sitio público permitido.',400);
+      count++;
+    }
+  }
+  if(!count)throw uadavExternalError('EXTERNAL_DNS','La fuente no tiene una dirección pública comprobable. Usá CSV.');
+}
+async function uadavExternalFetchHTML(value,{requestFetch=fetch,timeoutMs=8000}={}){
+  let current=uadavExternalURL(value);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
+  try{
+    for(let redirects=0;redirects<=3;redirects++){
+      await uadavExternalDNS(new URL(current).hostname,requestFetch,controller.signal);
+      const response=await uadavExternalAwait(requestFetch(current,{redirect:'manual',signal:controller.signal,headers:{Accept:'text/html, application/xhtml+xml;q=0.9','User-Agent':'UADAVSTREAM/1.0'}}),controller.signal);
+      if([301,302,303,307,308].includes(response.status)){
+        const location=response.headers.get('location');await response.body?.cancel();
+        if(!location||redirects===3)throw uadavExternalError('EXTERNAL_REDIRECT','La fuente redirige demasiadas veces. Usá la dirección final o CSV.');
+        current=uadavExternalURL(new URL(location,current).href);continue;
+      }
+      if(!response.ok){await response.body?.cancel();throw uadavExternalError('EXTERNAL_HTTP','La página de origen no respondió correctamente. Usá CSV o carga manual.')}
+      if(!/^(?:text\/html|application\/xhtml\+xml)(?:\s*;|$)/i.test(response.headers.get('content-type')||'')){await response.body?.cancel();throw uadavExternalError('EXTERNAL_TYPE','La URL no entrega una página HTML importable.',400)}
+      return {url:current,html:await uadavExternalRead(response,750000,controller.signal)};
+    }
+  }catch(error){
+    if(error.externalCode)throw error;
+    if(controller.signal.aborted)throw uadavExternalError('EXTERNAL_TIMEOUT','La fuente tardó demasiado. Podés usar CSV.');
+    throw uadavExternalError('EXTERNAL_FETCH','No pudimos leer esa página. Usá CSV o carga manual.');
+  }finally{clearTimeout(timer)}
+}
+function uadavExternalPreview(html,url,kind){
+  if(!['job','event'].includes(kind))throw uadavExternalError('EXTERNAL_KIND','Elegí Bolsa o Cartelera.',400);
+  const clean=value=>uadavDecodeHTMLText(String(value||'').replace(/<[^<>]*>/g,' ')).replace(/\s+/g,' ').trim();
+  const meta=name=>{let cursor=0;for(let n=0;n<300;n++){const start=lower.indexOf('<meta',cursor);if(start<0)break;const end=html.indexOf('>',start+5);if(end<0)break;cursor=end+1;const tag=html.slice(start,end+1);const key=tag.match(/(?:property|name)\s*=\s*["']([^"']*)["']/i)?.[1];if(key?.toLowerCase()!==name)continue;return clean(tag.match(/content\s*=\s*["']([^"']*)["']/i)?.[1])}return ''};
+  const lower=html.toLowerCase();let schema={},cursor=0;
+  for(let n=0;n<200;n++){
+    const start=lower.indexOf('<script',cursor);if(start<0)break;const open=html.indexOf('>',start+7);if(open<0)break;const end=lower.indexOf('</script',open+1);if(end<0)break;cursor=end+8;
+    if(!/type\s*=\s*["']application\/ld\+json["']/i.test(html.slice(start,open))||end-open>150000)continue;
+    try{const data=JSON.parse(html.slice(open+1,end)),roots=Array.isArray(data)?data:[data],nodes=roots.slice(0,100).flatMap(x=>Array.isArray(x?.['@graph'])?x['@graph'].slice(0,100):[x]);const hit=nodes.find(x=>[].concat(x?.['@type']||[]).some(type=>{const name=String(type).replace(/^https?:\/\/schema\.org\//i,'').toLowerCase();return kind==='job'?name==='jobposting':name.endsWith('event')}));if(hit){schema=hit;break}}catch{}
+  }
+  const titleStart=lower.indexOf('<title'),titleOpen=titleStart<0?-1:html.indexOf('>',titleStart),titleEnd=titleOpen<0?-1:lower.indexOf('</title',titleOpen);
+  const title=meta('og:title')||meta('twitter:title')||(titleEnd>=0?clean(html.slice(titleOpen+1,titleEnd)):'');
+  const object=value=>Array.isArray(value)?value[0]||{}:value&&typeof value==='object'?value:{};
+  const place=object(kind==='job'?schema.jobLocation:schema.location),address=object(place.address),organization=object(schema.hiringOrganization);
+  const date=value=>{const d=String(value||'').slice(0,10);return uadavJobValidDate(d)?d:''};
+  const item={titulo:clean((typeof schema.name==='string'?schema.name:'')||(typeof schema.title==='string'?schema.title:'')||title||'Sin título').slice(0,180),descripcion:clean((typeof schema.description==='string'?schema.description:'')||meta('og:description')||meta('description')).slice(0,2500),source:new URL(url).hostname.replace(/^www\./,''),source_url:url,external_id:url,origen:'externo',last_seen_at:new Date().toISOString(),source_status:'active',ciudad:clean(address.addressLocality).slice(0,120),provincia:clean(address.addressRegion).slice(0,120),pais:clean(address.addressCountry?.name||address.addressCountry||'Argentina').slice(0,80)};
+  const image=typeof schema.image==='string'?schema.image:Array.isArray(schema.image)?schema.image[0]:schema.image?.url;
+  item.imagen='';const imageValue=String(image||meta('og:image')||'');if(imageValue)try{item.imagen=uadavExternalURL(new URL(imageValue,url).href)}catch{}
+  if(kind==='job')Object.assign(item,{fecha:date(schema.datePosted),fecha_limite:date(schema.validThrough),empresa:clean(organization.name).slice(0,180),modalidad:schema.jobLocationType==='TELECOMMUTE'?'remoto':'presencial',application_mode:'external_url',application_url:url,region_scope:'argentina'});
+  else Object.assign(item,{fecha:String(schema.startDate||'').slice(0,80),fecha_inicio:String(schema.startDate||'').slice(0,80),fecha_fin:String(schema.endDate||'').slice(0,80),lugar:clean(place.name).slice(0,180),categoria:'Eventos'});
+  return {success:true,kind,item,structured:Object.keys(schema).length>0};
+}
+async function uadavPrepareExternalJobs(current,rows,{now=Date.now(),maxRecords=2000}={}){
+  const list=current.map(row=>({...row})),indices=new Map();let imported=0,updated=0;const iso=new Date(now).toISOString(),today=uadavJobToday(now),seen=new Set();
+  for(let index=0;index<list.length;index++){
+    const row=list[index];if(row.origen!=='externo')continue;
+    let key;try{key=uadavExternalURL(row.source_url)}catch{continue}
+    if(indices.has(key))throw uadavExternalError('EXTERNAL_EXISTING_DUPLICATE','Hay ofertas duplicadas para una misma URL. Revisalas desde Admin antes de importar.',409);
+    indices.set(key,index);
+  }
+  for(const raw of rows){
+    if(!raw||typeof raw!=='object'||Array.isArray(raw))throw uadavExternalError('EXTERNAL_ROW','Una oferta externa no tiene un formato válido.',400);
+    const title=String(raw.titulo||'').trim().slice(0,180),description=String(raw.descripcion||raw.resumen||'').trim().slice(0,2500);
+    if(typeof raw.titulo!=='string'||typeof (raw.descripcion||raw.resumen)!=='string'||!title||!description)throw uadavExternalError('EXTERNAL_FIELDS','Cada oferta externa necesita título y descripción.',400);
+    const sourceUrl=uadavExternalURL(raw.source_url||raw.url_origen||raw.url),applicationUrl=uadavExternalURL(raw.application_url||sourceUrl);
+    if(seen.has(sourceUrl))throw uadavExternalError('EXTERNAL_DUPLICATE','El lote repite una URL de origen.',409);seen.add(sourceUrl);
+    const index=indices.get(sourceUrl)??-1,old=index>=0?list[index]:null;
+    const approved=raw.revisado_por_admin===true,expires=String(raw.fecha_limite||'').trim();
+    if(expires&&!uadavJobValidDate(expires)||(approved||old?.activo===true)&&(!uadavJobValidDate(expires)||expires<today))throw uadavExternalError('EXTERNAL_DATE','La oferta externa publicada requiere una fecha de caducidad válida y vigente.',400);
+    const item={...(old||{}),id:old?.id||'JOB-EXT-'+crypto.randomUUID().slice(0,8).toUpperCase(),request_id:old?.request_id||'external-url:'+await uadavDigest(sourceUrl),titulo:title,descripcion:description,rubro:String(raw.rubro||raw.categoria||'Artistas').slice(0,100),ciudad:String(raw.ciudad||'').slice(0,120),provincia:String(raw.provincia||'').slice(0,120),pais:String(raw.pais||'Argentina').slice(0,80),region_scope:String(raw.region_scope||'argentina').slice(0,40),modalidad:String(raw.modalidad||'presencial').slice(0,50),remuneracion:String(raw.remuneracion||'no_informada').slice(0,100),fecha:String(raw.fecha||'').slice(0,40),fecha_limite:expires,empresa:String(raw.empresa||raw.organizacion||'').slice(0,180),source:String(raw.source||raw.fuente||'externa').slice(0,100),source_url:sourceUrl,external_key:sourceUrl,source_id:old?.source_id||String(raw.source_id||'').slice(0,80),source_auto_sync:old?old.source_auto_sync===true:raw.source_auto_sync===true,last_seen_at:iso,source_status:'active',application_mode:'external_url',application_url:applicationUrl,origen:'externo',activo:old?old.activo===true:approved,revision_pendiente:old?old.revision_pendiente!==false:!approved,importado_en:old?.importado_en||iso,actualizado:iso};
+    if(index>=0){list[index]=old.managed===true||old.claimed===true?{...old,last_seen_at:iso}:item;updated++}else{if(list.length>=maxRecords)throw uadavExternalError('EXTERNAL_CAPACITY','La colección requiere revisión administrativa antes de incorporar más ofertas.',503);indices.set(sourceUrl,list.length);list.push(item);imported++}
+  }
+  return {list,imported,updated};
+}
+
+function uadavExternalCandidates(html,base,kind,limit=6){
+  const lower=html.toLowerCase(),seen=new Set(),out=[];let cursor=0;
+  const words=kind==='job'?/convoc|casting|audici[oó]n|bailar[ií]n|actriz|actor|m[uú]sico|vacante|trabajo/i:/teatro|m[uú]sica|danza|circo|festival|show|funci[oó]n|concierto|recital|encuentro|espect[aá]culo/i;
+  for(let n=0;n<2000&&out.length<Math.max(3,Math.min(12,Number(limit)||6));n++){
+    const start=lower.indexOf('<a',cursor);if(start<0)break;cursor=start+2;if(!/[\s>]/.test(html[cursor]||''))continue;
+    const open=html.indexOf('>',cursor),end=open<0?-1:lower.indexOf('</a',open+1);if(open<0||end<0)break;cursor=end+3;
+    const href=html.slice(start,open).match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1];if(!href)continue;
+    const label=uadavDecodeHTMLText(html.slice(open+1,end).replace(/<[^<>]*>/g,' ')).replace(/\s+/g,' ').trim().slice(0,180);
+    if(label.length<8||!words.test(label+' '+href))continue;
+    try{const url=uadavExternalURL(new URL(uadavDecodeHTMLText(href),base).href);if(seen.has(url))continue;seen.add(url);out.push({href:url,label})}catch{}
+  }
+  return out;
 }
 
 /* END JOB STORE STAGING */
@@ -3803,9 +3952,9 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if (path === '/api/bolsa_trabajo') {
       const list=await getArray('bolsa_trabajo');
       if(request.method==='GET') return isAdmin()?json(list.map(({owner_access_hash,...adminJob})=>adminJob)):json(list.filter(jobIsPublic).map(publicJob));
-      if(request.method==='POST'){ let b;try{b=await uadavSecurityJSON(request,18000)}catch{return json({error:'Solicitud inválida o demasiado grande'},400)} if(!b.titulo||!b.descripcion||!b.contacto)return json({error:'Título, descripción y contacto son obligatorios'},400); const accountIdentity=await uadavJobAccountSelection(request,env,b); const requestId=String(b.request_id||'');if(jobStore&&!requestId)return json({error:'Actualizá la página antes de publicar.'},400);if(requestId&&!/^[a-f0-9-]{36}$/i.test(requestId))return json({error:'Identificador de solicitud inválido'},400);if(requestId){const prior=list.find(x=>x.request_id===requestId);if(prior)return json({error:'Esta solicitud ya fue recibida. No vuelvas a publicarla. Referencia: '+prior.id,existing_job_id:prior.id},409);} const item={id:'JOB-'+Date.now().toString(36).toUpperCase()+'-'+Array.from(crypto.getRandomValues(new Uint8Array(6)),v=>v.toString(16).padStart(2,'0')).join('').toUpperCase(),creado:new Date().toISOString(),creado_por:isAdmin()?'admin':'publico',request_id:requestId||undefined,titulo:String(b.titulo).slice(0,160),rubro:String(b.rubro||'').slice(0,80),tipo:String(b.tipo||'busqueda_artista').slice(0,50),contratante_tipo:String(b.contratante_tipo||'productora').slice(0,50),empresa:String(b.empresa||'').slice(0,160),contacto_nombre:String(b.contacto_nombre||'').slice(0,100),contacto_apellido:String(b.contacto_apellido||'').slice(0,100),logo_url:(()=>{try{const u=new URL(String(b.logo_url||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href.slice(0,500):''}catch{return ''}})(),modalidad:String(b.modalidad||'presencial').slice(0,50),ciudad:String(b.ciudad||'').slice(0,100),provincia:String(b.provincia||'').slice(0,100),pais:String(b.pais||'Argentina').slice(0,80),fecha:String(b.fecha||'').slice(0,30),fecha_limite:String(b.fecha_limite||'').slice(0,30),remuneracion:String(b.remuneracion||'a_convenir').slice(0,80),descripcion:String(b.descripcion).slice(0,2500),requisitos:String(b.requisitos||'').slice(0,2000),contacto:String(b.contacto).slice(0,300),contacto_email:String(b.contacto_email||b.email||'').trim().toLowerCase().slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,60),contacto_tipo:String(b.contacto_tipo||'').slice(0,30),activo:true}; const today=uadavJobToday();if(!item.fecha_limite){const deadline=new Date(Date.now()+30*86400000);item.fecha_limite=deadline.toISOString().slice(0,10);}if(!uadavJobValidDate(item.fecha_limite)||item.fecha_limite<today)return json({error:'Elegí una fecha de caducidad válida, igual o posterior a hoy'},400); if(item.contacto_email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.contacto_email))return json({error:'El correo del responsable no es válido'},400); const ownerKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');item.owner_access_hash=await uadavDigest(ownerKey); if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); if(jobStore)await jobStore.write('bolsa_trabajo',list,accountIdentity?{accountLink:{identity:accountIdentity,collection:'bolsa_trabajo',recordId:item.id}}:undefined);else await putJSON('bolsa_trabajo',list); let credential_shadow='disabled'; if(!jobStore&&env.JOB_OWNER_D1_SHADOW==='true'&&hasD1()){try{const wr=await env.DB.prepare('INSERT OR IGNORE INTO job_owner_credentials(job_id,secret_hash,revision,updated_at) VALUES(?,?,1,?)').bind(String(item.id),String(item.owner_access_hash),new Date().toISOString()).run();credential_shadow=wr.meta?.changes===1?'inserted':'existing';}catch{credential_shadow='failed';}} const d1sync=jobStore?{ok:true,authority:'job_store_records'}:await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('create_job','job',item.id,{title:item.titulo}).catch(()=>{}); return json({success:true,item:(({owner_access_hash,contacto,contacto_email,whatsapp,...safe})=>safe)(item),clave_contratante:ownerKey,account_saved:!!accountIdentity,d1_sync:d1sync,credential_sync_status:credential_shadow}); }
+      if(request.method==='POST'){ let b;try{b=await uadavSecurityJSON(request,18000)}catch{return json({error:'Solicitud inválida o demasiado grande'},400)} if(!b.titulo||!b.descripcion||!b.contacto)return json({error:'Título, descripción y contacto son obligatorios'},400); const accountIdentity=await uadavJobAccountSelection(request,env,b); const requestId=String(b.request_id||'');if(jobStore&&!requestId)return json({error:'Actualizá la página antes de publicar.'},400);if(requestId&&!/^[a-f0-9-]{36}$/i.test(requestId))return json({error:'Identificador de solicitud inválido'},400);if(requestId){const prior=list.find(x=>x.request_id===requestId);if(prior)return json({error:'Esta solicitud ya fue recibida. No vuelvas a publicarla. Referencia: '+prior.id,existing_job_id:prior.id},409);} const item={id:'JOB-'+Date.now().toString(36).toUpperCase()+'-'+Array.from(crypto.getRandomValues(new Uint8Array(6)),v=>v.toString(16).padStart(2,'0')).join('').toUpperCase(),creado:new Date().toISOString(),creado_por:isAdmin()?'admin':'publico',request_id:requestId||undefined,titulo:String(b.titulo).slice(0,160),rubro:String(b.rubro||'').slice(0,80),tipo:String(b.tipo||'busqueda_artista').slice(0,50),contratante_tipo:String(b.contratante_tipo||'productora').slice(0,50),empresa:String(b.empresa||'').slice(0,160),contacto_nombre:String(b.contacto_nombre||'').slice(0,100),contacto_apellido:String(b.contacto_apellido||'').slice(0,100),logo_url:(()=>{try{const u=new URL(String(b.logo_url||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href.slice(0,500):''}catch{return ''}})(),modalidad:String(b.modalidad||'presencial').slice(0,50),ciudad:String(b.ciudad||'').slice(0,100),provincia:String(b.provincia||'').slice(0,100),pais:String(b.pais||'Argentina').slice(0,80),fecha:String(b.fecha||'').slice(0,30),fecha_limite:String(b.fecha_limite||'').slice(0,30),remuneracion:String(b.remuneracion||'a_convenir').slice(0,80),descripcion:String(b.descripcion).slice(0,2500),requisitos:String(b.requisitos||'').slice(0,2000),contacto:String(b.contacto).slice(0,300),contacto_email:String(b.contacto_email||b.email||'').trim().toLowerCase().slice(0,160),whatsapp:String(b.whatsapp||'').slice(0,60),contacto_tipo:String(b.contacto_tipo||'').slice(0,30),activo:true}; const today=uadavJobToday();if(!item.fecha_limite)item.fecha_limite=uadavJobDeadlineAfter(30);if(!uadavJobValidDate(item.fecha_limite)||item.fecha_limite<today)return json({error:'Elegí una fecha de caducidad válida, igual o posterior a hoy'},400); if(item.contacto_email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.contacto_email))return json({error:'El correo del responsable no es válido'},400); const ownerKey=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');item.owner_access_hash=await uadavDigest(ownerKey); if(list.length>=2000)return json({error:'No pudimos registrar la consulta. Contactá al artista por sus canales públicos.'},503);list.push(item); if(jobStore)await jobStore.write('bolsa_trabajo',list,accountIdentity?{accountLink:{identity:accountIdentity,collection:'bolsa_trabajo',recordId:item.id}}:undefined);else await putJSON('bolsa_trabajo',list); let credential_shadow='disabled'; if(!jobStore&&env.JOB_OWNER_D1_SHADOW==='true'&&hasD1()){try{const wr=await env.DB.prepare('INSERT OR IGNORE INTO job_owner_credentials(job_id,secret_hash,revision,updated_at) VALUES(?,?,1,?)').bind(String(item.id),String(item.owner_access_hash),new Date().toISOString()).run();credential_shadow=wr.meta?.changes===1?'inserted':'existing';}catch{credential_shadow='failed';}} const d1sync=jobStore?{ok:true,authority:'job_store_records'}:await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('create_job','job',item.id,{title:item.titulo}).catch(()=>{}); return json({success:true,item:(({owner_access_hash,contacto,contacto_email,whatsapp,...safe})=>safe)(item),clave_contratante:ownerKey,account_saved:!!accountIdentity,d1_sync:d1sync,credential_sync_status:credential_shadow}); }
       if(!isAdmin())return json({error:'No autorizado'},401);
-      if(request.method==='PUT'){const b=await request.json().catch(()=>({}));const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'No encontrado'},404);const editable={};for(const field of ['titulo','descripcion','rubro','tipo','contratante_tipo','empresa','contacto_nombre','contacto_apellido','logo_url','modalidad','ciudad','provincia','pais','fecha','fecha_limite','remuneracion','requisitos','contacto','contacto_email','whatsapp','contacto_tipo','activo'])if(Object.hasOwn(b,field))editable[field]=b[field];if(Object.hasOwn(editable,'fecha_limite')&&editable.fecha_limite&&(!/^\d{4}-\d{2}-\d{2}$/.test(String(editable.fecha_limite))||editable.fecha_limite<new Date().toISOString().slice(0,10)))return json({error:'Fecha de caducidad inválida o vencida'},400);if(Object.hasOwn(editable,'activo'))editable.activo=editable.activo===true;Object.assign(list[i],editable);list[i].actualizado=new Date().toISOString();await putJSON('bolsa_trabajo',list); const d1sync=jobStore?{ok:true,authority:'job_store_records'}:await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('update_job','job',list[i].id,{}); return json({success:true,item:(({owner_access_hash,...safe})=>safe)(list[i])});}
+      if(request.method==='PUT'){let b;try{b=await uadavExternalBody(request,18000)}catch(error){return json({error:error.message},error.externalStatus||400)}const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'No encontrado'},404);const editable={};for(const field of ['titulo','descripcion','rubro','tipo','contratante_tipo','empresa','contacto_nombre','contacto_apellido','logo_url','modalidad','ciudad','provincia','pais','fecha','fecha_limite','remuneracion','requisitos','contacto','contacto_email','whatsapp','contacto_tipo','activo'])if(Object.hasOwn(b,field))editable[field]=b[field];if(Object.hasOwn(editable,'fecha_limite')){const deadline=String(editable.fecha_limite),changed=deadline!==String(list[i].fecha_limite||'');if(deadline?!uadavJobValidDate(deadline)||changed&&deadline<uadavJobToday():changed)return json({error:'Fecha de caducidad inválida o vencida'},400);editable.fecha_limite=deadline;}if(editable.activo===true&&list[i].activo===false){const deadline=String(editable.fecha_limite??list[i].fecha_limite??'');if(!uadavJobValidDate(deadline)||deadline<uadavJobToday())return json({error:'Elegí una fecha de caducidad vigente antes de reactivar'},400);}if(Object.hasOwn(editable,'activo'))editable.activo=editable.activo===true;Object.assign(list[i],editable);list[i].actualizado=new Date().toISOString();await putJSON('bolsa_trabajo',list); const d1sync=jobStore?{ok:true,authority:'job_store_records'}:await safeD1('sync_jobs',()=>syncJobsD1(list)); await audit('update_job','job',list[i].id,{}); return json({success:true,item:(({owner_access_hash,...safe})=>safe)(list[i])});}
       if(request.method==='DELETE'){const b=await request.json().catch(()=>({})); const next=list.filter(x=>String(x.id)!==String(b.id)); await putJSON('bolsa_trabajo',next); const d1sync=jobStore?{ok:true,authority:'job_store_records'}:await safeD1('sync_jobs',()=>syncJobsD1(next)); await audit('delete_job','job',b.id,{}); return json({success:true,d1_sync:d1sync});}
     }
     // Exportación administrativa de contactos laborales, exclusivamente para gestión de publicaciones.
@@ -3920,7 +4069,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const rows=await getArray('bolsa_trabajo'),i=rows.findIndex(x=>String(x.id)===id);
       if(i<0||!(accountIdentity?await uadavJobAccountOwns(uadavJobDB(env),accountIdentity,'bolsa_trabajo',id):await uadavJobOwnerAccessMatches(rows[i],secret)))return json({error:'No se encontró la oferta con ese acceso privado'},404);
       if(action==='cerrar'){rows[i].activo=false;rows[i].estado='cerrada_por_contratante';}
-      else {const days=Number(b.dias||30);if(![7,15,30,60].includes(days))return json({error:'Duración inválida'},400);rows[i].fecha_limite=new Date(Date.now()+days*86400000).toISOString().slice(0,10);rows[i].activo=true;rows[i].estado='activa';}
+      else {const days=Number(b.dias||30);if(![7,15,30,60].includes(days))return json({error:'Duración inválida'},400);rows[i].fecha_limite=uadavJobDeadlineAfter(days);rows[i].activo=true;rows[i].estado='activa';}
       rows[i].actualizado=new Date().toISOString();
       if(accountIdentity)await jobStore.write('bolsa_trabajo',rows,{accountAuthorization:{identity:accountIdentity,collection:'bolsa_trabajo',recordId:id}});else await putJSON('bolsa_trabajo',rows);
       if(!jobStore)await safeD1('sync_jobs',()=>syncJobsD1(rows));
@@ -4016,17 +4165,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(initialized==='1')return [];
       const d=defaultFederatedSources();await putJSON('federated_sources',d);await env.UADAV_DB.put('federated_sources_initialized','1');return d
     }
-    const validateFederatedSourceUrl=value=>{
-      let u;try{u=new URL(String(value||''))}catch{return 'Ingresá una dirección web válida'}
-      if(u.protocol!=='https:'||u.username||u.password)return 'Usá un enlace público HTTPS, sin usuario ni contraseña';
-      const h=u.hostname.toLowerCase().replace(/^\[|\]$/g,'');
-      if(!h||h==='localhost'||h.endsWith('.localhost')||h.endsWith('.local')||h.endsWith('.internal'))return 'Ese sitio no es una fuente pública permitida';
-      if(/^\d{1,3}(?:\.\d{1,3}){3}$/.test(h)){
-        const p=h.split('.').map(Number);if(p.some(n=>n>255)||p[0]===0||p[0]===10||p[0]===127||p[0]>=224||p[0]===169&&p[1]===254||p[0]===172&&p[1]>=16&&p[1]<=31||p[0]===192&&p[1]===168)return 'Ese sitio no es una dirección pública permitida';
-      }
-      if(h==='::1'||h.startsWith('fc')||h.startsWith('fd')||h.startsWith('fe80:'))return 'Ese sitio no es una dirección pública permitida';
-      return ''
-    };
+    const validateFederatedSourceUrl=value=>{try{uadavExternalURL(value);return ''}catch(error){return error.message}};
     const sourceFields=(b,old={})=>{
       const name=String(b.name??old.name??'').trim().slice(0,120),kind=String(b.kind??old.kind??'event').toLowerCase(),urlValue=String(b.url??old.url??'').trim(),urlError=validateFederatedSourceUrl(urlValue);
       if(!name)throw new Error('Escribí un nombre para reconocer la fuente');if(!['event','job'].includes(kind))throw new Error('Elegí Cartelera o Bolsa de Trabajo');if(urlError)throw new Error(urlError);
@@ -4052,14 +4191,24 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
     async function probeFederatedSource(src){
       const started=Date.now(),out={source_id:src.id,checked_at:isoNow(),ok:false,status:'error',found:0,error:'',candidates:[]};
-      try{const r=await fetch(src.url,{redirect:'follow',headers:{'User-Agent':'UADAVSTREAM/1.0'}});out.http_status=r.status;if(!r.ok)throw new Error('HTTP '+r.status);const finalUrl=r.url||src.url,html=(await r.text()).slice(0,900000),base=new URL(finalUrl),clean=s=>uadavDecodeHTMLText(String(s||'').replace(/<[^>]+>/g,' ')).replace(/\s+/g,' ').trim(),links=[];for(const m of html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi)){try{const href=new URL(m[1],base).toString(),label=clean(m[2]);if(label.length>=8)links.push({href,label})}catch(_){}}const words=src.kind==='job'?/convoc|casting|audicion|audición|bailarin|bailarín|actriz|actor|musico|músico|vacante|trabajo/i:/teatro|musica|música|danza|circo|festival|show|funcion|función|concierto|recital|encuentro|espectaculo|espectáculo/i,seen=new Set();out.candidates=links.filter(x=>words.test(x.label+' '+x.href)).filter(x=>{const k=x.href+'|'+x.label;if(seen.has(k))return false;seen.add(k);return true}).slice(0,Math.max(3,Math.min(12,Number(src.publish_limit||6)))).map(x=>({titulo:x.label,source_url:x.href,source:src.name,source_id:src.id,source_auto_sync:true,ciudad:src.city||(src.scope==='rosario'?'Rosario':''),provincia:src.province||(src.scope==='rosario'?'Santa Fe':''),pais:src.country||'Argentina'}));out.found=out.candidates.length;out.ok=true;out.status='active';out.duration_ms=Date.now()-started}catch(e){out.error=String(e?.message||e).slice(0,300);out.duration_ms=Date.now()-started}const state=await getObject('federated_source_state');state[src.id]=out;await putJSON('federated_source_state',state);return out
+      try{
+        const page=await uadavExternalFetchHTML(src.url,{timeoutMs:5000});out.http_status=200;
+        out.candidates=uadavExternalCandidates(page.html,page.url,src.kind,src.publish_limit).map(x=>({titulo:x.label,source_url:x.href,source:src.name,source_id:src.id,source_auto_sync:true,ciudad:src.city||(src.scope==='rosario'?'Rosario':''),provincia:src.province||(src.scope==='rosario'?'Santa Fe':''),pais:src.country||'Argentina'}));
+        out.found=out.candidates.length;out.ok=true;out.status='active';
+      }catch(error){out.error=error.externalCode?error.message:'No se pudo revisar la fuente. Podés usar CSV.'}
+      out.duration_ms=Date.now()-started;return out;
     }
     if(path==='/api/admin/federated/discard' && request.method==='POST'){
       if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({})),state=await getObject('federated_source_state'),s=state[String(b.source_id||'')];if(!s)return json({error:'Fuente sin candidatos'},404);const idx=Number(b.index);if(!Array.isArray(s.candidates)||!Number.isInteger(idx)||idx<0||idx>=s.candidates.length)return json({error:'Candidato no encontrado'},404);const [removed]=s.candidates.splice(idx,1);s.found=s.candidates.length;s.discarded=(s.discarded||0)+1;state[String(b.source_id)]=s;await putJSON('federated_source_state',state);await audit('federated_discard','source',String(b.source_id),{url:removed?.source_url||'',title:removed?.titulo||''});return json({success:true});
     }
     if(path==='/api/admin/federated/source-status' && request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);const list=await federatedSources(),state=await getObject('federated_source_state');return json(list.map(x=>({...x,last_check:state[x.id]||null})))}
     if(path==='/api/admin/federated/sync' && request.method==='POST'){
-      if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({})),list=await federatedSources(),selected=list.filter(x=>x.active&&(b.source_id?String(x.id)===String(b.source_id):true));const results=[];for(const src of selected.slice(0,12))results.push(await probeFederatedSource(src));return json({success:true,results});
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      let b;try{b=await uadavExternalBody(request,4096)}catch(error){return json({error:error.message},error.externalStatus||400)}
+      const list=await federatedSources(),state=await getObject('federated_source_state'),selected=list.filter(x=>x.active&&(b.source_id?String(x.id)===String(b.source_id):true)).sort((a,b)=>String(state[a.id]?.checked_at||'').localeCompare(String(state[b.id]?.checked_at||''))),results=[];
+      for(const src of selected.slice(0,2)){const result=await probeFederatedSource(src);state[src.id]=result;results.push(result)}
+      if(results.length)await putJSON('federated_source_state',state);
+      return json({success:true,results,remaining:Math.max(0,selected.length-results.length)});
     }
 
     if(path==='/api/public/region' && request.method==='GET'){
@@ -4085,18 +4234,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
     if(path==='/api/admin/federated/url-preview' && request.method==='POST'){
       if(!isAdmin())return json({error:'No autorizado'},401);
-      const b=await request.json().catch(()=>({})); const kind=String(b.kind||'event').toLowerCase(); let target;
-      try{target=new URL(String(b.url||''));if(!['http:','https:'].includes(target.protocol))throw new Error('bad')}catch{return json({error:'URL pública inválida'},400)}
-      const host=target.hostname.toLowerCase(); if(host==='localhost'||host==='127.0.0.1'||host.startsWith('10.')||host.startsWith('192.168.')||host.startsWith('169.254.'))return json({error:'Origen no permitido'},400);
-      let html='';try{const r=await fetch(target.toString(),{redirect:'follow',headers:{'User-Agent':'UADAVSTREAM/1.0'}});if(!r.ok)throw new Error('HTTP '+r.status);if(!(r.headers.get('content-type')||'').toLowerCase().includes('text/html'))return json({error:'La URL no entrega HTML importable'},400);html=(await r.text()).slice(0,750000)}catch{return json({error:'No pudimos leer esa página. Usá Excel/CSV o carga manual.'},422)}
-      const clean=s=>String(s||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-      const meta=name=>{const tags=html.match(/<meta\b[^>]*>/gi)||[];for(const tag of tags){if(!tag.toLowerCase().includes(name.toLowerCase()))continue;const m=tag.match(/content=["']([^"']*)["']/i);if(m)return clean(m[1])}return''};
-      const title=meta('og:title')||meta('twitter:title')||clean((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]||''); const desc=meta('og:description')||meta('description'); const image=meta('og:image');
-      let schema={}; const scripts=html.match(/<script[^>]*application\/ld\+json[^>]*>[\s\S]*?<\/script>/gi)||[]; for(const tag of scripts){try{const raw=tag.replace(/^<script[^>]*>/i,'').replace(/<\/script>$/i,'');const x=JSON.parse(raw);const roots=Array.isArray(x)?x:[x];const flat=roots.flatMap(v=>Array.isArray(v?.['@graph'])?v['@graph']:[v]);const hit=flat.find(v=>kind==='event'?String(v?.['@type']||'').toLowerCase().includes('event'):String(v?.['@type']||'').toLowerCase().includes('job'));if(hit){schema=hit;break}}catch(_){}}
-      const loc=schema.location||{},addr=loc.address||{}; const item={titulo:clean(schema.name||title||'Sin título'),descripcion:clean(schema.description||desc),imagen:String(schema.image?.url||schema.image?.[0]||schema.image||image||''),source:host.replace(/^www\./,''),source_url:target.toString(),external_id:String(schema.identifier?.value||schema.identifier||target.toString()),origen:'externo',last_seen_at:isoNow(),source_status:'active'};
-      if(kind==='event')Object.assign(item,{fecha:String(schema.startDate||''),fecha_inicio:String(schema.startDate||''),fecha_fin:String(schema.endDate||''),lugar:clean(loc.name||''),ciudad:clean(addr.addressLocality||''),provincia:clean(addr.addressRegion||''),pais:clean(addr.addressCountry?.name||addr.addressCountry||'Argentina'),categoria:'Eventos'});
-      else Object.assign(item,{fecha:String(schema.datePosted||''),fecha_limite:String(schema.validThrough||''),empresa:clean(schema.hiringOrganization?.name||''),ciudad:clean(schema.jobLocation?.address?.addressLocality||''),provincia:clean(schema.jobLocation?.address?.addressRegion||''),pais:clean(schema.jobLocation?.address?.addressCountry?.name||schema.jobLocation?.address?.addressCountry||'Argentina'),modalidad:schema.jobLocationType==='TELECOMMUTE'?'remoto':'presencial',application_mode:'external_url',application_url:target.toString(),region_scope:'argentina'});
-      return json({success:true,kind,item,structured:Object.keys(schema).length>0});
+      let b;try{b=await uadavExternalBody(request,4096)}catch(error){return json({error:error.message},error.externalStatus||400)}
+      const kind=String(b.kind||'event').toLowerCase();if(!['job','event'].includes(kind))return json({error:'Elegí Bolsa o Cartelera'},400);
+      try{const page=await uadavExternalFetchHTML(b.url);return json(uadavExternalPreview(page.html,page.url,kind))}
+      catch(error){return json({error:error.externalCode?error.message:'No pudimos leer esa página. Usá CSV o carga manual.'},error.externalStatus||422)}
     }
     // Limpieza selectiva de convocatorias importadas: vista previa y confirmación explícita.
     if(path==='/api/admin/federated/cleanup-jobs' && ['GET','POST'].includes(request.method)){
@@ -4113,10 +4254,14 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       return json({success:true,removed:targets.length,preserved:keep.length,d1_cleanup_pending:true});
     }
     if(path==='/api/admin/federated/import' && request.method==='POST'){
-      if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({})),kind=String(b.kind||'').toLowerCase(),items=Array.isArray(b.items)?b.items:[];
+      if(!isAdmin())return json({error:'No autorizado'},401);let b;try{b=await uadavExternalBody(request,65536)}catch(error){return json({error:error.message},error.externalStatus||400)}const kind=String(b.kind||'').toLowerCase(),items=Array.isArray(b.items)?b.items:[];
       if(!['job','event'].includes(kind)||!items.length)return json({error:'kind e items requeridos'},400);
       let imported=0,updated=0;const now=isoNow();
-      if(kind==='job'){if(jobStore&&items.length>5)return json({error:'Importá hasta 5 ofertas por lote en D1.',max_batch:5},413);const list=await getArray('bolsa_trabajo');for(const raw of items.slice(0,500)){const source=String(raw.source||raw.fuente||'externa').slice(0,100),sourceUrl=String(raw.source_url||raw.url_origen||raw.url||'').slice(0,700);if(!raw.titulo||!sourceUrl)continue;const sourceError=validateFederatedSourceUrl(sourceUrl);if(sourceError)return json({error:sourceError},400);const approved=raw.revisado_por_admin===true,expires=String(raw.fecha_limite||'');if(approved&&(!/^\d{4}-\d{2}-\d{2}$/.test(expires)||expires<now.slice(0,10)))return json({error:'La publicación externa revisada requiere una fecha de caducidad vigente'},400);const key=String(raw.external_id||sourceUrl).toLowerCase(),idx=list.findIndex(x=>String(x.external_key||x.source_url||'').toLowerCase()===key);const item={...(idx>=0?list[idx]:{}),id:idx>=0?list[idx].id:'JOB-EXT-'+crypto.randomUUID().slice(0,8).toUpperCase(),request_id:'external:'+await uadavDigest(key),titulo:String(raw.titulo).slice(0,180),descripcion:String(raw.descripcion||raw.resumen||'').slice(0,2500),rubro:String(raw.rubro||raw.categoria||'Artistas').slice(0,100),ciudad:String(raw.ciudad||'').slice(0,120),provincia:String(raw.provincia||'').slice(0,120),pais:String(raw.pais||'Argentina').slice(0,80),region_scope:String(raw.region_scope||'argentina').slice(0,40),modalidad:String(raw.modalidad||'presencial').slice(0,50),remuneracion:String(raw.remuneracion||'no_informada').slice(0,100),fecha:String(raw.fecha||'').slice(0,40),fecha_limite:(/^\d{4}-\d{2}-\d{2}$/.test(String(raw.fecha_limite||''))?String(raw.fecha_limite):''),empresa:String(raw.empresa||raw.organizacion||'').slice(0,180),source,source_url:sourceUrl,external_key:key,last_seen_at:now,source_status:'active',application_mode:String(raw.application_mode||'external_url').slice(0,30),application_url:String(raw.application_url||sourceUrl).slice(0,700),origen:'externo',activo:idx>=0?list[idx].activo===true:approved,revision_pendiente:idx>=0?list[idx].revision_pendiente!==false:!approved,importado_en:idx>=0?(list[idx].importado_en||now):now,actualizado:now};if(idx>=0){list[idx]=item;updated++}else{list.push(item);imported++}}await putJSON('bolsa_trabajo',list.slice(-5000));if(!jobStore)await safeD1('sync_jobs',()=>syncJobsD1(list));}
+      if(kind==='job'){
+        if(items.length>(jobStore?5:500))return json({error:'Importá hasta '+(jobStore?5:500)+' ofertas por lote.',max_batch:jobStore?5:500},413);
+        try{const result=await uadavPrepareExternalJobs(await getArray('bolsa_trabajo'),items,{maxRecords:jobStore?2000:5000});imported=result.imported;updated=result.updated;await putJSON('bolsa_trabajo',result.list);if(!jobStore)await safeD1('sync_jobs',()=>syncJobsD1(result.list))}
+        catch(error){if(error.externalCode)return json({error:error.message},error.externalStatus);throw error}
+      }
       else{const list=await getArray('cartelera_aprobada'),pub=await getArray('eventos_publicados');for(const raw of items.slice(0,500)){const source=String(raw.source||raw.fuente||'externa').slice(0,100),sourceUrl=String(raw.source_url||raw.url_origen||raw.url||'').slice(0,700);if(!raw.titulo||!sourceUrl)continue;const key=String(raw.external_id||sourceUrl).toLowerCase(),idx=list.findIndex(x=>String(x.external_key||x.source_url||'').toLowerCase()===key);const item={...(idx>=0?list[idx]:{}),id:idx>=0?list[idx].id:'EV-EXT-'+crypto.randomUUID().slice(0,8),titulo:String(raw.titulo).slice(0,180),nombre:String(raw.titulo).slice(0,180),categoria:String(raw.categoria||'Eventos').slice(0,100),descripcion_corta:String(raw.descripcion_corta||raw.resumen||'').slice(0,400),fecha:String(raw.fecha||'').slice(0,80),fecha_inicio:String(raw.fecha_inicio||raw.fecha||'').slice(0,80),fecha_fin:String(raw.fecha_fin||'').slice(0,80),lugar:String(raw.lugar||'').slice(0,180),ciudad:String(raw.ciudad||'').slice(0,120),provincia:String(raw.provincia||'').slice(0,120),pais:String(raw.pais||'Argentina').slice(0,80),imagen:String(raw.imagen||raw.poster||'').slice(0,700),source,source_url:sourceUrl,external_key:key,last_seen_at:now,source_status:'active',origen:'externo',estado:'published',destacado_pagado:false,destacado_solicitado:false,claimable:true,importado_en:idx>=0?(list[idx].importado_en||now):now,actualizado:now};if(idx>=0){list[idx]=item;updated++}else{list.push(item);imported++}const pi=pub.findIndex(x=>String(x.id)===String(item.id));if(pi>=0)pub[pi]=item;else pub.push(item)}await putJSON('cartelera_aprobada',list.slice(-5000));await putJSON('eventos_publicados',pub.slice(-5000));await safeD1('sync_event_import',()=>syncEventsD1(list));}
       await audit('federated_import',kind,'batch',{imported,updated,count:items.length});return json({success:true,kind,imported,updated});
     }
@@ -5008,6 +5153,7 @@ async function saveEntityVersion(type,id,data){
         await putJSON('media_titles',list.slice(-5000));for(const item of list.slice(-5000)){await safeD1('import_media',()=>env.DB.prepare(`INSERT INTO media_titles(id,media_type,title,year,genres,poster,backdrop,provider,source_url,featured,visible,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET media_type=excluded.media_type,title=excluded.title,year=excluded.year,genres=excluded.genres,poster=excluded.poster,backdrop=excluded.backdrop,provider=excluded.provider,source_url=excluded.source_url,featured=excluded.featured,visible=excluded.visible,data_json=excluded.data_json,updated_at=excluded.updated_at`).bind(item.id,item.media_type,item.titulo,item.year,JSON.stringify(item.generos||[]),item.poster||'',item.backdrop||'',item.provider||detectProvider(item.source_url||'').provider,item.source_url||'',item.featured?1:0,item.visible===false?0:1,JSON.stringify(item),item.creado||isoNow(),item.actualizado||isoNow()).run())}await audit('bulk_import','media',null,{created,updated,total:rows.length});return json({success:true,entity,created,updated,total:rows.length});
       }
       if(entity==='jobs'){
+        if(jobStore)return json({error:'Actualizá Admin y usá la importación externa de Bolsa con URL de origen y revisión.'},409);
         const list=await getArray('bolsa_trabajo');const map=new Map(list.map((x,i)=>[(String(x.id||'')||normalizeSearchText(x.titulo)+'|'+normalizeSearchText(x.ciudad)+'|'+String(x.fecha||'')),i]));let created=0,updated=0;
         for(const r of rows){const title=String(r.titulo||r.title||'').trim();if(!title)continue;const item={...r,id:String(r.id||makeId('JOB')),titulo:title,rubro:String(r.rubro||''),tipo:String(r.tipo||'busqueda_artista'),empresa:String(r.empresa||r.entidad||''),modalidad:String(r.modalidad||'presencial'),ciudad:String(r.ciudad||''),provincia:String(r.provincia||''),pais:String(r.pais||'Argentina'),fecha:String(r.fecha||''),fecha_limite:String(r.fecha_limite||''),remuneracion:String(r.remuneracion||'a_convenir'),descripcion:String(r.descripcion||''),requisitos:String(r.requisitos||''),contacto:String(r.contacto||r.email||r.whatsapp||''),contacto_email:String(r.contacto_email||r.email||''),whatsapp:String(r.whatsapp||''),activo:r.activo!==false,creado:String(r.creado||isoNow()),origen:String(r.origen||'Importación Admin')};if(!item.descripcion)item.descripcion='Oportunidad importada';if(!item.contacto)item.contacto='Administración UADAV STREAM';const k=String(r.id||'')||normalizeSearchText(title)+'|'+normalizeSearchText(item.ciudad)+'|'+item.fecha;if(map.has(k)){const i=map.get(k);list[i]={...list[i],...item,id:list[i].id};updated++;}else{map.set(k,list.length);list.push(item);created++;}}
         await putJSON('bolsa_trabajo',list.slice(-5000));const d1sync=await safeD1('import_jobs',()=>syncJobsD1(list));await audit('bulk_import','jobs',null,{created,updated,total:rows.length});return json({success:true,entity,created,updated,total:rows.length,d1_sync:d1sync});
@@ -5401,6 +5547,6 @@ const uadavStagingWorker={...uadavWorker,async fetch(request,env,ctx){
     return response({error:error?.jobCode?error.message:'No se pudo confirmar la operación. Intentá más tarde.',code:error?.jobCode||'SERVICE_UNAVAILABLE'},error?.jobCode?error.status:503);
   }
 }};
-export {uadavJobStore,uadavJobMigration,uadavJobRedeemRecovery,uadavJobRate,uadavJobMaintenance,uadavJobExpiryReview,uadavJobExpiryKind,uadavJobToday};
+export {uadavJobStore,uadavJobMigration,uadavJobRedeemRecovery,uadavJobRate,uadavJobMaintenance,uadavJobExpiryReview,uadavJobExpiryKind,uadavJobToday,uadavExternalURL,uadavExternalPublicAddress,uadavExternalFetchHTML,uadavExternalPreview,uadavExternalCandidates,uadavPrepareExternalJobs};
 export default uadavStagingWorker;
 
