@@ -38,3 +38,8 @@ La publicación gratuita e inmediata, postulación con consentimiento, gestión 
 Estimación provisional de planificación: **3–5 jornadas de trabajo efectivo**, condicionadas a accesos, proveedor de correo y entorno desechable disponibles, y a que el diagnóstico no revele otro cambio importante. No es una fecha garantizada ni implica ejecución autónoma fuera de las sesiones. Las esperas de verificación de dominio, correo y dispositivos pueden extender el calendario. No se asigna un porcentaje de avance artificial.
 
 La siguiente prioridad es el fallo real del capturador. Correo, restauración y automatizaciones siguen sin habilitar. Producción permanece en `fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd`; no se cambió ninguna de sus ramas, recursos o despliegues. El último respaldo privado verificado sigue siendo el de 11760 versión 3; no se fabricó un respaldo nuevo porque estas consultas no escribieron ofertas o postulaciones.
+
+
+## Actualización posterior: 11762 preparada y ensayada
+
+La causa concreta se reprodujo en workerd: `redirect: "error"` del resolvedor DNS no es compatible. La corrección 11762 usa manual y rechaza cualquier 3xx. Se verificaron 57 pruebas Worker, nueve comprobaciones del motor y 134 de Pages, con CI verde. Pages `e90f40a8b80d25bbaf8e1722d5b9a1d27884632c` ya está publicado; Worker `a98be118050af80c3325c1a7f01f3ee966b6c747` sigue pendiente de despliegue manual. También pasó el ensayo íntegro del respaldo privado versión 3 en SQLite local, con repetición, interrupción y reintento. No prueba D1 remoto. Los seis bloques permanecen abiertos para sus comprobaciones restantes. Ver `BOLSA-11762-ENTREGA-20261025.md`.
