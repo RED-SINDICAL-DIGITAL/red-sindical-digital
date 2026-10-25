@@ -2,7 +2,11 @@
 
 ## Estado
 
-El usuario proporcionó el enlace **https://uadav-restore-qa.uadavstream.workers.dev/** y el 25/10/2026 se observó la interfaz desplegada. Health informa versión `11762-restore-qa-1`, núcleo SHA256 `94e6603f4f9d44f6cfaa6f152c4670f27335ef9fdd7c52e90c3985b4ecdaab98`, `enabled:true` y `database_bound:true`. **La prueba D1 remota todavía no se ejecutó ni está aprobada**: el acceso devolvió «Configurá una clave exclusiva de QA de al menos 32 caracteres». El binding DB existe, pero aún no se comprobó su identidad ni que esté vacío. El Worker principal de staging permanece en 11762; este ensayo no cambia sus bindings ni habilita su restauración.
+**Ensayo remoto aprobado** el 25/10/2026 en **https://uadav-restore-qa.uadavstream.workers.dev/**. Después de corregir el Secret, la interfaz confirmó acceso, base vacía y esquema preparado; completó las seis fases en D1 de Cloudflare. Se comprobaron recuperación, idempotencia, rollback, reintento, campos, accesos, consentimiento e integridad con datos ficticios.
+
+Health QA informa `11762-restore-qa-1`, núcleo SHA256 `94e6603f4f9d44f6cfaa6f152c4670f27335ef9fdd7c52e90c3985b4ecdaab98`, `enabled:true` y `database_bound:true`. [Resultado real y límites](BOLSA-11762-RESTAURACION-QA-APROBADA-20261025.md).
+
+La instancia ya está preparada y aprobada. Las instrucciones siguientes son referencia de instalación; no volver a crearla, cambiar su clave/binding ni intentar vaciarla para repetir el ensayo. El Worker principal sigue en 11762 y no se habilitó su restauración. El respaldo privado no se cargó aquí.
 
 ## Preparación manual en Cloudflare
 
@@ -79,7 +83,7 @@ Referencias oficiales revisadas: [crear y vincular D1](https://developers.cloudf
 
 ## Qué no cierra este ensayo por sí solo
 
-Si pasa en remoto, acreditará el handler y las transacciones D1 con fixtures. No será recuperación integral de cuentas, mensajes o de toda la plataforma. No habilitará el endpoint de restauración del Worker principal, correo o cron. Para habilitar una recuperación real seguirá siendo necesario un alcance explícito y un respaldo vigente cotejado.
+La prueba remota aprobada acredita el handler y las transacciones D1 con fixtures. No acredita la recuperación integral de cuentas, mensajes o de toda la plataforma. No habilitará el endpoint de restauración del Worker principal, correo o cron. Para habilitar una recuperación real seguirá siendo necesario un alcance explícito y un respaldo vigente cotejado.
 
 ## Código guardado y CI confirmada
 
@@ -88,12 +92,10 @@ Commit del adaptador y del registro de captura: [`37e1cfb`](https://github.com/R
 - [Bolsa staging policy checks · 40238857214](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40238857214): **success**; fuente generada, políticas, 65 pruebas focalizadas, 12 comprobaciones workerd y compatibilidad KV aprobadas.
 - [Radio Studio security checks · 40238857246](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40238857246): **success**.
 
-Estos resultados prueban el código guardado. El despliegue independiente se observó después de esa CI; su estado actual figura al comienzo de esta guía. Las seis fases D1 remotas siguen pendientes. El Worker principal 11762, Pages, producción y la recuperación por correo no cambiaron.
+Estos resultados prueban el código guardado. El despliegue independiente se observó después de esa CI; su estado actual figura al comienzo de esta guía. Las seis fases D1 remotas aprobaron después de resolver la configuración del Secret. El Worker principal 11762, Pages, producción y la recuperación por correo no cambiaron.
 
-## Bloqueo de configuración observado · 25/10/2026
+## Configuración corregida y prueba completada · 25/10/2026
 
-El acceso se intentó una sola vez mediante browserAuth, sin revelar ni registrar la clave. El mensaje se origina en la validación de `env.QA_RESTORE_KEY`: esa variable falta o tiene menos de 32 o más de 256 caracteres. Esa comprobación precede a cualquier consulta D1, por lo que **esta sesión no consultó, preparó ni restauró la base**. No se rebajó el requisito de autenticación ni se modificó el código.
+El primer intento detectó un Secret ausente o fuera de la longitud 32–256; se detuvo antes de consultar D1. El usuario corrigió la configuración y confirmó **HECHO**. Un segundo ingreso seguro abrió la sesión; la preparación y las seis fases aprobaron. No se redujo la longitud requerida ni se cambió código para forzar el acceso.
 
-Intervención necesaria: únicamente en **uadav-restore-qa → Settings → Variables and Secrets**, crear o editar el Secret de nombre exacto `QA_RESTORE_KEY` con una clave exclusiva, aleatoria, de 32–256 caracteres ASCII. Guardar y desplegar el cambio. No compartir el valor en el chat ni tocar el Worker principal o las bases existentes. Después se retomará el acceso seguro y la comprobación de base vacía.
-
-Evidencia del mensaje, con el campo de clave vacío: [captura de configuración](evidence/bolsa-restore-qa-clave-pendiente-20261025.jpg).
+[Evidencia inicial del bloqueo](evidence/bolsa-restore-qa-clave-pendiente-20261025.jpg) y [evidencia posterior de la aprobación](evidence/bolsa-restore-qa-aprobada-20261025.jpg). El bloqueo de configuración quedó resuelto; no se debe volver a pedir ese ajuste sin una nueva incidencia observada.

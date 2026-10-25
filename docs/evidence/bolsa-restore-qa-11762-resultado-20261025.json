@@ -1,0 +1,49 @@
+{
+  "record_type": "browser_observation_and_executed_handler_assertions",
+  "result": "complete",
+  "scope": "isolated-synthetic-d1",
+  "url": "https://uadav-restore-qa.uadavstream.workers.dev/",
+  "version": "11762-restore-qa-1",
+  "source_core_sha256": "94e6603f4f9d44f6cfaa6f152c4670f27335ef9fdd7c52e90c3985b4ecdaab98",
+  "qa_code_commit": "37e1cfbd9c10c7a8800d4a38b0b4b3ada0623f64",
+  "initial_database_empty_ui_confirmed": true,
+  "database_prepared_ui_confirmed": true,
+  "remote_d1_validated": true,
+  "checks": [
+    "Bloqueo de restauración por defecto: aprobado",
+    "Oferta, postulación, acceso, vínculos y aviso: recuperados",
+    "Repetición sin duplicados: aprobada",
+    "Interrupción y rollback entre colecciones: aprobados",
+    "Reintento posterior al fallo: aprobado",
+    "Cotejo de campos, accesos, consentimiento e integridad: aprobado"
+  ],
+  "counts_asserted_by_completed_phases": {
+    "offers": 2,
+    "applications": 2,
+    "credentials": 2,
+    "links": 4,
+    "notices": 2
+  },
+  "copy_result_ui_confirmed": true,
+  "clipboard_text_available_to_automation": false,
+  "clipboard_note": "La interfaz confirmó copia; la lectura del portapapeles de control devolvió texto vacío. Este archivo registra la observación y las aserciones ejecutadas; no es el JSON exportado por el botón.",
+  "database_name_expected": "uadav-bolsa-restore-qa",
+  "database_dashboard_identity_verified": false,
+  "real_backup_uploaded": false,
+  "real_backup_remote_restore_validated": false,
+  "main_worker_restore_enabled_by_this_session": false,
+  "staging_health_observed": {
+    "build": "11762",
+    "ok": true,
+    "kv": true,
+    "d1": true,
+    "email_automation": false,
+    "queue": false,
+    "timestamp": "2026-10-25T23:13:21.154Z"
+  },
+  "production_modified_by_this_session": false,
+  "proof": "bolsa-restore-qa-aprobada-20261025.jpg",
+  "proof_sha256": "f5f434b0ba096b2f5d05fe1efe22f150be513b01e08c34af0e1f5b404ded05e7",
+  "proof_captured_at_utc": "2026-10-25T23:09:35.099000+00:00",
+  "proof_captured_at_argentina": "2026-10-25T20:09:35.099000-03:00"
+}

@@ -1,52 +1,42 @@
-# Bolsa de Trabajo · estado y cierre · 25 de octubre de 2026
+# Bolsa de Trabajo · estado verificado y pendientes · 25 de octubre de 2026
 
-## Verificación posterior al despliegue manual
+## Estado actual
 
-El usuario confirmó el despliegue. El navegador comprobó `https://uadav-api-staging.uadavstream.workers.dev/api/health` el `2026-10-25T20:19:09.201Z` (17:19 de Argentina): **V11.7 / 11761**, `ok=true`, `success=true`, D1/KV disponibles, `email_automation=false` y `queue=false`.
+**Bolsa todavía no está completa.** El último avance es el ensayo de restauración con fixtures aprobado en D1 remoto. La publicación y postulación abiertas, la gestión privada, la migración y las importaciones ya tienen evidencia previa; los bloques pendientes se distinguen debajo.
 
-Código publicado: `dab7e96fd0a71553e91bcc093329fde966b9e418`; Pages sigue en `fcb77c56fcddfc7136f05748aea532756c415958`. Las 54 pruebas Worker, 132 Pages y CI ya aprobadas corresponden a ese código; esta comprobación no equivale a repetir todas las pruebas de integración en Cloudflare.
+- Worker principal desplegado: **11762**, código `a98be118050af80c3325c1a7f01f3ee966b6c747`, SHA256 `94e6603f4f9d44f6cfaa6f152c4670f27335ef9fdd7c52e90c3985b4ecdaab98`.
+- Pages desplegado: `e90f40a8b80d25bbaf8e1722d5b9a1d27884632c`.
+- Health principal observado el `2026-10-25T23:13:21.154Z` (**20:13 de Argentina**): ok, D1/KV disponibles, correo y cola apagados.
+- Ensayo independiente desplegado: **uadav-restore-qa / 11762-restore-qa-1**. Sus seis fases aprobaron en la base vinculada, inicialmente vacía, con datos ficticios. El código de ejecución se guardó en `37e1cfbd9c10c7a8800d4a38b0b4b3ada0623f64`; CI Bolsa **40238857214** y Radio **40238857246** aprobadas.
+- Último respaldo privado verificado: **versión 4**, 12 ofertas y 10 postulaciones, 6 credenciales, 3 vínculos y 1 marca de aviso. Se cotejaron los 21 registros anteriores sin diferencias y se ensayó localmente su recuperación. No se subió ese respaldo a la herramienta QA.
+- Producción sigue fuera de alcance: referencia comprobada `fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd`. No se modificaron ramas, variables, bases o despliegues productivos.
 
-El catálogo público mostró las mismas cinco oportunidades. Admin requirió reingreso con clave mediante `browserAuth`, se verificó sesión administrativa activa y D1 OK, sin leer o extraer credenciales.
+## Avances con evidencia
 
-## Resultado real del capturador: pendiente
-
-En Fuentes automáticas → Agregar una ficha puntual → Bolsa se consultó `https://uadav-stream-staging.pages.dev/tests/staging-job-source`. La interfaz mostró: «No pudimos leer esa página. Usá CSV o carga manual». No apareció una ficha revisada y no se ejecutó ninguna incorporación.
-
-Una segunda consulta a la página pública del propio repositorio `https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital` devolvió el mismo mensaje. Esa página se usó solo para aislar el transporte con otro dominio propio, no como convocatoria laboral. El fallo no queda limitado a Pages por esta evidencia.
-
-[Evidencia del segundo resultado](evidence/bolsa-11761-lectura-pendiente-20261025.jpg).
-
-**Causa aún no determinada.** La respuesta actual agrupa excepciones de transporte, lectura o parseo en el mismo mensaje; no permite atribuir la falla a DNS, Cloudflare, permisos, IP privada o una protección anti-bot. No se cambiaron flags, bindings ni reglas para forzar la consulta y no se probaron rutas alternativas para eludir controles. No se volvió a intentar incorporar ni se creó una oferta, candidatura o cuenta.
-
-La importación CSV ya validada en 11760 sigue siendo el último circuito de importación aprobado de extremo a extremo. No dar por validada la captura por URL solo por pasar las pruebas locales con red simulada. Próximo trabajo: diagnóstico seguro por etapas del capturador, reproducción y corrección, con regresión local y nueva comprobación en staging; después ficha sintética, repetición sin duplicar y ocultamiento.
-
-## Seis bloques para considerar Bolsa completa
-
-| Bloque | Qué falta aprobar | Intervención que puede requerirse |
+| Circuito | Qué se comprobó | Evidencia |
 |---|---|---|
-| Fuentes externas | Resolver lectura por URL, probar fuente real autorizada, repetición, cierres, errores y salida pública segura. | Despliegue de una corrección preparada si cambia el Worker; revisar configuración solo con diagnóstico concreto. |
-| Recuperación por correo | Integrar proveedor y entrega real, token de un solo uso, vencimiento, límites/reintentos y revocación de la clave anterior en una transacción. Los endpoints siguen en 503 hasta completar las pruebas. | Proveedor, dominio/remitente verificado y secretos ingresados de forma segura. |
-| Restauración | Restaurar un respaldo en D1 desechable, cotejar datos, accesos, vínculos y avisos; interrumpir/reintentar y comprobar consistencia. | Crear o seleccionar exclusivamente una base desechable de staging, sin activar restore sobre la base actual. |
-| Vencimientos y avisos | Verificar el aviso posterior al vencimiento y la ejecución programada real, sin duplicar ni reabrir ofertas cerradas. El aviso previo ya se comprobó. | Configurar el cron de staging solo cuando el circuito esté preparado y probado. |
-| Privacidad y concurrencia | Segunda cuenta independiente, comprobante previo, vínculo voluntario con Mi Perfil/perfil artístico, aislamiento entre cuentas y solicitudes HTTP simultáneas en Cloudflare. | Acceso seguro a la cuenta o dispositivo independiente; no generar otra cuenta por caducidad de sesión. |
-| Dispositivos y cierre de UX | Completar circuitos y fallos con cuenta en móvil; tablet y Smart TV, accesibilidad y manuales. Los flujos básicos PC/móvil ya tienen evidencia. | Validación física en los dispositivos no disponibles en Work. |
+| Captura externa puntual | En 11762 se leyó una fuente ficticia propia, se incorporó una ficha, se repitió sin duplicar, se abrió el origen, se ocultó y se reimportó con fragmento sin reactivarla. El catálogo terminó con las cinco ofertas originales. | `BOLSA-11762-CAPTURA-QA-20261025.md` |
+| Importación CSV | Importación, repetición y moderación posterior aprobadas previamente en staging 11760. | Registro previo y respaldo cotejado. |
+| Respaldo real | Exportación D1 12/10, credenciales/vínculos/ledger presentes; cotejo de proyección e integridad y recuperación local, repetición, fallo y reintento. | `BOLSA-11762-CAPTURA-QA-20261025.md` |
+| Restauración D1 aislada | Seis fases remotas con el handler real: bloqueo por defecto, recuperación de dos parejas ficticias, repetición sin duplicados, rollback, reintento y cotejo. Conteos exigidos: 2 ofertas, 2 postulaciones, 2 credenciales, 4 vínculos y 2 marcas de aviso. | `BOLSA-11762-RESTAURACION-QA-APROBADA-20261025.md` |
+| Avisos previos y gestión | Aviso previo leído en Mi Perfil, renovación y cierre de la oferta QA, candidaturas conservadas. | `BOLSA-11760-AVISOS-STAGING.md` y registro de continuidad. |
+| Flujos básicos | Publicación gratuita e inmediata, consentimiento, acceso privado, moderación posterior y pruebas básicas PC/móvil ya registradas. | Registros anteriores de staging; no equivalen a pruebas completas de todos los dispositivos. |
 
-La publicación gratuita e inmediata, postulación con consentimiento, gestión privada, migración D1, cierre/renovación, moderación posterior, exportación/respaldo e importación CSV cuentan con pruebas previas. Eso no completa los seis bloques pendientes ni acredita disponibilidad productiva.
+El fallo de captura de 11761 quedó resuelto en 11762: el motor workerd no admite `redirect: "error"` para el resolvedor. Se cambió a manual y rechazo de redirecciones; la lectura real aprobó después. El anterior bloqueo de `QA_RESTORE_KEY` también quedó resuelto por el usuario; no volver a pedir esos ajustes como si siguieran pendientes.
 
-## Estimación de trabajo
+## Pendientes para el cierre
 
-Estimación provisional de planificación: **3–5 jornadas de trabajo efectivo**, condicionadas a accesos, proveedor de correo y entorno desechable disponibles, y a que el diagnóstico no revele otro cambio importante. No es una fecha garantizada ni implica ejecución autónoma fuera de las sesiones. Las esperas de verificación de dominio, correo y dispositivos pueden extender el calendario. No se asigna un porcentaje de avance artificial.
+| Bloque | Estado y trabajo que falta | Dependencia |
+|---|---|---|
+| Fuentes externas | CSV y URL propia aprobados. Falta una fuente real autorizada, cierres/errores y control de salida pública con alcance productivo. La comprobación DNS actual no fija la IP del fetch; no dar ese riesgo por cerrado. | Fuente autorizada y revisión del transporte. |
+| Recuperación por correo | Sigue deshabilitada, con endpoints 503. Falta emisión/entrega transaccional con proveedor, un solo uso, vencimiento, límites/reintentos y revocación atómica de la clave anterior. | Proveedor, remitente/dominio verificado y secretos mediante ingreso seguro. |
+| Recuperación operativa completa | Handler y transacciones D1 aprobados con fixtures; respaldo real ensayado localmente. No se restauró remotamente el respaldo privado completo ni se acredita recuperación integral de cuentas/mensajes. Mantener cerrado restore sobre la base operativa. | Alcance explícito de un ensayo con datos reales y destino aislado. |
+| Vencimientos y avisos | Aviso previo aprobado. Falta vencimiento real y aviso posterior, ejecución programada e idempotencia en remoto. El `scheduled` actual ejecuta mantenimiento general, Bolsa, push y podcasts juntos: aislar el alcance antes de activar un cron de Bolsa. | Preparar y probar la ejecución acotada; configuración manual de staging cuando corresponda. |
+| Privacidad y concurrencia | Una cuenta y sus vínculos tienen evidencia. Falta segunda cuenta independiente, comprobante previo, vínculo voluntario con perfil artístico, aislamiento entre cuentas y solicitudes simultáneas en Cloudflare. | Acceso seguro al otro contexto de prueba; no crear una cuenta por caducidad de sesión. |
+| Dispositivos y UX | PC/móvil básicos aprobados. Completar circuitos con cuenta y fallos en móvil, tablet, Smart TV y accesibilidad; actualizar manuales con lo validado. | Dispositivos físicos que no están disponibles en Work. |
 
-La siguiente prioridad es el fallo real del capturador. Correo, restauración y automatizaciones siguen sin habilitar. Producción permanece en `fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd`; no se cambió ninguna de sus ramas, recursos o despliegues. El último respaldo privado verificado sigue siendo el de 11760 versión 3; no se fabricó un respaldo nuevo porque estas consultas no escribieron ofertas o postulaciones.
+## Próxima prioridad y límites
 
+Continuar con vencimientos y avisos, preparando primero el alcance del cron. No activar el programador compartido para probar únicamente Bolsa. La recuperación por correo y la restauración de la base operativa permanecen deshabilitadas. Cartelera continúa después de cerrar y validar Bolsa.
 
-## Actualización posterior: 11762 preparada y ensayada
-
-La causa concreta se reprodujo en workerd: `redirect: "error"` del resolvedor DNS no es compatible. La corrección 11762 usa manual y rechaza cualquier 3xx. Se verificaron 57 pruebas Worker, nueve comprobaciones del motor y 134 de Pages, con CI verde. Pages `e90f40a8b80d25bbaf8e1722d5b9a1d27884632c` ya está publicado; Worker `a98be118050af80c3325c1a7f01f3ee966b6c747` sigue pendiente de despliegue manual. También pasó el ensayo íntegro del respaldo privado versión 3 en SQLite local, con repetición, interrupción y reintento. No prueba D1 remoto. Los seis bloques permanecen abiertos para sus comprobaciones restantes. Ver `BOLSA-11762-ENTREGA-20261025.md`.
-
-
-## Captura 11762 aprobada en Cloudflare
-
-El despliegue se verificó y la captura puntual aprobó con la fuente propia. Se creó una ficha, se repitió sin duplicar, se abrió su origen, se ocultó y se reimportó con fragmento sin reactivarla. El catálogo conserva las cinco ofertas originales. Total D1: 12 ofertas y 10 postulaciones, con seis credenciales, tres vínculos y una marca de aviso. Respaldo privado versión 4 guardado y cotejado: los 21 registros previos no cambiaron. La nueva copia también pasó el ensayo local de restauración. Ver `BOLSA-11762-CAPTURA-QA-20261025.md`.
-
-Siguiente comprobación preparada: Worker independiente `uadav-restore-qa` y D1 nueva `uadav-bolsa-restore-qa`, solo fixtures. Ocho grupos de QA local aprobados; suite total 65 y doce comprobaciones en workerd. Su creación y ejecución remota todavía requieren Cloudflare. No se habilita restauración sobre la base de staging existente. Ver `BOLSA-11762-RESTAURACION-D1-DESECHABLE.md`.
+La estimación anterior de 3–5 jornadas era provisional y anterior a estos avances. No se reemplaza por una fecha garantizada ni un porcentaje artificial: correo, pruebas entre cuentas, dispositivos y la espera de un vencimiento real siguen condicionando el cierre.
