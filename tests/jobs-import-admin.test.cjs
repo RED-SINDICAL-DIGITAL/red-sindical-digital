@@ -40,7 +40,17 @@ test('canonical source URLs retain query identity and ignore anchors and optiona
 });
 test('the complete preview rejects duplicate source URLs, including duplicates in different sheets',()=>{
   assert.throws(()=>jobs.splitBatches([batch([normalize()]),batch([normalize()])]),/repite una URL/);
-  assert.throws(()=>jobs.splitBatches([batch([normalize(),normalize({...raw,source_url:raw.source_url.toUpperCase()})])]),/repite una URL/);
+  assert.throws(()=>jobs.splitBatches([batch([normalize(),normalize({...raw,source_url:raw.source_url.replace('fuente.example','FUENTE.example.')})])]),/repite una URL/);
+});
+test('CSV identity preserves case-sensitive paths and queries while normalizing host, dot and fragment',()=>{
+  const urls=['https://FUENTE.example./Casting?q=Uno#form','https://fuente.example/casting?q=Uno','https://fuente.example/Casting?q=uno'];
+  const rows=urls.map(source_url=>normalize({...raw,source_url}));
+  assert.equal(rows[0].source_url,'https://fuente.example/Casting?q=Uno');
+  assert.equal(jobs.splitBatches([batch(rows)])[0].rows.length,3);
+  assert.throws(()=>jobs.splitBatches([batch([rows[0],normalize({...raw,source_url:'https://fuente.example/Casting?q=Uno#otra'})])]),/repite una URL/);
+});
+test('malformed domain labels are rejected during review before a source request or import',()=>{
+  for(const host of ['foo_bar.example','-foo.example','foo-.example','a'.repeat(64)+'.example'])assert.throws(()=>normalize({...raw,source_url:'https://'+host+'/qa'}),/dominio público/);
 });
 test('job rows split into transactions of at most five while other entity batches remain unchanged',()=>{
   const rows=Array.from({length:12},(_,i)=>normalize({...raw,source_url:'https://fuente.example/jobs/'+i}));
@@ -98,7 +108,7 @@ test('leaving the import view or replacing the preview stops later batches witho
   }
 });
 test('Admin loads the shared importer, validates the whole preview, and exposes external-source requirements',()=>{
-  assert.match(html,/uadav-jobs-import\.js\?v=11761\.1/);
+  assert.match(html,/uadav-jobs-import\.js\?v=11762\.1/);
   assert.match(html,/UADAVJobsImport\.normalize\(r,\{visible,source:origin\}\)/);
   assert.match(html,/UADAVJobsImport\.splitBatches\(batches\)/);
   assert.match(html,/source_url/);assert.match(html,/las existentes conservan su estado/);

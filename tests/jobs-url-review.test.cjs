@@ -36,7 +36,7 @@ function setup(){
     sel:(id,label,value)=>{node(id,value);return '<select id="'+id+'"></select>'},
     modal:(title,body,foot)=>{calls.push(['modal',title]);node('urlImportStatus');node('modalFoot');node('urlAnalyzeButton')},
     closeModal:()=>{calls.push(['close']);fields.urlImportStatus=null},toast:(...args)=>calls.push(['toast',...args]),go:async(...args)=>calls.push(['go',...args]),
-    api:(...args)=>{calls.push(['api',...args]);if(args[0]==='health')return Promise.resolve({ok:true,success:true,d1:true,build:'11761'});return new Promise((resolve,reject)=>pending.push({resolve,reject}))}};
+    api:(...args)=>{calls.push(['api',...args]);if(args[0]==='health')return Promise.resolve({ok:true,success:true,d1:true,build:'11762'});return new Promise((resolve,reject)=>pending.push({resolve,reject}))}};
   vm.runInNewContext(handlers,c);
   const open=()=>c.window.openUrlImport({kind:'job',url:sourceUrl,source:{id:'qa',name:'Fuente QA'}});
   async function analyze(){const task=c.window.analyzeImportUrl();await new Promise(setImmediate);pending.at(-1).resolve(reply);await task;node('urlReviewFeedback');node('urlCommitButton');}
@@ -77,10 +77,10 @@ test('server rejection remains visible and cannot leave a stale review publishab
 });
 
 test('an older or incomplete Worker blocks HTML reads before any source request',async()=>{
-  for(const health of [{ok:true,success:true,d1:true,build:'11760'},{ok:true,success:true,d1:false,build:'11761'},{}])assert.throws(()=>client.captureReady(health),/11761/);
-  client.captureReady({ok:true,success:true,d1:true,build:'11761'});
+  for(const health of [{ok:true,success:true,d1:true,build:'11760'},{ok:true,success:true,d1:true,build:'11761'},{ok:true,success:true,d1:false,build:'11762'},{}])assert.throws(()=>client.captureReady(health),/11762/);
+  client.captureReady({ok:true,success:true,d1:true,build:'11762'});
   const x=setup();x.open();x.c.api=async route=>{assert.equal(route,'health');return {ok:true,success:true,d1:true,build:'11760'}};
-  await x.c.window.analyzeImportUrl();assert.equal(x.pending.length,0);assert.match(x.fields.urlImportStatus.textContent,/11761/);assert.equal(x.c.S.urlImportPreview,null);
+  await x.c.window.analyzeImportUrl();assert.equal(x.pending.length,0);assert.match(x.fields.urlImportStatus.textContent,/11762/);assert.equal(x.c.S.urlImportPreview,null);
 });
 
 test('source discovery serializes clicks and reports remaining batches while accepting a legacy read response',async()=>{

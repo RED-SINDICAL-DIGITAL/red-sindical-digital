@@ -16,9 +16,9 @@
   function publicUrl(value,label){
     let url;try{url=new URL(String(value||'').trim())}catch{throw Error(label+': usá una URL HTTPS completa.')}
     if(url.protocol!=='https:'||url.username||url.password||url.port||url.href.length>700)throw Error(label+': usá una URL HTTPS sin credenciales ni puertos especiales.');
-    const host=url.hostname.toLowerCase();
-    if(!host.includes('.')||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.includes(':')||/^\d+(?:\.\d+){3}$/.test(host))throw Error(label+': usá el dominio público de la publicación.');
-    url.hash='';return url.href;
+    const host=url.hostname.toLowerCase().replace(/\.$/,'');
+    if(!host.includes('.')||host.length>253||!host.split('.').every(part=>/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(part))||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal')||host.includes(':')||/^\d+(?:\.\d+){3}$/.test(host))throw Error(label+': usá el dominio público de la publicación.');
+    url.hostname=host;url.hash='';return url.href;
   }
   function normalize(row,{visible=false,source='Importación Admin',now=Date.now()}={}){
     if(!row||typeof row!=='object'||Array.isArray(row))throw Error('Una fila de Bolsa no tiene un formato válido.');
@@ -47,7 +47,7 @@
     return {kind,item};
   }
   function captureReady(health){
-    if(health?.ok!==true||health.success!==true||health.d1!==true||!/^\d+$/.test(String(health.build||''))||Number(health.build)<11761)throw Error('La revisión de enlaces requiere el Worker de staging 11761 o posterior. Actualizalo y volvé a revisar.');
+    if(health?.ok!==true||health.success!==true||health.d1!==true||!/^\d+$/.test(String(health.build||''))||Number(health.build)<11762)throw Error('La revisión de enlaces requiere el Worker de staging 11762 o posterior. Actualizalo y volvé a revisar.');
   }
   function reviewedItem(review,{title,description,deadline},now=Date.now()){
     const item={...review.item,titulo:text(title,180),descripcion:text(description,2500)};
@@ -70,7 +70,7 @@
     const seen=new Set(),result=[];
     for(const batch of batches){
       if(batch.entity!=='jobs'){result.push(batch);continue}
-      for(const row of batch.rows){if(seen.has(row.external_id.toLowerCase()))throw Error('La planilla repite una URL de origen. Corregí los duplicados antes de importar.');seen.add(row.external_id.toLowerCase())}
+      for(const row of batch.rows){const key=publicUrl(row.source_url||row.external_id,'Origen');if(seen.has(key))throw Error('La planilla repite una URL de origen. Corregí los duplicados antes de importar.');seen.add(key)}
       for(let i=0;i<batch.rows.length;i+=5)result.push({...batch,rows:batch.rows.slice(i,i+5)});
     }
     return result;
