@@ -1,6 +1,6 @@
 # Bolsa 11764 · corrección de privacidad y laboratorio D1 separado
 
-Revisión del 26/10/2026. **11764 observada en staging después del despliegue manual del operador; código y pruebas locales/CI aprobados. El ensayo D1 remoto del laboratorio sigue pendiente.** Bolsa todavía no está terminada.
+Revisión del 26/10/2026. **11764 observada en staging; código y pruebas locales/CI aprobados. El operador ejecutó el laboratorio en Cloudflare y entregó health correcto y ocho fases aprobadas.** El informe se cotejó con versión, SHA256 y etiquetas del código entregado; Work no ejecutó ni leyó por autenticación ese ensayo. Bolsa todavía no está terminada.
 
 ## Corrección del Worker de staging
 
@@ -29,7 +29,7 @@ Health histórico después de ese intento: `2026-10-26T20:25:45.306Z` (**17:25 d
 
 ## Laboratorio nuevo: uadav-bolsa-lab
 
-**Siguiente paso pendiente.** Después de confirmar 11764, se abrió `/health` en el hostname esperado del laboratorio: mostró **There is nothing here yet**. No hay despliegue del laboratorio confirmado; no se ejecutó ninguna fase ni se creó una base desde Work.
+**Ensayo informado como aprobado por el operador.** Luego del estado inicial **There is nothing here yet**, el usuario publicó el laboratorio y lo ejecutó desde su navegador. Entregó health `11764-bolsa-lab-1`, propósito `isolated-synthetic-bolsa`, SHA256 del núcleo correcto, `enabled=true` y `database_bound=true`; el resultado seguro es `complete` con las ocho comprobaciones aprobadas. Evidencia original sin claves: `evidence/bolsa-11764-laboratorio-aprobado-20261026.json`. No volver a pedir el despliegue, otra D1 o la repetición de esas ocho fases por la desconexión anterior de Work. No se cotejó el JavaScript remoto byte por byte ni se consultó el estado autenticado desde Work.
 
 Archivo: `releases/uadav-bolsa-lab-11764.zip`, con su propio `worker.js` y `LEEME-LAB.txt`. **Este archivo corresponde a un Worker nuevo; no es el Worker de staging del apartado anterior.** No reemplaza `uadav-restore-qa` ni usa su base o clave.
 
@@ -65,7 +65,7 @@ Si aparece un error, no equivale a aprobación: conservar el código mostrado y 
 | 7 | Fallo SQL inyectado: token, clave y vínculo revierten juntos; el reintento posterior aprueba. |
 | 8 | Seis solicitudes con límite atómico de tres: tres aprobadas; integridad SQLite/FK y endpoints de correo todavía 503. |
 
-Las sondas paralelas son solicitudes HTTP separadas desde la interfaz, coordinadas mediante D1. La aprobación local con el adaptador SQLite **no acredita** esas carreras en Cloudflare; falta desplegar y ejecutarlo allí. Las fases 6–7 prueban únicamente el helper interno de canje. No emiten tokens públicos ni acreditan envío, recepción, proveedor o recuperación por correo completa.
+Las sondas paralelas son solicitudes HTTP separadas desde la interfaz, coordinadas mediante D1. El resultado entregado por el operador acredita la ejecución del ensayo separado en Cloudflare según las verificaciones de ese código; no se presenta como una ejecución observada o realizada por Work. Las fases 6–7 prueban únicamente el helper interno de canje. No emiten tokens públicos ni acreditan envío, recepción, proveedor o recuperación por correo completa.
 
 El código del núcleo se extrae del ZIP congelado de 11764 y se coteja por SHA256. No se exponen rutas de la plataforma ni el handler programado. El laboratorio instala los esquemas de cuentas/Bolsa y las definiciones mínimas originales que la plataforma usa para comprobar que D1 está preparada; así evita el bootstrap ajeno de toda la plataforma. Como cada sonda usa un proxy nuevo, se marca la caché del esquema de cuentas ya instalado antes de invocar el núcleo. No se sustituye la autenticación ni las transacciones de Bolsa. Cada solicitud dispone de un tope de 45 llamadas D1; un lote cuenta como una llamada, de acuerdo con el límite documentado por Cloudflare.
 

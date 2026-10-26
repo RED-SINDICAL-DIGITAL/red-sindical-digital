@@ -1,0 +1,39 @@
+{
+  "reported_date": "2026-10-26",
+  "client_timezone": "America/Buenos_Aires",
+  "source": "operator_report_from_own_browser",
+  "scope": "isolated-synthetic-bolsa",
+  "agent_executed_remote_phases": false,
+  "agent_read_authenticated_lab_status": false,
+  "remote_worker_compared_byte_for_byte": false,
+  "health_reported": {
+    "ok": true,
+    "version": "11764-bolsa-lab-1",
+    "purpose": "isolated-synthetic-bolsa",
+    "core_sha256": "c98d9c5bcffec76beb68fb4075f8b967c019667923c425081d794191f0cff90f",
+    "enabled": true,
+    "database_bound": true
+  },
+  "report": {
+    "result": "complete",
+    "scope": "isolated-synthetic-bolsa",
+    "version": "11764-bolsa-lab-1",
+    "core_sha256": "c98d9c5bcffec76beb68fb4075f8b967c019667923c425081d794191f0cff90f",
+    "checks": [
+      "Publicación simultánea sin duplicados: aprobado",
+      "Postulación simultánea y consentimiento: aprobado",
+      "Privacidad entre cuentas y perfil artístico: aprobado",
+      "Comprobante anterior y vínculo concurrente: aprobado",
+      "Revocación durante el guardado: aprobado",
+      "Recuperación: un solo canje: aprobado",
+      "Recuperación: rollback y reintento: aprobado",
+      "Límite atómico e integridad final: aprobado"
+    ]
+  },
+  "reported_checks": 8,
+  "email_issuance_or_delivery_validated": false,
+  "real_private_backup_remote_restore_validated": false,
+  "physical_devices_full_qa_validated": false,
+  "production_modified": false,
+  "bolsa_complete": false
+}
