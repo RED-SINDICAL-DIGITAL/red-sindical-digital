@@ -5,6 +5,9 @@
  * Provider acceptance is not a delivery/read receipt. Live email QA is required.
  */
 const TTL=15*60000,LEASE=30000,ATTEMPTS=5;
+// Cover the full issuance lifetime plus an in-flight lease and bounded send.
+// A provider's shorter window must never be silently declared as one hour.
+export const JOB_RECOVERY_MIN_IDEMPOTENCY_MS=TTL+LEASE+5000;
 const hex=bytes=>Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
 const bytes=value=>Uint8Array.from(value.match(/../g)||[],x=>parseInt(x,16));
 const hash=async value=>hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)));
@@ -72,7 +75,7 @@ export function createJobRecoveryOutbox({db,encryptionKey,mode,clock=Date.now,ti
   }catch(error){throw fail(safeCode(error))}
  }
  async function dispatch(adapter){
-  need(adapter&&typeof adapter.send==='function'&&Number.isFinite(adapter.idempotencyWindowMs)&&adapter.idempotencyWindowMs>=3600000,'JOB_RECOVERY_PROVIDER');
+  need(adapter&&typeof adapter.send==='function'&&Number.isFinite(adapter.idempotencyWindowMs)&&adapter.idempotencyWindowMs>=JOB_RECOVERY_MIN_IDEMPOTENCY_MS,'JOB_RECOVERY_PROVIDER');
   let row,owner;
   try{
    const now=clock();await sweep(now);

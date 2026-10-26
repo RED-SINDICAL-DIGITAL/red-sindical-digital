@@ -10,6 +10,8 @@ const entry=`import worker,{uadavExternalFetchHTML,uadavExternalPreview} from '.
 import qaWorker from './restore-qa.mjs';
 import labWorker from './bolsa-lab.mjs';
 import {createJobRecoveryOutbox} from './recovery-outbox.mjs';
+import {buildAccessMailMessage} from './access-mail-message.mjs';
+import {createBrevoStagingMail} from './brevo-staging-mail.mjs';
 function check(ok,message){if(!ok)throw Error(message)}
 async function rejected(url,code){try{await uadavExternalFetchHTML(url,{timeoutMs:25});throw Error('Expected rejection: '+code)}catch(error){check(error.externalCode===code,'Expected '+code+', received '+error.externalCode)}}
 export default {async test(){
@@ -61,6 +63,12 @@ export default {async test(){
  let outboxClosed=false;try{createJobRecoveryOutbox({db:{prepare(){throw Error('DB must not be touched')}},encryptionKey:'a'.repeat(64),mode:'production'})}catch(error){outboxClosed=error.code==='JOB_RECOVERY_CONFIGURATION'}check(outboxClosed,'Outbox preparatory mode gate');
  const outbox=createJobRecoveryOutbox({db:{prepare(){throw Error('DB must not be touched')}},encryptionKey:'a'.repeat(64),mode:'staging-only'});let providerClosed=false;try{await outbox.dispatch({send:async()=>({id:'fake'}),idempotencyWindowMs:1000})}catch(error){providerClosed=error.code==='JOB_RECOVERY_PROVIDER'}check(providerClosed,'Outbox provider retry contract before DB');
  console.log('PASS workerd: preparatory recovery module parses and gates mode/provider before DB');
+ const mailNow=Date.now(),mailData={purpose:'account_sign_in',token:'a'.repeat(64),issuedAt:mailNow,expiresAt:mailNow+15*60000};
+ check(buildAccessMailMessage(mailData).htmlContent.includes('Entrar a Mi Perfil'),'Simple account email action');
+ const mail=createBrevoStagingMail({mode:'staging-only',apiKey:'synthetic-brevo-key-'+'x'.repeat(40),senderEmail:'acceso@correo-staging.uadavstream.com.ar',allowedRecipients:['lab@example.invalid'],clock:()=>mailNow});
+ const mailReceipt=await mail.sendAccess({...mailData,requestId:'11111111-1111-4111-8111-111111111111',to:'lab@example.invalid'});
+ check(/^brevo:[a-f0-9]{64}$/.test(mailReceipt.id),'Brevo normalized provider receipt');
+ console.log('PASS workerd: preparatory access email rendering and Brevo transport with synthetic network only');
  const tick={cron:'*/15 * * * *',scheduledTime:1792969200000},closedEnv=new Proxy({},{get(_target,name){if(name==='JOB_STAGING_CRON')return undefined;throw Error('Unrelated module reached: '+String(name))}});
  check((await worker.scheduled(tick,closedEnv,{})).reason==='disabled','staging cron must default to no side effects');
  check((await worker.scheduled({...tick,cron:'* * * * *'},{JOB_STAGING_CRON:'bolsa-only'},{})).reason==='schedule','unrelated schedule must not run Bolsa');
@@ -79,6 +87,11 @@ export default {async fetch(request){
  const url=new URL(request.url);
  if(request.headers.has('Authorization')||request.headers.has('Cookie'))throw Error('Credentials forwarded to source');
  if(request.redirect!=='manual')throw Error('Automatic redirect enabled');
+ if(url.hostname==='api.brevo.com'){
+  if(url.href!=='https://api.brevo.com/v3/smtp/email'||request.method!=='POST'||!request.headers.get('api-key')?.startsWith('synthetic-brevo-key-'))throw Error('Unexpected mail request');
+  const mail=await request.json();if(mail.to?.length!==1||mail.to[0].email!=='lab@example.invalid'||mail.headers?.idempotencyKey!=='11111111-1111-4111-8111-111111111111')throw Error('Unexpected mail envelope');
+  return Response.json({messageId:'<synthetic-123@relay.example.invalid>'},{status:201});
+ }
  if(url.hostname==='cloudflare-dns.com'){
   const host=url.searchParams.get('name'),type=url.searchParams.get('type');
   if(host==='badresolver.example')return new Response('ignored',{status:302,headers:{Location:'https://127.0.0.1/private'}});
@@ -100,11 +113,13 @@ try{
  await writeFile(join(dir,'restore-qa.mjs'),await readFile(new URL('../releases/uadav-bolsa-restore-qa-11762.js',import.meta.url)));
  await writeFile(join(dir,'bolsa-lab.mjs'),await readFile(new URL('../releases/uadav-bolsa-lab-11764.js',import.meta.url)));
  await writeFile(join(dir,'recovery-outbox.mjs'),await readFile(new URL('../scripts/job-recovery-outbox.mjs',import.meta.url)));
+ await writeFile(join(dir,'access-mail-message.mjs'),await readFile(new URL('../scripts/access-mail-message.mjs',import.meta.url)));
+ await writeFile(join(dir,'brevo-staging-mail.mjs'),await readFile(new URL('../scripts/brevo-staging-mail.mjs',import.meta.url)));
  await writeFile(join(dir,'entry.mjs'),entry);
  await writeFile(join(dir,'mock.mjs'),mock);
  await writeFile(join(dir,'config.capnp'),`using Workerd = import "/workerd/workerd.capnp";
 const config :Workerd.Config = (services = [
-(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs"),(name = "bolsa-lab.mjs", esModule = embed "bolsa-lab.mjs"),(name = "recovery-outbox.mjs", esModule = embed "recovery-outbox.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
+(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs"),(name = "bolsa-lab.mjs", esModule = embed "bolsa-lab.mjs"),(name = "recovery-outbox.mjs", esModule = embed "recovery-outbox.mjs"),(name = "access-mail-message.mjs", esModule = embed "access-mail-message.mjs"),(name = "brevo-staging-mail.mjs", esModule = embed "brevo-staging-mail.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
 (name = "mock", worker = (modules = [(name = "mock.mjs", esModule = embed "mock.mjs")],compatibilityDate = "2026-09-28"))
 ]);`);
  const result=spawnSync(binary,['test',join(dir,'config.capnp'),'main'],{encoding:'utf8',timeout:30000});

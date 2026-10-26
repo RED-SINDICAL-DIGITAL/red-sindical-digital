@@ -19,13 +19,13 @@ Archivos nuevos: `scripts/job-recovery-outbox.mjs`, `migrations/staging/20261026
 | Canjear | El helper original consume una vez, cambia hash/revisión de credencial y revoca el vínculo anterior de cuenta en su transacción. |
 | Fallar o vencer | Error genérico, reintento acotado o estado final sin token nuevo activo. Un lease ajeno no se libera ni se sobrescribe. |
 
-La aceptación del proveedor y la transacción D1 **no forman una transacción distribuida única**. El diseño requiere que el proveedor deduplique por identificador y conserve la misma respuesta durante al menos una hora. Así puede reconciliarse un envío aceptado cuya respuesta o confirmación D1 se perdió. Una respuesta con ID válido solo prueba aceptación del proveedor: **no acredita entrega ni lectura del mensaje**. Ese circuito aún necesita pruebas reales.
+La aceptación del proveedor y la transacción D1 **no forman una transacción distribuida única**. El diseño exige deduplicación durante toda la vida del token más el margen de envío en curso; la reconciliación satisfactoria requiere un recibo auténtico. Un proveedor que repite el recibo permite reconciliar una aceptación cuya respuesta o confirmación D1 se perdió. Si devuelve un error sin el recibo original, no se activa el token por suposición. Una respuesta con ID válido solo prueba aceptación del proveedor: **no acredita entrega ni lectura del mensaje**. Ese circuito aún necesita pruebas reales.
 
 ## Contrato interno y límites
 
 - Factory por contexto de operación: `createJobRecoveryOutbox({db,encryptionKey,mode:'staging-only'})`. Usa sesión D1 `first-primary` si está disponible. El modo declarativo no sustituye el aislamiento real de la base futura.
 - `enqueue({jobId,recipient,requestId,actorHash})`: resultado uniforme `{accepted:true}` para solicitudes válidas, inexistentes, correo distinto, duplicadas o limitadas. El futuro HTTP debe derivar `actorHash` del contexto del servidor, gestionar errores y tiempos sin enumeración y aplicar su control de abuso; no reenviar ese dato del body del navegador.
-- `dispatch(adapter)`: el adaptador debe declarar una ventana de idempotencia de al menos una hora y devolver `{id}` válido. No hay adaptador de proveedor real en esta entrega.
+- `dispatch(adapter)`: el adaptador debe declarar una ventana de idempotencia de al menos **935.000 ms** (TTL15min+lease30s+timeout5s) y devolver `{id}` válido. Actualización posterior del26/10: transporte Brevo preparado con su ventana documentada de30min, sin integrarlo al Worker ni configurarlo; ver `CORREO-BREVO-PREPARACION-20261026.md`.
 - Payload de destinatario/token cifrado con **AES-256-GCM**, IV aleatorio de 96 bits y datos autenticados ligados a oferta, revisiones, hash del destinatario/token y vencimiento. El token no queda en texto plano en la bandeja ni se devuelve al solicitante.
 - TTL de 15 minutos desde la solicitud; lease de 30 segundos; timeout de envío de hasta 5 segundos; máximo cinco intentos con espera progresiva. El adaptador debe respetar cancelación y reintentar con el mismo cuerpo.
 - Límite de actor: cinco solicitudes por diez minutos. Límite de nuevas emisiones: tres por oferta/hora. Hasta 1.000 intentos activos. Operaciones y guardas atómicas en D1.
@@ -46,7 +46,7 @@ Las ocho fases del laboratorio 11764 que informó el operador corresponden al n�
 
 ## Proveedor y trabajo pendiente antes de habilitar
 
-El módulo no selecciona un servicio. Resend es una opción compatible para evaluar: documenta el uso de la misma clave y payload para reintentos durante 24 horas. Requiere un dominio verificado; permite utilizar un subdominio para separar los envíos. La elección sigue pendiente, sin cuenta nueva, compra o configuración realizada desde Work.
+Selección posterior del26/10: el usuario priorizó gratuidad y mayor volumen, aceptó la propuesta de cuenta única/correo/Google opcional y pidió simplificar los accesos. Se prepara Brevo gratuito, con300 envíos diarios compartidos. Resend había sido una opción inicial por su idempotencia24h. No hay cuenta, compra, remitente, credencial o configuración remota realizados. Brevo no promete repetir el recibo original ante duplicados: esa recepción incierta sigue como requisito abierto antes de activar.
 
 Fuentes oficiales consultadas el 26/10: [idempotencia de Resend](https://resend.com/docs/dashboard/emails/idempotency-keys), [verificación de dominios](https://resend.com/docs/dashboard/domains/introduction), [precios y límites publicados](https://resend.com/pricing) y [API de envío de Cloudflare](https://developers.cloudflare.com/email-service/api/send-emails/workers-api/). No se atribuye idempotencia a un transporte que no la haya documentado y validado.
 

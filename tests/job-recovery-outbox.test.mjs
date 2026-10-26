@@ -4,7 +4,8 @@ import {readFile} from 'node:fs/promises';
 import {webcrypto,randomUUID} from 'node:crypto';
 import {sqliteD1} from './sqlite-d1.mjs';
 import {loadWorker} from './load-worker.mjs';
-import {createJobRecoveryOutbox} from '../scripts/job-recovery-outbox.mjs';
+import {createJobRecoveryOutbox,JOB_RECOVERY_MIN_IDEMPOTENCY_MS} from '../scripts/job-recovery-outbox.mjs';
+import {createBrevoStagingMail} from '../scripts/brevo-staging-mail.mjs';
 globalThis.crypto ||= webcrypto;
 const {default:worker,uadavJobRedeemRecovery}=await loadWorker();
 const digest=async value=>Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))).toString('hex');
@@ -164,5 +165,42 @@ test('an accepted link expires without rotating access, and database errors neve
   await f.engine.enqueue(f.request());assert.equal((await f.engine.dispatch(f.provider())).state,'accepted');const [row]=await f.outbox();f.advance(15*60000);
   await assert.rejects(uadavJobRedeemRecovery(f.DB,{jobId:job,tokenHash:row.token_hash,newSecretHash:'6'.repeat(64),now:f.now()}),{jobCode:'JOB_RECOVERY_INVALID'});assert.equal((await f.DB.prepare('SELECT revision FROM job_owner_credentials').first()).revision,1);assert.equal(await f.count('job_account_links'),1);
   const broken={prepare(){throw Object.assign(Error('synthetic-private-SQL-details'),{code:123})}};const engine=createJobRecoveryOutbox({db:broken,encryptionKey:sealKey,mode:'staging-only'});await assert.rejects(engine.enqueue(f.request()),error=>error.code==='JOB_RECOVERY_STORAGE'&&!error.message.includes('private'));
+ }finally{f.close()}
+});
+
+test('provider deduplication must cover token lifetime plus an in-flight lease and bounded request',async()=>{
+ let reads=0;const engine=createJobRecoveryOutbox({db:{prepare(){reads++;throw Error('synthetic')}},mode:'staging-only',encryptionKey:sealKey});
+ for(const window of [15*60000,JOB_RECOVERY_MIN_IDEMPOTENCY_MS-1])await assert.rejects(engine.dispatch({send:async()=>({id:'unused'}),idempotencyWindowMs:window}),{code:'JOB_RECOVERY_PROVIDER'});
+ assert.equal(reads,0);
+ const f=await fixture();try{await f.engine.enqueue(f.request());assert.equal((await f.engine.dispatch({...f.provider(),idempotencyWindowMs:30*60000})).state,'accepted')}finally{f.close()}
+});
+
+test('Brevo transport acceptance and existing D1 redemption compose without changing access before use',async()=>{
+ const f=await fixture();let body;
+ try{
+  const adapter=createBrevoStagingMail({mode:'staging-only',apiKey:'synthetic-brevo-key-'+'x'.repeat(40),senderEmail:'acceso@correo-staging.uadavstream.com.ar',allowedRecipients:[recipient],clock:f.now,fetchImpl:async request=>{body=await request.json();return Response.json({messageId:'<synthetic-123@relay.example.invalid>'},{status:201})}});
+  await f.engine.enqueue(f.request());assert.deepEqual(await f.engine.dispatch(adapter),{state:'accepted'});
+  assert.equal((await f.DB.prepare('SELECT revision FROM job_owner_credentials').first()).revision,1);assert.equal(await f.count('job_account_links'),1);
+  const url=new URL(body.textContent.match(/https:\/\/uadav-stream-staging\.pages\.dev\/acceso-correo\.html#[^\s]+/)[0]),rawToken=new URLSearchParams(url.hash.slice(1)).get('token');
+  const [row]=await f.outbox();assert.equal(await digest(rawToken),row.token_hash);assert.match(row.provider_id,/^brevo:[a-f0-9]{64}$/);assert.equal(row.sealed_payload,null);
+  const attempt=()=>uadavJobRedeemRecovery(f.DB,{jobId:job,tokenHash:row.token_hash,newSecretHash:'6'.repeat(64),now:f.now()});
+  const results=await Promise.allSettled([attempt(),attempt()]);assert.equal(results.filter(r=>r.status==='fulfilled').length,1);
+  assert.equal((await f.DB.prepare('SELECT revision FROM job_owner_credentials').first()).revision,2);assert.equal(await f.count('job_account_links'),0);
+ }finally{f.close()}
+});
+
+test('Brevo lost response followed by duplicate error cannot activate an unconfirmed link or destroy old access',async()=>{
+ const f=await fixture(),bodies=[];
+ try{
+  const adapter=createBrevoStagingMail({mode:'staging-only',apiKey:'synthetic-brevo-key-'+'x'.repeat(40),senderEmail:'acceso@correo-staging.uadavstream.com.ar',allowedRecipients:[recipient],clock:f.now,fetchImpl:async request=>{bodies.push(await request.text());if(bodies.length===1)throw Error('synthetic provider accepted but receipt lost');return Response.json({code:'duplicate_parameter',message:'synthetic private provider detail'},{status:400})}});
+  await f.engine.enqueue(f.request());
+  for(let i=0;i<5;i++){
+   assert.equal((await f.engine.dispatch(adapter)).state,'unconfirmed');
+   assert.equal(await f.count('job_owner_recovery_v2'),0);assert.equal((await f.DB.prepare('SELECT revision FROM job_owner_credentials').first()).revision,1);assert.equal(await f.count('job_account_links'),1);
+   f.advance(60000);
+  }
+  assert.equal(bodies.length,5);assert(bodies.every(body=>body===bodies[0]));const [row]=await f.outbox();assert.equal(row.state,'failed');assert.equal(row.sealed_payload,null);assert.equal(row.provider_id,null);
+  await assert.rejects(uadavJobRedeemRecovery(f.DB,{jobId:job,tokenHash:row.token_hash,newSecretHash:'6'.repeat(64),now:f.now()}),{jobCode:'JOB_RECOVERY_INVALID'});
+  f.advance(30*60000);assert.equal((await f.engine.dispatch(adapter)).state,'idle');assert.equal(bodies.length,5);
  }finally{f.close()}
 });
