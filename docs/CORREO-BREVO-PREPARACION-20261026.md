@@ -31,6 +31,8 @@ La red de esos tests es simulada y los datos son ficticios. Los resultados no pr
 
 Resultados locales: **122 pruebas focalizadas Node/SQLite aprobadas** y **20 comprobaciones workerd aprobadas** con el motor fijado1.20261025.1. También aprobaron cotejo de fuentes embebidas/laboratorios congelados y diff; SHA de Worker/ZIP11764 y laboratorio sin cambios. CI incorpora los archivos nuevos. No repetir el laboratorio11764: no contiene este código. La oferta de vencimiento real mantiene su fecha y su cron original.
 
+Código y decisión guardados en `09ac96fad850a8016e2f2bc8fa9d2b7696a93932`, exclusivamente Worker staging. CI [Bolsa40413223664](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40413223664) y [Radio40413223652](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40413223652) confirmadas `success` para ese commit. No equivale a un despliegue ni a una entrega real de correo.
+
 ## Siguiente integración
 
 1. Cuenta gratuita en Brevo creada por el usuario. Remitente y subdominio de staging verificados, credencial exclusiva mediante secretos y un destinatario de prueba autorizado. Sin contratación, pago o cambio productivo.
