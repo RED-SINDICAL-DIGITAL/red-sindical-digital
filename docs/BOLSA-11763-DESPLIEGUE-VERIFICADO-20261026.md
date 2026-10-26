@@ -1,4 +1,4 @@
-# Bolsa 11763 · despliegue verificado · 26/10/2026
+# Bolsa 11763 · despliegue y Admin verificados · 26/10/2026
 
 ## Confirmado en staging
 
@@ -8,18 +8,22 @@ El código entregado corresponde a `90df7e3c6561271fa6a185f664cc17816c28266c`, S
 
 Una navegación sin credenciales a `/api/admin/jobs/cron` mostró **No autorizado**. No entregó el estado privado ni datos de ofertas/cuentas. No se añadió una ruta de ejecución pública ni se intentó ejecutar el cron desde HTTP.
 
-## Bloqueo concreto de la verificación privada
+## Ingreso seguro y consulta privada aprobados
 
-Admin solicitó reingreso. Se inspeccionó el formulario y se emitió una única solicitud browserAuth con el campo visible de clave y el botón de acceso. La llamada no devolvió un resultado y terminó por timeout; no se puede inferir si hubo entrada de datos. Después el contexto del navegador se perdió y la primera recuperación abrió una pestaña nueva en la URL canónica de Admin. Allí se observó **Acceso administrativo**, **API disponible** y el banner de staging.
+El primer intento de ingreso terminó por timeout, sin resultado conocido. Se ofreció control manual de la pestaña de Work. El usuario informó que no podía usar ese acceso y pidió volver al cuadro dentro del chat, además de consultar si podía adjuntar un TXT. Esa petición explícita habilitó un nuevo intento seguro; no se recibió ni leyó una clave por chat o archivo.
 
-No se observó un rechazo de contraseña ni una protección anti-bot. No se leyó o registró la clave, no se cambió una credencial ni se creó una cuenta. **El ingreso autenticado y el estado de la automatización siguen sin comprobar.** No se activó un flag o trigger desde esta sesión y no debe suponerse el valor real de `JOB_STAGING_CRON` solo por su valor por defecto en el código.
+Se inspeccionó el formulario existente y se utilizó browserAuth. Esta vez devolvió **submitted**. La observación posterior mostró **Administrador / Sesión central**, Auditoría y el banner de staging. Se pulsó únicamente **Actualizar estado automático**, que consulta mediante GET. La pantalla confirmó:
 
-[Evidencia de la pantalla que requiere ingreso](evidence/bolsa-11763-admin-ingreso-manual-20261026.jpg). [Registro estructurado de observación](evidence/bolsa-11763-despliegue-20261026.json).
+> La revisión automática está desactivada. Todavía no hay una ejecución confirmada.
+
+El mensaje se observó tanto al montar el panel como después de la actualización explícita. Conforme al formateador publicado 11763.1, esa combinación corresponde a base preparada, mantenimiento sin pausa, automatización desactivada y ningún turno confirmado, en curso o interrumpido. Esta interpretación se basa en la interfaz y su contrato; no se extrajo el JSON privado, la clave ni el almacenamiento del navegador. La captura se guardó a las **13:52 de Argentina**, `2026-10-26T16:52:16.986Z`.
+
+[Evidencia de Admin autenticado](evidence/bolsa-11763-admin-autenticado-20261026.jpg). [Registro estructurado de observación](evidence/bolsa-11763-despliegue-20261026.json). La [pantalla anterior que requería ingreso](evidence/bolsa-11763-admin-ingreso-manual-20261026.jpg) se conserva como evidencia histórica.
 
 ## Continuación necesaria
 
-Facilitar control manual de **esa pestaña de Work**, con motivo autenticación, para que el usuario ingrese la clave habitual de **Admin staging**. La sesión debe quedar en Auditoría para que Work retome la consulta; no se transfiere una sesión desde el navegador personal ni se pide la clave en el chat. No emitir otra solicitud automática del mismo tipo para este bloqueo.
+El bloqueo de ingreso quedó resuelto. No pedir otro despliegue de 11763 ni otro acceso mientras la sesión siga válida. Ya puede continuarse la **etapa 2** de `BOLSA-11763-VENCIMIENTOS-Y-CRON-STAGING.md`: configurar manualmente, solo en **uadav-api-staging**, `JOB_STAGING_CRON=bolsa-only` y el trigger exacto `*/15 * * * *`, conservando los demás ajustes de staging. La configuración del trigger en Cloudflare aún no se observó; el estado desactivado no demuestra su ausencia.
 
-Después del ingreso, consultar **Avisos por vencimiento de ofertas → Actualizar estado automático**. Validar preparación, mantenimiento, habilitación y último resultado; el botón solo lee información. Aún no se autoriza como resultado aprobado una ejecución programada real. Mantener pendiente la configuración de la etapa 2 hasta comprobar ese estado. No repetir el despliegue si health sigue en 11763.
+Después corresponde verificar un evento real y su recibo privado. No se activó ninguna variable o trigger desde estas sesiones ni se enviaron avisos. El vencimiento con reloj real, aviso posterior y repetición sin duplicados continúan pendientes.
 
-Producción no se operó. El Worker de restauración QA aprobado y el respaldo privado no se tocaron. El vencimiento con reloj real, aviso posterior, primera ejecución de cron y las otras puertas de cierre de Bolsa continúan pendientes.
+Producción no se operó. El Worker de restauración QA aprobado y el respaldo privado no se tocaron. La recuperación por correo y la restauración operativa siguen deshabilitadas. Bolsa todavía no está completa.

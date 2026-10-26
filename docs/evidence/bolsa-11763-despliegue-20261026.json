@@ -23,13 +23,39 @@
       "error": "No autorizado"
     }
   },
-  "admin_auth_result": "unknown_timeout",
-  "fresh_admin_page": "login_gate_visible",
-  "admin_authenticated_panel_verified": false,
-  "cron_state_observed": null,
+  "admin_auth_result": "submitted_then_authenticated_ui_verified",
+  "fresh_admin_page": "authenticated_audit_panel",
+  "admin_authenticated_panel_verified": true,
+  "cron_state_observed": {
+    "observation_type": "rendered_admin_ui_after_explicit_refresh",
+    "message": "La revisión automática está desactivada. Todavía no hay una ejecución confirmada.",
+    "source_contract": "Pages uadav-jobs-expiry-admin.js 11763.1",
+    "inferred_from_rendered_contract": {
+      "ready": true,
+      "paused": false,
+      "enabled": false,
+      "running": false,
+      "interrupted": false,
+      "last_run": null
+    },
+    "raw_private_json_read": false,
+    "cloudflare_trigger_configuration_observed": false
+  },
   "cron_configured_by_agent": false,
   "new_database_or_secret_created_by_agent": false,
   "production_modified_by_agent": false,
-  "proof": "bolsa-11763-admin-ingreso-manual-20261026.jpg",
-  "proof_sha256": "f36a0432cb435ba47e542f3255e95c9f69b8e8555461178f337e9ebd5722154e"
+  "proof": "bolsa-11763-admin-autenticado-20261026.jpg",
+  "proof_sha256": "36ad12046e1a3cf9eb721b7da7147bc2d403035265f91fa892aac03e487c956c",
+  "previous_auth_attempt": {
+    "result": "unknown_timeout",
+    "recovery_page": "login_gate_visible",
+    "manual_handoff_offered": true
+  },
+  "auth_retry_requested_by_user": true,
+  "auth_method": "browserAuth_secure_form",
+  "admin_verification_observed_at_utc": "2026-10-26T16:52:16.986Z",
+  "cron_execution_verified": false,
+  "private_notices_sent_by_agent": false,
+  "previous_proof": "bolsa-11763-admin-ingreso-manual-20261026.jpg",
+  "previous_proof_sha256": "f36a0432cb435ba47e542f3255e95c9f69b8e8555461178f337e9ebd5722154e"
 }
