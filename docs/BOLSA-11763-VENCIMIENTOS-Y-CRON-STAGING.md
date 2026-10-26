@@ -2,7 +2,7 @@
 
 ## Estado de la entrega
 
-**Despliegue principal 11763 verificado** el 26/10/2026 mediante health: D1/KV detectados, correo y cola apagados. La consulta privada también aprobó tras un nuevo ingreso seguro solicitado expresamente por el usuario: Admin autenticado y actualización explícita muestran revisión automática desactivada, sin una ejecución confirmada. El bloqueo previo quedó resuelto y ya puede continuarse la etapa 2. No se activó un cron desde esta sesión; su configuración en Cloudflare y primera ejecución siguen pendientes. El ensayo de restauración QA 11762 permanece aprobado y sin cambios. Ver `BOLSA-11763-DESPLIEGUE-VERIFICADO-20261026.md`.
+**Despliegue principal 11763 verificado** el 26/10/2026 mediante health: D1/KV detectados, correo y cola apagados. La consulta inicial desactivada aprobó tras el ingreso seguro. El usuario completó después la etapa 2 y Admin confirmó el primer turno exitoso de las 14:15 de Argentina, con cero ofertas actualizadas y cero avisos. No se inspeccionó el dashboard de Cloudflare; se verificó el recibo privado mediante GET. Falta el ensayo de una oferta que venza realmente. Ver `BOLSA-11763-CRON-PRIMERA-EJECUCION-20261026.md`. El ensayo de restauración QA 11762 permanece aprobado y sin cambios. Ver `BOLSA-11763-DESPLIEGUE-VERIFICADO-20261026.md`.
 
 La rama Worker sigue siendo `release/radio-studio-staging-rc-20261020`. Los cambios de interfaz se guardan por separado en `audit/continuidad-demo-20261019`. No se mezclan ramas ni se opera sobre producción.
 
@@ -51,7 +51,7 @@ La configuración por sí sola no aprueba una ejecución. Comprobar el primer ev
 
 ## QA remota que sigue pendiente
 
-- Primera ejecución real del cron y registro privado en D1. El despliegue 11763 y la consulta inicial de estado desactivado ya se comprobaron.
+- Primer turno y recibo privado ya confirmados el 26/10/2026 a las 14:15 de Argentina, sin ofertas/avisos procesados. El siguiente ensayo debe incluir una oferta elegible; ver `BOLSA-11763-QA-VENCIMIENTO-REAL.md`.
 - Una oferta ficticia guardada voluntariamente en una cuenta y que venza con el reloj real; verificar bloqueo de postulaciones, aviso posterior visible solo a esa cuenta, candidaturas conservadas y ausencia de duplicados en el turno siguiente. No cambiar fechas previas ni el reloj para forzar la aprobación.
 - Conservar una oferta cerrada u ocultada como control; el programador no debe modificar su estado.
 
@@ -61,4 +61,4 @@ Referencias oficiales revisadas el 25/10/2026: [scheduled handler y resultado de
 
 ## Confirmación de GitHub y archivos publicados
 
-Código Worker `90df7e3c6561271fa6a185f664cc17816c28266c` y Pages `cfc19c838c99be50820a81f7b6a4ca6d8f5464cd`. CI Bolsa **40263069135**, Radio **40263069094** y UI **40263077171**: success. La entrega y la observación del frontend se registran en `BOLSA-11763-ENTREGA-Y-VERIFICACION.md`. En la entrega original se observó 11762; el 26/10/2026 se confirmó 11763. Admin autenticado y consulta de estado desactivado también se confirmaron el 26/10/2026. No se configuró el cron desde estas sesiones.
+Código Worker `90df7e3c6561271fa6a185f664cc17816c28266c` y Pages `cfc19c838c99be50820a81f7b6a4ca6d8f5464cd`. CI Bolsa **40263069135**, Radio **40263069094** y UI **40263077171**: success. La entrega y la observación del frontend se registran en `BOLSA-11763-ENTREGA-Y-VERIFICACION.md`. En la entrega original se observó 11762; el 26/10/2026 se confirmó 11763. Admin autenticado, consulta inicial desactivada y primer recibo programado exitoso también se confirmaron el 26/10/2026. La configuración fue manual por el usuario; Work no escribió variables o triggers.

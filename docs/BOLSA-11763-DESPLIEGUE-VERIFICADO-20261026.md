@@ -1,5 +1,7 @@
 # Bolsa 11763 · despliegue y Admin verificados · 26/10/2026
 
+**Actualización posterior:** primera revisión automática exitosa de las 14:15 confirmada y pantalla de respaldo corregida. Ver `BOLSA-11763-CRON-PRIMERA-EJECUCION-20261026.md`. La consulta desactivada documentada debajo fue el estado inicial.
+
 ## Confirmado en staging
 
 El usuario informó **desplegado**. El navegador abrió `https://uadav-api-staging.uadavstream.workers.dev/api/health` y observó **11763**, `ok:true`, `success:true`, bindings D1/KV detectados, correo y cola apagados. La marca del servicio fue `2026-10-26T15:48:31.957Z` (**12:48 de Argentina**).
@@ -22,8 +24,8 @@ El mensaje se observó tanto al montar el panel como después de la actualizaci�
 
 ## Continuación necesaria
 
-El bloqueo de ingreso quedó resuelto. No pedir otro despliegue de 11763 ni otro acceso mientras la sesión siga válida. Ya puede continuarse la **etapa 2** de `BOLSA-11763-VENCIMIENTOS-Y-CRON-STAGING.md`: configurar manualmente, solo en **uadav-api-staging**, `JOB_STAGING_CRON=bolsa-only` y el trigger exacto `*/15 * * * *`, conservando los demás ajustes de staging. La configuración del trigger en Cloudflare aún no se observó; el estado desactivado no demuestra su ausencia.
+El usuario completó después la etapa 2. Admin confirmó la revisión habilitada y su primer recibo exitoso de las 14:15 de Argentina. Ver `BOLSA-11763-CRON-PRIMERA-EJECUCION-20261026.md`. No volver a pedir ingreso, configuración o despliegue por los bloqueos anteriores si la sesión sigue válida.
 
-Después corresponde verificar un evento real y su recibo privado. No se activó ninguna variable o trigger desde estas sesiones ni se enviaron avisos. El vencimiento con reloj real, aviso posterior y repetición sin duplicados continúan pendientes.
+El próximo ensayo es una oferta ficticia nueva guardada en la cuenta QA y una candidatura con consentimiento, siguiendo `BOLSA-11763-QA-VENCIMIENTO-REAL.md`. Faltan vencimiento con reloj real, aviso posterior y repetición sin duplicados. El primer turno con conteos cero no da esos puntos por aprobados.
 
-Producción no se operó. El Worker de restauración QA aprobado y el respaldo privado no se tocaron. La recuperación por correo y la restauración operativa siguen deshabilitadas. Bolsa todavía no está completa.
+Producción, el Worker de restauración QA y el respaldo privado no se tocaron. La recuperación por correo y la restauración operativa siguen deshabilitadas. Bolsa todavía no está completa.
