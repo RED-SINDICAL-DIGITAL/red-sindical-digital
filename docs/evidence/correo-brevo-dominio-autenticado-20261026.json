@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-26",
+  "scope": "staging-mail-domain-only",
+  "source": "operator_screenshots_viewed_directly",
+  "screenshots": ["image(20261026-225606).png", "image(20261026-225629).png"],
+  "agent_authenticated_browser_access": false,
+  "agent_changed_dns": false,
+  "sending_domain": "correo-staging.uadavstream.com.ar",
+  "brevo_displayed_authentication": "Autentificado",
+  "brevo_displayed_branding": "Sin marca",
+  "dns_records_visible": [
+    {"type": "TXT", "name": "correo-staging", "proxy": "DNS only", "ttl": "Auto"},
+    {"type": "CNAME", "name": "brevo1._domainkey.correo-staging", "proxy": "DNS only", "ttl": "Auto"},
+    {"type": "CNAME", "name": "brevo2._domainkey.correo-staging", "proxy": "DNS only", "ttl": "Auto"},
+    {"type": "TXT", "name": "_dmarc.correo-staging", "proxy": "DNS only", "ttl": "Auto"}
+  ],
+  "full_dns_values_compared": false,
+  "full_dns_zone_compared": false,
+  "note": "Names and contents are partially truncated in the Cloudflare screenshot. Brevo explicitly displays the domain as authenticated. Original screenshots remain private; no production-zone audit is claimed.",
+  "sender_status_confirmed": false,
+  "api_key_configuration_confirmed": false,
+  "billing_plan_verified": false,
+  "real_test_message_sent_by_agent": false,
+  "real_test_message_delivery_confirmed": false,
+  "email_recovery_enabled": false,
+  "account_google_login_enabled": false,
+  "worker_or_pages_deployed_by_agent": false,
+  "bolsa_complete": false,
+  "next_step": "Create the staging sender UADAV STREAM · pruebas / acceso@correo-staging.uadavstream.com.ar, then verify its status before configuring secrets or authorizing a real recipient test."
+}

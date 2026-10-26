@@ -1,6 +1,12 @@
 # Correo de acceso y Brevo · preparación aislada · 26/10/2026
 
-Decisión funcional en `CUENTA-UNICA-Y-ACCESO-SIMPLE-20261026.md`. El usuario quiere recuperar accesos desde su correo sin guardar códigos largos; aceptó cuenta única y Google opcional. Brevo gratuito se prioriza por volumen, sin cuenta del proveedor, remitente o credencial configurados todavía.
+Decisión funcional en `CUENTA-UNICA-Y-ACCESO-SIMPLE-20261026.md`. El usuario quiere recuperar accesos desde su correo sin guardar códigos largos; aceptó cuenta única y Google opcional. Brevo gratuito se prioriza por volumen. Actualización posterior: el operador ingresó a su cuenta y agregó el dominio exclusivo de staging; una captura de Brevo lo muestra **Autentificado**. Remitente, credencial del transporte y envío real todavía no están confirmados.
+
+## Dominio autenticado por el operador
+
+Capturas del26/10,19:56 Argentina: Cloudflare muestra los dos CNAME DKIM y dos TXT de correo-staging, todos DNS only/Auto; Brevo muestra `correo-staging.uadavstream.com.ar` Autentificado, Sin marca. La personalización de enlaces era opcional y se dejó vacía. Evidencia segura en `evidence/correo-brevo-dominio-autenticado-20261026.json`; originales privados, sin copiarlos al repositorio. Work inspeccionó las imágenes, no una sesión autenticada ni los valores DNS completos, que aparecen truncados. No hubo cambios DNS desde Work ni comparación integral de la zona productiva.
+
+Siguiente paso: crear el remitente **UADAV STREAM · pruebas**, **acceso@correo-staging.uadavstream.com.ar**, y comprobar su estado. No pedir que repita la autenticación del dominio. No hay plan/cupo visto en pantalla todavía, APIkey configurada, destinatario autorizado o correo enviado. La recuperación y el nuevo login continúan apagados.
 
 ## Código escrito, sin despliegue
 
@@ -11,7 +17,7 @@ Decisión funcional en `CUENTA-UNICA-Y-ACCESO-SIMPLE-20261026.md`. El usuario qu
 - Solo HTTP201 y un `messageId` válido producen aceptación. Su SHA256 se normaliza como identificador interno `brevo:<hash>`; no se inventa un ID del proveedor. No es constancia de entrega/lectura.
 - La adaptación al outbox de Bolsa conserva el UUID, token y vencimiento originales. Para cuentas generales solo se preparó el mensaje/transporte: no existe aún su sistema de emisión/canje, federación Google, endpoint o pantalla receptora.
 
-**No están importados ni embebidos en `worker.js`.** No hay despliegue, API key, cuenta Brevo, envío real, SQL remoto o DNS nuevos. `/acceso-correo.html` es un destino reservado todavía no implementado. No usar esos enlaces con personas reales ni aplicar el SQL previo para habilitar el correo.
+**No están importados ni embebidos en `worker.js`.** No hay despliegue, API key configurada, envío real o SQL remoto. Los registros DNS de staging los agregó después el operador, según la evidencia anterior; ese avance no habilita el transporte. `/acceso-correo.html` es un destino reservado todavía no implementado. No usar esos enlaces con personas reales ni aplicar el SQL previo para habilitar el correo.
 
 ## Idempotencia: diferencia importante con Resend
 
@@ -35,7 +41,7 @@ Código y decisión guardados en `09ac96fad850a8016e2f2bc8fa9d2b7696a93932`, exc
 
 ## Siguiente integración
 
-1. Cuenta gratuita en Brevo creada por el usuario. Remitente y subdominio de staging verificados, credencial exclusiva mediante secretos y un destinatario de prueba autorizado. Sin contratación, pago o cambio productivo.
+1. Cuenta accesible por el operador y subdominio de staging autenticado, según capturas. Completar remitente, comprobar plan gratuito/cupo, configurar credencial exclusiva mediante secretos y autorizar un destinatario de prueba. Sin contratación ni pago nuevo; todos los registros indicados corresponden solo al subdominio de staging.
 2. Emisión/canje de cuenta unificada y vinculación de identidades: verificación, cambio de correo, sesiones, permisos, consentimiento y migración desde respaldos actuales. Google opcional requiere su propio cliente y validación.
 3. Resolver recibos inciertos y persistencia inmutable de mensajes; controles de cuota diarios compartidos y preferencias. No enviar enlaces vencidos por colas diferidas ni anunciar entrega a partir de aceptaciónAPI.
 4. Implementar receptor y flujo simple; backup/retención/cifrado/restauración completos antes de retirar503. QA real con recepción/canje y fallos; habilitación expresamente acotada después de aprobar.
