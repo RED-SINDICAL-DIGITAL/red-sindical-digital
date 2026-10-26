@@ -145,9 +145,10 @@ async function uadavJobMaintenance(env){
   if(env.JOB_STORE_D1!=='true'||env.JOB_STORE_MAINTENANCE==='true')return {processed:0};
   const store=uadavJobStore(env),jobs=await store.read('bolsa_trabajo'),today=uadavJobToday(),now=Date.now();let processed=0;
   for(const job of jobs){
-    const expired=job.fecha_limite&&job.fecha_limite<today;
+    const expired=uadavJobValidDate(job.fecha_limite)&&job.fecha_limite<today;
+    const explicitlyClosed=[job.estado,job.status].some(value=>{const state=String(value||'').trim().toLowerCase();return UADAV_JOB_CLOSED_STATES.has(state)&&!UADAV_JOB_EXPIRED_STATES.has(state)});
     const stale=job.origen==='externo'&&job.managed!==true&&job.claimed!==true&&job.source_auto_sync===true&&now-Date.parse(job.last_seen_at||job.actualizado||job.importado_en||0)>72*3600000;
-    if(job.activo!==false&&(expired||stale)&&processed<5){job.activo=false;job.estado=expired?'vencida':'no_confirmada';job.actualizado=new Date().toISOString();processed++}
+    if(job.activo!==false&&job.activo!==0&&!explicitlyClosed&&(expired||stale)&&processed<5){job.activo=false;job.estado=expired?'vencida':'no_confirmada';job.actualizado=new Date().toISOString();processed++}
   }
   if(processed)await store.write('bolsa_trabajo',jobs);
   await uadavJobDB(env).batch([

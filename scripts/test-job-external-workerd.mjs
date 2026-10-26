@@ -46,6 +46,17 @@ export default {async test(){
  const qaPage=await qaWorker.fetch(new Request(qaOrigin+'/'),qaEnv,{}),qaHealth=await qaWorker.fetch(new Request(qaOrigin+'/health'),qaEnv,{});
  check(qaPage.status===200&&(await qaPage.text()).includes('SOLO BASE NUEVA DE QA'),'QA interface');check((await qaHealth.json()).purpose==='disposable-d1-rehearsal','QA purpose');
  console.log('PASS workerd: isolated QA interface and health');
+ const tick={cron:'*/15 * * * *',scheduledTime:1792969200000},closedEnv=new Proxy({},{get(_target,name){if(name==='JOB_STAGING_CRON')return undefined;throw Error('Unrelated module reached: '+String(name))}});
+ check((await worker.scheduled(tick,closedEnv,{})).reason==='disabled','staging cron must default to no side effects');
+ check((await worker.scheduled({...tick,cron:'* * * * *'},{JOB_STAGING_CRON:'bolsa-only'},{})).reason==='schedule','unrelated schedule must not run Bolsa');
+ console.log('PASS workerd: staging cron is disabled by default and isolated from other modules');
+ const statusEnv={ADMIN_KEY:'synthetic-admin',JOB_STORE_D1:'false',DB:{prepare(){throw Error('Status must authenticate before DB access')}}};
+ check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/jobs/cron'),statusEnv,{})).status===401,'cron status authentication');
+ check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/jobs/cron',{method:'POST',headers:{Authorization:'Bearer synthetic-admin'}}),statusEnv,{})).status===405,'no HTTP cron execution endpoint');
+ console.log('PASS workerd: private cron status is read-only');
+ let cronFailed=false;try{await worker.scheduled(tick,{JOB_STAGING_CRON:'bolsa-only',JOB_STORE_D1:'true',DB:{prepare(){throw Error('synthetic-private-SQL-detail')}}},{})}catch(error){cronFailed=error.jobCode==='JOB_CRON_FAILED'&&!error.message.includes('synthetic-private-SQL-detail')}
+ check(cronFailed,'scheduled handler must propagate sanitized failures');
+ console.log('PASS workerd: scheduled failures reach the runtime without private SQL details');
 }};
 `;
 const mock=`const html='<script type="application/ld+json">'+JSON.stringify({'@type':'JobPosting',title:'QA workerd · Música',description:'<b>Prueba ficticia</b>',validThrough:'2099-12-31',jobLocation:{address:{addressLocality:'Rosario'}}})+'</script>';

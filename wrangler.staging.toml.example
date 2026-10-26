@@ -19,5 +19,8 @@ ACCOUNT_ALLOWED_ORIGINS = "https://uadav-stream-staging.pages.dev"
 TURNSTILE_ALLOWED_HOSTNAMES = "uadav-stream-staging.pages.dev"
 PUBLIC_SITE_URL = "https://uadav-stream-staging.pages.dev"
 
+# JOB_STAGING_CRON is deliberately absent. The 11763 staging scheduler stays
+# disabled until its build/bindings are verified. See the 11763 cron guide.
+
 # Deliberately no routes, production domains, cron triggers, queues, email,
 # payment webhook, AI API keys or push secrets. ADMIN_KEY must be staging-only.

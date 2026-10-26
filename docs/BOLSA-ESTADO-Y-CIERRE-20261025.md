@@ -35,6 +35,12 @@ El fallo de captura de 11761 quedó resuelto en 11762: el motor workerd no admit
 | Privacidad y concurrencia | Una cuenta y sus vínculos tienen evidencia. Falta segunda cuenta independiente, comprobante previo, vínculo voluntario con perfil artístico, aislamiento entre cuentas y solicitudes simultáneas en Cloudflare. | Acceso seguro al otro contexto de prueba; no crear una cuenta por caducidad de sesión. |
 | Dispositivos y UX | PC/móvil básicos aprobados. Completar circuitos con cuenta y fallos en móvil, tablet, Smart TV y accesibilidad; actualizar manuales con lo validado. | Dispositivos físicos que no están disponibles en Work. |
 
+## Preparación 11763 · código probado, despliegue pendiente
+
+Se preparó una entrada programada exclusiva para Bolsa, apagada por defecto, con lease D1, repetición segura y registro privado del resultado. También se corrigió el respeto de ofertas ocultas/cerradas, actividad numérica cero y fechas inválidas. Admin incorpora consulta automática de estado mediante GET, sin activar tareas ni enviar avisos. No hay SQL nuevo.
+
+Pruebas locales: **73 Worker, 138 UI, 15 comprobaciones workerd y 12 estáticas de Radio**. No se activaron variables ni triggers remotos. El despliegue 11763 y un vencimiento/aviso reales siguen pendientes. Ver `BOLSA-11763-VENCIMIENTOS-Y-CRON-STAGING.md`; no confundir esta preparación con la prueba remota del adaptador de restauración 11762 ya aprobada.
+
 ## Próxima prioridad y límites
 
 Continuar con vencimientos y avisos, preparando primero el alcance del cron. No activar el programador compartido para probar únicamente Bolsa. La recuperación por correo y la restauración de la base operativa permanecen deshabilitadas. Cartelera continúa después de cerrar y validar Bolsa.

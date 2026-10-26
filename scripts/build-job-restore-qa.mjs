@@ -1,7 +1,13 @@
 import {readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 const root=new URL('../',import.meta.url),target=new URL('releases/uadav-bolsa-restore-qa-11762.js',root);
-const original=await readFile(new URL('worker.js',root),'utf8');
+// Preserve the exact core already approved in remote QA. A new main Worker
+// must not silently rewrite the deployed 11762 rehearsal or its release ZIP.
+const archive=fileURLToPath(new URL('releases/uadav-api-staging-11762.zip',root));
+const original=execFileSync('python',['-c','import sys,zipfile;sys.stdout.buffer.write(zipfile.ZipFile(sys.argv[1]).read("worker.js"))',archive],{encoding:'utf8',maxBuffer:2000000});
+if(createHash('sha256').update(original).digest('hex')!=='94e6603f4f9d44f6cfaa6f152c4670f27335ef9fdd7c52e90c3985b4ecdaab98')throw Error('The frozen 11762 core changed; do not replace the approved rehearsal.');
 if(!original.includes("const BUILD = '11762';"))throw Error('Update the QA adapter version and review its fixtures for the new core.');
 const named=original.match(/^export \{[^}]+\};\s*$/gm)||[];
 if(named.length!==2||!original.includes('export default uadavStagingWorker;'))throw Error('Unexpected core exports; review isolated adapter.');

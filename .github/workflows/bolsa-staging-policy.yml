@@ -16,6 +16,9 @@ on:
       - 'scripts/job-store-runtime.js'
       - 'scripts/job-account-runtime.js'
       - 'scripts/job-expiry-runtime.js'
+      - 'scripts/job-cron-runtime.js'
+      - 'tests/job-cron-staging.test.mjs'
+      - 'releases/uadav-api-staging-11762.zip'
       - 'scripts/job-external-runtime.js'
       - 'tests/job-external-security.test.mjs'
       - 'scripts/test-job-external-workerd.mjs'
@@ -40,6 +43,9 @@ on:
       - 'scripts/job-store-runtime.js'
       - 'scripts/job-account-runtime.js'
       - 'scripts/job-expiry-runtime.js'
+      - 'scripts/job-cron-runtime.js'
+      - 'tests/job-cron-staging.test.mjs'
+      - 'releases/uadav-api-staging-11762.zip'
       - 'scripts/job-external-runtime.js'
       - 'tests/job-external-security.test.mjs'
       - 'scripts/test-job-external-workerd.mjs'
@@ -75,6 +81,6 @@ jobs:
       - name: Run standalone external-source checks inside Cloudflare engine
         run: UADAV_WORKERD_BIN="$RUNNER_TEMP/uadav-workerd/node_modules/@cloudflare/workerd-linux-64/bin/workerd" node scripts/test-job-external-workerd.mjs
       - name: Run SQLite transaction, concurrency, migration and recovery checks
-        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs tests/job-restore-qa.test.mjs
+        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs tests/job-restore-qa.test.mjs tests/job-cron-staging.test.mjs
       - name: Run KV compatibility checks with current publication policy
         run: node tests/job-application-integration.mjs
