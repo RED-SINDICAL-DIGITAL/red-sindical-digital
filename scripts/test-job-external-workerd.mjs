@@ -69,6 +69,12 @@ export default {async test(){
  const mailReceipt=await mail.sendAccess({...mailData,requestId:'11111111-1111-4111-8111-111111111111',to:'lab@example.invalid'});
  check(/^brevo:[a-f0-9]{64}$/.test(mailReceipt.id),'Brevo normalized provider receipt');
  console.log('PASS workerd: preparatory access email rendering and Brevo transport with synthetic network only');
+ const probeEnv=new Proxy({ADMIN_KEY:'synthetic-admin'},{get(target,name){if(name==='ADMIN_KEY')return target[name];throw Error('Probe read binding before authorization: '+String(name))}});
+ check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/jobs/email-check'),probeEnv,{})).status===401,'Probe requires Admin before bindings');
+ check((await worker.fetch(new Request('https://uadav-api.uadavstream.workers.dev/api/admin/jobs/email-check',{headers:{Authorization:'Bearer synthetic-admin'}}),probeEnv,{})).status===403,'Probe rejects production');
+ const probePage=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/qa/correo'),probeEnv,{});
+ check(probePage.status===200&&(await probePage.text()).includes('Verificar conexión con Brevo'),'Probe interface');
+ console.log('PASS workerd: staging-only sandbox interface and Admin-before-binding gates');
  const tick={cron:'*/15 * * * *',scheduledTime:1792969200000},closedEnv=new Proxy({},{get(_target,name){if(name==='JOB_STAGING_CRON')return undefined;throw Error('Unrelated module reached: '+String(name))}});
  check((await worker.scheduled(tick,closedEnv,{})).reason==='disabled','staging cron must default to no side effects');
  check((await worker.scheduled({...tick,cron:'* * * * *'},{JOB_STAGING_CRON:'bolsa-only'},{})).reason==='schedule','unrelated schedule must not run Bolsa');
@@ -115,11 +121,12 @@ try{
  await writeFile(join(dir,'recovery-outbox.mjs'),await readFile(new URL('../scripts/job-recovery-outbox.mjs',import.meta.url)));
  await writeFile(join(dir,'access-mail-message.mjs'),await readFile(new URL('../scripts/access-mail-message.mjs',import.meta.url)));
  await writeFile(join(dir,'brevo-staging-mail.mjs'),await readFile(new URL('../scripts/brevo-staging-mail.mjs',import.meta.url)));
+ await writeFile(join(dir,'brevo-request.mjs'),await readFile(new URL('../scripts/brevo-request.mjs',import.meta.url)));
  await writeFile(join(dir,'entry.mjs'),entry);
  await writeFile(join(dir,'mock.mjs'),mock);
  await writeFile(join(dir,'config.capnp'),`using Workerd = import "/workerd/workerd.capnp";
 const config :Workerd.Config = (services = [
-(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs"),(name = "bolsa-lab.mjs", esModule = embed "bolsa-lab.mjs"),(name = "recovery-outbox.mjs", esModule = embed "recovery-outbox.mjs"),(name = "access-mail-message.mjs", esModule = embed "access-mail-message.mjs"),(name = "brevo-staging-mail.mjs", esModule = embed "brevo-staging-mail.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
+(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs"),(name = "bolsa-lab.mjs", esModule = embed "bolsa-lab.mjs"),(name = "recovery-outbox.mjs", esModule = embed "recovery-outbox.mjs"),(name = "access-mail-message.mjs", esModule = embed "access-mail-message.mjs"),(name = "brevo-staging-mail.mjs", esModule = embed "brevo-staging-mail.mjs"),(name = "brevo-request.mjs", esModule = embed "brevo-request.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
 (name = "mock", worker = (modules = [(name = "mock.mjs", esModule = embed "mock.mjs")],compatibilityDate = "2026-09-28"))
 ]);`);
  const result=spawnSync(binary,['test',join(dir,'config.capnp'),'main'],{encoding:'utf8',timeout:30000});

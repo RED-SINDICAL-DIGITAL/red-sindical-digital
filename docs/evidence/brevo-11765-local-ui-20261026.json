@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-26",
+  "scope": "local-synthetic-browser-emulation",
+  "status": "blocked_before_page_load",
+  "browser_rendering_verified": false,
+  "screenshots_produced": false,
+  "planned_viewports": [
+    {"width": 1280, "height": 900},
+    {"width": 390, "height": 844},
+    {"width": 320, "height": 740}
+  ],
+  "environment_observations": [
+    "Playwright browser was not installed; the download did not produce a valid archive.",
+    "Alternative isolated Chromium binary exited before a page loaded; final exit signal SIGTRAP."
+  ],
+  "product_failure_inferred": false,
+  "dom_simulation_interaction_test_groups_passed": 6,
+  "dom_simulation_proves_visual_layout": false,
+  "network_interception_configured_for_synthetic_loopback_only": true,
+  "real_brevo_call": false,
+  "real_email_delivery": false,
+  "remote_d1": false,
+  "physical_devices": false,
+  "next_step": "After the operator deploys11765, verify the private connection screen in their own browser; physical PC/mobile and accessibility coverage remain pending."
+}

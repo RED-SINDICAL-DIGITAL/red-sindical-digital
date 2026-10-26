@@ -1,12 +1,12 @@
 # Correo de acceso y Brevo · preparación aislada · 26/10/2026
 
-Decisión funcional en `CUENTA-UNICA-Y-ACCESO-SIMPLE-20261026.md`. El usuario quiere recuperar accesos desde su correo sin guardar códigos largos; aceptó cuenta única y Google opcional. Brevo gratuito se prioriza por volumen. Actualización posterior: el operador ingresó a su cuenta y agregó el dominio exclusivo de staging; una captura de Brevo lo muestra **Autentificado**. Remitente, credencial del transporte y envío real todavía no están confirmados.
+Decisión funcional en `CUENTA-UNICA-Y-ACCESO-SIMPLE-20261026.md`. El usuario quiere recuperar accesos desde su correo sin guardar códigos largos; aceptó cuenta única y Google opcional. Brevo gratuito se prioriza por volumen. El dominio staging aparece **Autentificado**, el remitente **Verificado** con DKIM/DMARC correctos y el plan Free muestra300/300. El usuario confirmó haber guardado `BREVO_API_KEY` en staging; Work no vio el valor ni leyó ese binding. Aceptación del proveedor, entrega y recuperación todavía no comprobadas.
 
 ## Dominio autenticado por el operador
 
 Capturas del26/10,19:56 Argentina: Cloudflare muestra los dos CNAME DKIM y dos TXT de correo-staging, todos DNS only/Auto; Brevo muestra `correo-staging.uadavstream.com.ar` Autentificado, Sin marca. La personalización de enlaces era opcional y se dejó vacía. Evidencia segura en `evidence/correo-brevo-dominio-autenticado-20261026.json`; originales privados, sin copiarlos al repositorio. Work inspeccionó las imágenes, no una sesión autenticada ni los valores DNS completos, que aparecen truncados. No hubo cambios DNS desde Work ni comparación integral de la zona productiva.
 
-Siguiente paso: crear el remitente **UADAV STREAM · pruebas**, **acceso@correo-staging.uadavstream.com.ar**, y comprobar su estado. No pedir que repita la autenticación del dominio. No hay plan/cupo visto en pantalla todavía, APIkey configurada, destinatario autorizado o correo enviado. La recuperación y el nuevo login continúan apagados.
+Avance posterior por capturas: remitente **UADAV STREAM · pruebas**, **acceso@correo-staging.uadavstream.com.ar**, verificado; DKIM y DMARC verdes. Plan Free,300correos restantes de300. Se guio una clave de acceso restringido con permisos solo para email transaccional; «guardada en staging» confirma la acción del operador, no la lectura autenticada de sus permisos o binding. Evidencia: `evidence/correo-brevo-remitente-y-secreto-20261026.json`. No repetir dominio, remitente, cupo o creación de clave. Siguiente paso: desplegar11765 y comprobar la conexión privada sandbox según `BOLSA-11765-CONEXION-BREVO-STAGING.md`; no requiere destinatario real ni SQL. Recuperación y nuevo login continúan apagados.
 
 ## Código escrito, sin despliegue
 
@@ -17,7 +17,7 @@ Siguiente paso: crear el remitente **UADAV STREAM · pruebas**, **acceso@correo-
 - Solo HTTP201 y un `messageId` válido producen aceptación. Su SHA256 se normaliza como identificador interno `brevo:<hash>`; no se inventa un ID del proveedor. No es constancia de entrega/lectura.
 - La adaptación al outbox de Bolsa conserva el UUID, token y vencimiento originales. Para cuentas generales solo se preparó el mensaje/transporte: no existe aún su sistema de emisión/canje, federación Google, endpoint o pantalla receptora.
 
-**No están importados ni embebidos en `worker.js`.** No hay despliegue, API key configurada, envío real o SQL remoto. Los registros DNS de staging los agregó después el operador, según la evidencia anterior; ese avance no habilita el transporte. `/acceso-correo.html` es un destino reservado todavía no implementado. No usar esos enlaces con personas reales ni aplicar el SQL previo para habilitar el correo.
+**Mensajes, transporte real y outbox no están importados ni embebidos en `worker.js`.** Actualización11765: el cliente HTTPS común se extrajo a `scripts/brevo-request.mjs` y se embebió únicamente para la prueba privada con destinatario `.invalid` y sandbox obligatorio. Código preparado, despliegue pendiente. El secreto fue guardado según el operador; todavía no se comprobó mediante API. No hay envío real o SQL remoto de outbox. `/acceso-correo.html` es un destino reservado todavía no implementado. No usar esos enlaces con personas reales ni aplicar el SQL previo para habilitar el correo.
 
 ## Idempotencia: diferencia importante con Resend
 
@@ -35,13 +35,13 @@ Antes de habilitar falta resolver esa recepción incierta con evidencia auténti
 
 La red de esos tests es simulada y los datos son ficticios. Los resultados no prueban Brevo real, la página de destino, D1 remoto, recepción de correo ni UX física. Los mensajes tienen estructura accesible básica, pero falta inspección visual de clientes de correo y validación con teclado/lectores/usuarios.
 
-Resultados locales: **122 pruebas focalizadas Node/SQLite aprobadas** y **20 comprobaciones workerd aprobadas** con el motor fijado1.20261025.1. También aprobaron cotejo de fuentes embebidas/laboratorios congelados y diff; SHA de Worker/ZIP11764 y laboratorio sin cambios. CI incorpora los archivos nuevos. No repetir el laboratorio11764: no contiene este código. La oferta de vencimiento real mantiene su fecha y su cron original.
+Preparación inicial: **122 pruebas focalizadas Node/SQLite aprobadas** y **20 comprobaciones workerd aprobadas**, sin cambios de Worker11764. Actualización11765: **146 y21**, respectivamente, con el motor fijado1.20261025.1; también las12 de Radio, política pública, compatibilidad KV, sintaxis y fuentes. Worker cambia a11765 exclusivamente por la prueba privada sandbox; ZIP11764 y laboratorio congelado sin cambios. CI incorpora los archivos nuevos. No repetir el laboratorio11764: no contiene este código. La oferta de vencimiento real mantiene su fecha y su cron original.
 
 Código y decisión guardados en `09ac96fad850a8016e2f2bc8fa9d2b7696a93932`, exclusivamente Worker staging. CI [Bolsa40413223664](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40413223664) y [Radio40413223652](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40413223652) confirmadas `success` para ese commit. No equivale a un despliegue ni a una entrega real de correo.
 
 ## Siguiente integración
 
-1. Cuenta accesible por el operador y subdominio de staging autenticado, según capturas. Completar remitente, comprobar plan gratuito/cupo, configurar credencial exclusiva mediante secretos y autorizar un destinatario de prueba. Sin contratación ni pago nuevo; todos los registros indicados corresponden solo al subdominio de staging.
+1. Cuenta, dominio, remitente y plan/cupo comprobados por capturas; secreto guardado según confirmación del operador. Desplegar11765 solo a `uadav-api-staging` y ejecutar su prueba privada sin entrega. Después autorizar un destinatario real para una prueba separada. Sin contratación o pago nuevo; conservar toda la configuración previa y no aplicar SQL de outbox.
 2. Emisión/canje de cuenta unificada y vinculación de identidades: verificación, cambio de correo, sesiones, permisos, consentimiento y migración desde respaldos actuales. Google opcional requiere su propio cliente y validación.
 3. Resolver recibos inciertos y persistencia inmutable de mensajes; controles de cuota diarios compartidos y preferencias. No enviar enlaces vencidos por colas diferidas ni anunciar entrega a partir de aceptaciónAPI.
 4. Implementar receptor y flujo simple; backup/retención/cifrado/restauración completos antes de retirar503. QA real con recepción/canje y fallos; habilitación expresamente acotada después de aprobar.

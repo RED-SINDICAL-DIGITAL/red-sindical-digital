@@ -35,6 +35,12 @@ on:
       - 'scripts/job-recovery-outbox.mjs'
       - 'scripts/access-mail-message.mjs'
       - 'scripts/brevo-staging-mail.mjs'
+      - 'scripts/brevo-request.mjs'
+      - 'scripts/brevo-probe-runtime.js'
+      - 'scripts/brevo-probe-page.html'
+      - 'scripts/embed-brevo-probe.mjs'
+      - 'tests/brevo-probe.test.mjs'
+      - 'releases/uadav-api-staging-11765.zip'
       - 'tests/access-mail-staging.test.mjs'
       - 'tests/job-recovery-outbox.test.mjs'
       - 'tests/job-expiry-integration.test.mjs'
@@ -73,6 +79,12 @@ on:
       - 'scripts/job-recovery-outbox.mjs'
       - 'scripts/access-mail-message.mjs'
       - 'scripts/brevo-staging-mail.mjs'
+      - 'scripts/brevo-request.mjs'
+      - 'scripts/brevo-probe-runtime.js'
+      - 'scripts/brevo-probe-page.html'
+      - 'scripts/embed-brevo-probe.mjs'
+      - 'tests/brevo-probe.test.mjs'
+      - 'releases/uadav-api-staging-11765.zip'
       - 'tests/access-mail-staging.test.mjs'
       - 'tests/job-recovery-outbox.test.mjs'
       - 'tests/job-expiry-integration.test.mjs'
@@ -94,6 +106,8 @@ jobs:
         run: node --check worker.js
       - name: Verify standalone source is current
         run: node scripts/embed-job-store.mjs --check
+      - name: Verify private staging sandbox probe source
+        run: node scripts/embed-brevo-probe.mjs --check
       - name: Verify isolated restoration QA source
         run: node scripts/build-job-restore-qa.mjs --check && node --check releases/uadav-bolsa-restore-qa-11762.js
       - name: Verify isolated synthetic Bolsa lab source
@@ -101,7 +115,7 @@ jobs:
       - name: Validate preparatory recovery outbox engine (not deployed)
         run: node --check scripts/job-recovery-outbox.mjs
       - name: Validate preparatory email messages and Brevo transport (not deployed)
-        run: node --check scripts/access-mail-message.mjs && node --check scripts/brevo-staging-mail.mjs
+        run: node --check scripts/access-mail-message.mjs && node --check scripts/brevo-staging-mail.mjs && node --check scripts/brevo-request.mjs
       - name: Run public Bolsa regression tests
         run: node tests/bolsa-public-policy.test.cjs
       - name: Install pinned Cloudflare test engine (no package scripts)
@@ -109,6 +123,6 @@ jobs:
       - name: Run standalone external-source checks inside Cloudflare engine
         run: UADAV_WORKERD_BIN="$RUNNER_TEMP/uadav-workerd/node_modules/@cloudflare/workerd-linux-64/bin/workerd" node scripts/test-job-external-workerd.mjs
       - name: Run SQLite transaction, concurrency, migration and recovery checks
-        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs tests/job-restore-qa.test.mjs tests/job-cron-staging.test.mjs tests/job-lab.test.mjs tests/job-recovery-outbox.test.mjs tests/access-mail-staging.test.mjs
+        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs tests/job-restore-qa.test.mjs tests/job-cron-staging.test.mjs tests/job-lab.test.mjs tests/job-recovery-outbox.test.mjs tests/access-mail-staging.test.mjs tests/brevo-probe.test.mjs
       - name: Run KV compatibility checks with current publication policy
         run: node tests/job-application-integration.mjs

@@ -49,7 +49,7 @@ Ver `CORREO-BREVO-PREPARACION-20261026.md` para pruebas y límites del transport
 
 ## Integración y aceptación antes de publicar
 
-- Cuenta Brevo gratuita y remitente de un subdominio exclusivo de staging verificado. Credenciales exclusivas en secretos; destinatarios de QA expresamente autorizados. Sin cambios productivos ni envíos desde Work en esta entrega.
+- Cuenta Brevo gratuita, dominio y remitente staging verificados por capturas; Free300/300. Credencial exclusiva guardada según «guardada en staging» del operador; no se vio su valor o binding autenticado.11765 prepara solo una conexión privada sandbox, pendiente de desplegar/probar. Destinatarios reales de QA aún deben autorizarse. Sin cambios productivos ni envíos reales desde Work.
 - Emisión/canje de acceso y verificación de correo en D1, enlace único, límites atómicos, antienumeración y confirmación segura de cambio de cuenta. Respaldo, restauración, borrado y revocación deben cubrir las identidades nuevas.
 - Alta de cliente Google separado de staging, configuración de orígenes/consentimiento y verificación backend. Migración voluntaria desde las cuentas actuales, preservando datos y permisos sin fusiones por email.
 - Receptor del enlace y UI conectados solo cuando el backend esté listo; control de sesión y del retorno permitido, sin redirección arbitraria.

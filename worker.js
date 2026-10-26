@@ -450,7 +450,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11764';
+const BUILD = '11765';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -1214,6 +1214,215 @@ async function uadavJobScheduled(event,env){
 }
 
 /* END JOB STORE STAGING */
+
+/* BEGIN BREVO SANDBOX STAGING */
+const uadavBrevoSandboxRoute = (() => {
+/* Shared bounded HTTPS client. Callers supply server-constructed JSON only.
+ * No automatic retry, redirect, credential forwarding or logging. */
+async function uadavBrevoRequest({mode, apiKey, body, signal, timeoutMs = 5000, fetchImpl = globalThis.fetch}) {
+  const fail = code => Object.assign(new Error(code), {code});
+  const need = (ok, code) => { if (!ok) throw fail(code); };
+  need(mode === 'staging-only' && typeof apiKey === 'string' && /^[A-Za-z0-9._-]{32,512}$/.test(apiKey) &&
+    typeof body === 'string' && new TextEncoder().encode(body).length <= 16384 &&
+    Number.isInteger(timeoutMs) && timeoutMs >= 1 && timeoutMs <= 5000 && typeof fetchImpl === 'function', 'MAIL_CONFIGURATION');
+  const controller = new AbortController();
+  let timer, abort;
+  async function readJSON(response) {
+    need(/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') || ''), 'MAIL_RESPONSE');
+    const size = response.headers.get('content-length');
+    need(size === null || /^\d+$/.test(size) && Number(size) <= 8192, 'MAIL_RESPONSE');
+    need(response.body, 'MAIL_RESPONSE');
+    const reader = response.body.getReader(), chunks = [];
+    const cancel = () => { reader.cancel().catch(() => {}); };
+    controller.signal.addEventListener('abort', cancel, {once: true});
+    let bytes = 0;
+    try {
+      need(!controller.signal.aborted, 'MAIL_CANCELLED');
+      for (;;) {
+        const {done, value} = await reader.read();
+        if (done) break;
+        bytes += value.byteLength;
+        need(bytes <= 8192, 'MAIL_RESPONSE');
+        chunks.push(value);
+      }
+    } finally {
+      controller.signal.removeEventListener('abort', cancel);
+      reader.cancel().catch(() => {});
+    }
+    const buffer = new Uint8Array(bytes);
+    let offset = 0;
+    for (const chunk of chunks) { buffer.set(chunk, offset); offset += chunk.length; }
+    try {
+      const data = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(buffer));
+      need(data && typeof data === 'object' && !Array.isArray(data), 'MAIL_RESPONSE');
+      return data;
+    } catch { throw fail('MAIL_RESPONSE'); }
+  }
+  try {
+    const request = new Request('https://api.brevo.com/v3/smtp/email', {method: 'POST', redirect: 'manual', credentials: 'omit',
+      cache: 'no-store', headers: {'Content-Type': 'application/json', Accept: 'application/json', 'api-key': apiKey},
+      body, signal: controller.signal});
+    const cancelled = new Promise((_, reject) => {
+      abort = () => { controller.abort(); reject(fail('MAIL_CANCELLED')); };
+      if (signal?.aborted) abort(); else signal?.addEventListener('abort', abort, {once: true});
+    });
+    const deadline = new Promise((_, reject) => {
+      timer = setTimeout(() => { controller.abort(); reject(fail('MAIL_TIMEOUT')); }, timeoutMs);
+    });
+    const operation = (async () => {
+      need(!controller.signal.aborted, 'MAIL_CANCELLED');
+      const response = await fetchImpl(request);
+      need(response.status < 300 || response.status >= 400, 'MAIL_REDIRECT');
+      if (response.status === 429) throw fail('MAIL_RATE_LIMIT');
+      if (response.status === 402) throw fail('MAIL_QUOTA');
+      if (response.status === 401 || response.status === 403) throw fail('MAIL_CONFIGURATION');
+      if (response.status >= 500) throw fail('MAIL_UNAVAILABLE');
+      const data = await readJSON(response);
+      if (response.status !== 201) {
+        if (data.code === 'duplicate_parameter') throw fail('MAIL_DELIVERY_UNCONFIRMED');
+        throw fail('MAIL_REJECTED');
+      }
+      need(typeof data.messageId === 'string' && data.messageId.length <= 256 &&
+        /^<[^<>\s\x00-\x1f]+@[^<>\s\x00-\x1f]+>$/.test(data.messageId) && data.messageIds === undefined, 'MAIL_RECEIPT');
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data.messageId));
+      return {id: 'brevo:' + Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')};
+    })();
+    return await Promise.race([operation, cancelled, deadline]);
+  } catch (error) {
+    const codes = new Set(['MAIL_RESPONSE', 'MAIL_REDIRECT', 'MAIL_RATE_LIMIT', 'MAIL_QUOTA', 'MAIL_CONFIGURATION',
+      'MAIL_UNAVAILABLE', 'MAIL_DELIVERY_UNCONFIRMED', 'MAIL_REJECTED', 'MAIL_RECEIPT', 'MAIL_CANCELLED', 'MAIL_TIMEOUT']);
+    throw fail(codes.has(error?.code) ? error.code : 'MAIL_UNAVAILABLE');
+  } finally {
+    clearTimeout(timer);
+    if (abort) signal?.removeEventListener('abort', abort);
+    controller.abort();
+  }
+}
+
+const UADAV_BREVO_PROBE_HTML = "<!doctype html>\n<html lang=\"es\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"robots\" content=\"noindex,nofollow\"><title>UADAV STREAM · Prueba de conexión</title>\n<style nonce=\"%%NONCE%%\">\n*{box-sizing:border-box}body{margin:0;background:#0b1220;color:#e9f0ff;font:17px/1.6 system-ui,sans-serif}main{width:min(620px,100%);margin:0 auto;padding:32px 20px}h1{font-size:clamp(25px,5vw,34px);line-height:1.25}h2{font-size:21px}section{background:#141f32;border:1px solid #344865;border-radius:18px;padding:24px;margin:24px 0}label{display:block;margin-bottom:8px}input,button{font:inherit;min-height:48px;border-radius:10px;padding:10px 14px}input{width:100%;border:1px solid #8ea3c3;background:#0b1220;color:#fff}button{border:0;background:#a8c7ff;color:#08224f;cursor:pointer;font-weight:700}button:disabled{opacity:.5;cursor:default}button.secondary{background:#263951;color:#fff}button:focus-visible,input:focus-visible{outline:3px solid #ffdf8b;outline-offset:4px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}.muted{color:#b5c5dd}.badge{font-size:14px;font-weight:700;color:#a8c7ff}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.5 ui-monospace,monospace}details{margin:20px 0}summary{cursor:pointer;min-height:44px}[hidden]{display:none!important}\n</style></head><body><main>\n<p class=\"badge\">UADAV STREAM · SOLO STAGING</p><h1>Comprobar conexión con Brevo</h1>\n<p>Esta prueba no entrega correos ni recupera cuentas. Comprueba si Brevo acepta una solicitud de prueba desde el Worker.</p>\n<section id=\"loginPanel\"><h2>Entrar a la prueba</h2><form id=\"loginForm\"><label for=\"adminKey\">Clave del Centro de Control de staging</label><input id=\"adminKey\" name=\"admin-key\" type=\"password\" autocomplete=\"current-password\" maxlength=\"512\" required><p class=\"muted\">Usá la clave Admin que ya tenés. La clave API de Brevo permanece guardada en Cloudflare.</p><button id=\"loginButton\" type=\"submit\">Entrar</button></form></section>\n<section id=\"testPanel\" hidden><h2>Conexión de correo</h2><p id=\"readiness\"></p><p class=\"muted\">Hasta cinco comprobaciones por día. Podés consultar una comprobación anterior sin repetirla.</p><div class=\"actions\"><button id=\"checkButton\" type=\"button\" disabled>Verificar conexión con Brevo</button><button id=\"consultButton\" type=\"button\" class=\"secondary\" hidden>Consultar resultado</button><button id=\"logoutButton\" type=\"button\" class=\"secondary\">Salir</button></div></section>\n<p id=\"status\" role=\"status\" aria-live=\"polite\"></p><div class=\"actions\"><button id=\"copyButton\" type=\"button\" class=\"secondary\" disabled>Copiar resultado seguro</button></div><details id=\"resultDetails\" hidden><summary>Ver resultado técnico</summary><pre id=\"resultText\"></pre></details>\n<p class=\"muted\">La recuperación por correo continúa deshabilitada hasta completar envío, recepción y canje de un solo uso.</p>\n</main><script nonce=\"%%NONCE%%\">\n(()=>{'use strict';const $=id=>document.getElementById(id);let key='',version=0,busy=false,ready=false,remaining=0,requestId='',report=null,since=0,active=null;\nfunction paint(){ $('loginPanel').hidden=!!key;$('testPanel').hidden=!key;$('loginButton').disabled=busy;$('checkButton').disabled=busy||!ready||remaining<1;$('consultButton').hidden=!requestId;$('consultButton').disabled=busy;$('copyButton').disabled=!report||busy;$('copyButton').hidden=!report; }\nfunction logout(){version++;active?.abort();key='';since=0;ready=false;requestId='';report=null;$('adminKey').value='';$('readiness').textContent='';$('resultText').textContent='';$('resultDetails').hidden=true;busy=false;paint();}\nfunction show(data){report={build:String(data.build||''),scope:'brevo-sandbox-staging',result:['accepted','pending','unconfirmed','error'].includes(data.result)?data.result:'error',sandbox:true,emails_sent:0,delivery_verified:false,recovery_enabled:false};if(typeof data.checked_at==='string')report.checked_at=data.checked_at;if(typeof data.code==='string'&&/^[A-Z_]{1,50}$/.test(data.code))report.code=data.code;if(data.interrupted===true)report.interrupted=true;remaining=Number.isInteger(data.remaining_today)?data.remaining_today:0;$('resultText').textContent=JSON.stringify(report,null,2);$('resultDetails').hidden=false;const text={accepted:'Brevo aceptó la solicitud de prueba. Todavía falta probar un correo recibido de verdad.',pending:'La comprobación sigue pendiente. Consultá el resultado sin repetir el envío.',unconfirmed:'No se confirmó la conexión. Revisá la clave, sus permisos o los avisos de seguridad de Brevo y consultá el resultado.'};$('status').textContent=text[report.result]||'No se confirmó la comprobación. Revisá la configuración y volvé a consultar.';}\nasync function call(method,body,query=''){if(!key||Date.now()-since>600000){logout();$('status').textContent='Volvé a entrar con la clave del Centro de Control.';throw Error('Volvé a entrar con la clave del Centro de Control.');}const secret=key,turn=version,controller=new AbortController();active=controller;const timer=setTimeout(()=>controller.abort(),12000);try{const response=await fetch('/api/admin/jobs/email-check'+query,{method,headers:{Authorization:'Bearer '+secret,'Content-Type':'application/json'},cache:'no-store',credentials:'omit',signal:controller.signal,...(body?{body:JSON.stringify(body)}:{})});const data=await response.json();if(turn!==version||secret!==key)return null;if(response.status===401)throw Object.assign(Error('La clave Admin no fue aceptada.'),{status:401});if(!response.ok)throw Object.assign(Error(typeof data.error==='string'?data.error.slice(0,180):'No se pudo completar la prueba.'),{status:response.status});if(data.scope!=='brevo-sandbox-staging'||data.sandbox!==true||data.emails_sent!==0||data.delivery_verified!==false||data.recovery_enabled!==false||!/^\\d{5}$/.test(String(data.build))||Number(data.build)<11765)throw Error('La respuesta no corresponde a esta prueba. Recargá la página.');return data;}finally{clearTimeout(timer);if(active===controller)active=null;}}\n$('loginForm').addEventListener('submit',async event=>{event.preventDefault();if(busy)return;key=$('adminKey').value.trim();$('adminKey').value='';since=Date.now();version++;const turn=version;busy=true;$('status').textContent='Comprobando configuración…';paint();try{const data=await call('GET');if(!data||turn!==version)return;ready=data.ready===true;remaining=data.remaining_today||0;$('readiness').textContent=ready?'Configuración disponible. Comprobaciones restantes hoy: '+remaining:'No detectamos el secreto BREVO_API_KEY o la base de staging preparada.';$('status').textContent=ready?'Podés iniciar la comprobación con el botón.':'Revisá la configuración del Worker de staging.';}catch(error){if(turn===version){logout();$('status').textContent=error.name==='AbortError'?'La conexión tardó demasiado. Volvé a entrar.':error.message;}}finally{if(turn===version)busy=false;paint();if(key&&ready)$('checkButton').focus();else if(!key)$('adminKey').focus();}});\nasync function run(consult){if(busy||!key||consult&&!requestId)return;const turn=version;busy=true;paint();$('status').textContent=consult?'Consultando el resultado…':'Verificando conexión…';if(!consult){requestId=crypto.randomUUID();report=null;$('resultText').textContent='';$('resultDetails').hidden=true;paint();}try{const data=await call(consult?'GET':'POST',consult?null:{request_id:requestId,confirm:'BREVO_SANDBOX_STAGING'},consult?'?request_id='+encodeURIComponent(requestId):'');if(data&&turn===version)show(data);}catch(error){if(turn===version){if(error.status===401)logout();if(error.status===429)remaining=0;$('status').textContent=error.name==='AbortError'?'La respuesta tardó demasiado. Usá Consultar resultado para evitar repetir la prueba.':error.message;}}finally{if(turn===version)busy=false;paint();}}\n$('checkButton').onclick=()=>run(false);$('consultButton').onclick=()=>run(true);$('logoutButton').onclick=()=>{logout();$('status').textContent='Saliste de la prueba.';};$('copyButton').onclick=async()=>{if(!report)return;try{await navigator.clipboard.writeText(JSON.stringify(report,null,2));$('status').textContent='Resultado seguro copiado.';}catch{$('resultDetails').open=true;$('status').textContent='Podés copiar el resultado técnico que aparece abajo.';}};window.addEventListener('pagehide',logout);paint();})();\n</script></body></html>\n";
+/* Private connection probe only. Every provider request is hard-wired to
+ * X-Sib-Sandbox: drop and a reserved .invalid recipient. No email delivery,
+ * account token, recovery mutation, schedule, schema or production operation. */
+async function uadavBrevoSandboxRoute(request, env) {
+  const url = new URL(request.url), origin = request.headers.get('Origin');
+  const site = 'https://uadav-api-staging.uadavstream.workers.dev';
+  const allowed = [site];
+  const headers = {'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store',
+    Pragma: 'no-cache', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff', Vary: 'Origin',
+    ...(origin && allowed.includes(origin) ? {'Access-Control-Allow-Origin': origin} : {})};
+  const reply = (data, status = 200, extra = {}) => new Response(JSON.stringify(data), {status, headers: {...headers, ...extra}});
+  const base = {scope: 'brevo-sandbox-staging', build: BUILD, sandbox: true, emails_sent: 0, delivery_verified: false, recovery_enabled: false};
+  const providerCodes = new Set(['MAIL_RESPONSE', 'MAIL_REDIRECT', 'MAIL_RATE_LIMIT', 'MAIL_QUOTA', 'MAIL_CONFIGURATION', 'MAIL_UNAVAILABLE', 'MAIL_DELIVERY_UNCONFIRMED', 'MAIL_REJECTED', 'MAIL_RECEIPT', 'MAIL_TIMEOUT', 'MAIL_CANCELLED']);
+  const fail = (code, error, status = 503, extra = {}) => reply({...base, result: 'error', code, error}, status, extra);
+  if (url.pathname === '/qa/correo') {
+    if (url.origin !== site) return fail('BREVO_STAGING_ONLY', 'Esta prueba solo está disponible en staging.', 403);
+    if (request.method !== 'GET') return fail('BREVO_METHOD', 'Abrí la página de prueba.', 405);
+    const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16)), value => value.toString(16).padStart(2, '0')).join('');
+    return new Response(UADAV_BREVO_PROBE_HTML.replaceAll('%%NONCE%%', nonce), {headers: {...headers,
+      'Content-Type': 'text/html; charset=utf-8', 'X-Robots-Tag': 'noindex, nofollow',
+      'Content-Security-Policy': "default-src 'none'; script-src 'nonce-" + nonce + "'; style-src 'nonce-" + nonce + "'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'"}});
+  }
+  // Authenticate before touching the provider secret, D1 or other bindings.
+  const admin = String(env.ADMIN_KEY || '').trim();
+  if (!admin || request.headers.get('Authorization') !== 'Bearer ' + admin) return fail('BREVO_AUTH', 'Ingresá con la clave del Centro de Control de staging.', 401);
+  if (url.origin !== site) return fail('BREVO_STAGING_ONLY', 'Esta prueba solo está disponible en staging.', 403);
+  if (origin && !allowed.includes(origin)) return fail('BREVO_ORIGIN', 'Abrí la prueba desde el sitio de staging.', 403);
+  if (!['GET', 'POST'].includes(request.method)) return fail('BREVO_METHOD', 'Método no permitido.', 405, {'Allow': 'GET,POST'});
+  if (env.JOB_STORE_MAINTENANCE === 'true') return fail('BREVO_MAINTENANCE', 'Staging está en mantenimiento.', 423);
+  let input;
+  const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
+  if (request.method === 'POST') {
+    if (url.search || !/^application\/json(?:\s*;|$)/i.test(request.headers.get('Content-Type') || '')) return fail('BREVO_INPUT', 'Solicitud de prueba inválida.', 400);
+    try { input = await uadavSecurityJSON(request, 256); } catch { return fail('BREVO_INPUT', 'Solicitud de prueba inválida o demasiado grande.', 400); }
+    if (!input || typeof input !== 'object' || Array.isArray(input) ||
+      Object.keys(input).length !== 2 || !uuid.test(input.request_id || '') || input.confirm !== 'BREVO_SANDBOX_STAGING') return fail('BREVO_INPUT', 'Confirmá la prueba desde su botón.', 400);
+  } else if ([...url.searchParams.keys()].some(key => key !== 'request_id') || url.searchParams.getAll('request_id').length > 1 ||
+    url.searchParams.has('request_id') && !uuid.test(url.searchParams.get('request_id'))) return fail('BREVO_INPUT', 'Referencia de prueba inválida.', 400);
+  const apiKey = env.BREVO_API_KEY;
+  const keyPresent = typeof apiKey === 'string' && /^[A-Za-z0-9._-]{32,512}$/.test(apiKey);
+  if (!keyPresent) return request.method === 'GET' ? reply({...base, result: 'status', ready: false, api_key_present: false, remaining_today: 0}) : fail('BREVO_KEY_MISSING', 'No detectamos BREVO_API_KEY como secreto válido en este Worker.');
+  if (env.JOB_STORE_D1 !== 'true' || !env.DB) return fail('BREVO_STORAGE', 'La prueba requiere la base D1 de staging ya preparada.');
+  const now = Date.now(), day = uadavJobToday(now), rateKey = 'brevo:sandbox:daily', prefix = 'brevo:sandbox:request:';
+  let db;
+  const read = async key => {
+    const row = await db.prepare('SELECT value FROM job_store_meta WHERE key=?').bind(key).first();
+    return row ? JSON.parse(row.value) : null;
+  };
+  function record(raw) {
+    if (!raw || raw.version !== 1 || !uuid.test(raw.request_id || '') || !['pending', 'accepted', 'unconfirmed'].includes(raw.state) ||
+      !Number.isSafeInteger(raw.created_at) || raw.created_at <= 0 || typeof raw.owner !== 'string' || !uuid.test(raw.owner)) throw Error('invalid_probe_record');
+    if (raw.state !== 'pending' && (!Number.isSafeInteger(raw.completed_at) || raw.completed_at < raw.created_at)) throw Error('invalid_probe_record');
+    if (raw.state === 'accepted' && !/^brevo:[a-f0-9]{64}$/.test(raw.receipt || '')) throw Error('invalid_probe_record');
+    if (raw.code !== undefined && !providerCodes.has(raw.code)) throw Error('invalid_probe_record');
+    return raw;
+  }
+  function count(raw) {
+    if (!raw) return 0;
+    if (raw.version !== 1 || !/^\d{4}-\d{2}-\d{2}$/.test(raw.day || '') || raw.day > day || !Number.isInteger(raw.count) || raw.count < 1 || raw.count > 5 || !uuid.test(raw.request_id || '') || !uuid.test(raw.owner || '')) throw Error('invalid_probe_rate');
+    return raw.day === day ? raw.count : 0;
+  }
+  function result(raw, remaining) {
+    const r = record(raw);
+    return {...base, result: r.state, request_id: r.request_id, remaining_today: remaining,
+      checked_at: r.completed_at ? new Date(r.completed_at).toISOString() : null, ...(r.code ? {code: r.code} : {}),
+      ...(r.state === 'pending' && now - r.created_at > 30000 ? {interrupted: true} : {})};
+  }
+  try {
+    db = uadavJobDB(env);
+    const ready = await db.prepare("SELECT value FROM job_store_meta WHERE key='migration_ready'").first();
+    if (ready?.value !== 'true') return fail('BREVO_STORAGE', 'Primero debe estar preparada la base D1 de staging.');
+    const remaining = 5 - count(await read(rateKey));
+    const requestId = request.method === 'POST' ? input.request_id : url.searchParams.get('request_id');
+    if (requestId) {
+      const prior = await read(prefix + requestId);
+      if (prior) return reply(result(prior, remaining), prior.state === 'pending' ? 202 : 200);
+      if (request.method === 'GET') return fail('BREVO_NOT_FOUND', 'No se encontró esa comprobación.', 404);
+    }
+    if (request.method === 'GET') return reply({...base, result: 'status', ready: true, api_key_present: true, remaining_today: remaining});
+    if (remaining === 0) return fail('BREVO_LIMIT', 'Ya se usaron las cinco comprobaciones de hoy. Podés volver a consultar sus resultados.', 429);
+    const owner = crypto.randomUUID(), key = prefix + requestId;
+    const pending = {version: 1, request_id: requestId, owner, state: 'pending', created_at: now};
+    const rate = {version: 1, day, count: 1, request_id: requestId, owner};
+    const writes = [
+      db.prepare('INSERT INTO job_store_meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=json_set(excluded.value,\'$.count\',CASE WHEN json_extract(job_store_meta.value,\'$.day\')<? THEN 1 ELSE json_extract(job_store_meta.value,\'$.count\')+1 END) WHERE json_extract(job_store_meta.value,\'$.version\')=1 AND json_type(job_store_meta.value,\'$.count\')=\'integer\' AND json_extract(job_store_meta.value,\'$.count\') BETWEEN 1 AND 5 AND (json_extract(job_store_meta.value,\'$.day\')<? OR (json_extract(job_store_meta.value,\'$.day\')=? AND json_extract(job_store_meta.value,\'$.count\')<5))').bind(rateKey, JSON.stringify(rate), day, day, day),
+      ...uadavJobGuard(db, "EXISTS(SELECT 1 FROM job_store_meta WHERE key=? AND json_extract(value,'$.request_id')=? AND json_extract(value,'$.owner')=? AND json_extract(value,'$.count') BETWEEN 1 AND 5)", [rateKey, requestId, owner]),
+      db.prepare('INSERT INTO job_store_meta(key,value) VALUES(?,?)').bind(key, JSON.stringify(pending)),
+      db.prepare("DELETE FROM job_store_meta WHERE substr(key,1,?)=? AND CASE WHEN json_valid(value) THEN json_extract(value,'$.created_at')<? ELSE 0 END").bind(prefix.length, prefix, now - 7 * 86400000),
+    ];
+    try { await db.batch(writes); } catch {
+      // A lost reservation acknowledgement never authorizes another send.
+      const saved = await read(key);
+      if (saved) return reply(result(saved, 5 - count(await read(rateKey))), 202);
+      if (count(await read(rateKey)) >= 5) return fail('BREVO_LIMIT', 'Ya se usaron las cinco comprobaciones de hoy.', 429);
+      return fail('BREVO_STORAGE', 'No se confirmó la preparación de la prueba. No se contactó a Brevo.');
+    }
+    let receipt, providerCode;
+    try {
+      receipt = await uadavBrevoRequest({mode: 'staging-only', apiKey, body: JSON.stringify({
+        sender: {name: 'UADAV STREAM · pruebas', email: 'acceso@correo-staging.uadavstream.com.ar'},
+        to: [{email: 'uadav-sandbox@example.invalid'}],
+        headers: {'X-Sib-Sandbox': 'drop', idempotencyKey: requestId},
+        subject: 'UADAV STREAM · comprobación sin entrega',
+        textContent: 'Prueba técnica de conexión de staging. Este mensaje no debe entregarse.',
+      })});
+    } catch (error) { providerCode = error.code; }
+    const finished = { ...pending, state: receipt ? 'accepted' : 'unconfirmed', completed_at: Date.now(), ...(receipt ? {receipt: receipt.id} : {}), ...(providerCode ? {code: providerCodes.has(providerCode) ? providerCode : 'MAIL_UNAVAILABLE'} : {})};
+    const update = db.prepare("UPDATE job_store_meta SET value=? WHERE key=? AND json_extract(value,'$.owner')=? AND json_extract(value,'$.state')='pending'").bind(JSON.stringify(finished), key, owner);
+    try {
+      const saved = await update.run();
+      if (saved.meta?.changes !== 1) throw Error('probe_commit_not_confirmed');
+    } catch {
+      const saved = await read(key);
+      if (saved && record(saved).state === finished.state && saved.owner === owner && (receipt ? saved.receipt === receipt.id : true)) return reply(result(saved, 5 - count(await read(rateKey))));
+      return fail('BREVO_STORAGE', 'Brevo pudo responder, pero no se confirmó el registro. Consultá el resultado antes de iniciar otra prueba.');
+    }
+    return reply(result(finished, 5 - count(await read(rateKey))));
+  } catch { return fail('BREVO_STORAGE', 'No se pudo comprobar el estado de la prueba. No se habilitó el correo.'); }
+}
+
+return uadavBrevoSandboxRoute;
+})();
+/* END BREVO SANDBOX STAGING */
 
 const uadavWorker = {
   async fetch(request, env, ctx) {
@@ -5622,6 +5831,7 @@ export {uadavPodcastURL,uadavPodcastXML,uadavFetchPodcast,uadavSyncPodcast,uadav
 
 const uadavStagingWorker={...uadavWorker,async scheduled(event,env){return uadavJobScheduled(event,env)},async fetch(request,env,ctx){
   const url=new URL(request.url),path=url.pathname;
+  if(path==='/qa/correo'||path==='/api/admin/jobs/email-check')return uadavBrevoSandboxRoute(request,env);
   const response=(data,status)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':'*','X-Content-Type-Options':'nosniff'}});
   if(env.JOB_STORE_D1==='true'&&url.hostname!=='uadav-api-staging.uadavstream.workers.dev')return response({error:'El almacenamiento laboral nuevo solo está permitido en staging',code:'JOB_STAGING_ONLY'},503);
   if(env.JOB_STORE_MAINTENANCE==='true'&&!['GET','HEAD','OPTIONS'].includes(request.method)&&path!=='/api/admin/jobs/migration')return response({error:'Staging está en mantenimiento. No se recibieron datos.',code:'JOB_MAINTENANCE'},423);

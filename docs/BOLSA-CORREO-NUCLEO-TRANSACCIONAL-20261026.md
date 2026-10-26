@@ -1,6 +1,6 @@
 # Bolsa · núcleo preparatorio de recuperación por correo
 
-26/10/2026. **Código escrito y pruebas locales aprobadas; no integrado ni desplegado.** No se aplicó SQL remoto, no se configuró proveedor/remitente/secretos y no se envió correo real. Worker 11764, su ZIP y el laboratorio aprobado permanecen idénticos. Las rutas públicas de recuperación siguen respondiendo 503 por el bloqueo existente.
+26/10/2026. **Outbox escrito y probado localmente; no integrado ni desplegado.** No se aplicó su SQL remoto ni se envió correo real. Actualización posterior: dominio/remitente Brevo y plan Free comprobados por capturas; secreto `BREVO_API_KEY` guardado según el operador. Worker11765 se prepara únicamente para una prueba privada sandbox, sin integrar este módulo; despliegue pendiente. ZIP11764 y laboratorio aprobado permanecen idénticos. Recuperación sigue503. Ver `BOLSA-11765-CONEXION-BREVO-STAGING.md`.
 
 ## Problema que prepara
 
@@ -46,16 +46,16 @@ Las ocho fases del laboratorio 11764 que informó el operador corresponden al n�
 
 ## Proveedor y trabajo pendiente antes de habilitar
 
-Selección posterior del26/10: el usuario priorizó gratuidad y mayor volumen, aceptó la propuesta de cuenta única/correo/Google opcional y pidió simplificar los accesos. Se prepara Brevo gratuito, con300 envíos diarios compartidos. Resend había sido una opción inicial por su idempotencia24h. No hay cuenta, compra, remitente, credencial o configuración remota realizados. Brevo no promete repetir el recibo original ante duplicados: esa recepción incierta sigue como requisito abierto antes de activar.
+Selección posterior del26/10: el usuario priorizó gratuidad y mayor volumen, aceptó cuenta única/correo/Google opcional y pidió simplificar accesos. Eligió Brevo gratuito,300 envíos diarios compartidos, y configuró cuenta, dominio/remitente y secreto staging según capturas/confirmación. La prueba privada11765 pendiente verifica solo aceptación sandbox, no entrega ni este outbox. Resend había sido una opción inicial por su idempotencia24h. Brevo no promete repetir el recibo original ante duplicados: esa recepción incierta sigue como requisito abierto antes de activar.
 
 Fuentes oficiales consultadas el 26/10: [idempotencia de Resend](https://resend.com/docs/dashboard/emails/idempotency-keys), [verificación de dominios](https://resend.com/docs/dashboard/domains/introduction), [precios y límites publicados](https://resend.com/pricing) y [API de envío de Cloudflare](https://developers.cloudflare.com/email-service/api/send-emails/workers-api/). No se atribuye idempotencia a un transporte que no la haya documentado y validado.
 
 Para pasar a una entrega integrada faltan:
 
-1. Elegir proveedor y remitente/subdominio de **staging** verificado, con credencial exclusiva y permiso de envío acotado. No modificar DNS o credenciales productivos.
+1. Proveedor/subdominio/remitente elegidos y verificados por capturas; secreto guardado según operador. Comprobar su aceptación con la prueba privada11765 antes de un destinatario real autorizado. No modificar DNS o credenciales productivos.
 2. Implementar el adaptador, mensajes y enlaces de recuperación seguros, con recibos, clasificación de fallos y cuerpos estables en los reintentos.
 3. Integrar HTTP/UI, validaciones, rate limits del contexto real y respuestas sin enumeración. Revisar el ciclo completo del token y de la credencial.
 4. Incluir la bandeja cifrada en el backup privado y diseñar restauración, retención, rotación de claves y auditoría sin reenvíos indebidos. La lista exportada por el Worker actual aún no incluye esta tabla.
 5. Probar D1 remoto y un correo real autorizado: envío, recepción, canje, vencimiento, reintentos/duplicación, pérdida de respuesta y fallo SQL. Solo después evaluar la habilitación con código/flags expresos y revisión final.
 
-Mientras tanto no corresponde otro despliegue del Worker principal ni aplicar este SQL. Permanecen vigentes los otros pendientes de Bolsa y la QA de vencimiento real desde el 27/10 a las 00:00 de Argentina.
+No aplicar este SQL o habilitar recuperación todavía. La única entrega principal preparada después es11765 para conexión sandbox, sin este módulo o migración. Permanecen los otros pendientes de Bolsa y la QA de vencimiento real desde el27/10 a las00:00 de Argentina.

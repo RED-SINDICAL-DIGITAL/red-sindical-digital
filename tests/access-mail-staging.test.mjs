@@ -185,5 +185,5 @@ test('caller cancellation aborts sending and a pre-aborted request never leaves 
 
 test('operational Worker does not import the transport or expose a receiver for these draft messages', async () => {
   const source = await readFile(new URL('../worker.js', import.meta.url), 'utf8');
-  assert.doesNotMatch(source, /brevo-staging-mail|access-mail-message|createBrevoStagingMail|api\.brevo\.com/);
+  assert.doesNotMatch(source, /brevo-staging-mail|access-mail-message|createBrevoStagingMail/);
 });
