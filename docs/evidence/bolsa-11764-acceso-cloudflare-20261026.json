@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-26",
+  "client_timezone": "America/Buenos_Aires",
+  "scope": "staging-only",
+  "access": {
+    "google_explicitly_authorized_by_user": true,
+    "google_method_selected_via_secure_auth": true,
+    "saved_uadav_account_selected_via_secure_auth": true,
+    "previous_google_origin_authorization_block_resolved": true,
+    "cloudflare_dashboard_verified": false,
+    "final_site": "https://dash.cloudflare.com/login",
+    "visible_error": "Unable to sign in. Try again or use your email and password.",
+    "automated_attempt_stopped": true,
+    "cause_determined": false,
+    "bot_detection_claimed": false
+  },
+  "staging_health_observed": {
+    "url": "https://uadav-api-staging.uadavstream.workers.dev/api/health",
+    "timestamp": "2026-10-26T20:25:45.306Z",
+    "ok": true,
+    "version": "V11.7",
+    "build": "11763",
+    "kv": true,
+    "d1": true,
+    "email_automation": false,
+    "queue": false
+  },
+  "prepared_release": {
+    "build": "11764",
+    "code_commit": "7fd54d11be324e75e595a6452950111512ad2fb9",
+    "worker_sha256": "c98d9c5bcffec76beb68fb4075f8b967c019667923c425081d794191f0cff90f",
+    "zip_sha256": "23957b0243e7eed3edc9b9985b9ba274f69e432a718a299f2e46a6675b85bcb2",
+    "ci_bolsa_run": 40383520286,
+    "ci_radio_run": 40383520281,
+    "both_ci_conclusions": "success"
+  },
+  "deployment_performed": false,
+  "remote_lab_validated": false,
+  "operational_database_written": false,
+  "production_modified": false,
+  "next_action": "Manual deployment of the prepared 11764 Worker to uadav-api-staging, retaining existing bindings, secrets and Bolsa cron; no SQL."
+}

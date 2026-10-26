@@ -21,7 +21,9 @@ Archivo: `releases/uadav-api-staging-11764.zip`, con `worker.js` y `LEEME-STAGIN
 5. Abrir `https://uadav-api-staging.uadavstream.workers.dev/api/health`: exigir build `11764`, D1/KV detectados y correo/cola apagados.
 6. Admin staging → Auditoría → **Actualizar estado automático**: consulta GET del cron existente. No usar la revisión manual para simular el vencimiento.
 
-El acceso de Work a Cloudflare requirió iniciar sesión. El formulario seguro devolvió `submitted`, con Google como método elegido; eso no acredita un ingreso. La revisión automática denegó la observación de `accounts.google.com` porque exige autorización explícita del usuario para usar esa cuenta. No se continuó por otra vía ni se verificó una sesión administrativa. No se atribuye un despliegue a esta preparación.
+El usuario autorizó expresamente usar Google para este ingreso. El 26/10 se continuó mediante formularios seguros: Google mostró la cuenta guardada UADAV STREAM, el usuario la seleccionó y Cloudflare volvió a `/login` con **Unable to sign in. Try again or use your email and password.** No se verificó una sesión administrativa. Se detuvieron los intentos al primer error del sitio, sin cambiar de método ni atribuirlo a bots. El anterior bloqueo de autorización del origen Google ya se superó; no volver a pedir ese mismo permiso como si faltara.
+
+Health observado después del intento: `2026-10-26T20:25:45.306Z` (**17:25 de Argentina**), build **11763**, ok, D1/KV detectados y correo/cola apagados. No hubo despliegue 11764 ni cambios operativos desde Work. El próximo paso requiere el despliegue manual del ZIP anterior, siguiendo los seis pasos indicados. Registro sin credenciales ni URL OAuth en `evidence/bolsa-11764-acceso-cloudflare-20261026.json`. La guía de [limitaciones de acceso del navegador de Work](https://help.openai.com/articles/20001280-using-cloud-browser-in-chatgpt#when-a-website-blocks-the-task) explica esta alternativa; no se determinó la causa del rechazo específico de Cloudflare.
 
 ## Laboratorio nuevo: uadav-bolsa-lab
 
