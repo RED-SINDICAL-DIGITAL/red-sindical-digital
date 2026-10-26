@@ -1,0 +1,35 @@
+{
+  "record_type": "browser_post_deploy_observation",
+  "date": "2026-10-26",
+  "target": "https://uadav-api-staging.uadavstream.workers.dev/api/health",
+  "observed_health": {
+    "ok": true,
+    "success": true,
+    "service": "PLATFORM",
+    "version": "V11.7",
+    "build": "11763",
+    "kv": true,
+    "d1": true,
+    "email_automation": false,
+    "queue": false,
+    "timestamp": "2026-10-26T15:48:31.957Z"
+  },
+  "delivered_code_commit": "90df7e3c6561271fa6a185f664cc17816c28266c",
+  "delivered_worker_sha256": "50d232f8b6e90cb54f266299b81d25c0a94af3c93687983f4389a9b0c1a0f348",
+  "deployed_source_bytes_independently_compared": false,
+  "private_endpoint_without_credentials": {
+    "url": "https://uadav-api-staging.uadavstream.workers.dev/api/admin/jobs/cron",
+    "observed_body": {
+      "error": "No autorizado"
+    }
+  },
+  "admin_auth_result": "unknown_timeout",
+  "fresh_admin_page": "login_gate_visible",
+  "admin_authenticated_panel_verified": false,
+  "cron_state_observed": null,
+  "cron_configured_by_agent": false,
+  "new_database_or_secret_created_by_agent": false,
+  "production_modified_by_agent": false,
+  "proof": "bolsa-11763-admin-ingreso-manual-20261026.jpg",
+  "proof_sha256": "f36a0432cb435ba47e542f3255e95c9f69b8e8555461178f337e9ebd5722154e"
+}

@@ -2,7 +2,7 @@
 
 ## Estado de la entrega
 
-Código preparado y probado; **todavía no está desplegado ni se activó un cron remoto**. El último Worker principal verificado sigue en 11762. El ensayo de restauración 11762 de la base desechable permanece aprobado y sin cambios.
+**Despliegue principal 11763 verificado** el 26/10/2026 mediante health: D1/KV detectados, correo y cola apagados. La consulta privada de estado sigue pendiente: el ingreso browserAuth no devolvió confirmación y una pestaña nueva mostró el acceso administrativo. Hace falta el ingreso manual en la pestaña de Work antes de configurar la etapa 2. No se activó un cron desde esta sesión; todavía no se observó el valor real de su flag ni una ejecución programada. El ensayo de restauración QA 11762 permanece aprobado y sin cambios. Ver `BOLSA-11763-DESPLIEGUE-VERIFICADO-20261026.md`.
 
 La rama Worker sigue siendo `release/radio-studio-staging-rc-20261020`. Los cambios de interfaz se guardan por separado en `audit/continuidad-demo-20261019`. No se mezclan ramas ni se opera sobre producción.
 
@@ -61,4 +61,4 @@ Referencias oficiales revisadas el 25/10/2026: [scheduled handler y resultado de
 
 ## Confirmación de GitHub y archivos publicados
 
-Código Worker `90df7e3c6561271fa6a185f664cc17816c28266c` y Pages `cfc19c838c99be50820a81f7b6a4ca6d8f5464cd`. CI Bolsa **40263069135**, Radio **40263069094** y UI **40263077171**: success. La entrega y la observación del frontend se registran en `BOLSA-11763-ENTREGA-Y-VERIFICACION.md`. El Worker principal todavía se observó en 11762 y no se activó el cron. Admin quedó pendiente de reingreso confirmado.
+Código Worker `90df7e3c6561271fa6a185f664cc17816c28266c` y Pages `cfc19c838c99be50820a81f7b6a4ca6d8f5464cd`. CI Bolsa **40263069135**, Radio **40263069094** y UI **40263077171**: success. La entrega y la observación del frontend se registran en `BOLSA-11763-ENTREGA-Y-VERIFICACION.md`. En la entrega original se observó 11762; el 26/10/2026 se confirmó 11763. Admin sigue pendiente de ingreso confirmado y no se configuró el cron desde estas sesiones.

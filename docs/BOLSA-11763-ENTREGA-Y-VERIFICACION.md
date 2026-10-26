@@ -1,6 +1,10 @@
 # Bolsa 11763 · entrega guardada y verificación
 
-## Resultado
+## Actualización posterior al despliegue · 26/10/2026
+
+Health ya confirmó **11763**, D1/KV detectados y correo/cola apagados. Falta el ingreso Admin confirmado y la lectura del estado privado; el canal browserAuth terminó sin resultado. Ver `BOLSA-11763-DESPLIEGUE-VERIFICADO-20261026.md`. No repetir el despliegue ni configurar el cron antes de esa comprobación.
+
+## Resultado de la entrega original
 
 **Código y pruebas aprobados; Worker 11763 pendiente de despliegue manual.** No se configuró ningún flag o trigger remoto. El Worker observado después de la entrega seguía en **11762**, con D1/KV disponibles, correo y cola apagados. Marca temporal literal de health: `2026-10-26T07:08:49.687Z`.
 

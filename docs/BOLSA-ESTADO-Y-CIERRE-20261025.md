@@ -1,12 +1,12 @@
-# Bolsa de Trabajo · estado verificado y pendientes · 25 de octubre de 2026
+# Bolsa de Trabajo · estado verificado y pendientes · revisión 26 de octubre de 2026
 
 ## Estado actual
 
-**Bolsa todavía no está completa.** El último avance es el ensayo de restauración con fixtures aprobado en D1 remoto. La publicación y postulación abiertas, la gestión privada, la migración y las importaciones ya tienen evidencia previa; los bloques pendientes se distinguen debajo.
+**Bolsa todavía no está completa.** El último avance es la confirmación del despliegue 11763; su consulta privada de estado todavía requiere ingreso manual. El ensayo de restauración con fixtures ya aprobó en D1 remoto. La publicación y postulación abiertas, la gestión privada, la migración y las importaciones ya tienen evidencia previa; los bloques pendientes se distinguen debajo.
 
-- Worker principal desplegado: **11762**, código `a98be118050af80c3325c1a7f01f3ee966b6c747`, SHA256 `94e6603f4f9d44f6cfaa6f152c4670f27335ef9fdd7c52e90c3985b4ecdaab98`.
-- Pages desplegado: `e90f40a8b80d25bbaf8e1722d5b9a1d27884632c`.
-- Health principal observado el `2026-10-25T23:13:21.154Z` (**20:13 de Argentina**): ok, D1/KV disponibles, correo y cola apagados.
+- Worker principal observado: **11763**. Código entregado `90df7e3c6561271fa6a185f664cc17816c28266c`, SHA256 `50d232f8b6e90cb54f266299b81d25c0a94af3c93687983f4389a9b0c1a0f348`; el archivo remoto no se cotejó byte por byte.
+- Pages staging: rama en `fac819c014013d2359eb434fd7017030011e03d5`. Se observaron publicados el recurso de avisos 11763.1 y la guía actualizada; falta comprobar el panel con sesión Admin.
+- Health principal observado el `2026-10-26T15:48:31.957Z` (**12:48 de Argentina**): ok, bindings D1/KV detectados, correo y cola apagados.
 - Ensayo independiente desplegado: **uadav-restore-qa / 11762-restore-qa-1**. Sus seis fases aprobaron en la base vinculada, inicialmente vacía, con datos ficticios. El código de ejecución se guardó en `37e1cfbd9c10c7a8800d4a38b0b4b3ada0623f64`; CI Bolsa **40238857214** y Radio **40238857246** aprobadas.
 - Último respaldo privado verificado: **versión 4**, 12 ofertas y 10 postulaciones, 6 credenciales, 3 vínculos y 1 marca de aviso. Se cotejaron los 21 registros anteriores sin diferencias y se ensayó localmente su recuperación. No se subió ese respaldo a la herramienta QA.
 - Producción sigue fuera de alcance: referencia comprobada `fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd`. No se modificaron ramas, variables, bases o despliegues productivos.
@@ -31,18 +31,18 @@ El fallo de captura de 11761 quedó resuelto en 11762: el motor workerd no admit
 | Fuentes externas | CSV y URL propia aprobados. Falta una fuente real autorizada, cierres/errores y control de salida pública con alcance productivo. La comprobación DNS actual no fija la IP del fetch; no dar ese riesgo por cerrado. | Fuente autorizada y revisión del transporte. |
 | Recuperación por correo | Sigue deshabilitada, con endpoints 503. Falta emisión/entrega transaccional con proveedor, un solo uso, vencimiento, límites/reintentos y revocación atómica de la clave anterior. | Proveedor, remitente/dominio verificado y secretos mediante ingreso seguro. |
 | Recuperación operativa completa | Handler y transacciones D1 aprobados con fixtures; respaldo real ensayado localmente. No se restauró remotamente el respaldo privado completo ni se acredita recuperación integral de cuentas/mensajes. Mantener cerrado restore sobre la base operativa. | Alcance explícito de un ensayo con datos reales y destino aislado. |
-| Vencimientos y avisos | Aviso previo aprobado. Falta vencimiento real y aviso posterior, ejecución programada e idempotencia en remoto. El `scheduled` actual ejecuta mantenimiento general, Bolsa, push y podcasts juntos: aislar el alcance antes de activar un cron de Bolsa. | Preparar y probar la ejecución acotada; configuración manual de staging cuando corresponda. |
+| Vencimientos y avisos | Aviso previo aprobado. Falta vencimiento real y aviso posterior, ejecución programada e idempotencia en remoto. El `scheduled` de 11763 ya acota el alcance a Bolsa y queda apagado por defecto. Falta observar su estado privado y verificar la configuración y ejecución remotas. | Preparar y probar la ejecución acotada; configuración manual de staging cuando corresponda. |
 | Privacidad y concurrencia | Una cuenta y sus vínculos tienen evidencia. Falta segunda cuenta independiente, comprobante previo, vínculo voluntario con perfil artístico, aislamiento entre cuentas y solicitudes simultáneas en Cloudflare. | Acceso seguro al otro contexto de prueba; no crear una cuenta por caducidad de sesión. |
 | Dispositivos y UX | PC/móvil básicos aprobados. Completar circuitos con cuenta y fallos en móvil, tablet, Smart TV y accesibilidad; actualizar manuales con lo validado. | Dispositivos físicos que no están disponibles en Work. |
 
-## Preparación 11763 · código probado, despliegue pendiente
+## 11763 desplegado · verificación privada pendiente
 
 Se preparó una entrada programada exclusiva para Bolsa, apagada por defecto, con lease D1, repetición segura y registro privado del resultado. También se corrigió el respeto de ofertas ocultas/cerradas, actividad numérica cero y fechas inválidas. Admin incorpora consulta automática de estado mediante GET, sin activar tareas ni enviar avisos. No hay SQL nuevo.
 
-Pruebas locales: **73 Worker, 138 UI, 15 comprobaciones workerd y 12 estáticas de Radio**. No se activaron variables ni triggers remotos. El despliegue 11763 y un vencimiento/aviso reales siguen pendientes. Ver `BOLSA-11763-VENCIMIENTOS-Y-CRON-STAGING.md`; no confundir esta preparación con la prueba remota del adaptador de restauración 11762 ya aprobada.
+Pruebas locales: **73 Worker, 138 UI, 15 comprobaciones workerd y 12 estáticas de Radio**. No se activaron variables o triggers desde estas sesiones. El despliegue 11763 se confirmó; el estado privado, el primer evento y un vencimiento/aviso reales siguen pendientes. Ver `BOLSA-11763-VENCIMIENTOS-Y-CRON-STAGING.md`; no confundir esta preparación con la prueba remota del adaptador de restauración 11762 ya aprobada.
 
 ## Próxima prioridad y límites
 
-Continuar con vencimientos y avisos, preparando primero el alcance del cron. No activar el programador compartido para probar únicamente Bolsa. La recuperación por correo y la restauración de la base operativa permanecen deshabilitadas. Cartelera continúa después de cerrar y validar Bolsa.
+Continuar con el ingreso manual de Admin en Work y la consulta privada del estado de 11763. Después podrá prepararse la configuración de su cron exclusivo. No activar el programador compartido de una versión anterior. La recuperación por correo y la restauración de la base operativa permanecen deshabilitadas. Cartelera continúa después de cerrar y validar Bolsa.
 
 La estimación anterior de 3–5 jornadas era provisional y anterior a estos avances. No se reemplaza por una fecha garantizada ni un porcentaje artificial: correo, pruebas entre cuentas, dispositivos y la espera de un vencimiento real siguen condicionando el cierre.
