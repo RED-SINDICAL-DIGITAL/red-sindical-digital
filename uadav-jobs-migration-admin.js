@@ -125,26 +125,51 @@
   function mount(host,{request,apiBase,download}){
     if(!host||location.origin!==ORIGIN||apiBase!==API)return;
     host.className='card card-pad';host.style.marginTop='16px';
-    host.innerHTML='<div class="section-title"><div><h2>Preparar Bolsa en D1 · Solo staging</h2><small>Respaldo, revisión y copia guiada. La activación sigue siendo manual.</small></div></div><p>Primero descargá el respaldo. Instalá el SQL en la base vinculada al Worker de pruebas y volvé a revisar. Esta pantalla copia ofertas y postulaciones; conserva KV.</p><div class="actions" style="display:flex;flex-wrap:wrap;gap:10px"><button type="button" class="btn btn-primary" data-job="prepare">Generar respaldo y revisar</button><a class="btn btn-secondary" href="https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/blob/release/radio-studio-staging-rc-20261020/migrations/staging/20261024_bolsa_completa.sql" target="_blank" rel="noopener noreferrer">Abrir SQL de staging</a></div><p data-job="counts" class="muted"></p><p data-job="schema" class="muted"></p><fieldset style="border:1px solid var(--border,#30425e);border-radius:12px;padding:14px;display:grid;gap:12px;margin:14px 0"><legend>Confirmaciones antes de copiar</legend><label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" data-job="backup">Guardé el respaldo actual que acaba de generar esta pantalla.</label><label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" data-job="isolation">Verifiqué en Cloudflare que DB pertenece a staging y es distinta de producción.</label><label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" data-job="maintenance">Activé JOB_STORE_MAINTENANCE=true y dejé JOB_STORE_D1 desactivado en el Worker staging. Las solicitudes anteriores ya terminaron.</label></fieldset><div class="actions" style="display:flex;flex-wrap:wrap;gap:10px"><button type="button" class="btn btn-primary" data-job="run" disabled>Copiar Bolsa a D1</button><button type="button" class="btn btn-secondary" data-job="pause" disabled>Pausar después del lote</button><button type="button" class="btn btn-secondary" data-job="report">Copiar resultado sin datos privados</button></div><p class="callout" data-job="status" role="status" aria-live="polite"></p><p class="muted" data-job="copy-status" role="status"></p><p class="muted">La recuperación por correo y la restauración siguen bloqueadas. Al terminar, dejá la activación D1 pendiente para validar los accesos.</p>';
-    const get=name=>host.querySelector('[data-job="'+name+'"]'),confirmations=host.querySelector('fieldset'),notice=host.lastElementChild;let flow;
-    notice.textContent='Esta herramienta no habilita recuperación por correo ni restauración. La activación de D1 requiere validar los accesos.';
-    flow=controller({origin:location.origin,apiBase,request,alive:()=>host.isConnected,download:async data=>download(new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'}),'uadav-bolsa-staging-backup-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json'),onChange:state=>{
+    host.innerHTML=`<div class="section-title"><div><h2 data-job="title">Respaldo de Bolsa · Solo staging</h2><small data-job="subtitle">Revisá el almacenamiento actual antes de preparar una copia.</small></div></div>
+      <p data-job="intro">El respaldo identifica si Bolsa usa KV o D1. Los pasos de migración aparecen después de verificar su origen.</p>
+      <div class="actions" style="display:flex;flex-wrap:wrap;gap:10px">
+        <button type="button" class="btn btn-primary" data-job="prepare">Generar respaldo y revisar</button>
+        <a class="btn btn-secondary" data-job="sql" hidden style="display:none" href="https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/blob/release/radio-studio-staging-rc-20261020/migrations/staging/20261024_bolsa_completa.sql" target="_blank" rel="noopener noreferrer">Abrir SQL de staging</a>
+      </div>
+      <p data-job="counts" class="muted"></p><p data-job="schema" class="muted"></p>
+      <fieldset hidden style="border:1px solid var(--border,#30425e);border-radius:12px;padding:14px;display:none;gap:12px;margin:14px 0">
+        <legend>Confirmaciones antes de copiar</legend>
+        <label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" data-job="backup">Guardé el respaldo actual que acaba de generar esta pantalla.</label>
+        <label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" data-job="isolation">Verifiqué en Cloudflare que DB pertenece a staging y es distinta de producción.</label>
+        <label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" data-job="maintenance">Activé JOB_STORE_MAINTENANCE=true y dejé JOB_STORE_D1 desactivado en el Worker staging. Las solicitudes anteriores ya terminaron.</label>
+      </fieldset>
+      <div class="actions" style="display:flex;flex-wrap:wrap;gap:10px">
+        <button type="button" class="btn btn-primary" data-job="run" hidden style="display:none" disabled>Copiar Bolsa a D1</button>
+        <button type="button" class="btn btn-secondary" data-job="pause" hidden style="display:none" disabled>Pausar después del lote</button>
+        <button type="button" class="btn btn-secondary" data-job="report">Copiar resultado sin datos privados</button>
+      </div>
+      <p class="callout" data-job="status" role="status" aria-live="polite"></p><p class="muted" data-job="copy-status" role="status"></p>
+      <p class="muted" data-job="notice">Esta herramienta no habilita recuperación por correo ni restauración.</p>`;
+    const get=name=>host.querySelector('[data-job="'+name+'"]'),confirmations=host.querySelector('fieldset');let flow;
+    const render=state=>{
       if(!host.isConnected)return;
+      const d1=state.backup?.source==='d1',migration=state.backup?.source==='kv';
+      get('title').textContent=d1?'Respaldo de Bolsa en D1 · Solo staging':migration?'Preparar Bolsa en D1 · Solo staging':'Respaldo de Bolsa · Solo staging';
+      get('subtitle').textContent=d1?'Bolsa ya usa D1. Conservá una copia verificada de sus datos actuales.':migration?'Respaldo, revisión y copia guiada. La activación sigue siendo manual.':'Revisá el almacenamiento actual antes de preparar una copia.';
+      get('intro').textContent=migration?'Primero guardá el respaldo. Instalá el SQL en la base vinculada al Worker de pruebas si faltan tablas y volvé a revisar. Esta pantalla copia ofertas y postulaciones; conserva KV.':'El respaldo identifica si Bolsa usa KV o D1. Los pasos de migración aparecen después de verificar su origen.';
+      get('intro').hidden=d1;get('intro').style.display=d1?'none':'';
+      get('sql').hidden=!migration;get('sql').style.display=migration?'':'none';
       get('status').textContent=state.message;get('prepare').disabled=state.busy;get('run').disabled=!flow.canRun();get('pause').disabled=!state.busy||state.phase!=='copying';
       get('run').textContent=state.offset&&!state.complete?'Continuar copia':'Copiar Bolsa a D1';
       for(const key of ['backup','isolation','maintenance']){get(key).disabled=state.busy;get(key).checked=state.checks[key]}
       const counts=state.preview?.counts||state.backup?.counts;
-      get('counts').textContent=counts?'Ofertas: '+counts.bolsa_trabajo+' · Postulaciones: '+counts.postulaciones_trabajo+(state.backup?.source==='d1'?' · Origen actual: D1':' · Registros confirmados: '+state.offset):'';
-      const d1=state.backup?.source==='d1';confirmations.hidden=d1;confirmations.style.display=d1?'none':'grid';
-      for(const name of ['run','pause']){get(name).hidden=d1;get(name).style.display=d1?'none':''}
-      notice.textContent=d1?'Bolsa ya usa D1. Conservá este respaldo actual. Volver a KV requiere reconciliar los datos escritos desde el cambio. Esta herramienta no habilita recuperación por correo ni restauración.':'Esta herramienta no habilita recuperación por correo ni restauración. La activación de D1 requiere validar los accesos.';
+      get('counts').textContent=counts?'Ofertas: '+counts.bolsa_trabajo+' · Postulaciones: '+counts.postulaciones_trabajo+(d1?' · Origen actual: D1':' · Registros confirmados: '+state.offset):'';
+      confirmations.hidden=!migration;confirmations.style.display=migration?'grid':'none';
+      for(const name of ['run','pause']){get(name).hidden=!migration;get(name).style.display=migration?'':'none'}
+      get('notice').textContent=d1?'Bolsa ya usa D1. Conservá este respaldo actual. Volver a KV requiere reconciliar los datos escritos desde el cambio. Esta herramienta no habilita recuperación por correo ni restauración.':migration?'Esta herramienta no habilita recuperación por correo ni restauración. La activación de D1 requiere validar los accesos.':'Esta herramienta no habilita recuperación por correo ni restauración.';
       get('schema').textContent=state.backup?.missing.length?'Tablas pendientes: '+state.backup.missing.join(', '):state.backup?'Tablas de respaldo requeridas: presentes.':'';
-    }});
+    };
+    flow=controller({origin:location.origin,apiBase,request,alive:()=>host.isConnected,download:async data=>download(new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'}),'uadav-bolsa-staging-backup-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json'),onChange:render});
     get('prepare').addEventListener('click',()=>flow.prepare());
     for(const key of ['backup','isolation','maintenance'])get(key).addEventListener('change',()=>flow.confirm(key,get(key).checked));
     get('run').addEventListener('click',()=>flow.run());get('pause').addEventListener('click',()=>flow.pause());
     get('report').addEventListener('click',async()=>{const out=get('copy-status');try{await navigator.clipboard.writeText(flow.report());out.textContent='Resultado copiado. No contiene nombres, correos, claves ni hashes.'}catch{out.textContent=flow.report()}});
-    get('status').textContent=flow.getState().message;
+    render(flow.getState());
   }
   root.UADAVJobsMigration={controller,verifyBackup,mount};
 })(window);
