@@ -1,0 +1,168 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {webcrypto,randomUUID} from 'node:crypto';
+import {sqliteD1} from './sqlite-d1.mjs';
+import {loadWorker} from './load-worker.mjs';
+import {createJobRecoveryOutbox} from '../scripts/job-recovery-outbox.mjs';
+globalThis.crypto ||= webcrypto;
+const {default:worker,uadavJobRedeemRecovery}=await loadWorker();
+const digest=async value=>Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))).toString('hex');
+const job='JOB-OUTBOX-QA',recipient='owner@example.invalid',actor='a'.repeat(64),sealKey='b'.repeat(64),oldSecret='c'.repeat(64),newSecret='d'.repeat(64),account='e'.repeat(64);
+async function fixture(){
+ const DB=sqliteD1();let now=Date.now(),sessions=0;DB.withSession=mode=>{assert.equal(mode,'first-primary');sessions++;return DB};await DB.prepare('PRAGMA foreign_keys=ON').run();
+ for(const file of ['20261023_job_owner_credentials.sql','20261024_job_store.sql','20261026_job_recovery_outbox.sql']){const s=await readFile(new URL('../migrations/staging/'+file,import.meta.url),'utf8');for(const sql of s.replace(/--[^\n]*/g,'').split(';').filter(s=>s.trim()))await DB.prepare(sql).run()}
+ // Actual account entry path installs its original schema; no external service.
+ const env={DB,UADAV_DB:{get:async()=>null,put:async()=>{}},ACCOUNT_ALLOWED_ORIGINS:'https://uadav-stream-staging.pages.dev'};
+ const r=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/account',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://uadav-stream-staging.pages.dev',Authorization:'Bearer UAC-'+account},body:JSON.stringify({data:{uadav_user_v11:{name:'LAB ficticio'}}})}),env,{});assert.equal(r.status,200);
+ const schema=await readFile(new URL('../migrations/staging/20261024_job_accounts.sql',import.meta.url),'utf8');for(const sql of schema.replace(/--[^\n]*/g,'').split(';').filter(s=>s.trim()))await DB.prepare(sql).run();
+ const accountId=await digest('UAC-'+account);
+ await DB.prepare("INSERT INTO job_store_records(collection,id,data_json,updated_at) VALUES('bolsa_trabajo',?,?,?)").bind(job,JSON.stringify({id:job,titulo:'LAB recuperación ficticia',contacto:recipient,activo:true}),new Date(now).toISOString()).run();
+ await DB.prepare('INSERT INTO job_owner_credentials(job_id,secret_hash,revision,updated_at) VALUES(?,?,1,?)').bind(job,await digest(oldSecret),new Date(now).toISOString()).run();
+ await DB.prepare("INSERT INTO job_account_links(collection,record_id,account_id,linked_at) VALUES('bolsa_trabajo',?,?,?)").bind(job,accountId,new Date(now).toISOString()).run();
+ const create=extra=>createJobRecoveryOutbox({db:DB,mode:'staging-only',encryptionKey:sealKey,clock:()=>now,...extra}),engine=create();
+ const request=(extra={})=>({jobId:job,recipient,requestId:randomUUID(),actorHash:actor,...extra});
+ const count=async table=>(await DB.prepare('SELECT COUNT(*) AS n FROM '+table).first()).n;
+ const outbox=()=>DB.prepare('SELECT * FROM job_recovery_outbox ORDER BY created_at,id').all().then(x=>x.results);
+ const provider=send=>({idempotencyWindowMs:86400000,send:send||(async()=>({id:'qa-provider-receipt'}))});
+ return {DB,engine,env,create,request,count,outbox,provider,now:()=>now,advance:ms=>now+=ms,sessions:()=>sessions,close:()=>DB.close()};
+}
+test('staging mode, encryption key and provider retry contract fail before database access',async()=>{
+ const db={prepare(){throw Error('DB must not be read')},withSession(){throw Error('DB must not be read')}};
+ for(const extra of [{mode:undefined},{mode:'production'},{encryptionKey:'short'},{timeoutMs:6000}])assert.throws(()=>createJobRecoveryOutbox({db,mode:'staging-only',encryptionKey:sealKey,...extra}),{code:'JOB_RECOVERY_CONFIGURATION'});
+ const f=await fixture();try{for(const adapter of [null,{send:async()=>{},idempotencyWindowMs:1000}])await assert.rejects(f.engine.dispatch(adapter),{code:'JOB_RECOVERY_PROVIDER'});assert.equal(await f.count('job_recovery_outbox'),0)}finally{f.close()}
+});
+test('enqueue stores a sealed payload and hash without activating a token or changing the old credential',async()=>{
+ const f=await fixture();try{
+  assert.deepEqual(await f.engine.enqueue(f.request()),{accepted:true});const rows=await f.outbox();assert.equal(rows.length,1);assert.equal(rows[0].state,'queued');
+  assert.equal(await f.count('job_owner_recovery_v2'),0);assert.equal(await f.count('job_account_links'),1);assert.equal((await f.DB.prepare('SELECT secret_hash,revision FROM job_owner_credentials').first()).revision,1);
+  const stored=JSON.stringify(rows);for(const secret of [recipient,oldSecret,newSecret,sealKey])assert(!stored.includes(secret));assert.match(rows[0].token_hash,/^[a-f0-9]{64}$/);assert(!stored.includes('"token":'));
+  await assert.rejects(uadavJobRedeemRecovery(f.DB,{jobId:job,tokenHash:rows[0].token_hash,newSecretHash:await digest(newSecret),now:f.now()}),{jobCode:'JOB_RECOVERY_INVALID'});assert(f.sessions()>0);
+ }finally{f.close()}
+});
+test('unknown job, wrong recipient and valid request have the same public-facing enqueue result',async()=>{
+ const f=await fixture();try{
+  for(const extra of [{jobId:'JOB-DOES-NOT-EXIST'},{recipient:'other@example.invalid'},{}])assert.deepEqual(await f.engine.enqueue(f.request(extra)),{accepted:true});assert.equal(await f.count('job_recovery_outbox'),1);
+  for(const extra of [{recipient:'name\r\nInjected@example.invalid'},{requestId:'bad'},{actorHash:'bad'},{jobId:'../job'}])await assert.rejects(f.engine.enqueue(f.request(extra)),{code:'JOB_RECOVERY_INPUT'});
+ }finally{f.close()}
+});
+test('repeated and simultaneous requests create one intent and no usable token',async()=>{
+ const f=await fixture();try{
+  const request=f.request();for(const r of await Promise.all([f.engine.enqueue(request),f.engine.enqueue(request),f.engine.enqueue(f.request({actorHash:'f'.repeat(64)}))]))assert.deepEqual(r,{accepted:true});
+  assert.equal(await f.count('job_recovery_outbox'),1);assert.equal(await f.count('job_owner_recovery_v2'),0);assert.equal(await f.count('job_store_checks'),0);
+  assert.deepEqual(await f.engine.enqueue(request),{accepted:true});assert.equal(await f.count('job_recovery_outbox'),1);
+ }finally{f.close()}
+});
+test('an issuance SQL failure rolls back the whole intent; lost acknowledgement is idempotent',async()=>{
+ for(const lost of [false,true]){const f=await fixture();try{
+  const batch=f.DB.batch;let once=true;f.DB.batch=async statements=>{if(once&&statements.some(s=>s.sql.startsWith('INSERT INTO job_recovery_outbox'))){once=false;if(lost){await batch(statements);throw Error('Synthetic lost acknowledgement')}return batch([...statements,f.DB.prepare("INSERT INTO job_store_checks(id,valid) VALUES('failure',0)")])}return batch(statements)};
+  const request=f.request();if(lost)assert.deepEqual(await f.engine.enqueue(request),{accepted:true});else await assert.rejects(f.engine.enqueue(request),{code:'JOB_RECOVERY_STORAGE'});
+  assert.equal(await f.count('job_recovery_outbox'),lost?1:0);assert.equal(await f.count('job_owner_recovery_v2'),0);assert.equal((await f.DB.prepare('SELECT revision FROM job_owner_credentials').first()).revision,1);
+  assert.deepEqual(await f.engine.enqueue(request),{accepted:true});assert.equal(await f.count('job_recovery_outbox'),1);
+ }finally{f.close()}}
+});
+test('address or credential changes between reading and enqueue transaction cannot create stale recovery',async()=>{
+ for(const kind of ['address','credential','deleted']){const f=await fixture();try{
+  const batch=f.DB.batch;let once=true;f.DB.batch=async statements=>{if(once&&statements.some(s=>s.sql.startsWith('INSERT INTO job_recovery_outbox'))){once=false;if(kind==='address')await f.DB.prepare("UPDATE job_store_records SET revision=revision+1,data_json=json_set(data_json,'$.contacto','other@example.invalid')").run();if(kind==='credential')await f.DB.prepare('UPDATE job_owner_credentials SET revision=revision+1').run();if(kind==='deleted')await f.DB.prepare('DELETE FROM job_store_records').run()}return batch(statements)};
+  assert.deepEqual(await f.engine.enqueue(f.request()),{accepted:true});assert.equal(await f.count('job_recovery_outbox'),0);assert.equal(await f.count('job_owner_recovery_v2'),0);
+ }finally{f.close()}}
+});
+test('accepted provider receipt activates a token atomically; the original redemption transaction consumes it once',async()=>{
+ const f=await fixture();try{
+  await f.engine.enqueue(f.request());let payload;const result=await f.engine.dispatch(f.provider(async request=>{payload=request.payload;assert.match(request.idempotencyKey,/^uadav-job-recovery\//);assert(request.signal instanceof AbortSignal);return {id:'provider-qa-1'}}));assert.deepEqual(result,{state:'accepted'});
+  const [row]=await f.outbox();assert.equal(row.sealed_payload,null);assert.equal(row.provider_id,'provider-qa-1');assert.equal(await f.count('job_owner_recovery_v2'),1);assert.equal((await f.DB.prepare('SELECT revision FROM job_owner_credentials').first()).revision,1);assert.equal(await f.count('job_account_links'),1);
+  assert.equal(payload.to,recipient);assert.equal(await digest(payload.token),row.token_hash);
+  const redeem=()=>uadavJobRedeemRecovery(f.DB,{jobId:job,tokenHash:row.token_hash,newSecretHash:'1'.repeat(64),now:f.now()});const outcomes=await Promise.allSettled([redeem(),redeem()]);assert.equal(outcomes.filter(x=>x.status==='fulfilled').length,1);assert.equal((await f.DB.prepare('SELECT revision FROM job_owner_credentials').first()).revision,2);assert.equal(await f.count('job_account_links'),0);
+  assert.deepEqual(await f.engine.dispatch(f.provider(()=>{throw Error('Must not send again')})),{state:'idle'});
+ }finally{f.close()}
+});
+test('simultaneous dispatchers lease one intent and send only once',async()=>{
+ const f=await fixture();try{
+  await f.engine.enqueue(f.request());let sent=0;const adapter=f.provider(async()=>{sent++;return{id:'one-receipt'}});const results=await Promise.all([f.engine.dispatch(adapter),f.engine.dispatch(adapter)]);assert.equal(results.filter(x=>x.state==='accepted').length,1);assert.equal(sent,1);assert.equal(await f.count('job_owner_recovery_v2'),1);assert.equal(await f.count('job_store_checks'),0);
+ }finally{f.close()}
+});
+test('ambiguous provider failure retries the identical payload and key, without activating a token early',async()=>{
+ const f=await fixture();try{
+  await f.engine.enqueue(f.request());const delivered=new Map(),calls=[];const adapter=f.provider(async request=>{const value=JSON.stringify(request.payload);calls.push({key:request.idempotencyKey,value});if(!delivered.has(request.idempotencyKey)){delivered.set(request.idempotencyKey,value);throw Error('synthetic-private-transport-with-token-'+request.payload.token)}assert.equal(delivered.get(request.idempotencyKey),value);return{id:'same-receipt'}});
+  const first=await f.engine.dispatch(adapter);assert.deepEqual(first,{state:'unconfirmed',error:'JOB_RECOVERY_SEND'});assert.equal(await f.count('job_owner_recovery_v2'),0);assert.equal(await f.count('job_account_links'),1);
+  assert.deepEqual(await f.engine.dispatch(adapter),{state:'idle'});f.advance(5000);assert.deepEqual(await f.engine.dispatch(adapter),{state:'accepted'});assert.equal(delivered.size,1);assert.deepEqual(calls[0],calls[1]);assert.equal((await f.outbox())[0].last_error,null);
+ }finally{f.close()}
+});
+test('missing or malformed provider receipts never activate tokens or leak provider details',async()=>{
+ for(const receipt of [undefined,{}, {id:'private@example.invalid\r\nSQL'}]){const f=await fixture();try{
+  await f.engine.enqueue(f.request());assert.deepEqual(await f.engine.dispatch(f.provider(async()=>receipt)),{state:'unconfirmed',error:'JOB_RECOVERY_RECEIPT'});assert.equal(await f.count('job_owner_recovery_v2'),0);assert.equal((await f.outbox())[0].last_error,'JOB_RECOVERY_RECEIPT');
+ }finally{f.close()}}
+});
+test('provider timeout covers ignored cancellation, and exhausted attempts fail closed',async()=>{
+ const f=await fixture();try{
+  await f.engine.enqueue(f.request());const engine=f.create({timeoutMs:5});let signal;const adapter=f.provider(request=>{signal=request.signal;return new Promise(()=>{})});
+  for(let attempt=1;attempt<=5;attempt++){assert.deepEqual(await engine.dispatch(adapter),{state:'unconfirmed',error:'JOB_RECOVERY_SEND'});assert(signal.aborted);f.advance(60000)}
+  assert.equal((await f.outbox())[0].state,'failed');assert.equal((await f.outbox())[0].sealed_payload,null);assert.equal(await f.count('job_owner_recovery_v2'),0);assert.deepEqual(await engine.dispatch(adapter),{state:'idle'});
+ }finally{f.close()}
+});
+test('token activation and acknowledgement failure roll back together and can retry safely after delivery',async()=>{
+ for(const lost of [false,true]){const f=await fixture();try{
+  await f.engine.enqueue(f.request());const batch=f.DB.batch;let once=true;f.DB.batch=async statements=>{if(once&&statements.some(s=>s.sql.startsWith('INSERT INTO job_owner_recovery_v2'))){once=false;if(lost){await batch(statements);throw Error('Synthetic lost acknowledgement')}return batch([...statements,f.DB.prepare("INSERT INTO job_store_checks(id,valid) VALUES('failure',0)")])}return batch(statements)};
+  const accepted=new Set(),adapter=f.provider(async r=>{accepted.add(r.idempotencyKey);return{id:'accepted-before-db-ack'}});
+  const first=await f.engine.dispatch(adapter);assert.equal(first.state,lost?'accepted':'unconfirmed');assert.equal(await f.count('job_owner_recovery_v2'),lost?1:0);assert.equal(await f.count('job_account_links'),1);
+  f.advance(5000);assert.equal((await f.engine.dispatch(adapter)).state,lost?'idle':'accepted');assert.equal(accepted.size,1);assert.equal(await f.count('job_owner_recovery_v2'),1);assert.equal((await f.outbox())[0].sealed_payload,null);
+ }finally{f.close()}}
+});
+test('expired, modified or deleted sources cancel before sending; changes during sending cannot activate a token',async()=>{
+ for(const scenario of ['expiry','edit','deleted','credential','during-send']){const f=await fixture();try{
+  await f.engine.enqueue(f.request());let sent=0;
+  if(scenario==='expiry')f.advance(15*60000);
+  if(scenario==='edit')await f.DB.prepare('UPDATE job_store_records SET revision=revision+1').run();
+  if(scenario==='deleted')await f.DB.prepare('DELETE FROM job_store_records').run();
+  if(scenario==='credential')await f.DB.prepare('UPDATE job_owner_credentials SET revision=revision+1').run();
+  const r=await f.engine.dispatch(f.provider(async()=>{sent++;await f.DB.prepare('UPDATE job_owner_credentials SET revision=revision+1').run();return{id:'already-sent-stale'}}));assert.equal(sent,scenario==='during-send'?1:0);assert.equal(r.state,scenario==='during-send'?'unconfirmed':'idle');assert.equal(await f.count('job_owner_recovery_v2'),0);assert.equal(await f.count('job_account_links'),scenario==='deleted'?0:1);
+ }finally{f.close()}}
+});
+test('AES authentication binds pending payloads to their metadata and a wrong key never creates a token',async()=>{
+ for(const scenario of ['cipher','metadata','key']){const f=await fixture();try{
+  await f.engine.enqueue(f.request());if(scenario==='cipher')await f.DB.prepare("UPDATE job_recovery_outbox SET sealed_payload='{}'").run();if(scenario==='metadata')await f.DB.prepare('UPDATE job_recovery_outbox SET recipient_hash=?').bind('f'.repeat(64)).run();let sent=0;const engine=scenario==='key'?f.create({encryptionKey:'f'.repeat(64)}):f.engine;
+  assert.deepEqual(await engine.dispatch(f.provider(async()=>{sent++;return{id:'must-not-send'}})),{state:'unconfirmed',error:'JOB_RECOVERY_PAYLOAD'});assert.equal(sent,0);assert.equal(await f.count('job_owner_recovery_v2'),0);assert.equal(await f.count('job_account_links'),1);
+ }finally{f.close()}}
+});
+test('one dispatcher cannot release or overwrite another lease after its own authority changes',async()=>{
+ const f=await fixture();try{
+  await f.engine.enqueue(f.request());const result=await f.engine.dispatch(f.provider(async()=>{await f.DB.prepare("UPDATE job_recovery_outbox SET lease_owner='other-dispatcher',lease_until=?").bind(f.now()+30000).run();return{id:'stale-owner'}}));assert.equal(result.state,'unconfirmed');const [row]=await f.outbox();assert.equal(row.lease_owner,'other-dispatcher');assert.equal(row.state,'sending');assert.equal(await f.count('job_owner_recovery_v2'),0);
+ }finally{f.close()}
+});
+test('the actor and per-job issuance limits are atomic and return the same accepted shape',async()=>{
+ const f=await fixture();try{
+  for(let i=0;i<5;i++)assert.deepEqual(await f.engine.enqueue(f.request({jobId:'JOB-UNKNOWN'})),{accepted:true});assert.deepEqual(await f.engine.enqueue(f.request()),{accepted:true});assert.equal(await f.count('job_recovery_outbox'),0);f.advance(10*60000);
+  for(let i=0;i<3;i++){assert.deepEqual(await f.engine.enqueue(f.request()),{accepted:true});await f.DB.prepare("UPDATE job_recovery_outbox SET state='failed',sealed_payload=NULL").run()}
+  const before=await f.count('job_recovery_outbox');for(const result of await Promise.all([f.engine.enqueue(f.request()),f.engine.enqueue(f.request({actorHash:'f'.repeat(64)}))]))assert.deepEqual(result,{accepted:true});assert.equal(await f.count('job_recovery_outbox'),before);assert.equal(await f.count('job_owner_recovery_v2'),0);
+ }finally{f.close()}
+});
+test('an abandoned lease can retry; the draft is idempotent and the public recovery routes remain disabled',async()=>{
+ const f=await fixture();try{
+  await f.engine.enqueue(f.request());await f.DB.prepare("UPDATE job_recovery_outbox SET state='sending',attempts=1,lease_until=?,lease_owner='abandoned'").bind(f.now()+30000).run();assert.deepEqual(await f.engine.dispatch(f.provider()),{state:'idle'});f.advance(30001);assert.deepEqual(await f.engine.dispatch(f.provider()),{state:'accepted'});
+  const schema=await readFile(new URL('../migrations/staging/20261026_job_recovery_outbox.sql',import.meta.url),'utf8');for(const sql of schema.replace(/--[^\n]*/g,'').split(';').filter(s=>s.trim()))await f.DB.prepare(sql).run();assert.equal(await f.count('job_recovery_outbox'),1);assert.equal((await f.DB.prepare('PRAGMA foreign_key_check').all()).results.length,0);
+  for(const route of ['solicitar','restablecer']){const r=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/bolsa_trabajo/acceso/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),f.env,{});assert.equal(r.status,503)}
+  assert(!await readFile(new URL('../worker.js',import.meta.url),'utf8').then(s=>s.includes('createJobRecoveryOutbox')));
+ }finally{f.close()}
+});
+test('older recovery links are invalidated only in the same successful activation transaction',async()=>{
+ const f=await fixture();try{
+  const oldToken='5'.repeat(64);await f.DB.prepare('INSERT INTO job_owner_recovery_v2(token_hash,job_id,credential_revision,expires_at,created_at) VALUES(?,?,1,?,?)').bind(oldToken,job,f.now()+3600000,f.now()).run();await f.engine.enqueue(f.request());
+  const batch=f.DB.batch;let once=true;f.DB.batch=statements=>{if(once&&statements.some(s=>s.sql.startsWith('INSERT INTO job_owner_recovery_v2'))){once=false;return batch([...statements,f.DB.prepare("INSERT INTO job_store_checks(id,valid) VALUES('activation-failure',0)")])}return batch(statements)};
+  assert.equal((await f.engine.dispatch(f.provider())).state,'unconfirmed');assert.equal((await f.DB.prepare('SELECT consumed_at FROM job_owner_recovery_v2 WHERE token_hash=?').bind(oldToken).first()).consumed_at,null);assert.equal(await f.count('job_owner_recovery_v2'),1);
+  f.advance(5000);assert.equal((await f.engine.dispatch(f.provider())).state,'accepted');assert.equal(await f.count('job_owner_recovery_v2'),2);assert.equal((await f.DB.prepare('SELECT consumed_at FROM job_owner_recovery_v2 WHERE token_hash=?').bind(oldToken).first()).consumed_at,f.now());
+  await assert.rejects(uadavJobRedeemRecovery(f.DB,{jobId:job,tokenHash:oldToken,newSecretHash:'6'.repeat(64),now:f.now()}),{jobCode:'JOB_RECOVERY_INVALID'});assert.equal((await f.DB.prepare('SELECT revision FROM job_owner_credentials').first()).revision,1);assert.equal(await f.count('job_account_links'),1);
+ }finally{f.close()}
+});
+test('simultaneous requests for different jobs share an atomic actor limit of five',async()=>{
+ const f=await fixture();try{
+  const requests=[];for(let i=0;i<6;i++){const id='JOB-OUTBOX-LIMIT-'+i;await f.DB.prepare("INSERT INTO job_store_records(collection,id,data_json,updated_at) SELECT collection,?,json_set(data_json,'$.id',?),updated_at FROM job_store_records WHERE id=?").bind(id,id,job).run();await f.DB.prepare('INSERT INTO job_owner_credentials(job_id,secret_hash,revision,updated_at) SELECT ?,secret_hash,revision,updated_at FROM job_owner_credentials WHERE job_id=?').bind(id,job).run();requests.push(f.request({jobId:id}))}
+  for(const r of await Promise.all(requests.map(r=>f.engine.enqueue(r))))assert.deepEqual(r,{accepted:true});assert.equal(await f.count('job_recovery_outbox'),5);assert.equal(await f.count('job_owner_recovery_v2'),0);
+ }finally{f.close()}
+});
+test('an accepted link expires without rotating access, and database errors never expose raw details',async()=>{
+ const f=await fixture();try{
+  await f.engine.enqueue(f.request());assert.equal((await f.engine.dispatch(f.provider())).state,'accepted');const [row]=await f.outbox();f.advance(15*60000);
+  await assert.rejects(uadavJobRedeemRecovery(f.DB,{jobId:job,tokenHash:row.token_hash,newSecretHash:'6'.repeat(64),now:f.now()}),{jobCode:'JOB_RECOVERY_INVALID'});assert.equal((await f.DB.prepare('SELECT revision FROM job_owner_credentials').first()).revision,1);assert.equal(await f.count('job_account_links'),1);
+  const broken={prepare(){throw Object.assign(Error('synthetic-private-SQL-details'),{code:123})}};const engine=createJobRecoveryOutbox({db:broken,encryptionKey:sealKey,mode:'staging-only'});await assert.rejects(engine.enqueue(f.request()),error=>error.code==='JOB_RECOVERY_STORAGE'&&!error.message.includes('private'));
+ }finally{f.close()}
+});
