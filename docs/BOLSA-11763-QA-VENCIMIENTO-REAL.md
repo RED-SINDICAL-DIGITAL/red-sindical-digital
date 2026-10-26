@@ -4,7 +4,7 @@
 
 **Preparación real confirmada:** oferta `JOB-MVPJ9WRW-439D4126D9AE`, candidatura `POST-MVPJCNGX-E7683EC0` recibida con consentimiento, ambas guardadas en una cuenta existente y fecha límite **2026-10-26**. El cron de las 14:45 generó un aviso previo para esa cuenta; marca y mensaje privados cotejados. Respaldo versión 5 actualizado y ensayo local aprobado. Ver `BOLSA-11763-AVISO-AUTOMATICO-QA-20261026.md`.
 
-**No repetir la publicación.** El turno siguiente, 15:00 de Argentina, confirmó cero avisos adicionales. Falta observar el aviso en el dispositivo de la cuenta y esperar el vencimiento real del **27/10 a las 00:00 de Argentina**. El cierre y aviso posterior todavía no están aprobados.
+**No repetir la publicación.** El turno siguiente, 15:00 de Argentina, confirmó cero avisos adicionales. El usuario confirmó el aviso visible y se inspeccionó su captura en PC; también aparece el aviso de postulación. Ver BOLSA-11763-AVISO-VISIBLE-20261026.md. Falta esperar el vencimiento real del **27/10 a las 00:00 de Argentina**. El cierre y aviso posterior todavía no están aprobados.
 
 ## Preparación realizada mediante la interfaz normal
 

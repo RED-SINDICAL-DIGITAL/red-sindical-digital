@@ -113,5 +113,40 @@
     "processed": 0,
     "emitted": 0,
     "message": "Activada para revisar cada 15 minutos. Última revisión: 26/10/26, 15:00 (hora de Argentina). Se actualizaron 0 ofertas y se generaron 0 avisos privados."
+  },
+  "notice_visual_verification": {
+    "passed": true,
+    "basis": "user_provided_screenshot_inspected",
+    "user_confirmation": "aviso visible",
+    "device_class": "PC",
+    "visible_unread_count": 2,
+    "visible_titles": [
+      "Una de tus ofertas está por vencer",
+      "Tu oferta recibió una postulación"
+    ],
+    "visible_expiry_date": "2026-10-26",
+    "visible_notice_times_before_fix": [
+      "26/10/2026, 02:45:40",
+      "26/10/2026, 02:33:40"
+    ],
+    "live_work_profile_session_used": false,
+    "read_acknowledgement_interaction_observed": false,
+    "source_sha256": "2e6350b1d89c997cd7a1f4850b75a1c6e6a02322ea5363396c1e26255cd10ddc",
+    "source_bytes": 462591,
+    "private_original_copied_to_repository": false
+  },
+  "notice_time_presentation_fix": {
+    "pages_code_commit": "7e16b2a815a218df870d7375ae565af6893afa70",
+    "asset_version": "11763.3",
+    "zone": "America/Argentina/Buenos_Aires",
+    "hour_cycle": "h23",
+    "explicit_zone_label": "hora argentina",
+    "local_ui_tests_passed": 138,
+    "existing_account_notices_ui_check": "passed",
+    "ci_run": 40376703081,
+    "ci_conclusion": "success",
+    "published_html_script_reference_verified": true,
+    "new_format_seen_in_recipient_device_after_update": false,
+    "worker_runtime_changed": false
   }
 }
