@@ -1,6 +1,6 @@
 # Bolsa 11764 · corrección de privacidad y laboratorio D1 separado
 
-Preparación del 26/10/2026. **Código y pruebas locales aprobados; despliegue 11764 y ensayo D1 remoto pendientes.** La última versión observada en el Worker operativo sigue siendo 11763. Bolsa todavía no está terminada.
+Revisión del 26/10/2026. **11764 observada en staging después del despliegue manual del operador; código y pruebas locales/CI aprobados. El ensayo D1 remoto del laboratorio sigue pendiente.** Bolsa todavía no está terminada.
 
 ## Corrección del Worker de staging
 
@@ -14,6 +14,8 @@ Cambian únicamente BUILD y esa comprobación en `worker.js`. No cambian SQL, cr
 
 Archivo: `releases/uadav-api-staging-11764.zip`, con `worker.js` y `LEEME-STAGING.txt`.
 
+**Paso ya realizado por el operador.** Health recargado el `2026-10-26T20:34:09.833Z` (**17:34 de Argentina**): build `11764`, ok, D1/KV detectados y correo/cola apagados. El catálogo público conserva seis ofertas y la QA11763 de vencimiento real. No se cotejó byte por byte el archivo remoto ni se ejecutó aún la corrección entre dos cuentas en D1 remoto. La consulta privada del cron en Work requiere una sesión Admin; no se verificó un nuevo recibo en esta revisión. No volver a pedir este despliegue o reconfigurar el cron por el rechazo anterior de Cloudflare. El procedimiento queda como referencia:
+
 1. Cloudflare → Workers & Pages → **uadav-api-staging** → Edit code.
 2. Reemplazar el código completo por `worker.js` del ZIP y Deploy.
 3. Conservar bindings y secretos. No ejecutar SQL. Mantener `JOB_STORE_D1=true`, mantenimiento apagado y `JOB_STAGING_CRON=bolsa-only`.
@@ -23,9 +25,11 @@ Archivo: `releases/uadav-api-staging-11764.zip`, con `worker.js` y `LEEME-STAGIN
 
 El usuario autorizó expresamente usar Google para este ingreso. El 26/10 se continuó mediante formularios seguros: Google mostró la cuenta guardada UADAV STREAM, el usuario la seleccionó y Cloudflare volvió a `/login` con **Unable to sign in. Try again or use your email and password.** No se verificó una sesión administrativa. Se detuvieron los intentos al primer error del sitio, sin cambiar de método ni atribuirlo a bots. El anterior bloqueo de autorización del origen Google ya se superó; no volver a pedir ese mismo permiso como si faltara.
 
-Health observado después del intento: `2026-10-26T20:25:45.306Z` (**17:25 de Argentina**), build **11763**, ok, D1/KV detectados y correo/cola apagados. No hubo despliegue 11764 ni cambios operativos desde Work. El próximo paso requiere el despliegue manual del ZIP anterior, siguiendo los seis pasos indicados. Registro sin credenciales ni URL OAuth en `evidence/bolsa-11764-acceso-cloudflare-20261026.json`. La guía de [limitaciones de acceso del navegador de Work](https://help.openai.com/articles/20001280-using-cloud-browser-in-chatgpt#when-a-website-blocks-the-task) explica esta alternativa; no se determinó la causa del rechazo específico de Cloudflare.
+Health histórico después de ese intento: `2026-10-26T20:25:45.306Z` (**17:25 de Argentina**), build **11763**, ok, D1/KV detectados y correo/cola apagados. Luego el operador informó el despliegue manual y se confirmó 11764 a las 17:34; no atribuir la publicación a Work. Registro histórico sin credenciales ni URL OAuth en `evidence/bolsa-11764-acceso-cloudflare-20261026.json`, seguido por `evidence/bolsa-11764-despliegue-20261026.json`. La guía de [limitaciones de acceso del navegador de Work](https://help.openai.com/articles/20001280-using-cloud-browser-in-chatgpt#when-a-website-blocks-the-task) explica la alternativa manual; no se determinó la causa del rechazo específico de Cloudflare.
 
 ## Laboratorio nuevo: uadav-bolsa-lab
+
+**Siguiente paso pendiente.** Después de confirmar 11764, se abrió `/health` en el hostname esperado del laboratorio: mostró **There is nothing here yet**. No hay despliegue del laboratorio confirmado; no se ejecutó ninguna fase ni se creó una base desde Work.
 
 Archivo: `releases/uadav-bolsa-lab-11764.zip`, con su propio `worker.js` y `LEEME-LAB.txt`. **Este archivo corresponde a un Worker nuevo; no es el Worker de staging del apartado anterior.** No reemplaza `uadav-restore-qa` ni usa su base o clave.
 

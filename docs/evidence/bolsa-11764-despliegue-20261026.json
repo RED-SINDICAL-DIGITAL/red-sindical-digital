@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-26",
+  "client_timezone": "America/Buenos_Aires",
+  "scope": "staging-only",
+  "deployment_reported_by_user": true,
+  "deployed_by_work": false,
+  "health": {
+    "url": "https://uadav-api-staging.uadavstream.workers.dev/api/health",
+    "observed_after_reload": true,
+    "timestamp": "2026-10-26T20:34:09.833Z",
+    "ok": true,
+    "version": "V11.7",
+    "build": "11764",
+    "kv": true,
+    "d1": true,
+    "email_automation": false,
+    "queue": false
+  },
+  "delivered_artifact": {
+    "code_commit": "7fd54d11be324e75e595a6452950111512ad2fb9",
+    "worker_sha256": "c98d9c5bcffec76beb68fb4075f8b967c019667923c425081d794191f0cff90f",
+    "remote_source_compared_byte_for_byte": false
+  },
+  "public_catalog": {
+    "url": "https://uadav-stream-staging.pages.dev/app.html?build=12058&view=%2Fbolsa-trabajo",
+    "visible_count": 6,
+    "real_deadline_qa_title_visible": true,
+    "real_deadline_qa_unchanged_by_work": true
+  },
+  "private_cron_status": {
+    "admin_login_required_in_work": true,
+    "new_receipt_verified": false,
+    "configuration_modified": false
+  },
+  "lab": {
+    "checked_url": "https://uadav-bolsa-lab.uadavstream.workers.dev/health",
+    "visible_heading": "There is nothing here yet",
+    "deployment_confirmed": false,
+    "remote_phases_passed": 0
+  },
+  "production_modified": false,
+  "operational_database_written_by_work": false,
+  "private_backup_exported": false,
+  "bolsa_complete": false,
+  "next_action": "Create and deploy the isolated uadav-bolsa-lab Worker with its own new empty D1 and dedicated secret; verify its health before testing."
+}
