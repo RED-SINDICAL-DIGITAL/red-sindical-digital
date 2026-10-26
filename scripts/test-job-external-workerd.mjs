@@ -8,6 +8,7 @@ const binary=process.env.UADAV_WORKERD_BIN||'workerd';
 const dir=await mkdtemp(join(tmpdir(),'uadav-external-workerd-'));
 const entry=`import worker,{uadavExternalFetchHTML,uadavExternalPreview} from './worker.mjs';
 import qaWorker from './restore-qa.mjs';
+import labWorker from './bolsa-lab.mjs';
 function check(ok,message){if(!ok)throw Error(message)}
 async function rejected(url,code){try{await uadavExternalFetchHTML(url,{timeoutMs:25});throw Error('Expected rejection: '+code)}catch(error){check(error.externalCode===code,'Expected '+code+', received '+error.externalCode)}}
 export default {async test(){
@@ -46,6 +47,16 @@ export default {async test(){
  const qaPage=await qaWorker.fetch(new Request(qaOrigin+'/'),qaEnv,{}),qaHealth=await qaWorker.fetch(new Request(qaOrigin+'/health'),qaEnv,{});
  check(qaPage.status===200&&(await qaPage.text()).includes('SOLO BASE NUEVA DE QA'),'QA interface');check((await qaHealth.json()).purpose==='disposable-d1-rehearsal','QA purpose');
  console.log('PASS workerd: isolated QA interface and health');
+ const labEnv={QA_BOLSA_ONLY:'true',QA_BOLSA_KEY:'synthetic-lab-key-'+'x'.repeat(48),DB:{prepare(){throw Error('Lab database must not be touched')},withSession(){throw Error('Lab session must not be opened')}}},labOrigin='https://uadav-bolsa-lab.uadavstream.workers.dev';
+ for(const origin of ['https://uadav-api-staging.uadavstream.workers.dev','https://uadav-restore-qa.uadavstream.workers.dev'])check((await labWorker.fetch(new Request(origin+'/health'),labEnv,{})).status===403,'Lab must reject existing Worker hosts');
+ console.log('PASS workerd: synthetic Bolsa lab rejects existing staging and restoration hosts');
+ check((await labWorker.fetch(new Request(labOrigin+'/status',{method:'POST',headers:{Authorization:'Bearer incorrect'}}),labEnv,{})).status===401,'Lab authentication before database');
+ check((await labWorker.fetch(new Request(labOrigin+'/status',{method:'POST',headers:{Authorization:'Bearer '+labEnv.QA_BOLSA_KEY}}),{...labEnv,QA_BOLSA_ONLY:'false'},{})).status===503,'Lab must require its own flag');
+ console.log('PASS workerd: synthetic Bolsa lab requires explicit mode and authentication before DB');
+ const labPage=await labWorker.fetch(new Request(labOrigin+'/'),labEnv,{}),labHealth=await labWorker.fetch(new Request(labOrigin+'/health'),labEnv,{});
+ check(labPage.status===200&&(await labPage.text()).includes('SOLO DATOS FICTICIOS'),'Lab private interface');const labData=await labHealth.json();check(labData.version==='11764-bolsa-lab-1'&&labData.purpose==='isolated-synthetic-bolsa','Lab frozen identity');
+ check((await labWorker.fetch(new Request(labOrigin+'/api/bolsa_trabajo',{method:'POST'}),labEnv,{})).status===404,'Lab must not expose platform routes');
+ console.log('PASS workerd: synthetic Bolsa lab interface, frozen identity and restricted entrypoints');
  const tick={cron:'*/15 * * * *',scheduledTime:1792969200000},closedEnv=new Proxy({},{get(_target,name){if(name==='JOB_STAGING_CRON')return undefined;throw Error('Unrelated module reached: '+String(name))}});
  check((await worker.scheduled(tick,closedEnv,{})).reason==='disabled','staging cron must default to no side effects');
  check((await worker.scheduled({...tick,cron:'* * * * *'},{JOB_STAGING_CRON:'bolsa-only'},{})).reason==='schedule','unrelated schedule must not run Bolsa');
@@ -83,11 +94,12 @@ try{
  const source=await readFile(new URL('../worker.js',import.meta.url));
  await writeFile(join(dir,'worker.mjs'),source);
  await writeFile(join(dir,'restore-qa.mjs'),await readFile(new URL('../releases/uadav-bolsa-restore-qa-11762.js',import.meta.url)));
+ await writeFile(join(dir,'bolsa-lab.mjs'),await readFile(new URL('../releases/uadav-bolsa-lab-11764.js',import.meta.url)));
  await writeFile(join(dir,'entry.mjs'),entry);
  await writeFile(join(dir,'mock.mjs'),mock);
  await writeFile(join(dir,'config.capnp'),`using Workerd = import "/workerd/workerd.capnp";
 const config :Workerd.Config = (services = [
-(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
+(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs"),(name = "bolsa-lab.mjs", esModule = embed "bolsa-lab.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
 (name = "mock", worker = (modules = [(name = "mock.mjs", esModule = embed "mock.mjs")],compatibilityDate = "2026-09-28"))
 ]);`);
  const result=spawnSync(binary,['test',join(dir,'config.capnp'),'main'],{encoding:'utf8',timeout:30000});

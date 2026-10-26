@@ -167,6 +167,25 @@ test('notice failure rolls back the application and its account association rath
   }finally{f.close()}
 });
 
+test('an artist proof from another account or a legacy unbound proof cannot be saved as this account application',async()=>{
+  const f=await fixture();try{
+    const job=(await f.call('bolsa_trabajo','POST',offer({save_to_account:true}),a)).data;
+    const accountA=await digest(a),accountB=await digest(b);
+    await f.DB.prepare('INSERT INTO audience_artist_links(account_id,artist_id,claim_id,expires_at,created_at) VALUES(?,?,NULL,0,?)').bind(accountA,'ART-OWNER-A',Date.now()).run();
+    f.kv.set('artistas',JSON.stringify([{id:'ART-OWNER-A',nombre:'Artista ficticio A',claimed:true}]));
+    f.kv.set('artist_access_qa_other_artist',JSON.stringify({artist_id:'ART-OWNER-A',account_id:accountA,account_credential_hash:accountA,expires:Date.now()+600000}));
+    f.kv.set('artist_access_qa_legacy_artist',JSON.stringify({artist_id:'ART-OWNER-A',expires:Date.now()+600000}));
+    const body=extra=>application(job.item.id,{save_to_account:true,artist_token:'qa_other_artist',shared_fields:['nombre','email','artist_profile'],...extra});
+    for(const artist_token of ['qa_other_artist','qa_legacy_artist']){
+      const r=await f.call('bolsa_trabajo/postular','POST',body({artist_token,account_id:accountA}),b);assert.equal(r.status,403);assert(!JSON.stringify(r.data).includes(accountA));assert(!JSON.stringify(r.data).includes(accountB));
+    }
+    assert.equal((await f.DB.prepare("SELECT COUNT(*) AS n FROM job_store_records WHERE collection='postulaciones_trabajo'").first()).n,0);
+    assert.equal(await f.count('job_account_links'),1);assert.equal(await f.count('audience_announcements'),0);
+    const own=await f.call('bolsa_trabajo/postular','POST',body({}),a);assert.equal(own.status,200);assert.equal(own.data.account_saved,true);
+    const publicResult=await f.call('bolsa_trabajo/postular','POST',body({save_to_account:false,artist_token:'qa_legacy_artist'}));assert.equal(publicResult.status,200);assert.equal(publicResult.data.account_saved,false);
+  }finally{f.close()}
+});
+
 test('maximum collections with verified artist and account save remain below 50 D1 subrequests',async()=>{
   const f=await fixture();try{
     const job=(await f.call('bolsa_trabajo','POST',offer({save_to_account:true}),a)).data;

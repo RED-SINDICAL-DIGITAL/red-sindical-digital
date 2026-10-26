@@ -450,7 +450,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11763';
+const BUILD = '11764';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -4205,7 +4205,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(token){
         try{
           const raw=await uadavReadArtistAccess(token,env);
-          if(raw){const access=JSON.parse(raw);if(!access.expires||Date.now()<=access.expires){const artists=await getArray('artistas');const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id));if(artist){artist_id=String(access.artist_id);artist_nombre=String(artist.nombre_artistico||artist.nombre||'');perfil_verificado=artist.afiliado_verificado===true||artist.claimed===true}}}
+          if(raw){const access=JSON.parse(raw);if(accountIdentity&&String(access.account_id||'')!==accountIdentity.accountId)throw Error('JOB_ARTIST_ACCOUNT_MISMATCH');if(!access.expires||Date.now()<=access.expires){const artists=await getArray('artistas');const artist=artists.find(a=>String(publicArtistFromItem(a).id)===String(access.artist_id));if(artist){artist_id=String(access.artist_id);artist_nombre=String(artist.nombre_artistico||artist.nombre||'');perfil_verificado=artist.afiliado_verificado===true||artist.claimed===true}}}
         }catch(_){}
         if(!artist_id)return json({error:'El perfil artístico no pudo validarse. Desmarcá la vinculación o volvé a Mi Perfil.'},403);
       }
