@@ -40,6 +40,8 @@ La clave de cifrado futura debe ser exclusiva de staging, guardarse como secreto
 
 Suite focalizada total: **102 pruebas Node/SQLite aprobadas**, frente a 82 anteriores. **19 comprobaciones workerd aprobadas**, frente a 18: el nuevo control valida carga del módulo y rechazo por modo/proveedor antes de DB; no ejecuta SQL de esta bandeja contra D1 remoto. Generadores, fuente embebida, sintaxis y diff aprobados. No se repitieron pruebas UI por un módulo sin exposición frontend. La suite general conserva sus fallos previos ajenos a Bolsa.
 
+Código y pruebas guardados en commit `253bd484b0c6d2abf382de4af2022d9d18329972`, exclusivamente en la rama Worker staging. CI [Bolsa 40406193132](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40406193132) y [Radio 40406193109](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40406193109), ambas `success` para ese commit. El informe del operador del laboratorio quedó antes en `9c6e6f7735dacf78523670d964429bd5050d0a41`.
+
 Las ocho fases del laboratorio 11764 que informó el operador corresponden al núcleo anterior de Bolsa y su helper de canje. **No prueban remotamente esta bandeja nueva.** No pedir que repita ese laboratorio para acreditar un código que aún no contiene.
 
 ## Proveedor y trabajo pendiente antes de habilitar

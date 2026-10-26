@@ -14,7 +14,7 @@ Cambian únicamente BUILD y esa comprobación en `worker.js`. No cambian SQL, cr
 
 Archivo: `releases/uadav-api-staging-11764.zip`, con `worker.js` y `LEEME-STAGING.txt`.
 
-**Paso ya realizado por el operador.** Health recargado el `2026-10-26T20:34:09.833Z` (**17:34 de Argentina**): build `11764`, ok, D1/KV detectados y correo/cola apagados. El catálogo público conserva seis ofertas y la QA11763 de vencimiento real. No se cotejó byte por byte el archivo remoto ni se ejecutó aún la corrección entre dos cuentas en D1 remoto. La consulta privada del cron en Work requiere una sesión Admin; no se verificó un nuevo recibo en esta revisión. No volver a pedir este despliegue o reconfigurar el cron por el rechazo anterior de Cloudflare. El procedimiento queda como referencia:
+**Paso ya realizado por el operador.** Health recargado el `2026-10-26T20:34:09.833Z` (**17:34 de Argentina**): build `11764`, ok, D1/KV detectados y correo/cola apagados. El catálogo público conserva seis ofertas y la QA11763 de vencimiento real. No se cotejó byte por byte el archivo remoto. La corrección de cuentas/perfiles se ejercitó después en el laboratorio separado por el operador; no se creó otra postulación en la base operativa para esta revisión. La consulta privada del cron en Work requiere una sesión Admin; no se verificó un nuevo recibo. No volver a pedir este despliegue o reconfigurar el cron por el rechazo anterior de Cloudflare. El procedimiento queda como referencia:
 
 1. Cloudflare → Workers & Pages → **uadav-api-staging** → Edit code.
 2. Reemplazar el código completo por `worker.js` del ZIP y Deploy.
