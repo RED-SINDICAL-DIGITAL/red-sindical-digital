@@ -6,6 +6,7 @@ on:
     paths:
       - bolsa-trabajo.html
       - admin.html
+      - manual.html
       - uadav-jobs-migration-admin.js
       - uadav-jobs-expiry-admin.js
       - tests/jobs-expiry-admin.test.cjs
@@ -30,6 +31,7 @@ on:
     paths:
       - bolsa-trabajo.html
       - admin.html
+      - manual.html
       - uadav-jobs-migration-admin.js
       - uadav-jobs-expiry-admin.js
       - tests/jobs-expiry-admin.test.cjs
