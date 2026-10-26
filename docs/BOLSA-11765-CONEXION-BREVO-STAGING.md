@@ -36,6 +36,8 @@ Worker11765:663849bytes; SHA256 `486171b739a8c0dd196f8f7320c2bfa530c296b11bde4b9
 
 ## Después de esta prueba
 
+Código/ZIP guardados en commit `7fc95c424c82cefd0647fda3bb5c23b136b2394e`, árbol `d5a077c7c46e11d9e877f45c8a7455a744774c61`, solo rama Worker staging. CI [Bolsa40423142867](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40423142867) y [Radio40423143076](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40423143076) confirmadas `success` para ese commit. Registro: `evidence/brevo-11765-ci-y-entrega-20261026.json`. El despliegue11765, la aceptación de Brevo y el aspecto real de la pantalla siguen pendientes; la última versión observada en servicio es11764.
+
 La aceptación sandbox solo cierra la comprobación inicial de conexión. Falta autorizar un destinatario real, probar recepción, resolver la aceptación incierta/idempotencia del outbox y persistir el mensaje completo, integrar cuenta/email/UI y canje, backup/retención/rotación y QA D1 remoto. No se repite el laboratorio11764 aprobado, que no contiene este código. Bolsa mantiene sus cinco bloques de cierre abiertos y Cartelera sigue después de su validación completa.
 
 Referencias oficiales consultadas: [sandbox de Brevo](https://developers.brevo.com/docs/using-sandbox-mode), [API de envío](https://developers.brevo.com/reference/send-transac-email), [permisos de claves API](https://help.brevo.com/hc/en-us/articles/209467485-Create-and-manage-your-API-keys) y [secretos de Cloudflare](https://developers.cloudflare.com/workers/configuration/secrets/).
