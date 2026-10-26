@@ -1,0 +1,117 @@
+{
+  "download_bytes": 268315,
+  "sha256": "2865eefe5a91145ab459743580e51ec760b4c117c95abe3396988966974a9442",
+  "generated_at": "2026-10-26T17:47:23.903Z",
+  "source": "d1",
+  "backup_complete": true,
+  "offers": 13,
+  "applications": 11,
+  "records": 24,
+  "credentials": 7,
+  "account_links": 5,
+  "notice_markers": 2,
+  "previous_records_checked": 22,
+  "previous_records_changed": 0,
+  "prior_credentials_links_notices_unchanged": true,
+  "offer_and_application_unchanged_after_automatic_notice": true,
+  "qa_offer": {
+    "id": "JOB-MVPJ9WRW-439D4126D9AE",
+    "title": "QA 11763 · Vencimiento real · NO CONTRATAR",
+    "deadline": "2026-10-26",
+    "active": true
+  },
+  "qa_application": {
+    "id": "POST-MVPJCNGX-E7683EC0",
+    "job_id": "JOB-MVPJ9WRW-439D4126D9AE",
+    "state": "recibida",
+    "consent_scope": "job_application_v1",
+    "consent_at": "2026-10-26T17:33:39.921Z"
+  },
+  "both_saved_to_same_account": true,
+  "qa_soon_notice": {
+    "count": 1,
+    "kind": "soon",
+    "deadline": "2026-10-26",
+    "created_at": "2026-10-26T17:45:40.988Z",
+    "private_message_count": 1,
+    "recipient_matches_offer_account": true,
+    "title": "Una de tus ofertas está por vencer",
+    "message": "Una de tus ofertas vence el 2026-10-26. Abrí Mis trabajos en Mi Perfil para revisarla, cerrarla o renovarla."
+  },
+  "cron_last_success": {
+    "version": 1,
+    "status": "success",
+    "scheduled_time": 1793036739219,
+    "started_at": "2026-10-26T17:45:39.986Z",
+    "completed_at": "2026-10-26T17:45:41.581Z",
+    "processed": 0,
+    "emitted": 1,
+    "recorded": 1
+  },
+  "record_type": "real_staging_offer_application_and_automatic_soon_notice",
+  "date": "2026-10-26",
+  "worker_build": "11763",
+  "worker_runtime_changed_by_agent": false,
+  "public_catalog": {
+    "total_after_user_publication": 6,
+    "matching_qa_title_after_filter": 1,
+    "original_public_offers_retained": 5
+  },
+  "private_backup": {
+    "saved": true,
+    "version": 5,
+    "filename": "UADAV-STAGING-11759-respaldo-20261024.json",
+    "sha256": "2865eefe5a91145ab459743580e51ec760b4c117c95abe3396988966974a9442",
+    "bytes": 268315,
+    "prior_version_retained": true
+  },
+  "offline_recovery": {
+    "passed": true,
+    "environment": "offline-sqlite-memory",
+    "remote_d1_validated": false,
+    "batches": 6,
+    "repeated_without_duplicates": true,
+    "interrupted_batch_rolled_back": true,
+    "integrity": "ok",
+    "mail": "disabled",
+    "scope": "Bolsa with existing audience parent records; not whole-platform account recovery"
+  },
+  "admin_preview_before_cron": {
+    "pending": 1,
+    "kind": "soon",
+    "deadline": "2026-10-26",
+    "title": "QA 11763 · Vencimiento real · NO CONTRATAR"
+  },
+  "admin_preview_after_cron": {
+    "pending": 0,
+    "message": "No hay avisos pendientes para las cuentas vinculadas."
+  },
+  "manual_notices_sent_by_agent": false,
+  "new_audience_account_or_device_link_created_by_agent": false,
+  "work_profile_authenticated": false,
+  "notice_viewed_in_recipient_profile_by_agent": false,
+  "same_soon_notice_next_scheduled_turn_verified": true,
+  "real_expiration_verified": false,
+  "post_expiration_notice_verified": false,
+  "expiration_expected_at_utc": "2026-10-27T03:00:00.000Z",
+  "expiration_expected_local": "27/10/2026 00:00 America/Argentina/Buenos_Aires",
+  "email_recovery_enabled_by_agent": false,
+  "production_modified_by_agent": false,
+  "proofs": [
+    {
+      "file": "bolsa-11763-aviso-automatico-20261026.jpg",
+      "bytes": 104324,
+      "sha256": "6b2254b8c0501ddda4b7461b66521646beeef9434b54137aeed2182fa3b11338",
+      "kind": "automatic_soon_notice_and_zero_pending_ui"
+    }
+  ],
+  "next_scheduled_turn": {
+    "basis": "validated rendered Admin GET receipt; not raw export JSON",
+    "observed_at_utc": "2026-10-26T18:01:24.939Z",
+    "displayed_completion_local": "26/10/2026 15:00 America/Argentina/Buenos_Aires",
+    "status": "success",
+    "processed": 0,
+    "emitted": 0,
+    "message": "Activada para revisar cada 15 minutos. Última revisión: 26/10/26, 15:00 (hora de Argentina). Se actualizaron 0 ofertas y se generaron 0 avisos privados."
+  }
+}

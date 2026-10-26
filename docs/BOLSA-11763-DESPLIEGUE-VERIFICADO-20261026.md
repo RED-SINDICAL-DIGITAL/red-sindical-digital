@@ -26,6 +26,6 @@ El mensaje se observó tanto al montar el panel como después de la actualizaci�
 
 El usuario completó después la etapa 2. Admin confirmó la revisión habilitada y su primer recibo exitoso de las 14:15 de Argentina. Ver `BOLSA-11763-CRON-PRIMERA-EJECUCION-20261026.md`. No volver a pedir ingreso, configuración o despliegue por los bloqueos anteriores si la sesión sigue válida.
 
-El próximo ensayo es una oferta ficticia nueva guardada en la cuenta QA y una candidatura con consentimiento, siguiendo `BOLSA-11763-QA-VENCIMIENTO-REAL.md`. Faltan vencimiento con reloj real, aviso posterior y repetición sin duplicados. El primer turno con conteos cero no da esos puntos por aprobados.
+La oferta y candidatura de `BOLSA-11763-QA-VENCIMIENTO-REAL.md` ya están creadas, guardadas y con consentimiento; el cron de las 14:45 generó un aviso previo real. Ver `BOLSA-11763-AVISO-AUTOMATICO-QA-20261026.md`. No volver a publicar esa QA. Faltan ver el aviso en su dispositivo, repetición sin duplicados y vencimiento/cierre/aviso posterior con reloj real desde el 27/10 a las 00:00 de Argentina.
 
 Producción, el Worker de restauración QA y el respaldo privado no se tocaron. La recuperación por correo y la restauración operativa siguen deshabilitadas. Bolsa todavía no está completa.

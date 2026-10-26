@@ -2,7 +2,7 @@
 
 ## Estado de la entrega
 
-**Despliegue principal 11763 verificado** el 26/10/2026 mediante health: D1/KV detectados, correo y cola apagados. La consulta inicial desactivada aprobó tras el ingreso seguro. El usuario completó después la etapa 2 y Admin confirmó el primer turno exitoso de las 14:15 de Argentina, con cero ofertas actualizadas y cero avisos. No se inspeccionó el dashboard de Cloudflare; se verificó el recibo privado mediante GET. Falta el ensayo de una oferta que venza realmente. Ver `BOLSA-11763-CRON-PRIMERA-EJECUCION-20261026.md`. El ensayo de restauración QA 11762 permanece aprobado y sin cambios. Ver `BOLSA-11763-DESPLIEGUE-VERIFICADO-20261026.md`.
+**Despliegue principal 11763 verificado** el 26/10/2026 mediante health: D1/KV detectados, correo y cola apagados. La consulta inicial desactivada aprobó tras el ingreso seguro. El usuario completó después la etapa 2 y Admin confirmó el primer turno exitoso de las 14:15 de Argentina, con cero ofertas actualizadas y cero avisos. No se inspeccionó el dashboard de Cloudflare; se verificó el recibo privado mediante GET. Después se creó y guardó la QA con fecha límite 26/10 y candidatura con consentimiento; el cron de las 14:45 generó un aviso previo real para su cuenta. Falta el vencimiento, cierre y aviso posterior a partir del 27/10 a las 00:00 de Argentina. Ver `BOLSA-11763-AVISO-AUTOMATICO-QA-20261026.md`. El ensayo de restauración QA 11762 permanece aprobado y sin cambios. Ver `BOLSA-11763-DESPLIEGUE-VERIFICADO-20261026.md`.
 
 La rama Worker sigue siendo `release/radio-studio-staging-rc-20261020`. Los cambios de interfaz se guardan por separado en `audit/continuidad-demo-20261019`. No se mezclan ramas ni se opera sobre producción.
 

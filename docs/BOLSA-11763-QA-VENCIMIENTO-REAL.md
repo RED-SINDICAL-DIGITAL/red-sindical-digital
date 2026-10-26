@@ -2,9 +2,11 @@
 
 ## Estado
 
-Procedimiento preparado, **oferta todavía no creada y ensayo no ejecutado**. El cron y su recibo se comprueban por separado. Un turno exitoso con cero cambios no demuestra el cierre de una oferta ni la entrega de un aviso.
+**Preparación real confirmada:** oferta `JOB-MVPJ9WRW-439D4126D9AE`, candidatura `POST-MVPJCNGX-E7683EC0` recibida con consentimiento, ambas guardadas en una cuenta existente y fecha límite **2026-10-26**. El cron de las 14:45 generó un aviso previo para esa cuenta; marca y mensaje privados cotejados. Respaldo versión 5 actualizado y ensayo local aprobado. Ver `BOLSA-11763-AVISO-AUTOMATICO-QA-20261026.md`.
 
-## Preparación mediante la interfaz normal
+**No repetir la publicación.** El turno siguiente, 15:00 de Argentina, confirmó cero avisos adicionales. Falta observar el aviso en el dispositivo de la cuenta y esperar el vencimiento real del **27/10 a las 00:00 de Argentina**. El cierre y aviso posterior todavía no están aprobados.
+
+## Preparación realizada mediante la interfaz normal
 
 El operador usa su cuenta QA existente y conserva sus comprobantes privados; no envía claves por chat o TXT. Crear una oferta nueva de staging evita alterar los registros previos. La publicación genera un acceso privado nuevo, por lo que el operador completa esa publicación y guarda el comprobante.
 
