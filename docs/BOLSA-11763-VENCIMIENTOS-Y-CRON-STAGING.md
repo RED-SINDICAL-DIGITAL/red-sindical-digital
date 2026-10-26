@@ -58,3 +58,7 @@ La configuración por sí sola no aprueba una ejecución. Comprobar el primer ev
 No se da Bolsa por terminada con esta entrega. Correo transaccional, ensayo remoto del respaldo privado completo, pruebas entre cuentas/perfil artístico, fuentes reales autorizadas y dispositivos restantes siguen abiertos.
 
 Referencias oficiales revisadas el 25/10/2026: [scheduled handler y resultado de su promesa](https://developers.cloudflare.com/workers/runtime-apis/handlers/scheduled/) y [Cron Triggers, UTC, configuración y propagación](https://developers.cloudflare.com/workers/configuration/cron-triggers/).
+
+## Confirmación de GitHub y archivos publicados
+
+Código Worker `90df7e3c6561271fa6a185f664cc17816c28266c` y Pages `cfc19c838c99be50820a81f7b6a4ca6d8f5464cd`. CI Bolsa **40263069135**, Radio **40263069094** y UI **40263077171**: success. La entrega y la observación del frontend se registran en `BOLSA-11763-ENTREGA-Y-VERIFICACION.md`. El Worker principal todavía se observó en 11762 y no se activó el cron. Admin quedó pendiente de reingreso confirmado.
