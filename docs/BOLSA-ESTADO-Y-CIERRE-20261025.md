@@ -6,6 +6,8 @@
 
 Nueva preparación 26/10: **11764**, todavía sin despliegue confirmado, corrige el guardado de una postulación con credencial artística de otra cuenta. Se entrega además un laboratorio nuevo con dos cuentas ficticias y ocho fases para ejecutar concurrencia real y canje/rollback en otra D1 vacía. **82 pruebas Bolsa y 18 workerd locales aprobadas**; no confundirlas con un resultado remoto del laboratorio. Guía y límites: `BOLSA-11764-PRIVACIDAD-Y-LABORATORIO.md`. El último Worker observado sigue siendo 11763.
 
+Commit de código/artefactos `7fd54d11be324e75e595a6452950111512ad2fb9`; CI Bolsa40383520286 y Radio40383520281 `success`. El ingreso seguro de Cloudflare eligió Google, pero la revisión automática bloqueó continuar en ese origen sin autorización explícita. No hay dashboard autenticado ni despliegue nuevo verificados.
+
 - Worker principal observado: **11763**. Código entregado `90df7e3c6561271fa6a185f664cc17816c28266c`, SHA256 `50d232f8b6e90cb54f266299b81d25c0a94af3c93687983f4389a9b0c1a0f348`; el archivo remoto no se cotejó byte por byte.
 - Pages staging: código en `7e16b2a815a218df870d7375ae565af6893afa70`. Admin conserva cron 11763.1 y respaldo 11763.2; Mi Perfil sirve avisos 11763.3 con Argentina/24h explícitos, tras detectar una hora ambigua en la captura. CI 40376703081 aprobado, 138 pruebas UI y control existente de avisos entre cuentas. La nueva representación horaria en el dispositivo destinatario no se volvió a observar.
 - Health principal observado el `2026-10-26T17:09:55.540Z` (**14:09 de Argentina**): ok, bindings D1/KV detectados, correo y cola apagados.

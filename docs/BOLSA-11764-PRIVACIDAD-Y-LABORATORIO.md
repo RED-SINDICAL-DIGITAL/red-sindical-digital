@@ -21,7 +21,7 @@ Archivo: `releases/uadav-api-staging-11764.zip`, con `worker.js` y `LEEME-STAGIN
 5. Abrir `https://uadav-api-staging.uadavstream.workers.dev/api/health`: exigir build `11764`, D1/KV detectados y correo/cola apagados.
 6. Admin staging → Auditoría → **Actualizar estado automático**: consulta GET del cron existente. No usar la revisión manual para simular el vencimiento.
 
-El acceso de Work a Cloudflare terminó en la pantalla de inicio de sesión, no en una sesión administrativa. No se atribuye un despliegue a esta preparación.
+El acceso de Work a Cloudflare requirió iniciar sesión. El formulario seguro devolvió `submitted`, con Google como método elegido; eso no acredita un ingreso. La revisión automática denegó la observación de `accounts.google.com` porque exige autorización explícita del usuario para usar esa cuenta. No se continuó por otra vía ni se verificó una sesión administrativa. No se atribuye un despliegue a esta preparación.
 
 ## Laboratorio nuevo: uadav-bolsa-lab
 
@@ -69,6 +69,7 @@ El código del núcleo se extrae del ZIP congelado de 11764 y se coteja por SHA2
 - **18 comprobaciones workerd aprobadas**, frente a 15 previas: incluye hostname, modo, autenticación antes de DB, interfaz e identidad del laboratorio. Estos controles no usan D1 remoto.
 - **12 controles estáticos de Radio**, política pública, compatibilidad KV, fuente embebida, adaptador de restauración congelado, generación del laboratorio, sintaxis y diff aprobados.
 - Ambos ZIP se abrieron, verificaron y cotejaron con sus respectivos JavaScript. No se repitieron las 138 pruebas UI por esta entrega de backend/laboratorio, sin cambios en Pages.
+- Código y artefactos guardados en commit `7fd54d11be324e75e595a6452950111512ad2fb9`, exclusivamente en la rama Worker staging. CI [Bolsa 40383520286](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40383520286) y [Radio 40383520281](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40383520281), ambas `success` para ese commit. Pages `7e16b2a815a218df870d7375ae565af6893afa70` y main `fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd` cotejadas sin cambios.
 - La suite general de la plataforma conserva sus 46 fallos previos ajenos a este alcance. No se afirma que toda la plataforma esté aprobada.
 
 | Archivo | SHA256 | Bytes |
