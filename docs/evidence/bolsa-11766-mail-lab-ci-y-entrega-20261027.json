@@ -1,0 +1,44 @@
+{
+  "evidence_date_utc": "2026-10-27",
+  "scope": "isolated-synthetic-mail-recovery",
+  "version": "11766-mail-lab-1",
+  "code_commit": "e4035e2f0ad1f82b630464c1c04a39654a701447",
+  "tree": "62d7082eb1d8a668d5f47ca577ccb8daaa2ede1d",
+  "github_blobs_verified": 24,
+  "worker_branch": "release/radio-studio-staging-rc-20261020",
+  "ci": [
+    {
+      "run_id": 40434894253,
+      "job_id": 121961112689,
+      "name": "Bolsa staging policy checks",
+      "status": "completed",
+      "conclusion": "success",
+      "all_job_steps_succeeded": true
+    },
+    {
+      "run_id": 40434894235,
+      "job_id": 121961112501,
+      "name": "Radio Studio security checks",
+      "status": "completed",
+      "conclusion": "success",
+      "all_job_steps_succeeded": true
+    }
+  ],
+  "ci_focused_test_count_expected_from_197_prior_plus_one_added": 198,
+  "ci_numeric_test_log_obtained": false,
+  "ci_step_success_independently_read": true,
+  "local_full_focused_before_last_additional_case_passed": 197,
+  "local_updated_outbox_file_passed": 32,
+  "local_mail_lab_file_passed": 13,
+  "local_workerd_checks_passed": 23,
+  "main_worker11766_unchanged": true,
+  "new_lab_deployed_by_agent": false,
+  "new_lab_remote_result_received": false,
+  "operational_recovery_enabled": false,
+  "new_real_email_sent_by_agent": false,
+  "pages_head_unchanged": "7e16b2a815a218df870d7375ae565af6893afa70",
+  "production_main_head_unchanged": "fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd",
+  "physical_device_qa_completed": false,
+  "bolsa_complete": false,
+  "next_step": "Operator deploys only the new synthetic mail-lab artifact to existing uadav-bolsa-lab, keeps DB/QA_BOLSA_KEY/QA_BOLSA_ONLY=true, then runs seven phases and shares safe result. No repeated email, new DB/key/Worker, manual SQL, production change or public recovery activation."
+}
