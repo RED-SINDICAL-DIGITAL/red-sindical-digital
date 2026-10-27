@@ -1,0 +1,287 @@
+{
+  "checked_at": "2026-10-27T18:10:31.387Z",
+  "build": "11769",
+  "scope": "github-ci-and-staging-delivery",
+  "code": {
+    "worker_commit": "e7508d63e2b5c9ce2b085634a7b4113d30b2b6e9",
+    "worker_tree": "8fa279eb4f09ac095a852df718e35b879417207f",
+    "pages_commit": "6913c9f56107246c6949767ea4e7cdf34896657b",
+    "pages_tree": "80c2b5789404a915b423ec9a467c908b6b47ce98",
+    "branches_merged": false,
+    "production_main": "fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd",
+    "blobs_checked": {
+      "worker": 34,
+      "pages": 28
+    }
+  },
+  "ci": {
+    "worker": {
+      "run_id": 40556901492,
+      "jobs": [
+        {
+          "id": 122375277345,
+          "name": "public-policy",
+          "status": "completed",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Validate worker JavaScript",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify standalone source is current",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify private staging sandbox and receipt diagnostics",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify isolated restoration QA source",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify isolated synthetic Bolsa lab source",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify isolated synthetic email recovery lab source",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify private staging mail-recovery sources and package",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify consistent backup and read-only closure sources/package",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify account email and isolated full restoration sources",
+              "conclusion": "success"
+            },
+            {
+              "name": "Validate preparatory recovery outbox engine (not deployed)",
+              "conclusion": "success"
+            },
+            {
+              "name": "Validate preparatory email messages and Brevo transport (not deployed)",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run public Bolsa regression tests",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install pinned Cloudflare test engine (no package scripts)",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run standalone external-source checks inside Cloudflare engine",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run SQLite transaction, concurrency, migration and recovery checks",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run KV compatibility checks with current publication policy",
+              "conclusion": "success"
+            },
+            {
+              "name": "Verify account recovery and deletion compatibility",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    "pages": {
+      "run_id": 40556522264,
+      "jobs": [
+        {
+          "id": 122373931865,
+          "name": "ui-and-isolation",
+          "status": "completed",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run node --test tests/email-access.test.cjs tests/jobs-url-review.test.cjs tests/jobs-import-admin.test.cjs tests/admin-job-save.test.cjs tests/job-application-ui.test.cjs tests/job-status-contract.test.cjs tests/staging-build.test.mjs tests/jobs-migration-admin.test.cjs tests/jobs-account-ui.test.cjs tests/jobs-expiry-admin.test.cjs tests/admin-api-retry.test.cjs tests/admin-navigation.test.cjs tests/admin-navigation-races.test.cjs tests/account-email-ui.test.cjs tests/account-rotation-resume.test.cjs tests/account-local-access.test.cjs tests/account-ui-recovery.test.cjs tests/account-sync-conflicts.test.cjs tests/account-sync-switch.mjs tests/jobs-profile-email.test.cjs tests/account-email-admin.test.cjs",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run node tests/account-notices-ui.mjs",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run node tests/admin-import-export.mjs",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    "radio": {
+      "run_id": 40556901227,
+      "jobs": [
+        {
+          "id": 122375275149,
+          "name": "radio-studio-tests",
+          "status": "completed",
+          "conclusion": "success",
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Static regression suite",
+              "conclusion": "success"
+            },
+            {
+              "name": "Worker syntax",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    "counts_source": "294 Worker,186 Pages,32 workerd,12 Radio are local totals of those commands; CI steps were checked successful, without downloading and recounting logs."
+  },
+  "cloudflare_pages": {
+    "check_id": 122374247721,
+    "status": "completed",
+    "conclusion": "success",
+    "app": "cloudflare-workers-and-pages",
+    "project": "uadav-stream-staging",
+    "deployment_id": "cd80763c-35d7-46fe-8552-d9010f1b1723",
+    "source_commit": "6913c9f56107246c6949767ea4e7cdf34896657b"
+  },
+  "browser_smoke": {
+    "surface": "Work Chrome cloud browser, public desktop UI only",
+    "credentials_entered": false,
+    "proof_tokens_supplied": false,
+    "mail_sent": false,
+    "account_form_submitted": false,
+    "receiver": {
+      "url": "https://uadav-stream-staging.pages.dev/entrar-correo",
+      "title": "Entrar con mi correo · UADAV STREAM",
+      "observed_status": "No autorizado",
+      "visual": "Readable desktop card, no clipping in the observed viewport; no proof confirmation or complete login tested."
+    },
+    "admin": {
+      "url": "https://uadav-stream-staging.pages.dev/configurar-correo",
+      "title": "Correo · Admin staging",
+      "observed_controls": [
+        "Admin de staging",
+        "Consultar"
+      ],
+      "tools_hidden_before_authentication": true
+    },
+    "interpretation": "The new frontend is published. Remote API health still11768 and isolated health11762, so new account-mail endpoints are not available yet; this is not proof of11769 email readiness or physical-device QA."
+  },
+  "public_health": {
+    "checked_at": "2026-10-27T18:08:53.455926Z",
+    "scope": "public-health-only",
+    "authenticated": false,
+    "production_touched": false,
+    "services": [
+      {
+        "url": "https://uadav-api-staging.uadavstream.workers.dev/api/health",
+        "http_status": 200,
+        "build": "11768",
+        "version": "V11.7",
+        "purpose": null,
+        "ok": true,
+        "d1": true,
+        "kv": true,
+        "enabled": null
+      },
+      {
+        "url": "https://uadav-restore-qa.uadavstream.workers.dev/health",
+        "http_status": 200,
+        "build": null,
+        "version": "11762-restore-qa-1",
+        "purpose": "disposable-d1-rehearsal",
+        "ok": true,
+        "d1": null,
+        "kv": null,
+        "enabled": true
+      }
+    ]
+  },
+  "pending_worker_deployment": true,
+  "pending_real_account_mail": true,
+  "pending_private_backup_rehearsal": true,
+  "legacy_job_key_email_enabled": false,
+  "operational_restore_enabled": false,
+  "production_touched": false
+}

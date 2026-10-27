@@ -23,9 +23,9 @@ Código preparado y probado; desplegar un Worker es distinto de guardar su códi
 
 ## Pruebas y límites
 
-11769:294/294Node Worker,186/186Node Pages,32controles workerd1.20261025.1 y12/12Radio. Política pública, KV, cuenta/borrado, avisos, importación/exportación, fuentes, sintaxis y ZIP aprobados.51artefactos anteriores idénticos. Evidencia local `evidence/bolsa-11769-verificacion-local-20261027.json`; CI y commits se registran después de publicar las ramas.
+11769:294/294Node Worker,186/186Node Pages,32controles workerd1.20261025.1 y12/12Radio. Política pública, KV, cuenta/borrado, avisos, importación/exportación, fuentes, sintaxis y ZIP aprobados.51artefactos anteriores idénticos. Evidencia local `evidence/bolsa-11769-verificacion-local-20261027.json`; CI Worker40556901492/Pages40556522264/Radio40556901227 success para código e7508d63/6913c9f5. Cloudflare publicó Pages (check122374247721). Evidencia `evidence/bolsa-11769-ci-y-entrega-20261027.json`.
 
-Ningún envío real11769, lectura del respaldo privado, SQL remoto o despliegue Worker11769 por Work. El feed público fue leído sin publicar. La descarga de Chromium para revisión visual falló; no se insistió. El login Cloudflare anterior devolvió `Unable to sign in`; se conserva el despliegue manual, sin afirmar bloqueo de bots.
+Ningún envío real11769, lectura del respaldo privado, SQL remoto o despliegue Worker11769 por Work. El feed público fue leído sin publicar. La descarga de Chromium local falló; no se insistió. Se revisaron después las dos pantallas públicas de escritorio en el navegador Work, sin credenciales/canje: no acredita el circuito, móvil físico o accesibilidad. Health18:08UTC seguía API11768 y aislado11762, pendientes de despliegue11769. El login Cloudflare anterior devolvió `Unable to sign in`; se conserva el despliegue manual, sin afirmar bloqueo de bots.
 
 Brevo usa la configuración ya existente. Presupuesto del circuito nuevo240/díaUTC compartido por todas sus secciones; cuota gratuita observada del proveedor300/día, también compartida con otros usos. No ilimitado ni plan pago. No enviar claves permanentes ni pedirlas por chat/TXT. Los avisos comunes siguen dentro de Mi Perfil.
 
