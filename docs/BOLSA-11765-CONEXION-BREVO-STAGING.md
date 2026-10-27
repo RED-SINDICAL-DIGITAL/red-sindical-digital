@@ -1,6 +1,8 @@
 # Worker11765 · conexión privada con Brevo · solo staging
 
-26/10/2026. **Código preparado; despliegue y aceptación de Brevo pendientes.** El usuario confirmó «guardada en staging» para el secreto `BREVO_API_KEY`. Work no vio su valor ni leyó el binding autenticado. Capturas anteriores muestran remitente verificado, DKIM/DMARC correctos y plan Free con300/300 disponibles. Evidencia: `evidence/correo-brevo-remitente-y-secreto-20261026.json`.
+Actualización27/10UTC: **el operador informó aceptación sandbox de11765**, checked_at `2026-10-27T00:02:58.237Z` (26/10,21:02:58Argentina). Resultado/scope/flags coinciden; cero correos, recuperación deshabilitada. Work no ejecutó o leyó esa prueba autenticada ni cotejó JS remoto. Evidencia `evidence/brevo-11765-sandbox-aprobado-20261027.json`. **No repetir despliegue11765 o sandbox por las instrucciones históricas de abajo.** Siguiente entrega preparada: `BOLSA-11766-RECEPCION-BREVO-STAGING.md`, un correo diagnóstico solo al destinatario propio configurado por el operador. Entrega real/canje/login aún pendientes.
+
+Preparación original26/10: secreto `BREVO_API_KEY` guardado según usuario; remitente verificado, DKIM/DMARC y Free300/300 según capturas. Evidencia `evidence/correo-brevo-remitente-y-secreto-20261026.json`. Los pasos siguientes documentan la ejecución que ya informó el operador.
 
 ## Para el operador
 
@@ -36,7 +38,7 @@ Worker11765:663849bytes; SHA256 `486171b739a8c0dd196f8f7320c2bfa530c296b11bde4b9
 
 ## Después de esta prueba
 
-Código/ZIP guardados en commit `7fc95c424c82cefd0647fda3bb5c23b136b2394e`, árbol `d5a077c7c46e11d9e877f45c8a7455a744774c61`, solo rama Worker staging. CI [Bolsa40423142867](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40423142867) y [Radio40423143076](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40423143076) confirmadas `success` para ese commit. Registro: `evidence/brevo-11765-ci-y-entrega-20261026.json`. El despliegue11765, la aceptación de Brevo y el aspecto real de la pantalla siguen pendientes; la última versión observada en servicio es11764.
+Código/ZIP guardados en commit `7fc95c424c82cefd0647fda3bb5c23b136b2394e`, árbol `d5a077c7c46e11d9e877f45c8a7455a744774c61`, solo rama Worker staging. CI [Bolsa40423142867](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40423142867) y [Radio40423143076](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40423143076) `success`. Registro histórico de entrega `evidence/brevo-11765-ci-y-entrega-20261026.json`, previo al resultado del operador. Actualización:11765 con aceptación sandbox informada; no hay nueva lectura independiente de health, JS o revisión visual completa.11766 se prepara después, sin despliegue confirmado.
 
 La aceptación sandbox solo cierra la comprobación inicial de conexión. Falta autorizar un destinatario real, probar recepción, resolver la aceptación incierta/idempotencia del outbox y persistir el mensaje completo, integrar cuenta/email/UI y canje, backup/retención/rotación y QA D1 remoto. No se repite el laboratorio11764 aprobado, que no contiene este código. Bolsa mantiene sus cinco bloques de cierre abiertos y Cartelera sigue después de su validación completa.
 

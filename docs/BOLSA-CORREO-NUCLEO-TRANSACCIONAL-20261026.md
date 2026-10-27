@@ -1,6 +1,6 @@
 # Bolsa · núcleo preparatorio de recuperación por correo
 
-26/10/2026. **Outbox escrito y probado localmente; no integrado ni desplegado.** No se aplicó su SQL remoto ni se envió correo real. Actualización posterior: dominio/remitente Brevo y plan Free comprobados por capturas; secreto `BREVO_API_KEY` guardado según el operador. Worker11765 se prepara únicamente para una prueba privada sandbox, sin integrar este módulo; despliegue pendiente. ZIP11764 y laboratorio aprobado permanecen idénticos. Recuperación sigue503. Ver `BOLSA-11765-CONEXION-BREVO-STAGING.md`.
+26/10/2026, actualizado27/10UTC. **Outbox escrito y probado localmente; no integrado ni desplegado.** No se aplicó su SQL remoto ni se envió correo real desde Work. Dominio/remitente/Free por capturas; secreto guardado y11765 sandbox accepted según operador.11766 prepara únicamente un correo diagnóstico con comprobación de recepción a la dirección propia configurada en secreto; no integra este módulo o soluciona su recibo incierto. ZIP11764/11765 y laboratorio aprobado conservados. Recuperación sigue503. Ver `BOLSA-11766-RECEPCION-BREVO-STAGING.md`.
 
 ## Problema que prepara
 

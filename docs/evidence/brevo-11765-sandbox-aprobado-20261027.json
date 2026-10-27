@@ -1,0 +1,27 @@
+{
+  "evidence_date_utc": "2026-10-27",
+  "source": "operator_pasted_safe_result_from_private_staging_page",
+  "agent_executed_or_authenticated_read": false,
+  "operator_result": {
+    "build": "11765",
+    "scope": "brevo-sandbox-staging",
+    "result": "accepted",
+    "sandbox": true,
+    "emails_sent": 0,
+    "delivery_verified": false,
+    "recovery_enabled": false,
+    "checked_at": "2026-10-27T00:02:58.237Z"
+  },
+  "checked_at_argentina": "2026-10-26T21:02:58.237-03:00",
+  "report_matches_delivered_build_scope_and_flags": true,
+  "staging11765_deployment_reported": true,
+  "remote_javascript_byte_compared": false,
+  "independent_public_health_read_after_deploy": false,
+  "sandbox_api_acceptance_reported": true,
+  "secret_value_seen_by_agent": false,
+  "real_delivery_verified": false,
+  "operational_recovery_enabled": false,
+  "full_pc_mobile_or_accessibility_test_completed": false,
+  "bolsa_complete": false,
+  "next_step": "Prepare11766 for one explicitly authorized real diagnostic email to BREVO_QA_RECIPIENT configured privately by the operator, followed by a one-use receipt challenge. No recovery token or account change. Do not repeat sandbox11765, DNS, sender or API-key creation."
+}

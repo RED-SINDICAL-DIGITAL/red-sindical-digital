@@ -75,6 +75,11 @@ export default {async test(){
  const probePage=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/qa/correo'),probeEnv,{});
  check(probePage.status===200&&(await probePage.text()).includes('Verificar conexión con Brevo'),'Probe interface');
  console.log('PASS workerd: staging-only sandbox interface and Admin-before-binding gates');
+ check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/jobs/email-delivery-check'),probeEnv,{})).status===401,'Real-mail QA requires Admin before bindings');
+ check((await worker.fetch(new Request('https://uadav-api.uadavstream.workers.dev/api/admin/jobs/email-delivery-check',{headers:{Authorization:'Bearer synthetic-admin'}}),probeEnv,{})).status===403,'Real-mail QA rejects production');
+ const deliveryPage=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/qa/correo-real'),probeEnv,{});
+ check(deliveryPage.status===200&&(await deliveryPage.text()).includes('Autorizo enviar un correo de prueba'),'Real-mail QA page without env access');
+ console.log('PASS workerd: private real-mail diagnostic page and authorization gates (no real delivery)');
  const tick={cron:'*/15 * * * *',scheduledTime:1792969200000},closedEnv=new Proxy({},{get(_target,name){if(name==='JOB_STAGING_CRON')return undefined;throw Error('Unrelated module reached: '+String(name))}});
  check((await worker.scheduled(tick,closedEnv,{})).reason==='disabled','staging cron must default to no side effects');
  check((await worker.scheduled({...tick,cron:'* * * * *'},{JOB_STAGING_CRON:'bolsa-only'},{})).reason==='schedule','unrelated schedule must not run Bolsa');

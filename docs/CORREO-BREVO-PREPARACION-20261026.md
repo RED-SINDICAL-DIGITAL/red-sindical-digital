@@ -1,6 +1,6 @@
 # Correo de acceso y Brevo · preparación aislada · 26/10/2026
 
-Decisión funcional en `CUENTA-UNICA-Y-ACCESO-SIMPLE-20261026.md`. El usuario quiere recuperar accesos desde su correo sin guardar códigos largos; aceptó cuenta única y Google opcional. Brevo gratuito se prioriza por volumen. El dominio staging aparece **Autentificado**, el remitente **Verificado** con DKIM/DMARC correctos y el plan Free muestra300/300. El usuario confirmó haber guardado `BREVO_API_KEY` en staging; Work no vio el valor ni leyó ese binding. Aceptación del proveedor, entrega y recuperación todavía no comprobadas.
+Decisión funcional en `CUENTA-UNICA-Y-ACCESO-SIMPLE-20261026.md`: cuenta única, correo privado y Google opcional para evitar administrar códigos largos. Dominio **Autentificado**, remitente **Verificado**, DKIM/DMARC y Free300/300 por capturas. `BREVO_API_KEY` guardada según usuario, sin ver valor/binding. Actualización27/10UTC: **11765 sandbox accepted informado por operador**, cero correos y recuperación apagada; evidencia `evidence/brevo-11765-sandbox-aprobado-20261027.json`. Entrega/canje/login siguen sin comprobarse.11766 prepara solo un correo diagnóstico a su dirección propia con comprobación de recepción; guía `BOLSA-11766-RECEPCION-BREVO-STAGING.md`.
 
 ## Dominio autenticado por el operador
 
@@ -41,7 +41,7 @@ Código y decisión guardados en `09ac96fad850a8016e2f2bc8fa9d2b7696a93932`, exc
 
 ## Siguiente integración
 
-1. Cuenta, dominio, remitente y plan/cupo comprobados por capturas; secreto guardado según confirmación del operador. Desplegar11765 solo a `uadav-api-staging` y ejecutar su prueba privada sin entrega. Después autorizar un destinatario real para una prueba separada. Sin contratación o pago nuevo; conservar toda la configuración previa y no aplicar SQL de outbox.
+1. Cuenta/dominio/remitente/plan por capturas y11765 sandbox accepted según operador. No repetir. Configurar dirección propia en Secret BREVO_QA_RECIPIENT, desplegar11766 solo a staging y autorizar un correo desde su pantalla privada. Confirmar sus seis cifras y compartir solo el reporte seguro. Es diagnóstico, no acceso de cuenta; no aplicar SQL de outbox o habilitar recuperación por su resultado.
 2. Emisión/canje de cuenta unificada y vinculación de identidades: verificación, cambio de correo, sesiones, permisos, consentimiento y migración desde respaldos actuales. Google opcional requiere su propio cliente y validación.
 3. Resolver recibos inciertos y persistencia inmutable de mensajes; controles de cuota diarios compartidos y preferencias. No enviar enlaces vencidos por colas diferidas ni anunciar entrega a partir de aceptaciónAPI.
 4. Implementar receptor y flujo simple; backup/retención/cifrado/restauración completos antes de retirar503. QA real con recepción/canje y fallos; habilitación expresamente acotada después de aprobar.

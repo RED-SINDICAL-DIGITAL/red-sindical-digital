@@ -1,0 +1,46 @@
+# Worker11766 · comprobar recepción real · solo staging
+
+27/10/2026UTC. **Código y pruebas locales preparados; despliegue11766 y recepción real pendientes.** El operador entregó el resultado `accepted` de11765, scope `brevo-sandbox-staging`, cero correos y recuperación deshabilitada, a `2026-10-27T00:02:58.237Z` (**26/10,21:02:58 de Argentina**). Coincide con la versión y flags del código entregado. Work no ejecutó esa prueba ni leyó su estado autenticado o el JS remoto. Evidencia: `evidence/brevo-11765-sandbox-aprobado-20261027.json`. No volver a pedir el sandbox, dominio, remitente o clave API.
+
+## Pasos del operador
+
+1. En Cloudflare → **Workers & Pages → uadav-api-staging → Settings → Variables and Secrets → Add**, agregar de tipo **Secret**, nombre **BREVO_QA_RECIPIENT**, valor **un correo propio donde reciba mensajes**. Puede ser su Gmail habitual. Guardar/Deploy. No enviar el valor al chat. El remitente `acceso@correo-staging.uadavstream.com.ar` ya verificado es una dirección de salida; no asumir que sea una casilla receptora.
+2. Descargar `releases/uadav-api-staging-11766.zip`, extraerlo y usar el `worker.js` en **uadav-api-staging → Edit code → Deploy**. También se puede copiar el `worker.js` de este commit en GitHub. Conservar todos los secretos/bindings y el cron existente `*/15 * * * *`, `JOB_STAGING_CRON=bolsa-only`. **No requiere otra base/Worker, migración SQL, cron o API key.** Producción, Pages y laboratorios quedan fuera de esta entrega.
+3. Abrir [Recibir un correo de prueba](https://uadav-api-staging.uadavstream.workers.dev/qa/correo-real). Entrar con la **clave Admin de staging existente**. La pantalla no muestra ni pide la clave API de Brevo o el correo destinatario; los lee únicamente el servidor.
+4. Marcar **Autorizo enviar un correo de prueba a mi propia dirección configurada** y pulsar **Enviar un correo de prueba** una sola vez. Entrar o recargar la pantalla nunca envía. No iniciar otra prueba por una respuesta lenta: usar **Consultar resultado**.
+5. Revisar bandeja/Spam del correo propio. Asunto **UADAV STREAM · confirmá la recepción de prueba**. Copiar los **seis números** únicamente al campo de la pantalla y pulsar **Confirmar recepción**, antes de15minutos. No pegar esos números en el chat. Son una comprobación técnica, no una clave de cuenta/recuperación.
+6. Pulsar **Copiar resultado seguro** y compartir ese JSON. El resultado esperado es `received`, scope `brevo-delivery-staging`, `sandbox:false`, `delivery_verified:true`, `recovery_enabled:false`. Finalizar con **Salir**.
+
+El contenido exacto es texto sin enlaces: identifica staging, incluye los seis números, el plazo y aclara que no permite ingresar a una cuenta, recuperar una oferta o cambiar credenciales. No hay adjuntos, campaña, suscripción, CC/BCC, contactos o mensajes programados. El único destinatario es el configurado en el secreto; el navegador no puede elegir otro o modificar texto/remitente/cabeceras.
+
+## Estados y errores
+
+- `accepted`: Brevo aceptó la solicitud; **todavía no prueba recepción**. Buscar el mensaje y confirmar sus números.
+- `pending`: hay reserva sin respuesta persistida. Consultar sin reenviar; si llegó el mensaje puede comprobarse su código.
+- `unconfirmed`: la respuesta del proveedor no quedó confirmada. Un correo que sí haya llegado puede probar su recepción igualmente; no se inventa un recibo del proveedor ni se reintenta automáticamente.
+- `received`: se comprobó una vez el desafío recibido. No es login, titularidad de Mi Perfil, prueba del outbox ni canje de recuperación. La respuesta puede conservar `provider_accepted:false` si se perdió la respuesta API; eso no contradice la prueba posterior de recepción.
+- `expired`/`locked`: vencieron15min o se agotaron cinco intentos. El código no se reutiliza. Una nueva prueba exige otra acción explícita y cupo disponible.
+
+`BREVO_DELIVERY_CONFIGURATION` pide revisar el secreto destinatario (o la clave API) del Worker correcto. `MAIL_CONFIGURATION` agrupa rechazo401/403 del proveedor: revisar vigencia/permisos o avisos de habilitación/seguridad en Brevo sin publicar credenciales. Otros errores del proveedor quedan saneados. Si hay503 de almacenamiento después de un envío o confirmación, **consultar el resultado**, porque pudo confirmarse aunque se perdiera la respuesta. No volver a instalar D1 ni aplicar SQL por ese mensaje.
+
+## Límites y privacidad
+
+Solo hostnameHTTPS exacto `uadav-api-staging.uadavstream.workers.dev`. API `/api/admin/jobs/email-delivery-check`, Admin existente validado antes de otros bindings, mismo origen o clientes sin Origin. Página `/qa/correo-real`, CSP con nonce, no-store/noindex y sin recursos externos. La aplicación mantiene Admin solo en memoria, limpia el campo al entrar, descarta al salir/pagehide y exige reingreso después de10minutos. El formulario de recepción borra el código tras enviarlo. El JSON copiado omite clave Admin, API key, destinatario, UUID, hash/código de recepción y recibo del proveedor.
+
+Antes del primer envío exige una aceptación sandbox de los últimos siete días en el D1 existente. **Máximo dos reservas por día argentino**, contando intentos inciertos. Una única prueba activa por destinatario; su GET tras una recarga recupera la referencia y no envía. UUID/nonce y lote atómico en `job_store_meta`/`job_store_checks`; contador y registro se confirman juntos. Las repeticiones del mismo UUID y los POST simultáneos no inician otra entrega. Una reserva con respuesta perdida no autoriza contacto con Brevo. No hay reintento automático del correo, incluso con timeout.
+
+Destinatario solo en el secreto/memoria y en el cuerpo HTTPS hacia Brevo; en D1 queda su hash. Código aleatorio de seis cifras sin sesgo, sal aleatoria y hash,15min y cinco intentos atómicos con Admin obligatorio. Su consumo usa un nonce de confirmación propio y `UPDATE ... RETURNING`: una confirmación concurrente o pérdida de respuesta no se atribuye al intento equivocado. Al confirmar se borra el hash del desafío. **Este desafío no es un token de acceso y no debe reutilizarse como mecanismo de login.** El transporte fijo ya probado limita tiempo/cuerpo, rechaza redirecciones y guarda solo hash del ID del proveedor. Los metadatos de diagnóstico de más de7días se eliminan al iniciar una prueba nueva; no se promete purga automática sin otra actividad.
+
+La escritura final del proveedor conserva una confirmación de recepción que llegue mientras su respuesta estaba pendiente; tampoco puede sobrescribir otro propietario de la reserva. Un código recibido sigue verificable ante pérdida de respuesta API, sin reenviar. Eso corresponde solo a este diagnóstico: **no resuelve por sí mismo el recibo incierto del outbox preparatorio de recuperación**, cuyo token/estado y receptor siguen sin integrarse.
+
+## Validación y alcance
+
+**24 grupos nuevos Node/SQLite aprobados**,19 backend y5 de UI simulada. Se suman a146 anteriores:170 cubiertos localmente; la suite conjunta de169 aprobó antes del último caso adicional y ajuste del mensaje al quinto fallo, y los24 del archivo actualizado volvieron a aprobar. **22 comprobaciones workerd1.20261025.1 y12 de Radio aprobadas**, política pública, compatibilidadKV, sintaxis/fuentes y laboratorios congelados correctos. Toda la red de tests es simulada, con direcciones ficticias. Ningún correo real se envió desde Work. CI y commit se registran al persistir la entrega.
+
+No se completó revisión visual de esta pantalla en navegador o dispositivos físicos; no repetir descargas fallidas del navegador anterior como prueba del producto. Los tests DOM cubren autorización explícita, ausencia de envío automático, limpieza del código, recuperación tras GET, logout/resultado tardío y whitelist del reporte. La revisión del aspecto, teclado/táctil y recepción se hace después del despliegue en el navegador del operador; no declarar PC/móvil/tablet/TV validados por estos tests.
+
+Artefactos: Worker691577bytes, SHA256 `570972ded9f9d576df4db4a8a70f6cb73eb077b4e16373523c744291a5026642`; ZIP169256bytes, SHA256 `5fa491e6bfaffdbb88f13b0383fe4885cbd4a182fc677c935d4c7bbe5a1e6c78`. Se abrió/cotejó el Worker del ZIP. No contiene claves reales ni destinatarios reales. El ZIP11765 y los artefactos de laboratorio/restauración permanecen idénticos. Los valores reales de los secretos se ingresan por el operador únicamente en Cloudflare.
+
+No cambia ofertas/postulaciones/credenciales/vínculos/avisos o cron. Rutas públicas de recuperación siguen503 incondicional con ambos secretos configurados. Outbox, cuenta única, verificación de correo/login y Google siguen sin integrar. No se aplica SQL de outbox ni se habilita restore operativo. Conservar fecha/oferta/candidatura de la QA de vencimiento real:27/10 00:00Argentina equivale a03:00UTC; el informe sandbox de00:02UTC todavía era de la noche anterior en Argentina y **no acredita vencimiento**. Bolsa conserva sus cinco bloques de cierre y no está completa.
+
+Fuentes oficiales: [API transaccional de Brevo](https://developers.brevo.com/docs/send-a-transactional-email), [diferencia entre sandbox y entrega real](https://developers.brevo.com/docs/using-sandbox-mode). La cuota interna2/día es un límite de esta prueba, no un cambio de plan o cuota del proveedor.
