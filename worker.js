@@ -3890,6 +3890,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         if(!permission||b.id_stream!=='radio:'+permission.radio_id)return json({error:'Permiso de operador inválido'},403);
         clean.radio_operator_account_id=operatorIdentity.account_id;clean.radio_operator_radio_id=permission.radio_id;
       }
+      if(path==='/api/eventos'&&b.request_id!==undefined){if(typeof b.request_id!=='string'||!/^[-A-Za-z0-9_]{16,128}$/.test(b.request_id))return json({error:'Referencia de publicación inválida'},400);clean.request_id=b.request_id;}
       if(path==='/api/eventos'&&b.artist_token){const permission=await uadavArtistPermission(String(b.artist_token),env);if(!permission)return json({error:'Acceso de artista inválido'},401);clean.moderation_artist_id=permission.artist_id}
       let stationMode='manual',stationScope='';
       if(path==='/api/radio/requests')stationScope=String(clean.radio_id||'');
