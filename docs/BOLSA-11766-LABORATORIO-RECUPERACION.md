@@ -1,5 +1,7 @@
 # Bolsa11766 · laboratorio de recuperación · solo datos ficticios
 
+**Actualización26/10Argentina, posterior al informe anterior:** el operador informó `complete` del laboratorio11766-mail-lab-1: siete fases D1 aprobadas, ambas huellas y etiquetas cotejadas. Evidencia `evidence/bolsa-11766-mail-lab-aprobado-20261027.json`. No repetir.11767 integra ese núcleo sin modificarlo únicamente en una QA real privada y prepara el receptor de Pages; rutas generales503, cuenta por correo/Google y restore operativo apagados. El procedimiento actual es `BOLSA-11767-RECUPERACION-REAL-QA.md`. Su despliegue/canje real todavía no se acreditan. Las descripciones de no integración/ensayo pendiente más abajo corresponden al checkpoint previo.
+
 **Preparado y probado localmente; sin despliegue remoto desde Work.** La recepción real del diagnóstico11766 ya fue informada como aprobada por el operador. No volver a desplegar el Worker principal, configurar Brevo o enviar otro correo diagnóstico para este paso.
 
 Esta entrega usa el **Worker `uadav-bolsa-lab` y su base/clave existentes**. Conserva el historial de las ocho pruebas anteriores y agrega siete fases del nuevo núcleo transaccional. No requiere crear otro Worker, base, clave, cron o binding, ni ejecutar SQL a mano. Solo acepta el hostname HTTPS exacto del laboratorio; rechaza staging operativo, restore QA y producción antes de leer sus bindings.

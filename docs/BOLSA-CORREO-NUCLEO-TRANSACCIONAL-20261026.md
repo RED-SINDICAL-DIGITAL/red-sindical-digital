@@ -1,5 +1,7 @@
 # Bolsa · núcleo transaccional de recuperación por correo
 
+**Actualización26/10Argentina, posterior al informe anterior:** el operador informó `complete` del laboratorio11766-mail-lab-1: siete fases D1 aprobadas, ambas huellas y etiquetas cotejadas. Evidencia `evidence/bolsa-11766-mail-lab-aprobado-20261027.json`. No repetir.11767 integra ese núcleo sin modificarlo únicamente en una QA real privada y prepara el receptor de Pages; rutas generales503, cuenta por correo/Google y restore operativo apagados. El procedimiento actual es `BOLSA-11767-RECUPERACION-REAL-QA.md`. Su despliegue/canje real todavía no se acreditan. Las descripciones de no integración/ensayo pendiente más abajo corresponden al checkpoint previo.
+
 Actualizado el 27/10/2026 UTC (noche del 26/10 en Argentina). **Código preparatorio probado localmente; recuperación pública deshabilitada.** El diagnóstico de recepción11766 fue informado como `received` por el operador. No prueba un canje de recuperación ni una cuenta por correo. El Worker principal y su ZIP11766 no cambiaron en este avance.
 
 Esta revisión reemplaza el diseño anterior que exigía el recibo del proveedor para hacer canjeable un enlace. Ese requisito era una decisión técnica preparatoria, no una condición comercial del usuario. Con Brevo podía dejar inutilizable un enlace realmente recibido cuando se perdía la respuesta API. No tratar `duplicate_parameter` como aceptación ni fabricar recibos.

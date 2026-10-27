@@ -32,6 +32,14 @@ on:
       - 'scripts/build-job-lab.mjs'
       - 'scripts/job-lab-runtime.js'
       - 'tests/job-lab.test.mjs'
+      - 'scripts/job-inbox-runtime.js'
+      - 'scripts/job-mail-live-runtime.js'
+      - 'scripts/job-mail-live-page.html'
+      - 'scripts/embed-job-mail-live.mjs'
+      - 'scripts/package-job-mail-live.mjs'
+      - 'tests/job-mail-live.test.mjs'
+      - 'tests/job-mail-live-ui.test.mjs'
+      - 'releases/uadav-api-staging-11767.zip'
       - 'scripts/job-recovery-outbox.mjs'
       - 'scripts/access-mail-message.mjs'
       - 'scripts/brevo-staging-mail.mjs'
@@ -88,6 +96,14 @@ on:
       - 'scripts/build-job-lab.mjs'
       - 'scripts/job-lab-runtime.js'
       - 'tests/job-lab.test.mjs'
+      - 'scripts/job-inbox-runtime.js'
+      - 'scripts/job-mail-live-runtime.js'
+      - 'scripts/job-mail-live-page.html'
+      - 'scripts/embed-job-mail-live.mjs'
+      - 'scripts/package-job-mail-live.mjs'
+      - 'tests/job-mail-live.test.mjs'
+      - 'tests/job-mail-live-ui.test.mjs'
+      - 'releases/uadav-api-staging-11767.zip'
       - 'scripts/job-recovery-outbox.mjs'
       - 'scripts/access-mail-message.mjs'
       - 'scripts/brevo-staging-mail.mjs'
@@ -138,6 +154,8 @@ jobs:
         run: node scripts/build-job-lab.mjs --check && node --check releases/uadav-bolsa-lab-11764.js
       - name: Verify isolated synthetic email recovery lab source
         run: node scripts/build-job-mail-lab.mjs --check && node --check releases/uadav-bolsa-mail-lab-11766.js
+      - name: Verify private staging mail-recovery sources and package
+        run: node scripts/embed-job-mail-live.mjs --check && node scripts/package-job-mail-live.mjs --check
       - name: Validate preparatory recovery outbox engine (not deployed)
         run: node --check scripts/job-recovery-outbox.mjs
       - name: Validate preparatory email messages and Brevo transport (not deployed)
@@ -149,6 +167,6 @@ jobs:
       - name: Run standalone external-source checks inside Cloudflare engine
         run: UADAV_WORKERD_BIN="$RUNNER_TEMP/uadav-workerd/node_modules/@cloudflare/workerd-linux-64/bin/workerd" node scripts/test-job-external-workerd.mjs
       - name: Run SQLite transaction, concurrency, migration and recovery checks
-        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs tests/job-restore-qa.test.mjs tests/job-cron-staging.test.mjs tests/job-lab.test.mjs tests/job-recovery-outbox.test.mjs tests/access-mail-staging.test.mjs tests/brevo-probe.test.mjs tests/brevo-delivery.test.mjs tests/brevo-recovery-message.test.mjs tests/job-mail-lab.test.mjs
+        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs tests/job-restore-qa.test.mjs tests/job-cron-staging.test.mjs tests/job-lab.test.mjs tests/job-recovery-outbox.test.mjs tests/access-mail-staging.test.mjs tests/brevo-probe.test.mjs tests/brevo-delivery.test.mjs tests/brevo-recovery-message.test.mjs tests/job-mail-lab.test.mjs tests/job-mail-live.test.mjs tests/job-mail-live-ui.test.mjs
       - name: Run KV compatibility checks with current publication policy
         run: node tests/job-application-integration.mjs

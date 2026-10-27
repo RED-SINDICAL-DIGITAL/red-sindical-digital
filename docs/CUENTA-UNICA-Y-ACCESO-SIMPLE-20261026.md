@@ -1,5 +1,7 @@
 # Cuenta única y acceso simple · decisión de producto · 26/10/2026
 
+**Actualización26/10Argentina, posterior al informe anterior:** el operador informó `complete` del laboratorio11766-mail-lab-1: siete fases D1 aprobadas, ambas huellas y etiquetas cotejadas. Evidencia `evidence/bolsa-11766-mail-lab-aprobado-20261027.json`. No repetir.11767 integra ese núcleo sin modificarlo únicamente en una QA real privada y prepara el receptor de Pages; rutas generales503, cuenta por correo/Google y restore operativo apagados. El procedimiento actual es `BOLSA-11767-RECUPERACION-REAL-QA.md`. Su despliegue/canje real todavía no se acreditan. Las descripciones de no integración/ensayo pendiente más abajo corresponden al checkpoint previo.
+
 El usuario aprobó una cuenta UADAV para todas las secciones, correo privado y acceso opcional con Google. Solicitó recibir por correo lo necesario para recuperar sus accesos porque los códigos y archivos actuales resultan difíciles incluso para él. La prioridad es que una persona sin conocimientos técnicos pueda volver a Mi Perfil sin administrar claves largas.
 
 ## Experiencia acordada

@@ -1,0 +1,32 @@
+{
+  "source": "operator_pasted_safe_report_after_manual_cloudflare_lab_deploy",
+  "received_on_client_date": "2026-10-26",
+  "operator_result": {
+    "result": "complete",
+    "scope": "isolated-synthetic-mail-recovery",
+    "version": "11766-mail-lab-1",
+    "base_lab_sha256": "d4392464cf5b3c731fe49fe800ab1a3dedb37af1e1a584c11c98639382534013",
+    "mail_sha256": "6ff12d37d0043eecfe4c27b7621270478db76b7d1b6b919b4924ca2709d59d37",
+    "emails_sent": 0,
+    "recovery_enabled": false,
+    "checks": [
+      "Solicitud cifrada y mensaje inmutable: aprobado",
+      "Respuesta perdida y enlace recibido: aprobado",
+      "Canje concurrente: una sola credencial: aprobado",
+      "Rollback y respuesta perdida del canje: aprobado",
+      "Cambios de contacto, revocación y vencimiento: aprobado",
+      "Reintentos idénticos y cambio de clave del proveedor: aprobado",
+      "Integridad final y aislamiento del laboratorio: aprobado"
+    ]
+  },
+  "operator_report_has_execution_timestamp": false,
+  "matches_delivered_source_metadata_and_seven_labels": true,
+  "agent_executed_or_authenticated_read": false,
+  "remote_javascript_byte_compared": false,
+  "new_synthetic_mail_lab_d1_pass_reported": true,
+  "normal_real_mail_diagnostic_previously_reported_received": true,
+  "actual_job_recovery_or_account_login_verified": false,
+  "operational_recovery_enabled": false,
+  "bolsa_complete": false,
+  "next_step": "Prepare11767 private end-to-end staging QA and Pages receiver. Keep both public recovery routes503 and preserve the approved laboratory, prior release artifacts, expiry QA, cron and production."
+}

@@ -1,0 +1,53 @@
+{
+  "client_date": "2026-10-26",
+  "scope": "brevo-recovery-staging",
+  "build": "11767",
+  "source_stage": "prepared_not_deployed",
+  "synthetic_mail_lab11766_remote_operator_result": "complete_matched_source",
+  "tests": {
+    "new_backend": 23,
+    "new_admin_ui": 6,
+    "new_receiver_client_ui": 12,
+    "pages_suite": 151,
+    "pages_notices": "passed",
+    "pages_export": "passed",
+    "worker_full_before_assertion_updates": {
+      "tests": 227,
+      "passed": 225,
+      "failed": 2,
+      "failures": "obsolete not-yet-embedded assertions, updated to private-block confinement; no runtime failure"
+    },
+    "updated_affected_files": {
+      "passed": 49,
+      "failed": 0
+    },
+    "workerd": {
+      "passed": 25,
+      "version": "1.20261025.1"
+    },
+    "radio": {
+      "passed": 12,
+      "failed": 0
+    },
+    "public_policy": "passed",
+    "kv_compatibility": "passed",
+    "source_zip_and_frozen_artifacts": "passed"
+  },
+  "ci_for_current_code": "pending_commit",
+  "real_email_sent_by_agent": false,
+  "remote11767_qa_executed": false,
+  "physical_pc_mobile_tablet_tv_or_accessibility_qa_completed": false,
+  "public_recovery_enabled": false,
+  "production_changed": false,
+  "new_key_value_known_by_agent": false,
+  "artifacts": {
+    "worker.js": {
+      "bytes": 757917,
+      "sha256": "ec28cbb61a87f76c36011284f3636a69bcca16273395840c790bb9f70e4b2cd9"
+    },
+    "releases/uadav-api-staging-11767.zip": {
+      "bytes": 187479,
+      "sha256": "0717ffdc145b0a5d05974d6b3c7c972bf3d72efe62ab3646c4e420d29326e23a"
+    }
+  }
+}

@@ -1,8 +1,8 @@
--- STAGING DRAFT ONLY. Not applied by the Worker or included in its installer.
--- Do not apply remotely until the mail provider, HTTP/UI and backup QA pass.
--- Revised v2 draft: possession-based redemption. This is NOT an in-place upgrade
--- for an earlier draft table. Only the fingerprint-checked synthetic mail lab
--- may install it before operational recovery/backup QA. No live installer uses it.
+-- STAGING ONLY. Never install on production or enable public recovery.
+-- Revised v2 draft: possession-based redemption. NOT an in-place upgrade.
+-- May be installed only by the fingerprint-checked synthetic mail lab or the
+-- explicit Admin11767 closed-fixture QA installer after all its prerequisites.
+-- The public recovery routes and operational restore remain disabled.
 CREATE TABLE IF NOT EXISTS job_recovery_outbox (
   id TEXT PRIMARY KEY,
   request_id TEXT NOT NULL UNIQUE,

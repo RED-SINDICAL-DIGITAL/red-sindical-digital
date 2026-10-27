@@ -1,5 +1,7 @@
 # Bolsa de Trabajo · estado y cierre · actualización27/10/2026UTC
 
+**Checkpoint posterior26/10Argentina:** siete fases11766-mail-lab-1 remotas aprobadas según operador; coincidencia exacta de versión/scope/huellas/etiquetas, sin lectura autenticada de Work. Evidencia `evidence/bolsa-11766-mail-lab-aprobado-20261027.json`.11767 nuevo Worker y receptor Pages preparados para QA real de una oferta ficticia cerrada/correo propio, canje por POST, clave vieja rechazada, bandeja con nueva y guardado voluntario en Mi Perfil. Código/pruebas locales, sin despliegue11767/canje real acreditado. Guía `BOLSA-11767-RECUPERACION-REAL-QA.md`. No repetir laboratorios o configuración Brevo; siguiente intervención es publicar receptor/Worker, un Secret de cifrado privado y una autorización de envío. Ambos endpoints de recuperación pública503. Los cinco bloques siguen abiertos en su alcance integral.
+
 **Bolsa todavía no está completa.** La recepción real del correo diagnóstico11766 fue informada como aprobada por el operador: `received`, `sandbox:false`, `provider_accepted:true`, `delivery_verified:true`, `recovery_enabled:false`, `2026-10-27T00:39:26.248Z` (**26/10,21:39:26Argentina**). La recuperación pública sigue503. Evidencia `evidence/brevo-11766-recepcion-aprobada-20261027.json`. Work cotejó el reporte con código/flags, sin leer el estado autenticado, ejecutar el envío o cotejar JS remoto.
 
 ## Código, pruebas y despliegues
@@ -28,7 +30,7 @@ Cloudflare rechazó el ingreso de Work mediante Google con **Unable to sign in**
 
 | Bloque | Falta y siguiente validación |
 |---|---|
-| Recuperación por correo y cuenta | Siete fases nuevas del laboratorio D1. Después endpoints/receptor/UX, abuso y tiempos uniformes, cuotas compartidas, correo verificado/sesiones de cuenta, Google opcional, exportación/restauración/retención/rotación y ensayo real completo. La solución local de respuesta perdida no habilita el servicio público. |
+| Recuperación por correo y cuenta | Siete fases nuevas D1 ya informadas aprobadas. Endpoints/receptor/UX de QA privada11767 escritos y probados localmente; falta desplegar y probar ese canje real. Después integración pública, abuso y tiempos uniformes, cuotas compartidas, correo verificado/sesiones de cuenta, Google opcional, exportación/restauración/retención/rotación y ensayo real completo. La solución local de respuesta perdida no habilita el servicio público. |
 | Recuperación operativa completa | Respaldo privado real ensayado localmente, no restaurado íntegramente en remoto con cuentas/mensajes. Mantener restore operativo apagado; ensayo real requiere destino aislado y alcance explícito. |
 | Fuente externa real | Incorporar una fuente real autorizada y probar bajas/errores. La comprobación DNS actual no fija la IP del fetch; sigue pendiente la revisión del transporte. |
 | Vencimiento y avisos | QA `JOB-MVPJ9WRW-439D4126D9AE`, candidatura `POST-MVPJCNGX-E7683EC0`, fecha límite26/10. Verificar tras27/10 00:00Argentina (=03:00UTC): salida pública, rechazo de nuevas postulaciones, estado vencido, candidatura conservada, un aviso y siguiente turno sin duplicado. El reporte de correo00:39UTC era anterior a ese momento. No cambiar fecha, cerrar/renovar/republicar la QA ni alterar reloj global. |

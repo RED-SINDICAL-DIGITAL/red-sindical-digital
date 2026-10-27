@@ -450,7 +450,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11766';
+const BUILD = '11767';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -1561,6 +1561,570 @@ async function uadavBrevoDeliveryRoute(request, env) {
 return (request,env) => {const path=new URL(request.url).pathname;return path==="/qa/correo-real"||path==="/api/admin/jobs/email-delivery-check"?uadavBrevoDeliveryRoute(request,env):uadavBrevoSandboxRoute(request,env)};
 })();
 /* END BREVO SANDBOX STAGING */
+
+/* BEGIN PRIVATE JOB MAIL LIVE QA */
+/* Shared D1-only private inbox. It uses the existing Bolsa authority and avoids
+ * the unrelated legacy bootstrap when an email recovery verifies its result. */
+async function uadavJobD1Inbox(request,env){
+ const origin=request.headers.get('Origin'),allowed=['https://uadav-stream-staging.pages.dev','https://uadav-api-staging.uadavstream.workers.dev'];
+ const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',Vary:'Origin',...(allowed.includes(origin)?{'Access-Control-Allow-Origin':origin}:{})};
+ const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers});
+ if(origin&&!allowed.includes(origin))return reply({error:'Abrí la bandeja desde staging.'},403);
+ const b=await uadavSecurityJSON(request,4096).catch(()=>null),id=String(b?.job_id||'').trim(),key=String(b?.clave||'').trim();
+ const identity=b?.cuenta===true?await uadavJobAccountIdentity(request,env):null;
+ if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id)||!identity&&!/^[a-f0-9]{64}$/.test(key))return reply({error:'Credenciales inválidas'},400);
+ const peer=String(request.headers.get('CF-Connecting-IP')||'').trim();if(!peer)return reply({error:'Origen no verificable'},403);
+ if(!await uadavJobRate(env,'job-owner-rate:'+await uadavDigest(peer),12,600000))return reply({error:'Demasiadas consultas. Intentá más tarde.'},429);
+ const store=uadavJobStore(env),job=(await store.read('bolsa_trabajo')).find(x=>String(x.id)===id),db=uadavJobDB(env);
+ const credential=!identity&&job?await db.prepare('SELECT secret_hash FROM job_owner_credentials WHERE job_id=?').bind(id).first():null;
+ if(!job||!(identity?await uadavJobAccountOwns(db,identity,'bolsa_trabajo',id):credential?.secret_hash===await uadavDigest(key)))return reply({error:'No se encontró el acceso a esta oportunidad'},404);
+ const rows=await store.read('postulaciones_trabajo');
+ // Recheck after reading candidates so a concurrent revocation cannot publish
+ // a response authorized only by a stale credential/account lookup.
+ const stillOwns=identity?await uadavJobAccountOwns(db,identity,'bolsa_trabajo',id):(await db.prepare('SELECT secret_hash FROM job_owner_credentials WHERE job_id=?').bind(id).first())?.secret_hash===await uadavDigest(key);
+ if(!stillOwns)return reply({error:'No se encontró el acceso a esta oportunidad'},404);
+ const items=rows.filter(x=>String(x.job_id)===id).map(x=>({id:x.id,nombre:x.nombre,email:x.email,whatsapp:Array.isArray(x.shared_fields)&&x.shared_fields.includes('whatsapp')?x.whatsapp:'',portfolio_url:Array.isArray(x.shared_fields)&&x.shared_fields.includes('portfolio_url')?x.portfolio_url:'',mensaje:Array.isArray(x.shared_fields)&&x.shared_fields.includes('mensaje')?x.mensaje:'',artist_id:Array.isArray(x.shared_fields)&&x.shared_fields.includes('artist_profile')?x.artist_id:'',creado:x.creado,estado:x.estado||'recibida',perfil_verificado:!!x.perfil_verificado}));
+ return reply({success:true,job:{id:job.id,titulo:job.titulo},items});
+}
+
+const uadavLiveMailCore=(()=>{
+const access=(()=>{
+
+/* Preparatory messages only. No authentication route or email delivery is enabled. */
+const ACCESS_MAIL_VERSION = 1;
+const ACCESS_MAIL_TTL_MS = 15 * 60 * 1000;
+const origin = 'https://uadav-stream-staging.pages.dev';
+const purposes = {
+  account_sign_in: {
+    subject: 'Tu acceso a UADAV STREAM',
+    title: 'Volvé a Mi Perfil',
+    description: 'Desde tu cuenta podés consultar tus contenidos guardados, trabajos y perfiles vinculados.',
+    action: 'Entrar a Mi Perfil',
+  },
+  account_verify_email: {
+    subject: 'Confirmá tu correo en UADAV STREAM',
+    title: 'Confirmá tu correo',
+    description: 'Usaremos este correo para ayudarte a volver a tu cuenta y enviarte avisos importantes.',
+    action: 'Confirmar mi correo',
+  },
+  job_owner_recovery: {
+    subject: 'Recuperá tu oferta en UADAV STREAM',
+    title: 'Volvé a gestionar tu oferta',
+    description: 'Este acceso corresponde a la oferta que solicitaste recuperar.',
+    action: 'Recuperar mi oferta',
+  },
+};
+function invalid() {
+  throw Object.assign(new Error('ACCESS_MAIL_INPUT'), {code: 'ACCESS_MAIL_INPUT'});
+}
+const escape = value => value.replace(/[&<>"']/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char]));
+
+// issuedAt/expiresAt are stored issuance times, never renewed during a retry.
+// /acceso-correo.html and its redemption backend are not integrated yet.
+function buildAccessMailMessage({purpose, token, issuedAt, expiresAt, jobId, version = ACCESS_MAIL_VERSION} = {}) {
+  const copy = Object.hasOwn(purposes, purpose || '') ? purposes[purpose] : null;
+  if (!copy || version !== ACCESS_MAIL_VERSION || typeof token !== 'string' || !/^[a-f0-9]{64}$/.test(token) ||
+      !Number.isSafeInteger(issuedAt) || issuedAt <= 0 || !Number.isSafeInteger(expiresAt) ||
+      expiresAt <= issuedAt || expiresAt > 8640000000000000 || expiresAt - issuedAt > ACCESS_MAIL_TTL_MS ||
+      (purpose === 'job_owner_recovery' ? !/^JOB-[A-Z0-9-]{3,80}$/.test(jobId || '') : jobId !== undefined)) invalid();
+  const link = new URL('/acceso-correo.html', origin);
+  const fragment = new URLSearchParams({purpose, token});
+  if (purpose === 'job_owner_recovery') fragment.set('job', jobId);
+  // A fragment avoids sending the token in the initial page URL/server logs.
+  // The future receiver must clear it before loading other resources and require
+  // an explicit POST confirmation; an email scanner GET must not consume it.
+  link.hash = fragment.toString();
+  const until = new Date(expiresAt).toLocaleString('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires', hourCycle: 'h23',
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+  const expiry = 'Podés usarlo una sola vez, hasta el ' + until + ' (hora argentina).';
+  const retry = 'Si venció, pedí un enlace nuevo desde Mi Perfil. No necesitás guardar ni recordar códigos largos.';
+  const ignore = 'Si no lo pediste vos, ignorá este mensaje. No cambia tu acceso actual.';
+  const textContent = ['UADAV STREAM · entorno de prueba', copy.title, copy.description,
+    copy.action + ': ' + link.href, expiry, retry, ignore,
+    'Este enlace es privado. No lo reenvíes.'].join('\n\n');
+  const htmlContent = '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
+    '<body style="margin:0;padding:24px;background:#f1f5f9;color:#172033;font:17px/1.6 Arial,sans-serif">' +
+    '<main style="max-width:560px;margin:auto;background:#fff;padding:28px;border-radius:16px">' +
+    '<p style="font-size:14px;color:#475569">UADAV STREAM · entorno de prueba</p>' +
+    '<h1 style="font-size:26px;line-height:1.25">' + escape(copy.title) + '</h1><p>' + escape(copy.description) + '</p>' +
+    '<p style="margin:28px 0"><a href="' + escape(link.href) + '" style="display:inline-block;min-height:48px;box-sizing:border-box;padding:12px 22px;border-radius:10px;background:#174bc1;color:#fff;font-weight:bold;text-decoration:none">' + escape(copy.action) + '</a></p>' +
+    '<p>' + escape(expiry) + '</p><p>' + escape(retry) + '</p><p>' + escape(ignore) + '</p>' +
+    '<p style="font-size:14px;color:#475569">Este enlace es privado. No lo reenvíes.</p></main></body></html>';
+  return Object.freeze({subject: copy.subject, textContent, htmlContent});
+}
+
+return {ACCESS_MAIL_TTL_MS,buildAccessMailMessage};
+})();
+const transport=(()=>{
+
+/* Shared bounded HTTPS client. Callers supply server-constructed JSON only.
+ * No automatic retry, redirect, credential forwarding or logging. */
+async function uadavBrevoRequest({mode, apiKey, body, signal, timeoutMs = 5000, fetchImpl = globalThis.fetch}) {
+  const fail = code => Object.assign(new Error(code), {code});
+  const need = (ok, code) => { if (!ok) throw fail(code); };
+  need(mode === 'staging-only' && typeof apiKey === 'string' && /^[A-Za-z0-9._-]{32,512}$/.test(apiKey) &&
+    typeof body === 'string' && new TextEncoder().encode(body).length <= 16384 &&
+    Number.isInteger(timeoutMs) && timeoutMs >= 1 && timeoutMs <= 5000 && typeof fetchImpl === 'function', 'MAIL_CONFIGURATION');
+  const controller = new AbortController();
+  let timer, abort;
+  async function readJSON(response) {
+    need(/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') || ''), 'MAIL_RESPONSE');
+    const size = response.headers.get('content-length');
+    need(size === null || /^\d+$/.test(size) && Number(size) <= 8192, 'MAIL_RESPONSE');
+    need(response.body, 'MAIL_RESPONSE');
+    const reader = response.body.getReader(), chunks = [];
+    const cancel = () => { reader.cancel().catch(() => {}); };
+    controller.signal.addEventListener('abort', cancel, {once: true});
+    let bytes = 0;
+    try {
+      need(!controller.signal.aborted, 'MAIL_CANCELLED');
+      for (;;) {
+        const {done, value} = await reader.read();
+        if (done) break;
+        bytes += value.byteLength;
+        need(bytes <= 8192, 'MAIL_RESPONSE');
+        chunks.push(value);
+      }
+    } finally {
+      controller.signal.removeEventListener('abort', cancel);
+      reader.cancel().catch(() => {});
+    }
+    const buffer = new Uint8Array(bytes);
+    let offset = 0;
+    for (const chunk of chunks) { buffer.set(chunk, offset); offset += chunk.length; }
+    try {
+      const data = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(buffer));
+      need(data && typeof data === 'object' && !Array.isArray(data), 'MAIL_RESPONSE');
+      return data;
+    } catch { throw fail('MAIL_RESPONSE'); }
+  }
+  try {
+    const request = new Request('https://api.brevo.com/v3/smtp/email', {method: 'POST', redirect: 'manual', credentials: 'omit',
+      cache: 'no-store', headers: {'Content-Type': 'application/json', Accept: 'application/json', 'api-key': apiKey},
+      body, signal: controller.signal});
+    const cancelled = new Promise((_, reject) => {
+      abort = () => { controller.abort(); reject(fail('MAIL_CANCELLED')); };
+      if (signal?.aborted) abort(); else signal?.addEventListener('abort', abort, {once: true});
+    });
+    const deadline = new Promise((_, reject) => {
+      timer = setTimeout(() => { controller.abort(); reject(fail('MAIL_TIMEOUT')); }, timeoutMs);
+    });
+    const operation = (async () => {
+      need(!controller.signal.aborted, 'MAIL_CANCELLED');
+      const response = await fetchImpl(request);
+      need(response.status < 300 || response.status >= 400, 'MAIL_REDIRECT');
+      if (response.status === 429) throw fail('MAIL_RATE_LIMIT');
+      if (response.status === 402) throw fail('MAIL_QUOTA');
+      if (response.status === 401 || response.status === 403) throw fail('MAIL_CONFIGURATION');
+      if (response.status >= 500) throw fail('MAIL_UNAVAILABLE');
+      const data = await readJSON(response);
+      if (response.status !== 201) {
+        if (data.code === 'duplicate_parameter') throw fail('MAIL_DELIVERY_UNCONFIRMED');
+        throw fail('MAIL_REJECTED');
+      }
+      need(typeof data.messageId === 'string' && data.messageId.length <= 256 &&
+        /^<[^<>\s\x00-\x1f]+@[^<>\s\x00-\x1f]+>$/.test(data.messageId) && data.messageIds === undefined, 'MAIL_RECEIPT');
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data.messageId));
+      return {id: 'brevo:' + Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')};
+    })();
+    return await Promise.race([operation, cancelled, deadline]);
+  } catch (error) {
+    const codes = new Set(['MAIL_RESPONSE', 'MAIL_REDIRECT', 'MAIL_RATE_LIMIT', 'MAIL_QUOTA', 'MAIL_CONFIGURATION',
+      'MAIL_UNAVAILABLE', 'MAIL_DELIVERY_UNCONFIRMED', 'MAIL_REJECTED', 'MAIL_RECEIPT', 'MAIL_CANCELLED', 'MAIL_TIMEOUT']);
+    throw fail(codes.has(error?.code) ? error.code : 'MAIL_UNAVAILABLE');
+  } finally {
+    clearTimeout(timer);
+    if (abort) signal?.removeEventListener('abort', abort);
+    controller.abort();
+  }
+}
+
+return {uadavBrevoRequest};
+})();
+const snapshot=(()=>{
+const {ACCESS_MAIL_TTL_MS,buildAccessMailMessage}=access;
+/* Preparatory immutable envelope for a single staging recovery email.
+ * Stored only inside the outbox AES-GCM payload; never returned by HTTP.
+ * The transport key fingerprint binds retries to the original key context. */
+const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
+const digest=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),b=>b.toString(16).padStart(2,'0')).join('');
+const fail=()=>{throw Object.assign(Error('MAIL_SNAPSHOT'),{code:'MAIL_SNAPSHOT'})};
+const exact=(object,keys)=>object&&typeof object==='object'&&!Array.isArray(object)&&Object.keys(object).length===keys.length&&keys.every(k=>Object.hasOwn(object,k));
+function brevoStagingAddress(value){return typeof value==='string'&&value.length<=160&&/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?\.[A-Za-z]{2,}$/.test(value)&&value.split('@')[1].split('.').every(s=>s.length<=63&&/^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(s))?value.toLowerCase():''}
+async function brevoTransportHash(apiKey){return digest('uadav-brevo-context-v1:'+apiKey)}
+function input({requestId,to,token,issuedAt,expiresAt,jobId,transportHash}){
+ if(typeof requestId!=='string'||!uuid.test(requestId)||brevoStagingAddress(to)!==to||typeof token!=='string'||!/^[a-f0-9]{64}$/.test(token)||
+   !Number.isSafeInteger(issuedAt)||issuedAt<=0||!Number.isSafeInteger(expiresAt)||expiresAt-issuedAt!==ACCESS_MAIL_TTL_MS||
+   typeof jobId!=='string'||!/^JOB-[A-Z0-9-]{3,80}$/.test(jobId)||!/^[a-f0-9]{64}$/.test(transportHash||''))fail();
+}
+async function prepareBrevoRecoveryMessage(options){
+ input(options);const {requestId,to,token,issuedAt,expiresAt,jobId,senderEmail,transportHash}=options;
+ if(brevoStagingAddress(senderEmail)!==senderEmail||!senderEmail.endsWith('@correo-staging.uadavstream.com.ar'))fail();
+ const message=buildAccessMailMessage({purpose:'job_owner_recovery',token,issuedAt,expiresAt,jobId});
+ const body=JSON.stringify({sender:{email:senderEmail,name:'UADAV STREAM · pruebas'},to:[{email:to}],...message,headers:{idempotencyKey:requestId}});
+ const snapshot={version:1,kind:'brevo-job-recovery',request_id:requestId,transport_hash:transportHash,body_hash:await digest(body),body};
+ await validateBrevoRecoveryMessage(snapshot,options);return Object.freeze(snapshot);
+}
+async function validateBrevoRecoveryMessage(snapshot,options){
+ input(options);const {requestId,to,token,issuedAt,expiresAt,jobId,transportHash}=options;
+ if(!exact(snapshot,['version','kind','request_id','transport_hash','body_hash','body'])||snapshot.version!==1||snapshot.kind!=='brevo-job-recovery'||snapshot.request_id!==requestId||snapshot.transport_hash!==transportHash||
+   typeof snapshot.body!=='string'||new TextEncoder().encode(snapshot.body).length>6144||await digest(snapshot.body)!==snapshot.body_hash)fail();
+ let body;try{body=JSON.parse(snapshot.body)}catch{fail()}
+ if(!exact(body,['sender','to','subject','textContent','htmlContent','headers'])||!exact(body.sender,['email','name'])||brevoStagingAddress(body.sender.email)!==body.sender.email||!body.sender.email.endsWith('@correo-staging.uadavstream.com.ar')||
+   typeof body.sender.name!=='string'||body.sender.name.length<1||body.sender.name.length>100||/[\x00-\x1f]/.test(body.sender.name)||
+   !Array.isArray(body.to)||body.to.length!==1||!exact(body.to[0],['email'])||body.to[0].email!==to||!exact(body.headers,['idempotencyKey'])||body.headers.idempotencyKey!==requestId||
+   typeof body.subject!=='string'||body.subject.length<1||body.subject.length>160||/[\r\n]/.test(body.subject)||typeof body.textContent!=='string'||typeof body.htmlContent!=='string')fail();
+ // Validate purpose/token/link identity, not current wording. A template change
+ // or renamed sender must not rerender a queued message during a retry.
+ const link=new URL('/acceso-correo.html','https://uadav-stream-staging.pages.dev');link.hash=new URLSearchParams({purpose:'job_owner_recovery',token,job:jobId}).toString();
+ const links=body.textContent.match(/https:\/\/[^\s]+/g)||[];
+ if(links.length!==1||links[0]!==link.href||!body.htmlContent.includes(link.href.replaceAll('&','&amp;'))||expiresAt-issuedAt!==ACCESS_MAIL_TTL_MS)fail();
+ return snapshot.body;
+}
+
+return {brevoStagingAddress,brevoTransportHash,prepareBrevoRecoveryMessage,validateBrevoRecoveryMessage};
+})();
+const brevo=(()=>{
+const {ACCESS_MAIL_TTL_MS,buildAccessMailMessage}=access;const {uadavBrevoRequest}=transport;const {brevoStagingAddress,brevoTransportHash,prepareBrevoRecoveryMessage,validateBrevoRecoveryMessage}=snapshot;
+/* Optional, preparatory STAGING transport. Not imported by worker.js.
+ * Only an operator-configured recipient allowlist may be used in future QA.
+ * A duplicate/error is NOT a delivery receipt. The module contains no real key;
+ * future operational callers must supply secrets and prepare the queued message.
+ */
+const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
+const address = brevoStagingAddress;
+const fail = code => Object.assign(new Error(code), {code});
+const need = (ok, code) => { if (!ok) throw fail(code); };
+
+function createBrevoStagingMail({mode, apiKey, senderEmail, allowedRecipients,
+  fetchImpl = globalThis.fetch, clock = Date.now, timeoutMs = 5000} = {}) {
+  need(mode === 'staging-only' && typeof apiKey === 'string' && /^[A-Za-z0-9._-]{32,512}$/.test(apiKey) &&
+    address(senderEmail) === senderEmail && senderEmail.endsWith('@correo-staging.uadavstream.com.ar') &&
+    Array.isArray(allowedRecipients) && allowedRecipients.length >= 1 && allowedRecipients.length <= 10 &&
+    allowedRecipients.every(item => address(item) && address(item) === item) &&
+    typeof fetchImpl === 'function' && typeof clock === 'function' &&
+    Number.isInteger(timeoutMs) && timeoutMs >= 1 && timeoutMs <= 5000, 'MAIL_CONFIGURATION');
+  const recipients = new Set(allowedRecipients);
+  const transportHash=brevoTransportHash(apiKey);
+
+  async function sendAccess({requestId, to, purpose, token, issuedAt, expiresAt, jobId, version, signal} = {}) {
+    need(uuid.test(requestId || '') && address(to) === to && recipients.has(to), 'MAIL_INPUT');
+    const now = clock();
+    need(Number.isSafeInteger(now) && Number.isSafeInteger(issuedAt) && issuedAt <= now &&
+      expiresAt > now && expiresAt - issuedAt <= ACCESS_MAIL_TTL_MS, 'MAIL_EXPIRED');
+    let message;
+    try { message = buildAccessMailMessage({purpose, token, issuedAt, expiresAt, jobId, version}); }
+    catch { throw fail('MAIL_INPUT'); }
+    const body = JSON.stringify({sender: {email: senderEmail, name: 'UADAV STREAM · pruebas'},
+      to: [{email: to}], ...message, headers: {idempotencyKey: requestId}});
+    return uadavBrevoRequest({mode, apiKey, body, signal, timeoutMs, fetchImpl});
+  }
+
+  // Adapter for the existing preparatory Bolsa outbox. No live route invokes it.
+  async function prepare(payload){
+    need(payload&&recipients.has(payload.to),'MAIL_INPUT');
+    return prepareBrevoRecoveryMessage({requestId:payload.request_id,to:payload.to,token:payload.token,issuedAt:payload.expires_at-ACCESS_MAIL_TTL_MS,
+      expiresAt:payload.expires_at,jobId:payload.job_id,senderEmail,transportHash:await transportHash});
+  }
+  async function send({idempotencyKey, payload, signal} = {}) {
+    const requestId = typeof idempotencyKey === 'string' && idempotencyKey.startsWith('uadav-job-recovery/')
+      ? idempotencyKey.slice('uadav-job-recovery/'.length) : '';
+    need(payload && typeof payload === 'object', 'MAIL_INPUT');
+    need(recipients.has(payload.to),'MAIL_INPUT');
+    const now=clock();need(Number.isSafeInteger(now)&&payload.expires_at-ACCESS_MAIL_TTL_MS<=now&&payload.expires_at>now,'MAIL_EXPIRED');
+    const body=await validateBrevoRecoveryMessage(payload.delivery,{requestId,to:payload.to,token:payload.token,issuedAt:payload.expires_at-ACCESS_MAIL_TTL_MS,
+      expiresAt:payload.expires_at,jobId:payload.job_id,transportHash:await transportHash});
+    return uadavBrevoRequest({mode,apiKey,body,signal,timeoutMs,fetchImpl});
+  }
+  return Object.freeze({idempotencyWindowMs: 30 * 60 * 1000, prepare, send, sendAccess});
+}
+
+return {createBrevoStagingMail};
+})();
+const outbox=(()=>{
+
+/* Preparatory STAGING-only engine. Not imported/embedded by worker.js.
+ * No HTTP endpoint, timer, provider, secret or remote database is configured here.
+ * Possession of the 256-bit emailed token authorizes one atomic redemption after
+ * a dispatch reservation. No token/credential is returned when requesting mail.
+ * Provider acceptance is an audit fact, not an authentication prerequisite.
+ * HTTP, email-link receiver, backup and live recovery QA remain unimplemented.
+ */
+const TTL=15*60000,LEASE=30000,ATTEMPTS=5;
+// Cover the full issuance lifetime plus an in-flight lease and bounded send.
+// A provider's shorter window must never be silently declared as one hour.
+const JOB_RECOVERY_MIN_IDEMPOTENCY_MS=TTL+LEASE+5000;
+const hex=bytes=>Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
+const bytes=value=>Uint8Array.from(value.match(/../g)||[],x=>parseInt(x,16));
+const hash=async value=>hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)));
+const fail=(code,status=503)=>Object.assign(Error(code),{code,status});
+const safeCodes=new Set(['JOB_RECOVERY_CONFIGURATION','JOB_RECOVERY_PROVIDER','JOB_RECOVERY_INPUT','JOB_RECOVERY_CLOCK','JOB_RECOVERY_STORAGE','JOB_RECOVERY_PAYLOAD','JOB_RECOVERY_SEND','JOB_RECOVERY_RECEIPT','JOB_RECOVERY_COMMIT']);
+const safeCode=error=>safeCodes.has(error?.code)?error.code:'JOB_RECOVERY_STORAGE';
+const need=(condition,code,status)=>{if(!condition)throw fail(code,status)};
+const email=value=>typeof value==='string'&&value.length<=160&&/^[^\s@<>\x00-\x1f]{1,64}@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value.trim())?value.trim().toLowerCase():'';
+const current="EXISTS(SELECT 1 FROM job_owner_credentials c JOIN job_store_records r ON r.collection='bolsa_trabajo' AND r.id=c.job_id WHERE c.job_id=job_recovery_outbox.job_id AND c.revision=job_recovery_outbox.credential_revision AND r.revision=job_recovery_outbox.record_revision)";
+function guard(db,condition,args=[]){const id=crypto.randomUUID();return [db.prepare('INSERT INTO job_store_checks(id,valid) SELECT ?,CASE WHEN '+condition+' THEN 1 ELSE 0 END').bind(id,...args),db.prepare('DELETE FROM job_store_checks WHERE id=?').bind(id)]}
+function aad(row){return new TextEncoder().encode(['job-recovery-v2',row.id,row.job_id,row.record_revision,row.credential_revision,row.recipient_hash,row.token_hash,row.expires_at].join('|'))}
+async function encrypt(key,row,payload){
+ const encoded=new TextEncoder().encode(JSON.stringify(payload));need(encoded.length<=8000,'JOB_RECOVERY_PAYLOAD');
+ const iv=crypto.getRandomValues(new Uint8Array(12)),cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:aad(row)},key,encoded);
+ return JSON.stringify({v:2,iv:hex(iv),cipher:hex(cipher)});
+}
+async function decrypt(key,row){
+ const sealed=JSON.parse(row.sealed_payload);need(sealed.v===2&&/^[a-f0-9]{24}$/.test(sealed.iv||'')&&/^[a-f0-9]{32,16384}$/.test(sealed.cipher||'')&&sealed.cipher.length%2===0,'JOB_RECOVERY_PAYLOAD');
+ const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(sealed.iv),additionalData:aad(row)},key,bytes(sealed.cipher)),payload=JSON.parse(new TextDecoder().decode(plain));
+ need(payload.job_id===row.job_id&&payload.credential_revision===row.credential_revision&&payload.expires_at===row.expires_at&&/^[a-f0-9]{64}$/.test(payload.token||'')&&await hash(payload.token)===row.token_hash&&email(payload.to)===payload.to&&await hash(payload.to)===row.recipient_hash,'JOB_RECOVERY_PAYLOAD');
+ return payload;
+}
+function createJobRecoveryOutbox({db,encryptionKey,mode,clock=Date.now,timeoutMs=5000,prepareDelivery}){
+ need(mode==='staging-only'&&db&&/^[a-f0-9]{64}$/.test(encryptionKey||'')&&typeof clock==='function'&&(prepareDelivery===undefined||typeof prepareDelivery==='function')&&Number.isInteger(timeoutMs)&&timeoutMs>=1&&timeoutMs<=5000,'JOB_RECOVERY_CONFIGURATION');
+ db=typeof db.withSession==='function'?db.withSession('first-primary'):db;
+ const key=crypto.subtle.importKey('raw',bytes(encryptionKey),'AES-GCM',false,['encrypt','decrypt']);
+ const accepted=()=>({accepted:true});
+ const time=()=>{const now=clock();need(Number.isSafeInteger(now)&&now>0&&now<=8640000000000000-TTL,'JOB_RECOVERY_CLOCK');return now};
+ async function sweep(now){
+  await db.batch([
+   db.prepare("UPDATE job_recovery_outbox SET state='expired',sealed_payload=NULL,lease_owner=NULL,lease_until=0 WHERE state IN ('queued','sending','accepted','failed') AND expires_at<=?").bind(now),
+   db.prepare("UPDATE job_recovery_outbox SET state='cancelled',sealed_payload=NULL,lease_owner=NULL,lease_until=0 WHERE state IN ('queued','sending','accepted','failed') AND NOT "+current)
+  ]);
+ }
+ async function rate(bucket,limit,windowMs,now){
+  const r=await db.prepare('INSERT INTO job_store_rates(bucket,hits,resets_at) VALUES(?,1,?) ON CONFLICT(bucket) DO UPDATE SET hits=CASE WHEN resets_at<=? THEN 1 ELSE hits+1 END,resets_at=CASE WHEN resets_at<=? THEN excluded.resets_at ELSE resets_at END RETURNING hits').bind(bucket,now+windowMs,now,now).first();return r.hits<=limit;
+ }
+ async function enqueue({jobId,recipient,requestId,actorHash}){
+  need(/^JOB-[A-Z0-9-]{3,80}$/.test(jobId||'')&&email(recipient)&&/^[a-f0-9-]{36}$/i.test(requestId||'')&&/^[a-f0-9]{64}$/.test(actorHash||''),'JOB_RECOVERY_INPUT',400);
+  const now=time();
+  try{
+   if(!await rate('recovery-actor:'+actorHash,5,10*60000,now))return accepted();
+   const source=await db.prepare("SELECT r.revision AS record_revision,r.data_json,c.revision AS credential_revision FROM job_store_records r JOIN job_owner_credentials c ON c.job_id=r.id WHERE r.collection='bolsa_trabajo' AND r.id=?").bind(jobId).first();
+   if(!source)return accepted();
+   const item=JSON.parse(source.data_json),to=email(item.contacto_email||item.email||item.contacto);
+   if(!to||to!==email(recipient))return accepted();
+   await sweep(now);
+   const recipientHash=await hash(to),prior=await db.prepare('SELECT id FROM job_recovery_outbox WHERE request_id=?').bind(requestId).first();if(prior)return accepted();
+   const active=await db.prepare("SELECT id FROM job_recovery_outbox WHERE job_id=? AND credential_revision=? AND state IN ('queued','sending','accepted')").bind(jobId,source.credential_revision).first();if(active)return accepted();
+   const bucket='recovery-job:'+jobId,limit=await db.prepare('SELECT hits,resets_at FROM job_store_rates WHERE bucket=?').bind(bucket).first();if(limit&&limit.resets_at>now&&limit.hits>=3)return accepted();
+   const token=hex(crypto.getRandomValues(new Uint8Array(32))),row={id:crypto.randomUUID(),job_id:jobId,record_revision:source.record_revision,credential_revision:source.credential_revision,recipient_hash:recipientHash,token_hash:await hash(token),expires_at:now+TTL};
+   const payload={job_id:jobId,to,token,credential_revision:row.credential_revision,expires_at:row.expires_at};
+   if(prepareDelivery){try{payload.delivery=await prepareDelivery({...payload,request_id:row.id});need(payload.delivery&&typeof payload.delivery==='object'&&!Array.isArray(payload.delivery),'JOB_RECOVERY_PAYLOAD')}catch{throw fail('JOB_RECOVERY_PAYLOAD')}}
+   const sealed=await encrypt(await key,row,payload);
+   const statements=[
+    db.prepare('INSERT INTO job_store_rates(bucket,hits,resets_at) VALUES(?,1,?) ON CONFLICT(bucket) DO UPDATE SET hits=CASE WHEN resets_at<=? THEN 1 ELSE hits+1 END,resets_at=CASE WHEN resets_at<=? THEN excluded.resets_at ELSE resets_at END').bind(bucket,now+3600000,now,now),
+    ...guard(db,'EXISTS(SELECT 1 FROM job_store_rates WHERE bucket=? AND hits<=3)',[bucket]),
+    ...guard(db,"EXISTS(SELECT 1 FROM job_owner_credentials c JOIN job_store_records r ON r.collection='bolsa_trabajo' AND r.id=c.job_id WHERE c.job_id=? AND c.revision=? AND r.revision=?)",[jobId,row.credential_revision,row.record_revision]),
+    ...guard(db,"(SELECT COUNT(*) FROM job_recovery_outbox WHERE state IN ('queued','sending','accepted'))<1000"),
+    db.prepare("INSERT INTO job_recovery_outbox(id,request_id,job_id,record_revision,credential_revision,recipient_hash,token_hash,sealed_payload,created_at,expires_at,next_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)").bind(row.id,requestId,jobId,row.record_revision,row.credential_revision,recipientHash,row.token_hash,sealed,now,row.expires_at,now)
+   ];
+   try{await db.batch(statements)}catch{
+    const saved=await db.prepare("SELECT id FROM job_recovery_outbox WHERE request_id=? OR (job_id=? AND credential_revision=? AND state IN ('queued','sending','accepted')) LIMIT 1").bind(requestId,jobId,row.credential_revision).first();if(saved)return accepted();
+    const live=await db.prepare("SELECT c.revision AS credential_revision,r.revision AS record_revision FROM job_owner_credentials c JOIN job_store_records r ON r.collection='bolsa_trabajo' AND r.id=c.job_id WHERE c.job_id=?").bind(jobId).first(),rate=await db.prepare('SELECT hits,resets_at FROM job_store_rates WHERE bucket=?').bind(bucket).first();
+    if(!live||live.credential_revision!==row.credential_revision||live.record_revision!==row.record_revision||rate?.resets_at>now&&rate.hits>=3)return accepted();
+    throw fail('JOB_RECOVERY_STORAGE');
+   }
+   return accepted();
+  }catch(error){throw fail(safeCode(error))}
+ }
+ async function dispatch(adapter){
+  need(adapter&&typeof adapter.send==='function'&&Number.isFinite(adapter.idempotencyWindowMs)&&adapter.idempotencyWindowMs>=JOB_RECOVERY_MIN_IDEMPOTENCY_MS,'JOB_RECOVERY_PROVIDER');
+  let row,owner;
+  try{
+   const now=time();await sweep(now);
+   row=await db.prepare("SELECT * FROM job_recovery_outbox WHERE state IN ('queued','sending') AND expires_at>? AND next_at<=? AND lease_until<=? AND attempts<? ORDER BY created_at,id LIMIT 1").bind(now,now,now,ATTEMPTS).first();if(!row)return {state:'idle'};
+   owner=crypto.randomUUID();const claimed=await db.prepare("UPDATE job_recovery_outbox SET state='sending',attempts=attempts+1,lease_until=?,lease_owner=? WHERE id=? AND state IN ('queued','sending') AND lease_until<=? AND next_at<=? AND expires_at>? AND attempts<? AND "+current).bind(now+LEASE,owner,row.id,now,now,now,ATTEMPTS).run();
+   if(claimed.meta?.changes!==1)return {state:'busy'};
+   row={...row,attempts:row.attempts+1};let payload;try{payload=await decrypt(await key,row)}catch{throw fail('JOB_RECOVERY_PAYLOAD')}
+   const controller=new AbortController();let timer,receipt;
+   try{receipt=await Promise.race([Promise.resolve().then(()=>adapter.send({idempotencyKey:'uadav-job-recovery/'+row.id,payload,signal:controller.signal})),new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(fail('JOB_RECOVERY_SEND'))},timeoutMs)})])}catch{throw fail('JOB_RECOVERY_SEND')}finally{clearTimeout(timer)}
+   need(receipt&&typeof receipt.id==='string'&&/^[A-Za-z0-9_.:-]{1,160}$/.test(receipt.id),'JOB_RECOVERY_RECEIPT');
+   const finished=time();
+   const statements=[...guard(db,"EXISTS(SELECT 1 FROM job_recovery_outbox WHERE id=? AND state='sending' AND lease_owner=? AND lease_until>? AND expires_at>? AND "+current+')',[row.id,owner,finished,finished]),
+    db.prepare("UPDATE job_recovery_outbox SET state='accepted',provider_id=?,accepted_at=?,sealed_payload=NULL,lease_owner=NULL,lease_until=0,last_error=NULL WHERE id=? AND state='sending' AND lease_owner=?").bind(receipt.id,finished,row.id,owner)
+   ];
+   try{await db.batch(statements)}catch{
+    const committed=await db.prepare('SELECT state,provider_id FROM job_recovery_outbox WHERE id=?').bind(row.id).first();if(committed?.state==='accepted'&&committed.provider_id===receipt.id)return {state:'accepted'};
+    if(committed?.state==='redeemed')return {state:'redeemed'};
+    throw fail('JOB_RECOVERY_COMMIT');
+   }
+   return {state:'accepted'};
+  }catch(error){
+   const code=safeCode(error);
+   if(!row||!owner)throw fail(code);
+   const now=time(),terminal=row.attempts>=ATTEMPTS,expired=row.expires_at<=now;
+   try{if((await db.prepare('SELECT state FROM job_recovery_outbox WHERE id=?').bind(row.id).first())?.state==='redeemed')return {state:'redeemed'}}catch{throw fail('JOB_RECOVERY_STORAGE')}
+   try{await db.prepare("UPDATE job_recovery_outbox SET state=?,sealed_payload=CASE WHEN ? THEN NULL ELSE sealed_payload END,next_at=?,lease_owner=NULL,lease_until=0,last_error=? WHERE id=? AND state='sending' AND lease_owner=?").bind(expired?'expired':terminal?'failed':'queued',expired||terminal?1:0,Math.min(row.expires_at,now+Math.min(60000,1000*2**row.attempts)),code,row.id,owner).run()}catch{throw fail('JOB_RECOVERY_STORAGE')}
+   return {state:'unconfirmed',error:code};
+  }
+ }
+ async function redeem({jobId,token,newSecretHash}){
+  need(typeof jobId==='string'&&/^JOB-[A-Z0-9-]{3,80}$/.test(jobId)&&typeof token==='string'&&/^[a-f0-9]{64}$/.test(token)&&typeof newSecretHash==='string'&&/^[a-f0-9]{64}$/.test(newSecretHash),'JOB_RECOVERY_INPUT',400);
+  const now=time(),tokenHash=await hash(token);
+  const lookup=()=>db.prepare("SELECT o.*,c.revision AS current_revision,c.secret_hash AS current_secret_hash,r.revision AS current_record_revision FROM job_recovery_outbox o JOIN job_owner_credentials c ON c.job_id=o.job_id JOIN job_store_records r ON r.collection='bolsa_trabajo' AND r.id=o.job_id WHERE o.token_hash=? AND o.job_id=?").bind(tokenHash,jobId).first();
+  const receipt=row=>row&&row.state==='redeemed'&&row.expires_at>now&&row.redeemed_secret_hash===newSecretHash&&row.current_secret_hash===newSecretHash&&row.current_revision===row.credential_revision+1;
+  try{
+   const row=await lookup();
+   if(receipt(row))return {job_id:jobId,revision:row.current_revision,replayed:true};
+   need(row&&['queued','sending','accepted','failed'].includes(row.state)&&row.attempts>0&&row.expires_at>now&&row.current_revision===row.credential_revision&&row.current_record_revision===row.record_revision&&row.current_secret_hash!==newSecretHash,'JOB_RECOVERY_INPUT',400);
+   const statements=[
+    ...guard(db,"EXISTS(SELECT 1 FROM job_recovery_outbox WHERE id=? AND token_hash=? AND job_id=? AND state IN ('queued','sending','accepted','failed') AND attempts>0 AND expires_at>? AND "+current+" AND EXISTS(SELECT 1 FROM job_owner_credentials c WHERE c.job_id=job_recovery_outbox.job_id AND c.secret_hash<>?))",[row.id,tokenHash,jobId,now,newSecretHash]),
+    db.prepare("UPDATE job_recovery_outbox SET state='redeemed',redeemed_at=?,redeemed_secret_hash=?,sealed_payload=NULL,lease_owner=NULL,lease_until=0 WHERE id=?").bind(now,newSecretHash,row.id),
+    db.prepare('UPDATE job_owner_credentials SET secret_hash=?,revision=revision+1,updated_at=? WHERE job_id=?').bind(newSecretHash,new Date(now).toISOString(),jobId),
+    db.prepare('UPDATE job_owner_recovery_v2 SET consumed_at=? WHERE job_id=? AND consumed_at IS NULL').bind(now,jobId)
+   ];
+   // Missing legacy account tables imply no links. A partial/broken table must
+   // fail the batch, never silently retain a link after credential rotation.
+   if(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='job_account_links'").first())statements.push(db.prepare("DELETE FROM job_account_links WHERE collection='bolsa_trabajo' AND record_id=?").bind(jobId));
+   try{await db.batch(statements)}catch{
+    const saved=await lookup();if(receipt(saved))return {job_id:jobId,revision:saved.current_revision,replayed:true};
+    if(!saved||saved.state==='redeemed'||saved.current_revision!==row.credential_revision||saved.current_record_revision!==row.record_revision)throw fail('JOB_RECOVERY_INPUT',400);
+    throw fail('JOB_RECOVERY_COMMIT');
+   }
+   return {job_id:jobId,revision:row.credential_revision+1};
+  }catch(error){throw fail(safeCode(error),error?.code==='JOB_RECOVERY_INPUT'?400:503)}
+ }
+ return {enqueue,dispatch,redeem};
+}
+
+return {createJobRecoveryOutbox};
+})();
+return {...brevo,...outbox,brevoStagingAddress:snapshot.brevoStagingAddress};
+})();
+const UADAV_LIVE_MAIL_SCHEMA=["CREATE TABLE IF NOT EXISTS job_recovery_outbox (\n  id TEXT PRIMARY KEY,\n  request_id TEXT NOT NULL UNIQUE,\n  job_id TEXT NOT NULL REFERENCES job_owner_credentials(job_id),\n  record_revision INTEGER NOT NULL CHECK(record_revision > 0),\n  credential_revision INTEGER NOT NULL CHECK(credential_revision > 0),\n  recipient_hash TEXT NOT NULL CHECK(length(recipient_hash) = 64),\n  token_hash TEXT NOT NULL UNIQUE CHECK(length(token_hash) = 64),\n  sealed_payload TEXT,\n  state TEXT NOT NULL DEFAULT 'queued' CHECK(state IN ('queued','sending','accepted','redeemed','expired','cancelled','failed')),\n  created_at INTEGER NOT NULL,\n  expires_at INTEGER NOT NULL CHECK(expires_at > created_at),\n  attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts BETWEEN 0 AND 5),\n  next_at INTEGER NOT NULL,\n  lease_until INTEGER NOT NULL DEFAULT 0,\n  lease_owner TEXT,\n  provider_id TEXT,\n  accepted_at INTEGER,\n  redeemed_at INTEGER,\n  redeemed_secret_hash TEXT,\n  last_error TEXT,\n  CHECK((state IN ('queued','sending') AND sealed_payload IS NOT NULL) OR\n        (state IN ('accepted','redeemed','expired','cancelled','failed') AND sealed_payload IS NULL)),\n  CHECK(state <> 'accepted' OR (provider_id IS NOT NULL AND accepted_at IS NOT NULL)),\n  CHECK(state <> 'redeemed' OR (redeemed_at IS NOT NULL AND length(redeemed_secret_hash)=64))\n)","CREATE UNIQUE INDEX IF NOT EXISTS job_recovery_one_active_revision ON job_recovery_outbox(job_id,credential_revision) WHERE state IN ('queued','sending','accepted')","CREATE INDEX IF NOT EXISTS job_recovery_ready ON job_recovery_outbox(state,next_at,lease_until,expires_at)"];
+const UADAV_LIVE_MAIL_SCHEMA_SHA="f7f88d74fd9ae8d74ddfeed0c7c741f0d581b7bdb5a157b752c43fd147ceee4b";
+const UADAV_LIVE_MAIL_HTML="<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"robots\" content=\"noindex,nofollow\"><title>UADAV · Recuperar una oferta de prueba</title><style nonce=\"%%NONCE%%\">*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:#0b1220;color:#edf4ff;font:17px/1.6 system-ui,sans-serif}main{max-width:720px;margin:auto;padding:28px 18px}h1{font-size:clamp(25px,5vw,34px);line-height:1.25}section{padding:22px;margin:22px 0;background:#142138;border:1px solid #3f5472;border-radius:18px}label{display:block;margin:16px 0}input,button{font:inherit;min-height:48px;padding:10px 14px;border-radius:10px}input[type=password]{display:block;width:100%;background:#0b1220;color:#fff;border:1px solid #91a9c8}input[type=checkbox]{min-height:24px;width:24px;vertical-align:middle}button{background:#afd0ff;color:#092349;border:0;font-weight:700;cursor:pointer;margin:6px 8px 6px 0;max-width:100%}button:disabled{opacity:.45;cursor:default}.secondary{background:#29415e;color:#fff}a{color:#afd0ff}:focus-visible{outline:3px solid #ffdf8b;outline-offset:4px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.5 ui-monospace,monospace}.muted{color:#b8c9df}</style></head><body><main>\n<p class=\"muted\">STAGING · PRUEBA PRIVADA11767</p><h1>Recuperar una oferta por correo</h1><p>Vas a recibir un enlace para recuperar una oferta ficticia cerrada. Tu correo se toma de la configuración privada existente. La recuperación de las ofertas reales sigue deshabilitada.</p>\n<section id=\"loginPanel\"><form id=\"loginForm\"><label for=\"adminKey\">Clave Admin de staging<input id=\"adminKey\" type=\"password\" autocomplete=\"current-password\" maxlength=\"256\" required></label><button id=\"loginButton\" type=\"submit\">Entrar a la prueba</button></form></section>\n<section id=\"keyPanel\" hidden><h2>Preparar la protección de los enlaces</h2><p>Esta clave cifra los mensajes pendientes. Generala acá y guardala como <strong>Secret JOB_RECOVERY_ENCRYPTION_KEY</strong> únicamente en <strong>uadav-api-staging</strong>. Después volvé y consultá el estado. No la envíes al chat.</p><button id=\"generateKey\" type=\"button\">Generar y copiar clave privada</button><label id=\"manualKeyRow\" hidden>Si no se pudo copiar, seleccioná esta clave<input id=\"manualKey\" type=\"password\" readonly autocomplete=\"off\"></label><p id=\"keyStatus\" role=\"status\"></p></section>\n<section id=\"testPanel\" hidden><p id=\"readiness\"></p><label><input id=\"consent\" type=\"checkbox\">Autorizo crear una oferta ficticia cerrada y enviar un enlace de recuperación a mi propio correo configurado.</label><button id=\"sendButton\" type=\"button\" disabled>Preparar y enviar enlace</button><button id=\"statusButton\" type=\"button\" class=\"secondary\">Consultar resultado</button><button id=\"logoutButton\" type=\"button\" class=\"secondary\">Salir</button></section>\n<p id=\"status\" role=\"status\" aria-live=\"polite\"></p><ol id=\"checks\"></ol><button id=\"copyButton\" type=\"button\" hidden disabled>Copiar resultado seguro</button><details id=\"reportPanel\" hidden><summary>Ver resultado técnico</summary><pre id=\"report\"></pre></details><p class=\"muted\">Al recibir el correo, abrí “Recuperar mi oferta” y confirmá en la pantalla. Después volvé aquí y consultá el resultado. Máximo dos pruebas por día; una reserva de envío por prueba. Consultar no reenvía.</p>\n</main><script nonce=\"%%NONCE%%\">\n(()=>{'use strict';const $=id=>document.getElementById(id);let key='',state=null,busy=false,since=0,generation=0,requestId='',safe=null;const active=new Set();\nfunction paint(){$('loginPanel').hidden=!!key;$('testPanel').hidden=!key;$('keyPanel').hidden=!key||state?.encryption_key_configured!==false;$('loginButton').disabled=busy;$('sendButton').disabled=busy||!key||!state?.ready||state.complete||state.dispatch_reserved&&!state.expired||!$('consent').checked;$('statusButton').disabled=busy;$('copyButton').hidden=!safe;$('copyButton').disabled=busy||!safe;}\nfunction logout(){generation++;for(const c of active)c.abort();active.clear();key='';state=null;busy=false;since=0;requestId='';safe=null;$('adminKey').value='';$('manualKey').value='';$('manualKeyRow').hidden=true;$('consent').checked=false;$('checks').replaceChildren();$('report').textContent='';$('reportPanel').hidden=true;paint();}\nasync function api(method,body){if(!key||Date.now()-since>600000){logout();throw Error('Volvé a entrar con la clave Admin.');}const turn=generation,secret=key,ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),18000);active.add(ctl);try{const response=await fetch('/api/admin/jobs/email-recovery-qa',{method,redirect:'manual',cache:'no-store',credentials:'omit',headers:{Authorization:'Bearer '+secret,'Content-Type':'application/json'},signal:ctl.signal,...(body?{body:JSON.stringify(body)}:{})}),data=await response.json();if(turn!==generation||key!==secret)return null;if(!response.ok)throw Error(typeof data.code==='string'?data.code:'No se confirmó la operación.');if(data.scope!=='brevo-recovery-staging'||!/^\\d{5}$/.test(String(data.build))||Number(data.build)<11767||data.recovery_enabled!==false||!['status','complete'].includes(data.result))throw Error('La respuesta no corresponde a esta prueba.');return data;}finally{clearTimeout(timer);active.delete(ctl)}}\nfunction show(data){if(!data)return;state=data;requestId=data.request_id||requestId;safe=null;$('checks').replaceChildren();if(data.complete===true&&data.result==='complete'&&Array.isArray(data.checks)&&data.checks.length===4&&data.checks.every(x=>typeof x==='string'&&x.endsWith(': aprobado'))){safe={build:data.build,scope:data.scope,result:'complete',sandbox:false,provider_accepted:data.provider_accepted===true,real_email_received:true,recovery_enabled:false,checks:data.checks};for(const text of safe.checks){const li=document.createElement('li');li.textContent=text;$('checks').append(li)}}$('readiness').textContent=data.complete?'Recuperación de prueba aprobada.':data.dispatch_reserved&&!data.expired?'El envío ya fue reservado. Revisá tu correo y confirmá el enlace; después consultá el resultado.':data.ready?'Listo para la prueba. Autorizá el correo para continuar.':data.encryption_key_configured===false?'Guardá primero la clave de cifrado siguiendo las instrucciones de arriba.':'Falta una configuración o comprobación previa. Conservá el mensaje para revisarlo.';$('report').textContent=safe?JSON.stringify(safe,null,2):'';$('reportPanel').hidden=!safe;paint();}\n$('loginForm').onsubmit=async event=>{event.preventDefault();if(busy)return;key=$('adminKey').value.trim();$('adminKey').value='';since=Date.now();generation++;const turn=generation;busy=true;paint();try{show(await api('GET'));if(turn===generation)$('status').textContent='';}catch(error){if(turn===generation){logout();$('status').textContent=error.message;}}finally{if(turn===generation){busy=false;paint();}}};\n$('consent').onchange=paint;\n$('sendButton').onclick=async()=>{if(busy||$('sendButton').disabled||!$('consent').checked)return;const turn=generation;busy=true;paint();try{if(!state.request_id||state.expired){requestId=crypto.randomUUID();show(await api('POST',{action:'start',request_id:requestId,confirm:'OFERTA_FICTICIA_Y_CORREO_PROPIO'}));}if(!key||turn!==generation)return;show(await api('POST',{action:'request',request_id:requestId,confirm:'ENVIAR_ENLACE_A_CORREO_PROPIO'}));if(!key||turn!==generation)return;show(await api('POST',{action:'send',request_id:requestId,confirm:'ENVIAR_ENLACE_A_CORREO_PROPIO'}));if(turn!==generation)return;$('status').textContent='Abrí el correo y confirmá la recuperación. Si tarda, consultá el resultado antes de otra acción.';}catch(error){if(turn===generation)$('status').textContent=error.message+' · Consultá el resultado antes de reintentar.';}finally{if(turn===generation){busy=false;paint();}}};\n$('statusButton').onclick=async()=>{if(busy||!key)return;const turn=generation;busy=true;paint();try{show(await api('GET'));if(turn===generation)$('status').textContent=safe?'Prueba completa. Podés copiar el resultado seguro.':'';}catch(error){if(turn===generation)$('status').textContent=error.message;}finally{if(turn===generation){busy=false;paint();}}};\n$('generateKey').onclick=async()=>{if(!key||state?.encryption_key_configured!==false)return;const turn=generation,secret=Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');$('manualKey').value='';$('manualKeyRow').hidden=true;try{await navigator.clipboard.writeText(secret);if(turn!==generation)return;$('keyStatus').textContent='Clave copiada. Pegala como Secret JOB_RECOVERY_ENCRYPTION_KEY en uadav-api-staging y guardá/Deploy.';}catch{if(turn!==generation)return;$('manualKey').value=secret;$('manualKeyRow').hidden=false;$('keyStatus').textContent='Copiá la clave del campo y guardala únicamente en Cloudflare.';}};\n$('copyButton').onclick=async()=>{if(!safe||busy)return;try{await navigator.clipboard.writeText(JSON.stringify(safe,null,2));$('status').textContent='Resultado copiado, sin claves ni correo.';}catch{$('status').textContent='Podés copiar el resultado técnico visible.';}};\n$('logoutButton').onclick=logout;addEventListener('pagehide',logout);paint();})();\n</script></body></html>\n";
+/* Private staging end-to-end QA. Public recovery remains503. Only explicitly
+ * created closed QA offers can be redeemed, only to the configured recipient.
+ * Provider and outbox are the unchanged modules approved in mail-lab-11766-1. */
+const LIVE_SITE='https://uadav-api-staging.uadavstream.workers.dev',LIVE_PAGES='https://uadav-stream-staging.pages.dev';
+const LIVE_ADMIN='/api/admin/jobs/email-recovery-qa',LIVE_REDEEM='/api/qa/bolsa/email-recovery/redeem';
+const LIVE_SCHEMA_KEY='mail:live:schema:11767',LIVE_SCOPE='brevo-recovery-staging';
+const LIVE_LABELS=['Enlace recibido y confirmado','Clave anterior revocada','Acceso privado con la clave nueva','Oferta ficticia conservada sin publicación'];
+const liveUUID=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
+const liveJob=/^JOB-QA-MAIL-LIVE-[A-F0-9]{32}$/;
+const liveHex=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
+const liveHash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),x=>x.toString(16).padStart(2,'0')).join('');
+const liveFail=(code,status=503)=>{throw Object.assign(Error(code),{liveCode:code,liveStatus:status})};
+const liveNeed=(value,code,status)=>{if(!value)liveFail(code,status)};
+const liveExact=(body,keys)=>body&&typeof body==='object'&&!Array.isArray(body)&&Object.keys(body).length===keys.length&&keys.every(k=>Object.hasOwn(body,k));
+function liveDB(native,counter={used:0}){
+ const spend=n=>liveNeed((counter.used+=n)<=48,'RECOVERY_QA_QUERY_BUDGET');
+ const wrap=s=>({_native:s,bind(...a){return wrap(s.bind(...a))},first(...a){spend(1);return s.first(...a)},all(){spend(1);return s.all()},run(){spend(1);return s.run()}});
+ return{prepare:sql=>wrap(native.prepare(sql)),withSession:()=>liveDB(native,counter),batch:sql=>{spend(sql.length);return native.batch(sql.map(s=>s._native))},queries:()=>counter.used};
+}
+async function liveReceiverReady(){
+ const ctl=new AbortController();let timer;try{
+  await Promise.race([(async()=>{const response=await fetch(new Request(LIVE_PAGES+'/email-access-version.json',{method:'GET',redirect:'manual',credentials:'omit',cache:'no-store',headers:{Accept:'application/json'},signal:ctl.signal}));liveNeed(response.status===200&&/^application\/json(?:\s*;|$)/i.test(response.headers.get('Content-Type')||''),'RECOVERY_QA_RECEIVER_NOT_READY',409);const reader=response.body?.getReader();liveNeed(reader,'RECOVERY_QA_RECEIVER_NOT_READY',409);let size=0,text='';const decoder=new TextDecoder();try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;liveNeed(size<=1024,'RECOVERY_QA_RECEIVER_NOT_READY',409);text+=decoder.decode(value,{stream:true})}}finally{await reader.cancel().catch(()=>{})}const data=JSON.parse(text+decoder.decode());liveNeed(liveExact(data,['scope','version','api_origin'])&&data.scope==='email-recovery-receiver-staging'&&data.version==='11767.1'&&data.api_origin===LIVE_SITE,'RECOVERY_QA_RECEIVER_NOT_READY',409)})(),new Promise((_,reject)=>{timer=setTimeout(()=>{ctl.abort();reject(Error('receiver timeout'))},5000)})]);
+ }catch{liveFail('RECOVERY_QA_RECEIVER_NOT_READY',409)}finally{clearTimeout(timer);ctl.abort()}
+}
+async function liveOldSecret(key,job){const k=await crypto.subtle.importKey('raw',Uint8Array.from(key.match(/../g),x=>parseInt(x,16)),{name:'HMAC',hash:'SHA-256'},false,['sign']);return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',k,new TextEncoder().encode('uadav-live-qa-owner-v1:'+job))),x=>x.toString(16).padStart(2,'0')).join('')}
+async function liveContext(env,withProvider=true){
+ liveNeed(env.JOB_STORE_MAINTENANCE!=='true','RECOVERY_QA_MAINTENANCE',423);
+ liveNeed(env.JOB_STORE_D1==='true'&&env.DB,'RECOVERY_QA_STORAGE');
+ const encryptionKey=env.JOB_RECOVERY_ENCRYPTION_KEY;
+ liveNeed(liveHex(encryptionKey),'RECOVERY_QA_ENCRYPTION_KEY');
+ const recipient=typeof env.BREVO_QA_RECIPIENT==='string'?env.BREVO_QA_RECIPIENT.trim().toLowerCase():'';
+ liveNeed(uadavLiveMailCore.brevoStagingAddress(recipient)===recipient&&!!recipient,'RECOVERY_QA_RECIPIENT');
+ const native=typeof env.DB.withSession==='function'?env.DB.withSession('first-primary'):env.DB,db=liveDB(native);
+ liveNeed((await db.prepare("SELECT value FROM job_store_meta WHERE key='migration_ready'").first())?.value==='true','RECOVERY_QA_MIGRATION');
+ const recipientHash=await liveHash(recipient),keyHash=await liveHash('uadav-live-qa-key-v1:'+encryptionKey),now=Date.now();
+ const read=async key=>{const x=await db.prepare('SELECT value FROM job_store_meta WHERE key=?').bind(key).first();if(!x)return null;try{return JSON.parse(x.value)}catch{liveFail('RECOVERY_QA_METADATA')}};
+ const marker=await read(LIVE_SCHEMA_KEY);
+ const tables=(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('job_recovery_outbox','job_mail_live_qa')").all()).results.map(x=>x.name);
+ if(marker){liveNeed(marker.version===1&&marker.schema_sha256===UADAV_LIVE_MAIL_SCHEMA_SHA&&tables.length===2,'RECOVERY_QA_SCHEMA');const cols=(await db.prepare('PRAGMA table_info(job_recovery_outbox)').all()).results.map(x=>x.name);liveNeed(cols.includes('redeemed_secret_hash')&&cols.includes('redeemed_at'),'RECOVERY_QA_SCHEMA');}
+ else liveNeed(tables.length===0,'RECOVERY_QA_FOREIGN_SCHEMA',423);
+ const delivery=(await db.prepare("SELECT value FROM job_store_meta WHERE key LIKE 'brevo:delivery:request:%' AND json_valid(value) AND json_extract(value,'$.recipient_hash')=? AND json_extract(value,'$.verified_at')>=? ORDER BY json_extract(value,'$.verified_at') DESC LIMIT 1").bind(recipientHash,now-7*86400000).first());
+ let diagnostic;try{diagnostic=delivery&&JSON.parse(delivery.value)}catch{}
+ const received=!!diagnostic&&diagnostic.version===1&&Number.isSafeInteger(diagnostic.verified_at)&&diagnostic.verified_at<=now&&diagnostic.verification_hash===null&&liveUUID.test(diagnostic.verification_owner||'');
+ let adapter;
+ if(withProvider)adapter=uadavLiveMailCore.createBrevoStagingMail({mode:'staging-only',apiKey:env.BREVO_API_KEY,senderEmail:'acceso@correo-staging.uadavstream.com.ar',allowedRecipients:[recipient]});
+ const engine=(extra={})=>uadavLiveMailCore.createJobRecoveryOutbox({db,encryptionKey,mode:'staging-only',...extra,...(adapter?{prepareDelivery:adapter.prepare}:{})});
+ const latest=()=>db.prepare('SELECT * FROM job_mail_live_qa WHERE recipient_hash=? ORDER BY (completed_at IS NULL AND expires_at>?) DESC,created_at DESC,id DESC LIMIT 1').bind(recipientHash,Date.now()).first();
+ return{db,read,marker,received,diagnostic,now,recipient,recipientHash,keyHash,encryptionKey,adapter,engine,latest};
+}
+async function liveFixture(c,row){
+ liveNeed(row&&liveUUID.test(row.id)&&liveJob.test(row.job_id)&&row.job_id==='JOB-QA-MAIL-LIVE-'+row.id.replaceAll('-','').toUpperCase()&&row.recipient_hash===c.recipientHash&&row.key_hash===c.keyHash&&row.expires_at===row.created_at+900000,'RECOVERY_QA_FIXTURE',400);
+ const record=await c.db.prepare("SELECT r.data_json,c.secret_hash,c.revision FROM job_store_records r JOIN job_owner_credentials c ON c.job_id=r.id WHERE r.collection='bolsa_trabajo' AND r.id=?").bind(row.job_id).first();let item;try{item=JSON.parse(record?.data_json)}catch{}
+ liveNeed(item?.id===row.job_id&&item.titulo==='QA11767 · Recuperación por correo · NO CONTRATAR'&&item.activo===false&&item.estado==='cerrada_por_contratante'&&item.contacto_email===c.recipient&&record.revision>=1&&record.revision<=2,'RECOVERY_QA_FIXTURE',400);
+ return record;
+}
+async function liveStatus(c,row){
+ const result={result:'status',ready:c.received,initialized:!!c.marker,diagnostic_received:c.received,encryption_key_configured:true,provider_configured:!!c.adapter,complete:false,can_start:!row||row.expires_at<=c.now||!!row.completed_at};
+ if(!row)return result;
+ await liveFixture(c,row);const outbox=await c.db.prepare('SELECT state,provider_id,attempts,expires_at FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();
+ return{...result,request_id:row.id,job_id:row.job_id,expires_at:row.expires_at,expired:row.expires_at<=c.now,dispatch_reserved:!!row.dispatch_at,provider_accepted:!!outbox?.provider_id,email_attempts:outbox?.attempts||0,link_redeemed:outbox?.state==='redeemed',complete:!!row.completed_at,result:row.completed_at?'complete':'status',checks:row.completed_at?LIVE_LABELS.map(x=>x+': aprobado'):[]};
+}
+async function uadavJobMailLiveRoute(request,env){
+ const url=new URL(request.url),origin=request.headers.get('Origin'),allowed=[LIVE_SITE,LIVE_PAGES];
+ const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',Pragma:'no-cache','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',Vary:'Origin',...(allowed.includes(origin)?{'Access-Control-Allow-Origin':origin}:{})};
+ const reply=(body,status=200)=>new Response(JSON.stringify({build:BUILD,scope:LIVE_SCOPE,recovery_enabled:false,...body}),{status,headers});
+ try{
+  liveNeed(url.origin===LIVE_SITE,'RECOVERY_QA_STAGING_ONLY',403);
+  if(url.pathname==='/qa/recuperacion-oferta'){
+   liveNeed(request.method==='GET'&&!url.search,'RECOVERY_QA_METHOD',405);const nonce=crypto.randomUUID().replaceAll('-','');
+   return new Response(UADAV_LIVE_MAIL_HTML.replaceAll('%%NONCE%%',nonce),{headers:{...headers,'Content-Type':'text/html; charset=utf-8','X-Robots-Tag':'noindex, nofollow','Content-Security-Policy':"default-src 'none'; script-src 'nonce-"+nonce+"'; style-src 'nonce-"+nonce+"'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"}});
+  }
+  const publicRedeem=url.pathname===LIVE_REDEEM;
+  liveNeed(publicRedeem||url.pathname===LIVE_ADMIN,'RECOVERY_QA_ROUTE',404);
+  liveNeed(!url.search,'RECOVERY_QA_INPUT',400);
+  if(publicRedeem&&request.method==='OPTIONS'){
+   liveNeed(allowed.includes(origin),'RECOVERY_QA_ORIGIN',403);return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'POST,OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'0'}});
+  }
+  if(!publicRedeem){const admin=env.ADMIN_KEY;liveNeed(typeof admin==='string'&&!!admin.trim()&&request.headers.get('Authorization')==='Bearer '+admin.trim(),'RECOVERY_QA_AUTH',401);liveNeed(!origin||origin===LIVE_SITE,'RECOVERY_QA_ORIGIN',403)}
+  else liveNeed(allowed.includes(origin),'RECOVERY_QA_ORIGIN',403);
+  liveNeed(request.method==='POST'||!publicRedeem&&request.method==='GET','RECOVERY_QA_METHOD',405);
+  let body;
+  if(request.method==='POST'){liveNeed(/^application\/json(?:\s*;|$)/i.test(request.headers.get('Content-Type')||''),'RECOVERY_QA_INPUT',400);body=await uadavSecurityJSON(request,768).catch(()=>null);liveNeed(body&&typeof body==='object'&&!Array.isArray(body),'RECOVERY_QA_INPUT',400)}
+  if(!publicRedeem&&request.method==='GET'){
+   // Missing configuration is readable by Admin without creating schema or mail.
+   if(!liveHex(env.JOB_RECOVERY_ENCRYPTION_KEY))return reply({result:'status',ready:false,encryption_key_configured:false,complete:false,checks:[]});
+   const c=await liveContext(env);return reply(await liveStatus(c,c.marker?await c.latest():null));
+  }
+  if(publicRedeem){
+   liveNeed(liveExact(body,['job_id','token','new_secret','confirm'])&&typeof body.job_id==='string'&&liveJob.test(body.job_id)&&liveHex(body.token)&&liveHex(body.new_secret)&&body.confirm==='RECUPERAR_OFERTA','RECOVERY_QA_LINK',400);
+   const peer=request.headers.get('CF-Connecting-IP');liveNeed(typeof peer==='string'&&peer.length<=64&&/^[a-fA-F0-9:.]+$/.test(peer),'RECOVERY_QA_ORIGIN',403);
+   const c=await liveContext(env,false);liveNeed(c.marker,'RECOVERY_QA_STORAGE');
+   liveNeed(await uadavJobRate({DB:c.db},'mail-live-redeem:'+await liveHash(peer),12,600000),'RECOVERY_QA_RATE',429);
+   const row=await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE job_id=?').bind(body.job_id).first();await liveFixture(c,row);
+   liveNeed(row.expires_at>Date.now()&&!!row.dispatch_at,'RECOVERY_QA_LINK',400);
+   const newHash=await liveHash(body.new_secret);await c.engine().redeem({jobId:row.job_id,token:body.token,newSecretHash:newHash});
+   const call=secret=>uadavJobD1Inbox(new Request(LIVE_SITE+'/api/bolsa_trabajo/mis-postulantes',{method:'POST',headers:{'Content-Type':'application/json','CF-Connecting-IP':peer},body:JSON.stringify({job_id:row.job_id,clave:secret})}),{...env,DB:c.db},{});
+   const old=await call(await liveOldSecret(c.encryptionKey,row.job_id)),fresh=await call(body.new_secret);
+   liveNeed(old.status===404&&fresh.status===200,'RECOVERY_QA_INBOX');
+   const written=await c.db.prepare("UPDATE job_mail_live_qa SET completed_at=COALESCE(completed_at,?),new_hash=? WHERE id=? AND key_hash=? AND EXISTS(SELECT 1 FROM job_owner_credentials WHERE job_id=? AND secret_hash=? AND revision=2)").bind(Date.now(),newHash,row.id,c.keyHash,row.job_id,newHash).run();liveNeed(written.meta?.changes===1,'RECOVERY_QA_COMMIT');
+   return reply({success:true,job_id:row.job_id,revision:2,result:'recovered'});
+  }
+  liveNeed(typeof body.action==='string','RECOVERY_QA_INPUT',400);
+  if(body.action==='start')liveNeed(liveExact(body,['action','request_id','confirm'])&&typeof body.request_id==='string'&&liveUUID.test(body.request_id)&&body.confirm==='OFERTA_FICTICIA_Y_CORREO_PROPIO','RECOVERY_QA_INPUT',400);
+  else liveNeed(['request','send'].includes(body.action)&&liveExact(body,['action','request_id','confirm'])&&typeof body.request_id==='string'&&liveUUID.test(body.request_id)&&body.confirm==='ENVIAR_ENLACE_A_CORREO_PROPIO','RECOVERY_QA_INPUT',400);
+  const c=await liveContext(env);liveNeed(c.received,'RECOVERY_QA_RECEIPT_REQUIRED',409);if(body.action==='start'||body.action==='send')await liveReceiverReady();
+  if(!c.marker){
+   liveNeed(body.action==='start','RECOVERY_QA_NOT_INITIALIZED',409);
+   const d=c.diagnostic,guard="EXISTS(SELECT 1 FROM job_store_meta WHERE key='migration_ready' AND value='true') AND EXISTS(SELECT 1 FROM job_store_meta WHERE key LIKE 'brevo:delivery:request:%' AND json_extract(value,'$.recipient_hash')=? AND json_extract(value,'$.verified_at')=? AND json_extract(value,'$.verification_hash') IS NULL) AND NOT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name IN ('job_recovery_outbox','job_mail_live_qa'))";
+   await c.db.batch([...uadavJobGuard(c.db,guard,[c.recipientHash,d.verified_at]),...UADAV_LIVE_MAIL_SCHEMA.map(sql=>c.db.prepare(sql)),c.db.prepare("CREATE TABLE job_mail_live_qa(id TEXT PRIMARY KEY,job_id TEXT NOT NULL UNIQUE,recipient_hash TEXT NOT NULL,key_hash TEXT NOT NULL,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,dispatch_at INTEGER,completed_at INTEGER,new_hash TEXT)"),c.db.prepare('INSERT INTO job_store_meta(key,value) VALUES(?,?)').bind(LIVE_SCHEMA_KEY,JSON.stringify({version:1,schema_sha256:UADAV_LIVE_MAIL_SCHEMA_SHA}))]);
+   c.marker={version:1,schema_sha256:UADAV_LIVE_MAIL_SCHEMA_SHA};
+  }
+  if(body.action==='start'){
+   const prior=await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE id=?').bind(body.request_id).first();if(prior)return reply(await liveStatus(c,prior));
+   const existing=await c.latest();liveNeed(!existing||existing.expires_at<=c.now||!!existing.completed_at,'RECOVERY_QA_ACTIVE',409);
+   const id=body.request_id,job='JOB-QA-MAIL-LIVE-'+id.replaceAll('-','').toUpperCase(),day=uadavJobToday(c.now),bucket='mail-live-qa:daily:'+day,reset=Date.parse(day+'T03:00:00Z')+86400000;
+   const record={id:job,titulo:'QA11767 · Recuperación por correo · NO CONTRATAR',descripcion:'Prueba privada de recuperación. Oferta ficticia cerrada.',contacto:'Prueba privada de staging',contacto_email:c.recipient,activo:false,estado:'cerrada_por_contratante',fecha_limite:day};
+   const oldHash=await liveHash(await liveOldSecret(c.encryptionKey,job));
+   try{await c.db.batch([c.db.prepare('INSERT INTO job_store_rates(bucket,hits,resets_at) VALUES(?,1,?) ON CONFLICT(bucket) DO UPDATE SET hits=hits+1').bind(bucket,reset),...uadavJobGuard(c.db,'EXISTS(SELECT 1 FROM job_store_rates WHERE bucket=? AND hits<=2) AND NOT EXISTS(SELECT 1 FROM job_mail_live_qa WHERE expires_at>? AND completed_at IS NULL)',[bucket,c.now]),c.db.prepare("INSERT INTO job_store_records(collection,id,data_json,updated_at) VALUES('bolsa_trabajo',?,?,?)").bind(job,JSON.stringify(record),new Date(c.now).toISOString()),c.db.prepare('INSERT INTO job_owner_credentials(job_id,secret_hash,revision,updated_at) VALUES(?,?,1,?)').bind(job,oldHash,new Date(c.now).toISOString()),c.db.prepare('INSERT INTO job_mail_live_qa(id,job_id,recipient_hash,key_hash,created_at,expires_at) VALUES(?,?,?,?,?,?)').bind(id,job,c.recipientHash,c.keyHash,c.now,c.now+900000)])}catch{const saved=await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE id=?').bind(id).first();if(saved)return reply(await liveStatus(c,saved));liveFail('RECOVERY_QA_LIMIT_OR_ACTIVE',409)}
+   return reply(await liveStatus(c,c.marker?await c.latest():null));
+  }
+  const row=await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE id=?').bind(body.request_id).first();await liveFixture(c,row);liveNeed(row.expires_at>Date.now()&&!row.completed_at,'RECOVERY_QA_LINK',400);
+  if(body.action==='request'){await c.engine({clock:()=>row.created_at}).enqueue({jobId:row.job_id,recipient:c.recipient,requestId:row.id,actorHash:await liveHash('mail-live-qa-admin:'+row.id)});return reply(await liveStatus(c,row));}
+  // Exactly one dispatch reservation per fixture. A timeout never sends again.
+  const pending=await c.db.prepare('SELECT id FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();liveNeed(pending,'RECOVERY_QA_REQUEST_REQUIRED',409);
+  const unexpected=await c.db.prepare("SELECT COUNT(*) AS n FROM job_recovery_outbox o WHERE NOT EXISTS(SELECT 1 FROM job_mail_live_qa q WHERE q.job_id=o.job_id AND q.id=o.request_id)").first();liveNeed(unexpected.n===0,'RECOVERY_QA_FOREIGN_OUTBOX',423);
+  const reserved=await c.db.prepare('UPDATE job_mail_live_qa SET dispatch_at=? WHERE id=? AND dispatch_at IS NULL AND expires_at>?').bind(Date.now(),row.id,Date.now()).run();
+  if(reserved.meta?.changes===1)await c.engine().dispatch(c.adapter);
+  return reply(await liveStatus(c,await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE id=?').bind(row.id).first()));
+ }catch(error){const code=/^RECOVERY_QA_[A-Z_]{1,60}$/.test(error?.liveCode||'')?error.liveCode:'RECOVERY_QA_UNCONFIRMED';const status=error?.liveStatus||(error?.code==='JOB_RECOVERY_INPUT'?400:503);return reply({result:'error',success:false,code,error:code==='RECOVERY_QA_LINK'||status===400?'Este enlace ya no está disponible. Solicitá uno nuevo.':'No se confirmó la operación. Consultá el estado antes de reintentar.'},status)}
+}
+
+/* END PRIVATE JOB MAIL LIVE QA */
 
 const uadavWorker = {
   async fetch(request, env, ctx) {
@@ -5969,11 +6533,13 @@ export {uadavPodcastURL,uadavPodcastXML,uadavFetchPodcast,uadavSyncPodcast,uadav
 
 const uadavStagingWorker={...uadavWorker,async scheduled(event,env){return uadavJobScheduled(event,env)},async fetch(request,env,ctx){
   const url=new URL(request.url),path=url.pathname;
+  if(['/qa/recuperacion-oferta','/api/admin/jobs/email-recovery-qa','/api/qa/bolsa/email-recovery/redeem'].includes(path))return uadavJobMailLiveRoute(request,env);
   if(['/qa/correo','/api/admin/jobs/email-check','/qa/correo-real','/api/admin/jobs/email-delivery-check'].includes(path))return uadavBrevoSandboxRoute(request,env);
   const response=(data,status)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':'*','X-Content-Type-Options':'nosniff'}});
   if(env.JOB_STORE_D1==='true'&&url.hostname!=='uadav-api-staging.uadavstream.workers.dev')return response({error:'El almacenamiento laboral nuevo solo está permitido en staging',code:'JOB_STAGING_ONLY'},503);
   if(env.JOB_STORE_MAINTENANCE==='true'&&!['GET','HEAD','OPTIONS'].includes(request.method)&&path!=='/api/admin/jobs/migration')return response({error:'Staging está en mantenimiento. No se recibieron datos.',code:'JOB_MAINTENANCE'},423);
   try{
+    if(env.JOB_STORE_D1==='true'&&request.method==='POST'&&path==='/api/bolsa_trabajo/mis-postulantes')return await uadavJobD1Inbox(request,env);
     if(env.JOB_STORE_D1==='true'&&request.method==='POST'&&['/api/bolsa_trabajo','/api/bolsa_trabajo/postular'].includes(path)){
       const peer=request.headers.get('CF-Connecting-IP');if(!peer)return response({error:'No se pudo validar el origen.'},403);
       if(!await uadavJobRate(env,path+':'+await uadavDigest(peer),path.endsWith('/postular')?12:6,600000))return response({error:'Demasiados envíos. Intentá más tarde.'},429);

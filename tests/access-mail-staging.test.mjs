@@ -184,7 +184,10 @@ test('caller cancellation aborts sending and a pre-aborted request never leaves 
   assert.equal(calls, 1);
 });
 
-test('operational Worker does not import the transport or expose a receiver for these draft messages', async () => {
+test('embedded mail transport is confined to the staging QA block while public recovery stays locked', async () => {
   const source = await readFile(new URL('../worker.js', import.meta.url), 'utf8');
-  assert.doesNotMatch(source, /brevo-staging-mail|access-mail-message|createBrevoStagingMail/);
+  const begin=source.indexOf('/* BEGIN PRIVATE JOB MAIL LIVE QA */'),end=source.indexOf('/* END PRIVATE JOB MAIL LIVE QA */');
+  assert(begin>=0&&end>begin);assert(!source.slice(0,begin).includes('createBrevoStagingMail'));assert(!source.slice(end).includes('createBrevoStagingMail'));
+  const publicRecovery=source.slice(source.indexOf("if(path==='/api/bolsa_trabajo/acceso/solicitar'"),source.indexOf('// Credential lookup is read-only'));assert(publicRecovery.includes("},503);"));assert(!publicRecovery.includes('uadavLiveMailCore'));
+  assert(source.includes("liveNeed(url.origin===LIVE_SITE"));
 });

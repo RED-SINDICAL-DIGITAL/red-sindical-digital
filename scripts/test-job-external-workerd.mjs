@@ -81,6 +81,16 @@ export default {async test(){
  const deliveryPage=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/qa/correo-real'),probeEnv,{});
  check(deliveryPage.status===200&&(await deliveryPage.text()).includes('Autorizo enviar un correo de prueba'),'Real-mail QA page without env access');
  console.log('PASS workerd: private real-mail diagnostic page and authorization gates (no real delivery)');
+ check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/jobs/email-recovery-qa'),probeEnv,{})).status===401,'Recovery QA authenticates before bindings');
+ check((await worker.fetch(new Request('https://uadav-api.uadavstream.workers.dev/api/admin/jobs/email-recovery-qa',{headers:{Authorization:'Bearer synthetic-admin'}}),probeEnv,{})).status===403,'Recovery QA rejects production before bindings');
+ const recoveryPage=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/qa/recuperacion-oferta'),probeEnv,{});
+ check(recoveryPage.status===200&&(await recoveryPage.text()).includes('Preparar y enviar enlace'),'Recovery QA page without secrets');
+ console.log('PASS workerd: private end-to-end recovery interface, staging host and Admin-before-binding gates');
+ const recoveryPreflight=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/qa/bolsa/email-recovery/redeem',{method:'OPTIONS',headers:{Origin:'https://uadav-stream-staging.pages.dev'}}),probeEnv,{});
+ check(recoveryPreflight.status===204&&recoveryPreflight.headers.get('Access-Control-Allow-Origin')==='https://uadav-stream-staging.pages.dev','Recovery proof preflight is strict and does not read bindings');
+ check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/qa/bolsa/email-recovery/redeem',{method:'POST',headers:{Origin:'https://evil.invalid','Content-Type':'application/json'},body:'{}'}),probeEnv,{})).status===403,'Recovery proof rejects foreign origin before bindings');
+ console.log('PASS workerd: public synthetic-proof entrypoint has strict CORS and rejects foreign origins');
+
  const mailLabEnv=new Proxy({QA_BOLSA_KEY:'synthetic-lab-key-'+'x'.repeat(48)},{get(t,k){if(k==='QA_BOLSA_KEY')return t[k];throw Error('Mail lab read a binding before authorization: '+String(k))}});
  check((await mailLabWorker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/health'),mailLabEnv,{})).status===403,'Mail lab rejects operational host');
  check((await mailLabWorker.fetch(new Request('https://uadav-bolsa-lab.uadavstream.workers.dev/mail/status',{method:'POST'}),mailLabEnv,{})).status===401,'Mail lab authenticates before DB');

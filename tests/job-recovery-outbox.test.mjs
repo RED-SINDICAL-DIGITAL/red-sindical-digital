@@ -142,7 +142,8 @@ test('an abandoned lease can retry; the draft is idempotent and the public recov
   await f.engine.enqueue(f.request());await f.DB.prepare("UPDATE job_recovery_outbox SET state='sending',attempts=1,lease_until=?,lease_owner='abandoned'").bind(f.now()+30000).run();assert.deepEqual(await f.engine.dispatch(f.provider()),{state:'idle'});f.advance(30001);assert.deepEqual(await f.engine.dispatch(f.provider()),{state:'accepted'});
   const schema=await readFile(new URL('../migrations/staging/20261026_job_recovery_outbox.sql',import.meta.url),'utf8');for(const sql of schema.replace(/--[^\n]*/g,'').split(';').filter(s=>s.trim()))await f.DB.prepare(sql).run();assert.equal(await f.count('job_recovery_outbox'),1);assert.equal((await f.DB.prepare('PRAGMA foreign_key_check').all()).results.length,0);
   for(const route of ['solicitar','restablecer']){const r=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/bolsa_trabajo/acceso/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),f.env,{});assert.equal(r.status,503)}
-  assert(!await readFile(new URL('../worker.js',import.meta.url),'utf8').then(s=>s.includes('createJobRecoveryOutbox')));
+  const source=await readFile(new URL('../worker.js',import.meta.url),'utf8'),begin=source.indexOf('/* BEGIN PRIVATE JOB MAIL LIVE QA */'),end=source.indexOf('/* END PRIVATE JOB MAIL LIVE QA */');assert(begin>=0&&end>begin);assert(!source.slice(0,begin).includes('createJobRecoveryOutbox'));assert(!source.slice(end).includes('createJobRecoveryOutbox'));
+  assert(source.includes("if(['/qa/recuperacion-oferta','/api/admin/jobs/email-recovery-qa','/api/qa/bolsa/email-recovery/redeem'].includes(path))"));
  }finally{f.close()}
 });
 test('older recovery links are invalidated only in the successful possession-based redemption transaction',async()=>{
