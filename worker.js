@@ -1,3 +1,11 @@
+function uadavEventScheduleError(body,{required=false}={}){
+ const calendar=value=>{if(typeof value!=='string')return false;const m=/^(\d{4}-\d{2}-\d{2})(?:T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,3})?)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)?)?$/.exec(value);if(!m)return false;const d=new Date(m[1]+'T12:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===m[1]};
+ if(required&&!body?.fecha&&!body?.fecha_inicio)return 'Elegí una fecha válida para el evento.';
+ for(const key of ['fecha','fecha_inicio','fecha_fin'])if(body?.[key]!==undefined&&body[key]!==''&&!calendar(body[key]))return 'La fecha del evento no es válida. Revisá el día, mes y año.';
+ const start=body?.fecha_inicio||body?.fecha,end=body?.fecha_fin;if(start&&end&&String(end).slice(0,10)<String(start).slice(0,10))return 'La fecha de finalización debe ser igual o posterior al inicio.';
+ if(body?.funciones!==undefined){if(!Array.isArray(body.funciones)||body.funciones.length>50)return 'Podés indicar hasta 50 funciones.';for(const f of body.funciones){if(!f||typeof f!=='object'||!calendar(f.fecha||f.date))return 'Cada función necesita una fecha válida.';const time=f.hora??f.time??f.horario;if(time!==undefined&&time!==''&&(typeof time!=='string'||!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)))return 'Revisá el horario de cada función (HH:MM).';}}
+ return null;
+}
 async function uadavArtistDraftSchema(env){
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS artist_profile_drafts(artist_id TEXT PRIMARY KEY,claim_id TEXT,patch_json TEXT NOT NULL,revision INTEGER NOT NULL,state TEXT NOT NULL,updated_at TEXT NOT NULL)").run();
 }
@@ -2611,6 +2619,11 @@ const uadavWorker = {
       const check=await uadavVerifyTurnstile(env,b.turnstile_token,securityActions[path]);if(!check.ok)return json({error:check.error},check.status);
       delete b.turnstile_token;const cleanHeaders=new Headers(request.headers);cleanHeaders.delete('Content-Length');request=new Request(request,{headers:cleanHeaders,body:JSON.stringify(b)});
     }
+    if((path==='/api/eventos'&&request.method==='POST')||(path==='/api/cartelera'&&['POST','PUT'].includes(request.method))){
+      if(path==='/api/cartelera'&&!isAdmin())return json({error:'No autorizado'},401);
+      let schedule;try{schedule=await request.clone().json()}catch{return json({error:'No se pudo leer el evento. Revisá el formulario.'},400)}
+      const scheduleError=uadavEventScheduleError(schedule,{required:request.method==='POST'});if(scheduleError)return json({error:scheduleError},400);
+    }
     const hasD1=()=>!!env.DB;
     const jobStore=env.JOB_STORE_D1==='true'?uadavJobStore(env):null;
     const getJSON = async (key, fallback) => {
@@ -4214,7 +4227,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       }
       if(request.method==='PUT'){
         const b=await request.json().catch(()=>({})); const list=await getArray(key); const i=list.findIndex(x=>String(x.id)===String(b.id)); if(i<0)return json({error:'Show no encontrado'},404);
-        const before={...list[i]}; list[i]={...list[i],...b,id:list[i].id,estado:'published',actualizado:isoNow()}; await putJSON(key,list); await saveEntityVersion('event',list[i].id,before); const d1sync=await safeD1('sync_cartelera_update',()=>syncEventsD1([list[i]])); await audit('update_event','event',list[i].id,{}); return json({success:true,item:list[i],d1_sync:d1sync});
+        const before={...list[i]}; const scheduleError=uadavEventScheduleError({...list[i],...b});if(scheduleError)return json({error:scheduleError},400); list[i]={...list[i],...b,id:list[i].id,estado:'published',actualizado:isoNow()}; await putJSON(key,list); await saveEntityVersion('event',list[i].id,before); const d1sync=await safeD1('sync_cartelera_update',()=>syncEventsD1([list[i]])); await audit('update_event','event',list[i].id,{}); return json({success:true,item:list[i],d1_sync:d1sync});
       }
       if(request.method==='DELETE'){
         const b=await request.json().catch(()=>({})); const list=await getArray(key); const item=list.find(x=>String(x.id)===String(b.id)); await putJSON(key,list.filter(x=>String(x.id)!==String(b.id))); await safeD1('delete_event',()=>env.DB.prepare(`DELETE FROM events WHERE id=?`).bind(String(b.id)).run()); if(item)await saveEntityVersion('event',String(b.id),item); await audit('delete_event','event',String(b.id),{}); return json({success:true});
