@@ -1,0 +1,116 @@
+{
+  "recorded_at": "2026-10-27T15:56:16.960998-03:00",
+  "scope": "11769-deployment-and-account-mail-observed-staging",
+  "operator_report": {
+    "text": "hecho todo",
+    "scope": "Prior delivery checklist, including both Workers, account email, backup rehearsal and PC/mobile checks",
+    "detail_level": "General completion statement; no private rehearsal JSON, counts or file checksum supplied"
+  },
+  "public_observations": {
+    "observed_at": "2026-10-27T15:50:22.701727-03:00",
+    "scope": "public-read-only-staging",
+    "requests": [
+      {
+        "url": "https://uadav-api-staging.uadavstream.workers.dev/api/health",
+        "status": 200,
+        "data": {
+          "ok": true,
+          "success": true,
+          "service": "PLATFORM",
+          "version": "V11.7",
+          "build": "11769",
+          "kv": true,
+          "d1": true,
+          "youtube_api_enabled": true,
+          "ai_gemini": false,
+          "ai_groq": false,
+          "email_automation": false,
+          "queue": false,
+          "youtube_key": true,
+          "youtube_api_mode": "enabled",
+          "timestamp": "2026-10-27T18:50:28.352Z"
+        },
+        "cache_control": "no-store"
+      },
+      {
+        "url": "https://uadav-api-staging.uadavstream.workers.dev/api/access/email/status",
+        "status": 200,
+        "data": {
+          "build": "11769",
+          "checked_at": "2026-10-27T18:50:33.170Z",
+          "scope": "account-email-staging",
+          "installed": true,
+          "enabled": true,
+          "qa_verification": true,
+          "qa_login": true,
+          "daily_budget": 240,
+          "public_job_key_recovery_enabled": false
+        },
+        "cache_control": "no-store"
+      },
+      {
+        "url": "https://uadav-restore-qa.uadavstream.workers.dev/health",
+        "status": 200,
+        "data": {
+          "ok": true,
+          "version": "11769-account-restore",
+          "purpose": "isolated-bolsa-account-rehearsal",
+          "enabled": true,
+          "database_bound": true
+        },
+        "cache_control": "no-store"
+      },
+      {
+        "url": "https://uadav-stream-staging.pages.dev/account-email-version.json",
+        "status": 200,
+        "data": {
+          "version": "11769.1",
+          "purpose": "account_email_access",
+          "confirmation": "explicit-post"
+        },
+        "cache_control": "no-store"
+      }
+    ]
+  },
+  "public_catalog": {
+    "checked_at": "2026-10-27T15:52:23.034796-03:00",
+    "scope": "public-jobs-read-only-staging",
+    "offers": 5,
+    "external_offers": [],
+    "private_fields_in_public_response": []
+  },
+  "independently_confirmed": [
+    "API build11769, KV and D1 available",
+    "Account email installed and explicitly enabled",
+    "QA verification and QA login flags true",
+    "Isolated restore version11769 and isolated DB binding available",
+    "Pages receiver protocol11769.1",
+    "Five public offers without credential-like fields",
+    "Public email UI renders email/unchecked consent/request button in Work Chrome"
+  ],
+  "not_independently_confirmed": [
+    "Private11769 rehearsal final phase, hash and counts",
+    "Physical PC/mobile end-to-end assertions beyond operator statement",
+    "Lifecycle of a real eligible imported external job; public catalog has zero external offers",
+    "Remote Worker JavaScript byte equality to GitHub artifact"
+  ],
+  "browser_check": {
+    "canonical_url": "https://uadav-stream-staging.pages.dev/entrar-correo",
+    "email_field_visible": true,
+    "consent_checked": false,
+    "request_button_visible": true,
+    "credentials_entered": false,
+    "email_sent": false,
+    "proof_redeemed_by_work": false,
+    "surface": "Work Chrome cloud browser, desktop"
+  },
+  "unchanged_boundaries": {
+    "production_main": "fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd",
+    "branches_merged": false,
+    "legacy_offer_key_email_recovery": false,
+    "operational_restore_not_activated_by_work": true,
+    "real_email_sent_by_work": false,
+    "private_backup_read_by_work": false
+  },
+  "next_step": "Preserve deployment and successful account-mail proof. Attach only the existing safe final rehearsal JSON to accredit its private comparison; do not send the backup or secrets. Real eligible external-source proof remains distinct."
+}

@@ -1,6 +1,6 @@
 # Correo de acceso y Brevo · estado27/10/2026
 
-**11769 escrito/probado, pendiente de despliegue y pruebas reales de cuenta.** La QA privada de oferta11767 y el respaldo/vencimiento11768 ya fueron aprobados por el operador. No repetir sus correos, laboratorios, cron, Brevo, dominio, DNS, remitente, APIkey o secretos. La secuencia vigente es [BOLSA-11769-ENTREGA-INTEGRADA.md](BOLSA-11769-ENTREGA-INTEGRADA.md).
+**11769 desplegado y correo de cuenta habilitado:** estado público15:50Argentina instalado/enabled/qa_verification/qa_login true, después de la confirmación general del operador. No repetir esas pruebas. Evidencia `evidence/bolsa-11769-despliegue-correo-observado-20261027.json`. La QA privada de oferta11767 y el respaldo/vencimiento11768 ya fueron aprobados por el operador. No repetir sus correos, laboratorios, cron, Brevo, dominio, DNS, remitente, APIkey o secretos. La secuencia vigente es [BOLSA-11769-ENTREGA-INTEGRADA.md](BOLSA-11769-ENTREGA-INTEGRADA.md).
 
 ## Configuración conservada
 
@@ -20,6 +20,6 @@ Dominio `correo-staging.uadavstream.com.ar` y remitente `acceso@correo-staging.u
 
 11765 sandbox aceptado sin envío;11766 diagnóstico real recibido; siete fases11766-mail-lab aprobadas;11767 recuperación real de oferta ficticia cerrada completada.11768 captura/avisos aprobados, health y rechazo404 sintético de postulación vencida observados por Work. Evidencias históricas en `docs/evidence`.
 
-11769:294Worker,186Pages,32controles workerd y12Radio locales. SMTP y D1 sintéticos; no nuevo correo real o SQL remoto por Work. Una lectura pública Agencia Beat no envió correo o publicó trabajos. Falta el despliegue manual de los dos Workers, los dos propósitos nuevos de cuenta, nuevo respaldo/restore aislado y recorrido físico. No repetir11767 ni habilitar por ese resultado el acceso general.
+11769:294Worker,186Pages,32controles workerd y12Radio locales. SMTP y D1 sintéticos; no nuevo correo real o SQL remoto por Work. Una lectura pública Agencia Beat no envió correo o publicó trabajos. Despliegues y dos propósitos de cuenta ya acreditados por estado remoto. El operador indica ensayo/recorrido completados; falta adjuntar el informe seguro privado de comparación y alcance físico, sin repetirlos. El flag histórico email_automation de health no es el estado del nuevo circuito: consultar /api/access/email/status. No repetir11767 ni habilitar por ese resultado el acceso general.
 
 Los dos endpoints antiguos por clave de oferta siguen503. Los trabajos guardados se recuperan entrando a la cuenta por su identidad verificada. Restore operativo permanece apagado; Google no implementado ni requisito artificial para cerrar Bolsa. Estado de cierre: `BOLSA-ESTADO-Y-CIERRE-20261025.md`.

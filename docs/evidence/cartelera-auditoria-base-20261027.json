@@ -1,0 +1,49 @@
+{
+  "scope": "isolated-synthetic-cartelera-audit",
+  "remote_writes": false,
+  "real_email_sent": false,
+  "checks": [
+    {
+      "name": "identical_request_replay",
+      "response_statuses": [
+        200,
+        200
+      ],
+      "same_request_id": true,
+      "returned_same_id": false,
+      "visible_copies": 2,
+      "publication_rows": 2
+    },
+    {
+      "name": "second_collection_write_failure",
+      "first_status": "uncaught_exception",
+      "after_failure": {
+        "publications": 1,
+        "catalog": 0
+      },
+      "retry_status": 200,
+      "after_retry": {
+        "publications": 2,
+        "catalog": 1
+      }
+    },
+    {
+      "name": "invalid_calendar_day",
+      "status": 200,
+      "success": true
+    }
+  ],
+  "checked_at": "2026-10-27T15:56:16.961286-03:00",
+  "worker_commit": "bc3e4470b5f0a3a5d823516013fa46328d67a936",
+  "pages_commit": "6913c9f56107246c6949767ea4e7cdf34896657b",
+  "baseline": {
+    "node_ui_tests": 33,
+    "passed": 33,
+    "failed": 0,
+    "slider_script": "passed"
+  },
+  "code_changed": false,
+  "worker_deployed": false,
+  "production_touched": false,
+  "live_event_published": false
+}

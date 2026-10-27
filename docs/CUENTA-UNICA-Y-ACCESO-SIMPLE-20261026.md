@@ -1,6 +1,6 @@
 # Cuenta única y acceso simple · decisión de producto · 26/10/2026
 
-**Actualización27/10 · entrega11769:** correo de cuenta y rotación avanzada escritos/probados, pendientes de despliegue y dos propósitos reales nuevos: confirmar desde la cuenta original e ingresar a esa misma cuenta.11767 y11768 ya aprobados no se repiten. Guía [BOLSA-11769-ENTREGA-INTEGRADA.md](BOLSA-11769-ENTREGA-INTEGRADA.md). Google sigue opcional posterior. Código, CI y activación/despliegue son estados distintos.
+**Actualización27/10,15:50Argentina:**11769 desplegado. Work comprobó correo de cuenta instalado/habilitado y qa_verification/qa_login true, después del «hecho todo» del operador. Cuenta y correo aprobados en staging. No repetir esos mensajes o despliegues. Informe privado del ensayo y detalle físico siguen sin adjuntar, no se inventan conteos. Google opcional posterior. Evidencia `evidence/bolsa-11769-despliegue-correo-observado-20261027.json`.
 
 El usuario aprobó una cuenta UADAV para todas las secciones, correo privado y acceso opcional con Google. Solicitó recibir por correo lo necesario para recuperar sus accesos porque los códigos y archivos actuales resultan difíciles incluso para él. La prioridad es que una persona sin conocimientos técnicos pueda volver a Mi Perfil sin administrar claves largas.
 
@@ -41,7 +41,7 @@ Objetivos de UI: una acción principal por pantalla, etiquetas claras, foco visi
 
 ## Estado de implementación11769
 
-Mi Perfil tiene cuenta interna, sincronización, dispositivos, respaldo y vínculos artísticos.11769 incorpora correo privado verificado/consentido y entrada general por enlace, con identificador de cuenta estable; el acceso general permanece apagado hasta completar ambas comprobaciones reales y activarlo explícitamente en staging. Google no está implementado y no se muestra como botón operativo.
+Mi Perfil tiene cuenta interna, sincronización, dispositivos, respaldo y vínculos artísticos.11769 incorpora correo privado verificado/consentido y entrada general por enlace, con identificador de cuenta estable; el acceso general fue habilitado explícitamente en staging después de ambas comprobaciones, según el estado remoto15:50Argentina. Google no está implementado y no se muestra como botón operativo.
 
 La persona que ya tiene una cuenta debe confirmar primero desde esa cuenta y abrir ese primer correo en el mismo dispositivo autenticado. Esta exigencia evita vincular el correo de otra persona a una cuenta ajena. Después puede entrar por enlace desde otro equipo. Una dirección sin identidad previa crea una cuenta solo al consumir la prueba recibida; no adopta datos antiguos por coincidencia de contacto. El cambio de correo mantiene el anterior hasta verificar el nuevo.
 
@@ -55,6 +55,6 @@ El export incluye identidades cifradas y versiones permanentes; excluye enlaces 
 
 294pruebas Worker,186Pages,32controles workerd y12Radio locales aprobados, con correo simulado. Incluyen concurrencia, respuesta perdida, rollback, cambio/revocación/borrado, identificación de cuenta y protección frente a respuestas tardías. Se mantienen QR, respaldo largo y comprobantes.
 
-La QA real11767 de una oferta ficticia y el respaldo/vencimiento11768 ya están aprobados; no repetirlos. Falta desplegar11769, confirmar y entrar con los dos nuevos mensajes de cuenta, ensayar la nueva captura privada en D1 aislado y completar PC/celular/accesibilidad. Las pruebas sintéticas no acreditan recepción real o UX física. Cada activación exige la misma cuenta/revisión verificada, no basta un informe copiado.
+La QA real11767 de una oferta ficticia y el respaldo/vencimiento11768 ya están aprobados; no repetirlos. Despliegue/confirmación/entrada ya acreditados por estado remoto; el operador informa también ensayo y comprobaciones hechos. Falta adjuntar el informe seguro del ensayo y alcance físico para acreditar sus detalles, sin repetir esos pasos. No se certifica accesibilidad completa por una confirmación general. Las pruebas sintéticas no acreditan recepción real o UX física. Cada activación exige la misma cuenta/revisión verificada, no basta un informe copiado.
 
 Brevo comparte la cuota gratuita observada de300envíos/día; el circuito nuevo reserva hasta240/díaUTC, con cuotas por IP/dirección y reintentos idénticos acotados. No hay plan pago o gasto automático autorizado. Los avisos comunes permanecen en Mi Perfil; acceso y seguridad tienen prioridad. Estado completo: `BOLSA-ESTADO-Y-CIERRE-20261025.md`.
