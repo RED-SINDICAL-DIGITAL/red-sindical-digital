@@ -52,3 +52,16 @@ body[data-page="app"] #mediaDock:not(.listeningAudio).expanded #mediaStage video
 @media(prefers-reduced-motion:reduce){.nativeListening *,#radioDock{transition:none!important;animation:none!important}}
 
 body[data-page="app"] #radioDock .radioParticipate{display:none}body[data-page="app"] #radioDock.listeningExpanded .radioParticipate{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}body[data-page="app"] #radioDock .radioParticipate button{border-radius:999px;padding:12px 20px;font-size:14px;background:#ffffff0c}body[data-page="app"] #radioDock.listeningExpanded #expandRadio{top:max(32px,env(safe-area-inset-top))}
+
+/* La vista ampliada debe prevalecer sobre las medidas del reproductor compacto. */
+@media (max-width:1024px){
+ body[data-page="app"] #radioDock.listeningExpanded{
+  inset:0!important;left:0!important;right:0!important;bottom:0!important;
+  width:100%!important;height:100dvh!important;min-height:0!important;
+  padding:max(64px,env(safe-area-inset-top)) 24px max(32px,env(safe-area-inset-bottom))!important;
+  border-radius:0!important;z-index:5100;
+ }
+ body[data-page="app"] #radioDock.listeningExpanded #radioArt{width:min(42vh,280px,70vw)!important;height:auto!important;aspect-ratio:1}
+ body[data-page="app"] #radioDock.listeningExpanded #radioName{font-size:clamp(22px,5vw,30px)!important;white-space:normal}
+ body[data-page="app"] #radioDock.listeningExpanded #radioMeta{font-size:15px!important;white-space:normal}
+}
