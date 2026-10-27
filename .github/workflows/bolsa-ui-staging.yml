@@ -4,6 +4,11 @@ on:
   push:
     branches: [audit/continuidad-demo-20261019]
     paths:
+      - acceso-correo.html
+      - uadav-email-access.js
+      - uadav-email-access.css
+      - email-access-version.json
+      - tests/email-access.test.cjs
       - bolsa-trabajo.html
       - admin.html
       - manual.html
@@ -31,6 +36,11 @@ on:
       - .github/workflows/bolsa-ui-staging.yml
   pull_request:
     paths:
+      - acceso-correo.html
+      - uadav-email-access.js
+      - uadav-email-access.css
+      - email-access-version.json
+      - tests/email-access.test.cjs
       - bolsa-trabajo.html
       - admin.html
       - manual.html
@@ -67,6 +77,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/jobs-url-review.test.cjs tests/jobs-import-admin.test.cjs tests/admin-job-save.test.cjs tests/job-application-ui.test.cjs tests/job-status-contract.test.cjs tests/staging-build.test.mjs tests/jobs-migration-admin.test.cjs tests/jobs-account-ui.test.cjs tests/jobs-expiry-admin.test.cjs tests/admin-api-retry.test.cjs tests/admin-navigation.test.cjs tests/admin-navigation-races.test.cjs
+      - run: node --test tests/email-access.test.cjs tests/jobs-url-review.test.cjs tests/jobs-import-admin.test.cjs tests/admin-job-save.test.cjs tests/job-application-ui.test.cjs tests/job-status-contract.test.cjs tests/staging-build.test.mjs tests/jobs-migration-admin.test.cjs tests/jobs-account-ui.test.cjs tests/jobs-expiry-admin.test.cjs tests/admin-api-retry.test.cjs tests/admin-navigation.test.cjs tests/admin-navigation-races.test.cjs
       - run: node tests/account-notices-ui.mjs
       - run: node tests/admin-import-export.mjs

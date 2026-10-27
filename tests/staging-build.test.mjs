@@ -59,3 +59,13 @@ test('staging banner appears only in the top document, keeping embedded layout u
   assert.equal(appended.length,embedded?0:1);assert.equal(classes.length,embedded?0:1);
  }
 });
+test('email receiver keeps its URL-clearing bootstrap first and receives a strict CSP for both canonical paths',async()=>{
+ const root=await mkdtemp(path.join(os.tmpdir(),'uadav-email-build-'));try{
+  for(const p of ['index.html','app.html','usuario.html','gestionar-artista.html'])await writeFile(path.join(root,p),'<html><head><title>QA</title></head><body></body></html>');await writeFile(path.join(root,'uadav-account-sync.js'),'');
+  await mkdir(path.join(root,'tests'));for(const file of ['staging-signals-diagnostic.html','staging-presskit-diagnostic.html','staging-job-source.html'])await writeFile(path.join(root,'tests',file),'<html><head><title>QA</title></head><body></body></html>');
+  for(const file of ['acceso-correo.html','uadav-email-access.js','uadav-email-access.css','email-access-version.json'])await writeFile(path.join(root,file),await readFile(new URL('../'+file,import.meta.url)));
+  const result=await build(root,origin),page=await readFile(path.join(result.out,'acceso-correo.html'),'utf8'),headers=await readFile(path.join(result.out,'_headers'),'utf8');assert(!page.includes('staging-bootstrap.js'));assert(!page.includes('staging-banner.css'));assert(page.indexOf('emailIntentBootstrap')<page.indexOf('rel="stylesheet"'));const script=page.match(/<script id="emailIntentBootstrap">([\s\S]*?)<\/script>/)[1],{createHash}=await import('node:crypto'),hash=createHash('sha256').update(script).digest('base64');
+  for(const route of ['/acceso-correo.html','/acceso-correo']){const block=headers.slice(headers.indexOf('\n'+route+'\n')+1).split(/\n(?=\/)/)[0];assert(block.includes("'sha256-"+hash+"'"));assert(!block.includes('unsafe-inline'));assert(block.includes('Referrer-Policy: no-referrer'));assert(block.includes("frame-ancestors 'none'"));assert(block.includes('Cache-Control: no-store'));}
+  const protocol=JSON.parse(await readFile(path.join(result.out,'email-access-version.json'),'utf8'));assert.deepEqual(protocol,{scope:'email-recovery-receiver-staging',version:'11767.1',api_origin:'https://uadav-api-staging.uadavstream.workers.dev'});for(const file of ['acceso-correo.html','uadav-email-access.js','uadav-email-access.css','email-access-version.json'])assert(result.manifest.files.some(x=>x.name===file));
+ }finally{await rm(root,{recursive:true,force:true})}
+});
