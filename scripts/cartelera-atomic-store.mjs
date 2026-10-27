@@ -10,6 +10,7 @@ export async function reserveEvent(db,{requestId,payloadHash,event,createdAt}){
  const row=await db.prepare('SELECT payload_hash,event_id,event_json FROM event_publication_intents WHERE request_id=?').bind(requestId).first();
  if(!row)throw Error('Publication not confirmed');
  if(row.payload_hash!==payloadHash)return {status:'conflict'};
- const saved=await db.prepare('SELECT id FROM events WHERE id=?').bind(row.event_id).first();if(!saved)throw Error('Publication incomplete');
- return {status:'committed',created:Number(results[0]?.meta?.changes)===1,event:JSON.parse(row.event_json)};
+ const saved=await db.prepare('SELECT id,status,data_json FROM events WHERE id=?').bind(row.event_id).first();if(!saved)throw Error('Publication unavailable');
+ const current=JSON.parse(saved.data_json);if(!current||current.id!==saved.id)throw Error('Publication unavailable');
+ return {status:'committed',created:Number(results[0]?.meta?.changes)===1,event:{...current,estado:saved.status}};
 }
