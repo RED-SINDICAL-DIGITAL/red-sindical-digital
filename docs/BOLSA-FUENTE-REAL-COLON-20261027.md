@@ -8,7 +8,7 @@ Archivo: `releases/bolsa-fuente-real-colon-20261027.csv`. UTF-8 con BOM, una fil
 
 ## Prueba en el Admin existente
 
-Usar solo `https://uadav-stream-staging.pages.dev/admin`, API `uadav-api-staging`. No crear ni comunicar claves. La captura de Work observó un formulario de acceso administrativo; no una sesión autenticada. Su ingreso, si hace falta, se realiza por el formulario seguro del navegador.
+Usar solo `https://uadav-stream-staging.pages.dev/admin`, API `uadav-api-staging`. No crear ni comunicar claves. La captura de Work observó un formulario de acceso administrativo; no una sesión autenticada. Se ofreció el formulario seguro; el intento fue cancelado y la inspección posterior sigue mostrando el acceso. No se inició la importación ni se repite el pedido de ingreso. El archivo y el recorrido quedan disponibles para una sesión autorizada posterior.
 
 1. En **Importar / exportar → Incorporar una planilla**, elegir tipo **Bolsa de trabajo**, archivo CSV y **Publicar si los datos son válidos**. Revisar la única fila y confirmar su incorporación.
 2. En Bolsa pública, comprobar el título y **Ver convocatoria**. Debe abrir el origen oficial y no un formulario interno de candidatura. No enviar una postulación o documentación al Teatro Colón durante esta prueba.

@@ -1,0 +1,25 @@
+{
+  "checked_at": "2026-10-27T16:33:24.650380-03:00",
+  "scope": "real-source-staging-import-awaiting-admin",
+  "browser_origin": "https://uadav-stream-staging.pages.dev",
+  "browser_canonical_url": "https://uadav-stream-staging.pages.dev/admin",
+  "observed_state": "Administrative login gate visible after secure authentication request was aborted by the user",
+  "authentication_result": "tool_aborted_by_user",
+  "authentication_confirmed": false,
+  "credential_values_observed_by_work": false,
+  "additional_authentication_requested_after_cancellation": false,
+  "remote_import_started_by_work": false,
+  "remote_offer_hidden_by_work": false,
+  "private_data_exported": false,
+  "public_presence": {
+    "checked_at": "2026-10-27T16:31:59.693933-03:00",
+    "scope": "public-source-presence-read-only-staging",
+    "public_offers": 5,
+    "matches": []
+  },
+  "source_csv_commit": "f5bc885b69e43373eaeea71dcb8f005816b251dc",
+  "csv_file": "releases/bolsa-fuente-real-colon-20261027.csv",
+  "guide": "docs/BOLSA-FUENTE-REAL-COLON-20261027.md",
+  "restore_rehearsal": "already approved; do not repeat",
+  "production_touched": false
+}
