@@ -67,8 +67,9 @@ export async function build(root=ROOT,origin=process.env.UADAV_STAGING_ORIGIN){
         if(!/<head\b[^>]*>/i.test(s))throw Error('HTML has no head: '+rel);
         // The mail receiver clears the fragment before any external resource.
         // Never put the general staging bootstrap or banner ahead of it.
-        if(rel!=='acceso-correo.html')s=s.replace(/<head\b[^>]*>/i,m=>m+'<meta name="robots" content="noindex,nofollow,noarchive"><script src="/staging-bootstrap.js"></script><link rel="stylesheet" href="/staging-banner.css">');
-        else if(!s.includes('<script id="emailIntentBootstrap">'))throw Error('Missing private email bootstrap');
+        if(!['acceso-correo.html','entrar-correo.html'].includes(rel))s=s.replace(/<head\b[^>]*>/i,m=>m+'<meta name="robots" content="noindex,nofollow,noarchive"><script src="/staging-bootstrap.js"></script><link rel="stylesheet" href="/staging-banner.css">');
+        else if(rel==='acceso-correo.html'&&!s.includes('<script id="emailIntentBootstrap">'))throw Error('Missing private email bootstrap');
+        else if(rel==='entrar-correo.html'){if(!s.includes('<script id="accountEmailBootstrap">'))throw Error('Missing account email bootstrap');s=s.replace('</script>','</script><script src="/staging-bootstrap.js"></script><link rel="stylesheet" href="/staging-banner.css">');}
       }
       output.set(rel,Buffer.from(s));
     }else output.set(rel,bytes);
@@ -85,6 +86,12 @@ export async function build(root=ROOT,origin=process.env.UADAV_STAGING_ORIGIN){
     const policy="default-src 'none'; script-src 'self' 'sha256-"+bootstrapHash+"'; style-src 'self'; connect-src https://uadav-api-staging.uadavstream.workers.dev; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'";
     for(const route of ['/acceso-correo.html','/acceso-correo'])privateHeaders+=route+'\n  Referrer-Policy: no-referrer\n  Cache-Control: no-store\n  X-Content-Type-Options: nosniff\n  Content-Security-Policy: '+policy+'\n';
   }
+  if(output.has('entrar-correo.html')){
+    const bootstrap=output.get('entrar-correo.html').toString('utf8').match(/<script id="accountEmailBootstrap">([\s\S]*?)<\/script>/)?.[1];if(!bootstrap)throw Error('Missing account mail bootstrap');const hash=createHash('sha256').update(bootstrap).digest('base64');
+    const policy="default-src 'none'; script-src 'self' 'sha256-"+hash+"'; style-src 'self'; connect-src https://uadav-api-staging.uadavstream.workers.dev; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'";
+    for(const route of ['/entrar-correo.html','/entrar-correo'])privateHeaders+=route+'\n  Referrer-Policy: no-referrer\n  Cache-Control: no-store\n  X-Content-Type-Options: nosniff\n  Content-Security-Policy: '+policy+'\n';
+  }
+  if(output.has('configurar-correo.html'))for(const route of ['/configurar-correo.html','/configurar-correo'])privateHeaders+=route+"\n  Referrer-Policy: no-referrer\n  Cache-Control: no-store\n  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; connect-src https://uadav-api-staging.uadavstream.workers.dev; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'\n";
   output.set('_headers',Buffer.from('/*\n  X-Robots-Tag: noindex, nofollow, noarchive\n  Cache-Control: no-store\n  Referrer-Policy: strict-origin-when-cross-origin\n  Content-Security-Policy: '+csp+'\n'+privateHeaders));
   const manifest={environment:'staging',origin,api:API,sourceCommit:process.env.CF_PAGES_COMMIT_SHA||process.env.UADAV_SOURCE_COMMIT||'not-specified',files:[...output].map(([name,data])=>({name,sha256:createHash('sha256').update(data).digest('hex')}))};
   output.set('staging-build.json',Buffer.from(JSON.stringify(manifest,null,2)+'\n'));

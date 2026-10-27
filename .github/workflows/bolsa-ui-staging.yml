@@ -5,6 +5,24 @@ on:
     branches: [audit/continuidad-demo-20261019]
     paths:
       - acceso-correo.html
+      - entrar-correo.html
+      - configurar-correo.html
+      - uadav-account-email.js
+      - uadav-account-email-admin.js
+      - uadav-account-email.css
+      - tests/account-email-admin.test.cjs
+      - uadav-profile-email.js
+      - uadav-jobs-profile-fill.js
+      - uadav-backup-digest.js
+      - tests/jobs-profile-email.test.cjs tests/account-email-admin.test.cjs
+      - account-email-version.json
+      - uadav-account-sync.js
+      - tests/account-email-ui.test.cjs
+      - tests/account-rotation-resume.test.cjs
+      - tests/account-local-access.test.cjs
+      - tests/account-ui-recovery.test.cjs
+      - tests/account-sync-conflicts.test.cjs
+      - tests/account-sync-switch.mjs
       - uadav-email-access.js
       - uadav-email-access.css
       - email-access-version.json
@@ -37,6 +55,24 @@ on:
   pull_request:
     paths:
       - acceso-correo.html
+      - entrar-correo.html
+      - configurar-correo.html
+      - uadav-account-email.js
+      - uadav-account-email-admin.js
+      - uadav-account-email.css
+      - tests/account-email-admin.test.cjs
+      - uadav-profile-email.js
+      - uadav-jobs-profile-fill.js
+      - uadav-backup-digest.js
+      - tests/jobs-profile-email.test.cjs tests/account-email-admin.test.cjs
+      - account-email-version.json
+      - uadav-account-sync.js
+      - tests/account-email-ui.test.cjs
+      - tests/account-rotation-resume.test.cjs
+      - tests/account-local-access.test.cjs
+      - tests/account-ui-recovery.test.cjs
+      - tests/account-sync-conflicts.test.cjs
+      - tests/account-sync-switch.mjs
       - uadav-email-access.js
       - uadav-email-access.css
       - email-access-version.json
@@ -77,6 +113,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/email-access.test.cjs tests/jobs-url-review.test.cjs tests/jobs-import-admin.test.cjs tests/admin-job-save.test.cjs tests/job-application-ui.test.cjs tests/job-status-contract.test.cjs tests/staging-build.test.mjs tests/jobs-migration-admin.test.cjs tests/jobs-account-ui.test.cjs tests/jobs-expiry-admin.test.cjs tests/admin-api-retry.test.cjs tests/admin-navigation.test.cjs tests/admin-navigation-races.test.cjs
+      - run: node --test tests/email-access.test.cjs tests/jobs-url-review.test.cjs tests/jobs-import-admin.test.cjs tests/admin-job-save.test.cjs tests/job-application-ui.test.cjs tests/job-status-contract.test.cjs tests/staging-build.test.mjs tests/jobs-migration-admin.test.cjs tests/jobs-account-ui.test.cjs tests/jobs-expiry-admin.test.cjs tests/admin-api-retry.test.cjs tests/admin-navigation.test.cjs tests/admin-navigation-races.test.cjs tests/account-email-ui.test.cjs tests/account-rotation-resume.test.cjs tests/account-local-access.test.cjs tests/account-ui-recovery.test.cjs tests/account-sync-conflicts.test.cjs tests/account-sync-switch.mjs tests/jobs-profile-email.test.cjs tests/account-email-admin.test.cjs
       - run: node tests/account-notices-ui.mjs
       - run: node tests/admin-import-export.mjs
