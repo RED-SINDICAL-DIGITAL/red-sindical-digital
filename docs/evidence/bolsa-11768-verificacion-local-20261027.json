@@ -1,0 +1,71 @@
+{
+  "checked_at": "2026-10-27T04:42:03.957925+00:00",
+  "client_date": "2026-10-27",
+  "scope": "bolsa-11768-local-and-packaging",
+  "build": "11768",
+  "worker_branch": "release/radio-studio-staging-rc-20261020",
+  "base_commit": "d55bf951f61c39ad8143e1496570df46fa28b111",
+  "tests": {
+    "focused_changed_parts": {
+      "passed": 42,
+      "failed": 0
+    },
+    "current_bolsa_node_suite": {
+      "passed": 252,
+      "failed": 0,
+      "skipped": 0,
+      "files": 18
+    },
+    "native_workerd": {
+      "passed": 27,
+      "version": "1.20261025.1",
+      "real_email_or_remote_database": false
+    },
+    "radio_studio": {
+      "passed": 12,
+      "failed": 0
+    },
+    "public_policy": "passed",
+    "kv_compatibility": "passed",
+    "worker_syntax": "passed",
+    "source_and_zip_checks": "passed",
+    "git_diff_check": "passed",
+    "frozen_release_files_unchanged": 50
+  },
+  "coverage": [
+    "same-transaction D1 tables and Bolsa projections under credential rotation",
+    "fail-closed schema drift/read/JSON/migration/KV failure",
+    "excluded temporary authentication and checksum corruption/legacy backup distinction",
+    "read-only private expiry and mail-completion evidence with latest-cron failure surfaced",
+    "bounded retention/rollback/retry preserving business data and fresh proof",
+    "missing-only restore atomic invalidation and full rollback on injected failure",
+    "UI two distinct cron turns, explicit backup save confirmation, refresh failure and session isolation"
+  ],
+  "artifacts": [
+    {
+      "path": "worker.js",
+      "bytes": 786785,
+      "sha256": "3f1ab89bbc837fa18c6d56b4d25e09fdd068f2dc6ee28c7b8bd13544b5c64c78"
+    },
+    {
+      "path": "releases/uadav-api-staging-11768.zip",
+      "bytes": 194878,
+      "sha256": "ce19e6ae859dd4262746f779fff297444c623f9f0ba85a334f78a70a2a6f622a"
+    }
+  ],
+  "worker11768_deployed_by_agent": false,
+  "worker11768_deployment_reported": false,
+  "remote_actual_expiry_verified": false,
+  "live_expired_application_post_probe_performed": false,
+  "real_private_backup_read_or_restored_this_revision": false,
+  "real_email_sent_by_agent": false,
+  "public_recovery_enabled": false,
+  "operational_restore_enabled": false,
+  "physical_devices_or_full_visual_review_completed": false,
+  "whole_platform_regressions_claimed": false,
+  "pages_unchanged": "86c765293a78fd0d7be69524a78520e8c94a8d81",
+  "production_unchanged": "fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd",
+  "bolsa_complete": false,
+  "ci_status": "pending first code commit; append CI evidence after observed completion",
+  "next_operator_action": "Deploy11768 only to uadav-api-staging, preserve secrets/bindings/cron, open /qa/bolsa-cierre, save private backup, compare distinct cron turns, share safe JSON only."
+}

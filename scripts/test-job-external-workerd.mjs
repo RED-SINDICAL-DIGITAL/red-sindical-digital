@@ -90,6 +90,16 @@ export default {async test(){
  check(recoveryPreflight.status===204&&recoveryPreflight.headers.get('Access-Control-Allow-Origin')==='https://uadav-stream-staging.pages.dev','Recovery proof preflight is strict and does not read bindings');
  check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/qa/bolsa/email-recovery/redeem',{method:'POST',headers:{Origin:'https://evil.invalid','Content-Type':'application/json'},body:'{}'}),probeEnv,{})).status===403,'Recovery proof rejects foreign origin before bindings');
  console.log('PASS workerd: public synthetic-proof entrypoint has strict CORS and rejects foreign origins');
+ check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/v7/export'),probeEnv,{})).status===401,'Backup authenticates before bindings');
+ check((await worker.fetch(new Request('https://uadav-api.uadavstream.workers.dev/api/v7/export',{headers:{Authorization:'Bearer synthetic-admin'}}),probeEnv,{})).status===403,'Backup is staging only');
+ const closurePage=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/qa/bolsa-cierre'),probeEnv,{}),closureHTML=await closurePage.text();
+ check(closurePage.status===200&&closureHTML.includes('Descargar respaldo privado')&&!closureHTML.includes('%%DIGEST_JS%%'),'Closure interface and embedded checksum helper');
+ console.log('PASS workerd: consistent-backup and read-only closure interface/authentication boundaries');
+ const backupPreflight=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/v7/export',{method:'OPTIONS',headers:{Origin:'https://uadav-stream-staging.pages.dev'}}),probeEnv,{});
+ check(backupPreflight.status===204&&backupPreflight.headers.get('Access-Control-Allow-Origin')==='https://uadav-stream-staging.pages.dev','Backup has strict CORS before bindings');
+ check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/jobs/closure-check',{method:'POST',headers:{Authorization:'Bearer synthetic-admin',Origin:'https://uadav-api-staging.uadavstream.workers.dev'},body:'{}'}),probeEnv,{})).status===405,'Closure endpoint cannot mutate');
+ console.log('PASS workerd: private closure/export are GET-only with strict CORS and no implicit execution');
+
 
  const mailLabEnv=new Proxy({QA_BOLSA_KEY:'synthetic-lab-key-'+'x'.repeat(48)},{get(t,k){if(k==='QA_BOLSA_KEY')return t[k];throw Error('Mail lab read a binding before authorization: '+String(k))}});
  check((await mailLabWorker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/health'),mailLabEnv,{})).status===403,'Mail lab rejects operational host');

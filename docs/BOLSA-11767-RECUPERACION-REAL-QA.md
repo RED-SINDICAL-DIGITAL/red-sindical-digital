@@ -1,5 +1,9 @@
 # Bolsa11767 · recuperación real de una oferta ficticia · solo staging
 
+**Actualización27/10/2026 Argentina:** el operador informó `complete` de esta QA real: correo recibido, enlace confirmado, clave anterior revocada, acceso privado con la nueva y oferta ficticia sin publicación. Versión/flags/cuatro etiquetas cotejados; sin timestamp en el reporte, lectura autenticada o comparación de JS remoto por Work. Evidencia `evidence/bolsa-11767-recuperacion-real-aprobada-20261027.json`. **No repetir el envío ni esta configuración.** La recuperación pública sigue apagada. Siguiente intervención: `BOLSA-11768-RESPALDO-Y-VENCIMIENTO.md`.
+
+El contenido siguiente conserva el procedimiento y las evidencias de la entrega11767. Las referencias a despliegue/canje pendientes describen su checkpoint anterior, ya superado por el reporte del operador. No son tareas actuales.
+
 Preparado el26/10/2026 de Argentina (archivos de la entrega fechados27/10UTC). **No desplegado ni ejecutado remotamente por Work.** El operador informó las siete fases11766-mail-lab-1 aprobadas en D1; scope, ambas huellas y etiquetas coinciden con el código congelado. Evidencia `evidence/bolsa-11766-mail-lab-aprobado-20261027.json`. No repetir laboratorio, DNS/Brevo, dominio, remitente, sandbox o diagnóstico de recepción.
 
 11767 prepara el circuito de punta a punta: una oferta ficticia cerrada, un correo al destinatario privado ya comprobado, confirmación del enlace, canje D1, rechazo de la clave anterior y acceso privado con la nueva. **Las dos rutas de recuperación pública siguen503.** No hay entrada de cuentas por correo/Google, transferencia de artistas o vinculación automática por coincidencia de email.

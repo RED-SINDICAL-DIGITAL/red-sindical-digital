@@ -3,14 +3,17 @@
 // Requires Node and Python; never prints records, credentials or account IDs.
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
-import {createHash} from 'node:crypto';
+import {createHash,webcrypto} from 'node:crypto';
 import {sqliteD1} from '../tests/sqlite-d1.mjs';
 import {loadWorker} from '../tests/load-worker.mjs';
+import {verifyJobBackupDigest} from './job-backup-digest.mjs';
 const input=process.argv[2];
 if(!input)throw Error('Uso: node scripts/rehearse-job-restore.mjs RUTA_DEL_RESPALDO_PRIVADO.json');
 const bytes=await readFile(resolve(input));
 if(bytes.length>3500000)throw Error('El respaldo supera el tamaño permitido para este ensayo.');
-const backup=JSON.parse(bytes.toString('utf8'));
+let backup;try{backup=JSON.parse(bytes.toString('utf8'))}catch{throw Error('El respaldo no es un JSON válido.')}
+const digestCheck=await verifyJobBackupDigest(backup,webcrypto);
+// No token/session state from a backup is installed by this offline rehearsal.
 const check=(condition,message)=>{if(!condition)throw Error(message)};
 check(backup.job_storage==='d1'&&backup.backup_integrity?.complete===true,'Se requiere un respaldo D1 completo.');
 for(const name of ['bolsa_trabajo','postulaciones_trabajo'])check(Array.isArray(backup.kv?.[name])&&backup.kv[name].length<=2000,'Colecciones de Bolsa ausentes o excesivas.');
@@ -91,5 +94,5 @@ try{
  for(const table of ['job_store_records','job_owner_credentials','job_account_links','job_expiry_notices'])check(await rollback.count(table)===0,'El lote interrumpido dejó datos parciales.');
  await rollback.DB.prepare('DROP TRIGGER offline_injected_failure').run();
  check((await rollback.call(route,body)).status===200,'No se pudo retomar el lote tras la interrupción.');
- console.log(JSON.stringify({success:true,environment:'offline-sqlite-memory',remote_d1_validated:false,backup_sha256:createHash('sha256').update(bytes).digest('hex'),offers:backup.kv.bolsa_trabajo.length,applications:backup.kv.postulaciones_trabajo.length,credentials:credentials.length,account_links:links.length,expiry_ledger:notices.length,batches,repeated_without_duplicates:true,interrupted_batch_rolled_back:true,integrity:'ok',mail:'disabled',scope:'Bolsa records with audience parents preserved; no account or whole-platform disaster recovery'},null,2));
+ console.log(JSON.stringify({success:true,environment:'offline-sqlite-memory',remote_d1_validated:false,backup_sha256:createHash('sha256').update(bytes).digest('hex'),embedded_checksum_verified:digestCheck.verified,legacy_backup_without_checksum:digestCheck.legacy,offers:backup.kv.bolsa_trabajo.length,applications:backup.kv.postulaciones_trabajo.length,credentials:credentials.length,account_links:links.length,expiry_ledger:notices.length,batches,repeated_without_duplicates:true,interrupted_batch_rolled_back:true,integrity:'ok',mail:'disabled',scope:'Bolsa records with audience parents preserved; no account or whole-platform disaster recovery'},null,2));
 }finally{complete?.close();rollback?.close();globalThis.fetch=originalFetch}

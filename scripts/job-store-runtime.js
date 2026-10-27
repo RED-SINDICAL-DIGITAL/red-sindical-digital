@@ -106,6 +106,7 @@ function uadavJobStore(env) {
         // Preserve credentials and applications for audit/explicit restoration.
       }
     }
+    if(restoring){const ids=(collections.bolsa_trabajo||[]).filter(item=>!snapshots.get('bolsa_trabajo')?.has(item.id)).map(item=>item.id);statements.push(...await uadavJobRestoredRecoveryStatements(db,ids));}
     const restoredIndices=[];
     if(restoreAccountLinks.length){
       if(!restoring||!accountFeatures||restoreAccountLinks.length>5)throw uadavJobError('JOB_ACCOUNT_RESTORE','No se preparó la restauración de vínculos de cuenta.',400);

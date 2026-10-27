@@ -1,0 +1,30 @@
+{
+  "received_on_client_date": "2026-10-27",
+  "source": "operator_pasted_safe_result_after_manual_staging_deploy_and_own_mail_confirmation",
+  "operator_result": {
+    "build": "11767",
+    "scope": "brevo-recovery-staging",
+    "result": "complete",
+    "sandbox": false,
+    "provider_accepted": true,
+    "real_email_received": true,
+    "recovery_enabled": false,
+    "checks": [
+      "Enlace recibido y confirmado: aprobado",
+      "Clave anterior revocada: aprobado",
+      "Acceso privado con la clave nueva: aprobado",
+      "Oferta ficticia conservada sin publicación: aprobado"
+    ]
+  },
+  "report_has_execution_timestamp": false,
+  "matches_delivered_build_scope_flags_and_labels": true,
+  "agent_executed_or_authenticated_read": false,
+  "remote_javascript_byte_compared": false,
+  "worker11767_deployment_reported": true,
+  "real_own_recipient_recovery_qa_passed_as_reported": true,
+  "secret_values_or_actual_recipient_seen_by_agent": false,
+  "optional_profile_link_or_physical_device_coverage_proven_by_this_report": false,
+  "operational_recovery_enabled": false,
+  "bolsa_complete": false,
+  "next_step": "Do not repeat the email or labs. Harden backup snapshot consistency, omit temporary recovery authentication, add bounded retention on existing staging cron and prepare read-only backup/real-expiry verification. No production, public recovery enablement or operational restore."
+}

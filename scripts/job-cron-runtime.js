@@ -13,6 +13,7 @@ function uadavJobCronRecord(value){
   if(value.status==='success'){
     if(!['processed','emitted','recorded'].every(key=>Number.isInteger(value[key])&&value[key]>=0&&value[key]<=5)||value.emitted>value.recorded)return null;
     for(const key of ['processed','emitted','recorded'])record[key]=value[key];
+    if(value.mail_retention!==undefined){const m=value.mail_retention;if(!m||typeof m.available!=='boolean'||!['expired','pruned','metadata_pruned'].every(k=>Number.isInteger(m[k])&&m[k]>=0&&m[k]<=25))return null;record.mail_retention={available:m.available,expired:m.expired,pruned:m.pruned,metadata_pruned:m.metadata_pruned};}
   }
   return record;
 }
@@ -43,7 +44,7 @@ async function uadavJobScheduled(event,env){
   const lease={owner,until:now+UADAV_JOB_CRON_LEASE_MS,scheduled_time:event.scheduledTime,started_at:startedAt};
   const release=()=>db.prepare("DELETE FROM job_store_meta WHERE key=? AND json_extract(value,'$.owner')=?").bind(UADAV_JOB_CRON_KEYS.lease,owner).run();
   async function finish(status,result){
-    const record={version:1,status,scheduled_time:event.scheduledTime,started_at:startedAt,completed_at:new Date().toISOString(),...(status==='success'?{processed:result.processed,emitted:result.notices.emitted,recorded:result.notices.recorded}:{})};
+    const record={version:1,status,scheduled_time:event.scheduledTime,started_at:startedAt,completed_at:new Date().toISOString(),...(status==='success'?{processed:result.processed,emitted:result.notices.emitted,recorded:result.notices.recorded,...(result.mail_retention?{mail_retention:result.mail_retention}:{})}:{})};
     if(!uadavJobCronRecord(record))throw uadavJobError('JOB_CRON_RESULT','No se pudo confirmar la revisión automática de Bolsa.');
     const put=key=>db.prepare('INSERT INTO job_store_meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').bind(key,JSON.stringify(record));
     await db.batch([...uadavJobGuard(db,"EXISTS(SELECT 1 FROM job_store_meta WHERE key=? AND json_extract(value,'$.owner')=?)",[UADAV_JOB_CRON_KEYS.lease,owner]),put(UADAV_JOB_CRON_KEYS.run),...(status==='success'?[put(UADAV_JOB_CRON_KEYS.success)]:[]),db.prepare("DELETE FROM job_store_meta WHERE key=? AND json_extract(value,'$.owner')=?").bind(UADAV_JOB_CRON_KEYS.lease,owner)]);
@@ -62,6 +63,7 @@ async function uadavJobScheduled(event,env){
     const current=await uadavJobCronSnapshot(db);
     if(current.lastSuccess?.scheduled_time>=event.scheduledTime){await release();acquired=false;return {executed:false,reason:'completed'}}
     const result=await uadavJobMaintenance(env);
+    result.mail_retention=await uadavJobRecoveryMaintenance(env);
     const record=await finish('success',result);
     return {executed:true,...record};
   }catch{

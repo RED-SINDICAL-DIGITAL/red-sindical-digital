@@ -1,45 +1,44 @@
-# Bolsa de Trabajo · estado y cierre · actualización27/10/2026UTC
+# Bolsa de Trabajo · estado y cierre · actualización27/10/2026 Argentina
 
-**CI/publicación posteriores:** código Worker11767 en2abb579e, receptor Pages en86c7652, CI Worker40444919105/Pages40444874718/Radio40444919072 success. Cloudflare Pages staging informó despliegue exitoso y el receptor abrió en su dominio principal con confirmación deshabilitada sin token. Worker11767 y su canje real siguen pendientes del despliegue/ensayo manual. No repetir laboratorio, Pages, Brevo o diagnóstico. Guía actual11767 y evidencia `evidence/bolsa-11767-ci-y-entrega-20261027.json`.
+**La recuperación real controlada11767 está aprobada según el reporte del operador. Bolsa todavía no está completa.** El informe `brevo-recovery-staging`, `complete`, confirma enlace recibido/confirmado, revocación de la clave anterior, acceso privado nuevo y oferta ficticia conservada sin publicación; `recovery_enabled:false`. No incluye hora de ejecución. Work cotejó versión, flags y las cuatro etiquetas con el código, sin lectura autenticada o cotejo remoto de JavaScript. Evidencia: `evidence/bolsa-11767-recuperacion-real-aprobada-20261027.json`.
 
-**Checkpoint posterior26/10Argentina:** siete fases11766-mail-lab-1 remotas aprobadas según operador; coincidencia exacta de versión/scope/huellas/etiquetas, sin lectura autenticada de Work. Evidencia `evidence/bolsa-11766-mail-lab-aprobado-20261027.json`.11767 nuevo Worker y receptor Pages preparados para QA real de una oferta ficticia cerrada/correo propio, canje por POST, clave vieja rechazada, bandeja con nueva y guardado voluntario en Mi Perfil. Código/pruebas locales, sin despliegue11767/canje real acreditado. Guía `BOLSA-11767-RECUPERACION-REAL-QA.md`. No repetir laboratorios o configuración Brevo; siguiente intervención es publicar receptor/Worker, un Secret de cifrado privado y una autorización de envío. Ambos endpoints de recuperación pública503. Los cinco bloques siguen abiertos en su alcance integral.
-
-**Bolsa todavía no está completa.** La recepción real del correo diagnóstico11766 fue informada como aprobada por el operador: `received`, `sandbox:false`, `provider_accepted:true`, `delivery_verified:true`, `recovery_enabled:false`, `2026-10-27T00:39:26.248Z` (**26/10,21:39:26Argentina**). La recuperación pública sigue503. Evidencia `evidence/brevo-11766-recepcion-aprobada-20261027.json`. Work cotejó el reporte con código/flags, sin leer el estado autenticado, ejecutar el envío o cotejar JS remoto.
+El siguiente paso es11768: respaldo consistente D1, exclusión e invalidación de autenticación temporal, retención acotada en el cron existente y consulta privada del vencimiento real. Ver `BOLSA-11768-RESPALDO-Y-VENCIMIENTO.md`. Esta entrega requiere despliegue manual; no declarar sus cambios o diagnóstico activos antes de comprobarlos. No repetir laboratorio, correo11767, Pages, Brevo, DNS, remitente, secretos o cron.
 
 ## Código, pruebas y despliegues
 
-- API principal11766: código/ZIP en `96cf98a5db6de17b7d3e097a885bf7ee5599b826`; CI Bolsa40426233321/Radio40426233264 success,170Node/22workerd/12Radio. El reporte posterior del operador acredita el diagnóstico de esa versión, distinto de la última health pública independiente11764 a20:34:09.833UTC del26/10. El archivo remoto no se comparó byte a byte.
-- Nuevo núcleo preparatorio: token recibido de256bits canjeable en lote D1 aunque se pierda la respuestaAPI; clave anterior conservada hasta el canje; snapshot completo cifrado e inmutable entre despliegues. Sustituye el diseño previo condicionado al recibo del proveedor. Ningún error de duplicado se convierte en recibo válido. No está importado en el Worker principal. Ver `BOLSA-CORREO-NUCLEO-TRANSACCIONAL-20261026.md`.
-- Pruebas nuevas:197grupos focalizados aprobaron juntos antes del último caso adicional;32del núcleo actualizado, seis snapshot,17transporte y13laboratorio se verifican por archivo.23controles workerd locales aprobados. CI Bolsa40434894253 y Radio40434894235 success para e4035e2f0ad1f82b630464c1c04a39654a701447; todos los pasos aprobados. Suite focalizada actual198casos; no se obtuvo su log numérico. Evidencia `evidence/bolsa-11766-mail-lab-ci-y-entrega-20261027.json`. SQLite/red simulada/DOM no equivalen al nuevo ensayo D1 o dispositivos físicos.
-- Nuevo artefacto: `releases/uadav-bolsa-mail-lab-11766.zip`, **solo para el laboratorio de Bolsa existente**. Siete fases nuevas con datos ficticios/cero correos reales, conserva las ocho anteriores. Preparado, no desplegado/ejecutado remotamente por Work. Guía `BOLSA-11766-LABORATORIO-RECUPERACION.md`.
-- API principal, todos los ZIP/laboratorios anteriores y restore conservan sus bytes en esta revisión. Pages continúa en `7e16b2a815a218df870d7375ae565af6893afa70`; Admin/avisos11763 anteriores,138pruebas UI aprobadas en su entrega. Producción `main` sigue en `fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd`; sin cambios productivos.
+| Alcance | Estado acreditado |
+|---|---|
+| Worker11767 | Código/ZIP en `2abb579e65f360b462e216890f3c3f53f427e0bf`. CI Bolsa40444919105 y Radio40444919072 success;227pruebas Node,25controles workerd y12Radio en la entrega. Despliegue y recuperación reales informados por el operador; no despliegue autenticado por Work. |
+| Pages receptor11767.1 | Rama `audit/continuidad-demo-20261019`, commit `86c765293a78fd0d7be69524a78520e8c94a8d81`,151pruebas y CI40444874718 success. Cloudflare informó despliegue exitoso; receptor abierto en su dominio principal sin token, confirmación deshabilitada. Sin cambios en11768. |
+| Worker11768 | Código y paquete nuevos con pruebas locales/CI registradas en sus evidencias. Despliegue manual y diagnóstico real pendientes. No envíos reales, SQL remoto o restauración del respaldo privado por Work. |
+| Producción | `main` conserva `fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd`. No mezclar ramas, activar flags productivos o modificar producción. |
 
-Cloudflare rechazó el ingreso de Work mediante Google con **Unable to sign in**. No se diagnosticó bloqueo de bots ni se repitió ese intento. El operador pudo desplegar manualmente las entregas posteriores; se conserva ese método. No pedir otra vez configuración Brevo, correo diagnóstico, nuevas bases/claves o repetir el laboratorio11764 aprobado.
+Cloudflare rechazó el ingreso de Work mediante Google con **Unable to sign in**. No se diagnosticó bloqueo de bots ni se repitió ese intento. El operador despliega manualmente los paquetes; se conserva ese método.
 
-## Evidencia que ya aprobó
+## Evidencias ya aprobadas
 
 | Área | Evidencia y alcance |
 |---|---|
-| Publicación/postulación | Flujos gratuitos e inmediatos, consentimiento explícito, acceso privado y moderación posterior según entregas anteriores. Pruebas básicas PC/móvil registradas, distintas de cobertura física completa. |
-| D1 y migración | Informe `already-d1`, respaldo consistente y preparación/pruebas transaccionales anteriores. Las credenciales operativas actuales están en D1 según diagnóstico informado; no activar variables productivas. |
-| Importación | CSV y captura desde URL propia autorizada aprobadas. Fuente real ajena/transporte completo siguen pendientes. |
-| Restore sintético | `uadav-restore-qa`,11762-restore-qa-1, seis fases con fixtures en D1 remoto informadas como aprobadas. No es recuperación integral del respaldo real. |
-| Privacidad/concurrencia | `uadav-bolsa-lab`,11764-bolsa-lab-1, ocho fases remotas informadas como aprobadas: duplicados, consentimiento, dos cuentas/artistas, revocación, canje/rollback, límite e integridad. Evidencia `evidence/bolsa-11764-laboratorio-aprobado-20261026.json`. No repetir esas ocho fases. |
-| Avisos previos | Turno14:45Argentina emitió exactamente un aviso para la cuenta correcta, visible en PC según captura. Turno15:00 emitió cero duplicados. Cron `*/15 * * * *`, `JOB_STAGING_CRON=bolsa-only`, conservado. |
-| Correo | Brevo dominio/remitente por capturas;11765sandbox accepted, cero correos.11766diagnóstico real received según operador. No equivale a login o recuperación de una oferta. |
+| Publicación/postulación | Política gratuita e inmediata, consentimiento explícito, acceso privado y moderación posterior cubiertos por código y pruebas de entregas previas. Pruebas básicas PC/móvil no equivalen a cobertura física completa. |
+| D1/migración | `already-d1`, respaldo consistente y pruebas transaccionales anteriores. Almacenamiento operativo en D1 según diagnóstico del operador. |
+| Importación | CSV y URL propia autorizada aprobados; fuente real ajena y transporte completo pendientes. |
+| Restore sintético | `uadav-restore-qa`,11762, seis fases remotas con fixtures informadas aprobadas. Respaldo real ensayado localmente, sin restauración remota integral. |
+| Privacidad/concurrencia | Ocho fases11764 y siete fases11766-mail-lab-1 informadas aprobadas; versiones, huellas y etiquetas cotejadas. No repetir. |
+| Avisos previos | Turno14:45Argentina produjo un aviso visible en PC;15:00 produjo cero duplicados según evidencias anteriores. Cron `*/15 * * * *`, `JOB_STAGING_CRON=bolsa-only`, conservado. |
+| Correo real |11766 diagnóstico recibido;11767 recuperación controlada completada. No habilita recuperación pública o acceso general a Mi Perfil por correo. |
 
-## Cinco bloques pendientes de cierre
+## Cinco bloques pendientes
 
 | Bloque | Falta y siguiente validación |
 |---|---|
-| Recuperación por correo y cuenta | Siete fases nuevas D1 ya informadas aprobadas. Endpoints/receptor/UX de QA privada11767 escritos y probados localmente; falta desplegar y probar ese canje real. Después integración pública, abuso y tiempos uniformes, cuotas compartidas, correo verificado/sesiones de cuenta, Google opcional, exportación/restauración/retención/rotación y ensayo real completo. La solución local de respuesta perdida no habilita el servicio público. |
-| Recuperación operativa completa | Respaldo privado real ensayado localmente, no restaurado íntegramente en remoto con cuentas/mensajes. Mantener restore operativo apagado; ensayo real requiere destino aislado y alcance explícito. |
-| Fuente externa real | Incorporar una fuente real autorizada y probar bajas/errores. La comprobación DNS actual no fija la IP del fetch; sigue pendiente la revisión del transporte. |
-| Vencimiento y avisos | QA `JOB-MVPJ9WRW-439D4126D9AE`, candidatura `POST-MVPJCNGX-E7683EC0`, fecha límite26/10. Verificar tras27/10 00:00Argentina (=03:00UTC): salida pública, rechazo de nuevas postulaciones, estado vencido, candidatura conservada, un aviso y siguiente turno sin duplicado. El reporte de correo00:39UTC era anterior a ese momento. No cambiar fecha, cerrar/renovar/republicar la QA ni alterar reloj global. |
-| Dispositivos/UX | Completar Mi Perfil/perfil artístico, fallos, accesibilidad y pruebas en móvil/tablet/SmartTV físicos. DOM y básicos previos no acreditan cobertura completa. |
+| Recuperación pública y cuenta | QA real11767 aprobada. Faltan destinatario de recuperación verificado/consentido para ofertas existentes, antienumeración y tiempos uniformes, cuotas/abuso globales, integración general con cuenta/correo verificado y sesiones, migración voluntaria y QA completa. Google sigue como opción de producto posterior, no requisito artificial para cerrar Bolsa. Retención/backup11768 son avances parciales; rotación y política integral siguen abiertas. Mantener rutas públicas503. |
+| Recuperación operativa completa | Probar restauración del respaldo real en destino aislado incluyendo cuentas/mensajes y autoridad vigente.11768 protege nuevas capturas e invalida pruebas temporales al restaurar ofertas faltantes; no acredita desastre integral remoto. Mantener flags de restore apagados. |
+| Fuente externa real | Incorporar fuente autorizada y probar bajas/errores. El transporte DNS/fetch aún requiere resolver la separación entre validación y conexión/IP. |
+| Vencimiento y avisos | QA `JOB-MVPJ9WRW-439D4126D9AE`, candidatura `POST-MVPJCNGX-E7683EC0`, fecha26/10; vencimiento27/10 00:00Argentina (=03:00UTC).11768 consulta estado, candidatura, aviso/cuenta y dos turnos distintos sin duplicado. No cambia la QA. Falta diagnóstico privado actual y prueba HTTP de rechazo de postulación vencida; la consulta declara que no realiza ese POST. |
+| Dispositivos/UX | Completar Mi Perfil/perfil artístico, errores, accesibilidad y pruebas físicas PC/móvil/tablet/SmartTV según funciones. DOM, red simulada y básicos previos no acreditan todo el circuito. |
 
-Último respaldo privado verificado: versión5,13ofertas/11postulaciones, siete credenciales, cinco vínculos y dos marcas de aviso;22registros anteriores cotejados. No contiene una prueba remota de recuperación integral y no debe subirse a GitHub o al nuevo laboratorio de correo.
+Último respaldo privado anterior:13ofertas/11postulaciones, siete credenciales, cinco vínculos y dos marcas de aviso. No subirlo a GitHub o laboratorios. La descarga11768 debe guardarse de forma privada y solo su resultado seguro se comparte.
 
-## Próxima intervención concreta
+## Próximo paso concreto
 
-Actualizar **solo `uadav-bolsa-lab`** con su nuevo ZIP; conservar DB/QA_BOLSA_KEY/QA_BOLSA_ONLY=true. Abrir la misma URL y clave, autorizar datos ficticios, ejecutar las siete fases nuevas y copiar reporte seguro. No redesplegar la API principal, crear otro Worker/base/clave, aplicar SQL manual o configurar Brevo. No hay cambios de cron, Pages, producción o activación de recuperación. Cartelera continúa después de cerrar y validar Bolsa. No dar un porcentaje o fecha garantizada que oculte estos pendientes.
+Publicar **solo `uadav-api-staging`** con11768, conservando configuración. Abrir `/qa/bolsa-cierre`, consultar, guardar respaldo privado y consultar después de otro turno del cron. La sesión Admin puede renovarse conservando en memoria la comparación segura. Compartir **Copiar resultado seguro**. No pedir nuevas claves, base, SQL, correo o configuración Pages. Cartelera continúa después de cerrar y validar Bolsa; no prometer porcentaje o fecha que oculte estos pendientes.

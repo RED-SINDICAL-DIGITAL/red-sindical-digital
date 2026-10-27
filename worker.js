@@ -450,7 +450,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11767';
+const BUILD = '11768';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -711,6 +711,7 @@ function uadavJobStore(env) {
         // Preserve credentials and applications for audit/explicit restoration.
       }
     }
+    if(restoring){const ids=(collections.bolsa_trabajo||[]).filter(item=>!snapshots.get('bolsa_trabajo')?.has(item.id)).map(item=>item.id);statements.push(...await uadavJobRestoredRecoveryStatements(db,ids));}
     const restoredIndices=[];
     if(restoreAccountLinks.length){
       if(!restoring||!accountFeatures||restoreAccountLinks.length>5)throw uadavJobError('JOB_ACCOUNT_RESTORE','No se preparó la restauración de vínculos de cuenta.',400);
@@ -1156,6 +1157,7 @@ function uadavJobCronRecord(value){
   if(value.status==='success'){
     if(!['processed','emitted','recorded'].every(key=>Number.isInteger(value[key])&&value[key]>=0&&value[key]<=5)||value.emitted>value.recorded)return null;
     for(const key of ['processed','emitted','recorded'])record[key]=value[key];
+    if(value.mail_retention!==undefined){const m=value.mail_retention;if(!m||typeof m.available!=='boolean'||!['expired','pruned','metadata_pruned'].every(k=>Number.isInteger(m[k])&&m[k]>=0&&m[k]<=25))return null;record.mail_retention={available:m.available,expired:m.expired,pruned:m.pruned,metadata_pruned:m.metadata_pruned};}
   }
   return record;
 }
@@ -1186,7 +1188,7 @@ async function uadavJobScheduled(event,env){
   const lease={owner,until:now+UADAV_JOB_CRON_LEASE_MS,scheduled_time:event.scheduledTime,started_at:startedAt};
   const release=()=>db.prepare("DELETE FROM job_store_meta WHERE key=? AND json_extract(value,'$.owner')=?").bind(UADAV_JOB_CRON_KEYS.lease,owner).run();
   async function finish(status,result){
-    const record={version:1,status,scheduled_time:event.scheduledTime,started_at:startedAt,completed_at:new Date().toISOString(),...(status==='success'?{processed:result.processed,emitted:result.notices.emitted,recorded:result.notices.recorded}:{})};
+    const record={version:1,status,scheduled_time:event.scheduledTime,started_at:startedAt,completed_at:new Date().toISOString(),...(status==='success'?{processed:result.processed,emitted:result.notices.emitted,recorded:result.notices.recorded,...(result.mail_retention?{mail_retention:result.mail_retention}:{})}:{})};
     if(!uadavJobCronRecord(record))throw uadavJobError('JOB_CRON_RESULT','No se pudo confirmar la revisión automática de Bolsa.');
     const put=key=>db.prepare('INSERT INTO job_store_meta(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').bind(key,JSON.stringify(record));
     await db.batch([...uadavJobGuard(db,"EXISTS(SELECT 1 FROM job_store_meta WHERE key=? AND json_extract(value,'$.owner')=?)",[UADAV_JOB_CRON_KEYS.lease,owner]),put(UADAV_JOB_CRON_KEYS.run),...(status==='success'?[put(UADAV_JOB_CRON_KEYS.success)]:[]),db.prepare("DELETE FROM job_store_meta WHERE key=? AND json_extract(value,'$.owner')=?").bind(UADAV_JOB_CRON_KEYS.lease,owner)]);
@@ -1205,6 +1207,7 @@ async function uadavJobScheduled(event,env){
     const current=await uadavJobCronSnapshot(db);
     if(current.lastSuccess?.scheduled_time>=event.scheduledTime){await release();acquired=false;return {executed:false,reason:'completed'}}
     const result=await uadavJobMaintenance(env);
+    result.mail_retention=await uadavJobRecoveryMaintenance(env);
     const record=await finish('success',result);
     return {executed:true,...record};
   }catch{
@@ -2125,6 +2128,134 @@ async function uadavJobMailLiveRoute(request,env){
 }
 
 /* END PRIVATE JOB MAIL LIVE QA */
+
+/* BEGIN JOB BACKUP STAGING */
+const UADAV_JOB_CLOSURE_HTML="<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"robots\" content=\"noindex,nofollow\"><title>UADAV · Respaldo y vencimiento</title><style nonce=\"%%NONCE%%\">*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:#0b1220;color:#edf4ff;font:17px/1.65 system-ui,sans-serif}main{max-width:740px;margin:auto;padding:28px 18px}section{margin:22px 0;padding:22px;border-radius:18px;border:1px solid #405572;background:#142138}h1{font-size:clamp(26px,5vw,35px);line-height:1.25}label{display:block;margin:16px 0}input,button{font:inherit;min-height:48px;padding:11px 15px;border-radius:11px}input[type=password]{display:block;width:100%;background:#0b1220;color:#fff;border:1px solid #91a9c8}input[type=checkbox]{width:24px;min-height:24px;vertical-align:middle}button{background:#afd0ff;color:#092349;border:0;font-weight:700;cursor:pointer;max-width:100%;margin:6px 8px 6px 0}button:disabled{opacity:.45;cursor:default}.secondary{background:#29415e;color:#fff}:focus-visible{outline:3px solid #ffdf8b;outline-offset:4px}.muted{color:#b8c9df}pre{font:13px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}li{margin:9px 0}</style></head><body><main>\n<p class=\"muted\">BOLSA · CONSULTA PRIVADA DE STAGING11768</p><h1>Respaldo y vencimiento</h1><p>Comprueba el estado actual sin publicar, postular, cerrar ofertas o enviar mensajes. La recuperación real11767 ya tiene su prueba separada aprobada.</p>\n<section id=\"loginPanel\"><form id=\"loginForm\"><label for=\"adminKey\">Clave Admin de staging<input id=\"adminKey\" type=\"password\" maxlength=\"256\" autocomplete=\"current-password\" required></label><button id=\"loginButton\" type=\"submit\">Consultar Bolsa</button></form></section>\n<section id=\"tools\" hidden><button id=\"refreshButton\" type=\"button\">Consultar de nuevo</button><button id=\"backupButton\" type=\"button\" class=\"secondary\">Descargar respaldo privado</button><button id=\"logoutButton\" type=\"button\" class=\"secondary\">Salir</button><p id=\"turnStatus\"></p><ul id=\"checks\"></ul><p id=\"backupStatus\"></p><label id=\"savedRow\" hidden><input id=\"saved\" type=\"checkbox\">Confirmo que descargué y guardé el archivo JSON en un lugar privado.</label></section>\n<p id=\"status\" role=\"status\" aria-live=\"polite\"></p><button id=\"copyButton\" type=\"button\" hidden disabled>Copiar resultado seguro</button><details id=\"reportPanel\" hidden><summary>Ver resultado sin datos personales</summary><pre id=\"report\"></pre></details><p class=\"muted\">Para comprobar repetición, consultá dos turnos distintos del cron de15min. Si vence tu sesión, volvé a ingresar: se conserva solo la comparación sin datos personales. El archivo de respaldo completo es privado; compartí únicamente el resultado seguro. Esta herramienta no habilita recuperación pública o restauración.</p>\n</main><script nonce=\"%%NONCE%%\">\n/* Format checksum only: detects changes/corruption, not issuer authenticity.\n * Older private backups remain explicitly labeled legacy-unchecked. */\nasync function verifyJobBackupDigest(backup,cryptoSource=globalThis.crypto){\n const invalid=()=>{throw Object.assign(Error('BACKUP_DIGEST_INVALID'),{code:'BACKUP_DIGEST_INVALID'})};\n if(!backup||typeof backup!=='object'||Array.isArray(backup))invalid();\n if(!Object.hasOwn(backup,'backup_digest'))return{verified:false,legacy:true};\n const d=backup.backup_digest;\n if(!d||typeof d!=='object'||Array.isArray(d)||Object.keys(d).length!==3||d.algorithm!=='SHA-256'||d.format!=='json-stringify-without-backup_digest-v1'||!/^[a-f0-9]{64}$/.test(d.value||''))invalid();\n const {backup_digest,...unsigned}=backup;\n const actual=Array.from(new Uint8Array(await cryptoSource.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(unsigned)))),n=>n.toString(16).padStart(2,'0')).join('');\n if(actual!==d.value)invalid();return{verified:true,legacy:false,sha256:actual};\n}\n\n(()=>{'use strict';const $=id=>document.getElementById(id);let key='',since=0,generation=0,busy=false,state=null,baseline=null,secondTurn=false,backup=null,safe=null;const active=new Set();\nconst labels={deadline_unchanged:'Fecha original conservada',deadline_passed:'Fecha de vencimiento alcanzada',public_offer_hidden:'Oferta fuera de la publicación pública',stored_as_expired:'Oferta registrada como vencida',application_preserved:'Candidatura y consentimiento conservados',one_expiry_notice:'Un solo registro de aviso posterior',one_matching_private_message:'Un solo mensaje privado correspondiente',notice_for_current_account:'Aviso para la cuenta vinculada',cron_after_expiry:'Cron correcto posterior al vencimiento'};\nfunction paint(){$('loginPanel').hidden=!!key;$('tools').hidden=!key;$('loginButton').disabled=busy;$('refreshButton').disabled=busy;$('backupButton').disabled=busy;$('copyButton').hidden=!safe;$('copyButton').disabled=busy||!safe;$('savedRow').hidden=!backup;}\nfunction forget(keepComparison=false){generation++;for(const c of active)c.abort();active.clear();key='';since=0;busy=false;state=null;safe=null;$('adminKey').value='';$('checks').replaceChildren();$('report').textContent='';$('reportPanel').hidden=true;if(!keepComparison){baseline=null;secondTurn=false;backup=null;$('saved').checked=false;$('backupStatus').textContent='';$('turnStatus').textContent='';}paint();}\nasync function api(route){if(!key||Date.now()-since>600000){forget(true);throw Error('Volvé a entrar con Admin para continuar. La comparación segura se conserva.');}const turn=generation,secret=key,ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),25000);active.add(ctl);try{const r=await fetch(route,{method:'GET',redirect:'manual',credentials:'omit',cache:'no-store',headers:{Authorization:'Bearer '+secret},signal:ctl.signal}),data=await r.json();if(turn!==generation||key!==secret)return null;if(!r.ok)throw Error('No se pudo confirmar la consulta. Conservá los datos actuales.');return data;}finally{clearTimeout(timer);active.delete(ctl)}}\nfunction validate(data){if(data?.scope!=='bolsa-closure-staging'||data.read_only!==true||data.recovery_enabled!==false||!/^\\d{5}$/.test(String(data.build))||Number(data.build)<11768||typeof data.checked_at!=='string'||!Number.isFinite(Date.parse(data.checked_at))||new Date(data.checked_at).toISOString()!==data.checked_at||!data.expiry?.checks||Object.keys(data.expiry.checks).length!==Object.keys(labels).length||Object.keys(labels).some(k=>typeof data.expiry.checks[k]!=='boolean')||data.expiry.all_passed!==Object.values(data.expiry.checks).every(Boolean)||data.expiry.notice_count<0||!Number.isSafeInteger(data.expiry.notice_count)||!data.cron||typeof data.real_mail_qa_completed!=='boolean')throw Error('La respuesta no corresponde a esta comprobación.');return data;}\nfunction report(){safe=null;if(state){const complete=state.ready&&state.real_mail_qa_completed&&state.expiry.all_passed&&secondTurn&&!!backup&&$('saved').checked;safe={build:state.build,scope:'bolsa-backup-expiry-staging',result:complete?'complete':'pending',checked_at:state.checked_at,read_only:true,recovery_enabled:false,real_mail_qa_completed:state.real_mail_qa_completed,expiry_checks:state.expiry.checks,second_cron_turn_without_duplicate:secondTurn,live_new_application_probe_performed:false,backup:backup?{...backup,saved_confirmed_by_operator:$('saved').checked}:null};}$('report').textContent=safe?JSON.stringify(safe,null,2):'';$('reportPanel').hidden=!safe;paint();}\nfunction show(data){validate(data);state=data;$('checks').replaceChildren();for(const [name,label]of Object.entries(labels)){const li=document.createElement('li');li.textContent=(data.expiry.checks[name]?'✓ ':'Pendiente · ')+label;$('checks').append(li);}const time=data.cron.scheduled_time;if(data.expiry.all_passed&&data.cron.enabled===true&&Number.isSafeInteger(time)&&time>0){if(!baseline)baseline={time,notice_count:data.expiry.notice_count};else if(time>baseline.time&&data.expiry.notice_count===1&&baseline.notice_count===1)secondTurn=true;}else secondTurn=false;$('turnStatus').textContent=secondTurn?'Dos turnos distintos conservan un solo aviso.':baseline?'Primer turno guardado. Consultá después del próximo turno de15min.':'Esperando un turno posterior al vencimiento con todas las comprobaciones correctas.';report();}\n$('loginForm').onsubmit=async e=>{e.preventDefault();if(busy)return;key=$('adminKey').value.trim();$('adminKey').value='';since=Date.now();const turn=++generation;busy=true;paint();try{const data=await api('/api/admin/jobs/closure-check');if(data){show(data);$('status').textContent='Consulta completada.';}}catch(error){if(turn===generation){forget(true);$('status').textContent=error.message;}}finally{if(turn===generation){busy=false;paint();}}};\n$('refreshButton').onclick=async()=>{if(busy||!key)return;const turn=generation;busy=true;paint();try{const data=await api('/api/admin/jobs/closure-check');if(data)show(data);}catch(error){if(turn===generation){state=null;safe=null;$('report').textContent='';$('reportPanel').hidden=true;$('status').textContent=error.message;}}finally{if(turn===generation){busy=false;paint();}}};\n$('backupButton').onclick=async()=>{if(busy||!key)return;const turn=generation;busy=true;paint();try{const data=await api('/api/v7/export');if(!data)return;const verified=await verifyJobBackupDigest(data);if(turn!==generation||!key)return;if(!verified.verified||data.job_storage!=='d1'||data.backup_integrity?.complete!==true||data.job_snapshot_integrity?.complete!==true||data.job_snapshot_integrity?.d1_atomic_snapshot!==true||data.backup_policy?.temporary_authentication_excluded!==true)throw Error('El respaldo está incompleto o no pasó su comprobación. No se considera recuperable.');const serialized=JSON.stringify(data,null,2),fileHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(serialized))),b=>b.toString(16).padStart(2,'0')).join('');if(turn!==generation||!key)return;const meta={generated_at:data.generated_at,file_sha256:fileHash,content_sha256:verified.sha256,offers:data.job_snapshot_integrity.offers,applications:data.job_snapshot_integrity.applications,consistent_d1_snapshot:true,temporary_authentication_excluded:true,download_requested:true};const blob=new Blob([serialized],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='UADAV-STAGING-11768-respaldo-'+new Date().toISOString().replaceAll(':','').replaceAll('-','').slice(0,15)+'Z.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);backup=meta;$('saved').checked=false;$('backupStatus').textContent='Descarga solicitada y checksum comprobado. Confirmá que guardaste el archivo.';report();}catch(error){if(turn===generation){backup=null;$('saved').checked=false;$('status').textContent=error.message;report();}}finally{if(turn===generation){busy=false;paint();}}};\n$('saved').onchange=report;$('copyButton').onclick=async()=>{if(!safe||busy)return;try{await navigator.clipboard.writeText(JSON.stringify(safe,null,2));$('status').textContent='Resultado copiado sin claves ni datos de postulantes.';}catch{$('status').textContent='Podés copiar el resultado seguro visible.';}};$('logoutButton').onclick=()=>forget(false);addEventListener('pagehide',()=>forget(false));paint();})();\n</script></body></html>\n";
+/* Staging-only backup and read-only closure diagnostics. Temporary recovery
+ * proofs are deliberately excluded. No email, restore, secret rotation or DDL. */
+const JOB_BACKUP_SITE='https://uadav-api-staging.uadavstream.workers.dev';
+const JOB_BACKUP_PAGES='https://uadav-stream-staging.pages.dev';
+const JOB_BACKUP_KV=['config_global','apariencia','secciones','web_visibility','home_layout','landing_config','footer_config','site_pages','estado_sitio','radios','senales_oficiales','artistas','artistas_prospectos','cartelera','eventos','bolsa_trabajo','postulaciones_trabajo','federated_sources','federated_source_state','content_items','collections','banners'];
+const JOB_BACKUP_TABLES=['job_expiry_notices','job_account_links','job_store_meta','job_store_records','job_owner_credentials','sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
+const JOB_BACKUP_TEMP=['job_owner_recovery_tokens','job_owner_recovery_v2','job_recovery_outbox','job_mail_live_qa','job_store_rates','job_store_checks','audience_pairings'];
+const JOB_BACKUP_META_PREFIXES=['brevo:','mail:','cron:lease'];
+const JOB_CLOSURE_QA={job:'JOB-MVPJ9WRW-439D4126D9AE',application:'POST-MVPJCNGX-E7683EC0',deadline:'2026-10-26'};
+const jobBackupError=(code,status=503)=>Object.assign(Error(code),{jobCode:code,status});
+function jobBackupReadDB(native){
+ // Both export and diagnostics must remain read-only even if a future query is
+ // accidentally added here. No pragmas, extra statements or write CTEs.
+ const check=sql=>{if(typeof sql!=='string'||!/^SELECT\b/i.test(sql.trim())||/;|--|\/\*/.test(sql))throw jobBackupError('JOB_BACKUP_READ_ONLY')};
+ return{prepare(sql){check(sql);return native.prepare(sql)},batch(statements){return native.batch(statements)}};
+}
+const jobBackupInventory=db=>db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().then(x=>x.results.map(r=>r.name));
+async function uadavJobBackupSnapshot(env){
+ const native=uadavJobDB(env),db=jobBackupReadDB(native),before=await jobBackupInventory(db),existing=new Set(before);
+ const selected=JOB_BACKUP_TABLES.filter(t=>existing.has(t)),sql=selected.map(t=>t==='job_store_meta'?"SELECT * FROM job_store_meta WHERE key NOT LIKE 'brevo:%' AND key NOT LIKE 'mail:%' AND key<>'cron:lease'":'SELECT * FROM '+t);
+ const results=await db.batch([db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"),...sql.map(s=>db.prepare(s))]);
+ const current=results[0]?.results?.map(x=>x.name);
+ if(JSON.stringify(before)!==JSON.stringify(current))throw jobBackupError('JOB_BACKUP_SCHEMA_CHANGED');
+ if(results.length!==selected.length+1||results.some(x=>x.success===false||!Array.isArray(x.results)))throw jobBackupError('JOB_BACKUP_D1_SNAPSHOT');
+ const tables=Object.fromEntries(selected.map((name,i)=>[name,results[i+1].results])),kv={bolsa_trabajo:[],postulaciones_trabajo:[]};
+ const ready=tables.job_store_meta?.some(r=>r.key==='migration_ready'&&r.value==='true');
+ const credentials=new Map((tables.job_owner_credentials||[]).map(x=>[x.job_id,x.secret_hash]));let valid=!!ready&&Array.isArray(tables.job_store_records)&&Array.isArray(tables.job_owner_credentials);
+ const seen=new Set();
+ for(const row of tables.job_store_records||[]){
+  if(!UADAV_JOB_COLLECTIONS.includes(row.collection)){valid=false;continue}
+  let item;try{item=JSON.parse(row.data_json)}catch{valid=false;continue}
+  if(!item||typeof item!=='object'||Array.isArray(item)||item.id!==row.id||seen.has(row.collection+'|'+row.id)){valid=false;continue}
+  seen.add(row.collection+'|'+row.id);const {owner_access_hash,...payload}=item;
+  const authority=row.collection==='bolsa_trabajo'?credentials.get(row.id):null;
+  if(authority&&!/^[a-f0-9]{64}$/.test(authority)){valid=false;continue}
+  kv[row.collection].push({...payload,...(authority?{owner_access_hash:authority}:{})});
+ }
+ if(UADAV_JOB_COLLECTIONS.some(k=>kv[k].length>2000))valid=false;
+ const accounts=UADAV_JOB_ACCOUNT_TABLES.every(t=>existing.has(t)),notices=existing.has('job_expiry_notices');
+ return{tables,kv,existing,missing:JOB_BACKUP_TABLES.filter(t=>!existing.has(t)),accounts,notices,
+  integrity:{version:1,complete:valid,d1_atomic_snapshot:true,projection_matches_tables:valid,offers:kv.bolsa_trabajo.length,applications:kv.postulaciones_trabajo.length,credentials:(tables.job_owner_credentials||[]).length,account_links:(tables.job_account_links||[]).length,expiry_notices:(tables.job_expiry_notices||[]).length},
+  policy:{version:1,temporary_authentication_excluded:true,excluded_tables:JOB_BACKUP_TEMP,excluded_metadata_prefixes:JOB_BACKUP_META_PREFIXES,d1_atomic_snapshot:true,kv_and_d1_distributed_snapshot:false,temporary_recovery_intents_restorable:false}};
+}
+async function uadavJobBackupDocument(env){
+ const out={generated_at:new Date().toISOString(),service:'★ UADAV STREAM',version:VERSION,build:BUILD,job_storage:'d1',kv:{},tables:{}};
+ for(const key of JOB_BACKUP_KV){if(UADAV_JOB_COLLECTIONS.includes(key))continue;try{const raw=await env.UADAV_DB.get(key);if(raw===null||raw===undefined)out.kv[key]=null;else{try{out.kv[key]=JSON.parse(raw)}catch{out.kv[key]=raw}}}catch{out.kv[key]={error:'BACKUP_KV_READ'}}}
+ try{
+  const snapshot=await uadavJobBackupSnapshot(env);Object.assign(out.kv,snapshot.kv);out.tables=snapshot.tables;out.job_accounts_available=snapshot.accounts;out.job_expiry_notices_available=snapshot.notices;out.missing_schema_tables=snapshot.missing;out.job_snapshot_integrity=snapshot.integrity;out.backup_policy=snapshot.policy;
+ }catch{out.table_inventory_error='BACKUP_D1_SNAPSHOT';out.job_snapshot_integrity={version:1,complete:false,d1_atomic_snapshot:false,projection_matches_tables:false};for(const key of UADAV_JOB_COLLECTIONS)out.kv[key]={error:'BACKUP_D1_SNAPSHOT'}}
+ const errors={kv_errors:Object.entries(out.kv).filter(([,x])=>x&&typeof x==='object'&&!Array.isArray(x)&&Object.keys(x).length===1&&Object.hasOwn(x,'error')).map(([k])=>k),table_errors:[],missing_critical_kv:UADAV_JOB_COLLECTIONS.filter(k=>!Array.isArray(out.kv[k])),d1_configured:true,missing_schema_tables:out.missing_schema_tables||[],inventory_error:out.table_inventory_error||null};
+ out.backup_integrity={...errors,complete:!!out.job_snapshot_integrity?.complete&&!errors.kv_errors.length&&!errors.inventory_error&&!errors.missing_critical_kv.length};
+ out.backup_digest={algorithm:'SHA-256',format:'json-stringify-without-backup_digest-v1',value:await uadavDigest(JSON.stringify(out))};return out;
+}
+async function uadavJobRecoveryMaintenance(env){
+ if(env.JOB_STORE_D1!=='true'||!env.DB)return{available:false,expired:0,pruned:0,metadata_pruned:0};
+ const db=uadavJobDB(env),inventory=new Set(await jobBackupInventory(db));
+ if(!inventory.has('job_recovery_outbox'))return{available:false,expired:0,pruned:0,metadata_pruned:0};
+ const marker=await db.prepare("SELECT value FROM job_store_meta WHERE key='mail:live:schema:11767'").first();let identity;try{identity=JSON.parse(marker?.value)}catch{}
+ if(identity?.version!==1||identity.schema_sha256!==UADAV_LIVE_MAIL_SCHEMA_SHA)throw jobBackupError('JOB_MAIL_RETENTION_SCHEMA');
+ const now=Date.now(),cutoff=now-7*86400000;
+ const batch=await db.batch([
+  db.prepare("UPDATE job_recovery_outbox SET state='expired',sealed_payload=NULL,lease_owner=NULL,lease_until=0 WHERE id IN (SELECT id FROM job_recovery_outbox WHERE state IN ('queued','sending','accepted','failed') AND expires_at<=? ORDER BY expires_at,id LIMIT 25)").bind(now),
+  db.prepare("DELETE FROM job_recovery_outbox WHERE id IN (SELECT id FROM job_recovery_outbox WHERE state IN ('expired','cancelled','failed','redeemed') AND expires_at<? ORDER BY expires_at,id LIMIT 25)").bind(cutoff),
+  db.prepare("DELETE FROM job_store_meta WHERE key IN (SELECT key FROM job_store_meta WHERE key LIKE 'brevo:%' AND json_valid(value) AND json_type(value,'$.created_at')='integer' AND json_extract(value,'$.created_at')<? ORDER BY key LIMIT 25)").bind(cutoff)
+ ]);
+ return{available:true,expired:Number(batch[0]?.meta?.changes||0),pruned:Number(batch[1]?.meta?.changes||0),metadata_pruned:Number(batch[2]?.meta?.changes||0)};
+}
+async function uadavJobClosureSnapshot(env){
+ const db=jobBackupReadDB(uadavJobDB(env)),inventory=new Set(await jobBackupInventory(db));
+ const needed=['job_store_records','job_owner_credentials','job_store_meta','job_account_links','job_expiry_notices','audience_announcements','audience_accounts','audience_deletions'];
+ if(needed.some(t=>!inventory.has(t)))throw jobBackupError('JOB_CLOSURE_SCHEMA');
+ const q=JOB_CLOSURE_QA,statements=[
+  db.prepare("SELECT data_json FROM job_store_records WHERE collection='bolsa_trabajo' AND id=?").bind(q.job),
+  db.prepare("SELECT data_json FROM job_store_records WHERE collection='postulaciones_trabajo' AND id=?").bind(q.application),
+  db.prepare("SELECT n.kind,n.account_id,n.deadline,COUNT(a.id) AS message_count FROM job_expiry_notices n LEFT JOIN audience_announcements a ON a.id=n.notice_id AND a.account_id=n.account_id WHERE n.job_id=? GROUP BY n.notice_id").bind(q.job),
+  db.prepare("SELECT l.account_id FROM job_account_links l JOIN audience_accounts a ON a.id=l.account_id WHERE l.collection='bolsa_trabajo' AND l.record_id=? AND NOT EXISTS(SELECT 1 FROM audience_deletions d WHERE d.account_id=l.account_id)").bind(q.job),
+  db.prepare("SELECT key,value FROM job_store_meta WHERE key IN ('migration_ready','cron:last_success','cron:last_run')"),
+  ...(inventory.has('job_mail_live_qa')?[db.prepare("SELECT COUNT(*) AS n FROM job_mail_live_qa q JOIN job_recovery_outbox o ON o.job_id=q.job_id AND o.request_id=q.id JOIN job_owner_credentials c ON c.job_id=q.job_id WHERE q.completed_at IS NOT NULL AND o.state='redeemed' AND c.revision=2 AND c.secret_hash=q.new_hash AND o.redeemed_secret_hash=c.secret_hash AND o.credential_revision+1=c.revision")]:[])
+ ];
+ const rows=await db.batch(statements);let offer,app;try{offer=rows[0].results[0]&&JSON.parse(rows[0].results[0].data_json);app=rows[1].results[0]&&JSON.parse(rows[1].results[0].data_json)}catch{throw jobBackupError('JOB_CLOSURE_RECORD')}
+ const notices=rows[2].results,accounts=rows[3].results.map(x=>x.account_id),meta=new Map(rows[4].results.map(x=>[x.key,x.value]));let success,lastRun;try{success=meta.has('cron:last_success')?uadavJobCronRecord(JSON.parse(meta.get('cron:last_success'))):null;lastRun=meta.has('cron:last_run')?uadavJobCronRecord(JSON.parse(meta.get('cron:last_run'))):null}catch{}
+ const expired=notices.filter(x=>x.kind==='expired'&&x.deadline===q.deadline),sameRecipient=accounts.length===1&&expired.every(x=>x.account_id===accounts[0]);
+ const checks={deadline_unchanged:offer?.fecha_limite===q.deadline,deadline_passed:uadavJobToday()>q.deadline,public_offer_hidden:!!offer&&!uadavJobIsPublic(offer),stored_as_expired:!!offer&&offer.activo===false&&offer.estado==='vencida',application_preserved:app?.id===q.application&&app.job_id===q.job&&app.consent_scope==='job_application_v1',one_expiry_notice:expired.length===1,one_matching_private_message:expired.length===1&&Number(expired[0].message_count)===1,notice_for_current_account:sameRecipient&&expired.length===1,cron_after_expiry:lastRun?.status==='success'&&lastRun.scheduled_time===success?.scheduled_time&&success?.status==='success'&&success.scheduled_time>=Date.parse('2026-10-27T03:00:00Z')&&success.scheduled_time<=Date.now()};
+ return{result:'status',scope:'bolsa-closure-staging',build:BUILD,checked_at:new Date().toISOString(),recovery_enabled:false,read_only:true,ready:meta.get('migration_ready')==='true',real_mail_qa_completed:Number(rows[5]?.results?.[0]?.n||0)>0,expiry:{checks,all_passed:Object.values(checks).every(Boolean),notice_count:expired.length},cron:{enabled:env.JOB_STAGING_CRON==='bolsa-only',scheduled_time:success?.scheduled_time||null,status:lastRun?.status||null},temporary_auth_excluded_from_new_backups:true};
+}
+async function uadavJobBackupRoute(request,env){
+ const url=new URL(request.url),origin=request.headers.get('Origin'),site=JOB_BACKUP_SITE,allowed=[site,JOB_BACKUP_PAGES];
+ const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',Vary:'Origin',...(allowed.includes(origin)?{'Access-Control-Allow-Origin':origin}:{})};
+ const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers});
+ try{
+  if(url.origin!==site)return reply({error:'Operación exclusiva de staging'},403);
+  if(url.pathname==='/qa/bolsa-cierre'){
+   if(request.method!=='GET'||url.search)return reply({error:'Solicitud inválida'},400);const nonce=crypto.randomUUID().replaceAll('-','');return new Response(UADAV_JOB_CLOSURE_HTML.replaceAll('%%NONCE%%',nonce),{headers:{...headers,'Content-Type':'text/html; charset=utf-8','X-Robots-Tag':'noindex, nofollow','Content-Security-Policy':"default-src 'none'; script-src 'nonce-"+nonce+"'; style-src 'nonce-"+nonce+"'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"}});
+  }
+  if(request.method==='OPTIONS'){
+   if(!allowed.includes(origin))return reply({error:'Origen no permitido'},403);
+   return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'GET,OPTIONS','Access-Control-Allow-Headers':'Authorization,Content-Type','Access-Control-Max-Age':'0'}});
+  }
+  if(!env.ADMIN_KEY||request.headers.get('Authorization')!=='Bearer '+String(env.ADMIN_KEY).trim())return reply({error:'No autorizado'},401);
+  if(origin&&!allowed.includes(origin))return reply({error:'Origen no permitido'},403);
+  if(request.method!=='GET'||url.search)return reply({error:'Solo consulta'},405);
+  if(url.pathname==='/api/v7/export'&&env.JOB_STORE_D1!=='true')return uadavWorker.fetch(request,env,{});
+  if(env.JOB_STORE_D1!=='true'||!env.DB)throw jobBackupError('JOB_BACKUP_D1_REQUIRED');
+  if(url.pathname==='/api/v7/export')return reply(await uadavJobBackupDocument(env));
+  if(url.pathname==='/api/admin/jobs/closure-check')return reply(await uadavJobClosureSnapshot(env));
+  return reply({error:'No encontrado'},404);
+ }catch{return reply({error:'No se pudo confirmar la consulta. Los datos actuales se conservan.',code:'JOB_BACKUP_UNAVAILABLE'},503)}
+}
+// Used only inside the existing guarded restore batch. A restored offer must
+// not revive an old email link whose revisions happen to match again.
+async function uadavJobRestoredRecoveryStatements(db,ids){
+ if(!ids.length)return[];
+ const tables=new Set(await jobBackupInventory(db)),statements=[],now=Date.now();
+ if(tables.has('job_recovery_outbox')){
+  const marker=await db.prepare("SELECT value FROM job_store_meta WHERE key='mail:live:schema:11767'").first();let identity;try{identity=JSON.parse(marker?.value)}catch{}
+  if(identity?.version!==1||identity.schema_sha256!==UADAV_LIVE_MAIL_SCHEMA_SHA)throw uadavJobError('JOB_RESTORE_RECOVERY_SCHEMA','Revisá el esquema de recuperación antes de restaurar. No se aplicaron cambios.',423);
+ }
+ for(const id of ids){
+  if(tables.has('job_recovery_outbox'))statements.push(db.prepare("UPDATE job_recovery_outbox SET state='cancelled',sealed_payload=NULL,lease_owner=NULL,lease_until=0 WHERE job_id=?").bind(id));
+  for(const table of ['job_owner_recovery_tokens','job_owner_recovery_v2'])if(tables.has(table))statements.push(db.prepare('UPDATE '+table+' SET consumed_at=? WHERE job_id=? AND consumed_at IS NULL').bind(now,id));
+ }
+ return statements;
+}
+
+/* END JOB BACKUP STAGING */
 
 const uadavWorker = {
   async fetch(request, env, ctx) {
@@ -6533,6 +6664,7 @@ export {uadavPodcastURL,uadavPodcastXML,uadavFetchPodcast,uadavSyncPodcast,uadav
 
 const uadavStagingWorker={...uadavWorker,async scheduled(event,env){return uadavJobScheduled(event,env)},async fetch(request,env,ctx){
   const url=new URL(request.url),path=url.pathname;
+  if(['/qa/bolsa-cierre','/api/admin/jobs/closure-check','/api/v7/export'].includes(path))return uadavJobBackupRoute(request,env);
   if(['/qa/recuperacion-oferta','/api/admin/jobs/email-recovery-qa','/api/qa/bolsa/email-recovery/redeem'].includes(path))return uadavJobMailLiveRoute(request,env);
   if(['/qa/correo','/api/admin/jobs/email-check','/qa/correo-real','/api/admin/jobs/email-delivery-check'].includes(path))return uadavBrevoSandboxRoute(request,env);
   const response=(data,status)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':'*','X-Content-Type-Options':'nosniff'}});
