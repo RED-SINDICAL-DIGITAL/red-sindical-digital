@@ -1,0 +1,71 @@
+{
+  "client_date": "2026-10-26",
+  "scope": "brevo-recovery-staging",
+  "build": "11767",
+  "worker_code_commit": "2abb579e65f360b462e216890f3c3f53f427e0bf",
+  "worker_tree": "34053ef7eb5aff6f2e14b4dce6f50c575fb4f744",
+  "worker_blobs_verified": 23,
+  "pages_code_commit": "86c765293a78fd0d7be69524a78520e8c94a8d81",
+  "pages_tree": "8ef3735dd60aab318b9697201cf2a8e04163de32",
+  "pages_blobs_verified": 9,
+  "ci": [
+    {
+      "run_id": 40444919105,
+      "job_id": 121993780642,
+      "name": "Bolsa staging policy checks",
+      "status": "completed",
+      "conclusion": "success",
+      "all_steps_succeeded": true
+    },
+    {
+      "run_id": 40444874718,
+      "job_id": 121993644981,
+      "name": "Bolsa UI staging checks",
+      "status": "completed",
+      "conclusion": "success",
+      "all_steps_succeeded": true
+    },
+    {
+      "run_id": 40444919072,
+      "job_id": 121993780104,
+      "name": "Radio Studio security checks",
+      "status": "completed",
+      "conclusion": "success",
+      "all_steps_succeeded": true
+    }
+  ],
+  "cases_in_current_worker_suite": 227,
+  "cases_in_pages_suite": 151,
+  "local_native_workerd_passed": 25,
+  "local_radio_passed": 12,
+  "ci_numeric_logs_fetched": false,
+  "ci_run_and_all_job_steps_read_successfully": true,
+  "cloudflare_pages_deployment": {
+    "check_run_id": 121993705546,
+    "app_slug": "cloudflare-workers-and-pages",
+    "conclusion": "success",
+    "title": "Deployed successfully",
+    "project": "uadav-stream-staging",
+    "deployment_id": "d76fb0c8-4664-4251-b2b7-c3583d2ee06d",
+    "source_commit": "86c765293a78fd0d7be69524a78520e8c94a8d81",
+    "preview_url": "https://d76fb0c8.uadav-stream-staging.pages.dev"
+  },
+  "primary_receiver_browser_observation": {
+    "url": "https://uadav-stream-staging.pages.dev/acceso-correo",
+    "title": "Recuperar mi oferta · UADAV STREAM",
+    "opened_without_token": true,
+    "missing_link_message_visible": true,
+    "confirmation_disabled": true,
+    "authenticated_state_or_storage_read": false,
+    "full_visual_or_physical_device_qa_completed": false
+  },
+  "public_json_lookup_tool_could_not_retrieve": true,
+  "pages_protocol_direct_asset_byte_verified": false,
+  "worker11767_deployed_by_agent": false,
+  "worker11767_real_recovery_completed": false,
+  "real_email_sent_by_agent": false,
+  "new_encryption_secret_value_known_by_agent": false,
+  "operational_recovery_enabled": false,
+  "bolsa_complete": false,
+  "next_step": "Only manual main Worker11767 deployment to uadav-api-staging remains before private QA. Use existing Admin and configuration. Generate encryption secret in that private browser page if missing, save only in Cloudflare staging, explicitly authorize own-recipient fixture mail, confirm its link, then consult/copy safe report. No repeat laboratory, Pages reconfiguration, Brevo setup, production change, public-recovery activation or manual SQL."
+}
