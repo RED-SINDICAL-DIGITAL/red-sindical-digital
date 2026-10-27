@@ -1,9 +1,10 @@
 import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const root=new URL('../',import.meta.url),worker=new URL('worker.js',root),zip=new URL('releases/uadav-api-staging-11768.zip',root),check=process.argv.includes('--check');
 const source=await readFile(worker,'utf8');
-if(!source.includes("const BUILD = '11768';")||!source.includes('/* BEGIN JOB BACKUP STAGING */'))throw Error('Wrong staging Worker for11768 package.');
+if(!check&&!source.includes("const BUILD = '11768';")||!source.includes('/* BEGIN JOB BACKUP STAGING */'))throw Error('Wrong staging Worker for11768 package.');
 const readme=`UADAV STREAM11768 - SOLO uadav-api-staging
 
 Extraer worker.js. En Workers & Pages > uadav-api-staging > Edit code, reemplazar el codigo y Deploy.
@@ -21,7 +22,8 @@ La restauracion operativa y la recuperacion publica siguen deshabilitadas. No ac
 Guia: docs/BOLSA-11768-RESPALDO-Y-VENCIMIENTO.md
 `;
 const script=check?
- 'import sys,zipfile;z=zipfile.ZipFile(sys.argv[1]);assert z.testzip() is None;assert z.namelist()==["worker.js","LEEME-STAGING.txt"];assert z.read("worker.js")==open(sys.argv[2],"rb").read();assert z.read("LEEME-STAGING.txt").decode()==sys.argv[3]':
+ 'import sys,zipfile,hashlib;z=zipfile.ZipFile(sys.argv[1]);assert z.testzip() is None;assert z.namelist()==["worker.js","LEEME-STAGING.txt"];assert hashlib.sha256(z.read("worker.js")).hexdigest()=="3f1ab89bbc837fa18c6d56b4d25e09fdd068f2dc6ee28c7b8bd13544b5c64c78";assert z.read("LEEME-STAGING.txt").decode()==sys.argv[3]':
  'import sys,zipfile;z=zipfile.ZipFile(sys.argv[1],"w",compression=zipfile.ZIP_DEFLATED,compresslevel=9);items=[("worker.js",open(sys.argv[2],"rb").read()),("LEEME-STAGING.txt",sys.argv[3].encode())];[(lambda i,d:(setattr(i,"compress_type",zipfile.ZIP_DEFLATED),z.writestr(i,d,compresslevel=9)))(zipfile.ZipInfo(n,(2026,10,27,7,0,0)),d) for n,d in items];z.close()';
+if(check&&createHash('sha256').update(await readFile(zip)).digest('hex')!=='ce19e6ae859dd4262746f779fff297444c623f9f0ba85a334f78a70a2a6f622a')throw Error('Frozen11768 ZIP changed.');
 execFileSync('python3',['-c',script,fileURLToPath(zip),fileURLToPath(worker),readme]);
 console.log(check?'11768 ZIP identity and CRC verified.':'11768 staging ZIP prepared; no deployment.');

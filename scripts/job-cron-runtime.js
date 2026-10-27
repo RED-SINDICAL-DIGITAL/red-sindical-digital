@@ -64,6 +64,7 @@ async function uadavJobScheduled(event,env){
     if(current.lastSuccess?.scheduled_time>=event.scheduledTime){await release();acquired=false;return {executed:false,reason:'completed'}}
     const result=await uadavJobMaintenance(env);
     result.mail_retention=await uadavJobRecoveryMaintenance(env);
+    await uadavAccountEmailRetention(env);
     const record=await finish('success',result);
     return {executed:true,...record};
   }catch{

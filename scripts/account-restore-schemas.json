@@ -1,0 +1,15 @@
+{
+  "audience_accounts": "CREATE TABLE audience_accounts(id TEXT PRIMARY KEY,data_json TEXT NOT NULL,revision INTEGER NOT NULL,updated_at TEXT NOT NULL)",
+  "audience_devices": "CREATE TABLE audience_devices(credential_hash TEXT PRIMARY KEY,id TEXT UNIQUE NOT NULL,account_id TEXT NOT NULL,name TEXT NOT NULL,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,revoked_at INTEGER)",
+  "audience_announcements": "CREATE TABLE audience_announcements(id TEXT PRIMARY KEY,title TEXT NOT NULL,message TEXT NOT NULL,account_id TEXT,created_at TEXT NOT NULL,expires_at TEXT NOT NULL)",
+  "audience_recovery_keys": "CREATE TABLE audience_recovery_keys(credential_hash TEXT PRIMARY KEY,account_id TEXT NOT NULL,revoked_at INTEGER)",
+  "audience_artist_links": "CREATE TABLE audience_artist_links(account_id TEXT NOT NULL,artist_id TEXT NOT NULL,claim_id TEXT,expires_at INTEGER NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(account_id,artist_id))",
+  "audience_artist_claims": "CREATE TABLE audience_artist_claims(claim_id TEXT PRIMARY KEY,account_id TEXT NOT NULL,artist_id TEXT NOT NULL,created_at INTEGER NOT NULL,linked_at INTEGER,detached_at INTEGER)",
+  "audience_deletions": "CREATE TABLE audience_deletions(account_id TEXT PRIMARY KEY,deleted_at INTEGER NOT NULL)",
+  "artist_deletions": "CREATE TABLE artist_deletions(artist_id TEXT PRIMARY KEY,channel_id TEXT,deleted_at TEXT NOT NULL,actor TEXT NOT NULL)",
+  "audience_notification_reads": "CREATE TABLE audience_notification_reads(account_id TEXT NOT NULL,notification_key TEXT NOT NULL,read_at INTEGER NOT NULL,PRIMARY KEY(account_id,notification_key))",
+  "artist_deletion_accounts": "CREATE TABLE artist_deletion_accounts(artist_id TEXT NOT NULL,account_id TEXT NOT NULL,PRIMARY KEY(artist_id,account_id))",
+  "artist_claims": "CREATE TABLE artist_claims (\n  id TEXT PRIMARY KEY,\n  artist_id TEXT NOT NULL,\n  name TEXT,\n  email TEXT NOT NULL,\n  whatsapp TEXT,\n  proof_url TEXT,\n  social_url TEXT,\n  note TEXT,\n  status TEXT NOT NULL DEFAULT 'pending',\n  created_at TEXT NOT NULL,\n  reviewed_at TEXT,\n  review_note TEXT\n)",
+  "artist_owners": "CREATE TABLE artist_owners (\n  id TEXT PRIMARY KEY, artist_id TEXT NOT NULL, claim_id TEXT, contact_email TEXT,\n  role TEXT NOT NULL DEFAULT 'owner', status TEXT NOT NULL DEFAULT 'active',\n  verification_level TEXT NOT NULL DEFAULT 'admin_approved',\n  created_at TEXT NOT NULL, updated_at TEXT NOT NULL, revoked_at TEXT\n)",
+  "audience_recovery_epochs": "CREATE TABLE audience_recovery_epochs(account_id TEXT PRIMARY KEY REFERENCES audience_accounts(id) ON DELETE CASCADE,version INTEGER NOT NULL CHECK(version>=0))"
+}

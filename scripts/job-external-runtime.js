@@ -49,8 +49,8 @@ async function uadavExternalRead(response,limit,signal){
     return text+decoder.decode();
   }catch(error){uadavExternalCancel(reader);throw error}finally{try{reader.releaseLock()}catch{}}
 }
-// Preflight validates both address families; it does not pin fetch() to those IPs.
-// Production still requires verified public-only egress against DNS rebinding.
+// DNS preflight is not IP pinning. Operational callers also restrict hosts to
+// fixed trusted publishers; arbitrary sources use uploaded HTML or CSV instead.
 async function uadavExternalDNS(host,requestFetch,signal){
   let count=0;
   for(const type of ['A','AAAA']){
@@ -73,11 +73,14 @@ async function uadavExternalDNS(host,requestFetch,signal){
   }
   if(!count)throw uadavExternalError('EXTERNAL_DNS','La fuente no tiene una dirección pública comprobable. Usá CSV.');
 }
-async function uadavExternalFetchHTML(value,{requestFetch=fetch,timeoutMs=8000}={}){
+const UADAV_EXTERNAL_TRUSTED_HOSTS=new Set(['uadav-stream-staging.pages.dev','www.agenciabeat.com','agenciabeat.com','www.blogger.com','www.rosario.gob.ar','www.cultura.gob.ar','www.teatrocervantes.gob.ar','teatrocervantes.gob.ar']);
+async function uadavExternalTrustedHTML(value,options={}){return uadavExternalFetchHTML(value,{...options,requireTrusted:true})}
+async function uadavExternalFetchHTML(value,{requestFetch=fetch,timeoutMs=8000,requireTrusted=false}={}){
   let current=uadavExternalURL(value);
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
   try{
     for(let redirects=0;redirects<=3;redirects++){
+      if(requireTrusted&&!UADAV_EXTERNAL_TRUSTED_HOSTS.has(new URL(current).hostname))throw uadavExternalError('EXTERNAL_SOURCE_REVIEW_REQUIRED','Esta fuente se importa con HTML o CSV. La lectura directa admite solo los proveedores públicos autorizados.',422);
       await uadavExternalDNS(new URL(current).hostname,requestFetch,controller.signal);
       const response=await uadavExternalAwait(requestFetch(current,{redirect:'manual',signal:controller.signal,headers:{Accept:'text/html, application/xhtml+xml;q=0.9','User-Agent':'UADAVSTREAM/1.0'}}),controller.signal);
       if([301,302,303,307,308].includes(response.status)){
@@ -116,6 +119,23 @@ function uadavExternalPreview(html,url,kind){
   if(kind==='job')Object.assign(item,{fecha:date(schema.datePosted),fecha_limite:date(schema.validThrough),empresa:clean(organization.name).slice(0,180),modalidad:schema.jobLocationType==='TELECOMMUTE'?'remoto':'presencial',application_mode:'external_url',application_url:url,region_scope:'argentina'});
   else Object.assign(item,{fecha:String(schema.startDate||'').slice(0,80),fecha_inicio:String(schema.startDate||'').slice(0,80),fecha_fin:String(schema.endDate||'').slice(0,80),lugar:clean(place.name).slice(0,180),categoria:'Eventos'});
   return {success:true,kind,item,structured:Object.keys(schema).length>0};
+}
+// Fixed Google-hosted public feed owned by the operator. Article URLs are only
+// candidates: no news becomes a job without its explicit category and review.
+function uadavBeatJobCandidates(data,limit=6){
+  if(data?.feed?.id?.$t!=='tag:blogger.com,1999:blog-3101225953970770773'||!Array.isArray(data.feed.entry||[]))throw uadavExternalError('EXTERNAL_FEED','La fuente no devolvió el feed autorizado.');
+  const labels=new Set(['convocatorias','trabajo','empleo','casting','castings','audiciones']),seen=new Set(),items=[];
+  for(const row of (data.feed.entry||[]).slice(0,25)){
+    if(!(row.category||[]).some(x=>labels.has(String(x.term||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase())))continue;
+    const link=(row.link||[]).find(x=>x.rel==='alternate'&&x.type==='text/html')?.href;let url;try{url=uadavExternalURL(link)}catch{continue}
+    if(!['www.agenciabeat.com','agenciabeat.com'].includes(new URL(url).hostname)||seen.has(url))continue;
+    const label=uadavDecodeHTMLText(String(row.title?.$t||'').replace(/<[^<>]*>/g,' ')).trim().slice(0,180);if(!label)continue;seen.add(url);items.push({href:url,label});if(items.length>=Math.min(20,limit))break;
+  }
+  return items;
+}
+async function uadavBeatFeed({requestFetch=fetch,timeoutMs=5000,limit=6}={}){
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
+  try{const url='https://www.blogger.com/feeds/3101225953970770773/posts/summary?alt=json&max-results=25',r=await uadavExternalAwait(requestFetch(url,{redirect:'manual',credentials:'omit',signal:controller.signal,headers:{Accept:'application/json'}}),controller.signal);if(r.status!==200||!/^application\/json(?:\s*;|$)/i.test(r.headers.get('content-type')||'')){uadavExternalCancel(r.body);throw uadavExternalError('EXTERNAL_FEED','No se confirmó la fuente autorizada.');}let data;try{data=JSON.parse(await uadavExternalRead(r,350000,controller.signal))}catch(error){if(error.externalCode)throw error;throw uadavExternalError('EXTERNAL_FEED','La fuente no devolvió JSON válido.');}return{candidates:uadavBeatJobCandidates(data,limit),publisher:'Agencia Beat',transport:'fixed-google-public-feed'};}finally{clearTimeout(timer)}
 }
 async function uadavPrepareExternalJobs(current,rows,{now=Date.now(),maxRecords=2000}={}){
   const list=current.map(row=>({...row})),indices=new Map();let imported=0,updated=0;const iso=new Date(now).toISOString(),today=uadavJobToday(now),seen=new Set();

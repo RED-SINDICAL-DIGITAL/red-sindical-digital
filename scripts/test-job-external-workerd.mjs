@@ -6,8 +6,10 @@ import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
 const binary=process.env.UADAV_WORKERD_BIN||'workerd';
 const dir=await mkdtemp(join(tmpdir(),'uadav-external-workerd-'));
-const entry=`import worker,{uadavExternalFetchHTML,uadavExternalPreview} from './worker.mjs';
+const entry=`import worker,{uadavExternalFetchHTML,uadavExternalTrustedHTML,uadavExternalPreview} from './worker.mjs';
 import qaWorker from './restore-qa.mjs';
+import fullRestoreWorker from './full-restore.mjs';
+import {prepareAccountEmailMessage} from './account-email-message.mjs';
 import labWorker from './bolsa-lab.mjs';
 import mailLabWorker from './mail-lab.mjs';
 import {createJobRecoveryOutbox} from './recovery-outbox.mjs';
@@ -38,7 +40,7 @@ export default {async test(){
  await rejected('https://stalled.example/qa','EXTERNAL_TIMEOUT');
  console.log('PASS workerd: stalled body and cancellation do not defeat timeout');
  const env={ADMIN_KEY:'synthetic-admin',UADAV_DB:{get:async()=>null,put:async()=>{}}};
- const request=auth=>new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/federated/url-preview',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://uadav-stream-staging.pages.dev',...(auth?{Authorization:'Bearer synthetic-admin'}:{})},body:JSON.stringify({kind:'job',url:'https://good.example/qa'})});
+ const request=auth=>new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/federated/url-preview',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://uadav-stream-staging.pages.dev',...(auth?{Authorization:'Bearer synthetic-admin'}:{})},body:JSON.stringify({kind:'job',url:'https://uadav-stream-staging.pages.dev/qa'})});
  check((await worker.fetch(request(false),env,{})).status===401,'Admin access must be required');
  const response=await worker.fetch(request(true),env,{}),data=await response.json();
  check(response.status===200&&data.success===true&&data.item.titulo===preview.item.titulo,'standalone authenticated preview route');
@@ -118,6 +120,22 @@ export default {async test(){
  let cronFailed=false;try{await worker.scheduled(tick,{JOB_STAGING_CRON:'bolsa-only',JOB_STORE_D1:'true',DB:{prepare(){throw Error('synthetic-private-SQL-detail')}}},{})}catch(error){cronFailed=error.jobCode==='JOB_CRON_FAILED'&&!error.message.includes('synthetic-private-SQL-detail')}
  check(cronFailed,'scheduled handler must propagate sanitized failures');
  console.log('PASS workerd: scheduled failures reach the runtime without private SQL details');
+ try{await uadavExternalTrustedHTML('https://untrusted.example/job');throw Error('Untrusted source admitted')}catch(e){check(e.externalCode==='EXTERNAL_SOURCE_REVIEW_REQUIRED','trusted publisher boundary')}
+ console.log('PASS workerd: operational source transport refuses untrusted publishers before egress');
+ const guardEnv=new Proxy({ADMIN_KEY:'synthetic-admin'},{get(o,k){if(k==='ADMIN_KEY')return o[k];throw Error('Unexpected binding '+String(k))}});
+ check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/access-email'),guardEnv,{})).status===401,'account email Admin-before-binding');
+ check((await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/access/email/redeem'),guardEnv,{})).status===405,'email GET never consumes proof');
+ check((await worker.fetch(new Request('https://production.invalid/api/access/email/status'),guardEnv,{})).status===403,'account mail staging host');
+ console.log('PASS workerd: new account-email host, method and Admin authentication boundaries');
+ check((await fullRestoreWorker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/rehearse'),guardEnv,{})).status===403,'full restore cannot execute on main API');
+ const fullHealth=await fullRestoreWorker.fetch(new Request('https://uadav-restore-qa.uadavstream.workers.dev/health'),{},{});check((await fullHealth.json()).version==='11769-account-restore','full restore standalone core loads');
+ console.log('PASS workerd: full account restore standalone engine loads and rejects operational hosts');
+ const uploaded=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/federated/url-preview',{method:'POST',headers:{Authorization:'Bearer synthetic-admin','Content-Type':'application/json'},body:JSON.stringify({kind:'job',url:'https://untrusted.example/job',html:'<title>Synthetic uploaded HTML</title>'})}),env,{});
+ check(uploaded.status===200&&(await uploaded.json()).transport==='uploaded-html','HTML capture without arbitrary source fetch');
+ console.log('PASS workerd: uploaded source HTML is parsed without outbound website access');
+ const accountMessage=JSON.parse(prepareAccountEmailMessage({to:'own@example.invalid',purpose:'verify',token:'a'.repeat(64),id:'6d534d25-b757-482c-8aad-7366a2e38657',issuedAt:1800000000000,expiresAt:1800000900000}));check(accountMessage.to.length===1&&accountMessage.textContent.includes('/entrar-correo.html#')&&!accountMessage.textContent.includes('UAC-'),'native account mail format');
+ console.log('PASS workerd: account email has one action, fragment proof and explicit Argentine expiry');
+
 }};
 `;
 const mock=`const html='<script type="application/ld+json">'+JSON.stringify({'@type':'JobPosting',title:'QA workerd · Música',description:'<b>Prueba ficticia</b>',validThrough:'2099-12-31',jobLocation:{address:{addressLocality:'Rosario'}}})+'</script>';
@@ -141,13 +159,15 @@ export default {async fetch(request){
  if(url.hostname==='nonhtml.example')return Response.json({private:'not HTML'});
  if(url.hostname==='oversize.example')return new Response('x'.repeat(750001),{headers:{'content-type':'text/html'}});
  if(url.hostname==='stalled.example'){let timer;return new Response(new ReadableStream({start(c){timer=setTimeout(()=>c.close(),1000)},cancel(){clearTimeout(timer)}}),{headers:{'content-type':'text/html'}})}
- if(url.hostname!=='good.example')throw Error('Unexpected synthetic destination');
+ if(!['good.example','uadav-stream-staging.pages.dev'].includes(url.hostname))throw Error('Unexpected synthetic destination');
  return new Response(html,{headers:{'content-type':'text/html; charset=utf-8'}});
 }};
 `;
 try{
  const source=await readFile(new URL('../worker.js',import.meta.url));
  await writeFile(join(dir,'worker.mjs'),source);
+ await writeFile(join(dir,'full-restore.mjs'),await readFile(new URL('../releases/uadav-bolsa-account-restore-11769.js',import.meta.url)));
+ await writeFile(join(dir,'account-email-message.mjs'),await readFile(new URL('../scripts/account-email-message.mjs',import.meta.url)));
  await writeFile(join(dir,'restore-qa.mjs'),await readFile(new URL('../releases/uadav-bolsa-restore-qa-11762.js',import.meta.url)));
  await writeFile(join(dir,'bolsa-lab.mjs'),await readFile(new URL('../releases/uadav-bolsa-lab-11764.js',import.meta.url)));
  await writeFile(join(dir,'recovery-outbox.mjs'),await readFile(new URL('../scripts/job-recovery-outbox.mjs',import.meta.url)));
@@ -160,7 +180,7 @@ try{
  await writeFile(join(dir,'mock.mjs'),mock);
  await writeFile(join(dir,'config.capnp'),`using Workerd = import "/workerd/workerd.capnp";
 const config :Workerd.Config = (services = [
-(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs"),(name = "bolsa-lab.mjs", esModule = embed "bolsa-lab.mjs"),(name = "recovery-outbox.mjs", esModule = embed "recovery-outbox.mjs"),(name = "access-mail-message.mjs", esModule = embed "access-mail-message.mjs"),(name = "brevo-staging-mail.mjs", esModule = embed "brevo-staging-mail.mjs"),(name = "brevo-request.mjs", esModule = embed "brevo-request.mjs"),(name = "brevo-recovery-message.mjs", esModule = embed "brevo-recovery-message.mjs"),(name = "mail-lab.mjs", esModule = embed "mail-lab.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
+(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs"),(name = "full-restore.mjs", esModule = embed "full-restore.mjs"),(name = "account-email-message.mjs", esModule = embed "account-email-message.mjs"),(name = "bolsa-lab.mjs", esModule = embed "bolsa-lab.mjs"),(name = "recovery-outbox.mjs", esModule = embed "recovery-outbox.mjs"),(name = "access-mail-message.mjs", esModule = embed "access-mail-message.mjs"),(name = "brevo-staging-mail.mjs", esModule = embed "brevo-staging-mail.mjs"),(name = "brevo-request.mjs", esModule = embed "brevo-request.mjs"),(name = "brevo-recovery-message.mjs", esModule = embed "brevo-recovery-message.mjs"),(name = "mail-lab.mjs", esModule = embed "mail-lab.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
 (name = "mock", worker = (modules = [(name = "mock.mjs", esModule = embed "mock.mjs")],compatibilityDate = "2026-09-28"))
 ]);`);
  const result=spawnSync(binary,['test',join(dir,'config.capnp'),'main'],{encoding:'utf8',timeout:30000});

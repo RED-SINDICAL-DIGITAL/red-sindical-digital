@@ -16,12 +16,12 @@ try{
  for(const name of ['Desktop','Mobile']){
   const d=await call(root,'account/devices','POST',{name});assert.equal(d.status,200);devices.push(d.data.secret);
  }
- const rotated=await call(devices[0],'account/recovery','POST',{});assert.equal(rotated.status,200);
+ const rotated=await call(devices[0],'account/recovery/atomic','POST',{request_id:crypto.randomUUID(),expected_version:(await call(devices[0],'account/identity')).data.recovery_version,new_secret:'UAC-'+Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('')});assert.equal(rotated.status,200);
  assert.match(rotated.data.secret,/^UAC-[a-f0-9]{64}$/);
  assert.equal((await call(root)).data.code,'RECOVERY_REVOKED');
  assert.equal((await call(rotated.data.secret)).status,200);
  for(const device of devices)assert.equal((await call(device)).status,200,'recovery rotation must retain approved devices');
- const rotatedAgain=await call(rotated.data.secret,'account/recovery','POST',{});assert.equal(rotatedAgain.status,200);
+ const rotatedAgain=await call(rotated.data.secret,'account/recovery/atomic','POST',{request_id:crypto.randomUUID(),expected_version:(await call(devices[0],'account/identity')).data.recovery_version,new_secret:'UAC-'+Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('')});assert.equal(rotatedAgain.status,200);
  assert.equal((await call(rotated.data.secret)).data.code,'RECOVERY_REVOKED');
  assert.equal((await call(rotatedAgain.data.secret)).status,200);
  assert.equal((await call(devices[0],'account','DELETE',{confirm:'ELIMINAR',revision:0})).status,409);

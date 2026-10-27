@@ -1,0 +1,13 @@
+{
+  "checked_at": "2026-10-27T17:13:42.354Z",
+  "scope": "authorized-publisher-read-only",
+  "publisher": "Agencia Beat",
+  "provider": "Google Blogger",
+  "feed_id": "3101225953970770773",
+  "entries_observed": 25,
+  "eligible_job_candidates": 0,
+  "content_published": false,
+  "staging_state_changed": false,
+  "production_touched": false,
+  "scope_limit": "Read-only real public feed of the operator-owned publisher. Candidates require explicit employment/casting/convocatorias labels and Admin review. Zero candidates is valid; no fictitious job or remote publication is claimed."
+}

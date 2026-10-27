@@ -6,6 +6,24 @@ on:
       - release/radio-studio-staging-rc-20261020
     paths:
       - 'worker.js'
+      - 'scripts/account-email-core.mjs'
+      - 'scripts/account-email-message.mjs'
+      - 'scripts/account-email-runtime.js'
+      - 'scripts/account-recovery-runtime.js'
+      - 'scripts/embed-account-email.mjs'
+      - 'scripts/account-restore-runtime.js'
+      - 'scripts/account-restore-page.html'
+      - 'scripts/account-restore-schemas.json'
+      - 'scripts/build-account-restore-qa.mjs'
+      - 'scripts/package-bolsa-11769.mjs'
+      - 'tests/account-email-core.test.mjs'
+      - 'tests/account-email-http.test.mjs'
+      - 'tests/account-atomic-recovery.test.mjs'
+      - 'tests/account-restore-qa.test.mjs'
+      - 'tests/job-external-trusted.test.mjs'
+      - 'tests/account-recovery-deletion.mjs'
+      - 'releases/uadav-bolsa-account-restore-11769.js'
+      - 'releases/uadav-bolsa-staging-11769.zip'
       - 'tests/bolsa-public-policy.test.cjs'
       - 'tests/job-store-integration.test.mjs'
       - 'tests/job-account-integration.test.mjs'
@@ -79,6 +97,24 @@ on:
   pull_request:
     paths:
       - 'worker.js'
+      - 'scripts/account-email-core.mjs'
+      - 'scripts/account-email-message.mjs'
+      - 'scripts/account-email-runtime.js'
+      - 'scripts/account-recovery-runtime.js'
+      - 'scripts/embed-account-email.mjs'
+      - 'scripts/account-restore-runtime.js'
+      - 'scripts/account-restore-page.html'
+      - 'scripts/account-restore-schemas.json'
+      - 'scripts/build-account-restore-qa.mjs'
+      - 'scripts/package-bolsa-11769.mjs'
+      - 'tests/account-email-core.test.mjs'
+      - 'tests/account-email-http.test.mjs'
+      - 'tests/account-atomic-recovery.test.mjs'
+      - 'tests/account-restore-qa.test.mjs'
+      - 'tests/job-external-trusted.test.mjs'
+      - 'tests/account-recovery-deletion.mjs'
+      - 'releases/uadav-bolsa-account-restore-11769.js'
+      - 'releases/uadav-bolsa-staging-11769.zip'
       - 'tests/bolsa-public-policy.test.cjs'
       - 'tests/job-store-integration.test.mjs'
       - 'tests/job-account-integration.test.mjs'
@@ -176,6 +212,8 @@ jobs:
         run: node scripts/embed-job-mail-live.mjs --check && node scripts/package-job-mail-live.mjs --check
       - name: Verify consistent backup and read-only closure sources/package
         run: node scripts/embed-job-backup.mjs --check && node scripts/package-job-backup.mjs --check
+      - name: Verify account email and isolated full restoration sources
+        run: node scripts/embed-account-email.mjs --check && node scripts/build-account-restore-qa.mjs --check && node scripts/package-bolsa-11769.mjs --check
       - name: Validate preparatory recovery outbox engine (not deployed)
         run: node --check scripts/job-recovery-outbox.mjs
       - name: Validate preparatory email messages and Brevo transport (not deployed)
@@ -187,6 +225,9 @@ jobs:
       - name: Run standalone external-source checks inside Cloudflare engine
         run: UADAV_WORKERD_BIN="$RUNNER_TEMP/uadav-workerd/node_modules/@cloudflare/workerd-linux-64/bin/workerd" node scripts/test-job-external-workerd.mjs
       - name: Run SQLite transaction, concurrency, migration and recovery checks
-        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs tests/job-restore-qa.test.mjs tests/job-cron-staging.test.mjs tests/job-lab.test.mjs tests/job-recovery-outbox.test.mjs tests/access-mail-staging.test.mjs tests/brevo-probe.test.mjs tests/brevo-delivery.test.mjs tests/brevo-recovery-message.test.mjs tests/job-mail-lab.test.mjs tests/job-mail-live.test.mjs tests/job-mail-live-ui.test.mjs tests/job-backup.test.mjs tests/job-closure-ui.test.mjs
+        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs tests/job-restore-qa.test.mjs tests/job-cron-staging.test.mjs tests/job-lab.test.mjs tests/job-recovery-outbox.test.mjs tests/access-mail-staging.test.mjs tests/brevo-probe.test.mjs tests/brevo-delivery.test.mjs tests/brevo-recovery-message.test.mjs tests/job-mail-lab.test.mjs tests/job-mail-live.test.mjs tests/job-mail-live-ui.test.mjs tests/job-backup.test.mjs tests/job-closure-ui.test.mjs tests/account-email-core.test.mjs tests/account-email-http.test.mjs tests/account-atomic-recovery.test.mjs tests/account-restore-qa.test.mjs tests/job-external-trusted.test.mjs
       - name: Run KV compatibility checks with current publication policy
         run: node tests/job-application-integration.mjs
+
+      - name: Verify account recovery and deletion compatibility
+        run: node tests/account-recovery-deletion.mjs

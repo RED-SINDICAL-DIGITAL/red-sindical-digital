@@ -1,0 +1,82 @@
+{
+  "checked_at": "2026-10-27T18:00:05.397452Z",
+  "build": "11769",
+  "scope": "local-synthetic-and-public-source-validation",
+  "worker_parent_sha": "cd23eedc56e0d51c734ff0dcc3c87d86f0ca5cdf",
+  "pages_parent_sha": "86c765293a78fd0d7be69524a78520e8c94a8d81",
+  "tests": {
+    "worker_node": {
+      "passed": 294,
+      "failed": 0
+    },
+    "pages_node": {
+      "passed": 186,
+      "failed": 0
+    },
+    "workerd": {
+      "version": "1.20261025.1",
+      "passed_checks": 32
+    },
+    "radio_node": {
+      "passed": 12,
+      "failed": 0
+    },
+    "additional_passed": [
+      "public Bolsa policy",
+      "KV compatibility",
+      "account recovery and deletion",
+      "account notices",
+      "Admin import/export",
+      "embedded source consistency",
+      "standalone artifact and ZIP integrity",
+      "JavaScript syntax",
+      "git diff whitespace"
+    ]
+  },
+  "artifacts": {
+    "worker.js": {
+      "bytes": 836224,
+      "sha256": "e34178eaa866efb4bd4e245a8d31fb68337e27e2723f35ab7a48f2a6f7aa2886"
+    },
+    "releases/uadav-bolsa-account-restore-11769.js": {
+      "bytes": 865434,
+      "sha256": "39308b31bbd6bc2b6b76fd14900bc7058ca2a93e556ecf7b6eb9b88fae508bac"
+    },
+    "releases/uadav-bolsa-staging-11769.zip": {
+      "bytes": 425061,
+      "sha256": "184a631d6d031a25e578d9a72e18ab02648d2f8c9545a25d0e82d30f8aca1454"
+    }
+  },
+  "old_release_files": {
+    "compared": 51,
+    "identical": true
+  },
+  "shared_digest_bytes_identical": true,
+  "data_scope": {
+    "synthetic_d1_and_mail": true,
+    "private_backup_read": false,
+    "real_mail_sent_by_work": false,
+    "staging_state_mutated_by_work_in_11769": false,
+    "real_public_feed_read_only": true,
+    "eligible_real_source_jobs": 0,
+    "real_job_published": false
+  },
+  "deployment": {
+    "worker_11769_deployed_by_work": false,
+    "isolated_restore_11769_deployed_by_work": false,
+    "pages_requires_staging_branch_publish": true,
+    "public_account_email_enabled": false,
+    "legacy_job_key_recovery_enabled": false,
+    "operational_restore_enabled": false,
+    "production_touched": false
+  },
+  "pending": [
+    "Deploy two existing staging Workers",
+    "Confirm configured QA email from its original account",
+    "Log into that same account with a second email link",
+    "Isolated D1 rehearsal of a fresh private11769 backup",
+    "Real eligible external-job lifecycle and errors",
+    "Physical PC/mobile UX and accessibility review"
+  ],
+  "browser_visual_test": "Chromium binary download failed; DOM tests are not visual or physical-device verification."
+}

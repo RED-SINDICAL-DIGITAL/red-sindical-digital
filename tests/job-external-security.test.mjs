@@ -176,6 +176,7 @@ test('D1 imports remain atomic, preserve KV, reject the generic bypass and canno
   }finally{f.close()}
 });
 test('HTML preview requires Admin, validates kind before egress and is read-only',async()=>{
+  const source='https://www.agenciabeat.com/convocatorias/qa';
   const f=await fixture({d1:false}),n=network({html:'<title>Convocatoria QA</title><meta name="description" content="Ficticia">'}),previous=globalThis.fetch;globalThis.fetch=n.requestFetch;
   try{
     assert.equal((await f.call('admin/federated/url-preview','POST',{url:source,kind:'job'},false)).status,401);
@@ -186,7 +187,7 @@ test('HTML preview requires Admin, validates kind before egress and is read-only
 test('source discovery has bounded batches and rotates older sources without publishing jobs',async()=>{
   const f=await fixture({d1:false}),n=network({html:'<a href="/casting/qa">Convocatoria ficticia QA</a>'}),previous=globalThis.fetch;globalThis.fetch=n.requestFetch;
   try{
-    f.kv.set('federated_sources_initialized','1');f.kv.set('federated_sources',JSON.stringify(Array.from({length:3},(_,i)=>({id:'qa-'+i,kind:'job',name:'QA',url:'https://fuente.example/'+i,active:true}))));
+    f.kv.set('federated_sources_initialized','1');f.kv.set('federated_sources',JSON.stringify(Array.from({length:3},(_,i)=>({id:'qa-'+i,kind:'job',name:'QA',url:'https://www.agenciabeat.com/qa/'+i,active:true}))));
     const first=await f.call('admin/federated/sync','POST',{});assert.equal(first.data.results.length,2);assert.equal(first.data.remaining,1);assert(first.data.results.every(x=>x.ok&&x.found===1));
     const next=await f.call('admin/federated/sync','POST',{});assert.equal(next.data.results[0].source_id,'qa-2');assert.equal(f.kv.has('bolsa_trabajo'),false);assert.equal(n.calls.length,12);
   }finally{globalThis.fetch=previous;f.close()}
@@ -203,7 +204,8 @@ test('malformed, non-object and oversized Admin import bodies fail before a sour
   const f=await fixture({d1:false}),n=network(),previous=globalThis.fetch;globalThis.fetch=n.requestFetch;
   try{
     for(const body of [null,[],false])for(const route of ['admin/federated/url-preview','admin/federated/sync','admin/federated/import'])assert.equal((await f.call(route,'POST',body)).status,400);
-    assert.equal((await f.call('admin/federated/url-preview','POST',{url:source,kind:'job',extra:'x'.repeat(5000)})).status,413);
+    assert.equal((await f.call('admin/federated/url-preview','POST',{url:source,kind:'job',extra:'x'.repeat(5000)})).status,400);
+    assert.equal((await f.call('admin/federated/url-preview','POST',{url:source,kind:'job',html:'x'.repeat(1600001)})).status,413);
     assert.equal(n.calls.length,0);assert.equal(f.kv.has('bolsa_trabajo'),false);
   }finally{globalThis.fetch=previous;f.close()}
 });
