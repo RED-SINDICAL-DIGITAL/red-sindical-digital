@@ -1,0 +1,28 @@
+{
+  "evidence_date_utc": "2026-10-27",
+  "source": "operator_pasted_safe_result_from_private_staging_page",
+  "agent_executed_or_authenticated_read": false,
+  "operator_result": {
+    "build": "11766",
+    "scope": "brevo-delivery-staging",
+    "result": "received",
+    "sandbox": false,
+    "provider_accepted": true,
+    "delivery_verified": true,
+    "recovery_enabled": false,
+    "checked_at": "2026-10-27T00:39:26.248Z"
+  },
+  "checked_at_argentina": "2026-10-26T21:39:26.248-03:00",
+  "report_matches_delivered_build_scope_and_flags": true,
+  "staging11766_deployment_reported": true,
+  "remote_javascript_byte_compared": false,
+  "independent_public_health_read_after_deploy": false,
+  "normal_provider_acceptance_and_receipt_reported": true,
+  "real_recipient_or_secret_seen_by_agent": false,
+  "proof_of_job_recovery_or_account_login": false,
+  "operational_recovery_enabled": false,
+  "new_mail_recovery_d1_lab_executed_remotely": false,
+  "full_pc_mobile_or_accessibility_test_completed": false,
+  "bolsa_complete": false,
+  "next_step": "Keep main11766 unchanged. Deploy the prepared synthetic email-recovery extension only to the existing uadav-bolsa-lab, preserving its DB, QA_BOLSA_KEY and QA_BOLSA_ONLY=true; run seven new phases and copy safe result. No repeated real email, new Brevo configuration, new DB/key/Worker, production changes or public recovery activation."
+}

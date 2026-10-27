@@ -45,15 +45,15 @@ Preparación nueva: `scripts/access-mail-message.mjs` contiene tres mensajes reu
 
 El núcleo de Bolsa preparado conserva sus transacciones de canje, pero no es un sistema de login de cuentas generales. La cuenta unificada necesita sus propias identidades verificadas, intenciones de acceso y sesiones revocables. No convertir la recuperación de una oferta en acceso automático a una cuenta personal porque tenga el mismo correo.
 
-Ver `CORREO-BREVO-PREPARACION-20261026.md` para pruebas y límites del transporte. `worker.js`, Pages, ZIP, laboratorios y producción permanecen sin cambios por esta preparación. Los endpoints de recuperación de Bolsa siguen en 503.
+Ver `CORREO-BREVO-PREPARACION-20261026.md` para pruebas y límites. El diagnóstico11766 ya fue informado como received por el operador, con recepción comprobada y recuperación apagada. No verifica una identidad de cuenta. La revisión del outbox ahora canjea por posesión del token recibido y conserva el mensaje inmutable cifrado; está probada localmente, sin integrar en el Worker principal. Se prepara un ensayo D1 en el laboratorio existente según `BOLSA-11766-LABORATORIO-RECUPERACION.md`. Pages y producción no cambian; endpoints públicos503.
 
 ## Integración y aceptación antes de publicar
 
-- Cuenta Brevo gratuita, dominio y remitente staging verificados por capturas; Free300/300. Credencial exclusiva guardada según «guardada en staging» del operador; no se vio su valor o binding autenticado.11765 prepara solo una conexión privada sandbox, pendiente de desplegar/probar. Destinatarios reales de QA aún deben autorizarse. Sin cambios productivos ni envíos reales desde Work.
+- BrevoFree, dominio/remitente por capturas;11765sandbox accepted y11766received informados por el operador. Prueba real a su dirección propia autorizada en la pantalla privada, sin que Work viera dirección/claves o enviara correo. Este paso ya aprobó; no repetir la configuración o el correo diagnóstico.
 - Emisión/canje de acceso y verificación de correo en D1, enlace único, límites atómicos, antienumeración y confirmación segura de cambio de cuenta. Respaldo, restauración, borrado y revocación deben cubrir las identidades nuevas.
 - Alta de cliente Google separado de staging, configuración de orígenes/consentimiento y verificación backend. Migración voluntaria desde las cuentas actuales, preservando datos y permisos sin fusiones por email.
 - Receptor del enlace y UI conectados solo cuando el backend esté listo; control de sesión y del retorno permitido, sin redirección arbitraria.
-- Resolver la recepción incierta de Brevo y comprobar cuota/retrasos/reintentos. La aceptación de API no acredita que el correo llegó. No habilitar mientras un enlace recibido pueda quedar inutilizable por una respuesta perdida sin solución probada.
+- La respuesta incierta y los bytes inmutables ya tienen solución preparatoria local para recuperar una oferta: posesión del token recibido y canje atómico, sin fabricar recibos. Falta validación D1 remota nueva, integración HTTP, cuotas/retrasos/reintentos y extensión específica a las identidades/sesiones de cuenta. El canje de una oferta no abre Mi Perfil ni fusiona cuentas por coincidencia de correo.
 - Probar recepción real autorizada, enlace usado/vencido, reenvío, cambio/revocación de correo, dos cuentas/dispositivos, regresión de Bolsa/artistas/Radio, teclado/lector de pantalla y dispositivos físicos.
 
 Brevo comparte sus 300 envíos gratuitos diarios entre todas las secciones. Google no necesita que Brevo envíe un código en cada ingreso. Los avisos comunes permanecen en Mi Perfil; recuperación y seguridad tienen prioridad en el presupuesto de correo. No se configura plan pago ni gasto automático.

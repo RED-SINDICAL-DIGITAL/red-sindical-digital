@@ -1,0 +1,52 @@
+{
+  "evidence_date_utc": "2026-10-27",
+  "scope": "isolated-synthetic-mail-recovery",
+  "version": "11766-mail-lab-1",
+  "tests": {
+    "full_focused_before_last_additional_case": {
+      "passed": 197,
+      "failed": 0
+    },
+    "updated_outbox_file_including_private_inbox_integration": {
+      "passed": 32,
+      "failed": 0
+    },
+    "immutable_message_file": {
+      "passed": 6,
+      "failed": 0
+    },
+    "synthetic_mail_lab_file": {
+      "passed": 13,
+      "failed": 0,
+      "dom_groups_included": 5
+    },
+    "cloudflare_workerd": {
+      "passed": 23,
+      "version": "1.20261025.1"
+    },
+    "public_policy": "passed",
+    "kv_compatibility": "passed",
+    "source_and_zip_consistency": "passed"
+  },
+  "network": "synthetic_only_no_real_email_sent_by_agent",
+  "new_lab_d1_remote_executed": false,
+  "new_lab_deployed_by_agent": false,
+  "physical_pc_mobile_tablet_tv_or_accessibility_qa_completed": false,
+  "main_worker11766_byte_unchanged": true,
+  "older_release_lab_and_restore_artifacts_byte_unchanged": true,
+  "operational_recovery_enabled": false,
+  "production_changed": false,
+  "ci_current_change_status": "pending_commit_and_run",
+  "base_lab_sha256": "d4392464cf5b3c731fe49fe800ab1a3dedb37af1e1a584c11c98639382534013",
+  "mail_sha256": "6ff12d37d0043eecfe4c27b7621270478db76b7d1b6b919b4924ca2709d59d37",
+  "artifacts": {
+    "releases/uadav-bolsa-mail-lab-11766.js": {
+      "bytes": 745835,
+      "sha256": "12ae0b57e88c90cd0dd4676d5cf7bb02e322dada6b8282239666a5ca21a92a86"
+    },
+    "releases/uadav-bolsa-mail-lab-11766.zip": {
+      "bytes": 186331,
+      "sha256": "bdd3967e9dcd4a07845177691421cfa75f10ac360ff93938d8772bf378a180ca"
+    }
+  }
+}

@@ -9,6 +9,7 @@ const dir=await mkdtemp(join(tmpdir(),'uadav-external-workerd-'));
 const entry=`import worker,{uadavExternalFetchHTML,uadavExternalPreview} from './worker.mjs';
 import qaWorker from './restore-qa.mjs';
 import labWorker from './bolsa-lab.mjs';
+import mailLabWorker from './mail-lab.mjs';
 import {createJobRecoveryOutbox} from './recovery-outbox.mjs';
 import {buildAccessMailMessage} from './access-mail-message.mjs';
 import {createBrevoStagingMail} from './brevo-staging-mail.mjs';
@@ -80,6 +81,12 @@ export default {async test(){
  const deliveryPage=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/qa/correo-real'),probeEnv,{});
  check(deliveryPage.status===200&&(await deliveryPage.text()).includes('Autorizo enviar un correo de prueba'),'Real-mail QA page without env access');
  console.log('PASS workerd: private real-mail diagnostic page and authorization gates (no real delivery)');
+ const mailLabEnv=new Proxy({QA_BOLSA_KEY:'synthetic-lab-key-'+'x'.repeat(48)},{get(t,k){if(k==='QA_BOLSA_KEY')return t[k];throw Error('Mail lab read a binding before authorization: '+String(k))}});
+ check((await mailLabWorker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/health'),mailLabEnv,{})).status===403,'Mail lab rejects operational host');
+ check((await mailLabWorker.fetch(new Request('https://uadav-bolsa-lab.uadavstream.workers.dev/mail/status',{method:'POST'}),mailLabEnv,{})).status===401,'Mail lab authenticates before DB');
+ const mailLabPage=await mailLabWorker.fetch(new Request('https://uadav-bolsa-lab.uadavstream.workers.dev/'),mailLabEnv,{});
+ check(mailLabPage.status===200&&(await mailLabPage.text()).includes('Ejecutar pruebas de recuperación'),'Mail lab interface');
+ console.log('PASS workerd: isolated synthetic mail lab loads and refuses operational hosts or unauthenticated DB access');
  const tick={cron:'*/15 * * * *',scheduledTime:1792969200000},closedEnv=new Proxy({},{get(_target,name){if(name==='JOB_STAGING_CRON')return undefined;throw Error('Unrelated module reached: '+String(name))}});
  check((await worker.scheduled(tick,closedEnv,{})).reason==='disabled','staging cron must default to no side effects');
  check((await worker.scheduled({...tick,cron:'* * * * *'},{JOB_STAGING_CRON:'bolsa-only'},{})).reason==='schedule','unrelated schedule must not run Bolsa');
@@ -127,11 +134,13 @@ try{
  await writeFile(join(dir,'access-mail-message.mjs'),await readFile(new URL('../scripts/access-mail-message.mjs',import.meta.url)));
  await writeFile(join(dir,'brevo-staging-mail.mjs'),await readFile(new URL('../scripts/brevo-staging-mail.mjs',import.meta.url)));
  await writeFile(join(dir,'brevo-request.mjs'),await readFile(new URL('../scripts/brevo-request.mjs',import.meta.url)));
+  await writeFile(join(dir,'brevo-recovery-message.mjs'),await readFile(new URL('../scripts/brevo-recovery-message.mjs',import.meta.url)));
+  await writeFile(join(dir,'mail-lab.mjs'),await readFile(new URL('../releases/uadav-bolsa-mail-lab-11766.js',import.meta.url)));
  await writeFile(join(dir,'entry.mjs'),entry);
  await writeFile(join(dir,'mock.mjs'),mock);
  await writeFile(join(dir,'config.capnp'),`using Workerd = import "/workerd/workerd.capnp";
 const config :Workerd.Config = (services = [
-(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs"),(name = "bolsa-lab.mjs", esModule = embed "bolsa-lab.mjs"),(name = "recovery-outbox.mjs", esModule = embed "recovery-outbox.mjs"),(name = "access-mail-message.mjs", esModule = embed "access-mail-message.mjs"),(name = "brevo-staging-mail.mjs", esModule = embed "brevo-staging-mail.mjs"),(name = "brevo-request.mjs", esModule = embed "brevo-request.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
+(name = "main", worker = (modules = [(name = "entry.mjs", esModule = embed "entry.mjs"),(name = "worker.mjs", esModule = embed "worker.mjs"),(name = "restore-qa.mjs", esModule = embed "restore-qa.mjs"),(name = "bolsa-lab.mjs", esModule = embed "bolsa-lab.mjs"),(name = "recovery-outbox.mjs", esModule = embed "recovery-outbox.mjs"),(name = "access-mail-message.mjs", esModule = embed "access-mail-message.mjs"),(name = "brevo-staging-mail.mjs", esModule = embed "brevo-staging-mail.mjs"),(name = "brevo-request.mjs", esModule = embed "brevo-request.mjs"),(name = "brevo-recovery-message.mjs", esModule = embed "brevo-recovery-message.mjs"),(name = "mail-lab.mjs", esModule = embed "mail-lab.mjs")],compatibilityDate = "2026-09-28",globalOutbound = "mock")),
 (name = "mock", worker = (modules = [(name = "mock.mjs", esModule = embed "mock.mjs")],compatibilityDate = "2026-09-28"))
 ]);`);
  const result=spawnSync(binary,['test',join(dir,'config.capnp'),'main'],{encoding:'utf8',timeout:30000});

@@ -108,10 +108,11 @@ test('expired and future-issued messages are rejected locally; no automatic next
   assert.equal(f.requests.length, 0);
 });
 
-test('Bolsa adapter uses the original UUID and converts its immutable token payload', async () => {
+test('Bolsa adapter uses the original UUID and sends its prepared immutable message', async () => {
   const f = setup(), id = randomUUID();
-  await f.adapter.send({idempotencyKey: 'uadav-job-recovery/' + id,
-    payload: {to, token, expires_at: now + ACCESS_MAIL_TTL_MS, job_id: 'JOB-TEST-QA'}});
+  const payload={to,token,expires_at:now+ACCESS_MAIL_TTL_MS,job_id:'JOB-TEST-QA'};
+  payload.delivery=await f.adapter.prepare({...payload,request_id:id});
+  await f.adapter.send({idempotencyKey: 'uadav-job-recovery/' + id,payload});
   const body = await f.requests[0].json();
   assert.equal(body.headers.idempotencyKey, id);assert.match(body.textContent, /Recuperar mi oferta/);
   await assert.rejects(f.adapter.send({idempotencyKey: 'bad', payload: {}}), {code: 'MAIL_INPUT'});

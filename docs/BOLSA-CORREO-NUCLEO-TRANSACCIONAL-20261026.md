@@ -1,61 +1,38 @@
-# Bolsa · núcleo preparatorio de recuperación por correo
+# Bolsa · núcleo transaccional de recuperación por correo
 
-26/10/2026, actualizado27/10UTC. **Outbox escrito y probado localmente; no integrado ni desplegado.** No se aplicó su SQL remoto ni se envió correo real desde Work. Dominio/remitente/Free por capturas; secreto guardado y11765 sandbox accepted según operador.11766 prepara únicamente un correo diagnóstico con comprobación de recepción a la dirección propia configurada en secreto; no integra este módulo o soluciona su recibo incierto. ZIP11764/11765 y laboratorio aprobado conservados. Recuperación sigue503. Ver `BOLSA-11766-RECEPCION-BREVO-STAGING.md`.
+Actualizado el 27/10/2026 UTC (noche del 26/10 en Argentina). **Código preparatorio probado localmente; recuperación pública deshabilitada.** El diagnóstico de recepción11766 fue informado como `received` por el operador. No prueba un canje de recuperación ni una cuenta por correo. El Worker principal y su ZIP11766 no cambiaron en este avance.
 
-## Problema que prepara
+Esta revisión reemplaza el diseño anterior que exigía el recibo del proveedor para hacer canjeable un enlace. Ese requisito era una decisión técnica preparatoria, no una condición comercial del usuario. Con Brevo podía dejar inutilizable un enlace realmente recibido cuando se perdía la respuesta API. No tratar `duplicate_parameter` como aceptación ni fabricar recibos.
 
-Un fallo entre guardar el enlace y enviar el correo puede dejar un enlace activo sin entrega confirmada, repetir envíos o perder la referencia del primer intento. El módulo prepara una bandeja transaccional con solicitud cifrada, identidad estable de envío y activación del token después de una respuesta válida del proveedor. La clave del contratante y su vínculo de cuenta solo cambian cuando se canjea el token mediante el helper original ya probado.
+## Contrato actual
 
-Archivos nuevos: `scripts/job-recovery-outbox.mjs`, `migrations/staging/20261026_job_recovery_outbox.sql` y `tests/job-recovery-outbox.test.mjs`. El SQL es un **borrador no incluido en el instalador**. No aplicarlo sobre staging operativo o producción en esta etapa. `worker.js` no importa ni contiene este módulo; no hay variable que permita habilitarlo en el Worker actual.
-
-## Estados y transacciones
-
-| Paso | Comportamiento preparado |
+| Operación | Comportamiento escrito |
 |---|---|
-| Solicitar | Verifica correo contra el contacto privado de la oferta y la revisión de su credencial. Guarda en una fila el hash del token, payload cifrado y datos de deduplicación. Todavía no inserta el token en la tabla que permite canjearlo. |
-| Repetir | Identificador de solicitud único y un solo intento activo por oferta/revisión. Las repeticiones y solicitudes paralelas no generan otro intento activo. |
-| Enviar | Un dispatcher toma lease D1; entrega al adaptador siempre el mismo payload e identificador. Se procesa un intento por invocación. |
-| Confirmar aceptación | En un único lote D1: revalida oferta, credencial, lease y plazo; invalida tokens anteriores; inserta el nuevo token canjeable; guarda recibo del proveedor y borra el payload cifrado. |
-| Canjear | El helper original consume una vez, cambia hash/revisión de credencial y revoca el vínculo anterior de cuenta en su transacción. |
-| Fallar o vencer | Error genérico, reintento acotado o estado final sin token nuevo activo. Un lease ajeno no se libera ni se sobrescribe. |
+| Solicitar | Comprueba contacto privado de la oferta y revisión de credencial. Guarda hash de token aleatorio de256bits, plazo15min y payload completo cifrado con AES-GCM. La respuesta uniforme `{accepted:true}` no contiene el token. |
+| Preparar mensaje | Antes del encolado, renderiza una vez destinatario, remitente, asunto, HTML/texto, enlace y UUID. Persiste esos bytes dentro del cifrado y su hash; el contexto de la clave del proveedor queda representado por una huella, nunca por la clave real. |
+| Enviar | Reserva lease D1 antes de llamar al adaptador. Reintenta únicamente los mismos bytes/UUID dentro del plazo; una intención no despachada todavía no puede canjearse. |
+| Aceptar en API | Un201 y `messageId` válido registran aceptación auténtica y eliminan el payload. No cambian la credencial, no invalidan enlaces anteriores y no acreditan entrega. |
+| Recibir sin respuesta API | Quien posee el token recibido puede canjearlo, aunque el recibo sea incierto, haya un envío en curso o se hayan agotado reintentos. Se exige al menos una reserva de despacho, plazo vigente y revisiones actuales. El hash almacenado o las seis cifras del diagnóstico no sirven como prueba. |
+| Canjear | Un lote D1 revalida token/oferta/credencial, consume el token, borra su payload, rota hash/revisión de acceso, invalida tokensV2 anteriores y revoca vínculos previos de esa oferta. No crea cuentas ni transfiere perfiles artísticos. |
+| Repetir tras perder respuesta | Solo la misma credencial nueva y su revisión vigente permiten confirmar un canje ya hecho, sin una segunda rotación. Una credencial distinta o una revisión posterior se rechazan. |
+| Revocar o vencer | Cambios de oferta/contacto/credencial o vencimiento impiden el canje. La clave anterior se conserva hasta un canje válido; un fallo SQL revierte el lote entero. |
 
-La aceptación del proveedor y la transacción D1 **no forman una transacción distribuida única**. El diseño exige deduplicación durante toda la vida del token más el margen de envío en curso; la reconciliación satisfactoria requiere un recibo auténtico. Un proveedor que repite el recibo permite reconciliar una aceptación cuya respuesta o confirmación D1 se perdió. Si devuelve un error sin el recibo original, no se activa el token por suposición. Una respuesta con ID válido solo prueba aceptación del proveedor: **no acredita entrega ni lectura del mensaje**. Ese circuito aún necesita pruebas reales.
+La posesión del enlace recibido demuestra control de ese secreto temporal; el recibo del proveedor es evidencia de transporte, no autoridad de acceso. No se envían claves permanentes por correo. Un GET futuro no consumirá el enlace: el receptor deberá exigir confirmación y POST. Ese receptor aún no está implementado.
 
-## Contrato interno y límites
+## Archivos y límites
 
-- Factory por contexto de operación: `createJobRecoveryOutbox({db,encryptionKey,mode:'staging-only'})`. Usa sesión D1 `first-primary` si está disponible. El modo declarativo no sustituye el aislamiento real de la base futura.
-- `enqueue({jobId,recipient,requestId,actorHash})`: resultado uniforme `{accepted:true}` para solicitudes válidas, inexistentes, correo distinto, duplicadas o limitadas. El futuro HTTP debe derivar `actorHash` del contexto del servidor, gestionar errores y tiempos sin enumeración y aplicar su control de abuso; no reenviar ese dato del body del navegador.
-- `dispatch(adapter)`: el adaptador debe declarar una ventana de idempotencia de al menos **935.000 ms** (TTL15min+lease30s+timeout5s) y devolver `{id}` válido. Actualización posterior del26/10: transporte Brevo preparado con su ventana documentada de30min, sin integrarlo al Worker ni configurarlo; ver `CORREO-BREVO-PREPARACION-20261026.md`.
-- Payload de destinatario/token cifrado con **AES-256-GCM**, IV aleatorio de 96 bits y datos autenticados ligados a oferta, revisiones, hash del destinatario/token y vencimiento. El token no queda en texto plano en la bandeja ni se devuelve al solicitante.
-- TTL de 15 minutos desde la solicitud; lease de 30 segundos; timeout de envío de hasta 5 segundos; máximo cinco intentos con espera progresiva. El adaptador debe respetar cancelación y reintentar con el mismo cuerpo.
-- Límite de actor: cinco solicitudes por diez minutos. Límite de nuevas emisiones: tres por oferta/hora. Hasta 1.000 intentos activos. Operaciones y guardas atómicas en D1.
-- Cambios de contacto/revisión/credencial o eliminación antes de guardar o confirmar cancelan el intento obsoleto. La solicitud de recuperación por sí sola conserva la clave y el vínculo existentes.
-- Las excepciones almacenadas/devueltas usan códigos permitidos; no incluyen errores SQL, cuerpo del proveedor, token, correo o clave de cifrado.
+- `scripts/job-recovery-outbox.mjs`: `createJobRecoveryOutbox({db,encryptionKey,mode:'staging-only',prepareDelivery})`, métodos `enqueue`, `dispatch` y `redeem`. Usa `first-primary` cuando existe. El futuro HTTP debe derivar `actorHash` del servidor, controlar abuso y tiempos uniformes; nunca confiar en ese dato enviado por el cliente.
+- `scripts/brevo-recovery-message.mjs`: snapshot restringido y validado. Cambio de plantilla/remitente no recompone mensajes pendientes; cambio de contexto de API key o destinatario fuera de la lista permitida bloquea antes del transporte. `.send` exige snapshot, sin fallback a un mensaje regenerado.
+- `migrations/staging/20261026_job_recovery_outbox.sql`: borrador revisado, estados con `redeemed_at`/`redeemed_secret_hash`. **No es una actualización en sitio de un borrador anterior.** Solo el laboratorio sintético con huella/base verificadas puede instalarlo en esta entrega. No forma parte del instalador operativo ni debe aplicarse manualmente a staging operativo o producción.
+- Token15min, lease30s, transporte5s, máximo cinco intentos; ventana mínima de deduplicación935000ms. Brevo declara30min. Límite atómico por actor cinco/10min, por oferta tres/hora, máximo1000 intenciones activas. Estos controles internos no sustituyen presupuesto global de correo ni medidas HTTP contra abuso.
+- Payload completo cifrado; no token/destinatario plano en el outbox, logs o errores. El laboratorio usa exclusivamente una casilla y secretos ficticios. Su buzón simulado puede conservar los mensajes ficticios para verificar el algoritmo; nunca se debe usar como almacenamiento de correo real.
 
-La clave de cifrado futura debe ser exclusiva de staging, guardarse como secreto y acompañarse de una política de recuperación/rotación. No reutilizar claves de Admin o de los laboratorios ni publicarla. Esa gestión todavía no está configurada.
+El cambio no importa este módulo en `worker.js`. `/api/bolsa_trabajo/acceso/solicitar` y `/restablecer` siguen503 incondicional. No existe un flag para habilitar este núcleo en el Worker actual. Restore operativo, cuentas generales, Google, Pages y cron quedan fuera del cambio.
 
-## Pruebas y alcance
+## Evidencia y siguiente paso
 
-**20 grupos nuevos** aprobaron con SQLite transaccional y proveedores simulados: cifrado/autenticación de metadatos, token inactivo antes del recibo, igualdad de resultado, solicitudes/dispatchers simultáneos, límites, SQL fallido, respuestas perdidas, recibos inválidos, timeout con cancelación ignorada, agotamiento, expiración, cambios de titular/contacto, lease ajeno/abandonado y canje único mediante el helper original. También se comprobó que tokens anteriores se invalidan solo si confirma todo el lote y que las rutas públicas permanecen bloqueadas.
+32grupos del núcleo, seis de snapshot,17 de mensajes/transporte y13 del laboratorio cubren concurrencia, rollback, respuestas perdidas, canje anticipado respecto de la respuestaAPI, cambio de fuente durante commit, destinatarios/cuerpos alterados, rotación de contexto, idempotencia y acceso real a la bandeja privada con clave vieja/nueva. La suite focalizada anterior al último caso adicional aprobó197 grupos; el archivo actualizado se comprueba por separado y CI registra el total final. Los23 controles workerd también aprobaron localmente. Red simulada y SQLite no equivalen a D1 remoto ni a dispositivos físicos.
 
-Suite focalizada total: **102 pruebas Node/SQLite aprobadas**, frente a 82 anteriores. **19 comprobaciones workerd aprobadas**, frente a 18: el nuevo control valida carga del módulo y rechazo por modo/proveedor antes de DB; no ejecuta SQL de esta bandeja contra D1 remoto. Generadores, fuente embebida, sintaxis y diff aprobados. No se repitieron pruebas UI por un módulo sin exposición frontend. La suite general conserva sus fallos previos ajenos a Bolsa.
+La guía `BOLSA-11766-LABORATORIO-RECUPERACION.md` prepara siete fases nuevas en el **laboratorio de Bolsa existente**, conservando las ocho anteriores. No envía correos reales. Su despliegue y resultado D1 remoto siguen pendientes. Después faltan HTTP/receptor, UX de cuenta, control de abuso/cuotas, exportación/restauración/retención/rotación de claves y QA integral antes de habilitar recuperación.
 
-Código y pruebas guardados en commit `253bd484b0c6d2abf382de4af2022d9d18329972`, exclusivamente en la rama Worker staging. CI [Bolsa 40406193132](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40406193132) y [Radio 40406193109](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40406193109), ambas `success` para ese commit. El informe del operador del laboratorio quedó antes en `9c6e6f7735dacf78523670d964429bd5050d0a41`.
-
-Las ocho fases del laboratorio 11764 que informó el operador corresponden al núcleo anterior de Bolsa y su helper de canje. **No prueban remotamente esta bandeja nueva.** No pedir que repita ese laboratorio para acreditar un código que aún no contiene.
-
-## Proveedor y trabajo pendiente antes de habilitar
-
-Selección posterior del26/10: el usuario priorizó gratuidad y mayor volumen, aceptó cuenta única/correo/Google opcional y pidió simplificar accesos. Eligió Brevo gratuito,300 envíos diarios compartidos, y configuró cuenta, dominio/remitente y secreto staging según capturas/confirmación. La prueba privada11765 pendiente verifica solo aceptación sandbox, no entrega ni este outbox. Resend había sido una opción inicial por su idempotencia24h. Brevo no promete repetir el recibo original ante duplicados: esa recepción incierta sigue como requisito abierto antes de activar.
-
-Fuentes oficiales consultadas el 26/10: [idempotencia de Resend](https://resend.com/docs/dashboard/emails/idempotency-keys), [verificación de dominios](https://resend.com/docs/dashboard/domains/introduction), [precios y límites publicados](https://resend.com/pricing) y [API de envío de Cloudflare](https://developers.cloudflare.com/email-service/api/send-emails/workers-api/). No se atribuye idempotencia a un transporte que no la haya documentado y validado.
-
-Para pasar a una entrega integrada faltan:
-
-1. Proveedor/subdominio/remitente elegidos y verificados por capturas; secreto guardado según operador. Comprobar su aceptación con la prueba privada11765 antes de un destinatario real autorizado. No modificar DNS o credenciales productivos.
-2. Implementar el adaptador, mensajes y enlaces de recuperación seguros, con recibos, clasificación de fallos y cuerpos estables en los reintentos.
-3. Integrar HTTP/UI, validaciones, rate limits del contexto real y respuestas sin enumeración. Revisar el ciclo completo del token y de la credencial.
-4. Incluir la bandeja cifrada en el backup privado y diseñar restauración, retención, rotación de claves y auditoría sin reenvíos indebidos. La lista exportada por el Worker actual aún no incluye esta tabla.
-5. Probar D1 remoto y un correo real autorizado: envío, recepción, canje, vencimiento, reintentos/duplicación, pérdida de respuesta y fallo SQL. Solo después evaluar la habilitación con código/flags expresos y revisión final.
-
-No aplicar este SQL o habilitar recuperación todavía. La única entrega principal preparada después es11765 para conexión sandbox, sin este módulo o migración. Permanecen los otros pendientes de Bolsa y la QA de vencimiento real desde el27/10 a las00:00 de Argentina.
+Referencia técnica: [OWASP, Forgot Password Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html). Se aplican los principios de secreto temporal de un uso, plazo y cambio de acceso solo tras la prueba válida. No se declara conformidad integral: quedan pendientes varias capas HTTP y de producto.
