@@ -4,7 +4,7 @@ export async function reserveEvent(db,{requestId,payloadHash,event,createdAt}){
  if(!db||!/^[-A-Za-z0-9_]{16,128}$/.test(requestId||'')||!/^[a-f0-9]{64}$/.test(payloadHash||'')||!event||!/^[-A-Za-z0-9_]{1,120}$/.test(event.id||'')||!createdAt)throw Error('Invalid event intent');
  const candidate=JSON.stringify(event);if(candidate.length>50000)throw Error('Event too large');
  const results=await db.batch([
-  db.prepare('INSERT OR IGNORE INTO event_publication_intents(request_id,payload_hash,event_id,event_json,created_at) VALUES(?,?,?,?,?)').bind(requestId,payloadHash,event.id,candidate,createdAt),
+  db.prepare('INSERT OR IGNORE INTO event_publication_intents(request_id,payload_hash,event_id,event_json,created_at) SELECT ?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM events WHERE id=?)').bind(requestId,payloadHash,event.id,candidate,createdAt,event.id),
   db.prepare('INSERT OR IGNORE INTO events(id,title,status,data_json,created_at,updated_at) SELECT event_id,?,\'published\',event_json,created_at,created_at FROM event_publication_intents WHERE request_id=? AND payload_hash=? AND event_id=?').bind(String(event.titulo||'Evento'),requestId,payloadHash,event.id)
  ]);
  const row=await db.prepare('SELECT payload_hash,event_id,event_json FROM event_publication_intents WHERE request_id=?').bind(requestId).first();
