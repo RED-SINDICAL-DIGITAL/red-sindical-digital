@@ -1,3 +1,25 @@
+const uadavAtomicEventLab=(()=>{
+/* Experimental staging component. Not connected to Worker routes. */
+const schema=`CREATE TABLE IF NOT EXISTS event_publication_intents (request_id TEXT PRIMARY KEY, payload_hash TEXT NOT NULL, event_id TEXT NOT NULL UNIQUE, event_json TEXT NOT NULL, created_at TEXT NOT NULL);`;
+const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,canonical(value[k])])):value;
+async function digestEvent(event){const {id,fecha_creacion,publicado_en,...data}=event;const bytes=new TextEncoder().encode(JSON.stringify(canonical(data)));return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),x=>x.toString(16).padStart(2,'0')).join('')}
+async function reserveEvent(db,{requestId,event,createdAt}){
+ if(!db||!/^[-A-Za-z0-9_]{16,128}$/.test(requestId||'')||!event||!/^[-A-Za-z0-9_]{1,120}$/.test(event.id||'')||!createdAt)throw Error('Invalid event intent');
+ const candidate=JSON.stringify(event);if(candidate.length>50000)throw Error('Event too large');const payloadHash=await digestEvent(event);
+ const results=await db.batch([
+  db.prepare('INSERT OR IGNORE INTO event_publication_intents(request_id,payload_hash,event_id,event_json,created_at) SELECT ?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM events WHERE id=?)').bind(requestId,payloadHash,event.id,candidate,createdAt,event.id),
+  db.prepare("INSERT OR IGNORE INTO events(id,title,category,city,province,country,venue,start_date,end_date,status,featured,payment_status,data_json,created_at,updated_at) SELECT event_id,?,?,?,?,?,?,?,?, 'published',0,?,event_json,created_at,created_at FROM event_publication_intents WHERE request_id=? AND payload_hash=? AND event_id=?").bind(String(event.titulo||'Evento'),String(event.categoria||''),String(event.ciudad||''),String(event.provincia||''),String(event.pais||'Argentina'),String(event.lugar||''),String(event.fecha_inicio||event.fecha||''),String(event.fecha_fin||''),String(event.destacado_estado||''),requestId,payloadHash,event.id)
+ ]);
+ const row=await db.prepare('SELECT payload_hash,event_id,event_json FROM event_publication_intents WHERE request_id=?').bind(requestId).first();
+ if(!row)throw Error('Publication not confirmed');
+ if(row.payload_hash!==payloadHash)return {status:'conflict'};
+ const saved=await db.prepare('SELECT id,status,data_json FROM events WHERE id=?').bind(row.event_id).first();if(!saved)throw Error('Publication unavailable');
+ const current=JSON.parse(saved.data_json);if(!current||current.id!==saved.id)throw Error('Publication unavailable');
+ return {status:'committed',created:Number(results[0]?.meta?.changes)===1,event:{...current,estado:saved.status}};
+}
+
+return {schema,reserveEvent};
+})();
 function uadavEventScheduleError(body,{required=false}={}){
  const calendar=value=>{if(typeof value!=='string')return false;const m=/^(\d{4}-\d{2}-\d{2})(?:T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,3})?)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)?)?$/.exec(value);if(!m)return false;const d=new Date(m[1]+'T12:00:00Z');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===m[1]};
  if(required&&!body?.fecha&&!body?.fecha_inicio)return 'Elegí una fecha válida para el evento.';
@@ -4138,6 +4160,22 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         // Every valid event is published automatically. If the organizer asked
         // for a paid highlight, only the PREMIUM PLACEMENT goes to review.
         if(body.artist_token){const owner=await uadavArtistPermission(String(body.artist_token),env);if(!owner)return json({error:'El acceso de artista venció. Abrí Mi perfil antes de publicar desde tu espacio.'},401);item.created_by_artist_id=String(owner.artist_id)}else if(isAdmin()&&body.moderation_artist_id)item.created_by_artist_id=String(body.moderation_artist_id);item.estado='published'; item.publicado_en=isoNow();
+        if(env.EVENT_ATOMIC_STAGING==='true'&&url.hostname==='uadav-api-staging.uadavstream.workers.dev'){
+          if(!hasD1())return json({error:'La publicación está temporalmente fuera de servicio.'},503);
+          if(typeof body.request_id!=='string'||!/^[-A-Za-z0-9_]{16,128}$/.test(body.request_id))return json({error:'Actualizá la página antes de publicar.'},400);
+          item.id='EV-'+crypto.randomUUID().toUpperCase();
+          try{
+            await env.DB.prepare(uadavAtomicEventLab.schema).run();
+            const saved=await uadavAtomicEventLab.reserveEvent(env.DB,{requestId:body.request_id,event:item,createdAt:isoNow()});
+            if(saved.status==='conflict')return json({error:'Este envío ya corresponde a otros datos. Revisá la publicación antes de continuar.'},409);
+            const current=saved.event;
+            if(current.estado!=='published')return json({success:true,id:current.id,item:current,mode:'previously_processed'});
+            for(const key of ['eventos_publicados','cartelera_aprobada']){const list=await getArray(key);const idx=list.findIndex(x=>String(x.id)===String(current.id));if(idx<0)list.push(current);await putJSON(key,list.slice(-2000));}
+            if(current.destacado_solicitado===true){const list=await getArray('eventos_pendientes');if(!list.some(x=>String(x.id)===String(current.id)))list.push(current);await putJSON('eventos_pendientes',list.slice(-1000));}
+            if(saved.created){await emitNotification({event:'event_published',template:'event_published',to:current.contacto_email||'',subject:'Tu evento ya está publicado · ★ UADAV STREAM',payload:{id:current.id,titulo:current.titulo,fecha:current.fecha,lugar:current.lugar}});if(current.destacado_solicitado===true)await emitNotification({event:'featured_requested',template:'event_featured_requested',to:current.contacto_email||'',subject:'Solicitud de destacado recibida · ★ UADAV STREAM',payload:{id:current.id,titulo:current.titulo,fecha:current.fecha,lugar:current.lugar}});}
+            return json({success:true,id:current.id,item:current,mode:current.destacado_solicitado===true?'auto_published_feature_review':'auto_published'});
+          }catch(error){return json({error:'No pudimos confirmar el envío. Conservá el formulario y comprobá Cartelera antes de volver a intentarlo.'},503)}
+        }
         const pub=await getArray('eventos_publicados'); pub.push(item); await putJSON('eventos_publicados',pub.slice(-2000));
         const cat=await getArray('cartelera_aprobada'); cat.push(item); await putJSON('cartelera_aprobada',cat.slice(-2000));
         await safeD1('sync_event_publish',()=>syncEventsD1([item]));
