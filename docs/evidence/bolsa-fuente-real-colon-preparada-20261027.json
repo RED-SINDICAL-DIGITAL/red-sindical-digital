@@ -1,0 +1,30 @@
+{
+  "checked_at": "2026-10-27T16:15:07.322760-03:00",
+  "scope": "primary-source-real-job-prepared-for-staging-review",
+  "publisher": "Teatro Colón",
+  "source_url": "https://teatrocolon.org.ar/concurso/concurso-publico-y-abierto-orquesta-estable-del-teatro-colon-4/",
+  "source_index": "https://teatrocolon.org.ar/concursos/",
+  "position": "Viola Fila, Orquesta Estable",
+  "vacancies": 1,
+  "registration_opens": "2026-10-14",
+  "registration_closes": "2026-11-23",
+  "deadline_source": "Official detail and official contest list, not the date of an audition or inferred extension",
+  "salary_amount_asserted": false,
+  "candidate_conditions_copied": false,
+  "application_route": "Open original official page; no internal UADAV application or documents collected",
+  "preparation": {
+    "file": "releases/bolsa-fuente-real-colon-20261027.csv",
+    "encoding": "UTF-8 with BOM",
+    "rows": 1,
+    "sha256": "4e627a9d7bcc44f03d302f8351c9b2b700354612ce20d9f2ced0104ca4644416"
+  },
+  "operational_import": {
+    "direct_html_host_approved": false,
+    "transport": "CSV upload, no server fetch to an unapproved publisher",
+    "admin_review_required": true,
+    "published_by_work": false,
+    "staging_changed": false,
+    "production_touched": false
+  },
+  "scope_limit": "Verified real source and prepared file; not a completed remote import/publication/withdrawal. No appointment, selection outcome, salary or source availability guaranteed."
+}

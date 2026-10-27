@@ -1,0 +1,47 @@
+{
+  "recorded_at": "2026-10-27T16:13:09.416233-03:00",
+  "scope": "11769-private-backup-rehearsal-operator-evidence",
+  "reported_at_argentina": "2026-10-27T15:48:17.393000-03:00",
+  "reported_result": {
+    "scope": "bolsa-account-restore-staging",
+    "version": "11769-account-restore",
+    "checked_at": "2026-10-27T18:48:17.393Z",
+    "result": "complete",
+    "phase": 14,
+    "phases": 14,
+    "complete": true,
+    "rollback_tested": true,
+    "counts": {
+      "offers": 14,
+      "applications": 11,
+      "accounts": 21,
+      "devices": 14,
+      "artist_links": 6,
+      "notices": 3,
+      "messages": 8,
+      "verified_email_identities": 1,
+      "kv_keys": 22
+    },
+    "backup_content_sha256": "96b6417632e21cfc968dd8d3ab6456e9ba18ee50726e5a7ed20b23381117b0b4",
+    "temporary_authentication_restored": false,
+    "operational_restore_enabled": false,
+    "whole_platform_restore": false,
+    "backup_file_sha256": "cc4cbe238b04361f9f98ab042fea40d4182d7a99680498c07d1caf8c7d6300f8"
+  },
+  "assessment": "approved-for-the-tested-isolated-Bolsa-account-context",
+  "validation": [
+    "Scope/version/labels match the11769 runtime and UI",
+    "Final phase equals total phases, complete and rollback flags true",
+    "Counts and two SHA-256 values well-formed; file checksum is separate from structural content checksum",
+    "Temporary authentication false, operational restore false and whole-platform false match the isolation contract"
+  ],
+  "independent_limits": {
+    "private_backup_received": false,
+    "private_backup_opened": false,
+    "checksums_recomputed_by_work": false,
+    "private_d1_rows_read_by_work": false,
+    "deployment_and_mail_public_checks_previously_observed": true
+  },
+  "production_touched": false,
+  "repeat_rehearsal_required": false
+}

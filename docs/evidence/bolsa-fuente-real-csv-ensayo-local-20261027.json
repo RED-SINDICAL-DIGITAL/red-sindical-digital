@@ -1,0 +1,31 @@
+{
+  "scope": "real-source-csv-local-rehearsal",
+  "source_url": "https://teatrocolon.org.ar/concurso/concurso-publico-y-abierto-orquesta-estable-del-teatro-colon-4/",
+  "fixture_review_day": "2026-10-27",
+  "original_deadline": "2026-11-23",
+  "csv_path": "releases/bolsa-fuente-real-colon-20261027.csv",
+  "csv_sha256": "4e627a9d7bcc44f03d302f8351c9b2b700354612ce20d9f2ced0104ca4644416",
+  "reader_sha256": "9732a6c8fb0cbf73dca95b2131c706dbc097b45c35ba29e69ef8d975fa7b632d",
+  "result": "complete",
+  "passed_checks": 8,
+  "checks": [
+    "Admin authorization required before importing",
+    "Unapproved direct HTML publisher fails before network; CSV is the supported path",
+    "Actual UTF-8 CSV reader, normalization and import produce one public external link locally",
+    "Identical source URL reimport retains one record and its identifier",
+    "External opportunity refuses an internal application and stores no applicant",
+    "Manual withdrawal preserves history and a reimport cannot reopen the offer",
+    "Unsafe source errors leave the existing record intact",
+    "Original official deadline expires the public listing while preserving its stored history"
+  ],
+  "network_attempts": 0,
+  "staging_published": false,
+  "source_form_submitted": false,
+  "real_applications": false,
+  "real_mail_sent": false,
+  "production_touched": false,
+  "recorded_at": "2026-10-27T16:19:28.468139-03:00",
+  "worker_commit": "6b7a9c023eac6a10de1d12d6801a7c469f1a7703",
+  "pages_commit": "6913c9f56107246c6949767ea4e7cdf34896657b",
+  "clock_policy": "Explicit review-day clock for the local rehearsal; the real source deadline is unmodified. This is not a fresh live source fetch."
+}

@@ -1,6 +1,6 @@
 # Cartelera · auditoría previa · 27/10/2026 Argentina
 
-La entrega11769 de Bolsa/cuenta ya está desplegada según health y el acceso por correo está habilitado con las dos pruebas QA registradas. El operador indicó «hecho todo»; falta adjuntar el informe seguro del ensayo privado para acreditar su comparación, sin repetir los pasos ya completados. No se declara cerrada toda Bolsa: la prueba de convocatoria externa real elegible sigue aparte. Se avanza con esta lectura y reproducción aislada de Cartelera, sin cambiar su implementación o publicar eventos remotos.
+La entrega11769 de Bolsa/cuenta ya está desplegada según health y el acceso por correo está habilitado con las dos pruebas QA registradas. El operador indicó «hecho todo»; el informe seguro privado ya fue recibido y cotejado:14/14fases,rollback y contexto restaurado, sin repetir los pasos ya completados. No se declara cerrada toda Bolsa: la prueba de convocatoria externa real elegible sigue aparte. Se avanza con esta lectura y reproducción aislada de Cartelera, sin cambiar su implementación o publicar eventos remotos.
 
 ## Estado previo conservado
 
