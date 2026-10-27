@@ -11,6 +11,9 @@ const XLSX=require('../vendor/xlsx-0.20.3.full.min.js');
 const now=Date.parse('2026-10-25T01:30:00Z');
 const raw={titulo:'Oferta externa QA',descripcion:'Prueba de importación',source_url:'https://fuente.example/convocatoria/uno',fecha_limite:'2026-10-24'};
 const normalize=(row=raw,options={})=>jobs.normalize(row,{now,...options});
+test('a native exported job without a source explains the difference between external import and backup',()=>{
+  assert.throws(()=>normalize({...raw,id:'JOB-NATIVE',source_url:''}),error=>/ofertas externas/.test(error.message)&&/Respaldo avanzado/.test(error.message));
+});
 const batch=rows=>({entity:'jobs',sheet:'CSV',rows});
 
 test('new hidden jobs remain unapproved, retain their external origin, and discard spreadsheet credentials and native IDs',()=>{

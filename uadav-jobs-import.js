@@ -25,7 +25,9 @@
     const val=(...keys)=>{for(const key of keys)if(row[key]!==undefined&&row[key]!==null&&String(row[key]).trim())return row[key];return ''};
     const title=text(val('titulo','Titulo','Título','title'),180),description=text(val('descripcion','Descripción','resumen'),2500);
     if(!title||!description)throw Error('Cada oferta externa necesita título y descripción.');
-    const sourceUrl=publicUrl(val('source_url','url_origen','url','URL'),'Origen de «'+title+'»');
+    const sourceInput=val('source_url','url_origen','url','URL');
+    if(!sourceInput)throw Error('«'+title+'» no tiene URL de origen HTTPS. Esta herramienta incorpora ofertas externas; el archivo exportado de Bolsa puede incluir ofertas internas y no sirve como respaldo para restaurar. Para una fuente externa, agregá su URL oficial. Para copias de seguridad, usá Auditoría → Respaldo avanzado.');
+    const sourceUrl=publicUrl(sourceInput,'Origen de «'+title+'»');
     const applicationUrl=publicUrl(val('application_url','url_postulacion')||sourceUrl,'Postulación de «'+title+'»');
     const deadline=text(val('fecha_limite','Fecha límite'),30);
     if(deadline&&!validDate(deadline))throw Error('Fecha límite inválida en «'+title+'»: usá AAAA-MM-DD.');
