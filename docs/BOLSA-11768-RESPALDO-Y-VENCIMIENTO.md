@@ -1,8 +1,12 @@
 # Bolsa11768 · respaldo y vencimiento · solo staging
 
+**Resultado posterior27/10/2026: aprobado.** Operador informó `complete` a13:05:01Argentina: nueve checks, dos turnos sin duplicado y respaldo14ofertas/11postulaciones guardado, D1 consistente y autenticación temporal excluida. Evidencia `evidence/bolsa-11768-respaldo-vencimiento-aprobado-20261027.json`. Work confirmó health11768 a13:07:03Argentina y ejecutó un único POST sintético a la QA vencida:404 `Oportunidad no disponible`, sin credencial; oferta todavía ausente después. Evidencia separada `evidence/bolsa-11768-rechazo-vencimiento-http-20261027.json`. **No repetir despliegue, descarga, espera de cron o ensayo de correo por este paso.** Los pasos de la entrega siguientes quedan como procedimiento histórico.
+
+El operador conserva el respaldo completo; Work no lo recibió/abrió o recalculó su hash. Tampoco leyó los contadores privados después del POST. El rechazo se obtuvo antes del guardado según el código entregado, sin recibo devuelto. El bloque de vencimiento y avisos queda aprobado para esta QA, separado de cobertura física/general, restauración integral y recuperación pública, que sigue apagada.
+
 Preparación27/10/2026. El operador informó la recuperación real11767 `complete`: correo recibido, enlace confirmado, clave anterior revocada, acceso privado nuevo y oferta ficticia conservada sin publicación. El reporte no incluye hora de ejecución. Se cotejaron versión, flags y etiquetas con el código; Work no leyó el estado autenticado ni comparó los bytes del Worker remoto. Evidencia: `evidence/bolsa-11767-recuperacion-real-aprobada-20261027.json`. No repetir ese correo, los laboratorios aprobados o la configuración de Brevo/Pages.
 
-11768 corrige un respaldo que podía mezclar registros y credenciales leídos en momentos diferentes. Añade una consulta privada del vencimiento real ya preparado y limpieza acotada de datos temporales en el cron existente. Código preparado y probado se distingue del despliegue manual y de sus resultados reales; estos últimos siguen pendientes para11768.
+11768 corrige un respaldo que podía mezclar registros y credenciales leídos en momentos diferentes. Añade una consulta privada del vencimiento real ya preparado y limpieza acotada de datos temporales en el cron existente. Código preparado, pruebas y despliegue manual se distinguen de los resultados reales acreditados en la actualización superior.
 
 ## Única intervención del operador
 
@@ -23,7 +27,7 @@ Comprueba fecha intacta/alcanzada, exclusión por la política pública, estado 
 
 También consulta que exista el registro de QA11767 completada, unido a un canje consumido y a la credencial nueva vigente. No envía otro correo o cambia credenciales. Después de la retención de registros temporales esa evidencia viva puede desaparecer; el reporte histórico aprobado se conserva por separado.
 
-`result:complete` de scope `bolsa-backup-expiry-staging` cubre este diagnóstico y el respaldo guardado según confirmación del operador. **No declara Bolsa terminada.** No realiza una postulación nueva por HTTP: `live_new_application_probe_performed:false`. La prueba negra de rechazo de una postulación vencida, dispositivos físicos, recuperación pública e integral siguen siendo verificaciones distintas.
+`result:complete` de scope `bolsa-backup-expiry-staging` cubre este diagnóstico y el respaldo guardado según confirmación del operador. **No declara Bolsa terminada.** Esta pantalla no realiza una postulación nueva por HTTP: `live_new_application_probe_performed:false`. El POST real posterior de Work tiene una evidencia separada y no modifica el reporte histórico de esa consulta. Dispositivos físicos, recuperación pública e integral siguen siendo verificaciones distintas.
 
 ## Respaldo y restauración
 
@@ -51,4 +55,4 @@ Pruebas locales finales: **252Node,27controles workerd1.20261025.1 y12Radio apro
 
 Código/ZIP en commit `c782c2541d93f728eba8f4cbc82a519c98511c59`, árbol `ca680e246fbd22626b323e95e1f4f5f1d99c5a26`,23blobs cotejados con el índice local. [CI Bolsa40451323481](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40451323481) y [CI Radio40451323476](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40451323476): `completed/success` para ese commit. Pasos de pruebas y verificaciones aprobados; cifras exactas252/27/12 obtenidas de los logs locales de los mismos comandos, sin descargar otro archivo de logs numéricos CI.
 
-Rama Pages y producción cotejadas sin cambios. La persistencia y CI no despliegan el Worker principal. Falta la intervención manual de esta guía y su resultado seguro.
+Rama Pages y producción cotejadas sin cambios. La persistencia y CI no despliegan el Worker principal. Su despliegue manual y reporte posterior se registran en la actualización superior; no repetirlos.

@@ -1,0 +1,53 @@
+{
+  "client_date": "2026-10-27",
+  "source": "operator_pasted_safe_result_after_manual_staging_deploy",
+  "operator_result": {
+    "build": "11768",
+    "scope": "bolsa-backup-expiry-staging",
+    "result": "complete",
+    "checked_at": "2026-10-27T16:05:01.744Z",
+    "read_only": true,
+    "recovery_enabled": false,
+    "real_mail_qa_completed": true,
+    "expiry_checks": {
+      "deadline_unchanged": true,
+      "deadline_passed": true,
+      "public_offer_hidden": true,
+      "stored_as_expired": true,
+      "application_preserved": true,
+      "one_expiry_notice": true,
+      "one_matching_private_message": true,
+      "notice_for_current_account": true,
+      "cron_after_expiry": true
+    },
+    "second_cron_turn_without_duplicate": true,
+    "live_new_application_probe_performed": false,
+    "backup": {
+      "generated_at": "2026-10-27T16:05:03.976Z",
+      "file_sha256": "a8da0c49e05a2e6a4b9fd30421c6f59206932802e7b787caf7c32800f44e145a",
+      "content_sha256": "a3bb15022f2d1659c14a9f644a5c817be0fdea93e755e86c00977168d3d6ca0d",
+      "offers": 14,
+      "applications": 11,
+      "consistent_d1_snapshot": true,
+      "temporary_authentication_excluded": true,
+      "download_requested": true,
+      "saved_confirmed_by_operator": true
+    }
+  },
+  "matches_delivered_11768_scope_flags_checks_and_report_shape": true,
+  "operator_checked_at_argentina": "2026-10-27T13:05:01.744-03:00",
+  "operator_backup_generated_at_argentina": "2026-10-27T13:05:03.976-03:00",
+  "operator_report_unchanged": true,
+  "worker11768_deployment_reported": true,
+  "agent_authenticated_private_state_read": false,
+  "agent_received_or_read_actual_new_backup": false,
+  "backup_file_hash_independently_recomputed_by_agent": false,
+  "actual_backup_saved_as_reported_by_operator": true,
+  "remote_worker_javascript_byte_compared": false,
+  "read_only_diagnostic_did_not_perform_application_post": true,
+  "separate_agent_http_probe_evidence": "bolsa-11768-rechazo-vencimiento-http-20261027.json",
+  "whole_account_or_platform_restore_proven": false,
+  "public_recovery_enabled": false,
+  "bolsa_complete": false,
+  "agent_independently_observed_api_health_build11768": true
+}
