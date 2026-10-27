@@ -10,7 +10,7 @@ El siguiente paso es11768: respaldo consistente D1, exclusión e invalidación d
 |---|---|
 | Worker11767 | Código/ZIP en `2abb579e65f360b462e216890f3c3f53f427e0bf`. CI Bolsa40444919105 y Radio40444919072 success;227pruebas Node,25controles workerd y12Radio en la entrega. Despliegue y recuperación reales informados por el operador; no despliegue autenticado por Work. |
 | Pages receptor11767.1 | Rama `audit/continuidad-demo-20261019`, commit `86c765293a78fd0d7be69524a78520e8c94a8d81`,151pruebas y CI40444874718 success. Cloudflare informó despliegue exitoso; receptor abierto en su dominio principal sin token, confirmación deshabilitada. Sin cambios en11768. |
-| Worker11768 | Código y paquete nuevos con pruebas locales/CI registradas en sus evidencias. Despliegue manual y diagnóstico real pendientes. No envíos reales, SQL remoto o restauración del respaldo privado por Work. |
+| Worker11768 | Código/ZIP en `c782c2541d93f728eba8f4cbc82a519c98511c59`;252Node/27workerd/12Radio locales y CI Bolsa40451323481/Radio40451323476 success. Despliegue manual y diagnóstico real pendientes. No envíos reales, SQL remoto o restauración del respaldo privado por Work. |
 | Producción | `main` conserva `fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd`. No mezclar ramas, activar flags productivos o modificar producción. |
 
 Cloudflare rechazó el ingreso de Work mediante Google con **Unable to sign in**. No se diagnosticó bloqueo de bots ni se repitió ese intento. El operador despliega manualmente los paquetes; se conserva ese método.

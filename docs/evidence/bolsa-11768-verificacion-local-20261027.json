@@ -66,6 +66,24 @@
   "pages_unchanged": "86c765293a78fd0d7be69524a78520e8c94a8d81",
   "production_unchanged": "fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd",
   "bolsa_complete": false,
-  "ci_status": "pending first code commit; append CI evidence after observed completion",
-  "next_operator_action": "Deploy11768 only to uadav-api-staging, preserve secrets/bindings/cron, open /qa/bolsa-cierre, save private backup, compare distinct cron turns, share safe JSON only."
+  "next_operator_action": "Deploy11768 only to uadav-api-staging, preserve secrets/bindings/cron, open /qa/bolsa-cierre, save private backup, compare distinct cron turns, share safe JSON only.",
+  "github": {
+    "code_commit": "c782c2541d93f728eba8f4cbc82a519c98511c59",
+    "tree": "ca680e246fbd22626b323e95e1f4f5f1d99c5a26",
+    "verified_uploaded_blobs": 23,
+    "worker_run": 40451323481,
+    "worker_job": 122014471656,
+    "worker_status": "completed/success",
+    "radio_run": 40451323476,
+    "radio_job": 122014471406,
+    "radio_status": "completed/success",
+    "all_workflow_test_steps_succeeded": true,
+    "exact_counts_source": "Local completed logs; matching workflow test steps succeeded. No numeric CI log archive fetched.",
+    "ci_observed_at": "2026-10-27T04:44:54.844665+00:00",
+    "branch_refs_verified": {
+      "worker": "c782c2541d93f728eba8f4cbc82a519c98511c59",
+      "pages": "86c765293a78fd0d7be69524a78520e8c94a8d81",
+      "main": "fd9799cdbaba5ff522dcff45a67a4bc9a9de90bd"
+    }
+  }
 }

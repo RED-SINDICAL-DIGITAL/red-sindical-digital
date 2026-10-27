@@ -46,3 +46,9 @@ Esta retención acotada de intenciones y metadatos no equivale a una política c
 Pruebas finales, huellas del paquete y CI se registran en `evidence/bolsa-11768-verificacion-local-20261027.json` y en el checkpoint de `CONTINUIDAD-WORK-20261024.md`. El estado de los cinco bloques restantes está en `BOLSA-ESTADO-Y-CIERRE-20261025.md`. Mantener separados código escrito, pruebas sintéticas, reporte del operador y despliegue observado.
 
 Pruebas locales finales: **252Node,27controles workerd1.20261025.1 y12Radio aprobados**; política pública, compatibilidad KV, sintaxis, fuentes y ZIP aprobados. Los50artefactos anteriores conservan sus bytes. Worker786785bytes SHA256 `3f1ab89bbc837fa18c6d56b4d25e09fdd068f2dc6ee28c7b8bd13544b5c64c78`; ZIP194878bytes SHA256 `ce19e6ae859dd4262746f779fff297444c623f9f0ba85a334f78a70a2a6f622a`. No equivalen a despliegue, correo real nuevo, SQL remoto, restauración integral o cobertura física.
+
+## GitHub y CI confirmadas
+
+Código/ZIP en commit `c782c2541d93f728eba8f4cbc82a519c98511c59`, árbol `ca680e246fbd22626b323e95e1f4f5f1d99c5a26`,23blobs cotejados con el índice local. [CI Bolsa40451323481](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40451323481) y [CI Radio40451323476](https://github.com/RED-SINDICAL-DIGITAL/red-sindical-digital/actions/runs/40451323476): `completed/success` para ese commit. Pasos de pruebas y verificaciones aprobados; cifras exactas252/27/12 obtenidas de los logs locales de los mismos comandos, sin descargar otro archivo de logs numéricos CI.
+
+Rama Pages y producción cotejadas sin cambios. La persistencia y CI no despliegan el Worker principal. Falta la intervención manual de esta guía y su resultado seguro.
