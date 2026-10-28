@@ -2640,6 +2640,14 @@ const uadavWorker = {
       if(request.method!=='GET')return json({error:'Solo se puede consultar el estado de la revisión automática.'},405,{'Allow':'GET'});
       return json(await uadavJobCronStatus(env));
     }
+    // Commercial decision: no artist memberships or new PRO entitlements.
+    // Keep historical records readable; never delete payment or entitlement history.
+    const retiredProRoutes=['/api/pro/payment-orders','/api/pro/payment-orders/report','/api/pro/bank-confirmation','/api/admin/pro-payment-orders/review','/api/admin/artist-plan','/api/admin/pro-payment-settings'];
+    if((retiredProRoutes.includes(path)&&!['GET','HEAD','OPTIONS'].includes(request.method))||['/api/artist/pro-benefits','/api/admin/pro-features'].includes(path)){
+      if(path.startsWith('/api/admin/')&&!isAdmin())return json({error:'No autorizado'},401);
+      return json({error:'Las membresías para artistas fueron retiradas. Las promociones se contratan por campaña o convenio.',code:'ARTIST_MEMBERSHIP_RETIRED'},410);
+    }
+    if(['/api/pro/payment-settings','/api/pro/payment-destination'].includes(path)&&request.method==='GET')return json({enabled:false,retired:true});
     const securityActions={'/api/artista/claim':'artist_claim','/api/eventos':'event_publish','/api/bolsa_trabajo':'job_publish','/api/bolsa_trabajo/postular':'job_apply'};
     if(request.method==='POST'&&securityActions[path]&&!isAdmin()&&uadavSecurityConfig(env).configured){
       let b;try{b=await uadavSecurityJSON(request.clone())}catch(e){return json({error:e.message},e.status||400)}
