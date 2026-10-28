@@ -4253,8 +4253,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
           if(from && start && start<from) return false; if(to && start && start>to) return false;
           if(when==='hoy' && start!==todayStr) return false;
           if(when==='manana'){ const d=new Date(today); d.setDate(today.getDate()+1); if(start!==d.toISOString().slice(0,10)) return false; }
-          if(when==='esta-semana' && start>weekStr) return false;
-          if(when==='este-mes' && start>endMonth) return false;
+          if(when==='esta-semana' && (!start || start<todayStr || start>weekStr)) return false;
+          if(when==='este-mes' && (!start || start<todayStr || start>endMonth)) return false;
           if(free==='true' && !(e.es_gratuito===true || normalizeSearchText(e.precio)==='gratis')) return false;
           if(free==='false' && (e.es_gratuito===true || normalizeSearchText(e.precio)==='gratis')) return false;
           const featureUntil=e.destacado_hasta?Date.parse(e.destacado_hasta):NaN;if(e.destacado_pagado===true&&Number.isFinite(featureUntil)&&featureUntil<Date.now()){e.destacado_pagado=false;e.destacado_estado='vencido';}
