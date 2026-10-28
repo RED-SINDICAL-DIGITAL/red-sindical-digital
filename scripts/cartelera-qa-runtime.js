@@ -74,7 +74,8 @@ async function cqaMail(env,state){
   const id=String(n.payload?.payload?.id||'');cqaNeed(/^[-A-Za-z0-9_]{1,120}$/.test(id),'QA_MAIL_EVENT_ID');
   const current=await core.DB.prepare('SELECT status FROM events WHERE id=?').bind(id).first();if(current?.status!=='published')return {skipped:true};
   const title=String(n.payload?.payload?.titulo||'Evento').slice(0,180);
-  const body=JSON.stringify({sender:{email:'acceso@correo-staging.uadavstream.com.ar',name:'UADAV STREAM · staging'},to:[{email:n.to}],headers:{idempotencyKey:n.id},subject:'Cartelera · '+title,textContent:'Tu evento está publicado.\n'+title+'\nhttps://uadav-stream-staging.pages.dev/evento.html?id='+encodeURIComponent(id)});
+  const digest=await cqaHash('cartelera-notice:'+n.id);const idempotencyKey=digest.slice(0,8)+'-'+digest.slice(8,12)+'-4'+digest.slice(13,16)+'-'+((parseInt(digest[16],16)&3)|8).toString(16)+digest.slice(17,20)+'-'+digest.slice(20,32);
+  const body=JSON.stringify({sender:{email:'acceso@correo-staging.uadavstream.com.ar',name:'UADAV STREAM · staging'},to:[{email:n.to}],headers:{idempotencyKey},subject:'Cartelera · '+title,textContent:'Tu evento está publicado.\n'+title+'\nhttps://uadav-stream-staging.pages.dev/evento.html?id='+encodeURIComponent(id)});
   return uadavAccountEmail.uadavBrevoRequest({mode:'staging-only',apiKey:env.BREVO_API_KEY,body,fetchImpl:async request=>{
    const response=await fetch(request);diagnostic={http_status:response.status,provider_code:'unavailable',reason:'unknown'};
    if(response.status!==201){

@@ -2,7 +2,7 @@
   "version": "11770-cartelera-qa-1",
   "purpose": "UADAV_CARTELERA_DISPOSABLE_11770",
   "core_sha256": "4c24a50c6eaea09e24809feddcb59fcd4690436350248877a5cf9d7c2db12060",
-  "file_sha256": "3de79b7befa63e13eeddbb9bc12fdbf81badca81fed6ee01f9bbb0e98ddc14e2",
+  "file_sha256": "cfb02d65e529beca3f33b331860671f2f1779b2f321c2d86a4db60f5e1f17016",
   "host": "uadav-cartelera-qa-11770.uadavstream.workers.dev",
   "deployed": false,
   "d1_remote_verified": false,
