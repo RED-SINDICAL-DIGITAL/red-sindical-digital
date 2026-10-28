@@ -84,3 +84,11 @@ test('failed restore rolls back both data recovery and link invalidation, then s
 test('a latest cron error cannot be masked by an older successful run in the closure report',async()=>{
  const f=await fixture();try{const old=JSON.parse((await f.DB.prepare("SELECT value FROM job_store_meta WHERE key='cron:last_success'").first()).value);await f.DB.prepare("UPDATE job_store_meta SET value=? WHERE key='cron:last_run'").bind(JSON.stringify({version:1,status:'error',scheduled_time:old.scheduled_time+900000,started_at:old.started_at,completed_at:old.completed_at})).run();const r=await f.closure();assert.equal(r.data.cron.status,'error');assert.equal(r.data.expiry.checks.cron_after_expiry,false);assert.equal(r.data.expiry.all_passed,false)}finally{f.close()}
 });
+test('backup preserves event publication references without exporting a stale KV catalog or writing data',async()=>{
+ const f=await fixture();try{
+  await f.DB.prepare('CREATE TABLE event_publication_intents(request_id TEXT PRIMARY KEY,payload_hash TEXT NOT NULL,event_id TEXT NOT NULL UNIQUE,event_json TEXT NOT NULL,created_at TEXT NOT NULL)').run();
+  const reference={request_id:'12345678-1234-4123-8123-123456789abc',payload_hash:'a'.repeat(64),event_id:'EV-BACKUP-QA',event_json:JSON.stringify({id:'EV-BACKUP-QA',titulo:'Evento sintético'}),created_at:'2026-10-27T15:00:00.000Z'};
+  await f.DB.prepare('INSERT INTO event_publication_intents VALUES(?,?,?,?,?)').bind(reference.request_id,reference.payload_hash,reference.event_id,reference.event_json,reference.created_at).run();
+  const backup=await f.call();assert.equal(backup.status,200);assert.deepEqual(backup.data.tables.event_publication_intents,[reference]);assert.equal((await verifyJobBackupDigest(backup.data)).verified,true);assert.equal(f.writes.length,0);
+ }finally{f.close()}
+});
