@@ -30,3 +30,7 @@ Pendientes para activar: creación administrativa, migración de eventos heredad
 La creación administrativa ya usa intención idempotente en el circuito experimental. La edición migra puntualmente registros heredados mediante INSERT OR IGNORE sin reemplazar una fila D1 más nueva. Se bloquearon las sustituciones completas por endpoints antiguos. La consulta por referencia permite confirmar una publicación incierta sin volver a publicarla. El Admin bloquea doble clic y conserva formularios ante fallo o respuesta incompleta.
 
 Ver `CIERRE-QA-BOLSA-CARTELERA-20261027.md` para el estado vigente y las pruebas. Se resolvieron esos pendientes de creación, migración puntual y comprobación de envío; continúan pendientes entrega de avisos, importación/mantenimiento, respaldo de referencias y D1 real aislado. El flag permanece sin activar y el Worker operativo continúa en 11769.
+
+## Lote integral local del 28/10/2026
+
+Importación canónica, mantenimiento D1, destacados pagos, ledger de avisos y ensayo de restauración están implementados y probados en el lote descrito en `CARTELERA-11770-LOTE-INTEGRAL-20261028.md`. Los avisos están restringidos al destinatario de QA y desactivados por defecto. Se preparó el archivo único de release 11770. Siguen pendientes el despliegue, la validación D1 remota y la recepción real del aviso; no se activó ninguna variable ni se modificó producción.

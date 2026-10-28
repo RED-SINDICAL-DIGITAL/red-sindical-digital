@@ -1,0 +1,16 @@
+{
+  "build": "11770",
+  "scope": "staging-candidate",
+  "file": "worker-UADAVSTREAM-V11.7-11770.js",
+  "sha256": "4c24a50c6eaea09e24809feddcb59fcd4690436350248877a5cf9d7c2db12060",
+  "worker_tests_passed": 415,
+  "ui_tests_passed": 173,
+  "production_modified": false,
+  "deployed": false,
+  "cloudflare_d1_validated": false,
+  "real_cartelera_email_delivery_verified": false,
+  "event_atomic_staging_enabled_by_package": false,
+  "cartelera_cron_enabled_by_package": false,
+  "cartelera_mail_enabled_by_package": false,
+  "mail_mode_available": "qa-only"
+}
