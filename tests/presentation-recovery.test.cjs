@@ -12,10 +12,10 @@ test('health success shares request but malformed build cannot unlock writes',as
 function publicPage(fetch,query='?artist_id=ART-QA'){
  const nodes={};for(const id of ['profile','retry','print','share','status','app'])nodes[id]={hidden:true,disabled:false,textContent:'',innerHTML:'',querySelectorAll:()=>[]};
  let renders=0,prepared=0;const c={URLSearchParams,AbortController,setTimeout,clearTimeout,location:{search:query},document:{title:'',getElementById:id=>nodes[id]},window:{UADAV_API_BASE:'https://isolated.example/api/',print(){}},fetch,UADAVPressKit:{render:()=>{renders++;return'<div>Public presentation</div>'}},UADAVShare:{prepare(){prepared++},open(){}}};
- vm.createContext(c);let source=page.slice(page.indexOf('const $=id=>'),page.indexOf('</script></body>')).trim().replace(/loadPresentation\(\);$/,'');vm.runInContext(source+';this.start=loadPresentation',c);return{c,nodes,renders:()=>renders,prepared:()=>prepared};
+ c.window.UADAVShare=c.UADAVShare;vm.createContext(c);let source=page.slice(page.indexOf('const $=id=>'),page.indexOf('</script></body>')).trim().replace(/loadPresentation\(\);$/,'');vm.runInContext(source+';this.start=loadPresentation',c);return{c,nodes,renders:()=>renders,prepared:()=>prepared};
 }
 test('public kit load failure enables retry, keeps print/share hidden and then recovers',async()=>{
- let attempt=0;const h=publicPage(async()=>{attempt++;if(attempt===1)throw Error('Sin conexión');return{ok:true,json:async()=>({kit:{name:'QA Artist'},shows:[]})}});
+ let attempt=0;const h=publicPage(async()=>{attempt++;if(attempt===1)throw Error('Sin conexión');return{ok:true,json:async()=>({artist_id:'ART-QA',kit:{name:'QA Artist',bio:'Presentación sintética'},shows:[]})}});
  await h.c.start();assert.equal(h.nodes.retry.hidden,false);assert.equal(h.nodes.print.hidden,true);assert.equal(h.nodes.share.hidden,true);assert.equal(h.renders(),0);
  await h.nodes.retry.onclick();assert.equal(h.nodes.retry.hidden,true);assert.equal(h.nodes.print.hidden,false);assert.equal(h.nodes.share.hidden,false);assert.equal(h.renders(),1);assert.equal(h.prepared(),1);assert.equal(h.c.document.title,'QA Artist · Presentación artística');
 });

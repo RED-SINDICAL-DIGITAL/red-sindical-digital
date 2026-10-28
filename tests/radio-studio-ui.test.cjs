@@ -1,9 +1,10 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 const source=fs.readFileSync('radio-studio.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
 function setup(handler){let secret='UAC-fixture',calls=[];const events={};
- const element=tag=>({tag,value:'',textContent:'',children:[],hidden:false,disabled:false,focus(){},append(...xs){this.children.push(...xs);if(this.tag==='select'&&!this.value&&xs[0])this.value=xs[0].value},replaceChildren(...xs){this.children=[...xs];if(this.tag==='select')this.value=''}});
+ const element=tag=>({tag,dataset:{},attrs:{},setAttribute(k,v){this.attrs[k]=v},value:'',textContent:'',children:[],hidden:false,disabled:false,focus(){},append(...xs){this.children.push(...xs);if(this.tag==='select'&&!this.value&&xs[0])this.value=xs[0].value},replaceChildren(...xs){this.children=[...xs];if(this.tag==='select')this.value=''}});
  const nodes={};for(const id of ['status','refresh','studio','station','filter','count','requests','chatStatus','chatRefresh','chatMessages','chatReplyView','chatMessage','sendChat','cancelChatReply'])nodes[id]=element(['station','filter'].includes(id)?'select':'div');
- const ctx={AbortController,setTimeout,clearTimeout,JSON,window:{UADAVAccount:{code:()=>secret},addEventListener:(name,fn)=>events[name]=fn},document:{getElementById:id=>nodes[id],createElement:element,querySelectorAll:()=>Object.values(nodes)},fetch:async(url,opt)=>{calls.push({url,opt});return handler(url,opt)}};
+ for(const match of fs.readFileSync('radio-studio.html','utf8').matchAll(/\bid="([^"]+)"/g))if(!nodes[match[1]])nodes[match[1]]=element(match[1]==='modeSelect'?'select':'div');
+ const ctx={location:{hostname:'uadav-stream-staging.pages.dev'},AbortController,setTimeout,clearTimeout,setInterval:()=>1,clearInterval(){},JSON,window:{UADAVAccount:{code:()=>secret},addEventListener:(name,fn)=>events[name]=fn},document:{addEventListener:(name,fn)=>events['document:'+name]=fn,getElementById:id=>nodes[id],createElement:element,querySelectorAll:()=>Object.values(nodes)},fetch:async(url,opt)=>{calls.push({url,opt});return handler(url,opt)}};
  vm.runInNewContext(source,ctx);return{nodes,calls,events,secret:s=>secret=s,settle:()=>new Promise(r=>setImmediate(r))};
 }
 const response=d=>({ok:true,json:async()=>d});
@@ -13,7 +14,7 @@ test('duplicate refresh does not overlap the authorized station and inbox load',
 test('account replacement discards pending response and clears private display',async()=>{let release;const h=setup(()=>new Promise(r=>release=r));const loading=h.events.load();h.secret('UAC-other');h.events['uadav:account']();release(response({items:[{id:'RAD-A',name:'Radio A'}]}));await loading;assert.equal(h.nodes.requests.children.length,0);assert.equal(h.nodes.studio.hidden,true);assert.equal(h.nodes.refresh.disabled,false)});
 test('inbox rejects a response belonging to another station',async()=>{const h=setup(async url=>response(url.endsWith('radio-studio')?{items:[{id:'RAD-A',name:'Radio A'}]}:{radio_id:'OTHER',items:[{title:'<script>unsafe</script>'}]}));await h.events.load();assert.equal(h.nodes.studio.hidden,true);assert.equal(h.nodes.requests.children.length,0);assert.match(h.nodes.status.textContent,/incompleta/)});
 
-const studioData=url=>url.endsWith('radio-studio')?{items:[{id:'RAD-A',name:'Radio A'}]}:url.includes('/chat?')?{radio_id:'RAD-A',items:[{id:'MSG-A',alias:'Oyente',mensaje:'Saludos'}]}:{radio_id:'RAD-A',items:[]};
+const studioData=url=>url.endsWith('radio-studio')?{items:[{id:'RAD-A',name:'Radio A'}]}:url.includes('/settings?')?{radio_id:'RAD-A',mode:'manual'}:url.includes('/chat?')?{radio_id:'RAD-A',items:[{id:'MSG-A',alias:'Oyente',mensaje:'Saludos'}]}:{radio_id:'RAD-A',items:[]};
 const requestData=url=>url.includes('/requests?')?{radio_id:'RAD-A',items:[{id:'REQ-A',title:'Tema solicitado',status:'pending'}]}:studioData(url);
 const requestAction=(h,label)=>h.nodes.requests.children[0].children.find(n=>n.className==='actions').children.find(n=>n.textContent===label);
 const requestBadge=h=>h.nodes.requests.children[0].children.find(n=>n.className==='badge').textContent;
