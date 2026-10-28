@@ -55,3 +55,16 @@ test('concurrent admin edits reject the stale mutation and keep one history entr
   assert.equal((await f.DB.prepare("SELECT COUNT(*) n FROM entity_versions WHERE entity_type='event' AND entity_id=?").bind(id).first()).n,1);
  }finally{f.DB.close()}
 });
+
+test('admin creation replays one event for concurrent identical references',async()=>{
+ const f=fixture();try{const b=event(),responses=await Promise.all([adminRequest(f,'POST',b),adminRequest(f,'POST',b)]);assert.deepEqual(responses.map(r=>r.status),[200,200]);const [a,c]=await Promise.all(responses.map(r=>r.json()));assert.equal(a.item.id,c.item.id);assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM events WHERE title=?').bind(b.titulo).first()).n,1);assert.equal((await adminRequest(f,'POST',{...b,titulo:'Modificado'})).status,409)}finally{f.DB.close()}
+});
+test('a legacy KV event can be edited without resurrecting a canonical deletion',async()=>{
+ const f=fixture();try{await f.call(event());const legacy={id:'EV-LEGACY',titulo:'Anterior',fecha:'2028-02-29',fecha_inicio:'2028-02-29',lugar:'Sala',estado:'published'};f.kv.set('cartelera_aprobada',JSON.stringify([legacy]));assert.equal((await adminRequest(f,'PUT',{id:legacy.id,titulo:'Migrado y editado'})).status,200);const saved=await f.DB.prepare('SELECT title,status FROM events WHERE id=?').bind(legacy.id).first();assert.equal(saved.title,'Migrado y editado');assert.equal((await adminRequest(f,'DELETE',{id:legacy.id})).status,200);assert.equal((await adminRequest(f,'PUT',{id:legacy.id,titulo:'No resucitar'})).status,404);assert.equal((await f.DB.prepare('SELECT status FROM events WHERE id=?').bind(legacy.id).first()).status,'deleted')}finally{f.DB.close()}
+});
+test('canonical mode refuses obsolete whole-catalog replacements',async()=>{
+ const f=fixture();try{for(const path of ['/api/cartelera_aprobada','/api/eventos_publicados']){const r=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev'+path,{method:'PUT',headers:{Authorization:'Bearer test-admin'},body:'[]'}),f.env,{});assert.equal(r.status,405)}}finally{f.DB.close()}
+});
+test('a lost publication response can be checked without another write or private data disclosure',async()=>{
+ const f=fixture();try{const b={...event(),contacto_email:'private@example.invalid'},published=await f.call(b);const get=async id=>worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/eventos/receipt?request_id='+id),f.env,{});const r=await get(b.request_id);assert.deepEqual(await r.json(),{confirmed:true,id:published.body.id});assert.deepEqual(await(await get(randomUUID())).json(),{confirmed:false});assert.equal((await get('bad')).status,400);assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM events').first()).n,1);assert.equal((await adminRequest(f,'DELETE',{id:published.body.id})).status,200);assert.deepEqual(await(await get(b.request_id)).json(),{confirmed:false})}finally{f.DB.close()}
+});

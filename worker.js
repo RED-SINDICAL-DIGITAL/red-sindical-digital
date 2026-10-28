@@ -522,7 +522,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
 }
 
 const VERSION = 'V11.7';
-const BUILD = '11769';
+const BUILD = '11770';
 
 function uadavProfileDisplay(value,strict=false){
  const keys=['videos','playlists','music','clips','live','events'];
@@ -4285,6 +4285,9 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
 
     async function mutateCanonicalEvent(before,next,{remove=false}={}) {
       // History and the canonical mutation must either both commit or both roll back.
+      // Migrate only the requested legacy event, without replacing a newer D1 row.
+      await env.DB.prepare(`INSERT OR IGNORE INTO events(id,title,category,city,province,country,venue,start_date,end_date,status,featured,payment_status,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+        .bind(String(before.id),String(before.titulo||before.nombre||'Evento'),String(before.categoria||''),String(before.ciudad||''),String(before.provincia||''),String(before.pais||'Argentina'),String(before.lugar||''),String(before.fecha_inicio||before.fecha||''),String(before.fecha_fin||''),String(before.estado||'published'),before.destacado_pagado===true?1:0,String(before.destacado_estado||''),JSON.stringify(before),String(before.fecha_creacion||isoNow()),isoNow()).run();
       const row=await env.DB.prepare('SELECT data_json,status FROM events WHERE id=?').bind(String(before.id)).first();
       if(!row||row.status!=='published'||JSON.stringify({...JSON.parse(row.data_json),id:before.id,estado:row.status})!==JSON.stringify(before))return {conflict:true};
       const now=isoNow(),id=String(before.id),expected=row.data_json;
@@ -4342,6 +4345,13 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(request.method==='POST'){
         const b=await request.json().catch(()=>({})); if(!b.titulo||!b.fecha||!b.lugar)return json({error:'Título, fecha y lugar son obligatorios'},400);
         const list=await getArray(key); const item={...b,id:'SHOW-'+Date.now().toString(36).toUpperCase(),titulo:String(b.titulo).slice(0,180),nombre:String(b.titulo).slice(0,180),fecha:String(b.fecha).slice(0,80),fecha_inicio:String(b.fecha_inicio||b.fecha).slice(0,80),lugar:String(b.lugar).slice(0,180),ciudad:String(b.ciudad||'').slice(0,120),provincia:String(b.provincia||'').slice(0,120),pais:String(b.pais||'Argentina').slice(0,80),estado:'published',creado_por:'admin',destacado_pagado:b.destacado_pagado===true,fecha_creacion:new Date().toISOString()};
+        if(atomicEventsEnabled){
+          if(typeof b.request_id!=='string'||!/^[-A-Za-z0-9_]{16,128}$/.test(b.request_id))return json({error:'Actualizá el Admin antes de crear un evento.'},400);
+          if(item.destacado_pagado===true)return json({error:'Primero publicá el evento; confirmá el destacado pago después de verificar el ingreso.'},400);
+          item.id='SHOW-'+crypto.randomUUID().toUpperCase();
+          try{await env.DB.prepare(uadavAtomicEventLab.schema).run();const saved=await uadavAtomicEventLab.reserveEvent(env.DB,{requestId:b.request_id,event:item,createdAt:isoNow()});if(saved.status==='conflict')return json({error:'Este envío corresponde a otros datos. Revisá el evento antes de continuar.'},409);if(saved.event.estado!=='published')return json({error:'Este envío ya fue procesado y el evento no está publicado.'},409);await env.UADAV_DB.put('event-publication-snapshot:v1:'+saved.event.id,JSON.stringify(saved.event));return json({success:true,item:saved.event,d1_sync:{ok:true}});}
+          catch{return json({error:'No pudimos confirmar la creación. Conservá el formulario y revisá Cartelera antes de reintentar.'},503);}
+        }
         list.push(item); await putJSON(key,list); const d1sync=await safeD1('sync_cartelera_create',()=>syncEventsD1([item])); await audit('create_event','event',item.id,{title:item.titulo}); return json({success:true,item,d1_sync:d1sync});
       }
       if(request.method==='PUT'){
@@ -4366,6 +4376,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
 
     if (path === '/api/cartelera_aprobada' || path === '/api/eventos_publicados') {
       const key=path==='/api/eventos_publicados'?'eventos_publicados':'cartelera_aprobada'; if(request.method==='GET')return json(await getArray(key)); if(!isAdmin())return json({error:'No autorizado'},401);
+      if(atomicEventsEnabled&&request.method!=='GET')return json({error:'Usá la edición individual de Cartelera. La sustitución de listas está deshabilitada.'},405);
       if(request.method==='POST'||request.method==='PUT'){await env.UADAV_DB.put(key,await request.text());return json({success:true});}
       if(request.method==='DELETE'){const b=await request.json().catch(()=>({}));const list=await getArray(key);await putJSON(key,list.filter(x=>String(x.id)!==String(b.id)));return json({success:true});}
       return json({error:'Método no permitido'},405);
@@ -7067,6 +7078,15 @@ async function saveEntityVersion(type,id,data){
       if(request.method==='GET'){if(!isAdmin())return json({error:'No autorizado'},401);return json(await getArray('ticket_orders'));}
       if(request.method==='PUT'){if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));const list=await getArray('ticket_orders');const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Orden no encontrada'},404);list[i]={...list[i],status:String(b.status||list[i].status),payment_status:String(b.payment_status||list[i].payment_status),updated_at:isoNow()};await putJSON('ticket_orders',list);return json({success:true,item:list[i]});}
     }
+
+    if(path==='/api/eventos/receipt'&&request.method==='GET'){
+      if(!atomicEventsEnabled||!hasD1())return json({confirmed:false,error:'La comprobación por referencia todavía no está disponible.'},503);
+      const reference=url.searchParams.get('request_id')||'';if(!/^[-A-Za-z0-9_]{16,128}$/.test(reference))return json({error:'Referencia inválida'},400);
+      try{await env.DB.prepare(uadavAtomicEventLab.schema).run();const saved=await env.DB.prepare('SELECT e.id,e.status FROM event_publication_intents i JOIN events e ON e.id=i.event_id WHERE i.request_id=?').bind(reference).first();return saved&&saved.status==='published'?json({confirmed:true,id:saved.id}):json({confirmed:false});}
+      catch{return json({confirmed:false,error:'No pudimos comprobar la referencia. Conservá el formulario.'},503);}
+    }
+
+    if(path==='/api/eventos/capabilities'&&request.method==='GET')return json({atomic_publication:atomicEventsEnabled&&hasD1(),reference_required:atomicEventsEnabled});
 
     if(path==='/api/advertising/policy'&&request.method==='GET')return json({version:uadavAdvertisingPolicy.version,currency:uadavAdvertisingPolicy.currency,memberships:false,automatic_renewal:false,products:uadavAdvertisingPolicy.products,territorial_campaigns:true,delivery_requires_verification:true});
 

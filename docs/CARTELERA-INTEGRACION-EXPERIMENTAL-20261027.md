@@ -24,3 +24,9 @@ PUT y DELETE de /api/cartelera, bajo el mismo bloqueo experimental, guardan la v
 Pruebas integradas adicionales: rollback de edición e historial, rollback de eliminación e historial, reintento posterior exitoso, dos ediciones concurrentes con un único historial y una respuesta 409. La inyección de fallo se ejecuta dentro del batch SQLite, después de las escrituras, para comprobar rollback real.
 
 Pendientes para activar: creación administrativa, migración de eventos heredados, importaciones/mantenimiento y caminos alternativos de modificación, entrega de avisos y respaldo/restauración. No se desplegó ni activó el flag experimental.
+
+## Pasada consolidada build 11770
+
+La creación administrativa ya usa intención idempotente en el circuito experimental. La edición migra puntualmente registros heredados mediante INSERT OR IGNORE sin reemplazar una fila D1 más nueva. Se bloquearon las sustituciones completas por endpoints antiguos. La consulta por referencia permite confirmar una publicación incierta sin volver a publicarla. El Admin bloquea doble clic y conserva formularios ante fallo o respuesta incompleta.
+
+Ver `CIERRE-QA-BOLSA-CARTELERA-20261027.md` para el estado vigente y las pruebas. Se resolvieron esos pendientes de creación, migración puntual y comprobación de envío; continúan pendientes entrega de avisos, importación/mantenimiento, respaldo de referencias y D1 real aislado. El flag permanece sin activar y el Worker operativo continúa en 11769.
