@@ -6,9 +6,13 @@ async function digestEvent(event){const {id,fecha_creacion,publicado_en,...data}
 async function reserveEvent(db,{requestId,event,createdAt}){
  if(!db||!/^[-A-Za-z0-9_]{16,128}$/.test(requestId||'')||!event||!/^[-A-Za-z0-9_]{1,120}$/.test(event.id||'')||!createdAt)throw Error('Invalid event intent');
  const candidate=JSON.stringify(event);if(candidate.length>50000)throw Error('Event too large');const payloadHash=await digestEvent(event);
+ const notices=[{type:'event_published',template:'event_published',subject:'Tu evento ya está publicado · ★ UADAV STREAM'}];
+ if(event.destacado_solicitado===true)notices.push({type:'featured_requested',template:'event_featured_requested',subject:'Solicitud de destacado recibida · ★ UADAV STREAM'});
+ const noticeStatements=notices.map(n=>db.prepare("INSERT OR IGNORE INTO notifications(id,channel,template,recipient,status,payload_json,created_at) SELECT ?, 'email', ?, ?, 'queued', ?, created_at FROM event_publication_intents WHERE request_id=? AND payload_hash=? AND event_id=?").bind('N-EVENT-'+event.id+'-'+n.type,n.template,String(event.contacto_email||''),JSON.stringify({event:n.type,template:n.template,to:String(event.contacto_email||''),subject:n.subject,payload:{id:event.id,titulo:event.titulo,fecha:event.fecha,lugar:event.lugar}}),requestId,payloadHash,event.id));
  const results=await db.batch([
   db.prepare('INSERT OR IGNORE INTO event_publication_intents(request_id,payload_hash,event_id,event_json,created_at) SELECT ?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM events WHERE id=?)').bind(requestId,payloadHash,event.id,candidate,createdAt,event.id),
-  db.prepare("INSERT OR IGNORE INTO events(id,title,category,city,province,country,venue,start_date,end_date,status,featured,payment_status,data_json,created_at,updated_at) SELECT event_id,?,?,?,?,?,?,?,?, 'published',0,?,event_json,created_at,created_at FROM event_publication_intents WHERE request_id=? AND payload_hash=? AND event_id=?").bind(String(event.titulo||'Evento'),String(event.categoria||''),String(event.ciudad||''),String(event.provincia||''),String(event.pais||'Argentina'),String(event.lugar||''),String(event.fecha_inicio||event.fecha||''),String(event.fecha_fin||''),String(event.destacado_estado||''),requestId,payloadHash,event.id)
+  db.prepare("INSERT OR IGNORE INTO events(id,title,category,city,province,country,venue,start_date,end_date,status,featured,payment_status,data_json,created_at,updated_at) SELECT event_id,?,?,?,?,?,?,?,?, 'published',0,?,event_json,created_at,created_at FROM event_publication_intents WHERE request_id=? AND payload_hash=? AND event_id=?").bind(String(event.titulo||'Evento'),String(event.categoria||''),String(event.ciudad||''),String(event.provincia||''),String(event.pais||'Argentina'),String(event.lugar||''),String(event.fecha_inicio||event.fecha||''),String(event.fecha_fin||''),String(event.destacado_estado||''),requestId,payloadHash,event.id),
+  ...noticeStatements
  ]);
  const row=await db.prepare('SELECT payload_hash,event_id,event_json FROM event_publication_intents WHERE request_id=?').bind(requestId).first();
  if(!row)throw Error('Publication not confirmed');
@@ -4172,7 +4176,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
             if(current.estado!=='published')return json({success:true,id:current.id,item:current,mode:'previously_processed'});
             for(const key of ['eventos_publicados','cartelera_aprobada']){const list=await getArray(key);const idx=list.findIndex(x=>String(x.id)===String(current.id));if(idx<0)list.push(current);await putJSON(key,list.slice(-2000));}
             if(current.destacado_solicitado===true){const list=await getArray('eventos_pendientes');if(!list.some(x=>String(x.id)===String(current.id)))list.push(current);await putJSON('eventos_pendientes',list.slice(-1000));}
-            if(saved.created){await emitNotification({event:'event_published',template:'event_published',to:current.contacto_email||'',subject:'Tu evento ya está publicado · ★ UADAV STREAM',payload:{id:current.id,titulo:current.titulo,fecha:current.fecha,lugar:current.lugar}});if(current.destacado_solicitado===true)await emitNotification({event:'featured_requested',template:'event_featured_requested',to:current.contacto_email||'',subject:'Solicitud de destacado recibida · ★ UADAV STREAM',payload:{id:current.id,titulo:current.titulo,fecha:current.fecha,lugar:current.lugar}});}
+            // Los avisos ya quedaron en la cola D1 dentro de la misma transacción.
+
             return json({success:true,id:current.id,item:current,mode:current.destacado_solicitado===true?'auto_published_feature_review':'auto_published'});
           }catch(error){return json({error:'No pudimos confirmar el envío. Conservá el formulario y comprobá Cartelera antes de volver a intentarlo.'},503)}
         }
