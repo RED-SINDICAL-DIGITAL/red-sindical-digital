@@ -115,7 +115,7 @@ function showParticipationMode(paused,verified=true){
  for(const id of ['alias','message','send','reqName','reqArtist','reqTitle','reqDedication','sendRequest']){
   const el=document.getElementById(id);
   if(!el)continue;
-  el.disabled=locked||Boolean(radioSending[id==='send'?'chat':'request']);
+  el.disabled=locked||Boolean(radioSending[['alias','message','send'].includes(id)?'chat':'request']);
   el.title=paused&&verified?'Recepción pausada temporalmente':!verified?'Verificando recepción de la emisora':'';
  }
  const message=paused&&verified?'Esta emisora pausó temporalmente los mensajes y pedidos. Podés seguir escuchando la radio.':!verified?'Verificando si la emisora está recibiendo mensajes y pedidos…':'';
