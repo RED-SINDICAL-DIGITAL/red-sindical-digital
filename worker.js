@@ -1,3 +1,30 @@
+const uadavCarteleraReadiness=(()=>{
+/* Read-only transition audit. Counts only: no contact data, titles or credentials. */
+const collections=['eventos_publicados','cartelera_aprobada','eventos_pendientes'];
+function stable(v){if(Array.isArray(v))return v.map(stable);if(v&&typeof v==='object')return Object.fromEntries(Object.keys(v).sort().map(k=>[k,stable(v[k])]));return v}
+function normalized(event,status){return JSON.stringify(stable({...event,id:String(event.id),estado:status}))}
+async function inspect(db,kv){
+ const blockers=[],legacy=new Map(),raws=[];let duplicates=0;
+ for(const key of collections){const raw=await kv.get(key);raws.push(raw);let values;try{values=raw==null?[]:JSON.parse(raw);if(!Array.isArray(values))throw Error()}catch{blockers.push('INVALID_LEGACY_COLLECTION');continue}
+  for(const event of values){if(!event||typeof event!=='object'||Array.isArray(event)||typeof event.id!=='string'||!event.id){blockers.push('INVALID_LEGACY_EVENT');continue}const status=event.estado||event.status||(key==='eventos_pendientes'?'pending':'published'),item={status,json:normalized(event,status)};if(legacy.has(event.id)){duplicates++;if(legacy.get(event.id).json!==item.json)blockers.push('CONFLICTING_LEGACY_COPIES')}else legacy.set(event.id,item)}
+ }
+ const names=new Set(((await db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all()).results||[]).map(r=>r.name));
+ if(!names.has('events'))return{ready:false,read_only:true,blockers:[...new Set([...blockers,'EVENTS_TABLE_MISSING'])],counts:{legacy:legacy.size}};
+ const rows=(await db.prepare('SELECT id,status,data_json FROM events').all()).results||[],canonical=new Map();let invalid=0;
+ for(const row of rows){try{const data=JSON.parse(row.data_json);if(!data||typeof data!=='object'||Array.isArray(data))throw Error();canonical.set(String(row.id),{status:row.status,json:normalized({...data,id:String(row.id)},row.status)})}catch{invalid++}}
+ const counts={legacy:legacy.size,d1:rows.length,legacy_duplicate_copies:duplicates,invalid_d1:invalid,legacy_missing_in_d1:0,changed_records:0,d1_only_public:0,public_before:0,public_after:0};
+ for(const [id,event] of legacy){if(event.status==='published')counts.public_before++;const current=canonical.get(id);if(!current)counts.legacy_missing_in_d1++;else if(current.json!==event.json)counts.changed_records++}
+ for(const [id,event] of canonical){if(event.status==='published'){counts.public_after++;if(!legacy.has(id))counts.d1_only_public++}}
+ if(invalid)blockers.push('INVALID_D1_EVENT');if(counts.legacy_missing_in_d1)blockers.push('LEGACY_EVENTS_MISSING_IN_D1');if(counts.changed_records)blockers.push('LEGACY_D1_DIFFERENCES_REQUIRE_REVIEW');if(counts.d1_only_public)blockers.push('D1_ONLY_PUBLIC_EVENTS_REQUIRE_REVIEW');
+ for(let i=0;i<collections.length;i++)if(await kv.get(collections[i])!==raws[i])blockers.push('LEGACY_CHANGED_DURING_CHECK');
+ const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify({legacy:[...legacy].sort(),canonical:[...canonical].sort()})))),b=>b.toString(16).padStart(2,'0')).join('');
+ return {ready:blockers.length===0,read_only:true,blockers:[...new Set(blockers)],counts,comparison_sha256:digest,distributed_snapshot:false,backup_required:true,scope:'cartelera-staging-readiness'};
+}
+return {inspect};
+
+})();
+const UADAV_CARTELERA_CHECK_HTML="<!doctype html><html lang=\"es\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Cartelera · revisión staging</title><style nonce=\"%%NONCE%%\">body{background:#101622;color:#eef4ff;font:18px/1.5 system-ui;max-width:760px;margin:auto;padding:24px}section{padding:20px;border:1px solid #40516b;border-radius:16px;margin:20px 0}input,button{font:inherit;padding:12px;border-radius:8px;max-width:100%;box-sizing:border-box}input{display:block;width:100%;margin:12px 0}button{cursor:pointer;margin:6px 8px 6px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}button:disabled{opacity:.5}</style><h1>Cartelera · revisión de staging</h1><p>Consulta los datos actuales y descarga un respaldo privado. No activa funciones, no migra ni modifica registros.</p><section><label for=\"key\">Clave Admin de staging</label><input id=\"key\" type=\"password\" autocomplete=\"current-password\"><button id=\"check\">Revisar estado</button><button id=\"backup\">Descargar respaldo privado</button><button id=\"copy\" disabled>Copiar resultado seguro</button><button id=\"exit\">Borrar clave</button></section><p id=\"status\" role=\"status\"></p><pre id=\"report\"></pre><p>La clave queda solo en memoria mientras esta página está abierta. No compartas el respaldo: contiene datos privados. El resultado seguro muestra únicamente cantidades y estado.</p><script nonce=\"%%NONCE%%\">(()=>{const $=id=>document.getElementById(id);let busy=false,result=null,turn=0;async function run(backup){if(busy)return;const key=$('key').value;if(!key){$('status').textContent='Ingresá la clave Admin de staging.';return}busy=true;const current=turn;$('check').disabled=$('backup').disabled=true;$('status').textContent=backup?'Preparando respaldo…':'Comparando KV y D1…';try{const r=await fetch(backup?'/api/v7/export':'/api/admin/cartelera/readiness',{headers:{Authorization:'Bearer '+key},cache:'no-store'});if(!r.ok)throw Error('No se pudo completar. HTTP '+r.status);const data=await r.json();if(current!==turn)return;if(backup){if(!data.tables||data.backup_digest?.algorithm!=='SHA-256'||data.backup_policy?.d1_atomic_snapshot!==true)throw Error('El respaldo no tiene snapshot D1 consistente o checksum.');const digest=data.backup_digest;delete data.backup_digest;const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(data)))),b=>b.toString(16).padStart(2,'0')).join('');data.backup_digest=digest;if(hash!==digest.value)throw Error('Checksum del respaldo incorrecto. No se descargó.');const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='uadav-staging-backup-'+new Date().toISOString().replaceAll(':','-')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);$('status').textContent='Descarga solicitada. Comprobá que el archivo quedó guardado en tu equipo.'}else{result=data;$('report').textContent=JSON.stringify(data,null,2);$('copy').disabled=false;$('status').textContent=data.ready?'Comparación sin diferencias. Descargá y conservá el respaldo antes de activar.':'Hay diferencias pendientes: copiá el resultado seguro y compartilo en el chat.'}}catch(e){if(current===turn)$('status').textContent=e.message}finally{busy=false;$('check').disabled=$('backup').disabled=false}}$('check').onclick=()=>run(false);$('backup').onclick=()=>run(true);$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(JSON.stringify(result,null,2));$('status').textContent='Resultado seguro copiado.'}catch{$('status').textContent='Seleccioná y copiá el resultado visible.'}};function clear(){turn++;$('key').value='';result=null;$('report').textContent='';$('copy').disabled=true}$('exit').onclick=clear;window.addEventListener('pagehide',clear)})();</script></html>\n";
+const CARTELERA_REVISION="11770-cartelera-cierre-20261028";
 const uadavCarteleraNotices=(()=>{
 /* A confirmed receipt is durable; ambiguous sends require review, never blind replay. */
 const schema="CREATE TABLE IF NOT EXISTS event_notification_dispatch(notification_id TEXT PRIMARY KEY,state TEXT NOT NULL,owner TEXT,lease_until INTEGER NOT NULL DEFAULT 0,attempts INTEGER NOT NULL DEFAULT 0,next_at INTEGER NOT NULL DEFAULT 0,provider_id TEXT,error_code TEXT,updated_at TEXT NOT NULL)";
@@ -4093,7 +4120,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(check.decision==='reject')return json({error:check.reason==='submission_limit'?'Demasiados envíos. Intentá más tarde.':check.reason==='queue_full'?'La revisión está ocupada. Intentá más tarde.':'Este contenido fue rechazado por moderación'},check.reason==='submission_limit'?429:check.reason==='queue_full'?503:422);
     }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: (await platformIdentity()).name, version: VERSION, build: BUILD, kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: (await platformIdentity()).name, version: VERSION, build: BUILD, cartelera_revision:CARTELERA_REVISION, kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:(await platformIdentity()).name, architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -7187,7 +7214,7 @@ async function saveEntityVersion(type,id,data){
       catch{return json({confirmed:false,error:'No pudimos comprobar la referencia. Conservá el formulario.'},503);}
     }
 
-    if(path==='/api/eventos/capabilities'&&request.method==='GET')return json({atomic_publication:atomicEventsEnabled&&hasD1(),reference_required:atomicEventsEnabled});
+    if(path==='/api/eventos/capabilities'&&request.method==='GET')return json({atomic_publication:atomicEventsEnabled&&hasD1(),reference_required:atomicEventsEnabled,revision:CARTELERA_REVISION});
 
     if(path==='/api/advertising/policy'&&request.method==='GET')return json({version:uadavAdvertisingPolicy.version,currency:uadavAdvertisingPolicy.currency,memberships:false,automatic_renewal:false,products:uadavAdvertisingPolicy.products,territorial_campaigns:true,delivery_requires_verification:true});
 
@@ -7249,6 +7276,16 @@ export {uadavPodcastURL,uadavPodcastXML,uadavFetchPodcast,uadavSyncPodcast,uadav
 
 const uadavStagingWorker={...uadavWorker,async scheduled(event,env){if(event?.cron!=='7,22,37,52 * * * *')return uadavJobScheduled(event,env);if(env.EVENT_ATOMIC_STAGING!=='true'||env.CARTELERA_STAGING_CRON!=='cartelera-only')return {executed:false,reason:'cartelera-disabled'};const cartelera=await uadavCarteleraOps.maintenance(env.DB);cartelera.notices=await uadavCarteleraNoticeTick(env);return {executed:true,scope:'cartelera-staging',cartelera}},async fetch(request,env,ctx){
   const url=new URL(request.url),path=url.pathname;
+  if(['/qa/cartelera-staging','/api/admin/cartelera/readiness'].includes(path)){
+   const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff'},reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers});
+   if(url.hostname!=='uadav-api-staging.uadavstream.workers.dev'||url.search)return reply({error:'Exclusivo de staging.'},403);
+   if(request.method!=='GET')return reply({error:'Consulta de solo lectura.'},405);
+   if(path==='/qa/cartelera-staging'){const nonce=crypto.randomUUID().replaceAll('-','');return new Response(UADAV_CARTELERA_CHECK_HTML.replaceAll('%%NONCE%%',nonce),{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; script-src 'nonce-"+nonce+"'; style-src 'nonce-"+nonce+"'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"}})}
+   if(request.headers.get('Origin')&&request.headers.get('Origin')!==url.origin)return reply({error:'Origen no autorizado.'},403);
+   if(!env.ADMIN_KEY||request.headers.get('Authorization')!=='Bearer '+String(env.ADMIN_KEY).trim())return reply({error:'No autorizado.'},401);
+   if(!env.DB||!env.UADAV_DB)return reply({error:'Falta D1 o KV.'},503);
+   try{return reply({...await uadavCarteleraReadiness.inspect(env.DB,env.UADAV_DB),revision:CARTELERA_REVISION,atomic_enabled:env.EVENT_ATOMIC_STAGING==='true',cron_enabled:env.CARTELERA_STAGING_CRON==='cartelera-only',mail_mode:env.CARTELERA_MAIL_STAGING==='qa-only'?'qa-only':'off',production_modified:false})}catch{return reply({error:'No se pudo comparar. No se modificaron los datos.'},503)}
+  }
   if(path.startsWith('/api/access/email/')||path==='/api/admin/access-email')return uadavAccountEmailRoute(request,env,ctx);
   if(['/qa/bolsa-cierre','/api/admin/jobs/closure-check','/api/v7/export'].includes(path))return uadavJobBackupRoute(request,env);
   if(['/qa/recuperacion-oferta','/api/admin/jobs/email-recovery-qa','/api/qa/bolsa/email-recovery/redeem'].includes(path))return uadavJobMailLiveRoute(request,env);

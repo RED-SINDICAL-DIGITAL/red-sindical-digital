@@ -2,8 +2,8 @@
   "build": "11770",
   "scope": "staging-candidate",
   "file": "worker-UADAVSTREAM-V11.7-11770.js",
-  "sha256": "3d8aab739bc8a06f940530719cb7981674a8d577e92fc6729b3240e9562b08cb",
-  "worker_tests_passed": 422,
+  "sha256": "d7737957ee3d01ceee68fdd0128802c206245a4ba127958fde59103eae0f8d00",
+  "worker_tests_passed": 426,
   "ui_tests_passed": 173,
   "production_modified": false,
   "deployed": false,
@@ -14,8 +14,9 @@
   "cartelera_mail_enabled_by_package": false,
   "mail_mode_available": "qa-only",
   "ui_tests_note": "Pruebas anteriores; esta revisión no cambia la interfaz.",
-  "revision": "cartelera-mail-uuid-20261028",
+  "revision": "11770-cartelera-cierre-20261028",
   "isolated_prior_core_d1_validated": true,
   "isolated_prior_core_real_email_received": true,
-  "isolated_evidence": "docs/CARTELERA-QA-11770-RESULTADO-20261028.json"
+  "isolated_evidence": "docs/CARTELERA-QA-11770-RESULTADO-20261028.json",
+  "readiness_route": "/qa/cartelera-staging"
 }

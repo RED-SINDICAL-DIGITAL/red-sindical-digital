@@ -4,7 +4,7 @@ Archivo único: `worker-UADAVSTREAM-V11.7-11770.js`. Es idéntico a `worker.js`;
 
 ## Resultado comprobado
 
-422 pruebas del Worker aprobadas en la revisión de correo UUID del 28/10/2026. Las 173 pruebas de interfaz corresponden a la revisión anterior; no hay cambios de interfaz en este lote. Código completo del lote: importaciones canónicas, mantenimiento D1, destacados pagos con vencimiento válido, comprobación por referencia, cola de avisos y ensayo de restauración descartable con rollback/reintento. El operador completó las tres fases en una D1 exclusiva del laboratorio y confirmó un aviso real aceptado por Brevo (HTTP 201). Evidencia: `docs/CARTELERA-QA-11770-RESULTADO-20261028.json`. La corrección UUID se verificó remotamente en el wrapper QA y ahora se incorpora al candidato operacional. El candidato revisado aún no está desplegado ni validado remotamente. El laboratorio existente y su artefacto validado se conservan sin regenerarlos con otro core.
+426 pruebas del Worker aprobadas en la revisión de correo UUID del 28/10/2026. Las 173 pruebas de interfaz corresponden a la revisión anterior; no hay cambios de interfaz en este lote. Código completo del lote: importaciones canónicas, mantenimiento D1, destacados pagos con vencimiento válido, comprobación por referencia, cola de avisos y ensayo de restauración descartable con rollback/reintento. El operador completó las tres fases en una D1 exclusiva del laboratorio y confirmó un aviso real aceptado por Brevo (HTTP 201). Evidencia: `docs/CARTELERA-QA-11770-RESULTADO-20261028.json`. La corrección UUID se verificó remotamente en el wrapper QA y ahora se incorpora al candidato operacional. El candidato revisado aún no está desplegado ni validado remotamente. El laboratorio existente y su artefacto validado se conservan sin regenerarlos con otro core.
 
 ## Cargar el archivo sin activar funciones nuevas
 
@@ -33,4 +33,17 @@ El circuito aislado tiene confirmación del operador de D1 remoto, restauración
 
 ## Revisión de correo del 28/10/2026
 
-La clave de idempotencia de Cartelera se deriva del identificador de aviso como UUID estable, usando el mismo algoritmo del laboratorio que obtuvo HTTP 201. Al aceptar un aviso se limpian error_code, next_at y lease_until. Se conserva el máximo de tres intentos y no se reenvía una aceptación persistida. SHA-256 del candidato revisado: `3d8aab739bc8a06f940530719cb7981674a8d577e92fc6729b3240e9562b08cb`. El build sigue siendo 11770; comprobar el archivo por hash, no solo por número de build. Esta revisión no cambia flags ni habilita el correo para otros usuarios.
+La clave de idempotencia de Cartelera se deriva del identificador de aviso como UUID estable, usando el mismo algoritmo del laboratorio que obtuvo HTTP 201. Al aceptar un aviso se limpian error_code, next_at y lease_until. Se conserva el máximo de tres intentos y no se reenvía una aceptación persistida. SHA-256 del candidato revisado: `d7737957ee3d01ceee68fdd0128802c206245a4ba127958fde59103eae0f8d00`. El build sigue siendo 11770; comprobar el archivo por hash, no solo por número de build. Esta revisión no cambia flags ni habilita el correo para otros usuarios.
+
+## Una pasada de comprobación operacional
+
+Revisión identificable: `11770-cartelera-cierre-20261028`. Este archivo conserva el build 11770; `/api/health` muestra `cartelera_revision` y `/api/eventos/capabilities` muestra `revision`. La revisión previa con UUID fue desplegada por el operador y salud/KV/D1 confirmadas en el chat; este candidato añade comprobación y todavía necesita desplegarse.
+
+1. Desplegar solo `releases/worker-UADAVSTREAM-V11.7-11770.js` en **uadav-api-staging**. Conservar bindings/secretos/variables. No tocar producción ni el laboratorio.
+2. Abrir `https://uadav-api-staging.uadavstream.workers.dev/qa/cartelera-staging`. Ingresar la clave Admin de staging en esa página, nunca en el chat.
+3. Pulsar **Revisar estado**. El endpoint de comparación se ejecuta antes del router principal y no inicializa ni modifica tablas. Solo devuelve cantidades y bloqueos, sin títulos ni contactos.
+4. Pulsar **Descargar respaldo privado** y confirmar en el equipo que existe el archivo. La página verifica checksum SHA-256 y snapshot D1 atómico antes de solicitar descarga. El respaldo es privado: no pegarlo en el chat.
+5. Pulsar **Copiar resultado seguro** y compartir únicamente ese JSON. Si `ready:false`, no activar el circuito ni ejecutar una migración general. No elegir automáticamente entre copias diferentes. Las diferencias no se reparan sobrescribiendo D1.
+6. Con comparación aprobada y respaldo conservado, en una ventana sin ediciones/publicaciones se puede pasar a la activación controlada exclusivamente en staging. La página no activa variables, no migra ni envía correos. La comparación no constituye un snapshot distribuido entre KV y D1.
+
+`LEGACY_EVENTS_MISSING_IN_D1`: falta copiar un registro legado antes de activar. `CONFLICTING_LEGACY_COPIES` y `LEGACY_D1_DIFFERENCES_REQUIRE_REVIEW`: hay versiones diferentes, requieren revisión explícita. `D1_ONLY_PUBLIC_EVENTS_REQUIRE_REVIEW`: activar expondría eventos adicionales. `INVALID_*`: datos inválidos, no saltar el control. `LEGACY_CHANGED_DURING_CHECK`: repetir consulta al terminar las ediciones. Ninguna de estas comprobaciones altera la Bolsa.
