@@ -4236,6 +4236,22 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       }
     }
 
+    async function mutateCanonicalEvent(before,next,{remove=false}={}) {
+      // History and the canonical mutation must either both commit or both roll back.
+      const row=await env.DB.prepare('SELECT data_json,status FROM events WHERE id=?').bind(String(before.id)).first();
+      if(!row||row.status!=='published'||JSON.stringify({...JSON.parse(row.data_json),id:before.id,estado:row.status})!==JSON.stringify(before))return {conflict:true};
+      const now=isoNow(),id=String(before.id),expected=row.data_json;
+      const version=env.DB.prepare(`INSERT INTO entity_versions(entity_type,entity_id,version,data_json,created_at)
+        SELECT 'event',?,COALESCE((SELECT MAX(version) FROM entity_versions WHERE entity_type='event' AND entity_id=?),0)+1,?,?
+        WHERE EXISTS(SELECT 1 FROM events WHERE id=? AND data_json=? AND status='published')`).bind(id,id,expected,now,id,expected);
+      const change=remove
+        ? env.DB.prepare("UPDATE events SET status='deleted',updated_at=? WHERE id=? AND data_json=? AND status='published'").bind(now,id,expected)
+        : env.DB.prepare(`UPDATE events SET title=?,category=?,city=?,province=?,country=?,venue=?,start_date=?,end_date=?,featured=?,payment_status=?,data_json=?,updated_at=? WHERE id=? AND data_json=? AND status='published'`)
+          .bind(String(next.titulo||next.nombre||'Evento'),String(next.categoria||''),String(next.ciudad||''),String(next.provincia||''),String(next.pais||'Argentina'),String(next.lugar||''),String(next.fecha_inicio||next.fecha||''),String(next.fecha_fin||''),next.destacado_pagado===true?1:0,String(next.destacado_estado||''),JSON.stringify(next),now,id,expected);
+      const result=await env.DB.batch([version,change]);
+      return {conflict:Number(result[1]?.meta?.changes)!==1};
+    }
+
     if (path === '/api/cartelera') {
       const key='cartelera_aprobada';
       if(request.method==='GET') {
@@ -4283,10 +4299,21 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       }
       if(request.method==='PUT'){
         const b=await request.json().catch(()=>({})); const list=await getArray(key); const i=list.findIndex(x=>String(x.id)===String(b.id)); if(i<0)return json({error:'Show no encontrado'},404);
-        const before={...list[i]}; const scheduleError=uadavEventScheduleError({...list[i],...b});if(scheduleError)return json({error:scheduleError},400); list[i]={...list[i],...b,id:list[i].id,estado:'published',actualizado:isoNow()}; await putJSON(key,list); await saveEntityVersion('event',list[i].id,before); const d1sync=await safeD1('sync_cartelera_update',()=>syncEventsD1([list[i]])); await audit('update_event','event',list[i].id,{}); return json({success:true,item:list[i],d1_sync:d1sync});
+        const before={...list[i]}; const scheduleError=uadavEventScheduleError({...list[i],...b});if(scheduleError)return json({error:scheduleError},400); list[i]={...list[i],...b,id:list[i].id,estado:'published',actualizado:isoNow()};
+        if(atomicEventsEnabled){
+          try{const saved=await mutateCanonicalEvent(before,list[i]);if(saved.conflict)return json({error:'El evento cambió. Actualizá la lista antes de guardar.'},409);return json({success:true,item:list[i],d1_sync:{ok:true}});}
+          catch{return json({error:'No pudimos confirmar el guardado. Actualizá la lista antes de reintentar.'},503);}
+        }
+        await putJSON(key,list); await saveEntityVersion('event',list[i].id,before); const d1sync=await safeD1('sync_cartelera_update',()=>syncEventsD1([list[i]])); await audit('update_event','event',list[i].id,{}); return json({success:true,item:list[i],d1_sync:d1sync});
       }
       if(request.method==='DELETE'){
-        const b=await request.json().catch(()=>({})); const list=await getArray(key); const item=list.find(x=>String(x.id)===String(b.id)); await putJSON(key,list.filter(x=>String(x.id)!==String(b.id))); await safeD1('delete_event',()=>atomicEventsEnabled?env.DB.prepare("UPDATE events SET status='deleted',updated_at=? WHERE id=?").bind(isoNow(),String(b.id)).run():env.DB.prepare(`DELETE FROM events WHERE id=?`).bind(String(b.id)).run()); if(item)await saveEntityVersion('event',String(b.id),item); await audit('delete_event','event',String(b.id),{}); return json({success:true});
+        const b=await request.json().catch(()=>({})); const list=await getArray(key); const item=list.find(x=>String(x.id)===String(b.id));
+        if(atomicEventsEnabled){
+          if(!item)return json({error:'Evento no encontrado'},404);
+          try{const saved=await mutateCanonicalEvent(item,null,{remove:true});if(saved.conflict)return json({error:'El evento cambió. Actualizá la lista antes de eliminar.'},409);return json({success:true});}
+          catch{return json({error:'No pudimos confirmar la eliminación. Actualizá la lista antes de reintentar.'},503);}
+        }
+        await putJSON(key,list.filter(x=>String(x.id)!==String(b.id))); await safeD1('delete_event',()=>atomicEventsEnabled?env.DB.prepare("UPDATE events SET status='deleted',updated_at=? WHERE id=?").bind(isoNow(),String(b.id)).run():env.DB.prepare(`DELETE FROM events WHERE id=?`).bind(String(b.id)).run()); if(item)await saveEntityVersion('event',String(b.id),item); await audit('delete_event','event',String(b.id),{}); return json({success:true});
       }
     }
 

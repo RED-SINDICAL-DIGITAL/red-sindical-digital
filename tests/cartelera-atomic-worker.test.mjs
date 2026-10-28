@@ -31,3 +31,27 @@ test('different concurrent events remain visible and editable when legacy arrays
   assert.equal((await request('/api/evento?id='+id)).status,404);
  }finally{f.DB.close()}
 });
+
+const adminRequest=(f,method,body)=>worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/cartelera',{method,headers:{Authorization:'Bearer test-admin','Content-Type':'application/json'},body:JSON.stringify(body)}),f.env,{});
+for(const method of ['PUT','DELETE'])test(`admin ${method} rolls back history and event when its transaction fails`,async()=>{
+ const f=fixture();try{
+  const published=await f.call(event()),id=published.body.id;
+  const original=await f.DB.prepare('SELECT data_json,status FROM events WHERE id=?').bind(id).first();
+  const batch=f.DB.batch.bind(f.DB);
+  f.DB.batch=statements=>statements.some(s=>s.sql.includes('UPDATE events SET'))?batch([...statements,f.DB.prepare('INSERT INTO missing_rollback_probe VALUES(1)')]):batch(statements);
+  const response=await adminRequest(f,method,{id,titulo:'No debe guardarse'});assert.equal(response.status,503);
+  assert.deepEqual(await f.DB.prepare('SELECT data_json,status FROM events WHERE id=?').bind(id).first(),original);
+  assert.equal((await f.DB.prepare("SELECT COUNT(*) n FROM entity_versions WHERE entity_type='event' AND entity_id=?").bind(id).first()).n,0);
+  f.DB.batch=batch;
+  assert.equal((await adminRequest(f,method,{id,titulo:'Guardado al reintentar'})).status,200);
+  assert.equal((await f.DB.prepare("SELECT COUNT(*) n FROM entity_versions WHERE entity_type='event' AND entity_id=?").bind(id).first()).n,1);
+ }finally{f.DB.close()}
+});
+test('concurrent admin edits reject the stale mutation and keep one history entry',async()=>{
+ const f=fixture();try{
+  const id=(await f.call(event())).body.id;
+  const responses=await Promise.all(['Primera','Segunda'].map(titulo=>adminRequest(f,'PUT',{id,titulo})));
+  assert.deepEqual(responses.map(r=>r.status).sort(),[200,409]);
+  assert.equal((await f.DB.prepare("SELECT COUNT(*) n FROM entity_versions WHERE entity_type='event' AND entity_id=?").bind(id).first()).n,1);
+ }finally{f.DB.close()}
+});

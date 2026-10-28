@@ -16,3 +16,11 @@ La rama experimental deja de escribir arrays compartidos durante POST /api/event
 Prueba integrada: dos publicaciones diferentes simultáneas; ambas visibles en catálogo y colecciones Admin aunque KV omita una; edición de la omitida; eliminación con copia vieja; reintento del envío eliminado sin republicación. Las pruebas existentes de error de copia y reintento ahora interrumpen la copia individual real.
 
 No se activa ni despliega esta integración. Siguen pendientes entrega de avisos, revisión de todos los caminos administrativos/importación/mantenimiento, respaldo y restauración de las nuevas referencias y comportamiento ante errores D1 en mutaciones administrativas. Las copias individuales no sustituyen un backup integral.
+
+## Mutaciones administrativas transaccionales
+
+PUT y DELETE de /api/cartelera, bajo el mismo bloqueo experimental, guardan la versión anterior y modifican el evento canónico en un único batch D1. No escriben listas KV. La comparación de la versión leída impide sobrescribir silenciosamente otra edición concurrente: responde 409 y solicita actualizar. Una excepción transaccional responde 503 sin confirmar éxito. Un evento que todavía exista únicamente en KV requiere migración antes de editarse por este circuito (409); esta limitación impide activar la integración sin completar la migración.
+
+Pruebas integradas adicionales: rollback de edición e historial, rollback de eliminación e historial, reintento posterior exitoso, dos ediciones concurrentes con un único historial y una respuesta 409. La inyección de fallo se ejecuta dentro del batch SQLite, después de las escrituras, para comprobar rollback real.
+
+Pendientes para activar: creación administrativa, migración de eventos heredados, importaciones/mantenimiento y caminos alternativos de modificación, entrega de avisos y respaldo/restauración. No se desplegó ni activó el flag experimental.
