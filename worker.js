@@ -2660,7 +2660,19 @@ const uadavWorker = {
       try { return JSON.parse(raw); } catch { return fallback; }
     };
     const putJSON = (key, value) => jobStore&&UADAV_JOB_COLLECTIONS.includes(key)?jobStore.write(key,value):env.UADAV_DB.put(key, JSON.stringify(value));
-    const getArray = (key) => getJSON(key, []);
+    const atomicEventsEnabled=env.EVENT_ATOMIC_STAGING==='true'&&url.hostname==='uadav-api-staging.uadavstream.workers.dev';
+    const getArray = async (key) => {
+      const stored=await getJSON(key, []);
+      if(!atomicEventsEnabled||!['eventos_publicados','cartelera_aprobada','eventos_pendientes'].includes(key))return stored;
+      if(!hasD1())throw Error('Event database unavailable');
+      // D1 is authoritative in the isolated experiment; KV arrays are legacy copies.
+      const rows=await env.DB.prepare('SELECT id,status,data_json FROM events').all();
+      const merged=new Map((Array.isArray(stored)?stored:[]).map(e=>[String(e.id),e]));
+      for(const row of rows.results||[])merged.set(String(row.id),{...JSON.parse(row.data_json),id:row.id,estado:row.status});
+      return [...merged.values()].filter(e=>key==='eventos_pendientes'
+        ? e.estado==='pending'||(e.estado==='published'&&e.destacado_solicitado===true)
+        : e.estado==='published');
+    };
     const getObject = (key) => getJSON(key, {});
     // Request-local configuration: the same flags govern API and public UI.
     let platformConfigPromise;
@@ -4174,8 +4186,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
             if(saved.status==='conflict')return json({error:'Este envío ya corresponde a otros datos. Revisá la publicación antes de continuar.'},409);
             const current=saved.event;
             if(current.estado!=='published')return json({success:true,id:current.id,item:current,mode:'previously_processed'});
-            for(const key of ['eventos_publicados','cartelera_aprobada']){const list=await getArray(key);const idx=list.findIndex(x=>String(x.id)===String(current.id));if(idx<0)list.push(current);await putJSON(key,list.slice(-2000));}
-            if(current.destacado_solicitado===true){const list=await getArray('eventos_pendientes');if(!list.some(x=>String(x.id)===String(current.id)))list.push(current);await putJSON('eventos_pendientes',list.slice(-1000));}
+            await env.UADAV_DB.put('event-publication-snapshot:v1:'+current.id,JSON.stringify(current));
             // Los avisos ya quedaron en la cola D1 dentro de la misma transacción.
 
             return json({success:true,id:current.id,item:current,mode:current.destacado_solicitado===true?'auto_published_feature_review':'auto_published'});
@@ -4275,7 +4286,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         const before={...list[i]}; const scheduleError=uadavEventScheduleError({...list[i],...b});if(scheduleError)return json({error:scheduleError},400); list[i]={...list[i],...b,id:list[i].id,estado:'published',actualizado:isoNow()}; await putJSON(key,list); await saveEntityVersion('event',list[i].id,before); const d1sync=await safeD1('sync_cartelera_update',()=>syncEventsD1([list[i]])); await audit('update_event','event',list[i].id,{}); return json({success:true,item:list[i],d1_sync:d1sync});
       }
       if(request.method==='DELETE'){
-        const b=await request.json().catch(()=>({})); const list=await getArray(key); const item=list.find(x=>String(x.id)===String(b.id)); await putJSON(key,list.filter(x=>String(x.id)!==String(b.id))); await safeD1('delete_event',()=>env.DB.prepare(`DELETE FROM events WHERE id=?`).bind(String(b.id)).run()); if(item)await saveEntityVersion('event',String(b.id),item); await audit('delete_event','event',String(b.id),{}); return json({success:true});
+        const b=await request.json().catch(()=>({})); const list=await getArray(key); const item=list.find(x=>String(x.id)===String(b.id)); await putJSON(key,list.filter(x=>String(x.id)!==String(b.id))); await safeD1('delete_event',()=>atomicEventsEnabled?env.DB.prepare("UPDATE events SET status='deleted',updated_at=? WHERE id=?").bind(isoNow(),String(b.id)).run():env.DB.prepare(`DELETE FROM events WHERE id=?`).bind(String(b.id)).run()); if(item)await saveEntityVersion('event',String(b.id),item); await audit('delete_event','event',String(b.id),{}); return json({success:true});
       }
     }
 

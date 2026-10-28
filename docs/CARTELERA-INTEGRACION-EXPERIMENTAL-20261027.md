@@ -8,3 +8,11 @@ Pendientes que impiden activar el circuito: recuperación fiable de los avisos c
 
 ## Actualización: cola de avisos integrada
 El Worker experimental incorpora el componente actualizado: evento, intención y avisos se insertan en el mismo batch D1, con identificadores de aviso deterministas. Se eliminó la emisión separada después de la copia KV en esa ruta. La prueba del Worker completo provoca una interrupción de KV y verifica un solo aviso antes y después del reintento. Esto resuelve el registro durable del aviso en la ruta experimental; no verifica envío por proveedor, cron ni entrega al destinatario. La integración continúa desactivada. Sigue pendiente la concurrencia de copias de eventos distintos y el circuito de entrega/reintento de avisos.
+
+## Continuación: catálogo canónico y publicaciones concurrentes
+
+La rama experimental deja de escribir arrays compartidos durante POST /api/eventos. Cada evento tiene una copia independiente `event-publication-snapshot:v1:<id>`; D1 conserva el registro canónico y los avisos transaccionales. Los lectores de las tres colecciones de eventos superponen el estado actual D1 a las copias heredadas de KV, exclusivamente con EVENT_ATOMIC_STAGING=true y el hostname exacto de staging. Una baja administrativa conserva una marca deleted en D1, evitando que una copia vieja o un reintento de publicación reactive el evento.
+
+Prueba integrada: dos publicaciones diferentes simultáneas; ambas visibles en catálogo y colecciones Admin aunque KV omita una; edición de la omitida; eliminación con copia vieja; reintento del envío eliminado sin republicación. Las pruebas existentes de error de copia y reintento ahora interrumpen la copia individual real.
+
+No se activa ni despliega esta integración. Siguen pendientes entrega de avisos, revisión de todos los caminos administrativos/importación/mantenimiento, respaldo y restauración de las nuevas referencias y comportamiento ante errores D1 en mutaciones administrativas. Las copias individuales no sustituyen un backup integral.
