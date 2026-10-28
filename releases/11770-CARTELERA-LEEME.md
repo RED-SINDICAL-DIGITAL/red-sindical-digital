@@ -4,7 +4,7 @@ Archivo único: `worker-UADAVSTREAM-V11.7-11770.js`. Es idéntico a `worker.js`;
 
 ## Resultado comprobado
 
-415 pruebas del Worker y 173 de interfaz aprobadas. Código completo del lote: importaciones canónicas, mantenimiento D1, destacados pagos con vencimiento válido, comprobación por referencia, cola de avisos y ensayo de restauración descartable con rollback/reintento. No se enviaron correos reales ni se modificó una base remota en esta revisión.
+422 pruebas del Worker aprobadas en la revisión de correo UUID del 28/10/2026. Las 173 pruebas de interfaz corresponden a la revisión anterior; no hay cambios de interfaz en este lote. Código completo del lote: importaciones canónicas, mantenimiento D1, destacados pagos con vencimiento válido, comprobación por referencia, cola de avisos y ensayo de restauración descartable con rollback/reintento. El operador completó las tres fases en una D1 exclusiva del laboratorio y confirmó un aviso real aceptado por Brevo (HTTP 201). Evidencia: `docs/CARTELERA-QA-11770-RESULTADO-20261028.json`. La corrección UUID se verificó remotamente en el wrapper QA y ahora se incorpora al candidato operacional. El candidato revisado aún no está desplegado ni validado remotamente. El laboratorio existente y su artefacto validado se conservan sin regenerarlos con otro core.
 
 ## Cargar el archivo sin activar funciones nuevas
 
@@ -29,4 +29,8 @@ Los avisos permanecen desactivados. `CARTELERA_MAIL_STAGING=qa-only` permite env
 
 ## Alcance del cierre
 
-El lote está probado localmente y preparado para su validación en Cloudflare. No certifica D1 remoto, recepción real del nuevo aviso ni restauración operativa de toda la plataforma. No modifica producción, no activa recuperación histórica de ofertas, no reactiva ArtistaPRO y no convierte un comprobante de pago en aprobación automática.
+El circuito aislado tiene confirmación del operador de D1 remoto, restauración con rollback y correo recibido. El candidato operacional revisado está probado localmente; falta desplegarlo en `uadav-api-staging` y verificar su salud. No certifica restauración operativa de toda la plataforma ni entrega general a usuarios. No modifica producción, no activa recuperación histórica de ofertas, no reactiva ArtistaPRO y no convierte un comprobante de pago en aprobación automática.
+
+## Revisión de correo del 28/10/2026
+
+La clave de idempotencia de Cartelera se deriva del identificador de aviso como UUID estable, usando el mismo algoritmo del laboratorio que obtuvo HTTP 201. Al aceptar un aviso se limpian error_code, next_at y lease_until. Se conserva el máximo de tres intentos y no se reenvía una aceptación persistida. SHA-256 del candidato revisado: `3d8aab739bc8a06f940530719cb7981674a8d577e92fc6729b3240e9562b08cb`. El build sigue siendo 11770; comprobar el archivo por hash, no solo por número de build. Esta revisión no cambia flags ni habilita el correo para otros usuarios.

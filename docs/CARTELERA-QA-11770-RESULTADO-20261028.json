@@ -1,0 +1,31 @@
+{
+  "scope": "cartelera-isolated-11770",
+  "version": "11770-cartelera-qa-1",
+  "core_sha256": "4c24a50c6eaea09e24809feddcb59fcd4690436350248877a5cf9d7c2db12060",
+  "phase": 3,
+  "phases": 3,
+  "synthetic_complete": true,
+  "complete": true,
+  "counts": {
+    "events": 3,
+    "event_publication_intents": 2,
+    "notifications": 3,
+    "entity_versions": 3,
+    "event_notification_dispatch": 1
+  },
+  "provider_accepted": true,
+  "mail_state": "accepted",
+  "real_email_received": true,
+  "receipt_confirmation": "operator",
+  "operational_routes_exposed": false,
+  "mail_diagnostic": {
+    "http_status": 201,
+    "provider_code": "unavailable",
+    "reason": "accepted"
+  },
+  "mail_error_code": "MAIL_REJECTED",
+  "mail_attempts": 3,
+  "mail_retry_after": "2026-10-28T16:45:20.845Z",
+  "evidence_source": "Resultado seguro compartido por el operador en el chat el 2026-10-28. No es una lectura remota independiente del agente.",
+  "note": "error_code y retry_after son residuos anteriores; prevalece accepted. La corrección UUID estaba en el wrapper QA, no en el core original. No certifica el despliegue del candidato operacional revisado."
+}

@@ -1,6 +1,10 @@
 const uadavCarteleraNotices=(()=>{
 /* A confirmed receipt is durable; ambiguous sends require review, never blind replay. */
 const schema="CREATE TABLE IF NOT EXISTS event_notification_dispatch(notification_id TEXT PRIMARY KEY,state TEXT NOT NULL,owner TEXT,lease_until INTEGER NOT NULL DEFAULT 0,attempts INTEGER NOT NULL DEFAULT 0,next_at INTEGER NOT NULL DEFAULT 0,provider_id TEXT,error_code TEXT,updated_at TEXT NOT NULL)";
+async function idempotencyKey(notificationId){
+ const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('cartelera-notice:'+notificationId))),b=>b.toString(16).padStart(2,'0')).join('');
+ return digest.slice(0,8)+'-'+digest.slice(8,12)+'-4'+digest.slice(13,16)+'-'+((parseInt(digest[16],16)&3)|8).toString(16)+digest.slice(17,20)+'-'+digest.slice(20,32);
+}
 async function dispatch(db,send,{now=Date.now(),limit=20,allowedRecipient}={}){
  if(typeof send!=='function'||!allowedRecipient)return {enabled:false,sent:0,blocked:0,uncertain:0};
  await db.prepare(schema).run();
@@ -16,13 +20,13 @@ async function dispatch(db,send,{now=Date.now(),limit=20,allowedRecipient}={}){
   try{receipt=await send({id:row.id,to:row.recipient,payload:JSON.parse(row.payload_json)});if(receipt?.skipped===true){await db.batch([db.prepare("UPDATE event_notification_dispatch SET state='cancelled',owner=NULL,error_code='EVENT_NOT_PUBLIC',updated_at=? WHERE notification_id=? AND owner=?").bind(stamp,row.id,owner),db.prepare("UPDATE notifications SET status='cancelled' WHERE id=? AND EXISTS(SELECT 1 FROM event_notification_dispatch WHERE notification_id=? AND state='cancelled')").bind(row.id,row.id)]);continue}if(!receipt||typeof receipt.id!=='string')throw Error('No confirmed receipt')}
   catch(e){const retry=['MAIL_RATE_LIMIT','MAIL_QUOTA','MAIL_CONFIGURATION','MAIL_REJECTED'].includes(e?.code);await db.prepare("UPDATE event_notification_dispatch SET state=?,owner=NULL,next_at=?,error_code=?,updated_at=? WHERE notification_id=? AND owner=?").bind(retry?'retry':'uncertain',now+900000,retry?e.code:'DELIVERY_UNCONFIRMED',stamp,row.id,owner).run();if(!retry)uncertain++;continue}
   // Store provider acceptance first. A later notification-status write may be retried without sending.
-  await db.prepare("UPDATE event_notification_dispatch SET state='accepted',provider_id=?,owner=NULL,updated_at=? WHERE notification_id=? AND owner=?").bind(receipt.id,stamp,row.id,owner).run();
+  await db.prepare("UPDATE event_notification_dispatch SET state='accepted',provider_id=?,owner=NULL,error_code=NULL,next_at=0,lease_until=0,updated_at=? WHERE notification_id=? AND owner=?").bind(receipt.id,stamp,row.id,owner).run();
   await db.prepare("UPDATE notifications SET status='sent',sent_at=? WHERE id=? AND EXISTS(SELECT 1 FROM event_notification_dispatch WHERE notification_id=? AND state='accepted')").bind(stamp,row.id,row.id).run();sent++;
  }
  await db.prepare("UPDATE notifications SET status='sent',sent_at=COALESCE(sent_at,?) WHERE status='queued' AND EXISTS(SELECT 1 FROM event_notification_dispatch d WHERE d.notification_id=notifications.id AND d.state='accepted')").bind(new Date(now).toISOString()).run();
  return {enabled:true,sent,blocked,uncertain};
 }
-return {schema,dispatch};
+return {schema,dispatch,idempotencyKey};
 
 })();
 const uadavCarteleraOps=(()=>{
@@ -609,7 +613,7 @@ async function uadavCarteleraNoticeTick(env){
   if(!/^[-A-Za-z0-9_]{1,120}$/.test(id))throw Object.assign(Error('Invalid event'),{code:'MAIL_REJECTED'});
   const current=await env.DB.prepare('SELECT status FROM events WHERE id=?').bind(id).first();if(!current||current.status!=='published')return {skipped:true};
   const text=n.payload.template==='event_featured_requested'?'La solicitud de destacado está pendiente de presupuesto y verificación del pago. No se activó una promoción paga.':'Tu evento está publicado.';
-  const body=JSON.stringify({sender:{email:'acceso@correo-staging.uadavstream.com.ar',name:'UADAV STREAM · staging'},to:[{email:n.to}],headers:{idempotencyKey:n.id},subject:'Cartelera · '+title,textContent:text+'\n'+title+'\nhttps://uadav-stream-staging.pages.dev/evento.html?id='+encodeURIComponent(id)});
+  const body=JSON.stringify({sender:{email:'acceso@correo-staging.uadavstream.com.ar',name:'UADAV STREAM · staging'},to:[{email:n.to}],headers:{idempotencyKey:await uadavCarteleraNotices.idempotencyKey(n.id)},subject:'Cartelera · '+title,textContent:text+'\n'+title+'\nhttps://uadav-stream-staging.pages.dev/evento.html?id='+encodeURIComponent(id)});
   return uadavAccountEmail.uadavBrevoRequest({mode:'staging-only',apiKey:env.BREVO_API_KEY,body});
  },{allowedRecipient:env.BREVO_QA_RECIPIENT});
 }
