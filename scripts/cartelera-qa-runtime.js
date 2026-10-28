@@ -69,11 +69,27 @@ async function cqaMail(env,state){
  cqaNeed(state.phase===3,'QA_SYNTHETIC_FIRST');cqaNeed(/^[A-Za-z0-9._-]{32,512}$/.test(env.BREVO_API_KEY||'')&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(env.BREVO_QA_RECIPIENT||''),'QA_MAIL_CONFIGURATION');
  const core=cqaCoreEnv(env),body={...cqaEvent('qa11770-mail-reference','QA Cartelera 11770 · Aviso de publicación'),contacto_email:env.BREVO_QA_RECIPIENT};
  const published=await cqaCall(core,'eventos','POST',body);cqaNeed(published.status===200,'QA_MAIL_EVENT');
- Object.assign(core,{CARTELERA_MAIL_STAGING:'qa-only',BREVO_API_KEY:env.BREVO_API_KEY,BREVO_QA_RECIPIENT:env.BREVO_QA_RECIPIENT});await uadavCarteleraNoticeTick(core);
- const row=await core.DB.prepare("SELECT d.state FROM event_notification_dispatch d JOIN notifications n ON n.id=d.notification_id WHERE n.id=?").bind('N-EVENT-'+published.body.id+'-event_published').first();
- return {...state,mail_attempted:true,provider_accepted:row?.state==='accepted',mail_state:row?.state||'not_confirmed'};
+ let diagnostic=state.mail_diagnostic||null;
+ await uadavCarteleraNotices.dispatch(core.DB,async n=>{
+  const id=String(n.payload?.payload?.id||'');cqaNeed(/^[-A-Za-z0-9_]{1,120}$/.test(id),'QA_MAIL_EVENT_ID');
+  const current=await core.DB.prepare('SELECT status FROM events WHERE id=?').bind(id).first();if(current?.status!=='published')return {skipped:true};
+  const title=String(n.payload?.payload?.titulo||'Evento').slice(0,180);
+  const body=JSON.stringify({sender:{email:'acceso@correo-staging.uadavstream.com.ar',name:'UADAV STREAM · staging'},to:[{email:n.to}],headers:{idempotencyKey:n.id},subject:'Cartelera · '+title,textContent:'Tu evento está publicado.\n'+title+'\nhttps://uadav-stream-staging.pages.dev/evento.html?id='+encodeURIComponent(id)});
+  return uadavAccountEmail.uadavBrevoRequest({mode:'staging-only',apiKey:env.BREVO_API_KEY,body,fetchImpl:async request=>{
+   const response=await fetch(request);diagnostic={http_status:response.status,provider_code:'unavailable',reason:'unknown'};
+   if(response.status!==201){
+    const reader=response.clone().body?.getReader();let bytes=0,chunks=[];
+    if(reader)try{for(;;){const part=await reader.read();if(part.done)break;bytes+=part.value.byteLength;if(bytes>8192)break;chunks.push(part.value)}if(bytes<=8192){const buffer=new Uint8Array(bytes);let offset=0;for(const chunk of chunks){buffer.set(chunk,offset);offset+=chunk.length}const data=JSON.parse(new TextDecoder().decode(buffer));
+     const allowed=['invalid_parameter','missing_parameter','unauthorized','permission_denied','not_enough_credits','duplicate_parameter','account_under_validation','document_not_found','method_not_allowed'];if(allowed.includes(data.code))diagnostic.provider_code=data.code;
+     const message=String(data.message||'').toLowerCase();diagnostic.reason=/idempotenc/.test(message)?'idempotency':/sender|exp.diteur|remitente/.test(message)?'sender':/unrecogni[sz]ed|whitelist|ip address|unauthori[sz]ed ip/.test(message)?'ip_authorization':/htmlcontent|textcontent|content|subject/.test(message)?'message_content':/recipient|email address|email is/.test(message)?'recipient':/api.key|authentication/.test(message)?'authentication':/activat|validat|suspend|account/.test(message)?'account_status':'unknown';
+    }}catch{}finally{if(reader)await reader.cancel().catch(()=>{})}
+   }else diagnostic.reason='accepted';return response;
+  }});
+ },{allowedRecipient:env.BREVO_QA_RECIPIENT});
+ const row=await core.DB.prepare("SELECT d.state,d.error_code,d.attempts,d.next_at FROM event_notification_dispatch d JOIN notifications n ON n.id=d.notification_id WHERE n.id=?").bind('N-EVENT-'+published.body.id+'-event_published').first();
+ return {...state,mail_attempted:true,provider_accepted:row?.state==='accepted',mail_state:row?.state||'not_confirmed',mail_diagnostic:diagnostic,mail_error_code:row?.error_code||null,mail_attempts:row?.attempts||0,mail_retry_after:row?.next_at?new Date(row.next_at).toISOString():null};
 }
-function cqaReport(state){return{scope:'cartelera-isolated-11770',version:'11770-cartelera-qa-1',core_sha256:CQA_CORE_SHA,phase:state?.phase||0,phases:3,synthetic_complete:state?.phase===3,complete:state?.phase===3&&state?.provider_accepted===true&&state?.real_email_received===true,checks:state?.checks||[],counts:state?.counts||null,mail_attempted:state?.mail_attempted===true,provider_accepted:state?.provider_accepted===true,mail_state:state?.mail_state||'not_sent',real_email_received:state?.real_email_received===true,receipt_confirmation:state?.real_email_received?'operator':'pending',operational_routes_exposed:false}}
+function cqaReport(state){return{scope:'cartelera-isolated-11770',version:'11770-cartelera-qa-1',core_sha256:CQA_CORE_SHA,phase:state?.phase||0,phases:3,synthetic_complete:state?.phase===3,complete:state?.phase===3&&state?.provider_accepted===true&&state?.real_email_received===true,checks:state?.checks||[],counts:state?.counts||null,mail_attempted:state?.mail_attempted===true,provider_accepted:state?.provider_accepted===true,mail_state:state?.mail_state||'not_sent',real_email_received:state?.real_email_received===true,receipt_confirmation:state?.real_email_received?'operator':'pending',operational_routes_exposed:false,mail_diagnostic:state?.mail_diagnostic||null,mail_error_code:state?.mail_error_code||null,mail_attempts:state?.mail_attempts||0,mail_retry_after:state?.mail_retry_after||null}}
 const cqaWorker={async scheduled(){return{executed:false,reason:'isolated-qa-only'}},async fetch(request,env){
  const url=new URL(request.url),headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'},reply=(b,s=200)=>new Response(JSON.stringify(b),{status:s,headers});
  if(url.hostname!==CQA_HOST||url.search)return reply({error:'QA_HOST'},403);
