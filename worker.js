@@ -1,3 +1,42 @@
+const uadavAdvertisingPolicy=(()=>{
+
+ const durations=[7,15,30],products=[];
+ for(const [key,name,entity,placement,prices] of [
+  ['cartelera','Destacado en Cartelera','event','cartelera_slider',[5000,9000,15000]],
+  ['hero','Hero de Explorar','artist_or_event','hero',[12000,22000,36000]],
+  ['combo','Hero + Cartelera','event','hero_cartelera',[15000,28000,45000]]])
+  durations.forEach((days,i)=>products.push({id:`UADAV-LAUNCH-${key}-${days}`,name:`${name} · ${days} días`,entity_type:entity,placement,duration_days:days,amount:prices[i],currency:'ARS',price_label:'ARS '+prices[i].toLocaleString('es-AR'),active:false}));
+ for(const [key,name,entity,placement,amount,from] of [
+  ['radio','Radio destacada','radio','radio_partner',20000,false],
+  ['banner','Banner entre secciones','brand','infeed',30000,false],
+  ['sponsor','Auspicio de sección','brand','section_sponsor',50000,true]])
+  products.push({id:`UADAV-LAUNCH-${key}-30`,name,entity_type:entity,placement,duration_days:30,amount,currency:'ARS',price_from:from,price_label:(from?'Desde ':'')+'ARS '+amount.toLocaleString('es-AR'),active:false});
+ const provinces=['Buenos Aires','Ciudad Autónoma de Buenos Aires','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'];
+ const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
+ function targetIssue(x){
+  if(!['national','province','city','international'].includes(x.target_scope))return 'Elegí el alcance territorial de la campaña.';
+  if(x.target_scope==='international')return '';
+  if(!/^[A-Z]{2}$/.test(String(x.target_country||'')))return 'Indicá el país con dos letras, por ejemplo AR.';
+  if(['province','city'].includes(x.target_scope)&&!String(x.target_province||'').trim())return 'Indicá la provincia de la campaña.';
+  if(x.target_scope==='city'&&!String(x.target_city||'').trim())return 'Indicá la ciudad de la campaña.';
+  if(x.target_country==='AR'&&['province','city'].includes(x.target_scope)&&!provinces.some(p=>norm(p)===norm(x.target_province)))return 'Elegí una provincia argentina válida.';
+  return '';
+ }
+ function matchesTerritory(c,viewer={}){
+  if(targetIssue(c))return false;
+  if(c.target_scope==='international')return true;
+  if(norm(c.target_country)!==norm(viewer.country))return false;
+  if(['province','city'].includes(c.target_scope)&&norm(c.target_province)!==norm(viewer.province))return false;
+  if(c.target_scope==='city'&&norm(c.target_city)!==norm(viewer.city))return false;
+  return true;
+ }
+ function validDay(v){return /^\d{4}-\d{2}-\d{2}$/.test(String(v||''))&&Number.isFinite(Date.parse(v+'T12:00:00Z'))&&new Date(v+'T12:00:00Z').toISOString().slice(0,10)===v}
+ function eligible(c,viewer,now=Date.now()){
+  return c.status==='active'&&['paid','waived'].includes(c.payment_status)&&c.delivery_verified===true&&validDay(c.starts_at)&&validDay(c.ends_at)&&c.starts_at<=c.ends_at&&Date.parse(c.starts_at+'T00:00:00-03:00')<=now&&Date.parse(c.ends_at+'T23:59:59.999-03:00')>=now&&matchesTerritory(c,viewer);
+ }
+ const policy={version:'2026-10-27-launch',currency:'ARS',memberships:false,automaticRenewal:false,heroMaxCommercialCampaigns:3,products,provinces,targetIssue,matchesTerritory,validDay,eligible};
+ return policy;
+})();
 const uadavAtomicEventLab=(()=>{
 /* Experimental staging component. Not connected to Worker routes. */
 const schema=`CREATE TABLE IF NOT EXISTS event_publication_intents (request_id TEXT PRIMARY KEY, payload_hash TEXT NOT NULL, event_id TEXT NOT NULL UNIQUE, event_json TEXT NOT NULL, created_at TEXT NOT NULL);`;
@@ -7029,16 +7068,18 @@ async function saveEntityVersion(type,id,data){
       if(request.method==='PUT'){if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));const list=await getArray('ticket_orders');const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Orden no encontrada'},404);list[i]={...list[i],status:String(b.status||list[i].status),payment_status:String(b.payment_status||list[i].payment_status),updated_at:isoNow()};await putJSON('ticket_orders',list);return json({success:true,item:list[i]});}
     }
 
+    if(path==='/api/advertising/policy'&&request.method==='GET')return json({version:uadavAdvertisingPolicy.version,currency:uadavAdvertisingPolicy.currency,memberships:false,automatic_renewal:false,products:uadavAdvertisingPolicy.products,territorial_campaigns:true,delivery_requires_verification:true});
+
     if(path==='/api/monetization/products'){
       const list=await getArray('monetization_products');if(request.method==='GET')return json(list);if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));
-      if(request.method==='POST'){const item={id:String(b.id||makeId('PROD')),name:String(b.name||'Producto'),entity_type:String(b.entity_type||'event'),placement:String(b.placement||'featured'),duration_days:Number(b.duration_days||7),price_label:String(b.price_label||'A convenir'),active:b.active!==false,created_at:isoNow(),updated_at:isoNow()};list.push(item);await putJSON('monetization_products',list);return json({success:true,item});}
+      if(request.method==='POST'){const item={id:String(b.id||makeId('PROD')),name:String(b.name||'Producto'),entity_type:String(b.entity_type||'event'),placement:String(b.placement||'featured'),duration_days:Number(b.duration_days||7),price_label:String(b.price_label||'A convenir'),amount:Number(b.amount)||0,currency:'ARS',price_from:b.price_from===true,active:b.active!==false,created_at:isoNow(),updated_at:isoNow()};list.push(item);await putJSON('monetization_products',list);return json({success:true,item});}
       if(request.method==='PUT'){const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Producto no encontrado'},404);list[i]={...list[i],...b,id:list[i].id,updated_at:isoNow()};await putJSON('monetization_products',list);return json({success:true,item:list[i]});}
       if(request.method==='DELETE'){await putJSON('monetization_products',list.filter(x=>String(x.id)!==String(b.id)));return json({success:true});}
     }
     if(path==='/api/monetization/campaigns'){
-      const list=await getArray('monetization_campaigns');if(request.method==='GET'){const pub=url.searchParams.get('public')==='true';if(pub){const now=Date.now();return json(list.filter(x=>{const start=Date.parse(String(x.starts_at||'')+'T00:00:00Z'),end=Date.parse(String(x.ends_at||'')+'T23:59:59.999Z');return x.status==='active'&&x.payment_status==='paid'&&Number.isFinite(start)&&Number.isFinite(end)&&start<=now&&end>now}))}if(!isAdmin())return json({error:'No autorizado'},401);return json(list);}if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));
-      const validateActive=item=>{if(item.status!=='active')return '';if(!['paid','waived'].includes(item.payment_status))return 'Para activar la campaña, registrá el pago o marcala como bonificada.';const validDate=value=>/^\d{4}-\d{2}-\d{2}$/.test(String(value||''))&&Number.isFinite(Date.parse(String(value)+'T00:00:00Z'));if(!validDate(item.starts_at)||!validDate(item.ends_at))return 'Una campaña activa necesita fecha de inicio y de fin.';if(Date.parse(item.ends_at+'T00:00:00Z')<=Date.parse(item.starts_at+'T00:00:00Z'))return 'La fecha de fin debe ser posterior al inicio.';return '';};
-      if(request.method==='POST'){const item={id:String(b.id||makeId('CAMP')),product_id:String(b.product_id||''),entity_type:String(b.entity_type||'event'),entity_id:String(b.entity_id||''),placement:String(b.placement||'featured'),status:String(b.status||'pending'),payment_status:String(b.payment_status||'pending'),starts_at:String(b.starts_at||''),ends_at:String(b.ends_at||''),notes:String(b.notes||''),created_at:isoNow(),updated_at:isoNow()};const issue=validateActive(item);if(issue)return json({error:issue},400);list.unshift(item);await putJSON('monetization_campaigns',list);return json({success:true,item});}
+      const list=await getArray('monetization_campaigns');if(request.method==='GET'){const pub=url.searchParams.get('public')==='true';if(pub){const manual=['country','province','city'].some(k=>url.searchParams.has(k)),viewer=manual?{country:url.searchParams.get('country')||'',province:url.searchParams.get('province')||'',city:url.searchParams.get('city')||''}:{country:request.cf?.country||'',province:request.cf?.region||'',city:request.cf?.city||''};return json(list.filter(x=>uadavAdvertisingPolicy.eligible(x,viewer)).map(x=>({id:x.id,entity_type:x.entity_type,entity_id:x.entity_id,placement:x.placement,starts_at:x.starts_at,ends_at:x.ends_at,label:'Publicidad'})))}if(!isAdmin())return json({error:'No autorizado'},401);return json(list);}if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));
+      const validateActive=item=>{if(!Number.isFinite(Number(item.quoted_amount||0))||Number(item.quoted_amount||0)<0)return 'Revisá el importe acordado.';const product=uadavAdvertisingPolicy.products.find(p=>p.id===item.product_id);if(product&&product.placement!==item.placement)return 'La ubicación no coincide con el producto contratado.';if(product?.price_from&&Number(item.quoted_amount||0)<product.amount)return 'El importe es inferior al mínimo del auspicio.';if(item.placement==='artist_pro')return 'Las membresías para artistas fueron retiradas.';const targetIssue=uadavAdvertisingPolicy.targetIssue(item);if(targetIssue)return targetIssue;if(item.status!=='active')return '';if(item.delivery_verified!==true)return 'Verificá la entrega en la ubicación contratada antes de activar.';if(!['paid','waived'].includes(item.payment_status))return 'Para activar la campaña, registrá el pago o marcala como bonificada.';if(!uadavAdvertisingPolicy.validDay(item.starts_at)||!uadavAdvertisingPolicy.validDay(item.ends_at))return 'Una campaña activa necesita fechas válidas de inicio y fin.';if(item.ends_at<item.starts_at)return 'La fecha de fin no puede ser anterior al inicio.';return '';};
+      if(request.method==='POST'){const item={id:String(b.id||makeId('CAMP')),product_id:String(b.product_id||''),buyer_type:String(b.buyer_type||'').slice(0,40),quoted_amount:Number(b.quoted_amount)||0,currency:'ARS',entity_type:String(b.entity_type||'event'),entity_id:String(b.entity_id||''),placement:String(b.placement||'featured'),status:String(b.status||'pending'),payment_status:String(b.payment_status||'pending'),starts_at:String(b.starts_at||''),ends_at:String(b.ends_at||''),notes:String(b.notes||'').slice(0,3000),target_scope:String(b.target_scope||''),target_country:String(b.target_country||'').toUpperCase(),target_province:String(b.target_province||'').slice(0,120),target_city:String(b.target_city||'').slice(0,120),delivery_verified:b.delivery_verified===true,created_at:isoNow(),updated_at:isoNow()};const issue=validateActive(item);if(issue)return json({error:issue},400);list.unshift(item);await putJSON('monetization_campaigns',list);return json({success:true,item});}
       if(request.method==='PUT'){const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Campaña no encontrada'},404);const item={...list[i],...b,id:list[i].id,updated_at:isoNow()},issue=validateActive(item);if(issue)return json({error:issue},400);list[i]=item;await putJSON('monetization_campaigns',list);return json({success:true,item});}
       if(request.method==='DELETE'){await putJSON('monetization_campaigns',list.filter(x=>String(x.id)!==String(b.id)));return json({success:true});}
     }
