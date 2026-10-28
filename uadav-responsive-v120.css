@@ -182,7 +182,7 @@
  body[data-page="cartelera"] .quick{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
  body[data-page="cartelera"] .quick .chip{flex:none;white-space:nowrap!important;font-size:12px!important}
  body[data-page="cartelera"] .events-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px;min-width:0}
- body[data-page="cartelera"] .event-card{min-width:0;border-radius:14px}
+ body[data-page="cartelera"] .event-card{display:block;min-width:0;border-radius:14px}
  body[data-page="cartelera"] .event-card>a{display:grid;grid-template-columns:96px minmax(0,1fr);height:100%}
  body[data-page="cartelera"] .event-media{aspect-ratio:auto;height:100%;min-height:160px}
  body[data-page="cartelera"] .event-media img{object-fit:contain;object-position:center;background:#060b13}
@@ -299,4 +299,10 @@
  body[data-page="app"] #mobile button{font-size:11px!important;line-height:1.25}
  body[data-page="app"] #top .searchbox{width:46px;height:46px}
  body[data-page="app"] #top .searchbox button{width:44px;height:44px;min-height:44px}
+}
+
+/* Keep small-screen filters full width; cards have one grid, on the link. */
+@media screen and (max-width:430px){
+ body[data-page="cartelera"] .filters{grid-template-columns:minmax(0,1fr)!important}
+ body[data-page="cartelera"] .filters>input,body[data-page="cartelera"] .filters>select{width:100%}
 }
