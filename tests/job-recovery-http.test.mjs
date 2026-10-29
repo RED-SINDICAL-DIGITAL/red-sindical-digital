@@ -18,3 +18,11 @@ test('HTTP boundary composes with real SQLite outbox and atomic credential rotat
   const candidate={job_id:body.job_id,token:delivered.token,new_secret:fresh};const a=await post('restablecer',candidate),b=await post('restablecer',candidate);assert.equal(a.status,200,await a.clone().text());assert.equal(b.status,200);const row=await DB.prepare('SELECT revision,secret_hash FROM job_owner_credentials WHERE job_id=?').bind(body.job_id).first();assert.equal(row.revision,2);assert.equal(row.secret_hash,await digest(fresh));assert.equal((await post('restablecer',{...candidate,new_secret:'f'.repeat(64)})).status,400);
  }finally{DB.close()}
 });
+
+test('runtime expiry and throttling keep their safe status instead of a retryable server error',async()=>{
+ for(const [fault,expected] of [[{liveStatus:400},400],[{liveStatus:429},429],[{status:400},400],[{status:429},429],[{liveStatus:409},503],[{liveStatus:403},503],[{},503]]){
+  const route=createJobRecoveryHttp({configuredRecipient:()=>body.email,hash:async()=> 'a'.repeat(64),getEngine:async()=>{throw Object.assign(Error('private diagnostic'),fault)}});
+  const r=await route(new Request(API+'/api/bolsa_trabajo/acceso/restablecer',{method:'POST',headers:{Origin:PAGES,'Content-Type':'application/json'},body:JSON.stringify({job_id:body.job_id,token:'a'.repeat(64),new_secret:'b'.repeat(64)})}),env);
+  assert.equal(r.status,expected);const text=await r.text();assert(!text.includes('private diagnostic'));if(expected===400)assert(text.includes('vencido'));if(expected===429)assert(text.includes('Esperá'));
+ }
+});
