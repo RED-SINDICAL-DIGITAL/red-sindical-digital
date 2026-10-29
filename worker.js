@@ -2132,12 +2132,14 @@ function createJobRecoveryOutbox({db,encryptionKey,mode,clock=Date.now,timeoutMs
    return accepted();
   }catch(error){throw fail(safeCode(error))}
  }
- async function dispatch(adapter){
+ async function dispatch(adapter,selection){
+  // A scoped caller must never fall back to another queued request.
+  need(selection===undefined||(selection&&typeof selection==='object'&&!Array.isArray(selection)&&Object.keys(selection).length===2&&Object.hasOwn(selection,'jobId')&&Object.hasOwn(selection,'requestId')&&/^JOB-[A-Z0-9-]{3,80}$/.test(selection.jobId||'')&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(selection.requestId||'')),'JOB_RECOVERY_INPUT',400);
   need(adapter&&typeof adapter.send==='function'&&Number.isFinite(adapter.idempotencyWindowMs)&&adapter.idempotencyWindowMs>=JOB_RECOVERY_MIN_IDEMPOTENCY_MS,'JOB_RECOVERY_PROVIDER');
   let row,owner;
   try{
    const now=time();await sweep(now);
-   row=await db.prepare("SELECT * FROM job_recovery_outbox WHERE state IN ('queued','sending') AND expires_at>? AND next_at<=? AND lease_until<=? AND attempts<? ORDER BY created_at,id LIMIT 1").bind(now,now,now,ATTEMPTS).first();if(!row)return {state:'idle'};
+   row=await db.prepare("SELECT * FROM job_recovery_outbox WHERE state IN ('queued','sending') AND expires_at>? AND next_at<=? AND lease_until<=? AND attempts<?"+(selection?' AND job_id=? AND request_id=?':'')+" ORDER BY created_at,id LIMIT 1").bind(now,now,now,ATTEMPTS,...(selection?[selection.jobId,selection.requestId]:[])).first();if(!row)return {state:'idle'};
    owner=crypto.randomUUID();const claimed=await db.prepare("UPDATE job_recovery_outbox SET state='sending',attempts=attempts+1,lease_until=?,lease_owner=? WHERE id=? AND state IN ('queued','sending') AND lease_until<=? AND next_at<=? AND expires_at>? AND attempts<? AND "+current).bind(now+LEASE,owner,row.id,now,now,now,ATTEMPTS).run();
    if(claimed.meta?.changes!==1)return {state:'busy'};
    row={...row,attempts:row.attempts+1};let payload;try{payload=await decrypt(await key,row)}catch{throw fail('JOB_RECOVERY_PAYLOAD')}
@@ -2325,7 +2327,7 @@ async function uadavJobMailLiveRoute(request,env){
   const pending=await c.db.prepare('SELECT id FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();liveNeed(pending,'RECOVERY_QA_REQUEST_REQUIRED',409);
   const unexpected=await c.db.prepare("SELECT COUNT(*) AS n FROM job_recovery_outbox o WHERE NOT EXISTS(SELECT 1 FROM job_mail_live_qa q WHERE q.job_id=o.job_id AND q.id=o.request_id)").first();liveNeed(unexpected.n===0,'RECOVERY_QA_FOREIGN_OUTBOX',423);
   const reserved=await c.db.prepare('UPDATE job_mail_live_qa SET dispatch_at=? WHERE id=? AND dispatch_at IS NULL AND expires_at>?').bind(Date.now(),row.id,Date.now()).run();
-  if(reserved.meta?.changes===1)await c.engine().dispatch(c.adapter);
+  if(reserved.meta?.changes===1)await c.engine().dispatch(c.adapter,{jobId:row.job_id,requestId:row.id});
   return reply(await liveStatus(c,await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE id=?').bind(row.id).first()));
  }catch(error){const code=/^RECOVERY_QA_[A-Z_]{1,60}$/.test(error?.liveCode||'')?error.liveCode:'RECOVERY_QA_UNCONFIRMED';const status=error?.liveStatus||(error?.code==='JOB_RECOVERY_INPUT'?400:503);return reply({result:'error',success:false,code,error:code==='RECOVERY_QA_LINK'||status===400?'Este enlace ya no está disponible. Solicitá uno nuevo.':'No se confirmó la operación. Consultá el estado antes de reintentar.'},status)}
 }

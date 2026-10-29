@@ -116,3 +116,17 @@ test('HTTP QA routes use private synthetic fixture, immutable dispatch and verif
  f.env.JOB_RECOVERY_HTTP_STAGING='qa-only';const row=await f.send();assert.equal(f.calls.length,1);const before=await f.credential(row.job);assert.equal(before.revision,1);
  const candidate='d'.repeat(64),tuple={job_id:row.job,token:f.proof().token,new_secret:candidate};const redeem=()=>f.call({route:'/api/bolsa_trabajo/acceso/restablecer',method:'POST',origin:PAGES,admin:null,data:tuple});const r=await redeem();assert.equal(r.status,200,JSON.stringify(r.data));assert.deepEqual(r.data,{success:true,job_id:row.job,revision:2});assert.equal((await redeem()).status,200);assert.equal((await f.credential(row.job)).secret_hash,await hash(candidate));assert.equal((await f.post({action:'status'})).status,400);const status=await f.call();assert.equal(status.data.complete,true);assert.equal(status.data.http_qa_flow,true);assert.equal(f.calls.length,1);assert.equal((await f.DB.prepare("SELECT value FROM job_store_meta WHERE key='cron:sentinel'").first()).value,'unchanged');
  }finally{f.close()}});
+
+test('embedded live QA selects the reserved offer and request when dispatching',async()=>{
+ const f=await fixture();try{
+  const x=await f.seed();await f.post(action(x.id,'request'));
+  const prepare=f.DB.prepare;let selected=false;
+  f.DB.prepare=sql=>{const statement=prepare(sql);if(sql.startsWith('SELECT * FROM job_recovery_outbox WHERE state IN')){
+   assert(sql.includes('AND job_id=? AND request_id=?'));const bind=statement.bind;
+   statement.bind=(...args)=>{assert.deepEqual(args.slice(-2),[x.job,x.id]);selected=true;return bind.apply(statement,args)};
+  }return statement};
+  assert.equal((await f.post(action(x.id,'send'))).status,200);
+  assert.equal(selected,true);assert.equal(f.calls.length,1);assert.equal(f.proof().job,x.job);
+  assert.equal((await f.redeem(x)).status,200);assert.equal((await f.call()).data.complete,true);
+ }finally{f.close()}
+});
