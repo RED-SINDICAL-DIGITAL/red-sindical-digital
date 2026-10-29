@@ -25,3 +25,7 @@ Las versiones share v132 y playlist v134/v135 todavía son leídas por pruebas h
 ## Pendientes para cierre
 
 Comprobar publicación del lote y recorridos en navegador real, incluida reproducción con avance audible, compartir nativo y preview WhatsApp, seguir y reabrir entre dispositivos. Las pruebas de almacenamiento usan fallos simulados; no se modificó la cuenta real del operador. Recuperación de Bolsa, Spam, vencimiento remoto de destacados y entrega territorial siguen pendientes separados. No se certifica cierre total o preparación para producción.
+
+## Verificación adicional en navegador de staging
+
+Perfil público Masterboy - Topic (canal UCCaX_fzjQO1e1cLA9JerqLQ): Seguir cambió a Siguiendo; se revirtió a Seguir al terminar la prueba. Compartir mostró enlace canónico con channel únicamente, sin from ni categoría, y Copiar enlace confirmó éxito en la interfaz. No se enviaron mensajes a terceros. Volver conservó q=Masterboy y cat=musica; el directorio mostró búsqueda Masterboy y Música seleccionada. Esta prueba no certifica sincronización entre dispositivos ni preview remota de WhatsApp. Tampoco prueba en navegador los casos de fallo de almacenamiento simulados en la suite.
