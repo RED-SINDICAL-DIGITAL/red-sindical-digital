@@ -30,7 +30,7 @@ async function maintenance(db,now=new Date().toISOString()){
  const lastDay="MAX(COALESCE(NULLIF(end_date,''),start_date,''),COALESCE((SELECT MAX(json_extract(value,'$.fecha')) FROM json_each(events.data_json,'$.funciones')),''))";
  const end="CASE WHEN length("+lastDay+")=10 THEN "+lastDay+"||'T23:59:59-03:00' ELSE "+lastDay+" END";
  const statements=[
-  db.prepare(`UPDATE events SET featured=0,payment_status='vencido',data_json=json_set(data_json,'$.destacado_pagado',json('false'),'$.destacado_estado','vencido','$.actualizado',?),updated_at=? WHERE status='published' AND featured=1 AND julianday(json_extract(data_json,'$.destacado_hasta'))<julianday(?)`).bind(now,now,now),
+  db.prepare(`UPDATE events SET featured=0,payment_status='vencido',data_json=json_set(data_json,'$.destacado_pagado',json('false'),'$.destacado_estado','vencido','$.actualizado',?),updated_at=? WHERE status='published' AND featured=1 AND julianday(json_extract(data_json,'$.destacado_hasta'))<=julianday(?)`).bind(now,now,now),
   db.prepare(`UPDATE events SET status='expired',data_json=json_set(data_json,'$.estado','expired','$.source_status','stale','$.actualizado',?),updated_at=? WHERE status='published' AND json_extract(data_json,'$.origen')='externo' AND COALESCE(json_extract(data_json,'$.managed'),0)<>1 AND COALESCE(json_extract(data_json,'$.claimed'),0)<>1 AND (julianday(${end})<julianday(?,'-6 hours') OR (json_extract(data_json,'$.source_auto_sync')=1 AND julianday(COALESCE(json_extract(data_json,'$.last_seen_at'),json_extract(data_json,'$.importado_en')))<julianday(?,'-72 hours')))` ).bind(now,now,now,now)
  ];
  const r=await db.batch(statements);return {expired_features:Number(r[0].meta?.changes||0),expired_external_events:Number(r[1].meta?.changes||0)};
