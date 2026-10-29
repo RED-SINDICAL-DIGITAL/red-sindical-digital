@@ -130,3 +130,16 @@ test('embedded live QA selects the reserved offer and request when dispatching',
   assert.equal((await f.redeem(x)).status,200);assert.equal((await f.call()).data.complete,true);
  }finally{f.close()}
 });
+test('read-only QA status separates daily quota, active trial and expiration without changing storage',async()=>{
+ const f=await fixture();try{
+  const initial=await f.call();assert.equal(initial.data.daily_remaining,2);assert.equal(initial.data.start_blocker,null);assert.equal(initial.data.can_start,true);
+  const x=await f.seed();let r=await f.call();assert.equal(r.data.start_blocker,'active_trial');assert.equal(r.data.daily_remaining,1);assert.equal(r.data.can_start,false);
+  await f.DB.prepare('UPDATE job_mail_live_qa SET completed_at=? WHERE id=?').bind(Date.now(),x.id).run();
+  // Completed fixtures may prepare another trial, but the day-wide quota still applies.
+  const second=await f.seed();r=await f.call();assert.equal(r.data.start_blocker,'daily_limit');assert.equal(r.data.daily_remaining,0);assert.equal(r.data.can_start,false);assert.equal(r.data.expired,false);
+  const rowsBefore=await f.count('job_mail_live_qa');await f.call();assert.equal(await f.count('job_mail_live_qa'),rowsBefore);assert.equal(f.calls.length,0);assert.equal(r.data.qa_revision,'11770-qa-status-2');assert(Number.isSafeInteger(r.data.daily_reset_at));
+  assert.equal((await f.post(start())).status,409);
+  await f.DB.prepare('DELETE FROM job_mail_live_qa WHERE id=?').bind(x.id).run();const expiredAt=Date.now()-1000;await f.DB.prepare('UPDATE job_mail_live_qa SET created_at=?,expires_at=? WHERE id=?').bind(expiredAt-900000,expiredAt,second.id).run();
+  r=await f.call();assert.equal(r.data.expired,true);assert.equal(r.data.start_blocker,'daily_limit');assert.equal(r.data.can_start,false);
+ }finally{f.close()}
+});
