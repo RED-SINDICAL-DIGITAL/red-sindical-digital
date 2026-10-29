@@ -20,3 +20,5 @@ test('adapter ignores old player events after retry and removes feedback on clos
  const newest=panel.children[0].textContent;players[0].options.events.onError({data:100});assert.equal(panel.children[0].textContent,newest);
  frame.isConnected=false;frame=null;observers[0]();assert.equal(panel.isConnected,false);assert.equal(players[1].destroyed,true);
 });
+
+test('ready player awaiting user action does not later report a slow network load',()=>{const h=setup();assert.equal(h.callbacks.size,1);h.monitor.ready();assert.equal(h.callbacks.size,0);h.expire();assert.match(h.last().text,/Tocá reproducir/);assert.equal(h.last().retry,false);h.monitor.state(3);assert.equal(h.callbacks.size,1);h.expire();assert.equal(h.last().retry,true);assert.match(h.last().text,/tardando/)});

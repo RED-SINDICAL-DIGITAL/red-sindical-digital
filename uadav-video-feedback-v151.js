@@ -7,7 +7,7 @@ function createFeedback({render,alive=()=>true,schedule=setTimeout,cancel=clearT
  const wait=()=>{clear();timer=schedule(()=>{timer=null;show('La carga está tardando. Podés reintentar o abrir el video en YouTube.',true)},12000)};
  show('Preparando video…');wait();
  return{
-  ready(){if(dead||!alive())return;show('Tocá reproducir si el video no empieza.');wait()},
+  ready(){if(dead||!alive())return;clear();show('Tocá reproducir si el video no empieza.')},
   state(value){if(dead||!alive())return;clear();switch(Number(value)){
    case 1:show('Reproduciendo');break;
    case 2:show('En pausa');break;
