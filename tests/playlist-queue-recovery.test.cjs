@@ -30,3 +30,14 @@ test('closing playlist during pending request prevents late playback and list wr
 test('malformed next cursor preserves a retryable initial queue',async()=>{
  let calls=0;const h=setup(async()=>({items:[item(A)],next_cursor:++calls===1?42:null}));assert.equal(await h.queue.init(),false);assert.equal(h.queue.state.loaded,false);assert.equal(await h.queue.init(),true);
 });
+test('unavailable playlists stop automatic scanning after three pages and preserve manual continuation',async()=>{
+ let calls=0;const h=setup(async()=>{calls++;return{items:[item(A,calls,'unavailable')],next_cursor:'page-'+calls}});
+ assert.equal(await h.queue.init(),false);assert.equal(calls,3);assert.equal(h.queue.state.busy,false);assert.equal(h.queue.state.items.length,3);assert.equal(h.queue.state.cursor,'page-3');assert.match(h.notices.at(-1),/Cargar más temas/);assert.equal(h.played.length,0);
+ await h.queue.more();assert.equal(calls,4);assert.equal(h.queue.state.items.length,4);
+});
+test('a playable song on the third page still starts without extra provider calls',async()=>{
+ let calls=0;const h=setup(async()=>{calls++;return{items:[item(A,calls,calls===3?'available':'unavailable')],next_cursor:'page-'+calls}});assert.equal(await h.queue.init(),true);assert.equal(calls,3);assert.deepEqual(h.played,[A]);
+});
+test('oversized cursor fails before committing the page and allows a clean retry',async()=>{
+ let invalid=true;const h=setup(async()=>({items:[item(A)],next_cursor:invalid?'x'.repeat(2049):null}));assert.equal(await h.queue.init(),false);assert.equal(h.queue.state.items.length,0);assert.equal(h.queue.state.loaded,false);invalid=false;assert.equal(await h.queue.init(),true);
+});
