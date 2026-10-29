@@ -260,3 +260,29 @@ test('redemption changes the real private-inbox authority: old proof fails, the 
   await f.engine.redeem({jobId:job,token,newSecretHash:await digest(newSecret)});assert.notEqual((await inbox(oldSecret)).status,200);assert.equal((await inbox(newSecret)).status,200);assert.equal(await f.count('job_account_links'),0);
  }finally{f.close()}
 });
+
+test('scoped dispatch cannot consume an unrelated pending request or fall back on a mismatch',async()=>{
+ const f=await fixture();try{
+  const first=f.request();await f.engine.enqueue(first);
+  const other='JOB-OUTBOX-OTHER';
+  await f.DB.prepare("INSERT INTO job_store_records(collection,id,data_json,updated_at) VALUES('bolsa_trabajo',?,?,?)").bind(other,JSON.stringify({id:other,contacto:recipient}),new Date(f.now()).toISOString()).run();
+  await f.DB.prepare('INSERT INTO job_owner_credentials(job_id,secret_hash,revision,updated_at) VALUES(?,?,1,?)').bind(other,await digest(oldSecret),new Date(f.now()).toISOString()).run();
+  const second=f.request({jobId:other});await f.engine.enqueue(second);let sent=0;
+  const adapter=f.provider(async({payload})=>{assert.equal(payload.job_id,other);sent++;return{id:'scoped-receipt'}});
+  assert.deepEqual(await f.engine.dispatch(adapter,{jobId:job,requestId:second.requestId}),{state:'idle'});
+  assert.equal(sent,0);
+  assert.deepEqual(await f.engine.dispatch(adapter,{jobId:other,requestId:second.requestId}),{state:'accepted'});
+  assert.equal(sent,1);
+  assert.deepEqual(await f.engine.dispatch(adapter,{jobId:other,requestId:second.requestId}),{state:'idle'});
+  const rows=await f.outbox();assert.equal(rows.find(r=>r.request_id===first.requestId).state,'queued');
+  assert.equal(rows.find(r=>r.request_id===first.requestId).attempts,0);
+ }finally{f.close()}
+});
+test('malformed dispatch scope fails before touching storage or provider',async()=>{
+ let reads=0,sends=0;const db={prepare(){reads++;throw Error('Unexpected read')}};
+ const engine=createJobRecoveryOutbox({db,encryptionKey:sealKey,mode:'staging-only'});
+ for(const scope of [null,{},[],{jobId:job},{jobId:job,requestId:randomUUID(),extra:true},{jobId:job,requestId:'bad'}]){
+  await assert.rejects(engine.dispatch({send:async()=>{sends++},idempotencyWindowMs:86400000},scope),{code:'JOB_RECOVERY_INPUT'});
+ }
+ assert.equal(reads,0);assert.equal(sends,0);
+});

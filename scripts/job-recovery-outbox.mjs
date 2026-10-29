@@ -1,10 +1,6 @@
-/* Preparatory STAGING-only engine. Not imported/embedded by worker.js.
- * No HTTP endpoint, timer, provider, secret or remote database is configured here.
- * Possession of the 256-bit emailed token authorizes one atomic redemption after
- * a dispatch reservation. No token/credential is returned when requesting mail.
- * Provider acceptance is an audit fact, not an authentication prerequisite.
- * HTTP, email-link receiver, backup and live recovery QA remain unimplemented.
- */
+/* Recovery engine embedded in worker.js for private synthetic staging QA.
+ * Standalone source may contain preparatory changes not yet embedded; see audit
+ * docs. Public recovery for real offers remains disabled. */
 const TTL=15*60000,LEASE=30000,ATTEMPTS=5;
 // Cover the full issuance lifetime plus an in-flight lease and bounded send.
 // A provider's shorter window must never be silently declared as one hour.
@@ -79,12 +75,14 @@ export function createJobRecoveryOutbox({db,encryptionKey,mode,clock=Date.now,ti
    return accepted();
   }catch(error){throw fail(safeCode(error))}
  }
- async function dispatch(adapter){
+ async function dispatch(adapter,selection){
+  // A scoped caller must never fall back to another queued request.
+  need(selection===undefined||(selection&&typeof selection==='object'&&!Array.isArray(selection)&&Object.keys(selection).length===2&&Object.hasOwn(selection,'jobId')&&Object.hasOwn(selection,'requestId')&&/^JOB-[A-Z0-9-]{3,80}$/.test(selection.jobId||'')&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(selection.requestId||'')),'JOB_RECOVERY_INPUT',400);
   need(adapter&&typeof adapter.send==='function'&&Number.isFinite(adapter.idempotencyWindowMs)&&adapter.idempotencyWindowMs>=JOB_RECOVERY_MIN_IDEMPOTENCY_MS,'JOB_RECOVERY_PROVIDER');
   let row,owner;
   try{
    const now=time();await sweep(now);
-   row=await db.prepare("SELECT * FROM job_recovery_outbox WHERE state IN ('queued','sending') AND expires_at>? AND next_at<=? AND lease_until<=? AND attempts<? ORDER BY created_at,id LIMIT 1").bind(now,now,now,ATTEMPTS).first();if(!row)return {state:'idle'};
+   row=await db.prepare("SELECT * FROM job_recovery_outbox WHERE state IN ('queued','sending') AND expires_at>? AND next_at<=? AND lease_until<=? AND attempts<?"+(selection?' AND job_id=? AND request_id=?':'')+" ORDER BY created_at,id LIMIT 1").bind(now,now,now,ATTEMPTS,...(selection?[selection.jobId,selection.requestId]:[])).first();if(!row)return {state:'idle'};
    owner=crypto.randomUUID();const claimed=await db.prepare("UPDATE job_recovery_outbox SET state='sending',attempts=attempts+1,lease_until=?,lease_owner=? WHERE id=? AND state IN ('queued','sending') AND lease_until<=? AND next_at<=? AND expires_at>? AND attempts<? AND "+current).bind(now+LEASE,owner,row.id,now,now,now,ATTEMPTS).run();
    if(claimed.meta?.changes!==1)return {state:'busy'};
    row={...row,attempts:row.attempts+1};let payload;try{payload=await decrypt(await key,row)}catch{throw fail('JOB_RECOVERY_PAYLOAD')}
