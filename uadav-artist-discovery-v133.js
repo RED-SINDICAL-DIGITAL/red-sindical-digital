@@ -4,6 +4,7 @@ function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombr
 function identity(a){return a.canal||a.channel_id||a.id||normal(a.nombre||a.nombre_artistico)}
 function merge(catalog=[]){const seen=new Set(),result=[];const ordered=[...read().map(x=>catalog.find(a=>identity(a)===identity(x)||(a.id&&a.id===x.id))||x),...catalog];for(const a of ordered){if(!a||a.visible===false)continue;const keys=[identity(a),a.id].filter(Boolean);if(!keys.length||keys.some(k=>seen.has(k)))continue;keys.forEach(k=>seen.add(k));result.push(a)}return result}
 function find(q){return read().find(a=>normal(a.nombre)===normal(q)||normal(a.nombre_artistico)===normal(q))||null}
+function rankMatches(artists,q){const query=normal(q).replace(/\s+/g,' ');if(!query)return [...artists];const score=a=>Math.max(...[a.nombre,a.nombre_artistico,a.name,a.title].filter(Boolean).map(v=>{const name=normal(v).replace(/\s+/g,' ');return name===query?300:name.startsWith(query+' ')?200:name.includes(query)?100:0}),0);return artists.map((a,i)=>({a,i,score:score(a)})).sort((a,b)=>b.score-a.score||a.i-b.i).map(x=>x.a)}
 function rememberMatches(q,artists){for(const a of artists||[])if(normal(a.nombre||a.nombre_artistico)===normal(q))remember(a)}
 
 // Accept an explicit channel identity; never guess one from a person's name.
@@ -41,5 +42,5 @@ function followedProfileHref(a,origin){
  return profileHref({...copy,discovered:true,nombre:saved?.searchParams.get('discover')||a.nombre||a.nombre_artistico||''});
 }
 
-g.UADAVArtistDiscovery={remember,rememberMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,followedProfileHref};
+g.UADAVArtistDiscovery={remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,followedProfileHref};
 })(globalThis);
