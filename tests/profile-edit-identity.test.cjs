@@ -3,7 +3,7 @@ const page=fs.readFileSync(path.join(__dirname,'../usuario.html'),'utf8');
 const code=page.slice(page.indexOf('// Profile edit identity and asynchronous photo protection.'),page.indexOf('// End profile edit identity protection.'));
 function setup(){
  let identity='device-A',writes=0,paints=0;const readers=[],images=[],alerts=[],events={},nodes={photo:{files:[{size:100}],value:'file'},profileName:{value:''},profileDialog:{showModal(){this.open=true},close(){this.open=false}}};
- const ctx={window:{UADAVAccount:{code:()=>identity},addEventListener:(name,fn)=>events[name]=fn},$:id=>nodes[id],user:{name:'Account A',photo:'original'},save(){writes++},paint(){paints++},alert:message=>alerts.push(message),document:{createElement:()=>({getContext:()=>({drawImage(){}}),toDataURL:()=> 'new-photo'})},FileReader:class{constructor(){readers.push(this)}readAsDataURL(){this.result='read-data'}},Image:class{constructor(){images.push(this);this.width=this.height=100}}};
+ const ctx={window:{UADAVAccount:{code:()=>identity},addEventListener:(name,fn)=>events[name]=fn},$:id=>nodes[id],user:{name:'Account A',photo:'original'},save(next){writes++;ctx.user=next;return true},paint(){paints++},alert:message=>alerts.push(message),document:{createElement:()=>({getContext:()=>({drawImage(){}}),toDataURL:()=> 'new-photo'})},FileReader:class{constructor(){readers.push(this)}readAsDataURL(){this.result='read-data'}},Image:class{constructor(){images.push(this);this.width=this.height=100}}};
  vm.runInNewContext(code,ctx);return {ctx,nodes,readers,images,alerts,change(value){identity=value;events['uadav:account']?.()},writes:()=>writes};
 }
 test('photo selected in one account cannot be applied after switching accounts',()=>{
@@ -50,3 +50,7 @@ test('profile recent playback falls back to the same-origin shell bridge',()=>{
 test('profile has complete history access and no optimistic legacy artist-session link',()=>{
  assert.match(page,/href="\/biblioteca.html\?tab=recent"/);assert.doesNotMatch(page,/try\{const token=localStorage.getItem\('uadav_artist_access_token_v1'\)/);
 });
+
+test('failed name save preserves the previous profile and leaves its edit dialog open',()=>{const h=setup();h.ctx.save=()=>false;h.ctx.beginProfileEdit();h.nodes.profileName.value='Not saved';h.ctx.submitProfileEdit({preventDefault(){}});assert.equal(h.ctx.user.name,'Account A');assert.equal(h.nodes.profileDialog.open,true)});
+test('failed photo save and removal do not change the displayed photo',()=>{const h=setup();h.ctx.save=()=>false;h.ctx.removeProfilePhoto();assert.equal(h.ctx.user.photo,'original');h.ctx.loadProfilePhoto();h.readers[0].onload();h.images[0].onload();assert.equal(h.ctx.user.photo,'original')});
+test('storage failure cannot publish a profile sync event or replace current state',()=>{let events=0;const c={user:{name:'Old'},KEY:'profile',localStorage:{setItem(){throw Error('Quota')}},window:{dispatchEvent(){events++}},CustomEvent:class{},alert(){}};vm.runInNewContext(page.slice(page.indexOf('function save('),page.indexOf('function recent(')),c);assert.equal(c.save({name:'New'}),false);assert.equal(c.user.name,'Old');assert.equal(events,0)});
