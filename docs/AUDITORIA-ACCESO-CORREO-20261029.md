@@ -2,7 +2,7 @@
 
 Estado público observado /api/access/email/status: build 11770, installed=true, enabled=true, qa_verification=true, qa_login=true, public_job_key_recovery_enabled=false. Consulta sin credenciales ni cambios de configuración.
 
-No son el mismo circuito: acceso por correo a una cuenta previamente verificada y recuperación de claves antiguas de ofertas. El segundo permanece bloqueado en las dos rutas operativas. scripts/job-recovery-outbox.mjs se declara motor preparatorio, no embebido en el Worker operativo. Sus pruebas aisladas no prueban disponibilidad pública. Faltan integración HTTP y receptor de enlaces, configuración operativa y prueba real de recuperación para ese circuito antiguo.
+No son el mismo circuito: acceso por correo a una cuenta previamente verificada y recuperación de claves antiguas de ofertas. El segundo permanece bloqueado en las dos rutas operativas. El módulo fuente scripts/job-recovery-outbox.mjs se declara preparatorio; al revisar el Worker completo se confirmó que su motor sí está incluido mediante uadavLiveMailCore para QA privada. No está integrado en las rutas públicas de recuperación antigua. Sus pruebas aisladas no prueban disponibilidad pública. Faltan integración HTTP y receptor de enlaces, configuración operativa y prueba real de recuperación para ese circuito antiguo.
 
 38 pruebas aisladas de outbox y recuperación atómica de cuenta aprobadas; 21 pruebas UI de cuenta/Bolsa aprobadas. No enviaron correos reales ni alteraron datos remotos.
 
