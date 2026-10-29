@@ -1,0 +1,4 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const html=fs.readFileSync('admin.html','utf8'),a=html.indexOf('function eventFeatureUntil('),b=html.indexOf('\nwindow.saveEvent=',a),ctx={};vm.runInNewContext(html.slice(a,b)+';this.expiry=eventFeatureUntil;',ctx);
+test('editing unrelated data preserves the exact expiry instant',()=>{for(const original of ['2026-10-30T16:28:59.236Z','2026-10-30T21:30:00-03:00','2026-10-30'])assert.equal(ctx.expiry('2026-10-30',original),original)});
+test('explicitly changing or clearing expiry uses the chosen value',()=>{assert.equal(ctx.expiry('2026-11-03','2026-10-30T16:28:59Z'),'2026-11-03');assert.equal(ctx.expiry('','2026-10-30T16:28:59Z'),'');assert.equal(ctx.expiry('2026-11-03',undefined),'2026-11-03')});
