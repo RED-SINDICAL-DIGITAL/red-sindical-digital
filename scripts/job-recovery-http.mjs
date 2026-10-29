@@ -1,5 +1,5 @@
-/* Preparatory HTTP boundary. Not routed by worker.js. QA-only until an end-to-end
- * deployment validates sender, receiver, schema, rollback and private access. */
+/* HTTP boundary embedded by worker.js for private synthetic QA only. Disabled
+ * unless qa-only is explicit; real offer recovery remains unavailable. */
 const API='https://uadav-api-staging.uadavstream.workers.dev';
 const PAGES='https://uadav-stream-staging.pages.dev';
 const REQUEST='/api/bolsa_trabajo/acceso/solicitar',REDEEM='/api/bolsa_trabajo/acceso/restablecer';
@@ -16,6 +16,7 @@ export function createJobRecoveryHttp({getEngine,hash,configuredRecipient}={}){
   if(origin===PAGES||origin===API)Object.assign(headers,{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type'});
   const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers});
   // No engine access, schema installation or provider call before all gates.
+  if(url.search)return reply({error:'Solicitud inválida.'},400);
   if(url.origin!==API||env.JOB_RECOVERY_HTTP_STAGING!=='qa-only')return reply({error:'Recuperación de claves antiguas deshabilitada.'},503);
   if(origin!==PAGES&&origin!==API)return reply({error:'Origen no autorizado.'},403);
   if(request.method==='OPTIONS')return new Response(null,{status:204,headers});
@@ -34,9 +35,9 @@ export function createJobRecoveryHttp({getEngine,hash,configuredRecipient}={}){
    if(!email(body.email)||typeof body.request_id!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(body.request_id))return reply({error:'Solicitud de prueba inválida.'},400);
    // Same public answer for any address outside the operator's QA allowlist.
    if(body.email.trim().toLowerCase()!==recipient)return reply(accepted,202);
-   try{const actorHash=await hash(request.headers.get('CF-Connecting-IP')||'unknown'),engine=await getEngine(env);await engine.enqueue({jobId:body.job_id,recipient,requestId:body.request_id,actorHash});return reply(accepted,202)}catch{return reply({error:'No pudimos confirmar la solicitud. Conservá su referencia.'},503)}
+   try{const actorHash=await hash(request.headers.get('CF-Connecting-IP')||'unknown'),engine=await getEngine(env,body.job_id);await engine.enqueue({jobId:body.job_id,recipient,requestId:body.request_id,actorHash});return reply(accepted,202)}catch{return reply({error:'No pudimos confirmar la solicitud. Conservá su referencia.'},503)}
   }
   if(!hex(body.token)||!hex(body.new_secret))return reply({error:'Enlace inválido o vencido.'},400);
-  try{const engine=await getEngine(env),result=await engine.redeem({jobId:body.job_id,token:body.token,newSecretHash:await hash(body.new_secret)});if(result?.job_id!==body.job_id||!Number.isSafeInteger(result.revision)||result.revision<2)throw Error('Unconfirmed');return reply({success:true,job_id:body.job_id,revision:result.revision})}catch(error){return reply({error:error?.status===400?'Enlace inválido o vencido.':'No se confirmó el cambio. Conservá el enlace y la nueva clave para comprobarlo.'},error?.status===400?400:503)}
+  try{const engine=await getEngine(env,body.job_id,body.new_secret),result=await engine.redeem({jobId:body.job_id,token:body.token,newSecretHash:await hash(body.new_secret)});if(result?.job_id!==body.job_id||!Number.isSafeInteger(result.revision)||result.revision<2)throw Error('Unconfirmed');return reply({success:true,job_id:body.job_id,revision:result.revision})}catch(error){return reply({error:error?.status===400?'Enlace inválido o vencido.':'No se confirmó el cambio. Conservá el enlace y la nueva clave para comprobarlo.'},error?.status===400?400:503)}
  };
 }

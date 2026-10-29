@@ -1,3 +1,5 @@
+> Etapa preparatoria histórica, reemplazada por RECUPERACION-HTTP-QA-INTEGRADA-20261029.md. El controlador ya está conectado para QA privada y sigue apagado por defecto.
+
 # Capa HTTP QA para recuperación antigua — 29/10/2026
 
 scripts/job-recovery-http.mjs es preparatorio, no está enrutado ni embebido en worker.js. No se requiere desplegar Worker ni activar flags ahora. Ninguna ruta operativa cambia: recuperación antigua continúa deshabilitada.
