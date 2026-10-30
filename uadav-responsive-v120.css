@@ -320,3 +320,22 @@
  body[data-page="app"] #mediaDock.mini .tools button{width:44px;height:44px;min-height:44px!important;flex:none}
  body[data-page="app"] #radioDock .radioBtn{width:44px;height:44px;min-height:44px}
 }
+
+/* Dark native search controls, including focus and browser autofill. */
+body[data-page="app"] #searchInput,body[data-page="buscar"] #q,body[data-page="artistas"] #q{color-scheme:dark;background:#0b1017!important;color:#f7f8fa!important;caret-color:#f7f8fa;-webkit-text-fill-color:#f7f8fa}
+body[data-page="app"] #searchInput:-webkit-autofill,body[data-page="buscar"] #q:-webkit-autofill,body[data-page="artistas"] #q:-webkit-autofill{-webkit-box-shadow:0 0 0 1000px #0b1017 inset;-webkit-text-fill-color:#f7f8fa}
+@media screen and (max-width:760px){
+ body[data-page="buscar"] .card:has(>.cardOpen){display:block!important;padding:0;position:relative;border-radius:16px;overflow:hidden}
+ body[data-page="buscar"] .cardOpen{display:block;width:100%;min-height:0;padding:0 0 12px}
+ body[data-page="buscar"] .cardOpen>img{display:block;width:100%;height:auto;aspect-ratio:16/9;border-radius:0;object-fit:cover}
+ body[data-page="buscar"] .cardOpen>b{display:block;margin:12px 12px 6px;padding-right:52px;font-size:16px;line-height:1.4}
+ body[data-page="buscar"] .cardOpen>small{display:block;margin:0 12px;padding-right:52px;font-size:13px}
+ body[data-page="buscar"] .card:has(>.cardOpen)>.save{position:absolute;right:10px;bottom:12px;width:44px;height:44px;min-height:44px}
+ body[data-page="artista"] .main .rail{display:grid!important;grid-template-columns:minmax(0,1fr);overflow:visible!important;gap:16px}
+ body[data-page="artista"] .main .tile{width:100%;min-width:0;flex:none}
+ body[data-page="app"] #mediaDock.expanded .mediaCopy{padding:14px!important}
+ body[data-page="app"] #mediaTitle{font-size:18px;line-height:1.4;overflow-wrap:anywhere}
+ body[data-page="app"] #libraryTools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ body[data-page="app"] #libraryTools .libBtn{min-width:0;min-height:44px;padding:8px 10px;text-align:center;white-space:normal}
+ body[data-page="app"] #libraryTools #externalMedia{grid-column:1/-1;background:transparent;border-color:transparent;font-size:12px}
+}
