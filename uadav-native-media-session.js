@@ -45,9 +45,43 @@ function createController(session, Metadata){
   }
   return {attach,clear,sync,get element(){return active?.element||null}};
 }
-if(typeof module==='object'&&module.exports)module.exports={createController};
+function createYouTubeAdapter(player){
+ const listeners=new Map();let state=-1;
+ const emit=type=>{for(const fn of listeners.get(type)||[])fn()};
+ return {player,
+  get paused(){return state!==1},get ended(){return state===0},get error(){return false},
+  get duration(){return Number(player.getDuration?.())||0},
+  get currentTime(){return Number(player.getCurrentTime?.())||0},
+  set currentTime(value){player.seekTo?.(value,true)},
+  get playbackRate(){return Number(player.getPlaybackRate?.())||1},
+  play(){player.playVideo?.()},pause(){player.pauseVideo?.()},
+  addEventListener(type,fn){if(!listeners.has(type))listeners.set(type,new Set());listeners.get(type).add(fn)},
+  removeEventListener(type,fn){listeners.get(type)?.delete(fn)},
+  update(value){state=Number(value);emit(state===1?'play':state===0?'ended':'pause')}
+ };
+}
+if(typeof module==='object'&&module.exports)module.exports={createController,createYouTubeAdapter};
 if(!root.document||!root.navigator?.mediaSession)return;
 const doc=root.document,controller=createController(root.navigator.mediaSession,root.MediaMetadata);
+let embedded=null;
+root.UADAVMediaSession={
+ youtube(player,state){
+  if(!player)return;
+  // Only actual playback takes ownership; ready/loading never interrupts radio.
+  if(embedded?.player!==player){if(Number(state)!==1)return;embedded=createYouTubeAdapter(player)}
+  embedded.update(state);
+  if(Number(state)===1)controller.attach(embedded,{info:()=>({title:doc.getElementById('mediaTitle')?.textContent,artist:doc.getElementById('mediaMeta')?.textContent}),stop:()=>root.UADAVShellHost?.closeContent?.()});
+  else if(controller.element===embedded)controller.sync();
+ },
+ release(player){if(embedded?.player!==player)return;if(controller.element===embedded)controller.clear();embedded=null}
+};
+
+root.addEventListener('message',event=>{
+ if(!embedded||controller.element!==embedded||!['https://www.youtube.com','https://www.youtube-nocookie.com'].includes(event.origin))return;
+ const frame=doc.getElementById('mediaStage')?.querySelector('iframe');if(!frame||event.source!==frame.contentWindow)return;
+ let data=event.data;try{if(typeof data==='string')data=JSON.parse(data)}catch{return}
+ if(data?.event==='infoDelivery')controller.sync();
+});
 function relevant(el){return el?.matches?.('#radioAudio, #mediaStage audio, #mediaStage video')}
 doc.addEventListener('play',event=>{
   const el=event.target;if(!relevant(el))return;
@@ -63,7 +97,8 @@ doc.addEventListener('play',event=>{
 const observer=new MutationObserver(()=>{
   const el=controller.element;
   if(!el)return;
-  if(!el.isConnected||!el.getAttribute('src'))controller.clear();
+  if(el.player){if(!doc.getElementById('mediaStage')?.querySelector('iframe')){controller.clear();embedded=null}else controller.sync()}
+  else if(!el.isConnected||!el.getAttribute('src'))controller.clear();
   else controller.sync();
 });
 for(const id of ['mediaStage','radioAudio','radioName','radioMeta','mediaTitle','mediaMeta']){

@@ -34,3 +34,23 @@ test('stop closes active player; unsupported actions and absent APIs are tolerat
  const minimal=createController({setActionHandler(){throw Error('unsupported')}},null);
  assert.doesNotThrow(()=>minimal.attach(new Media()));assert.doesNotThrow(()=>minimal.clear());
 });
+
+test('official embedded media supports system controls, tracks observed state and releases old listeners',()=>{
+ const {createYouTubeAdapter}=require('../uadav-native-media-session.js');
+ const {controller,session,handlers}=setup();let plays=0,pauses=0,seek;
+ const player={getDuration:()=>200,getCurrentTime:()=>30,getPlaybackRate:()=>1,playVideo(){plays++},pauseVideo(){pauses++},seekTo(t){seek=t}};
+ const adapter=createYouTubeAdapter(player);adapter.update(1);controller.attach(adapter,{info:()=>({title:'Video'})});
+ assert.equal(session.playbackState,'playing');handlers.pause();assert.equal(pauses,1);
+ // Commands alone cannot claim a state change or force a paused video to resume.
+ assert.equal(session.playbackState,'playing');adapter.update(2);assert.equal(session.playbackState,'paused');
+ handlers.play();assert.equal(plays,1);assert.equal(session.playbackState,'paused');adapter.update(1);assert.equal(session.playbackState,'playing');
+ handlers.seekto({seekTime:250});assert.equal(seek,200);
+ controller.clear();adapter.update(1);assert.equal(session.playbackState,'none');
+});
+test('navigation and minimization preserve the existing player and never pause on page visibility',()=>{
+ const fs=require('node:fs'),html=fs.readFileSync('app.html','utf8');
+ const nav=html.slice(html.indexOf('function nav('),html.indexOf('function yid('));
+ const mode=html.slice(html.indexOf('function setMediaMode('),html.indexOf('let toastTimer'));
+ for(const body of [nav,mode])assert.doesNotMatch(body,/stage\.replaceChildren|pauseVideo|stopVideo|closeContent\(/);
+ const source=fs.readFileSync('uadav-native-media-session.js','utf8');assert.doesNotMatch(source,/visibilitychange|document.hidden|setInterval/);
+});

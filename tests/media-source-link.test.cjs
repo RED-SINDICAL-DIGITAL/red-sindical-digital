@@ -1,6 +1,14 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
-const html=fs.readFileSync(new URL('../app.html','file://'+__filename),'utf8');
-function setup(){const els={libraryTools:{appendChild:a=>els[a.id]=a}},context={URL,$:id=>els[id],document:{createElement:()=>({style:{},removeAttribute(n){delete this[n]}})}};vm.createContext(context);vm.runInContext(html.slice(html.indexOf('function yid('),html.indexOf('function node('))+html.slice(html.indexOf('function mediaSourceURL('),html.indexOf('// YouTube iframe API'))+';this.url=mediaSourceURL;this.sync=syncMediaSource',context);return{context,els}}
-test('source link always uses the current canonical video',()=>{const {context:c,els}=setup();c.sync({provider:'youtube',external_id:'rtVj-GImpZ8'});assert.equal(els.externalMedia.href,'https://www.youtube.com/watch?v=rtVj-GImpZ8');c.sync({url:'https://youtu.be/IBnshjEceKA'});assert.equal(els.externalMedia.href,'https://www.youtube.com/watch?v=IBnshjEceKA');assert.equal(els.externalMedia.rel,'noopener noreferrer')});
-test('playlist source is canonical and foreign URLs cannot inject outbound destinations',()=>{const {context:c}=setup();assert.equal(c.url({url:'https://www.youtube.com/playlist?list=PLabcdefghijklmnop'}),'https://www.youtube.com/playlist?list=PLabcdefghijklmnop');for(const url of ['javascript:alert(1)','https://youtube.com.attacker.example/?list=PLabcdefghijklmnop','https://example.org/movie.mp4'])assert.equal(c.url({url}),'')});
-test('closing or switching to unrelated media clears stale source',()=>{const {context:c,els}=setup();c.sync({external_id:'rtVj-GImpZ8'});c.sync(null);assert.equal(els.externalMedia.hidden,true);assert.equal(els.externalMedia.href,undefined);c.sync({url:'https://example.org/movie.mp4'});assert.equal(els.externalMedia.style.display,'none')});
+const html=fs.readFileSync('app.html','utf8');
+test('shell never creates an external fallback and removes a stale link',()=>{
+let removed=0;const context={$:()=>({remove(){removed++}})};vm.createContext(context);
+vm.runInContext(html.slice(html.indexOf('function syncMediaSource('),html.indexOf('// YouTube iframe API'))+';this.sync=syncMediaSource',context);
+context.sync({external_id:'IBnshjEceKA'});context.sync(null);assert.equal(removed,2);
+assert.doesNotMatch(html,/Abrir en YouTube|abrirlo en YouTube/);
+});
+test('active video and playlist errors offer recovery inside the app without outbound links',()=>{
+for(const file of ['uadav-video-feedback-v151.js','uadav-playlist-player-v136.js']){
+const source=fs.readFileSync(file,'utf8');assert.doesNotMatch(source,/Abrir en YouTube|abrir YouTube|abrilo en YouTube|createElement\('a'\)/);
+assert.match(source,/Reintentar/);
+}
+});

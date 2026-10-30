@@ -4,7 +4,7 @@ function createFeedback({render,alive=()=>true,schedule=setTimeout,cancel=clearT
  let timer=null,dead=false;
  const show=(text,retry=false)=>{if(!dead&&alive())render({text,retry})};
  const clear=()=>{if(timer!==null){cancel(timer);timer=null}};
- const wait=()=>{clear();timer=schedule(()=>{timer=null;show('La carga está tardando. Podés reintentar o abrir el video en YouTube.',true)},12000)};
+ const wait=()=>{clear();timer=schedule(()=>{timer=null;show('La carga está tardando. Podés reintentar sin salir de la plataforma.',true)},12000)};
  show('Preparando video…');wait();
  return{
   ready(){if(dead||!alive())return;clear();show('Tocá reproducir si el video no empieza.')},
@@ -17,7 +17,7 @@ function createFeedback({render,alive=()=>true,schedule=setTimeout,cancel=clearT
    default:show('Preparando video…');wait()
   }},
   blocked(){clear();show('Tocá reproducir en el video para empezar.')},
-  error(code){clear();const n=Number(code);show(n===100?'Este video no está disponible. Podés consultar su fuente en YouTube.':[101,150].includes(n)?'Este video no permite reproducirse dentro de la app. Podés abrirlo en YouTube.':'No pudimos iniciar este video. Reintentá o abrilo en YouTube.',![100,101,150].includes(n))},
+  error(code){clear();const n=Number(code);show(n===100?'Este video no está disponible. Elegí otro contenido.':[101,150].includes(n)?'Este video no permite reproducirse dentro de la app. Elegí otro contenido.':'No pudimos iniciar este video. Podés reintentar.',![100,101,150].includes(n))},
   dispose(){dead=true;clear()}
  };
 }
@@ -39,7 +39,7 @@ function api(){
 function attach(){
  const frame=stage.querySelector('iframe[data-uadav-video]');
  if(active?.frame===frame)return;
- if(active){active.dead=true;active.feedback.dispose();active.panel.remove();try{active.player?.destroy()}catch{}}
+ if(active){active.dead=true;active.feedback.dispose();window.UADAVMediaSession?.release(active.player);active.panel.remove();try{active.player?.destroy()}catch{}}
  active=null;if(!frame)return;
  const current={frame,dead:false,player:null,panel:document.createElement('section'),feedback:null};active=current;
  const alive=()=>active===current&&!current.dead&&frame.isConnected;
@@ -50,8 +50,8 @@ function attach(){
  frame.id='uadav-single-video-'+(++serial);
  api().then(YT=>{if(!alive())return;current.player=new YT.Player(frame,{events:{
   onReady:()=>{if(alive())current.feedback.ready()},
-  onStateChange:e=>{if(alive())current.feedback.state(e.data)},
-  onError:e=>{if(alive())current.feedback.error(e.data)},
+  onStateChange:e=>{if(alive()){current.feedback.state(e.data);window.UADAVMediaSession?.youtube(current.player,e.data)}},
+  onError:e=>{if(alive()){window.UADAVMediaSession?.release(current.player);current.feedback.error(e.data)}},
   onAutoplayBlocked:()=>{if(alive())current.feedback.blocked()}
  }})}).catch(()=>{if(alive())current.feedback.error(0)});
 }
