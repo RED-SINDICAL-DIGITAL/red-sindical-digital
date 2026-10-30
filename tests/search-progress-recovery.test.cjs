@@ -1,10 +1,10 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const source=fs.readFileSync(path.join(__dirname,'../buscar.html'),'utf8');
 const helpers=source.slice(source.indexOf('function searchStatusText('),source.indexOf('function renderSearch('));
-const search=source.slice(source.indexOf('async function search(){'),source.indexOf("$('form').onsubmit"));
+const search=source.slice(source.indexOf('function syncSearchRoute('),source.indexOf("$('form').onsubmit"));
 function setup(api){
  const snapshots=[],nodes={q:{value:'Masterboy'},status:{textContent:''},results:{innerHTML:''}},ctx={API:'https://uadav-api-staging.uadavstream.workers.dev/api/',searchVersion:0,searchState:{},$:id=>nodes[id],api,arr:x=>Array.isArray(x)?x:Array.isArray(x?.items)?x.items:[],uniqMedia:x=>x,history:{replaceState(){}},location:{pathname:'/buscar'},UADAVArtistDiscovery:{rememberMatches(){},remember(){}},esc:x=>String(x).replaceAll('<','&lt;'),console:{warn(){}}};
- ctx.renderSearch=()=>snapshots.push(JSON.parse(JSON.stringify(ctx.searchState)));
+ ctx.window={};ctx.parent=ctx.window;ctx.renderSearch=()=>snapshots.push(JSON.parse(JSON.stringify(ctx.searchState)));
  vm.runInNewContext(helpers+'\n'+search,ctx);return {ctx,nodes,snapshots};
 }
 const empty=()=>({content:[],artists:[],events:[],radios:[]});
