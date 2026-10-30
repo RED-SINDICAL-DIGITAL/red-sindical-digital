@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const source=fs.readFileSync('index-v117.html','utf8');
 function extract(start,end){const a=source.indexOf(start),b=source.indexOf(end,a);assert(a>=0&&b>a);return source.slice(a,b)}
 test('Home starts every catalog without waiting for Admin configuration',async()=>{
- const calls=[],ctx={wireHomeActions(){},renderContinue(){calls.push('recent')},loadVisits(){calls.push('visits')},applyAdminHome:()=>new Promise(()=>{}),cfg:()=>new Promise(()=>{}),timedFetch:async()=>({ok:false}),API:'https://example.test/api/'};for(const n of ['loadTrends','loadArtists','loadEvents','loadRadios','loadMedia'])ctx[n]=()=>calls.push(n);
+ const calls=[],ctx={wireHomeActions(){},renderContinue(){calls.push('recent')},loadVisits(){calls.push('visits')},applyAdminHome:()=>new Promise(()=>{}),loadAdminHomeSections:()=>new Promise(()=>{}),cfg:()=>new Promise(()=>{}),timedFetch:async()=>({ok:false}),API:'https://example.test/api/'};for(const n of ['loadTrends','loadArtists','loadEvents','loadRadios','loadMedia'])ctx[n]=()=>calls.push(n);
  const a=source.indexOf('(async()=>{wireHomeActions();'),b=source.indexOf('})();',a)+5;await vm.runInNewContext(source.slice(a,b),ctx);assert.deepEqual(calls,['recent','visits','loadTrends','loadArtists','loadEvents','loadRadios','loadMedia']);
 });
 test('Home search uses the full search page and encodes the exact user query',()=>{
