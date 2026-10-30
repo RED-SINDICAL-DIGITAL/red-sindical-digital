@@ -27,3 +27,5 @@ assert.equal(home.externalMedia([{videoId:a.id,private:true},{videoId:b.id},{id:
 });
 
 test('empty successful searches retain their section with an explicit empty state',async()=>{const rows=await home.loadModels([{id:'empty',modo:'auto',query:'nothing'}],[],{search:async()=>[]});assert.equal(rows.length,1);assert.equal(rows[0].automatic,true);assert.equal(rows[0].items.length,0);assert.equal(rows[0].incomplete,undefined)});
+
+test('external rows retain the source channel and never label missing authors as UADAV',()=>{const rows=home.externalMedia([{videoId:'IBnshjEceKA',channel:{name:'MasterboyVEVO'}},{videoId:'ZUSn9OI3l_g',canal:'Fundación Konex'},{videoId:'UIdwWJEfBH4'}]);assert.deepEqual(rows.map(x=>x.author),['MasterboyVEVO','Fundación Konex','YouTube'])});
