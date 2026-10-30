@@ -8,7 +8,7 @@ const c={S:{cache:{landing:{brand_hero_image:'https://example.test/cover.jpg',he
 vm.runInNewContext(capture,c);c.captureHomeFields();assert.equal(c.S.cache.landing.brand_hero_title,'Nuevo título');assert.equal(c.S.cache.landing.promo_description,'Texto pendiente');assert.equal(c.S.cache.landing.brand_hero_enabled,false);assert.equal(c.S.cache.landing.brand_hero_image,'https://example.test/cover.jpg');
 assert.match(html,/function renderHome\(\)\{captureHomeFields\(\)/);
 });
-function fixture(saveJSON){const button={disabled:false,textContent:'Guardar cambios'},notices=[],c={window:{},S:{cache:{landing:{hero_spotlights:[]},sections:[],visibility:{},layout:{}}},$:()=>button,captureHomeFields(){},arr:x=>Array.isArray(x)?x:[],saveJSON,toast:(...x)=>notices.push(x)};vm.runInNewContext(save,c);return{c,button,notices}}
+function fixture(saveJSON){const button={disabled:false,textContent:'Guardar cambios'},notices=[],c={window:{UADAVMusicStyles:require('../uadav-music-styles.js')},S:{cache:{landing:{hero_spotlights:[]},sections:[],visibility:{},layout:{}}},$:()=>button,captureHomeFields(){},arr:x=>Array.isArray(x)?x:[],saveJSON,toast:(...x)=>notices.push(x)};vm.runInNewContext(save,c);return{c,button,notices}}
 test('double save cannot create overlapping requests and reenables the button when finished',async()=>{
 let release;const gate=new Promise(r=>release=r);let requests=0;const f=fixture(async()=>{requests++;await gate;return{ok:true}});
 const first=f.c.window.saveHome();assert.equal(f.button.disabled,true);await f.c.window.saveHome();assert.equal(requests,4);release();await first;assert.equal(f.button.disabled,false);assert.equal(f.c.S.homeSaving,false);assert.equal(f.notices.length,1);assert.equal(f.notices[0][1],'ok');
