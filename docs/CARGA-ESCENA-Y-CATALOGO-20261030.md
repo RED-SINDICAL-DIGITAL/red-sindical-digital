@@ -14,3 +14,10 @@ Ambos registros se añadieron a la fila Escena y movimiento, que pasó de 3 a 5 
 Crear, editar o eliminar contenido invalida también sectionContent y sectionCatalog, además de contentItems. El selector de portada se vuelve a cargar al regresar, sin recargar toda la aplicación ni perder borradores de landing/secciones. Mutaciones fallidas conservan la caché para reintento.
 
 753/753 pruebas CJS aprobadas. Producción y Worker intactos.
+
+## Atribución final y validación del selector
+El reproductor del ballet identifica el canal publicador Matías Sanchez de Bustamante, UCrGm7R8AJiqZTC-W5LT3NaQ. No es una publicación del canal de Fundación Konex. Se corrigió el título final a La Bella Durmiente y las Hadas Encantadas · Registro Konex 2017 y la descripción acredita al publicador exacto. El título del video original menciona Konex 2017 y el reproductor informa duración 1:06:00.
+
+El especial de Cirque du Soleil identifica el canal UCPiWIjwDZQo3UobMqvi4ggg, nombre Cirque du Soleil, y título ESPECIAL DE 60 MINUTOS #10. Su duración visible es 1:18:17; Especial de 60 minutos es el nombre de la serie, no una duración exacta certificada por UADAV.
+
+Después de desplegar el arreglo, se editó ese registro desde Videos y música y se regresó a Portada sin recargar el Admin: el selector mostró el nuevo título, confirmando invalidación de caché en vivo. Se canceló el diálogo de sección porque no hacía falta volver a publicar referencias: conservan el mismo ID.
