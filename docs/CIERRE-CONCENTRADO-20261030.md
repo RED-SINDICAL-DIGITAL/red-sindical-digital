@@ -32,3 +32,13 @@ El perfil mostraba simultáneamente “Todavía no hay contenido disponible” y
 
 ## Decisión
 No declarar Bolsa, Cartelera o plataforma finalizadas al 100%; no promover a producción. Priorizar los puntos 1–3 y la validación de dispositivos antes de más contenido o cambios cosméticos. No repetir pruebas aprobadas sin motivo. No activar recuperación general, pagos o restauración operacional como parte de esta revisión.
+
+## Actualización posterior: Admin autenticado
+
+Se restableció el acceso con browserAuth y se comprobó la interfaz administrativa, sin leer credenciales ni modificar configuración. El navegador anterior perdió sus pestañas; la renovación posterior también fue confirmada con evidencia positiva de Administrador y D1 OK.
+
+Diagnóstico desde Admin: Worker build 11770 OK; D1 configured/ready=true, sin error; búsqueda diagnóstica UADAV STREAM OK, source=youtube_api_fallback, count=3. Este resultado no revoca el fallo específico de channel_library del canal Soda Stereo - Topic.
+
+Bolsa administrativa: 18 oportunidades/registros en total y 12 postulaciones. No confundir estos totales, que incluyen registros ocultos y QA, con las tres oportunidades públicas. Cartelera administrativa: dos publicados, cero destaques pendientes y cero destacados activos.
+
+No se enviaron correos, no se canjearon enlaces ni se activaron destacados en esta consulta. La recuperación HTTP real y el vencimiento remoto siguen pendientes; una lista sin destacados no demuestra su ejecución. Se mantuvo abierta la pestaña autenticada. La ausencia de sesión del apartado anterior describe el momento previo y queda superada por esta actualización.
