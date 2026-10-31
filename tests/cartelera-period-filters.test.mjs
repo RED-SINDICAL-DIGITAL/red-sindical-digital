@@ -19,3 +19,11 @@ test('unfiltered catalog retains historical events for explicit browsing',async(
   const r=await worker.fetch(new Request('https://isolated.invalid/api/cartelera'),env,{});
   assert.deepEqual((await r.json()).map(e=>e.id),['old']);
 });
+
+test('este-mes includes the last UTC day even when the runtime timezone is ahead of UTC',async()=>{
+ const NativeDate=globalThis.Date,previousTZ=process.env.TZ;const fixed='2026-10-31T12:00:00.000Z';
+ class FixedDate extends NativeDate{constructor(...args){super(...(args.length?args:[fixed]))}static now(){return NativeDate.parse(fixed)}}
+ process.env.TZ='Pacific/Auckland';globalThis.Date=FixedDate;
+ try{const events=[{id:'last-day',fecha:'2026-10-31'},{id:'next-month',fecha:'2026-11-01'}].map(e=>({...e,titulo:e.id,estado:'published'}));const env={UADAV_DB:{get:async k=>k==='cartelera_aprobada'?JSON.stringify(events):null}};const r=await worker.fetch(new Request('https://isolated.invalid/api/cartelera?when=este-mes'),env,{});assert.deepEqual((await r.json()).map(e=>e.id),['last-day']);}
+ finally{globalThis.Date=NativeDate;if(previousTZ===undefined)delete process.env.TZ;else process.env.TZ=previousTZ;}
+});

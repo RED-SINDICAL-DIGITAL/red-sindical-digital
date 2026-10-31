@@ -263,7 +263,7 @@ function uadavArtistSharePage({request,env,kind,id,artist,kit,share}){
 }
 // Public channel library. Only fixed provider hosts are contacted; cursors bind to channel and kind.
 async function uadavYouTubeLibrary(url,env,instances,cors={}){
- const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,'Content-Type':'application/json','Cache-Control':'public, max-age=60'}});
+ const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,'Content-Type':'application/json','Cache-Control':status>=400?'no-store':'public, max-age=60'}});
  const kind=url.searchParams.get('kind')||'videos';if(!['info','videos','playlists'].includes(kind))return reply({error:'Tipo inválido'},400);
  let reference=String(url.searchParams.get('id')||url.searchParams.get('handle')||'').trim();
  if(/^https?:\/\//i.test(reference)){try{const u=new URL(reference);if(!/(^|\.)youtube\.com$/i.test(u.hostname))throw Error();const parts=u.pathname.split('/').filter(Boolean);reference=parts[0]==='channel'?parts[1]:parts[0]?.startsWith('@')?parts[0]:''}catch{return reply({error:'Usá una URL de canal de YouTube'},400)}}
@@ -271,7 +271,7 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
  let cursor=null;const rawCursor=url.searchParams.get('cursor');if(rawCursor){if(rawCursor.length>6000)return reply({error:'Cursor inválido'},400);try{cursor=JSON.parse(atob(rawCursor.replace(/-/g,'+').replace(/_/g,'/')));if(cursor.v!==1||cursor.ref!==reference||cursor.kind!==kind||!['iv','yt'].includes(cursor.provider)||typeof cursor.token!=='string'||cursor.token.length>4000)throw Error();if(cursor.provider==='iv'&&(!Number.isInteger(cursor.base)||cursor.base<0||cursor.base>=instances.length))throw Error()}catch{return reply({error:'Cursor inválido para este canal'},400)}}
  const key='youtube_library_v2_'+encodeURIComponent([reference,kind,rawCursor||'first'].join('|'));
  try{const cached=await env.UADAV_DB?.get(key);if(cached)return reply(JSON.parse(cached))}catch{}
- const fetchJSON=async href=>{const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),2800);try{const r=await fetch(href,{signal:ctl.signal,headers:{Accept:'application/json'}});if(!r.ok)throw Error('Proveedor no disponible');const d=await r.json();if(d.error)throw Error('Proveedor no disponible');return d}finally{clearTimeout(timer)}};
+ const fetchJSON=async href=>{const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),2800);try{const r=await fetch(href,{signal:ctl.signal,headers:{Accept:'application/json'}});let d;try{d=await r.json()}catch{throw Error('Respuesta del proveedor no disponible')}if(!r.ok||d.error){const officialHost=new URL(href).hostname==='www.googleapis.com',raw=d?.error?.errors?.[0]?.reason,allowed=['quotaExceeded','dailyLimitExceeded','rateLimitExceeded','playlistNotFound','channelNotFound','forbidden','accessNotConfigured','keyInvalid','backendError'];throw Object.assign(Error('Proveedor no disponible'),officialHost?{provider_status:r.status,provider_reason:allowed.includes(raw)?raw:'unavailable'}:{})}return d}finally{clearTimeout(timer)}};
  const enabled=async()=>{try{const raw=await env.UADAV_DB?.get('youtube_api_enabled');if(raw!==null&&raw!==undefined){const value=JSON.parse(raw);if(value===false||String(value).toLowerCase()==='false')return false}}catch{}return !!env.YOUTUBE_API_KEY};
  const official=async(resource,params)=>{if(!await enabled())throw Error('API oficial deshabilitada');const qs=new URLSearchParams({...params,key:env.YOUTUBE_API_KEY});return fetchJSON('https://www.googleapis.com/youtube/v3/'+resource+'?'+qs)};
  const thumb=x=>x?.thumbnails?.high?.url||x?.thumbnails?.medium?.url||x?.thumbnails?.default?.url||'';
@@ -308,7 +308,7 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
   }
   try{await env.UADAV_DB?.put(key,JSON.stringify(out),{expirationTtl:out.metadata_incomplete?60:600})}catch{}
   return reply(out);
- }catch(e){return reply({error:String(e.message||'No pudimos consultar YouTube'),retryable:true},503)}
+ }catch(e){return reply({error:String(e.message||'No pudimos consultar YouTube'),retryable:true,...(Number.isInteger(e.provider_status)?{provider:'youtube_api',provider_status:e.provider_status,provider_reason:e.provider_reason}: {})},503)}
 }
 
 function uadavSecurityConfig(env){const sitekey=String(env.TURNSTILE_SITE_KEY||'').trim(),secret=String(env.TURNSTILE_SECRET_KEY||'').trim();return{enabled:!!sitekey&&!!secret,configured:!!sitekey||!!secret,sitekey:sitekey||null}}
@@ -4507,8 +4507,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         const free=url.searchParams.get('free');
         const featured=url.searchParams.get('featured');
         const today=new Date(); const todayStr=today.toISOString().slice(0,10);
-        const endWeek=new Date(today); endWeek.setDate(today.getDate() + (7 - today.getDay() || 7)); const weekStr=endWeek.toISOString().slice(0,10);
-        const endMonth=new Date(today.getFullYear(),today.getMonth()+1,0).toISOString().slice(0,10);
+        const endWeek=new Date(today); endWeek.setUTCDate(today.getUTCDate() + (7 - today.getUTCDay() || 7)); const weekStr=endWeek.toISOString().slice(0,10);
+        const endMonth=new Date(Date.UTC(today.getUTCFullYear(),today.getUTCMonth()+1,0)).toISOString().slice(0,10);
         items=items.filter(e=>{
           if(String(e.estado||'published')!=='published') return false;
           const text=normalizeSearchText([e.titulo,e.nombre,e.descripcion,e.lugar,e.ciudad,e.provincia,e.pais,e.categoria].join(' '));
@@ -4519,7 +4519,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
           if(country && normalizeSearchText(e.pais)!==country) return false;
           if(from && start && start<from) return false; if(to && start && start>to) return false;
           if(when==='hoy' && start!==todayStr) return false;
-          if(when==='manana'){ const d=new Date(today); d.setDate(today.getDate()+1); if(start!==d.toISOString().slice(0,10)) return false; }
+          if(when==='manana'){ const d=new Date(today); d.setUTCDate(today.getUTCDate()+1); if(start!==d.toISOString().slice(0,10)) return false; }
           if(when==='esta-semana' && (!start || start<todayStr || start>weekStr)) return false;
           if(when==='este-mes' && (!start || start<todayStr || start>endMonth)) return false;
           if(free==='true' && !(e.es_gratuito===true || normalizeSearchText(e.precio)==='gratis')) return false;
