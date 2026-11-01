@@ -23,3 +23,11 @@ Dos pruebas nuevas aprobadas: cuota sanitizada sin claves/mensajes; playlist ine
 La suite completa detectó un fallo de Cartelera: Este mes calculaba el límite mensual con fecha local y lo comparaba con fechas UTC. Se alinearon fin de mes, semana y mañana con el cálculo UTC ya utilizado para hoy. No cambia la definición existente de hoy a otra zona horaria. Se agregó una prueba fija del 31/10/2026 con runtime Pacific/Auckland para impedir excluir el último día. No modifica fechas ni registros guardados.
 
 Suite completa Worker: 450/450 aprobadas. SHA256 del archivo completo: 34a0b959d9d0c6a7dce90c19331be21ed36b52a76760702e7fa1cebcfc6741a5.
+
+## Comprobación remota — 01/11/2026
+
+La consulta pública de videos del canal UCQJuTjhtb6Oyy2kStA1BUKw devuelve el nuevo diagnóstico: error Proveedor no disponible; retryable true; provider youtube_api; provider_status 404; provider_reason playlistNotFound. Esto confirma la presencia remota del diagnóstico nuevo, pero no prueba por sí solo la corrección del filtro mensual. El proveedor oficial rechaza la lista de subidas; este resultado no corresponde a quotaExceeded ni acredita una clave inválida.
+
+Pendiente: tratar la ausencia/inaccesibilidad de la lista sin mezclar canales por nombre. No afirmar que el canal carece de videos: la búsqueda pública sí encuentra contenido. Una eventual alternativa debe mantener channelId exacto y paginación, además de considerar su consumo de cuota.
+
+No fue necesario autenticarse en Cloudflare para comprobar este resultado. El navegador llegó al login y no se ingresaron credenciales, ni se efectuó un nuevo despliegue durante esta comprobación.
