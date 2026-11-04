@@ -9,7 +9,7 @@ function client(order=null,enabled=false,pro=false){
  const c={artist:{id:'ART-QA'},token:'synthetic',currentTab:'plan',document:{getElementById:id=>id==='proOrderBox'?box:id==='createProOrder'?button:null},encodeURIComponent,esc:x=>String(x??''),artistHasCurrentPro:()=>pro,reportProPayment(){},get:async path=>path.startsWith('pro/payment-orders/current')?{order}:{enabled,monthly_amount:500,currency:'ARS'}};
  vm.createContext(c);vm.runInContext(fn,c);return {c,box,button};
 }
-test('PRO button starts disabled while checking configuration',()=>{assert(source.includes('id="createProOrder" disabled>Elegir mi PRO'))});
+test('retired PRO loader makes no requests when the promotion view has no order box',async()=>{const x=client(null,true);let requests=0;x.c.document.getElementById=()=>null;x.c.get=async()=>{requests++;throw Error('Retired checkout must not request data')};await x.c.loadProOrder();assert.equal(requests,0)});
 test('disabled collection never enables creating an order',async()=>{const x=client();await x.c.loadProOrder();assert.equal(x.button.disabled,true);assert.match(x.box.innerHTML,/todavía no habilitado/)});
 test('enabled configuration with a price permits creating an order',async()=>{const x=client(null,true);await x.c.loadProOrder();assert.equal(x.button.disabled,false)});
 test('approved historical payment does not claim expired PRO is active',async()=>{const x=client({id:'ORDER-QA',status:'approved'},false,false);await x.c.loadProOrder();assert.match(x.box.innerHTML,/Pago confirmado/);assert.match(x.box.innerHTML,/vigencia actual/);assert(!x.box.innerHTML.includes('Tu PRO está activo'));assert(x.button.disabled)});
