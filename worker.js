@@ -3346,7 +3346,7 @@ const uadavWorker = {
       if(!channelId) return officialDiscoveryChannelSearch(name);
       return {channelId,nombre:String(item.author||item.title||name),thumbnail:String(item.authorThumbnails?.[0]?.url||item.videoThumbnails?.[0]?.url||''),bio:String(item.description||''),source:'invidious'};
     }
-    async function invidiousChannelInfo(channelId){
+    async function invidiousChannelInfo(channelId,options={}){
       const id=String(channelId||'').trim(); if(!id)return null;
       const requestOne=async(base)=>{
         const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4200);
@@ -3358,7 +3358,7 @@ const uadavWorker = {
           return {channelId:String(d.authorId||id),nombre:String(d.author||'Artista'),thumbnail:String(d.authorThumbnails?.find?.(x=>x.quality==='medium')?.url||d.authorThumbnails?.[0]?.url||''),banner:String(d.authorBanners?.find?.(x=>x.quality==='medium')?.url||d.authorBanners?.[0]?.url||''),bio:String(d.description||''),subscribers:Number(d.subCount||0),total_views:Number(d.totalViews||0),latestVideos:Array.isArray(d.latestVideos)?d.latestVideos.slice(0,24):[],source:'invidious'};
         }finally{clearTimeout(timer)}
       };
-      try{return await Promise.any(INVIDIOUS_INSTANCES.map(base=>requestOne(base)))}catch(_){return officialDiscoveryChannelInfo(id)}
+      try{return await Promise.any(INVIDIOUS_INSTANCES.map(base=>requestOne(base)))}catch(_){return options.liveOnly?null:officialDiscoveryChannelInfo(id)}
     }
     async function invidiousVideoInfo(videoId){
       const id=String(videoId||'').trim();if(!id)return null;for(const base of INVIDIOUS_INSTANCES){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4500);try{const r=await fetch(`${base}/api/v1/videos/${encodeURIComponent(id)}`,{signal:controller.signal,headers:{Accept:'application/json','User-Agent':'WhiteLabelMediaPlatform/1.0'}});if(!r.ok)continue;const d=await r.json();if(d?.authorId)return{videoId:id,channelId:String(d.authorId),author:String(d.author||'')}}catch(_){}finally{clearTimeout(timer)}}return null;
@@ -6432,11 +6432,12 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const artists=all.filter(a=>!!publicArtistFromItem(a).canal);
       const external=all.map(a=>publicArtistFromItem(a)).flatMap(p=>[['twitch',p.twitch],['kick',p.kick]].map(([provider,raw])=>{const url=String(raw||'').trim();if(!url)return null;const slug=url.replace(/^https?:\/\//i,'').replace(/^www\./i,'').split('/').filter(Boolean).pop()||'';return slug?{artist_id:p.id,artist_name:p.nombre,artist_photo:p.foto,provider,url:url.startsWith('http')?url:'https://'+provider+'.com/'+slug,channel_id:slug,title:p.nombre+' en '+provider.charAt(0).toUpperCase()+provider.slice(1),thumbnail:p.portada||p.foto||'',linked_channel:true,detected_at:isoNow()}:null})).filter(Boolean);
       let cursor=Number(await env.UADAV_DB.get('public_live_cursor')||0), found=[];
-      for(let n=0;n<Math.min(4,artists.length);n++){
-        const a=artists[(cursor+n)%artists.length],p=publicArtistFromItem(a),info=await invidiousChannelInfo(p.canal).catch(()=>null);
+      const batch=Array.from({length:Math.min(4,artists.length)},(_,n)=>artists[(cursor+n)%artists.length]);
+      found=(await Promise.all(batch.map(async a=>{
+        const p=publicArtistFromItem(a),info=await invidiousChannelInfo(p.canal,{liveOnly:true}).catch(()=>null);
         const v=(Array.isArray(info?.latestVideos)?info.latestVideos:[]).find(x=>x?.liveNow===true||x?.isLive===true||String(x?.liveBroadcastContent||'').toLowerCase()==='live');
-        if(v?.videoId)found.push({artist_id:p.id,artist_name:p.nombre,artist_photo:p.foto,channel_id:p.canal,provider:'youtube',video_id:String(v.videoId),title:String(v.title||p.nombre),thumbnail:String(v.videoThumbnails?.[0]?.url||''),detected_at:isoNow()});
-      }
+        return v?.videoId?{artist_id:p.id,artist_name:p.nombre,artist_photo:p.foto,channel_id:p.canal,provider:'youtube',video_id:String(v.videoId),is_live:true,title:String(v.title||p.nombre),thumbnail:String(v.videoThumbnails?.[0]?.url||''),detected_at:isoNow()}:null;
+      }))).filter(Boolean);
       if(artists.length){cursor=(cursor+4)%artists.length;await env.UADAV_DB.put('public_live_cursor',String(cursor))}
       let registry=(await getArray('public_live_registry')).filter(x=>Date.now()-Date.parse(x.detected_at||0)<180000);
       for(const x of found)registry=[x,...registry.filter(y=>String(y.channel_id)!==String(x.channel_id))];
