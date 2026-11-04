@@ -9,3 +9,5 @@ test('event card links preserve active Cartelera filters',()=>{const source=fs.r
 test('using filters before a confirmed catalog cannot replace a loading failure with empty results',()=>{const source=fs.readFileSync('cartelera.html','utf8'),start=source.indexOf('function render(){'),end=source.indexOf('function eventRows(',start),c={catalogReady:false};vm.runInNewContext(source.slice(start,end),c);assert.doesNotThrow(()=>c.render())});
 
 test('finished events show their most recent performance instead of the oldest',()=>{const e={fecha:'2026-09-01',funciones:[{fecha:'2026-09-10'},{fecha:'2026-09-25'}]};assert.equal(view.info(e,now).day,25)});
+
+test('upcoming agenda excludes finished events and preserves later performances and ongoing events',()=>{const today=new Date('2026-11-04T16:00:00');assert.equal(view.upcoming({fecha:'2026-11-01'},today),false);assert.equal(view.upcoming({fecha:'2026-11-04'},today),true);assert.equal(view.upcoming({fecha:'2026-11-01',funciones:[{fecha:'2026-12-01'}]},today),true);assert.equal(view.upcoming({fecha_inicio:'2026-11-01',fecha_fin:'2026-11-05'},today),true);assert.equal(view.upcoming({},today),true)});
