@@ -58,7 +58,7 @@ const txt=await f.text();
 const found=txt.match(/JOB-[A-Z0-9-]{3,80}\s*\|\s*[a-f0-9]{64}/i);
 if(!found)throw Error('Archivo inválido. Seleccioná el TXT de acceso guardado cuando publicaste.');
 get('ownerAccessCode').value=found[0].replace(/\s/g,'');
-message.textContent='Acceso cargado. Ya podés ver los postulantes.';
+message.textContent='Archivo leído. El resultado de la verificación aparece debajo.';
 owner.requestSubmit();
 }catch(err){message.textContent=err.message||'No se pudo abrir el archivo.';}finally{upload.value='';}
 });
@@ -113,4 +113,4 @@ new MutationObserver(render).observe(candidates,{childList:true,subtree:false});
    const msg=document.getElementById('applyReceiptCopyStatus');if(msg)msg.textContent='Comprobante generado. Guardalo en un lugar seguro.';
  });
 })();
-</script><script src="/uadav-account-sync.js?v=20261104-library-events"></script><script src="/uadav-jobs-account.js?v=11759.3"></script><script src="/uadav-profile-email.js?v=12061"></script><script src="/uadav-jobs-profile-fill.js?v=11769.1"></script><script src="/uadav-job-recovery-public.js?v=20261104"></script></body></html>
+</script><script src="/uadav-account-sync.js?v=20261104-library-events"></script><script src="/uadav-jobs-account.js?v=20261104-cierre-ux"></script><script src="/uadav-profile-email.js?v=12061"></script><script src="/uadav-jobs-profile-fill.js?v=11769.1"></script><script src="/uadav-job-recovery-public.js?v=20261104"></script></body></html>
