@@ -1,0 +1,25 @@
+{
+  "scope": "cartelera-editorial-staging",
+  "date": "2026-11-04",
+  "import_result": {
+    "created": 3,
+    "updated": 0,
+    "skipped": 0
+  },
+  "events": [
+    "EV-EXT-1CD42885ECF220DC3D699E0774D0B1E5",
+    "EV-EXT-8AFE09149E9743833882F258E0948806",
+    "EV-EXT-E7DD8B847EE4B797D95BA9245D9EAE8E"
+  ],
+  "verified": {
+    "official_images_loaded": true,
+    "editorial_source_link": true,
+    "non_video_source_has_no_play_button": true,
+    "past_recommendations_excluded": true,
+    "free_event_official_information_link": true,
+    "agenda_scroll_margin_px": 110
+  },
+  "ui_tests_passed": 793,
+  "physical_mobile_test_this_turn": false,
+  "production_modified": false
+}
