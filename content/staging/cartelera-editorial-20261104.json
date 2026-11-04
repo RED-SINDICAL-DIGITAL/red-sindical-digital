@@ -1,0 +1,124 @@
+{
+  "entity": "events",
+  "rows": [
+    {
+      "titulo": "Manon · Ballet Estable del Teatro Colón",
+      "categoria": "Danza",
+      "organizador": "Teatro Colón",
+      "fecha_inicio": "2026-11-05",
+      "fecha_fin": "2026-11-15",
+      "hora": "20:00",
+      "lugar": "Teatro Colón · Sala principal",
+      "direccion": "Tucumán 1171",
+      "ciudad": "Buenos Aires",
+      "provincia": "Ciudad Autónoma de Buenos Aires",
+      "pais": "Argentina",
+      "descripcion_corta": "Ballet con coreografía de Kenneth MacMillan y música de Jules Massenet. Funciones del 5 al 15 de noviembre.",
+      "descripcion": "El Ballet Estable del Teatro Colón presenta Manon junto a la Filarmónica de Buenos Aires. Consultá horarios, disponibilidad y entradas en la publicación oficial. Agenda editorial informativa; no es una promoción paga ni una producción de UADAV STREAM.",
+      "source": "Teatro Colón · programación oficial",
+      "source_url": "https://teatrocolon.org.ar/produccion/manon/",
+      "external_id": "manon-2026",
+      "imagen": "https://teatrocolon.org.ar/wp-content/uploads/2025/12/Manon_tapa-redes_web-1.png",
+      "link_compra": "https://teatrocolon.org.ar/produccion/manon/",
+      "es_gratuito": false,
+      "funciones": [
+        {
+          "fecha": "2026-11-05",
+          "hora": "20:00"
+        },
+        {
+          "fecha": "2026-11-06",
+          "hora": "20:00"
+        },
+        {
+          "fecha": "2026-11-07",
+          "hora": "20:00"
+        },
+        {
+          "fecha": "2026-11-08",
+          "hora": "17:00"
+        },
+        {
+          "fecha": "2026-11-10",
+          "hora": "20:00"
+        },
+        {
+          "fecha": "2026-11-11",
+          "hora": "20:00"
+        },
+        {
+          "fecha": "2026-11-13",
+          "hora": "20:00"
+        },
+        {
+          "fecha": "2026-11-14",
+          "hora": "20:00"
+        },
+        {
+          "fecha": "2026-11-15",
+          "hora": "17:00"
+        }
+      ],
+      "destacado_pagado": false,
+      "moneda": "ARS"
+    },
+    {
+      "titulo": "Ars Nova · 50.º aniversario",
+      "categoria": "Música",
+      "organizador": "Teatro Municipal La Comedia",
+      "fecha_inicio": "2026-11-06",
+      "fecha_fin": "2026-11-06",
+      "hora": "20:00",
+      "lugar": "Teatro Municipal La Comedia",
+      "direccion": "Mitre 958",
+      "ciudad": "Rosario",
+      "provincia": "Santa Fe",
+      "pais": "Argentina",
+      "descripcion_corta": "Celebración coral de los 50 años de Ars Nova, bajo la dirección de Miguel Ángel Solagna.",
+      "descripcion": "Encuentro de música clásica por el aniversario del conjunto rosarino. Entrada gratuita por orden de llegada, hasta completar la capacidad. Duración informada: 90 minutos. Fuente e imagen: Teatro Municipal La Comedia. Agenda editorial; sin pauta paga.",
+      "source": "Teatro Municipal La Comedia · agenda oficial",
+      "source_url": "https://teatrolacomedia.gob.ar/espectaculo/ars-nova-50-aniversario/",
+      "external_id": "ars-nova-20261106",
+      "imagen": "https://teatrolacomedia.gob.ar/wp-content/uploads/2026/10/Ars-web-1024x547.jpg",
+      "link_compra": "https://teatrolacomedia.gob.ar/espectaculo/ars-nova-50-aniversario/",
+      "es_gratuito": true,
+      "funciones": [
+        {
+          "fecha": "2026-11-06",
+          "hora": "20:00"
+        }
+      ],
+      "destacado_pagado": false,
+      "moneda": "ARS"
+    },
+    {
+      "titulo": "Música de acá · Ensamble Municipal de Vientos",
+      "categoria": "Música",
+      "organizador": "Teatro Municipal La Comedia",
+      "fecha_inicio": "2026-11-07",
+      "fecha_fin": "2026-11-07",
+      "hora": "20:00",
+      "lugar": "Teatro Municipal La Comedia",
+      "direccion": "Mitre 958",
+      "ciudad": "Rosario",
+      "provincia": "Santa Fe",
+      "pais": "Argentina",
+      "descripcion_corta": "Rock, tango y folklore argentino junto al Ensamble Municipal de Vientos y cantantes invitados.",
+      "descripcion": "Concierto dirigido por Leonel Lúquez con canciones argentinas y artistas de la escena rosarina. Entrada libre por orden de llegada, hasta completar la capacidad. Duración informada: 80 minutos. Fuente e imagen: Teatro Municipal La Comedia. Agenda editorial; sin pauta paga.",
+      "source": "Teatro Municipal La Comedia · agenda oficial",
+      "source_url": "https://teatrolacomedia.gob.ar/espectaculo/musica-de-aca-3/",
+      "external_id": "musica-de-aca-20261107",
+      "imagen": "https://teatrolacomedia.gob.ar/wp-content/uploads/2026/10/vientos-1024x546.jpg",
+      "link_compra": "https://teatrolacomedia.gob.ar/espectaculo/musica-de-aca-3/",
+      "es_gratuito": true,
+      "funciones": [
+        {
+          "fecha": "2026-11-07",
+          "hora": "20:00"
+        }
+      ],
+      "destacado_pagado": false,
+      "moneda": "ARS"
+    }
+  ]
+}
