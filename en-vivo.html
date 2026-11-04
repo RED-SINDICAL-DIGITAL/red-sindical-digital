@@ -4,20 +4,30 @@
   let modules={};try{if(window.parent!==window){await window.parent.PlatformBrandReady;modules=window.parent.PlatformModules||{}}if(!Object.keys(modules).length)modules=(await get('config')).modules||{}}catch{}
   document.querySelectorAll('[data-module]').forEach(el=>{const off=modules[el.dataset.module]===false;el.hidden=off;if(off)el.style.display='none'});
   const paths=[['official','senales_oficiales'],['artists','public/live-artists'],['discovery','public/live-argentina'],['radios','radios']];
-  const results=await Promise.all(paths.map(async([key,path])=>{if(modules[key==='radios'?'radio':'iptv']===false)return {key,items:[],disabled:true};try{return {key,items:arr(await get(path+'?_='+Date.now()))}}catch{return {key,items:[],error:true}}}));
-  const data=Object.fromEntries(results.map(x=>[x.key,x]));
+  const data={};
   const publicItem=x=>!!x&&x.activa!==false&&x.active!==false&&x.activo!==false&&x.enabled!==false&&x.visible!==false&&!['hidden','oculto','oculta','suspended','suspendido','deleted','eliminado','private','privado'].includes(String(x.estado||x.status||'').toLowerCase());
   const paint=(id,items,message,error)=>{document.getElementById(id).innerHTML=error?'<div class="empty">No pudimos consultar esta fuente. Podés volver a intentarlo.</div>':items.length?items.map(x=>card(x)).join(''):'<div class="empty">'+message+'</div>'};
-  paint('official',data.official.items.filter(publicItem),'No hay señales oficiales habilitadas.',data.official.error);
+  const render=key=>{
+  if(key==='official')paint('official',data.official.items.filter(publicItem),'No hay señales oficiales habilitadas.',data.official.error);
+  if(key==='artists'){
   const verified=data.artists.items.filter(x=>x.video_id||x.videoId||ytId(x.url||x.live_url||'')),linked=data.artists.items.filter(x=>!verified.includes(x));
   paint('verified',verified,'No detectamos artistas transmitiendo en este instante.',data.artists.error);
   paint('linked',linked,'Todavía no hay canales externos vinculados.',data.artists.error);
-  paint('discovery',data.discovery.items,'No hay señales detectadas ahora.',data.discovery.error);
+  }
+  if(key==='discovery')paint('discovery',data.discovery.items,'No hay señales detectadas ahora.',data.discovery.error);
+  if(key==='radios'){
   const radios=data.radios.items.filter(publicItem).slice(0,8);
   const radioBox=document.getElementById('liveRadios');radioBox.innerHTML=data.radios.error?'<div class="empty">No pudimos consultar las radios. Volvé a intentarlo.</div>':radios.length?radios.map((x,i)=>'<button class="card" data-live-radio="'+i+'"><div class="thumb"><img src="'+esc(x.logo||x.portada||'/radio-fallback.svg')+'" alt="" loading="lazy"></div><div class="copy"><strong>'+esc(x.nombre||'Radio')+'</strong><span>Escuchar · '+esc(x.programa||x.ubicacion||'Radio en vivo')+'</span></div></button>').join(''):'<div class="empty">Todavía no hay radios habilitadas.</div>';
-  document.querySelectorAll('.card:not([data-live-radio])').forEach(b=>b.onclick=()=>openItem(b));
   radioBox.querySelectorAll('[data-live-radio]').forEach(b=>b.onclick=()=>{const radio=radios[Number(b.dataset.liveRadio)];try{const h=window.parent!==window&&(window.parent.UADAVShellHost||window.parent.UADAV_APP);if(h?.playRadio){h.playRadio(radio);return}}catch{}location.href='/radio.html?id='+encodeURIComponent(radio.id||radio.nombre||radio.stream_url||'')});
+  }
+  document.querySelectorAll('.card:not([data-live-radio])').forEach(b=>b.onclick=()=>openItem(b));
   document.querySelectorAll('.thumb img').forEach(img=>img.onerror=()=>{img.onerror=null;img.src='/radio-fallback.svg'});
+  };
+  const results=await Promise.all(paths.map(async([key,path])=>{
+   let result;if(modules[key==='radios'?'radio':'iptv']===false)result={key,items:[],disabled:true};
+   else try{result={key,items:arr(await get(path+'?_='+Date.now()))}}catch{result={key,items:[],error:true}}
+   data[key]=result;render(key);return result;
+  }));
   const errors=results.filter(x=>x.error).length;retry.hidden=!errors;status.textContent=errors?'Parte de En vivo no pudo cargarse. El resto sigue disponible.':'';
  }catch{status.textContent='No pudimos cargar En vivo. Volvé a intentarlo.';retry.hidden=false}
  finally{liveBusy=false;retry.disabled=false}
