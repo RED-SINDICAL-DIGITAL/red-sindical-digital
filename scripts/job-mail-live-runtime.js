@@ -122,7 +122,7 @@ async function uadavJobMailLiveRoute(request,env){
   if(body.action==='request'){await c.engine({clock:()=>row.created_at}).enqueue({jobId:row.job_id,recipient:c.recipient,requestId:row.id,actorHash:await liveHash('mail-live-qa-admin:'+row.id)});return reply(await liveStatus(c,row));}
   // Exactly one dispatch reservation per fixture. A timeout never sends again.
   const pending=await c.db.prepare('SELECT id FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();liveNeed(pending,'RECOVERY_QA_REQUEST_REQUIRED',409);
-  const unexpected=await c.db.prepare("SELECT COUNT(*) AS n FROM job_recovery_outbox o WHERE NOT EXISTS(SELECT 1 FROM job_mail_live_qa q WHERE q.job_id=o.job_id AND q.id=o.request_id)").first();liveNeed(unexpected.n===0,'RECOVERY_QA_FOREIGN_OUTBOX',423);
+  const unexpected=await c.db.prepare("SELECT COUNT(*) AS n FROM job_recovery_outbox o WHERE NOT EXISTS(SELECT 1 FROM job_mail_live_qa q WHERE q.job_id=o.job_id AND q.id=o.request_id) AND NOT EXISTS(SELECT 1 FROM job_store_meta m WHERE m.key='job-recovery-public:'||o.request_id AND m.value=o.job_id)").first();liveNeed(unexpected.n===0,'RECOVERY_QA_FOREIGN_OUTBOX',423);
   const reserved=await c.db.prepare('UPDATE job_mail_live_qa SET dispatch_at=? WHERE id=? AND dispatch_at IS NULL AND expires_at>?').bind(Date.now(),row.id,Date.now()).run();
   if(reserved.meta?.changes===1)await c.engine().dispatch(c.adapter);
   return reply(await liveStatus(c,await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE id=?').bind(row.id).first()));

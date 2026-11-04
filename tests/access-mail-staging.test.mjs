@@ -187,7 +187,7 @@ test('caller cancellation aborts sending and a pre-aborted request never leaves 
 test('embedded mail transport is confined to the staging QA block while public recovery stays locked', async () => {
   const source = await readFile(new URL('../worker.js', import.meta.url), 'utf8');
   const begin=source.indexOf('/* BEGIN PRIVATE JOB MAIL LIVE QA */'),end=source.indexOf('/* END PRIVATE JOB MAIL LIVE QA */');
-  assert(begin>=0&&end>begin);assert(!source.slice(0,begin).includes('createBrevoStagingMail'));assert(!source.slice(end).includes('createBrevoStagingMail'));
+  assert(begin>=0&&end>begin);assert(!source.slice(0,begin).includes('createBrevoStagingMail'));const publicStart=source.indexOf('/* BEGIN PUBLIC JOB RECOVERY STAGING */'),publicEnd=source.indexOf('/* END PUBLIC JOB RECOVERY STAGING */');assert(publicStart>end&&publicEnd>publicStart);assert(!(source.slice(end,publicStart)+source.slice(publicEnd+45)).includes('createBrevoStagingMail'));assert(source.slice(publicStart,publicEnd).includes("env.JOB_RECOVERY_HTTP_STAGING!=='public'"));
   const publicRecovery=source.slice(source.indexOf("if(path==='/api/bolsa_trabajo/acceso/solicitar'"),source.indexOf('// Credential lookup is read-only'));assert(publicRecovery.includes("},503);"));assert(!publicRecovery.includes('uadavLiveMailCore'));
   assert(source.includes("liveNeed(url.origin===LIVE_SITE"));
 });
