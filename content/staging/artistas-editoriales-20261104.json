@@ -1,0 +1,47 @@
+{
+  "entity": "artists",
+  "rows": [
+    {
+      "id": "ART-UCp538Jzy_VRFHAPBjyLTqJw",
+      "nombre": "Les Luthiers",
+      "nombre_artistico": "Les Luthiers",
+      "rubro": "Humor",
+      "pais": "Argentina",
+      "canal": "UCp538Jzy_VRFHAPBjyLTqJw",
+      "foto": "https://yt3.ggpht.com/ytc/AIdro_kj-HlTVjqTnW1o0YeZv11Az_LA3ATB_2KGSoaKKsVrZ6Y=s800-c-k-c0x00ffffff-no-rj",
+      "portada": "https://yt3.googleusercontent.com/R4B6rRe1iw47puLuoKXo-3zl31Wme_5YEMpT_F7qFt2u-vnLSDDABxYET4vlVNV_FO62yVxBsA",
+      "bio": "Humor y música en escena. Perfil editorial que reúne el contenido público de su canal oficial.",
+      "visible": true,
+      "afiliado_verificado": false,
+      "origen": "Selección editorial · canal oficial · sin afiliación ni publicidad paga"
+    },
+    {
+      "id": "ART-UCHdmFPerxgEUdLeDNO2F_NA",
+      "nombre": "Soledad Pastorutti",
+      "nombre_artistico": "Soledad Pastorutti",
+      "rubro": "Música",
+      "pais": "Argentina",
+      "canal": "UCHdmFPerxgEUdLeDNO2F_NA",
+      "foto": "https://yt3.ggpht.com/U35W3W_y0J0N505wU6mf96SHV28SjfE1Lr3ZKLKUDQqDunyRdt4NWHw3SDSfXmqTY7NlJ6tNrh8=s800-c-k-c0x00ffffff-no-rj",
+      "portada": "https://yt3.googleusercontent.com/epOt5QsVCeYmjfEWRPoM2-g0nc8FGZyDtQfrI7imNVaMZFe13KO5phFEtnrxnsoSB8sTFwl7",
+      "bio": "Cantante de folklore argentino. Perfil editorial para descubrir sus videos y playlists públicos desde su canal oficial.",
+      "visible": true,
+      "afiliado_verificado": false,
+      "origen": "Selección editorial · canal oficial · sin afiliación ni publicidad paga"
+    },
+    {
+      "id": "ART-UCPiWIjwDZQo3UobMqvi4ggg",
+      "nombre": "Cirque du Soleil",
+      "nombre_artistico": "Cirque du Soleil",
+      "rubro": "Circo",
+      "pais": "Canadá",
+      "canal": "UCPiWIjwDZQo3UobMqvi4ggg",
+      "foto": "https://yt3.ggpht.com/V_vri94zXp16VqVVK2ro-Fc-THBk9wcG1mhflKZNvaDGJsDc2zWd5XYNhjoq5D56FNVVSqJVhGQ=s800-c-k-c0x00ffffff-no-rj",
+      "portada": "https://yt3.googleusercontent.com/Y4GV-YQzhmr692gy4Hlwyd9KI33OnKP9nmkLqOzQpVPhpESD3fzGX-e1kwNnjdLum4WDoUZK1_c",
+      "bio": "Compañía de artes circenses y espectáculos. Selección editorial de su contenido público, con acceso al canal oficial.",
+      "visible": true,
+      "afiliado_verificado": false,
+      "origen": "Selección editorial · canal oficial · sin afiliación ni publicidad paga"
+    }
+  ]
+}
