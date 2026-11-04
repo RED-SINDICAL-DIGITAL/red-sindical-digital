@@ -3,5 +3,6 @@ function videoId(item){if(!item||typeof item!=='object'||Array.isArray(item))ret
 function normalize(items){if(!Array.isArray(items))return [];return items.slice(0,250).flatMap((item,position)=>{const id=videoId(item);return id?[{id,position,titulo:String(item.titulo||item.title||item.name||'Video').slice(0,300),availability:'unknown'}]:[]})}
 function libraryItem(item){return Object.fromEntries(Object.entries(item||{}).filter(([key])=>!key.startsWith('__uadav')))}
 function key(item){return videoId(item)||String(item?.id||item?.videoId||item?.external_id||item?.url||item?.href||item?.title||item?.name||'')}
-g.UADAVPersonalPlaylist={videoId,normalize,libraryItem,key};
+function selection(items,selected){const queue=normalize(items);if(!queue.length)return null;const id=selected?videoId(selected):queue[0].id,index=queue.findIndex(item=>item.id===id);if(index<0)return null;const first=selected||items.find(item=>videoId(item)===id);return {...libraryItem(first),__uadavPersonalQueue:items.slice(0,250).map(libraryItem),__uadavPersonalIndex:index}}
+g.UADAVPersonalPlaylist={videoId,normalize,libraryItem,key,selection};
 })(globalThis);

@@ -54,3 +54,4 @@ test('navigation and minimization preserve the existing player and never pause o
  for(const body of [nav,mode])assert.doesNotMatch(body,/stage\.replaceChildren|pauseVideo|stopVideo|closeContent\(/);
  const source=fs.readFileSync('uadav-native-media-session.js','utf8');assert.doesNotMatch(source,/visibilitychange|document.hidden|setInterval/);
 });
+test('system previous and next operate the active queue and clear when switching to radio',()=>{const {controller,handlers}=setup();let index=1;controller.attach(new Media(),{next:()=>index++,previous:()=>index--});handlers.nexttrack();assert.equal(index,2);handlers.previoustrack();assert.equal(index,1);controller.attach(new Media(),{live:true});assert.equal(handlers.nexttrack,null);assert.equal(handlers.previoustrack,null);controller.clear();assert.equal(handlers.nexttrack,null)});

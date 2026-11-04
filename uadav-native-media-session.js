@@ -3,7 +3,7 @@
 'use strict';
 function createController(session, Metadata){
   let active=null, listeners=[];
-  const actions=['play','pause','stop','seekto','seekbackward','seekforward'];
+  const actions=['play','pause','stop','seekto','seekbackward','seekforward','previoustrack','nexttrack'];
   const handle=(name,fn)=>{try{session.setActionHandler(name,fn)}catch{}};
   function clear(){
     listeners.forEach(([el,type,fn])=>el.removeEventListener(type,fn));listeners=[];
@@ -40,6 +40,8 @@ function createController(session, Metadata){
     }
     handle('play',()=>{try{Promise.resolve(options.resume?options.resume():element.play()).catch(sync)}catch{sync()}});
     handle('pause',()=>element.pause());
+    handle('nexttrack',typeof options.next==='function'?options.next:null);
+    handle('previoustrack',typeof options.previous==='function'?options.previous:null);
     handle('stop',()=>{element.pause();options.stop?.();clear()});
     sync();
   }
@@ -65,12 +67,12 @@ if(!root.document||!root.navigator?.mediaSession)return;
 const doc=root.document,controller=createController(root.navigator.mediaSession,root.MediaMetadata);
 let embedded=null;
 root.UADAVMediaSession={
- youtube(player,state){
+ youtube(player,state,options={}){
   if(!player)return;
   // Only actual playback takes ownership; ready/loading never interrupts radio.
   if(embedded?.player!==player){if(Number(state)!==1)return;embedded=createYouTubeAdapter(player)}
   embedded.update(state);
-  if(Number(state)===1)controller.attach(embedded,{info:()=>({title:doc.getElementById('mediaTitle')?.textContent,artist:doc.getElementById('mediaMeta')?.textContent}),stop:()=>root.UADAVShellHost?.closeContent?.()});
+  if(Number(state)===1)controller.attach(embedded,{info:()=>({title:doc.getElementById('mediaTitle')?.textContent,artist:doc.getElementById('mediaMeta')?.textContent}),stop:()=>root.UADAVShellHost?.closeContent?.(),next:options.next,previous:options.previous});
   else if(controller.element===embedded)controller.sync();
  },
  release(player){if(embedded?.player!==player)return;if(controller.element===embedded)controller.clear();embedded=null}
