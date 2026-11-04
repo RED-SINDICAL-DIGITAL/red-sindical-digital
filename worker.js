@@ -32,19 +32,22 @@ async function idempotencyKey(notificationId){
  const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('cartelera-notice:'+notificationId))),b=>b.toString(16).padStart(2,'0')).join('');
  return digest.slice(0,8)+'-'+digest.slice(8,12)+'-4'+digest.slice(13,16)+'-'+((parseInt(digest[16],16)&3)|8).toString(16)+digest.slice(17,20)+'-'+digest.slice(20,32);
 }
-async function dispatch(db,send,{now=Date.now(),limit=20,allowedRecipient}={}){
- if(typeof send!=='function'||!allowedRecipient)return {enabled:false,sent:0,blocked:0,uncertain:0};
+async function dispatch(db,send,{now=Date.now(),limit=20,allowedRecipient,notBefore,authorize}={}){
+ const general=!allowedRecipient&&typeof authorize==='function'&&typeof notBefore==='string'&&Number.isFinite(Date.parse(notBefore));
+ if(typeof send!=='function'||(!allowedRecipient&&!general))return {enabled:false,sent:0,blocked:0,uncertain:0};
  await db.prepare(schema).run();
  await db.prepare("UPDATE event_notification_dispatch SET state='uncertain',owner=NULL,error_code='INTERRUPTED_SEND',updated_at=? WHERE state='sending' AND lease_until<=?").bind(new Date(now).toISOString(),now).run();
- const rows=(await db.prepare("SELECT n.id,n.recipient,n.payload_json FROM notifications n LEFT JOIN event_notification_dispatch d ON d.notification_id=n.id WHERE n.status='queued' AND n.template IN ('event_published','event_featured_requested') AND lower(n.recipient)=lower(?) AND (d.notification_id IS NULL OR (d.state='retry' AND d.next_at<=? AND d.attempts<3)) ORDER BY n.created_at,n.id LIMIT ?").bind(allowedRecipient,now,Math.max(1,Math.min(50,limit))).all()).results||[];
- let sent=0,uncertain=0;const blocked=Number((await db.prepare("SELECT COUNT(*) n FROM notifications WHERE status='queued' AND template IN ('event_published','event_featured_requested') AND COALESCE(lower(recipient),'')<>lower(?)").bind(allowedRecipient).first()).n);
+ const selection=general?" AND n.created_at>=? AND n.created_at<=? AND json_valid(n.payload_json) AND json_extract(n.payload_json,'$.mail_authorization.version')=1 AND json_extract(n.payload_json,'$.mail_authorization.consent')=1":" AND lower(n.recipient)=lower(?)";
+ const params=general?[notBefore,new Date(now).toISOString()]:[allowedRecipient];
+ const rows=(await db.prepare("SELECT n.id,n.recipient,n.payload_json FROM notifications n LEFT JOIN event_notification_dispatch d ON d.notification_id=n.id WHERE n.status='queued' AND n.template IN ('event_published','event_featured_requested')"+selection+" AND (d.notification_id IS NULL OR (d.state='retry' AND d.next_at<=? AND d.attempts<3)) ORDER BY n.created_at,n.id LIMIT ?").bind(...params,now,Math.max(1,Math.min(50,limit))).all()).results||[];
+ let sent=0,uncertain=0;const blocked=general?0:Number((await db.prepare("SELECT COUNT(*) n FROM notifications WHERE status='queued' AND template IN ('event_published','event_featured_requested') AND COALESCE(lower(recipient),'')<>lower(?)").bind(allowedRecipient).first()).n);
  for(const row of rows){
-  if(!row.recipient||String(row.recipient).toLowerCase()!==String(allowedRecipient).toLowerCase()){continue}
+  if(!row.recipient||!general&&String(row.recipient).toLowerCase()!==String(allowedRecipient).toLowerCase()){continue}
   const owner=crypto.randomUUID(),stamp=new Date(now).toISOString();
   const claimed=await db.prepare("INSERT INTO event_notification_dispatch(notification_id,state,owner,lease_until,attempts,next_at,updated_at) VALUES(?,'sending',?,?,1,0,?) ON CONFLICT(notification_id) DO UPDATE SET state='sending',owner=excluded.owner,lease_until=excluded.lease_until,attempts=attempts+1,updated_at=excluded.updated_at WHERE event_notification_dispatch.state='retry' AND event_notification_dispatch.next_at<=? AND event_notification_dispatch.attempts<3").bind(row.id,owner,now+60000,stamp,now).run();
   if(Number(claimed.meta?.changes)!==1)continue;
   let receipt;
-  try{receipt=await send({id:row.id,to:row.recipient,payload:JSON.parse(row.payload_json)});if(receipt?.skipped===true){await db.batch([db.prepare("UPDATE event_notification_dispatch SET state='cancelled',owner=NULL,error_code='EVENT_NOT_PUBLIC',updated_at=? WHERE notification_id=? AND owner=?").bind(stamp,row.id,owner),db.prepare("UPDATE notifications SET status='cancelled' WHERE id=? AND EXISTS(SELECT 1 FROM event_notification_dispatch WHERE notification_id=? AND state='cancelled')").bind(row.id,row.id)]);continue}if(!receipt||typeof receipt.id!=='string')throw Error('No confirmed receipt')}
+  try{const message={id:row.id,to:row.recipient,payload:JSON.parse(row.payload_json)};receipt=general&&!await authorize(message)?{skipped:true}:await send(message);if(receipt?.skipped===true){await db.batch([db.prepare("UPDATE event_notification_dispatch SET state='cancelled',owner=NULL,error_code='EVENT_NOT_PUBLIC',updated_at=? WHERE notification_id=? AND owner=?").bind(stamp,row.id,owner),db.prepare("UPDATE notifications SET status='cancelled' WHERE id=? AND EXISTS(SELECT 1 FROM event_notification_dispatch WHERE notification_id=? AND state='cancelled')").bind(row.id,row.id)]);continue}if(!receipt||typeof receipt.id!=='string')throw Error('No confirmed receipt')}
   catch(e){const retry=['MAIL_RATE_LIMIT','MAIL_QUOTA','MAIL_CONFIGURATION','MAIL_REJECTED'].includes(e?.code);await db.prepare("UPDATE event_notification_dispatch SET state=?,owner=NULL,next_at=?,error_code=?,updated_at=? WHERE notification_id=? AND owner=?").bind(retry?'retry':'uncertain',now+900000,retry?e.code:'DELIVERY_UNCONFIRMED',stamp,row.id,owner).run();if(!retry)uncertain++;continue}
   // Store provider acceptance first. A later notification-status write may be retried without sending.
   const acceptedWrite=await db.prepare("UPDATE event_notification_dispatch SET state='accepted',provider_id=?,owner=NULL,error_code=NULL,next_at=0,lease_until=0,updated_at=? WHERE notification_id=? AND owner=?").bind(receipt.id,stamp,row.id,owner).run();
@@ -142,12 +145,12 @@ const uadavAtomicEventLab=(()=>{
 const schema=`CREATE TABLE IF NOT EXISTS event_publication_intents (request_id TEXT PRIMARY KEY, payload_hash TEXT NOT NULL, event_id TEXT NOT NULL UNIQUE, event_json TEXT NOT NULL, created_at TEXT NOT NULL);`;
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,canonical(value[k])])):value;
 async function digestEvent(event){const {id,fecha_creacion,publicado_en,...data}=event;const bytes=new TextEncoder().encode(JSON.stringify(canonical(data)));return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),x=>x.toString(16).padStart(2,'0')).join('')}
-async function reserveEvent(db,{requestId,event,createdAt}){
+async function reserveEvent(db,{requestId,event,createdAt,mailAuthorization}){
  if(!db||!/^[-A-Za-z0-9_]{16,128}$/.test(requestId||'')||!event||!/^[-A-Za-z0-9_]{1,120}$/.test(event.id||'')||!createdAt)throw Error('Invalid event intent');
- const candidate=JSON.stringify(event);if(candidate.length>50000)throw Error('Event too large');const payloadHash=await digestEvent(event);
+ const candidate=JSON.stringify(event);if(candidate.length>50000)throw Error('Event too large');const payloadHash=await digestEvent(mailAuthorization?{...event,mailAuthorization}:event);
  const notices=[{type:'event_published',template:'event_published',subject:'Tu evento ya está publicado · ★ UADAV STREAM'}];
  if(event.destacado_solicitado===true)notices.push({type:'featured_requested',template:'event_featured_requested',subject:'Solicitud de destacado recibida · ★ UADAV STREAM'});
- const noticeStatements=notices.map(n=>db.prepare("INSERT OR IGNORE INTO notifications(id,channel,template,recipient,status,payload_json,created_at) SELECT ?, 'email', ?, ?, 'queued', ?, created_at FROM event_publication_intents WHERE request_id=? AND payload_hash=? AND event_id=?").bind('N-EVENT-'+event.id+'-'+n.type,n.template,String(event.contacto_email||''),JSON.stringify({event:n.type,template:n.template,to:String(event.contacto_email||''),subject:n.subject,payload:{id:event.id,titulo:event.titulo,fecha:event.fecha,lugar:event.lugar}}),requestId,payloadHash,event.id));
+ const noticeStatements=notices.map(n=>db.prepare("INSERT OR IGNORE INTO notifications(id,channel,template,recipient,status,payload_json,created_at) SELECT ?, 'email', ?, ?, 'queued', ?, created_at FROM event_publication_intents WHERE request_id=? AND payload_hash=? AND event_id=?").bind('N-EVENT-'+event.id+'-'+n.type,n.template,String(event.contacto_email||''),JSON.stringify({event:n.type,template:n.template,to:String(event.contacto_email||''),subject:n.subject,...(mailAuthorization?{mail_authorization:mailAuthorization}:{}),payload:{id:event.id,titulo:event.titulo,fecha:event.fecha,lugar:event.lugar}}),requestId,payloadHash,event.id));
  const results=await db.batch([
   db.prepare('INSERT OR IGNORE INTO event_publication_intents(request_id,payload_hash,event_id,event_json,created_at) SELECT ?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM events WHERE id=?)').bind(requestId,payloadHash,event.id,candidate,createdAt,event.id),
   db.prepare("INSERT OR IGNORE INTO events(id,title,category,city,province,country,venue,start_date,end_date,status,featured,payment_status,data_json,created_at,updated_at) SELECT event_id,?,?,?,?,?,?,?,?, 'published',0,?,event_json,created_at,created_at FROM event_publication_intents WHERE request_id=? AND payload_hash=? AND event_id=?").bind(String(event.titulo||'Evento'),String(event.categoria||''),String(event.ciudad||''),String(event.provincia||''),String(event.pais||'Argentina'),String(event.lugar||''),String(event.fecha_inicio||event.fecha||''),String(event.fecha_fin||''),String(event.destacado_estado||''),requestId,payloadHash,event.id),
@@ -636,17 +639,54 @@ function uadavProfileDisplay(value,strict=false){
 function uadavSafeJSON(v,fallback={}){try{return typeof v==='string'?JSON.parse(v):(v??fallback)}catch{return fallback}}
 function uadavDecodeHTMLText(value){const named={amp:'&',apos:"'",gt:'>',lt:'<',nbsp:' ',quot:'"',ndash:'–',mdash:'—',lsquo:'‘',rsquo:'’',ldquo:'“',rdquo:'”',hellip:'…'};return String(value||'').replace(/&(#(?:x[0-9a-f]{1,6}|[0-9]{1,7})|[a-z]{2,10});/gi,(match,code)=>{if(code[0]==='#'){const raw=code.slice(1),cp=raw[0]?.toLowerCase()==='x'?parseInt(raw.slice(1),16):Number(raw);return Number.isInteger(cp)&&cp>=0x20&&cp<=0x10ffff&&!(cp>=0xd800&&cp<=0xdfff)?String.fromCodePoint(cp):' '}const key=code.toLowerCase();return Object.prototype.hasOwnProperty.call(named,key)?named[key]:match})}
 async function uadavDeliverNotification(payload,env){const url=String(env.EMAIL_AUTOMATION_URL||'').trim();if(!url)return {sent:false,reason:'EMAIL_AUTOMATION_URL no configurada'};try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(env.EMAIL_AUTOMATION_SECRET?{'X-UADAV-Webhook-Secret':String(env.EMAIL_AUTOMATION_SECRET)}:{})},body:JSON.stringify(payload)});return r.ok?{sent:true}:{sent:false,status:r.status}}catch(e){return {sent:false,error:String(e?.message||e)}}}
-async function uadavFlushQueuedNotifications(env,limit=20){if(!env.DB)return {processed:0};let rows;try{rows=await env.DB.prepare(`SELECT id,payload_json FROM notifications WHERE status='queued' ORDER BY created_at ASC LIMIT ?`).bind(Math.min(50,Math.max(1,Number(limit||20)))).all()}catch{return {processed:0}}let processed=0;for(const row of (rows.results||[])){const payload=uadavSafeJSON(row.payload_json,{}),result=await uadavDeliverNotification({notification_id:row.id,...payload},env);if(result.sent){await env.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(new Date().toISOString(),row.id).run();processed++;}}return {processed}}
+async function uadavFlushQueuedNotifications(env,limit=20){if(!env.DB)return {processed:0};let rows;try{rows=await env.DB.prepare(`SELECT id,payload_json FROM notifications WHERE status='queued' ${env.EVENT_ATOMIC_STAGING==='true'?"AND COALESCE(template,'') NOT IN ('event_published','event_featured_requested')":''} ORDER BY created_at ASC LIMIT ?`).bind(Math.min(50,Math.max(1,Number(limit||20)))).all()}catch{return {processed:0}}let processed=0;for(const row of (rows.results||[])){const payload=uadavSafeJSON(row.payload_json,{}),result=await uadavDeliverNotification({notification_id:row.id,...payload},env);if(result.sent){await env.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(new Date().toISOString(),row.id).run();processed++;}}return {processed}}
+const uadavCarteleraMailPolicy=(()=>{
+/* Consent belongs to a verified account, never to an arbitrary form address. */
+const mailbox=x=>typeof x==='string'?x.trim().toLowerCase():'';
+function authorization(identity,verified,keyHash,contact){
+ if(!identity?.accountId||verified?.verified!==true||!Number.isSafeInteger(verified.revision)||verified.revision<1||mailbox(verified.email)!==mailbox(contact)||!/^[a-f0-9]{64}$/.test(keyHash||''))throw Error('Verificá en Mi Perfil el mismo correo de contacto antes de pedir avisos. Podés publicar sin avisos.');
+ return {version:1,consent:true,account_id:identity.accountId,identity_revision:verified.revision,key_hash:keyHash};
+}
+function windowStart(value,now=Date.now()){
+ if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)||!Number.isFinite(Date.parse(value))||new Date(value).toISOString()!==value||Date.parse(value)>now)return null;
+ return new Date(Math.max(Date.parse(value),now-86400000)).toISOString();
+}
+function eligible(meta,verified,keyHash,recipient){
+ return meta?.version===1&&meta.consent===true&&typeof meta.account_id==='string'&&meta.key_hash===keyHash&&verified?.verified===true&&verified.revision===meta.identity_revision&&mailbox(verified.email)===mailbox(recipient);
+}
+
+return {authorization,windowStart,eligible};
+})();
+async function uadavCarteleraMailAuthorization(request,env,body){
+ if(body.email_notice_consent!==true)return undefined;
+ if(new URL(request.url).origin!==AE_SITE||env.EVENT_ATOMIC_STAGING!=='true'||env.CARTELERA_PUBLICATION_STAGING!=='immediate')throw Error('Los avisos requieren Cartelera de staging.');
+ const identity=await aeIdentity(request,env),c=await aeContext(env);aeRequire(c.setting?.enabled===1,'ACCESS_DISABLED');
+ return uadavCarteleraMailPolicy.authorization(identity,await c.core.status(identity.accountId),c.keyHash,body.contacto_email||body.email||'');
+}
+async function uadavCarteleraGeneralMailOptions(env){
+ const since=uadavCarteleraMailPolicy.windowStart(env.CARTELERA_MAIL_START_AT);
+ if(env.CARTELERA_MAIL_STAGING!=='verified-only'||env.EVENT_ATOMIC_STAGING!=='true'||env.JOB_STORE_MAINTENANCE==='true'||!since)return null;
+ const c=await aeContext(env);if(c.setting?.enabled!==1)return null;
+ return {notBefore:since,limit:5,authorize:async n=>{
+  const m=n.payload?.mail_authorization;if(typeof m?.account_id!=='string')return false;
+  const alive=await c.db.prepare('SELECT 1 AS ok FROM audience_accounts a JOIN access_email_identities e ON e.account_id=a.id WHERE a.id=? AND e.revision=? AND e.key_hash=? AND NOT EXISTS(SELECT 1 FROM audience_deletions d WHERE d.account_id=a.id)').bind(m.account_id,m.identity_revision,c.keyHash).first();if(!alive)return false;
+  return uadavCarteleraMailPolicy.eligible(m,await c.core.status(m.account_id),c.keyHash,n.to);
+ }};
+}
+
 async function uadavCarteleraNoticeTick(env){
- if(env.CARTELERA_MAIL_STAGING!=='qa-only'||!env.BREVO_API_KEY||!env.BREVO_QA_RECIPIENT)return {enabled:false,sent:0,blocked:0,uncertain:0};
+ if(!['qa-only','verified-only'].includes(env.CARTELERA_MAIL_STAGING)||!env.BREVO_API_KEY||!env.BREVO_QA_RECIPIENT)return {enabled:false,sent:0,blocked:0,uncertain:0};
+ const general=env.CARTELERA_MAIL_STAGING==='verified-only';const options=general?await uadavCarteleraGeneralMailOptions(env):{allowedRecipient:env.BREVO_QA_RECIPIENT};if(!options)return {enabled:false,sent:0,blocked:0,uncertain:0};
  return uadavCarteleraNotices.dispatch(env.DB,async n=>{
   const title=String(n.payload?.payload?.titulo||'Evento').slice(0,180),id=String(n.payload?.payload?.id||'');
   if(!/^[-A-Za-z0-9_]{1,120}$/.test(id))throw Object.assign(Error('Invalid event'),{code:'MAIL_REJECTED'});
-  const current=await env.DB.prepare('SELECT status FROM events WHERE id=?').bind(id).first();if(!current||current.status!=='published')return {skipped:true};
+  const current=await env.DB.prepare('SELECT status,data_json FROM events WHERE id=?').bind(id).first();if(!current||current.status!=='published')return {skipped:true};
+  if(general){let event;try{event=JSON.parse(current.data_json)}catch{return {skipped:true}}if(String(event.contacto_email||'').trim().toLowerCase()!==String(n.to).trim().toLowerCase()||!['event_published','event_featured_requested'].includes(n.payload?.template)||n.id!=='N-EVENT-'+id+'-'+(n.payload.template==='event_published'?'event_published':'featured_requested'))return {skipped:true};}
+  if(general){if(!await options.authorize(n))return {skipped:true};if(!await uadavJobRate(env,'cartelera-general-mail:'+uadavJobToday(),20,86400000))throw Object.assign(Error('Mail budget'),{code:'MAIL_QUOTA'});}
   const text=n.payload.template==='event_featured_requested'?'La solicitud de destacado está pendiente de presupuesto y verificación del pago. No se activó una promoción paga.':'Tu evento está publicado.';
   const body=JSON.stringify({sender:{email:'acceso@correo-staging.uadavstream.com.ar',name:'UADAV STREAM · staging'},to:[{email:n.to}],headers:{idempotencyKey:await uadavCarteleraNotices.idempotencyKey(n.id)},subject:'Cartelera · '+title,textContent:text+'\n'+title+'\nhttps://uadav-stream-staging.pages.dev/evento.html?id='+encodeURIComponent(id)});
   return uadavAccountEmail.uadavBrevoRequest({mode:'staging-only',apiKey:env.BREVO_API_KEY,body});
- },{allowedRecipient:env.BREVO_QA_RECIPIENT});
+ },options);
 }
 async function uadavMaintenance(env){const now=Date.now(),iso=new Date().toISOString();let expiredFeatures=0,expiredJobs=0;try{const raw=await env.UADAV_DB.get('eventos_publicados');const events=raw?uadavSafeJSON(raw,[]):[];let changed=false;for(const e of events){const until=e?.destacado_hasta?Date.parse(e.destacado_hasta):NaN;if(e?.destacado_pagado===true&&Number.isFinite(until)&&until<now){e.destacado_pagado=false;e.destacado_estado='vencido';e.actualizado=iso;expiredFeatures++;changed=true}}if(changed){await env.UADAV_DB.put('eventos_publicados',JSON.stringify(events));const catRaw=await env.UADAV_DB.get('cartelera_aprobada');const cat=catRaw?uadavSafeJSON(catRaw,[]):[];const byId=new Map(events.map(e=>[String(e.id),e]));for(let i=0;i<cat.length;i++){if(byId.has(String(cat[i]?.id)))cat[i]={...cat[i],...byId.get(String(cat[i].id))}}await env.UADAV_DB.put('cartelera_aprobada',JSON.stringify(cat));if(env.DB){for(const e of events.filter(x=>x.destacado_estado==='vencido'))await env.DB.prepare(`UPDATE events SET featured=0,payment_status='vencido',data_json=?,updated_at=? WHERE id=?`).bind(JSON.stringify(e),iso,String(e.id)).run()}}}catch(_){}
 if(env.JOB_STORE_D1!=='true'&&env.JOB_STORE_MAINTENANCE!=='true')try{const raw=await env.UADAV_DB.get('bolsa_trabajo');const jobs=raw?uadavSafeJSON(raw,[]):[];let changed=false;for(const j of jobs){const deadline=j?.fecha_limite?Date.parse(String(j.fecha_limite).slice(0,10)+'T23:59:59'):NaN;if(j?.activo!==false&&Number.isFinite(deadline)&&deadline<now){j.activo=false;j.estado='vencida';j.actualizado=iso;expiredJobs++;changed=true}}if(changed){await env.UADAV_DB.put('bolsa_trabajo',JSON.stringify(jobs));if(env.DB){for(const j of jobs.filter(x=>x.estado==='vencida'))await env.DB.prepare(`UPDATE jobs SET active=0,status='vencida',data_json=?,updated_at=? WHERE id=?`).bind(JSON.stringify(j),iso,String(j.id)).run()}}}catch(_){}
@@ -4465,6 +4505,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if (path === '/api/eventos') {
       if (request.method === 'POST') {
         const body = await request.json().catch(() => ({}));
+        let mailAuthorization;try{mailAuthorization=await uadavCarteleraMailAuthorization(request,env,body)}catch{return json({error:'Para recibir avisos, entrá a Mi Perfil y verificá el mismo correo de contacto. También podés publicar sin avisos.'},400)}
         const item = {
           id:'EV-'+Date.now().toString(36).toUpperCase(), nombre:String(body?.nombre||body?.titulo||'Evento').slice(0,180), titulo:String(body?.titulo||body?.nombre||'Evento').slice(0,180), categoria:String(body?.categoria||body?.category||'Eventos').slice(0,80), subcategoria:String(body?.subcategoria||'').slice(0,80), organizador:String(body?.organizador||body?.productora||'').slice(0,180), productora_id:String(body?.productora_id||'').slice(0,120), fecha:String(body?.fecha||'').slice(0,80), hora:String(body?.hora||'').slice(0,5), fecha_inicio:String(body?.fecha_inicio||body?.fecha||'').slice(0,80), fecha_fin:String(body?.fecha_fin||'').slice(0,80), lugar:String(body?.lugar||'').slice(0,180), direccion:String(body?.direccion||'').slice(0,220), ciudad:String(body?.ciudad||'').slice(0,120), provincia:String(body?.provincia||'').slice(0,120), pais:String(body?.pais||'Argentina').slice(0,80), imagen:String(body?.imagen||body?.poster||'').slice(0,500), trailer:String(body?.trailer||body?.youtube_id||'').slice(0,500), youtube_id:String(body?.youtube_id||body?.trailer||'').slice(0,80), precio:String(body?.precio||body?.precio_desde||'').slice(0,80), precio_desde:String(body?.precio_desde||body?.precio||'').slice(0,80), precio_hasta:String(body?.precio_hasta||'').slice(0,80), moneda:String(body?.moneda||'ARS').slice(0,12), es_gratuito:body?.es_gratuito===true, link_compra:String(body?.link_compra||body?.link_ticketera||'').slice(0,500), ticketera:String(body?.ticketera||'').slice(0,120), descripcion_corta:String(body?.descripcion_corta||'').slice(0,300), descripcion:String(body?.descripcion||'').slice(0,2500), contacto_email:String(body?.contacto_email||body?.email||'').slice(0,160), contacto:String(body?.contacto||body?.whatsapp||'').slice(0,200), whatsapp:String(body?.whatsapp||'').slice(0,60), instagram:String(body?.instagram||'').slice(0,300), facebook:String(body?.facebook||'').slice(0,300), web:String(body?.web||'').slice(0,300), galeria:Array.isArray(body?.galeria)?body.galeria.slice(0,20):[], funciones:Array.isArray(body?.funciones)?body.funciones.slice(0,50):[], creado_por:String(body?.creado_por||'publico').slice(0,40), estado:'pending', destacado_solicitado:body?.destacado_solicitado===true, destacado_pagado:false, destacado_estado:body?.destacado_solicitado===true?'pendiente_revision':'no_solicitado', pago_referencia:String(body?.pago_referencia||'').slice(0,160), fecha_creacion:new Date().toISOString()
         };
@@ -4477,7 +4518,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
           item.id='EV-'+crypto.randomUUID().toUpperCase();
           try{
             await env.DB.prepare(uadavAtomicEventLab.schema).run();
-            const saved=await uadavAtomicEventLab.reserveEvent(env.DB,{requestId:body.request_id,event:item,createdAt:isoNow()});
+            const saved=await uadavAtomicEventLab.reserveEvent(env.DB,{requestId:body.request_id,event:item,createdAt:isoNow(),mailAuthorization});
             if(saved.status==='conflict')return json({error:'Este envío ya corresponde a otros datos. Revisá la publicación antes de continuar.'},409);
             const current=saved.event;
             if(current.estado!=='published')return json({success:true,id:current.id,item:current,mode:'previously_processed'});
@@ -7337,6 +7378,15 @@ async function saveEntityVersion(type,id,data){
       if(request.method==='PUT'){if(!isAdmin())return json({error:'No autorizado'},401);const b=await request.json().catch(()=>({}));const list=await getArray('ticket_orders');const i=list.findIndex(x=>String(x.id)===String(b.id));if(i<0)return json({error:'Orden no encontrada'},404);list[i]={...list[i],status:String(b.status||list[i].status),payment_status:String(b.payment_status||list[i].payment_status),updated_at:isoNow()};await putJSON('ticket_orders',list);return json({success:true,item:list[i]});}
     }
 
+    if(path==='/api/admin/cartelera/mail-readiness'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(request.method!=='GET')return json({error:'Solo consulta'},405);
+      if(url.origin!==AE_SITE)return json({error:'Solo staging'},403);
+      const checks={atomic:atomicEventsEnabled,immediate:env.CARTELERA_PUBLICATION_STAGING==='immediate',cron:env.CARTELERA_STAGING_CRON==='cartelera-only',maintenance_off:env.JOB_STORE_MAINTENANCE!=='true',mail:!!env.BREVO_API_KEY,cutoff:uadavCarteleraMailPolicy.windowStart(env.CARTELERA_MAIL_START_AT)!==null,verified_accounts:false};
+      try{const c=await aeContext(env);checks.verified_accounts=c.setting?.enabled===1}catch{}
+      const ready=Object.values(checks).every(Boolean);return json({scope:'cartelera-mail-readiness',revision:'11770-cartelera-consent-20261104',read_only:true,checks,ready_to_enable:ready,enabled:ready&&env.CARTELERA_MAIL_STAGING==='verified-only',daily_budget:20,max_age_hours:24,suggested_start_at:isoNow()});
+    }
+
     if(path==='/api/admin/cartelera/maintenance'){
       if(!isAdmin())return json({error:'No autorizado'},401);
       if(request.method==='GET')return json({enabled:atomicEventsEnabled,cron_enabled:env.CARTELERA_STAGING_CRON==='cartelera-only',cron_schedule:'7,22,37,52 * * * *',mail_qa_enabled:env.CARTELERA_MAIL_STAGING==='qa-only',mail_configured:!!env.BREVO_API_KEY&&!!env.BREVO_QA_RECIPIENT,build:BUILD});
@@ -7352,7 +7402,7 @@ async function saveEntityVersion(type,id,data){
       catch{return json({confirmed:false,error:'No pudimos comprobar la referencia. Conservá el formulario.'},503);}
     }
 
-    if(path==='/api/eventos/capabilities'&&request.method==='GET')return json({atomic_publication:atomicEventsEnabled&&hasD1(),reference_required:atomicEventsEnabled,publication_mode:atomicEventsEnabled&&env.CARTELERA_PUBLICATION_STAGING==='immediate'?'immediate':'moderated',revision:CARTELERA_REVISION});
+    if(path==='/api/eventos/capabilities'&&request.method==='GET')return json({atomic_publication:atomicEventsEnabled&&hasD1(),reference_required:atomicEventsEnabled,publication_mode:atomicEventsEnabled&&env.CARTELERA_PUBLICATION_STAGING==='immediate'?'immediate':'moderated',revision:CARTELERA_REVISION,email_notice_consent_supported:atomicEventsEnabled&&env.CARTELERA_PUBLICATION_STAGING==='immediate'&&env.CARTELERA_MAIL_STAGING==='verified-only'&&uadavCarteleraMailPolicy.windowStart(env.CARTELERA_MAIL_START_AT)!==null,mail_revision:'11770-cartelera-consent-20261104'});
 
     if(path==='/api/advertising/policy'&&request.method==='GET')return json({version:uadavAdvertisingPolicy.version,currency:uadavAdvertisingPolicy.currency,memberships:false,automatic_renewal:false,products:uadavAdvertisingPolicy.products,territorial_campaigns:true,delivery_requires_verification:true});
 
@@ -7422,7 +7472,7 @@ const uadavStagingWorker={...uadavWorker,async scheduled(event,env){if(event?.cr
    if(request.headers.get('Origin')&&request.headers.get('Origin')!==url.origin)return reply({error:'Origen no autorizado.'},403);
    if(!env.ADMIN_KEY||request.headers.get('Authorization')!=='Bearer '+String(env.ADMIN_KEY).trim())return reply({error:'No autorizado.'},401);
    if(!env.DB||!env.UADAV_DB)return reply({error:'Falta D1 o KV.'},503);
-   try{return reply({...await uadavCarteleraReadiness.inspect(env.DB,env.UADAV_DB),revision:CARTELERA_REVISION,atomic_enabled:env.EVENT_ATOMIC_STAGING==='true',cron_enabled:env.CARTELERA_STAGING_CRON==='cartelera-only',mail_mode:env.CARTELERA_MAIL_STAGING==='qa-only'?'qa-only':'off',production_modified:false})}catch{return reply({error:'No se pudo comparar. No se modificaron los datos.'},503)}
+   try{return reply({...await uadavCarteleraReadiness.inspect(env.DB,env.UADAV_DB),revision:CARTELERA_REVISION,atomic_enabled:env.EVENT_ATOMIC_STAGING==='true',cron_enabled:env.CARTELERA_STAGING_CRON==='cartelera-only',mail_mode:['qa-only','verified-only'].includes(env.CARTELERA_MAIL_STAGING)?env.CARTELERA_MAIL_STAGING:'off',production_modified:false})}catch{return reply({error:'No se pudo comparar. No se modificaron los datos.'},503)}
   }
   if(path==='/api/admin/jobs/recovery-readiness'){
    const origin=request.headers.get('Origin'),allowed=['https://uadav-stream-staging.pages.dev','https://uadav-api-staging.uadavstream.workers.dev'],headers={'Content-Type':'application/json','Cache-Control':'no-store',Vary:'Origin',...(allowed.includes(origin)?{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Allow-Methods':'GET, OPTIONS'}:{})};const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers});
