@@ -1,0 +1,17 @@
+{
+  "scope": "staging-two-independent-clients",
+  "checked_at": "2026-11-04T15:33:32.499Z",
+  "environment": "staging",
+  "real_browser_devices": false,
+  "checks": [
+    "Creación de cuenta ficticia en staging: aprobado",
+    "Vinculación aprobada y credenciales independientes: aprobado",
+    "Favorito A → B con evento de Biblioteca: aprobado",
+    "Playlist B → A: aprobado",
+    "Conflicto conserva cambio local hasta elección explícita: aprobado",
+    "Revocación de segundo cliente conserva biblioteca local: aprobado"
+  ],
+  "production_modified": false,
+  "result": "complete",
+  "synthetic_account_retained": true
+}
