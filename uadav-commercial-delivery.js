@@ -6,5 +6,12 @@ function image(x){for(const raw of [x.portada,x.foto,x.imagen,x.thumbnail])try{c
 function hero(value,pools,now){return campaigns(value,'hero',now).map(c=>{const x=rows(c.entity_type==='artist'?pools.artists:pools.events).find(x=>String(x.id)===String(c.entity_id)&&publicEntity(x));if(!x)return null;return{kicker:'PUBLICIDAD · DESTACADO',title:x.nombre_artistico||x.titulo||x.nombre||'Destacado',description:x.descripcion_corta||x.rubro||x.categoria||'',image:image(x),action_url:(c.entity_type==='artist'?'/artista.html?id=':'/evento.html?id=')+encodeURIComponent(x.id),button_text:c.entity_type==='artist'?'Conocer artista':'Ver evento',_commercial:true}}).filter(Boolean).slice(0,3)}
 function events(value,catalog,now){const ids=new Set(campaigns(value,'cartelera',now).filter(x=>x.entity_type==='event').map(x=>String(x.entity_id)));return rows(catalog).filter(x=>ids.has(String(x.id))&&publicEntity(x)).map(x=>({...x,_campaign:true}))}
 async function load(base){const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),8000);try{const r=await fetch(base+'monetization/campaigns?public=true',{cache:'no-store',signal:ctl.signal});if(!r.ok)return[];return rows(await r.json())}catch{return[]}finally{clearTimeout(timer)}}
-const api={campaigns,hero,events,load};root.UADAVCommercial=api;if(typeof module==='object'&&module.exports)module.exports=api;
+function watch(base,notify,options={}){
+ const env=options.env||root,clock=options.now||(()=>Date.now()),request=options.load||load;let stopped=false,busy=false,current=[],expiryTimer=null,last='';
+ const publish=()=>{if(stopped)return;const valid=campaigns(current,'',clock()),key=JSON.stringify(valid);if(key!==last){last=key;notify(valid)}if(expiryTimer!==null)env.clearTimeout(expiryTimer);const ends=valid.map(x=>Date.parse(x.ends_at+'T23:59:59.999-03:00')+1).filter(t=>t>clock());expiryTimer=ends.length?env.setTimeout(publish,Math.min(2147483647,Math.max(1,Math.min(...ends)-clock()))):null};
+ const refresh=async()=>{if(stopped||busy)return;busy=true;try{current=await request(base);publish()}catch{current=[];publish()}finally{busy=false}};
+ const resume=()=>{publish();refresh()};const stop=()=>{stopped=true;env.clearInterval(interval);if(expiryTimer!==null)env.clearTimeout(expiryTimer);env.document?.removeEventListener('visibilitychange',resume);env.removeEventListener?.('pagehide',stop)};
+ const interval=env.setInterval(resume,60000);env.document?.addEventListener('visibilitychange',resume);env.addEventListener?.('pagehide',stop,{once:true});refresh();return stop;
+}
+const api={campaigns,hero,events,load,watch};root.UADAVCommercial=api;if(typeof module==='object'&&module.exports)module.exports=api;
 })(typeof window==='object'?window:globalThis);

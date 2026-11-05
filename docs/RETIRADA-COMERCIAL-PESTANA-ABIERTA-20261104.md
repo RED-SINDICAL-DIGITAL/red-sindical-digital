@@ -1,0 +1,5 @@
+# Retirada comercial en pestaña abierta — 2026-11-04
+Staging. Hero y Cartelera usan un observador compartido de campañas públicas. Programa comprobación local en el instante de fin (zona AR UTC-3), refresca servidor cada60s sin solicitudes solapadas y revalida al cambiar visibilidad. Si una campaña deja de ser pública o falla la consulta, se retira. No bloquea contenido editorial.
+Cancela recursos al abandonar la página. Cartelera sustituye el observador al recargar sus fuentes. Hero evita que una respuesta de catálogo tardía restaure campañas retiradas.
+859 pruebas aprobadas. Dos regresiones con reloj/control de temporizadores: vencimiento sin respuesta de red adicional y retirada al refrescar listado vacío. Validación de reloj simulada, no prueba física esperando medianoche. Los navegadores pueden suspender temporizadores en pestañas ocultas: se comprueba al volver; no se garantiza ejecución mientras el dispositivo duerme.
+No se activó ninguna campaña nueva ni se modificó Worker/producción. Campaña QA sigue pausada. Geolocalización física de usuarios continúa pendiente.
