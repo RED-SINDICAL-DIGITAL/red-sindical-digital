@@ -1,0 +1,4 @@
+# Catálogo comercial inactivo y bloqueo de entrega — 2026-11-04
+Solo staging. Admin permite cargar el catálogo base inactivo desde Cobros y destacados. Conserva productos existentes, importa solo IDs faltantes, bloquea invocación concurrente y permite reintentar tras fallo parcial. No activa cobros.
+853 pruebas de interfaz aprobadas. Nueva regresión: producto existente activo/precio editado permanece intacto; solo se envían once POST inactivos para productos faltantes.
+Auditoría de integración: la API monetization/campaigns?public=true filtra territorio y vigencia, pero no se encontraron consumidores públicos de esa ruta en la aplicación actual. Guardar campañas no equivale a entregar anuncios. Bloqueo comercial: conectar Hero/Cartelera/otras ubicaciones y validar entrega antes de activar ventas. No se marcó delivery_verified ni se activaron campañas.
