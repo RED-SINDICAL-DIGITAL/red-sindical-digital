@@ -81,3 +81,21 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 - Alcance: prueba real de API con fechas pasadas, no transición de reloj de un dispositivo abierto ni renderizado publicitario real.
 - Admin incorpora bloqueo de combinaciones sin renderizador compatible (artista/evento en Hero; evento en Cartelera; radio destacada; marca en banners/auspicio). 21 pruebas comerciales aprobadas, incluida regresión de cinco combinaciones inválidas.
 - Recuperación: usuario reportó funcionamiento con su casilla; el navegador de QA sigue desvinculado y no demuestra recuperación de datos entre dispositivos. La salida del iframe se corrigió en perfil y puente de navegación y quedó verificada en staging.
+
+## Hero comercial y navegación: cierre de comprobaciones
+- Prueba visual real de CAMP-MW5EDGH7-ZXSBQ: Evento/Hero, activa bonificada y alcance internacional temporal, 2026-11-06 a 2026-11-07. Hero mostró 3 de 3, con QA BANNER como tercera propuesta identificada PUBLICIDAD · DESTACADO, conservando las dos editoriales. Ver evento abrió la ficha exacta.
+- Se volvió a Pausada y alcance Santa Fe/AR. Tras recarga, Hero mostró 1 de 2: retiró la campaña y conservó las editoriales. Sin cobros. No se probó retirada sin recargar ni conexión física de otra provincia.
+- 22 pruebas dirigidas aprobadas: cinco destinos de navegación principal, teclado en formularios, búsquedas móviles y respuestas tardías de Admin. El error de búsqueda simulado forma parte del caso aprobado, no de una falla operativa observada.
+
+### Matriz honesta de disponibilidad para demo
+| Circuito | Evidencia disponible | Pendiente |
+| --- | --- | --- |
+| Cartelera pública y banner | Alta completa y aparición en Hero de staging | Dispositivos físicos |
+| Bolsa pública | Oferta, postulación y bandejas QA confirmadas anteriormente; búsqueda/limpieza y formulario sin sesión revisados | Recorridos físicos completos |
+| Consultas al artista | Envío y recepción privada QA sin liberación sindical | Uso real fuera de QA |
+| Publicidad | Entrega API Santa Fe, exclusión Córdoba, fechas pasadas, Hero visible y retiro tras pausa/recarga | Geolocalización de conexiones reales y vencimiento con página abierta |
+| Recuperación por correo | Usuario reportó que funcionó; enlace sale del iframe comprobado | Datos recuperados y revocación desde un segundo dispositivo |
+| Respaldo | Ensayos sintéticos aislados con rollback y checksum | Captura remota actual y ensayo de ese respaldo |
+| Celular/tablet/TV | Reglas responsive y pruebas automatizadas de teclado/navegación | Validación física, reproducción y control remoto |
+| Cobro publicitario | Circuito manual documentado | Automatización y SLA 24 h |
+| Vivos y gorra | Propuesta piloto | Dos dispositivos y donación directa comprobados |
