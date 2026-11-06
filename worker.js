@@ -10,6 +10,15 @@ async function uadavCommercialInquiries(request,env,{json,isAdmin}){
  if(!env.DB)return reply({error:'Servicio temporalmente no disponible'},503);
  try{
   if(url.pathname===admin){
+   if(request.method==='PATCH'){
+    const b=await uadavSecurityJSON(request,5000);
+    if(!b||Object.keys(b).some(k=>!['id','status','revision','note'].includes(k))||typeof b.id!=='string'||!/^PUB-[a-f0-9-]{36}$/.test(b.id)||!['received','contacted','quoted','closed'].includes(b.status)||!Number.isInteger(b.revision)||b.revision<0||typeof b.note!=='string'||b.note.length>1000)return reply({error:'Revisá el estado y la nota de seguimiento.'},400);
+    const row=await env.DB.prepare('SELECT data_json FROM commercial_inquiries WHERE id=?').bind(b.id).first();if(!row)return reply({error:'Consulta no encontrada'},404);
+    const current=JSON.parse(row.data_json),revision=Number(current.revision||0);if(revision!==b.revision)return reply({error:'La consulta cambió. Recargá antes de guardar.'},409);
+    const item={...current,status:b.status,note:b.note.trim(),revision:revision+1,updated_at:new Date().toISOString()};
+    const saved=await env.DB.prepare('UPDATE commercial_inquiries SET data_json=? WHERE id=? AND data_json=?').bind(JSON.stringify(item),b.id,row.data_json).run();if(Number(saved.meta?.changes)!==1)return reply({error:'Otra persona actualizó la consulta. Recargá antes de guardar.'},409);
+    return reply({success:true,item});
+   }
    if(request.method!=='GET')return reply({error:'Método no permitido'},405);
    await env.DB.prepare('CREATE TABLE IF NOT EXISTS commercial_inquiries(id TEXT PRIMARY KEY,fingerprint TEXT NOT NULL,data_json TEXT NOT NULL,created_at TEXT NOT NULL)').run();
    const rows=await env.DB.prepare('SELECT data_json FROM commercial_inquiries ORDER BY created_at DESC LIMIT 300').all();return reply({items:(rows.results||[]).map(x=>JSON.parse(x.data_json))});
