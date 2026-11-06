@@ -24,4 +24,4 @@ Admin puede pasar cada consulta a Recibida, Contactada, Propuesta enviada o Cerr
 El PDF actualizado está versionado en assets/comercial/UADAV_Stream_Media_Kit.pdf y enlazado desde el Media Kit web y Admin.
 
 
-Actualización 2026-11-06: se descarta la intermediación sindical obligatoria en Bolsa y contratación. Esta decisión sustituye las menciones anteriores del media kit PDF sobre coordinación y pago a artistas; su actualización gráfica queda pendiente. Cartelera y publicidad mantienen su modelo.
+Actualización 2026-11-06: se descarta la intermediación sindical obligatoria en Bolsa y contratación. Esta decisión sustituye las menciones anteriores del media kit PDF sobre coordinación y pago a artistas; actualización gráfica completada. Cartelera y publicidad mantienen su modelo.
