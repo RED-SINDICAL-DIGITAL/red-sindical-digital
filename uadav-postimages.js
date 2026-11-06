@@ -13,14 +13,17 @@
     function check() {
       input.setCustomValidity('');
       const value = input.value.trim();
-      if (!value) return;
+      if (!value) { help.textContent = 'Usá el enlace directo de la imagen, no el enlace de la página de Postimages.'; return; }
       try {
         const url = new URL(value);
-        if (['postimg.cc', 'www.postimg.cc', 'postimages.org', 'www.postimages.org'].includes(url.hostname)) {
+        if (url.protocol !== 'https:' || url.username || url.password) {
+          input.setCustomValidity('Usá un enlace HTTPS de una imagen pública, sin datos de acceso.');
+          help.textContent = 'El enlace debe empezar con https:// y no incluir usuario ni contraseña.';
+        } else if (['postimg.cc', 'www.postimg.cc', 'postimages.org', 'www.postimages.org'].includes(url.hostname)) {
           input.setCustomValidity('Copiá «Enlace directo» en Postimages: debe comenzar con https://i.postimg.cc/.');
           help.textContent = 'Este enlace abre una página. Volvé a Postimages y copiá «Enlace directo».';
         } else {
-          help.textContent = 'Enlace de imagen listo. También podés usar otro alojamiento HTTPS.';
+          help.textContent = 'Formato de enlace aceptado. Comprobá que la imagen sea pública y abra correctamente.';
         }
       } catch (_) { /* Native URL validation handles malformed values. */ }
     }
