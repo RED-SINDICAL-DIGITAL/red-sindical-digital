@@ -10,15 +10,18 @@ Admin: afiliación mediante control existente aVerified/afiliado_verificado, res
 
 Consultas comerciales: formulario validado y protegido con Turnstile. Solo staging. Tabla D1 commercial_inquiries, idempotencia de envío, control de origen, cinco solicitudes por IP y ventana de 15 minutos. Bandeja Admin Consultas comerciales. No envía correos y lo informa. Requiere desplegar el Worker nuevo; antes de eso el formulario queda deshabilitado por capabilities.
 
-Contrataciones desde perfil: nuevos pedidos se guardan con routing=santa_fe, released_to_artist=false. Se ocultan al artista y a sus notificaciones hasta que Admin use Compartir con el artista. Los registros históricos conservan su tratamiento. No cambia el pago ni genera contratos firmados. Validado con Worker real y SQLite aislado.
+Contrataciones: contacto directo entre productor y artista. Las consultas son visibles para su artista destinatario sin aprobación o derivación administrativa, incluidas las pendientes del circuito descartado. Las condiciones y pagos quedan entre las partes.
 
 Pendientes del cambio integral: recepción real de correos a administración y contratante, responsable/casilla aprobados, circuito de cotización y contrato revisado, seguimiento del cobro de la contratación, derivación interna a Nacional/delegaciones y adaptación integral de ofertas/postulaciones de Bolsa. No se declara cerrado este circuito; no se modificaron registros reales ni producción.
 
 Validación: 52 comprobaciones dirigidas de frontend y 15 de backend aprobadas. Una comprobación antigua home-entry.mjs falló por esperar build 12048, sin relación con este cambio; no se corrigió ni se cuenta como aprobada. Build staging generado. El despliegue del Worker sigue siendo manual.
 
 ## Aclaración de pagos
-El sindicato paga al artista por fuera de la web app. No crear transferencias, billeteras, retiros ni pagos automáticos al artista. La confirmación del cobro de una campaña publicitaria es independiente.
+La plataforma no cobra ni paga contrataciones artísticas. Productor y artista acuerdan y realizan sus pagos directamente. La administración sindical solo interviene en publicidad cuando corresponde.
 
 ## Seguimiento de consultas
 Admin puede pasar cada consulta a Recibida, Contactada, Propuesta enviada o Cerrada y guardar una nota interna. Control de versión impide sobrescribir cambios de otra persona. Ninguna de esas acciones envía dinero ni afirma que se envió un correo.
 El PDF actualizado está versionado en assets/comercial/UADAV_Stream_Media_Kit.pdf y enlazado desde el Media Kit web y Admin.
+
+
+Actualización 2026-11-06: se descarta la intermediación sindical obligatoria en Bolsa y contratación. Esta decisión sustituye las menciones anteriores del media kit PDF sobre coordinación y pago a artistas; su actualización gráfica queda pendiente. Cartelera y publicidad mantienen su modelo.
