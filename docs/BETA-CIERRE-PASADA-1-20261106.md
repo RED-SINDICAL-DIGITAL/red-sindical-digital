@@ -48,3 +48,9 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 - Tras recargar Admin, activar QA-BETA-20261106 sin entrega verificada conserva el editor y muestra: Primero verificá la entrega en la ubicación contratada. No se guardó ni activó la campaña; se conserva Pausada/Bonificada.
 - 26 pruebas comerciales aisladas aprobadas: guardado y concurrencia, territorio enviado, rechazo de Worker antiguo, campañas futuras/vencidas, pausa y máximo de una diapositiva comercial. No equivalen a entrega territorial real de una campaña activa.
 - Pendientes: campaña activa con comprobación pública por territorio y vencimiento, recuperación real por correo y dispositivos separados.
+
+## Entrega territorial comprobada en API de staging
+- Campaña CAMP-MW5EDGH7-ZXSBQ / QA-BETA-20261106 activada temporalmente como Bonificada, sin cobros. GET público con country=AR y province=Santa Fe devolvió la campaña identificada como Publicidad; province=Córdoba devolvió [].
+- Se volvió a Pausada desde Admin y la consulta Santa Fe devolvió []. Estado final Pausada confirmado en tabla.
+- Son consultas con territorio explícito: no prueban geolocalización de dos conexiones reales ni renderizado publicitario en esos dispositivos. Vencimiento real y conexiones/dispositivos siguen pendientes.
+- Guía pública y sección Admin: se retira compra PRO residual y se aclara activación manual tras acreditación/entrega; automatización y garantía 24 h no están implementadas. Banner gratuito visible y consulta comercial al final del formulario documentados.
