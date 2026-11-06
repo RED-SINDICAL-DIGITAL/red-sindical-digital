@@ -32,3 +32,12 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 - Oferta QA: JOB-MW59R728-CD7BE189A265. Publicación pública inmediata comprobada.
 - Postulación QA: POST-MW59YJQM-1336789C. Envío confirmado; seguimiento privado muestra Recibida. El contratante ve 1 postulación con nombre y mensaje sintéticos en su bandeja privada. No guardar ni publicar las claves de acceso en documentos.
 - No se usó correo real; no se declara entrega de emails ni recuperación por correo como aprobadas. No hubo pago ni contratación real. Se mantienen pendientes las campañas reales de QA y sus controles territoriales, y pruebas adicionales con cuentas/dispositivos separados.
+
+## Edición y Hero verificados con Admin
+- Se confirmó modo mixto ya seleccionado; la portada ausente no se debía a una configuración genérica.
+- La creación pública omitía el campo portada en el Worker. Corrección en 6b747fe944c7fc44dff3ab0e3c5e56b604a01a0f; pendiente de despliegue. /api/health incorpora event_artwork_revision=20261106-public-cover-1.
+- Se agregó portada y descripción breve al evento QA existente desde Admin. Guardado confirmado por aparición del evento y del texto editado en el Hero público, sin destaque pago.
+- Campaña sintética QA-BETA-20261106 de Santa Fe/AR: guardada Pausada/Bonificada, sin cobro ni publicación. Intento de activar sin entrega verificada permaneció en el editor. No se declara entrega activa ni segmentación real aprobadas.
+- Se agrega mensaje persistente de validación en el editor de campañas para evitar errores invisibles detrás de la ventana.
+- Corrección Worker: 40 pruebas dirigidas aprobadas, incluida conservación del banner en alta atómica, catálogo, repetición y rechazo de cambios con la misma referencia; protocolos inseguros/credenciales no se conservan.
+- Frontend: 14 pruebas dirigidas y sintaxis del Admin aprobadas. Recuperación de correo real, campaña activa/territorial/vencimiento y dispositivos separados siguen pendientes.
