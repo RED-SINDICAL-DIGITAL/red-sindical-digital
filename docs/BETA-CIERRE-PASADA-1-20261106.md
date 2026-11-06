@@ -26,3 +26,9 @@ Entorno exclusivo: staging. Producción sin cambios. Modelo: perfiles/eventos/Bo
 6. VDO.Ninja experimental; recepción entre teléfonos, gorra y límites reales pendientes. Postimages: carga manual por enlace; integración automática pendiente del proveedor.
 
 No requiere nuevo Worker por estas correcciones: son páginas, manual y documentación. El Worker existente de staging conserva las pruebas aprobadas. Los datos QA se conservan identificados hasta el cierre; no se borran datos reales.
+
+## Pruebas reales completadas después de la pasada
+- Evento QA: EV-5F48A70E-146B-4ED4-8C90-701ACB069A30. Publicación inmediata sin destaque pago, ficha pública, afiche visible, entrada gratuita y presencia en agenda comprobadas. Banner cargado; no aparece en Hero con la configuración actual. Pendientes edición y cambio de configuración desde Admin.
+- Oferta QA: JOB-MW59R728-CD7BE189A265. Publicación pública inmediata comprobada.
+- Postulación QA: POST-MW59YJQM-1336789C. Envío confirmado; seguimiento privado muestra Recibida. El contratante ve 1 postulación con nombre y mensaje sintéticos en su bandeja privada. No guardar ni publicar las claves de acceso en documentos.
+- No se usó correo real; no se declara entrega de emails ni recuperación por correo como aprobadas. No hubo pago ni contratación real. Se mantienen pendientes las campañas reales de QA y sus controles territoriales, y pruebas adicionales con cuentas/dispositivos separados.
