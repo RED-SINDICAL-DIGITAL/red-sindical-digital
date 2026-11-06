@@ -112,3 +112,10 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 - Tras restablecer sesión Admin se ejecutó Generar respaldo y revisar en Auditoría de staging.
 - El panel mostró Respaldo actual de D1 verificado y descarga solicitada; descarga real recibida y JSON completo comprobado. Se mantiene fuente D1 con 21 ofertas y 13 postulaciones.
 - Queda confirmada la corrección publicada del rechazo erróneo por tablas temporales. No se migró desde KV ni se restauró la base operativa.
+
+## Restauración ampliada del respaldo actual: cuentas y dispositivos
+- Se ensayó la captura privada actual con el adaptador de restauración 11769 en SQLite local desechable, red deshabilitada y clave sintética efímera. Sin bindings operativos ni acceso a Cloudflare remoto.
+- Resultado complete=true y rollback_tested=true: 23 cuentas, 18 dispositivos, 7 vínculos de artistas, 21 ofertas, 13 postulaciones, 3 avisos, 8 mensajes, 1 identidad de correo verificada y 22 claves KV.
+- temporary_authentication_restored=false: no se reviven enlaces de acceso o tokens temporales.
+- Esto amplía el ensayo anterior de Bolsa/Cartelera con datos actuales de cuentas. No demuestra ingreso real en un segundo dispositivo, uso de credenciales personales recuperadas ni un ensayo en D1 remota.
+- Respaldo operativo preservado; ninguna base de staging o producción fue restaurada.
