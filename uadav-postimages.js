@@ -12,7 +12,9 @@
     input.insertAdjacentElement('afterend', help);
     function check() {
       input.setCustomValidity('');
-      const value = input.value.trim();
+      let value = input.value.trim();
+      const embedded = value.match(/\[img\](https:\/\/i\.postimg\.cc\/[^\s\[\]<>]+)\[\/img\]/i);
+      if (embedded) { value = embedded[1]; input.value = value; }
       if (!value) { help.textContent = 'Usá el enlace directo de la imagen, no el enlace de la página de Postimages.'; return; }
       try {
         const url = new URL(value);
