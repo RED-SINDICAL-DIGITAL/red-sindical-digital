@@ -75,3 +75,29 @@ test('immediate flag cannot change publication on any other hostname',async()=>{
 
 test('public horizontal banner survives atomic publication, catalog and retries without becoming a paid highlight',async()=>{const f=fixture();try{const body={...event(),portada:'https://images.example.invalid/banner.webp'},saved=await f.call(body);assert.equal(saved.status,200);assert.equal(saved.body.item.portada,body.portada);assert.equal(saved.body.item.destacado_pagado,false);const again=await f.call(body);assert.equal(again.body.id,saved.body.id);assert.equal(again.body.item.portada,body.portada);const response=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/cartelera'),f.env,{}),rows=await response.json();assert.equal(rows.find(x=>x.id===saved.body.id).portada,body.portada);assert.equal((await f.call({...body,portada:'https://images.example.invalid/changed.webp'})).status,409)}finally{f.DB.close()}});
 test('optional banner ignores unsafe schemes and embedded credentials',async()=>{const f=fixture();try{for(const portada of ['javascript:alert(1)','http://images.example.invalid/a.jpg','https://user:secret@images.example.invalid/a.jpg','']){const saved=await f.call({...event(),portada});assert.equal(saved.status,200);assert.equal(saved.body.item.portada,'')}}finally{f.DB.close()}});
+
+test('hidden events leave all public catalogs and detail, remain in Admin and can be republished without duplicate notices',async()=>{
+ const f=fixture();try{
+ const published=await f.call(event()),id=published.body.id;
+ const route=async(path,method='GET',body,admin=false)=>{const r=await worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev'+path,{method,headers:{'Content-Type':'application/json',...(admin?{Authorization:'Bearer test-admin'}:{})},...(body?{body:JSON.stringify(body)}:{})}),f.env,{});return{status:r.status,data:await r.json()}};
+ const notices=(await f.DB.prepare('SELECT COUNT(*) n FROM notifications').first()).n;
+ assert.equal((await route('/api/admin/events/visibility')).status,401);
+ assert.equal((await route('/api/admin/events/visibility','POST',{id,action:'hide'})).status,401);
+ assert.equal((await route('/api/admin/events/visibility','POST',{id,action:'hide'},true)).data.item.estado,'hidden');
+ for(const path of ['/api/cartelera','/api/cartelera_aprobada','/api/eventos_publicados'])assert(!(await route(path)).data.some(x=>x.id===id));
+ assert.equal((await route('/api/evento?id='+id)).status,404);
+ assert((await route('/api/admin/events/visibility','GET',null,true)).data.items.some(x=>x.id===id&&x.estado==='hidden'));
+ assert.equal((await route('/api/cartelera','PUT',{id,titulo:'Editado oculto'},true)).data.item.estado,'hidden');
+ assert.equal((await route('/api/evento?id='+id)).status,404);
+ assert.equal((await route('/api/admin/events/visibility','POST',{id,action:'publish'},true)).data.item.estado,'published');
+ assert.equal((await route('/api/evento?id='+id)).data.titulo,'Editado oculto');
+ assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM notifications').first()).n,notices);
+ }finally{f.DB.close()}
+});
+test('visibility failure rolls back event and history and allows explicit retry',async()=>{
+ const f=fixture();try{const published=await f.call(event()),id=published.body.id,batch=f.DB.batch.bind(f.DB);
+ const change=()=>worker.fetch(new Request('https://uadav-api-staging.uadavstream.workers.dev/api/admin/events/visibility',{method:'POST',headers:{Authorization:'Bearer test-admin','Content-Type':'application/json'},body:JSON.stringify({id,action:'hide'})}),f.env,{});
+ f.DB.batch=sql=>batch([...sql,f.DB.prepare('INSERT INTO missing_visibility_probe VALUES(1)')]);assert.equal((await change()).status,503);assert.equal((await f.DB.prepare('SELECT status FROM events WHERE id=?').bind(id).first()).status,'published');assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM entity_versions').first()).n,0);
+ f.DB.batch=batch;assert.equal((await change()).status,200);
+ }finally{f.DB.close()}
+});
