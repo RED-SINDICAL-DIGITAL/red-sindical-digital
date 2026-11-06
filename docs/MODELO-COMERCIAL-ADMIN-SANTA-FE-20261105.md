@@ -12,6 +12,13 @@ Consultas comerciales: formulario validado y protegido con Turnstile. Solo stagi
 
 Contrataciones desde perfil: nuevos pedidos se guardan con routing=santa_fe, released_to_artist=false. Se ocultan al artista y a sus notificaciones hasta que Admin use Compartir con el artista. Los registros históricos conservan su tratamiento. No cambia el pago ni genera contratos firmados. Validado con Worker real y SQLite aislado.
 
-Pendientes del cambio integral: recepción real de correos a administración y contratante, responsable/casilla aprobados, circuito de cotización y contrato revisado, cobro y pago al artista con comprobantes, derivación interna a Nacional/delegaciones y adaptación integral de ofertas/postulaciones de Bolsa. No se declara cerrado este circuito; no se modificaron registros reales ni producción.
+Pendientes del cambio integral: recepción real de correos a administración y contratante, responsable/casilla aprobados, circuito de cotización y contrato revisado, seguimiento del cobro de la contratación, derivación interna a Nacional/delegaciones y adaptación integral de ofertas/postulaciones de Bolsa. No se declara cerrado este circuito; no se modificaron registros reales ni producción.
 
 Validación: 52 comprobaciones dirigidas de frontend y 15 de backend aprobadas. Una comprobación antigua home-entry.mjs falló por esperar build 12048, sin relación con este cambio; no se corrigió ni se cuenta como aprobada. Build staging generado. El despliegue del Worker sigue siendo manual.
+
+## Aclaración de pagos
+El sindicato paga al artista por fuera de la web app. No crear transferencias, billeteras, retiros ni pagos automáticos al artista. La confirmación del cobro de una campaña publicitaria es independiente.
+
+## Seguimiento de consultas
+Admin puede pasar cada consulta a Recibida, Contactada, Propuesta enviada o Cerrada y guardar una nota interna. Control de versión impide sobrescribir cambios de otra persona. Ninguna de esas acciones envía dinero ni afirma que se envió un correo.
+El PDF actualizado está versionado en assets/comercial/UADAV_Stream_Media_Kit.pdf y enlazado desde el Media Kit web y Admin.
