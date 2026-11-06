@@ -67,3 +67,9 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 4. Respaldo actualizado y ensayo final de restauración únicamente en base aislada; conservar procedimiento de reversión antes de una eventual publicación en producción.
 5. Automatización comercial: acreditación verificada, activación e información de estado; no prometer automatismo ni SLA de 24 h hasta implementarlo y probarlo. La beta puede operar con activación administrativa expresamente informada.
 6. En vivos y gorra: piloto VDO.Ninja entre dos dispositivos y enlace directo de donación al artista. Mantener indicación experimental hasta comprobarlo.
+
+## Respaldo y recuperación: ensayo aislado adicional
+- Worker: 43 pruebas aprobadas de exportación consistente, checksum, restauración de Bolsa/cuentas/Cartelera, transacciones con rollback, repetición idempotente y recuperación atómica. SQLite desechable con datos sintéticos; no se restauró ni exportó una base remota actual.
+- Frontend: 42 pruebas aprobadas de recuperación por correo, consentimiento, control de cuenta/dispositivo, errores y respuestas tardías. No hubo envíos de correo reales en este ensayo.
+- Comprobado que un respaldo corrupto o incompleto es rechazado, una falla revierte la transacción y un envío de correo interrumpido no se duplica automáticamente al restaurar.
+- Siguiente validación real requiere una casilla de QA indicada por su titular y acceso al mensaje recibido. No se asume correo del usuario a partir de datos no confirmados.
