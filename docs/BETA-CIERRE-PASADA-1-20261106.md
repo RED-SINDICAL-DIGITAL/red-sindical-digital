@@ -107,3 +107,8 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 - Ensayo Bolsa con copia actual en SQLite desechable: 21 ofertas, 13 postulaciones, 14 credenciales, 9 vínculos, 3 avisos. Integridad, checksum, repetición sin duplicados y rollback de lote interrumpido confirmados. No restaura cuentas completas ni valida D1 remota.
 - Ensayo Cartelera con la misma copia: 13 eventos, 8 referencias de publicación, 10 notificaciones, 12 versiones y 2 registros de despacho. Rollback e idempotencia aprobados; 0 correos enviados.
 - No se restauró la base operativa y no se modificó producción. Queda pendiente ensayo completo remoto aislado y verificación del panel publicado tras despliegue Pages.
+
+## Validador publicado: comprobación final de UI
+- Tras restablecer sesión Admin se ejecutó Generar respaldo y revisar en Auditoría de staging.
+- El panel mostró Respaldo actual de D1 verificado y descarga solicitada; descarga real recibida y JSON completo comprobado. Se mantiene fuente D1 con 21 ofertas y 13 postulaciones.
+- Queda confirmada la corrección publicada del rechazo erróneo por tablas temporales. No se migró desde KV ni se restauró la base operativa.
