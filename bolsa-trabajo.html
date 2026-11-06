@@ -98,7 +98,7 @@ new MutationObserver(render).observe(candidates,{childList:true,subtree:false});
    const actions=form.querySelector('.actions');if(actions)form.insertBefore(extra,actions);
    const titulo=document.getElementById('pubJobTitulo');if(titulo)titulo.placeholder='Ej.: Buscamos cantante para evento familiar';
    const desc=document.getElementById('pubJobDescripcion');if(desc)desc.placeholder='Contá qué necesitás, fecha, horario y cuánto ofrecés pagar.';
-   const email=document.getElementById('pubJobEmail');if(email){email.setAttribute('aria-describedby','jobEmailHelp');const help=document.createElement('small');help.id='jobEmailHelp';help.textContent='Este es el correo de contacto de la oferta. Para recuperar tu gestión sin códigos, guardala en Mi Perfil y confirmá allí tu correo privado.';email.closest('.field').append(help);}
+   const email=document.getElementById('pubJobEmail');if(email){email.setAttribute('aria-describedby','jobEmailHelp');const help=email.closest('.field').querySelector('small')||document.createElement('small');help.id='jobEmailHelp';help.textContent='Este es el correo de contacto de la oferta. Para recuperar tu gestión sin códigos, guardala en Mi Perfil y confirmá allí tu correo privado.';email.closest('.field').append(help);}
  }
  const save=document.getElementById('applyReceiptSave');
  if(save)save.addEventListener('click',()=>{
