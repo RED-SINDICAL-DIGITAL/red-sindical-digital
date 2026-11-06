@@ -35,9 +35,16 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 
 ## Edición y Hero verificados con Admin
 - Se confirmó modo mixto ya seleccionado; la portada ausente no se debía a una configuración genérica.
-- La creación pública omitía el campo portada en el Worker. Corrección en 6b747fe944c7fc44dff3ab0e3c5e56b604a01a0f; pendiente de despliegue. /api/health incorpora event_artwork_revision=20261106-public-cover-1.
+- La creación pública omitía el campo portada en el Worker. Corrección en 6b747fe944c7fc44dff3ab0e3c5e56b604a01a0f; despliegue confirmado por health y publicación pública completa. /api/health incorpora event_artwork_revision=20261106-public-cover-1.
 - Se agregó portada y descripción breve al evento QA existente desde Admin. Guardado confirmado por aparición del evento y del texto editado en el Hero público, sin destaque pago.
 - Campaña sintética QA-BETA-20261106 de Santa Fe/AR: guardada Pausada/Bonificada, sin cobro ni publicación. Intento de activar sin entrega verificada permaneció en el editor. No se declara entrega activa ni segmentación real aprobadas.
 - Se agrega mensaje persistente de validación en el editor de campañas para evitar errores invisibles detrás de la ventana.
 - Corrección Worker: 40 pruebas dirigidas aprobadas, incluida conservación del banner en alta atómica, catálogo, repetición y rechazo de cambios con la misma referencia; protocolos inseguros/credenciales no se conservan.
 - Frontend: 14 pruebas dirigidas y sintaxis del Admin aprobadas. Recuperación de correo real, campaña activa/territorial/vencimiento y dispositivos separados siguen pendientes.
+
+## Cierre de banner público y validación comercial · 2026-11-06
+- Alta pública real en staging: EV-CC646B1F-FAB3-4831-870A-D84CD209D680, QA BANNER 20261106. Publicación automática, banner conservado y diapositiva activa comprobada en Hero. Sin edición desde Admin, destaque pago ni aviso por correo. Datos ficticios; no asistir.
+- Aviso comercial retirado sobre Hero y trasladado a una sección desplegable al final de Publicar evento. Banner opcional gratuito visible junto al afiche sin desplegar opciones adicionales; verificado en staging.
+- Tras recargar Admin, activar QA-BETA-20261106 sin entrega verificada conserva el editor y muestra: Primero verificá la entrega en la ubicación contratada. No se guardó ni activó la campaña; se conserva Pausada/Bonificada.
+- 26 pruebas comerciales aisladas aprobadas: guardado y concurrencia, territorio enviado, rechazo de Worker antiguo, campañas futuras/vencidas, pausa y máximo de una diapositiva comercial. No equivalen a entrega territorial real de una campaña activa.
+- Pendientes: campaña activa con comprobación pública por territorio y vencimiento, recuperación real por correo y dispositivos separados.
