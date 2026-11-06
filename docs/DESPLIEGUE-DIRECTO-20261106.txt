@@ -1,0 +1,10 @@
+UADAV STREAM - Worker de STAGING - 2026-11-06
+
+Desplegar solo en uadav-api-staging. No reemplazar producción.
+Reemplazar el código por worker.js y conservar todos los bindings, variables, secretos y cron existentes. No crear recursos nuevos ni borrar datos.
+
+Incluye: contratación directa productor-artista, consultas privadas sin aprobación sindical, gestión de publicidad por administración y correcciones anteriores de Bolsa/Cartelera/correo. Los pagos artísticos quedan fuera de UADAV; la plataforma no cobra ni paga esas contrataciones.
+
+No incluye carga automática a Postimages ni completa el vivo público: siguen pendientes de integración y prueba real. El Worker no activa por sí solo claves o configuraciones faltantes.
+
+Comprobar después de desplegar: /api/health, ingreso privado de artista y recepción de una consulta sintética; otro artista no debe verla. No enviar datos reales durante las pruebas.
