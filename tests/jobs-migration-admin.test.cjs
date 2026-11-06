@@ -145,3 +145,5 @@ test('Admin loads and mounts the preparation panel inside its existing private a
   assert.match(admin,/UADAVJobsMigration\?\.mount/);
   for(const script of admin.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(script[1]);
 });
+
+test('modern D1 snapshots omit temporary security tables but still require durable records and credentials',async()=>{const f=fixture({source:'d1'});for(const key of ['job_store_rates','job_owner_recovery_tokens','job_owner_recovery_v2'])delete f.backup.tables[key];await f.flow.prepare();assert.equal(f.flow.getState().phase,'already-d1');assert.equal(f.downloads.length,1);for(const key of ['job_store_meta','job_store_records','job_owner_credentials']){const broken=fixture({source:'d1'});delete broken.backup.tables[key];await broken.flow.prepare();assert.equal(broken.flow.getState().phase,'error');assert.equal(broken.downloads.length,0);}});
