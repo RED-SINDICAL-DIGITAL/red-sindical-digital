@@ -1,16 +1,10 @@
 /* Approved launch offer. No checkout, renewal or campaign activation side effects. */
 (function(root){'use strict';
- const durations=[7,15,30],products=[];
- for(const [key,name,entity,placement,prices] of [
-  ['cartelera','Destacado en Cartelera','event','cartelera_slider',[5000,9000,15000]],
-  ['hero','Hero de Explorar','artist_or_event','hero',[12000,22000,36000]],
-  ['combo','Hero + Cartelera','event','hero_cartelera',[15000,28000,45000]]])
-  durations.forEach((days,i)=>products.push({id:`UADAV-LAUNCH-${key}-${days}`,name:`${name} · ${days} días`,entity_type:entity,placement,duration_days:days,amount:prices[i],currency:'ARS',price_label:'ARS '+prices[i].toLocaleString('es-AR'),active:false}));
- for(const [key,name,entity,placement,amount,from] of [
-  ['radio','Radio destacada','radio','radio_partner',20000,false],
-  ['banner','Banner entre secciones','brand','infeed',30000,false],
-  ['sponsor','Auspicio de sección','brand','section_sponsor',50000,true]])
-  products.push({id:`UADAV-LAUNCH-${key}-30`,name,entity_type:entity,placement,duration_days:30,amount,currency:'ARS',price_from:from,price_label:(from?'Desde ':'')+'ARS '+amount.toLocaleString('es-AR'),active:false});
+ const products=[
+ {id:'UADAV-CONSULT-HERO',name:'Hero premium',entity_type:'artist_or_event',placement:'hero'},
+ {id:'UADAV-CONSULT-CARTELERA',name:'Promoción en Cartelera',entity_type:'event',placement:'cartelera_slider'},
+ {id:'UADAV-CONSULT-FEED',name:'Publicidad en portada / feed',entity_type:'brand',placement:'infeed'}
+ ].map(p=>({...p,currency:'ARS',duration_days:0,price_label:'Consultar con administración',quote_required:true,active:false}));
  const provinces=['Buenos Aires','Ciudad Autónoma de Buenos Aires','Catamarca','Chaco','Chubut','Córdoba','Corrientes','Entre Ríos','Formosa','Jujuy','La Pampa','La Rioja','Mendoza','Misiones','Neuquén','Río Negro','Salta','San Juan','San Luis','Santa Cruz','Santa Fe','Santiago del Estero','Tierra del Fuego','Tucumán'];
  const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase();
  function targetIssue(x){
@@ -34,6 +28,6 @@
  function eligible(c,viewer,now=Date.now()){
   return c.status==='active'&&['paid','waived'].includes(c.payment_status)&&c.delivery_verified===true&&validDay(c.starts_at)&&validDay(c.ends_at)&&c.starts_at<=c.ends_at&&Date.parse(c.starts_at+'T00:00:00-03:00')<=now&&Date.parse(c.ends_at+'T23:59:59.999-03:00')>=now&&matchesTerritory(c,viewer);
  }
- const policy={version:'2026-10-27-launch',currency:'ARS',memberships:false,automaticRenewal:false,heroMaxCommercialCampaigns:3,products,provinces,targetIssue,matchesTerritory,validDay,eligible};
+ const policy={version:'2026-11-05-admin-quote',currency:'ARS',memberships:false,automaticRenewal:false,heroMaxCommercialCampaigns:1,heroEditorialTarget:4,commercialMode:'admin_quote',paymentMethod:'bank_transfer',administration:'Santa Fe',products,provinces,targetIssue,matchesTerritory,validDay,eligible};
  if(typeof module==='object'&&module.exports)module.exports=policy;else root.UADAVAdvertising=policy;
 })(typeof window==='object'?window:globalThis);
