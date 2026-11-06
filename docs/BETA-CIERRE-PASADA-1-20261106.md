@@ -99,3 +99,11 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 | Celular/tablet/TV | Reglas responsive y pruebas automatizadas de teclado/navegación | Validación física, reproducción y control remoto |
 | Cobro publicitario | Circuito manual documentado | Automatización y SLA 24 h |
 | Vivos y gorra | Propuesta piloto | Dos dispositivos y donación directa comprobados |
+
+## Respaldo actual y restauración aislada completados
+- Captura real desde Admin staging: 2026-11-06T21:51:55.054Z, 22 colecciones, 69 tablas, integridad declarada completa; checksum incorporado verificado en ensayo. Archivo privado conservado fuera del repositorio. No publicar su contenido ni credenciales.
+- Se detectó que el panel antiguo exigía job_store_rates, job_owner_recovery_tokens y job_owner_recovery_v2, que el exportador omite deliberadamente por ser temporales. Corrección del validador D1 mantiene exigencia de metadatos, registros y credenciales persistentes. No cambia requisitos de migración KV.
+- Respaldo real aceptado por validador corregido: 21 ofertas, 13 postulaciones, missing=[]; 21 pruebas existentes de migración/correo Admin aprobadas y regresión adicional incorporada al repositorio.
+- Ensayo Bolsa con copia actual en SQLite desechable: 21 ofertas, 13 postulaciones, 14 credenciales, 9 vínculos, 3 avisos. Integridad, checksum, repetición sin duplicados y rollback de lote interrumpido confirmados. No restaura cuentas completas ni valida D1 remota.
+- Ensayo Cartelera con la misma copia: 13 eventos, 8 referencias de publicación, 10 notificaciones, 12 versiones y 2 registros de despacho. Rollback e idempotencia aprobados; 0 correos enviados.
+- No se restauró la base operativa y no se modificó producción. Queda pendiente ensayo completo remoto aislado y verificación del panel publicado tras despliegue Pages.
