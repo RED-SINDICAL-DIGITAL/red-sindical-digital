@@ -119,3 +119,10 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 - temporary_authentication_restored=false: no se reviven enlaces de acceso o tokens temporales.
 - Esto amplía el ensayo anterior de Bolsa/Cartelera con datos actuales de cuentas. No demuestra ingreso real en un segundo dispositivo, uso de credenciales personales recuperadas ni un ensayo en D1 remota.
 - Respaldo operativo preservado; ninguna base de staging o producción fue restaurada.
+
+## Ocultamiento reversible de Cartelera preparado
+- Worker event_visibility_revision=20261106-hide-restore-1. Ruta administrativa autenticada lista publicados/ocultos y permite hide/publish con historial y transacción D1. Solo staging atómico.
+- Los ocultos desaparecen de catálogos y ficha públicos; se conservan datos y fechas. Editar ocultos mantiene estado. Republicar no reenvía notificaciones ni renueva campañas.
+- Admin incorpora etiqueta Oculto y botones Ocultar/Volver a publicar con bloqueo de doble envío y verificación de identidad/estado. Con Worker anterior conserva catálogo público y no muestra botones incompatibles.
+- 19 pruebas Worker y 8 Admin aprobadas, incluidos permisos, exclusión pública, edición oculta, recuperación, no duplicar avisos y rollback. ZIP preparado para despliegue manual. No se ocultaron eventos remotos todavía.
+- Limpieza: artista sintético ART-d01d02546d62490da9372e023934a8f0 quedó Oculto en staging; conservación y botón Publicar confirmados.
