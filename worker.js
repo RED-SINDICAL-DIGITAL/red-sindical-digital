@@ -4347,7 +4347,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     }
     {const commercialReply=await uadavCommercialInquiries(request,env,{json,isAdmin});if(commercialReply)return commercialReply;}
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: (await platformIdentity()).name, version: VERSION, build: BUILD, cartelera_revision:CARTELERA_REVISION, diagnostics_revision:'20261105-health-1', event_artwork_revision:'20261106-public-cover-1', advertising_revision:uadavAdvertisingPolicy.version, creative_revision:uadavCampaignCreative.version, integrations:{legacy_email_webhook_configured:!!env.EMAIL_AUTOMATION_URL,notification_queue_binding_configured:!!env.UADAV_NOTIFY,brevo_api_key_configured:!!env.BREVO_API_KEY}, kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: (await platformIdentity()).name, version: VERSION, build: BUILD, cartelera_revision:CARTELERA_REVISION, diagnostics_revision:'20261105-health-1', event_artwork_revision:'20261106-public-cover-1', event_visibility_revision:'20261106-hide-restore-1', advertising_revision:uadavAdvertisingPolicy.version, creative_revision:uadavCampaignCreative.version, integrations:{legacy_email_webhook_configured:!!env.EMAIL_AUTOMATION_URL,notification_queue_binding_configured:!!env.UADAV_NOTIFY,brevo_api_key_configured:!!env.BREVO_API_KEY}, kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:(await platformIdentity()).name, architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -4635,7 +4635,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       await env.DB.prepare(`INSERT OR IGNORE INTO events(id,title,category,city,province,country,venue,start_date,end_date,status,featured,payment_status,data_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
         .bind(String(before.id),String(before.titulo||before.nombre||'Evento'),String(before.categoria||''),String(before.ciudad||''),String(before.provincia||''),String(before.pais||'Argentina'),String(before.lugar||''),String(before.fecha_inicio||before.fecha||''),String(before.fecha_fin||''),String(before.estado||'published'),before.destacado_pagado===true?1:0,String(before.destacado_estado||''),JSON.stringify(before),String(before.fecha_creacion||isoNow()),isoNow()).run();
       const row=await env.DB.prepare('SELECT data_json,status FROM events WHERE id=?').bind(String(before.id)).first();
-      if(!row||!['published','pending'].includes(row.status)||row.status!==String(before.estado||'published')||JSON.stringify({...JSON.parse(row.data_json),id:before.id,estado:row.status})!==JSON.stringify(before))return {conflict:true};
+      if(!row||!['published','pending','hidden'].includes(row.status)||row.status!==String(before.estado||'published')||JSON.stringify({...JSON.parse(row.data_json),id:before.id,estado:row.status})!==JSON.stringify(before))return {conflict:true};
       const now=isoNow(),id=String(before.id),expected=row.data_json,expectedStatus=row.status;
       const version=env.DB.prepare(`INSERT INTO entity_versions(entity_type,entity_id,version,data_json,created_at)
         SELECT 'event',?,COALESCE((SELECT MAX(version) FROM entity_versions WHERE entity_type='event' AND entity_id=?),0)+1,?,?
@@ -4646,6 +4646,26 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
           .bind(String(next.titulo||next.nombre||'Evento'),String(next.categoria||''),String(next.ciudad||''),String(next.provincia||''),String(next.pais||'Argentina'),String(next.lugar||''),String(next.fecha_inicio||next.fecha||''),String(next.fecha_fin||''),next.destacado_pagado===true?1:0,String(next.destacado_estado||''),JSON.stringify(next),now,String(next.estado||'published'),id,expected,expectedStatus);
       const result=await env.DB.batch([version,change]);
       return {conflict:Number(result[1]?.meta?.changes)!==1};
+    }
+
+
+    if(path==='/api/admin/events/visibility'){
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      if(!atomicEventsEnabled||!hasD1())return json({error:'La visibilidad reversible requiere staging con D1.'},503);
+      const rows=await env.DB.prepare('SELECT id,status,data_json FROM events').all();
+      const merged=new Map((await getJSON('cartelera_aprobada',[])).map(e=>[String(e.id),e]));
+      for(const row of rows.results||[])merged.set(String(row.id),{...JSON.parse(row.data_json),id:row.id,estado:row.status});
+      const items=[...merged.values()].filter(e=>['published','hidden'].includes(e.estado||'published'));
+      if(request.method==='GET')return json({visibility_supported:true,items});
+      if(request.method!=='POST')return json({error:'Método no permitido'},405);
+      const b=await request.json().catch(()=>({}));
+      if(typeof b.id!=='string'||!['hide','publish'].includes(b.action))return json({error:'Elegí un evento y una acción válida.'},400);
+      const before=items.find(e=>String(e.id)===b.id);if(!before)return json({error:'Evento no encontrado'},404);
+      const state=b.action==='hide'?'hidden':'published';
+      if((before.estado||'published')===state)return json({success:true,item:before,unchanged:true});
+      const next={...before,estado:state,actualizado:isoNow()};
+      try{const saved=await mutateCanonicalEvent(before,next);if(saved.conflict)return json({error:'El evento cambió. Actualizá antes de continuar.'},409);return json({success:true,item:next});}
+      catch{return json({error:'No se confirmó el cambio. Actualizá la lista antes de reintentar.'},503);}
     }
 
     if (path === '/api/cartelera') {
@@ -4701,8 +4721,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         list.push(item); await putJSON(key,list); const d1sync=await safeD1('sync_cartelera_create',()=>syncEventsD1([item])); await audit('create_event','event',item.id,{title:item.titulo}); return json({success:true,item,d1_sync:d1sync});
       }
       if(request.method==='PUT'){
-        const b=await request.json().catch(()=>({})); const list=await getArray(key); const i=list.findIndex(x=>String(x.id)===String(b.id)); if(i<0)return json({error:'Show no encontrado'},404);
-        const before={...list[i]}; const scheduleError=uadavEventScheduleError({...list[i],...b});if(scheduleError)return json({error:scheduleError},400); list[i]={...list[i],...b,id:list[i].id,estado:'published',actualizado:isoNow()};
+        const b=await request.json().catch(()=>({})); const list=await getArray(key); let i=list.findIndex(x=>String(x.id)===String(b.id)); if(i<0&&atomicEventsEnabled){const hidden=await env.DB.prepare("SELECT id,status,data_json FROM events WHERE id=? AND status='hidden'").bind(String(b.id||'')).first();if(hidden){list.push({...JSON.parse(hidden.data_json),id:hidden.id,estado:hidden.status});i=list.length-1;}} if(i<0)return json({error:'Show no encontrado'},404);
+        const before={...list[i]}; const scheduleError=uadavEventScheduleError({...list[i],...b});if(scheduleError)return json({error:scheduleError},400); list[i]={...list[i],...b,id:list[i].id,estado:before.estado==='hidden'?'hidden':'published',actualizado:isoNow()};
         if(atomicEventsEnabled){
           try{const saved=await mutateCanonicalEvent(before,list[i]);if(saved.conflict)return json({error:'El evento cambió. Actualizá la lista antes de guardar.'},409);return json({success:true,item:list[i],d1_sync:{ok:true}});}
           catch{return json({error:'No pudimos confirmar el guardado. Actualizá la lista antes de reintentar.'},503);}
