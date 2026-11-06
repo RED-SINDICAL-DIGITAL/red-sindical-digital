@@ -10,7 +10,41 @@
     help.textContent = 'Usá el enlace directo de la imagen, no el enlace de la página de Postimages.';
     input.setAttribute('aria-describedby', help.id);
     input.insertAdjacentElement('afterend', help);
+    const previewButton = document.createElement('button');
+    previewButton.type = 'button';
+    previewButton.className = 'btn';
+    previewButton.textContent = id === 'cover' ? 'Ver banner' : 'Ver afiche';
+    const preview = document.createElement('div');
+    preview.hidden = true;
+    preview.id = id + '-image-preview';
+    preview.setAttribute('role', 'status');
+    preview.setAttribute('aria-live', 'polite');
+    previewButton.setAttribute('aria-controls', preview.id);
+    help.insertAdjacentElement('afterend', previewButton);
+    previewButton.insertAdjacentElement('afterend', preview);
+    let generation = 0;
+    function clearPreview() { generation++; preview.hidden = true; preview.replaceChildren(); }
+    previewButton.addEventListener('click', function () {
+      check();
+      if (!input.value.trim() || !input.checkValidity()) { input.reportValidity(); return; }
+      clearPreview();
+      const current = generation;
+      preview.hidden = false;
+      const message = document.createElement('p');
+      message.className = 'small';
+      message.textContent = 'Cargando vista previa…';
+      const image = document.createElement('img');
+      image.alt = id === 'cover' ? 'Vista previa del banner de Cartelera' : 'Vista previa del afiche';
+      image.referrerPolicy = 'no-referrer';
+      image.style.cssText = 'display:block;max-width:100%;max-height:320px;object-fit:contain;margin-top:10px;border-radius:12px';
+      image.hidden = true;
+      image.onload = function () { if (current !== generation) return; image.hidden = false; message.textContent = 'Vista previa cargada. Confirmá que sea la imagen correcta.'; };
+      image.onerror = function () { if (current !== generation) return; image.hidden = true; message.textContent = 'No pudimos mostrar la imagen. Revisá el enlace directo y que sea público. El alojamiento también puede impedir la vista previa.'; };
+      preview.append(message, image);
+      image.src = input.value.trim();
+    });
     function check() {
+      clearPreview();
       input.setCustomValidity('');
       let value = input.value.trim();
       const embedded = value.match(/\[img\](https:\/\/i\.postimg\.cc\/[^\s\[\]<>]+)\[\/img\]/i);
