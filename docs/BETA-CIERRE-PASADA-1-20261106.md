@@ -73,3 +73,11 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 - Frontend: 42 pruebas aprobadas de recuperación por correo, consentimiento, control de cuenta/dispositivo, errores y respuestas tardías. No hubo envíos de correo reales en este ensayo.
 - Comprobado que un respaldo corrupto o incompleto es rechazado, una falla revierte la transacción y un envío de correo interrumpido no se duplica automáticamente al restaurar.
 - Siguiente validación real requiere una casilla de QA indicada por su titular y acceso al mensaje recibido. No se asume correo del usuario a partir de datos no confirmados.
+
+## Validación adicional de vencimiento en staging
+- CAMP-MW5EDGH7-ZXSBQ se asoció al evento ficticio EV-CC646B1F-FAB3-4831-870A-D84CD209D680 (tipo Evento, Hero). Se guardó Activa/Bonificada con vigencia 2026-11-04 a 2026-11-05.
+- El 2026-11-06 la consulta pública Santa Fe devolvió [], aunque Admin mostraba Activo: la API excluye por fecha independientemente del estado administrativo.
+- Estado final Pausada confirmado; se conservan fechas y nota del ensayo. Sin cobros.
+- Alcance: prueba real de API con fechas pasadas, no transición de reloj de un dispositivo abierto ni renderizado publicitario real.
+- Admin incorpora bloqueo de combinaciones sin renderizador compatible (artista/evento en Hero; evento en Cartelera; radio destacada; marca en banners/auspicio). 21 pruebas comerciales aprobadas, incluida regresión de cinco combinaciones inválidas.
+- Recuperación: usuario reportó funcionamiento con su casilla; el navegador de QA sigue desvinculado y no demuestra recuperación de datos entre dispositivos. La salida del iframe se corrigió en perfil y puente de navegación y quedó verificada en staging.
