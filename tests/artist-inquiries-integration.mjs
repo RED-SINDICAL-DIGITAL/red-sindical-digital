@@ -7,6 +7,7 @@ async function call(route,method='GET',body,token=''){const r=await worker.fetch
 try{
  const submitted=await call('contrataciones','POST',{artist_id:'QA-A',nombre:'Synthetic client',email:'client@example.invalid',evento:'Synthetic event',detalles:'Private inquiry details',acepta_contrato:true});assert.equal(submitted.status,200);const id=submitted.data.item.id;
  assert.equal((await call('contrataciones')).status,401);assert.equal((await call('artist/inquiries')).status,401);
+ assert.equal(submitted.data.item.routing,'santa_fe');assert.equal((await call('artist/inquiries','GET',null,a)).data.items.length,0);assert.equal((await call('admin/artist-inquiries','PATCH',{id,release_to_artist:true})).status,401);assert.equal((await call('admin/artist-inquiries','PATCH',{id,release_to_artist:true},'local-inquiries-admin')).data.released_to_artist,true);
  const received=await call('artist/inquiries','GET',null,a);assert.equal(received.status,200);assert.equal(received.cache,'no-store');assert.equal(received.data.items[0].id,id);assert.equal(received.data.items[0].email,'client@example.invalid');
  assert.equal((await call('artist/inquiries','GET',null,b)).data.items.length,0);
  assert.equal((await call('artist/inquiries','PATCH',{id,estado:'leida'},b)).status,404);
@@ -32,6 +33,7 @@ try{
  env.UADAV_DB.get=async key=>{const snapshot=await read(key);if(key==='contrataciones'&&racing){reads++;if(reads===2){racing=false;release()}await gate}return snapshot};
  const concurrent=await Promise.all(['First concurrent inquiry','Second concurrent inquiry'].map(evento=>call('contrataciones','POST',{artist_id:'QA-B',nombre:'Synthetic',email:'client@example.invalid',evento,acepta_contrato:true})));
  env.UADAV_DB.get=read;assert.ok(concurrent.every(r=>r.status===200));
+ assert.equal((await call('artist/inquiries','GET',null,b)).data.items.length,0);assert.equal((await call('account/notifications','GET',null,accountB)).data.items.filter(n=>n.kind==='inquiry').length,0);for(const r of concurrent)assert.equal((await call('admin/artist-inquiries','PATCH',{id:r.data.item.id,release_to_artist:true},'local-inquiries-admin')).data.released_to_artist,true);
  const inbox=await call('artist/inquiries','GET',null,b);assert.equal(inbox.data.items.length,2,'concurrent submissions must both remain in the recipient inbox');
  const notices=await call('account/notifications','GET',null,accountB);assert.equal(notices.data.items.filter(n=>n.kind==='inquiry').length,2);
  const legacy=[{id:'QA-LEGACY-INQUIRY',artist_id:'QA-B',nombre:'Legacy synthetic client',email:'legacy@example.invalid',creado:'2026-01-01T00:00:00Z',estado:'pendiente'},{...concurrent[0].data.item,artist_id:'QA-A',evento:'STALE KV COPY'}];
@@ -44,6 +46,7 @@ try{
  const retryBody={request_id:'QA-REQUEST-1234567890123456',artist_id:'QA-B',nombre:'Retry synthetic client',email:'retry@example.invalid',evento:'Idempotent request',acepta_contrato:true};
  const attempts=await Promise.all([call('contrataciones','POST',retryBody),call('contrataciones','POST',retryBody)]);assert.ok(attempts.every(r=>r.status===200));assert.equal(attempts[0].data.item.id,attempts[1].data.item.id,'same submission key must create only one inquiry');
  assert.equal((await call('contrataciones','POST',{...retryBody,evento:'Changed payload'})).status,409);
+ assert.equal((await call('admin/artist-inquiries','PATCH',{id:attempts[0].data.item.id,release_to_artist:true},'local-inquiries-admin')).data.released_to_artist,true);
  assert.equal((await call('contrataciones','POST',{...retryBody,request_id:'short'})).status,400);
  const finalInbox=await call('artist/inquiries','GET',null,b);assert.equal(finalInbox.data.items.filter(x=>x.evento==='Idempotent request').length,1);
  console.log('PASS: actual Worker + SQLite free inquiry delivery, private recipient-only access, state persistence, invalid state denial and active-owner/suspended profile safeguards.');

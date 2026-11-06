@@ -6,6 +6,8 @@ on:
       - release/radio-studio-staging-rc-20261020
     paths:
       - 'worker.js'
+      - 'scripts/commercial-inquiries-runtime.js'
+      - 'tests/commercial-inquiries.test.mjs'
       - 'scripts/account-email-core.mjs'
       - 'scripts/account-email-message.mjs'
       - 'scripts/account-email-runtime.js'
@@ -97,6 +99,8 @@ on:
   pull_request:
     paths:
       - 'worker.js'
+      - 'scripts/commercial-inquiries-runtime.js'
+      - 'tests/commercial-inquiries.test.mjs'
       - 'scripts/account-email-core.mjs'
       - 'scripts/account-email-message.mjs'
       - 'scripts/account-email-runtime.js'
@@ -225,7 +229,7 @@ jobs:
       - name: Run standalone external-source checks inside Cloudflare engine
         run: UADAV_WORKERD_BIN="$RUNNER_TEMP/uadav-workerd/node_modules/@cloudflare/workerd-linux-64/bin/workerd" node scripts/test-job-external-workerd.mjs
       - name: Run SQLite transaction, concurrency, migration and recovery checks
-        run: node --test tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs tests/job-restore-qa.test.mjs tests/job-cron-staging.test.mjs tests/job-lab.test.mjs tests/job-recovery-outbox.test.mjs tests/access-mail-staging.test.mjs tests/brevo-probe.test.mjs tests/brevo-delivery.test.mjs tests/brevo-recovery-message.test.mjs tests/job-mail-lab.test.mjs tests/job-mail-live.test.mjs tests/job-mail-live-ui.test.mjs tests/job-backup.test.mjs tests/job-closure-ui.test.mjs tests/account-email-core.test.mjs tests/account-email-http.test.mjs tests/account-atomic-recovery.test.mjs tests/account-restore-qa.test.mjs tests/job-external-trusted.test.mjs
+        run: node --test tests/commercial-inquiries.test.mjs tests/advertising-territory.test.mjs tests/health-diagnostics.test.mjs tests/job-store-integration.test.mjs tests/job-store-schema.test.mjs tests/job-account-integration.test.mjs tests/job-expiry-integration.test.mjs tests/job-external-security.test.mjs tests/job-restore-qa.test.mjs tests/job-cron-staging.test.mjs tests/job-lab.test.mjs tests/job-recovery-outbox.test.mjs tests/access-mail-staging.test.mjs tests/brevo-probe.test.mjs tests/brevo-delivery.test.mjs tests/brevo-recovery-message.test.mjs tests/job-mail-lab.test.mjs tests/job-mail-live.test.mjs tests/job-mail-live-ui.test.mjs tests/job-backup.test.mjs tests/job-closure-ui.test.mjs tests/account-email-core.test.mjs tests/account-email-http.test.mjs tests/account-atomic-recovery.test.mjs tests/account-restore-qa.test.mjs tests/job-external-trusted.test.mjs
       - name: Run KV compatibility checks with current publication policy
         run: node tests/job-application-integration.mjs
 
