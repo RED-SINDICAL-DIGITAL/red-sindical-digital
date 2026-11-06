@@ -54,3 +54,16 @@ No requiere nuevo Worker por estas correcciones: son páginas, manual y document
 - Se volvió a Pausada desde Admin y la consulta Santa Fe devolvió []. Estado final Pausada confirmado en tabla.
 - Son consultas con territorio explícito: no prueban geolocalización de dos conexiones reales ni renderizado publicitario en esos dispositivos. Vencimiento real y conexiones/dispositivos siguen pendientes.
 - Guía pública y sección Admin: se retira compra PRO residual y se aclara activación manual tras acreditación/entrega; automatización y garantía 24 h no están implementadas. Banner gratuito visible y consulta comercial al final del formulario documentados.
+
+## Revisión consolidada sobre 8a16f08d
+- Checkout limpio de la rama staging: 224 pruebas aprobadas en 29 archivos *.test.cjs de jobs, bolsa, profile, event, cartelera, commercial y advertising. Sin fallas ni omisiones en este conjunto; no representa toda la CI ni validación física multidispositivo.
+- Build staging correcto: 201 archivos generados con UADAV_STAGING_ORIGIN. Solo preparación, sin despliegue ni cambios en producción.
+- Mi Perfil diferencia comprobante de postulación de acceso a ofertas y describe contacto directo con artistas.
+
+### Pendientes de cierre, por prioridad
+1. Recuperación por correo con casilla real de QA y segundo dispositivo: verificar acceso, datos vinculados y revocación; no usar correos inventados para declarar entrega.
+2. Recorrido visual y funcional en celular/tablet/Smart TV reales: publicación, postulación, retorno y reproducción. Las pruebas automatizadas no sustituyen estos dispositivos.
+3. Publicidad: renderizado de la campaña en el espacio contratado, ubicación detectada desde conexiones de Santa Fe/Córdoba y vencimiento real. API territorial explícita y pausa ya verificadas.
+4. Respaldo actualizado y ensayo final de restauración únicamente en base aislada; conservar procedimiento de reversión antes de una eventual publicación en producción.
+5. Automatización comercial: acreditación verificada, activación e información de estado; no prometer automatismo ni SLA de 24 h hasta implementarlo y probarlo. La beta puede operar con activación administrativa expresamente informada.
+6. En vivos y gorra: piloto VDO.Ninja entre dos dispositivos y enlace directo de donación al artista. Mantener indicación experimental hasta comprobarlo.
