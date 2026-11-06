@@ -12,7 +12,8 @@
     for(const key of COLLECTIONS)if(!Array.isArray(backup.kv[key])||backup.kv[key].length>2000)throw Error('El respaldo de Bolsa no es válido.');
     if(Object.values(backup.tables).some(rows=>!Array.isArray(rows)))throw Error('El respaldo tiene tablas sin verificar.');
     if(!['kv','d1'].includes(backup.job_storage))throw Error('El Worker no informa el origen de Bolsa. Verificá el build 11758.');
-    const missing=TABLES.filter(name=>!Array.isArray(backup.tables[name]));
+    const requiredTables=backup.job_storage==='d1'?TABLES.filter(name=>!['job_store_rates','job_owner_recovery_tokens','job_owner_recovery_v2'].includes(name)):TABLES;
+    const missing=requiredTables.filter(name=>!Array.isArray(backup.tables[name]));
     if(backup.job_storage==='d1'){
       const mismatch=()=>{throw Error('El respaldo de D1 no coincide con todos sus registros y credenciales. Repetí el respaldo; si vuelve a fallar, pausá las escrituras de staging para revisarlo.');};
       if(missing.length||!backup.tables.job_store_meta.some(row=>row?.key==='migration_ready'&&row.value==='true'))mismatch();
