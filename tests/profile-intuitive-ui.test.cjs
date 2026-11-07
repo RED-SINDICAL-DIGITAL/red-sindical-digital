@@ -12,9 +12,9 @@ test('primary actions have consistent local SVG icons and preserve navigation',(
  assert.equal((first.match(/<svg class="profile-icon"/g)||[]).length,8);
  for(const id of ['pi-work','pi-artist','pi-library','pi-calendar','pi-plus','pi-explore','pi-settings','pi-help','pi-edit']){
    assert(html.includes('id="'+id+'"'),id);
-   assert(first.includes('href="#'+id+'"')||first.includes('href="#mis-trabajos"')||first.includes('href="/biblioteca.html"'));
+   assert(first.includes('href="#'+id+'"')||first.includes('href="/usuario.html?vista=trabajos"')||first.includes('href="/biblioteca.html"'));
  }
- for(const link of ['href="#mis-trabajos"','href="#mi-artista"','href="/biblioteca.html"','href="/publicar-evento.html"','href="/usuario.html?vista=cuenta"'])assert(first.includes(link),link);
+ for(const link of ['href="/usuario.html?vista=trabajos"','href="/usuario.html?vista=artista"','href="/biblioteca.html"','href="/publicar-evento.html"','href="/usuario.html?vista=cuenta"'])assert(first.includes(link),link);
  assert(!first.includes('data-symbol='));
 });
 test('continue-watching precedes lower priority editing panels and preserves the player',()=>{

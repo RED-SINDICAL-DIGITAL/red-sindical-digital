@@ -84,3 +84,50 @@ body[data-page="usuario"].uadav-ui-v2 a:focus-visible,body[data-page="usuario"].
 @media(min-width:768px) and (max-width:1024px){
  body[data-page="usuario"].uadav-ui-v2 #recent .item{flex-basis:220px!important}
 }
+
+/* Profile views v2: one simple home and focused management screens.
+   The legacy DOM remains mounted to retain working account/artists/jobs logic. */
+body[data-page="usuario"].uadav-ui-v2 .profile-view-header{display:flex;flex-direction:column;gap:8px;padding:11px 4px 16px}
+body[data-page="usuario"].uadav-ui-v2 .profile-view-header[hidden]{display:none!important}
+body[data-page="usuario"].uadav-ui-v2 .profile-view-back{color:var(--u-cyan);display:inline-flex;align-items:center;gap:8px;min-height:44px;text-decoration:none;font-weight:750;font-size:14px;align-self:flex-start}
+body[data-page="usuario"].uadav-ui-v2 .profile-view-back:first-letter{font-size:22px}
+body[data-page="usuario"].uadav-ui-v2 .profile-view-header h1{margin:0;font-weight:900;font-size:clamp(25px,5vw,36px);letter-spacing:-.04em}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #mis-trabajos,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #mi-artista,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #radioStudioEntry,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-library-details,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-settings{display:none!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] .profile-settings,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] .profile-settings{display:none!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="account"] .profile-account-top{display:none!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] .hero,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] .hero{display:none!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] .grid>:not(#mi-artista),
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] .grid>:not(#mis-trabajos){display:none!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] #mi-artista,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] #mis-trabajos{display:block!important;border:0!important;padding:14px 2px!important;box-shadow:none!important;background:transparent!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] #mi-artista>h2,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] #mis-trabajos>h2,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] .profile-fold-toggle,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] .profile-fold-toggle{display:none!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] #mi-artista>:not(h2),
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] #mis-trabajos>:not(h2){display:revert}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] #mi-artista .prefs,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] #mis-trabajos .prefs{gap:11px}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] #mi-artista .chip,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] #mis-trabajos .chip{min-height:44px;border-radius:12px;padding:11px 15px}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] #mi-artista .muted,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] #mis-trabajos .muted{max-width:65ch}
+body[data-page="usuario"].uadav-ui-v2 #profileTasks .profile-task{box-shadow:none!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks{padding:0!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-tasks{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-task{min-height:74px!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-shortcuts{margin:12px 0 0}
+@media(min-width:800px){
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:24px}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks{grid-column:1}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-continue{grid-column:2;margin:0!important;padding-top:6px!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #accountNotices{grid-column:1/-1}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #recent .item{flex-basis:min(16vw,180px)!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-shortcuts a{flex:1 1 42%;min-width:0}
+}
