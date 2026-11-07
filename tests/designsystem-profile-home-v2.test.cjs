@@ -7,7 +7,7 @@ const html=fs('usuario.html'),tokens=fs('design/uadav-ui-tokens-v2.css'),base=fs
 
 test('design system is opt-in and only linked by Mi Perfil',()=>{
  assert.match(html,/body data-page="usuario" class="uadav-ui-v2"/);
- for(const name of ['uadav-ui-tokens-v2.css','uadav-ui-components-v2.css','uadav-profile-home-v2.css'])assert(html.includes('/design/'+name));
+ for(const name of ['uadav-ui-tokens-v2.css','uadav-ui-components-v2.css','uadav-profile-home-v2.css'])assert(html.includes('data-uadav-inline-source="'+name+'"'),name);
  assert.match(base,/body\.uadav-ui-v2/);
  assert.match(profile,/body\[data-page="usuario"\]\.uadav-ui-v2/);
  assert.doesNotMatch(profile,/(^|\n)\s*(body|html|\.panel|\.hero)\s*\{/);
