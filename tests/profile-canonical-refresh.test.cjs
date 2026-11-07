@@ -26,3 +26,18 @@ test('unrelated localStorage updates do not repaint Mi Perfil',()=>{
 test('clear storage requests a canonical profile refresh',()=>{
  const x=fixture();x.events.storage({key:null});assert.equal(x.refreshCount(),1);
 });
+
+const profileHTML=readFileSync(join(__dirname,'..','usuario.html'),'utf8');
+test('Mi Perfil explains managed artist identity before job applications',()=>{
+ assert.match(profileHTML,/Tu cuenta personal y un perfil artístico administrado son distintos/);
+ assert.match(profileHTML,/Postularte sin artista también está permitido/);
+});
+test('local deletion clearly excludes library and saved job records',()=>{
+ assert.match(profileHTML,/Borrar mi perfil local e historial reciente/);
+ assert.match(profileHTML,/No elimina favoritos, playlists, la cuenta sincronizada ni gestiones guardadas/);
+ assert.match(profileHTML,/Tus favoritos, playlists y gestiones no se eliminan/);
+});
+test('saved job and private receipt paths are distinguished',()=>{
+ assert.match(profileHTML,/Las gestiones guardadas en tu cuenta aparecen acá automáticamente/);
+ assert.match(profileHTML,/Consultar comprobante \(\.txt\)/);
+});
