@@ -23,11 +23,13 @@ test('home hides management panels; no duplicate long HTML on first screen',()=>
 test('jobs subview opens its own content and provides back navigation',()=>{
  const a=simulate('?vista=trabajos');assert.equal(a.body.dataset.profileView,'trabajos');assert.equal(a.header.hidden,false);assert.equal(a.title.textContent,'Mis trabajos');assert.equal(a.panel.classList.contains('is-collapsed'),false);
  assert.match(css,/\[data-profile-view="trabajos"\] \.grid>:not\(#mis-trabajos\)/);
+ assert.match(css,/\[data-profile-view="trabajos"\] \.profile-settings\{display:none!important\}/);
  assert.match(html,/href="\/usuario\.html" aria-label="Volver a Mi Perfil"/);
 });
 test('artist subview shows only artist management and retains auth hooks',()=>{
  const a=simulate('?vista=artista');assert.equal(a.body.dataset.profileView,'artista');assert.equal(a.title.textContent,'Mi artista');assert.equal(a.panel.classList.contains('is-collapsed'),false);
  assert.match(css,/\[data-profile-view="artista"\] \.grid>:not\(#mi-artista\)/);
+ assert.match(css,/\[data-profile-view="artista"\] \.profile-settings/);
  for(const id of ['linkedArtists','artistProfile','artistAccessRetry','artistInquiries','artistKit'])assert(html.includes('id="'+id+'"'),id);
 });
 test('account security keeps old route, existing auth code and recovery',()=>{
