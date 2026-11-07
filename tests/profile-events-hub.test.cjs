@@ -18,9 +18,9 @@ test('only real publishing and promotion actions are provided',()=>{
  for(const url of ['/publicar-evento.html','/cartelera.html','/consultar-publicidad.html'])
   assert(content.includes('href="'+url+'"'),url);
  assert.match(content,/publicaciones asociadas a tu cuenta verificada/);
- assert(!content.includes('Editar evento'));
+ assert.match(html,/id="profileOwnedEventEditor"/);
  assert(!content.includes('Eliminar evento'));
- assert(!content.includes('Reactivar evento'));
+ assert.match(html,/action:item.estado==='hidden'\?'publish':'hide'/);
 });
 test('event controls are isolated from private jobs and artist identity',()=>{
  for(const id of ['profileJobLookup','linkedArtists','artistProfile','profileSettings','recoverAccount'])assert(html.includes('id="'+id+'"'),id);
