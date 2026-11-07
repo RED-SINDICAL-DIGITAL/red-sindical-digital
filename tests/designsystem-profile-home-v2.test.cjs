@@ -20,7 +20,7 @@ test('blue cyan tokens match approved mobile visual reference',()=>{
 test('mobile-first actions are compact, legible and keep current business navigation',()=>{
  assert.match(profile,/#profileTasks \.profile-tasks\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.match(profile,/#profileTasks \.profile-task\{min-width:0;min-height:83px/);
- for(const action of ['href="#mis-trabajos"','href="#mi-artista"','href="/biblioteca.html"','href="/publicar-evento.html"','href="/usuario.html?vista=cuenta"'])assert(html.includes(action),action);
+ for(const action of ['href="/usuario.html?vista=trabajos"','href="/usuario.html?vista=artista"','href="/biblioteca.html"','href="/publicar-evento.html"','href="/usuario.html?vista=cuenta"'])assert(html.includes(action),action);
 });
 test('all private modules, account scripts and real playback hooks remain intact',()=>{
  for(const id of ['avatar','photo','name','edit','mis-trabajos','mi-artista','recent','profileSettings','accountDevices','recoverAccount','profileJobLookup','linkedArtists'])assert(html.includes('id="'+id+'"'),id);
