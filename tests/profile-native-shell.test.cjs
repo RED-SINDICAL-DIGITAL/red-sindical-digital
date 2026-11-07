@@ -8,22 +8,30 @@ const css=readFileSync(join(__dirname,'..','design/uadav-profile-native-v3.css')
 const js=readFileSync(join(__dirname,'..','design/uadav-profile-native-mount-v4.js'),'utf8');
 const app=readFileSync(join(__dirname,'..','app.html'),'utf8');
 function simulate(view='home',options={}){
+ const listeners={};
+ function container(extra={}){
+   return {children:[],...extra,appendChild(e){if(e.parentNode){const prev=e.parentNode.children;prev.splice(prev.indexOf(e),1)}this.children.push(e);e.parentNode=this},insertBefore(e,next){if(e.parentNode){const prev=e.parentNode.children;prev.splice(prev.indexOf(e),1)}const i=this.children.indexOf(next);this.children.splice(i<0?this.children.length:i,0,e);e.parentNode=this}};
+ }
  const sections={hero:{id:'hero'},tasks:{id:'profileTasks'},recent:{id:'recent'},notices:{id:'accountNotices'}};
- const home={hidden:true},original={hidden:false,querySelector(selector){return selector==='.hero'?sections.hero:selector==='.profile-continue'?(options.noRecent?null:sections.recent):null}};
- const target={children:[],appendChild(e){this.children.push(e)}},listeners={};
- const body={dataset:{profileView:view},classList:{values:new Set(),contains(v){return this.values.has(v)},add(v){this.values.add(v)}}};
+ const home={hidden:true},original=container({hidden:false,querySelector(selector){return selector==='.hero'?sections.hero:selector==='.profile-continue'?(options.noRecent?null:sections.recent):null}});
+ const grid=container();
+ original.appendChild(sections.hero);original.appendChild(grid);
+ for(const x of [sections.tasks,sections.recent,sections.notices])grid.appendChild(x);
+ const target=container();
+ const body={dataset:{profileView:view},classList:{values:new Set(),contains(v){return this.values.has(v)},add(v){this.values.add(v)},remove(v){this.values.delete(v)}}};
  const document={body,readyState:'complete',title:'Mi Perfil',getElementById(id){
   return ({profileNativeHome:home,profileLegacyViews:original,nativeHomeSections:target,profileTasks:sections.tasks,accountNotices:options.noNotices?null:sections.notices})[id]||null;
  }};
  const window={addEventListener(name,fn){listeners[name]=fn}};
  const location={search:'',hash:''};
  vm.runInNewContext(js,{document,window,location,URLSearchParams,MutationObserver:undefined});
- return{home,original,target,body,document,sections,listeners};
+ return{home,original,target,body,document,sections,listeners,location,grid};
 }
+
 test('native home mounts only existing interactive nodes, without copying data or listeners',()=>{
  const x=simulate();assert.equal(x.home.hidden,false);assert.equal(x.original.hidden,true);
  assert.deepEqual(x.target.children.map(e=>e.id),['hero','profileTasks','recent','accountNotices']);
- assert.equal(x.body.dataset.profileMount,'profile-native-mount-v4');
+ assert.equal(x.body.dataset.profileMount,'profile-native-mount-v5');
  assert(x.body.classList.values.has('profile-native-mounted'));
 });
 test('optional notices never prevent mounting of actual home',()=>{
@@ -54,4 +62,33 @@ test('new mount loads independently and preserves CSS and account hookups',()=>{
 test('the PWA uses the canonical profile path with a fresh iframe revision',()=>{
  assert.match(app,/if\(p==='\/usuario'\|\|p==='\/usuario\/'\)p='\/usuario\.html'/);
  assert.match(app,/frameURL\.searchParams\.set\('rev',routePath\(to\)==='\/usuario\.html'/);
+});
+
+test('fragment navigation restores original live controls and remounts without clones',()=>{
+ const x=simulate();
+ x.location.hash='#profileSettings';
+ x.listeners.hashchange();
+ assert.equal(x.home.hidden,true);
+ assert.equal(x.original.hidden,false);
+ assert.equal(x.target.children.length,0);
+ assert.deepEqual(x.grid.children.map(e=>e.id),['profileTasks','recent','accountNotices']);
+ assert.equal(x.original.children[0],x.sections.hero);
+ assert.equal(x.body.classList.contains('profile-native-mounted'),false);
+ x.location.hash='';
+ x.listeners.hashchange();
+ assert.equal(x.home.hidden,false);
+ assert.equal(x.original.hidden,true);
+ assert.deepEqual(x.target.children.map(e=>e.id),['hero','profileTasks','recent','accountNotices']);
+});
+test('history navigation to account view and back preserves interactive node identity',()=>{
+ const x=simulate();
+ x.body.dataset.profileView='account';
+ x.listeners.popstate();
+ assert.equal(x.target.children.length,0);
+ assert.equal(x.original.hidden,false);
+ x.body.dataset.profileView='home';
+ x.listeners.popstate();
+ assert.equal(x.target.children[0],x.sections.hero);
+ assert.equal(x.target.children[1],x.sections.tasks);
+ assert.equal(x.original.hidden,true);
 });
