@@ -13,6 +13,7 @@ function simulate(view='home',options={}){
    return {children:[],...extra,appendChild(e){if(e.parentNode){const prev=e.parentNode.children;prev.splice(prev.indexOf(e),1)}this.children.push(e);e.parentNode=this},insertBefore(e,next){if(e.parentNode){const prev=e.parentNode.children;prev.splice(prev.indexOf(e),1)}const i=this.children.indexOf(next);this.children.splice(i<0?this.children.length:i,0,e);e.parentNode=this}};
  }
  const sections={hero:{id:'hero'},tasks:{id:'profileTasks'},recent:{id:'recent'},notices:{id:'accountNotices'}};
+ const header={hidden:true},heading={textContent:''},settings={open:false};
  const home={hidden:true},original=container({hidden:false,querySelector(selector){return selector==='.hero'?sections.hero:selector==='.profile-continue'?(options.noRecent?null:sections.recent):null}});
  const grid=container();
  original.appendChild(sections.hero);original.appendChild(grid);
@@ -20,12 +21,12 @@ function simulate(view='home',options={}){
  const target=container();
  const body={dataset:{profileView:view},classList:{values:new Set(),contains(v){return this.values.has(v)},add(v){this.values.add(v)},remove(v){this.values.delete(v)}}};
  const document={body,readyState:'complete',title:'Mi Perfil',getElementById(id){
-  return ({profileNativeHome:home,profileLegacyViews:original,nativeHomeSections:target,profileTasks:sections.tasks,accountNotices:options.noNotices?null:sections.notices})[id]||null;
+  return ({profileNativeHome:home,profileLegacyViews:original,nativeHomeSections:target,profileViewHeader:header,profileViewTitle:heading,profileSettings:settings,profileTasks:sections.tasks,accountNotices:options.noNotices?null:sections.notices})[id]||null;
  }};
  const window={addEventListener(name,fn){listeners[name]=fn}};
  const location={search:view==='home'?'':'?vista='+view,hash:''};
  vm.runInNewContext(js,{document,window,location,URLSearchParams,MutationObserver:undefined});
- return{home,original,target,body,document,sections,listeners,location,grid};
+ return{home,original,target,body,document,sections,listeners,location,grid,header,heading,settings};
 }
 
 test('native home mounts only existing interactive nodes, without copying data or listeners',()=>{
@@ -91,4 +92,20 @@ test('history navigation to account view and back preserves interactive node ide
  assert.equal(x.target.children[0],x.sections.hero);
  assert.equal(x.target.children[1],x.sections.tasks);
  assert.equal(x.original.hidden,true);
+});
+
+test('history-driven account heading and settings restore and clear when returning home',()=>{
+ const x=simulate();
+ assert.equal(x.header.hidden,true);
+ x.location.search='?vista=cuenta';
+ x.listeners.popstate();
+ assert.equal(x.header.hidden,false);
+ assert.equal(x.heading.textContent,'Cuenta y seguridad');
+ assert.equal(x.settings.open,true);
+ assert.equal(x.body.dataset.profileView,'account');
+ x.location.search='';
+ x.listeners.popstate();
+ assert.equal(x.header.hidden,true);
+ assert.equal(x.body.dataset.profileView,'home');
+ assert.equal(x.document.title,'Mi espacio · UADAV STREAM');
 });
