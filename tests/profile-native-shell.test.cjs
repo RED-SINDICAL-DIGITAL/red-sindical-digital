@@ -48,5 +48,18 @@ test('new mount script parses',()=>new vm.Script(script));
 
 const app=fs.readFileSync(path.join(__dirname,'..','app.html'),'utf8');
 test('the host PWA iframe uses a new revision for Mi Perfil only',()=>{
- assert.match(app,/frameURL\.searchParams\.set\('rev',routePath\(to\)==='\/usuario\.html'\?'profile-native-shell-20261107':'12059'\)/);
+ assert.match(app,/frameURL\.searchParams\.set\('rev',routePath\(to\)==='\/usuario\.html'\?'profile-native-shell-routefix-20261107':'12059'\)/);
+});
+
+test('PWA canonicalizes /usuario alias before deciding iframe version',()=>{
+ const marker="function clean(h){",start=app.indexOf(marker),end=app.indexOf('function routePath(v)',start);
+ assert(start>0&&end>start);
+ const code=app.slice(start,end);
+ const context={location:{origin:'https://uadav-stream-staging.pages.dev'},URL,HOME:'/descubrir.html'};
+ vm.runInNewContext(code,context);
+ assert.equal(context.clean('/usuario'),'/usuario.html');
+ assert.equal(context.clean('/usuario/'),'/usuario.html');
+ assert.equal(context.clean('/usuario?vista=artista'),'/usuario.html?vista=artista');
+ assert.equal(context.clean('/usuario.html?vista=cuenta'),'/usuario.html?vista=cuenta');
+ assert.equal(context.clean('/cartelera.html'),'/cartelera.html');
 });
