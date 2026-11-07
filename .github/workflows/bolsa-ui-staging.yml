@@ -61,6 +61,10 @@ on:
       - tests/profile-editorial-continue.test.cjs
       - tests/profile-intuitive-ui.test.cjs
       - tests/profile-mobile-first.test.cjs
+      - design/uadav-ui-tokens-v2.css
+      - design/uadav-ui-components-v2.css
+      - design/uadav-profile-home-v2.css
+      - tests/designsystem-profile-home-v2.test.cjs
       - uadav-profile-email.js
       - tests/jobs-account-ui.test.cjs
       - tests/jobs-migration-admin.test.cjs
@@ -130,6 +134,10 @@ on:
       - tests/profile-editorial-continue.test.cjs
       - tests/profile-intuitive-ui.test.cjs
       - tests/profile-mobile-first.test.cjs
+      - design/uadav-ui-tokens-v2.css
+      - design/uadav-ui-components-v2.css
+      - design/uadav-profile-home-v2.css
+      - tests/designsystem-profile-home-v2.test.cjs
       - uadav-profile-email.js
       - tests/jobs-account-ui.test.cjs
       - tests/jobs-migration-admin.test.cjs
@@ -162,6 +170,7 @@ jobs:
       - run: node --test tests/profile-editorial-continue.test.cjs
       - run: node --test tests/profile-intuitive-ui.test.cjs
       - run: node --test tests/profile-mobile-first.test.cjs
+      - run: node --test tests/designsystem-profile-home-v2.test.cjs
       - run: node --test tests/commercial-delivery-placement.test.cjs
       - run: node tests/account-notices-ui.mjs
       - run: node tests/admin-import-export.mjs
