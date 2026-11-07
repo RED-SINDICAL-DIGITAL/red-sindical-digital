@@ -71,6 +71,8 @@ on:
       - design/uadav-profile-native-v3.css
       - tests/profile-native-shell.test.cjs
       - tests/profile-css-mime.test.cjs
+      - tests/pwa-profile-scroll-meta.test.cjs
+      - app.html
       - uadav-profile-email.js
       - tests/jobs-account-ui.test.cjs
       - tests/jobs-migration-admin.test.cjs
@@ -150,6 +152,8 @@ on:
       - design/uadav-profile-native-v3.css
       - tests/profile-native-shell.test.cjs
       - tests/profile-css-mime.test.cjs
+      - tests/pwa-profile-scroll-meta.test.cjs
+      - app.html
       - uadav-profile-email.js
       - tests/jobs-account-ui.test.cjs
       - tests/jobs-migration-admin.test.cjs
@@ -188,6 +192,7 @@ jobs:
       - run: node --test tests/profile-native-mobile-list.test.cjs
       - run: node --test tests/profile-native-shell.test.cjs
       - run: node --test tests/profile-css-mime.test.cjs
+      - run: node --test tests/pwa-profile-scroll-meta.test.cjs
       - run: node --test tests/commercial-delivery-placement.test.cjs
       - run: node tests/account-notices-ui.mjs
       - run: node tests/admin-import-export.mjs
