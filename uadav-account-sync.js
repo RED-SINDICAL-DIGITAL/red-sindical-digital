@@ -3,7 +3,7 @@
 try{if(window.parent!==window&&window.parent.UADAVAccount){window.UADAVAccount=window.parent.UADAVAccount;const relay=()=>window.parent.dispatchEvent(new window.parent.CustomEvent('uadav:local-change'));window.addEventListener('uadav:local-change',relay);window.addEventListener('uadav:library-change',relay);return}}catch{}
 if(window.UADAVAccount)return;
 const keys=['uadav_user_v11','uadav_favorites_v1','uadav_watch_later_v1','uadav_playlists_v1','uadav_following_v1','uadav_radio_favorites_v1','uadav_recent_v11'],accessKey='uadav_account_access_v1',baseKey='uadav_account_base_v1',rotationKey='uadav_account_rotation_pending_v1';
-const host=String(location.hostname||new URL(location.href).hostname).toLowerCase();
+const host=String(location.hostname||String(location.href||'').match(/^https?:\/\/([^/:?#]+)/i)?.[1]||'').toLowerCase();
 const staging=window.UADAV_ENV==='staging'||window.PLATFORM_ENV==='staging'||/(?:^|[.-])(?:staging|preview)(?:[.-]|$)/i.test(host)||/^[^.]+\.[^.]+\.pages\.dev$/i.test(host);
 const api=String(staging?'https://uadav-api-staging.uadavstream.workers.dev/api/':(window.PLATFORM_API_BASE||window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/')).replace(/\/?$/,'/');
 let busy=false,rotationBusy=false,conflict=null,generation=0,message='Guardado en este dispositivo';
