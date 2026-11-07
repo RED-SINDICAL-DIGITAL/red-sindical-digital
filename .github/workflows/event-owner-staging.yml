@@ -1,0 +1,25 @@
+name: Event owner staging checks
+on:
+  push:
+    branches:
+      - feat/event-owner-staging-20261107
+  pull_request:
+    paths:
+      - worker.js
+      - tests/event-owner-staging.test.cjs
+      - tests/event-owner-behavior.test.cjs
+      - .github/workflows/event-owner-staging.yml
+jobs:
+  owner-security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Worker syntax
+        run: node --check worker.js
+      - name: Test event owner authorization
+        run: node --test tests/event-owner-staging.test.cjs tests/event-owner-behavior.test.cjs

@@ -4558,6 +4558,15 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         const item = {
           id:'EV-'+Date.now().toString(36).toUpperCase(), nombre:String(body?.nombre||body?.titulo||'Evento').slice(0,180), titulo:String(body?.titulo||body?.nombre||'Evento').slice(0,180), categoria:String(body?.categoria||body?.category||'Eventos').slice(0,80), subcategoria:String(body?.subcategoria||'').slice(0,80), organizador:String(body?.organizador||body?.productora||'').slice(0,180), productora_id:String(body?.productora_id||'').slice(0,120), fecha:String(body?.fecha||'').slice(0,80), hora:String(body?.hora||'').slice(0,5), fecha_inicio:String(body?.fecha_inicio||body?.fecha||'').slice(0,80), fecha_fin:String(body?.fecha_fin||'').slice(0,80), lugar:String(body?.lugar||'').slice(0,180), direccion:String(body?.direccion||'').slice(0,220), ciudad:String(body?.ciudad||'').slice(0,120), provincia:String(body?.provincia||'').slice(0,120), pais:String(body?.pais||'Argentina').slice(0,80), imagen:String(body?.imagen||body?.poster||'').slice(0,500), portada:(()=>{try{const u=new URL(String(body?.portada||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href.slice(0,500):''}catch{return ''}})(), trailer:String(body?.trailer||body?.youtube_id||'').slice(0,500), youtube_id:String(body?.youtube_id||body?.trailer||'').slice(0,80), precio:String(body?.precio||body?.precio_desde||'').slice(0,80), precio_desde:String(body?.precio_desde||body?.precio||'').slice(0,80), precio_hasta:String(body?.precio_hasta||'').slice(0,80), moneda:String(body?.moneda||'ARS').slice(0,12), es_gratuito:body?.es_gratuito===true, link_compra:String(body?.link_compra||body?.link_ticketera||'').slice(0,500), ticketera:String(body?.ticketera||'').slice(0,120), descripcion_corta:String(body?.descripcion_corta||'').slice(0,300), descripcion:String(body?.descripcion||'').slice(0,2500), contacto_email:String(body?.contacto_email||body?.email||'').slice(0,160), contacto:String(body?.contacto||body?.whatsapp||'').slice(0,200), whatsapp:String(body?.whatsapp||'').slice(0,60), instagram:String(body?.instagram||'').slice(0,300), facebook:String(body?.facebook||'').slice(0,300), web:String(body?.web||'').slice(0,300), galeria:Array.isArray(body?.galeria)?body.galeria.slice(0,20):[], funciones:Array.isArray(body?.funciones)?body.funciones.slice(0,50):[], creado_por:String(body?.creado_por||'publico').slice(0,40), estado:'pending', destacado_solicitado:body?.destacado_solicitado===true, destacado_pagado:false, destacado_estado:body?.destacado_solicitado===true?'pendiente_revision':'no_solicitado', pago_referencia:String(body?.pago_referencia||'').slice(0,160), fecha_creacion:new Date().toISOString()
         };
+        // Only a verified server identity can claim a new event; never trust
+        // request JSON, contact email, artist token or receipt reference for ownership.
+        if(atomicEventsEnabled&&request.headers.get('Authorization')){
+          let identity;
+          try{identity=await aeIdentity(request,env)}
+          catch{return json({error:'Tu sesión de Mi Perfil venció. Recuperala antes de publicar.'},401)}
+          if(typeof identity?.accountId!=='string'||!identity.accountId)return json({error:'No se verificó tu cuenta. Volvé a Mi Perfil.'},401);
+          item.created_by_account_id=identity.accountId;
+        }
         // Every valid event is published automatically. If the organizer asked
         // for a paid highlight, only the PREMIUM PLACEMENT goes to review.
         if(body.artist_token){const owner=await uadavArtistPermission(String(body.artist_token),env);if(!owner)return json({error:'El acceso de artista venció. Abrí Mi perfil antes de publicar desde tu espacio.'},401);item.created_by_artist_id=String(owner.artist_id)}else if(isAdmin()&&body.moderation_artist_id)item.created_by_artist_id=String(body.moderation_artist_id);item.estado='published'; item.publicado_en=isoNow();
@@ -7463,6 +7472,46 @@ async function saveEntityVersion(type,id,data){
       if(request.method!=='POST')return json({error:'Método no permitido'},405);
       if(!atomicEventsEnabled||!hasD1())return json({error:'Operación experimental exclusiva de staging.'},423);
       try{return json({success:true,...await uadavCarteleraOps.maintenance(env.DB,isoNow()),notices:await uadavCarteleraNoticeTick(env)})}catch{return json({error:'No se confirmó el mantenimiento. No se aplicó el lote.'},503)}
+    }
+
+    // Staging-only: private owner management for newly authenticated publications.
+    // Never infer ownership from email, event ID, receipt reference or public artist profile.
+    if(path==='/api/eventos/mis'){
+      const reply=(data,status=200)=>{const out=json(data,status);out.headers.set('Cache-Control','no-store');return out};
+      if(!atomicEventsEnabled||!hasD1())return reply({error:'La gestión privada de eventos requiere staging con D1.'},503);
+      if(!['GET','POST'].includes(request.method))return reply({error:'Método no permitido'},405);
+      if(request.method==='POST'&&request.headers.get('Origin')!=='https://uadav-stream-staging.pages.dev')return reply({error:'Origen no autorizado'},403);
+      let identity;
+      try{identity=await aeIdentity(request,env);if(typeof identity.accountId!=='string'||!identity.accountId)return reply({error:'Ingresá a Mi Perfil para administrar tus eventos.'},401)}
+      catch{return reply({error:'Ingresá a Mi Perfil con una cuenta válida.'},401)}
+      try{
+        const db=env.DB;
+        const list=async()=>{const result=await db.prepare("SELECT id,title,start_date,status,data_json FROM events WHERE json_valid(data_json) AND json_extract(data_json,'$.created_by_account_id')=? AND status IN ('published','hidden') ORDER BY updated_at DESC,id DESC LIMIT 100").bind(identity.accountId).all();return (result.results||[]).map(e=>{const data=JSON.parse(e.data_json);return {id:e.id,titulo:e.title,fecha:e.start_date,estado:e.status,lugar:String(data.lugar||'').slice(0,180),ciudad:String(data.ciudad||'').slice(0,120),descripcion_corta:String(data.descripcion_corta||'').slice(0,300),hora:String(data.hora||'').slice(0,5)}})};
+        if(request.method==='GET')return reply({success:true,items:await list()});
+        const b=await request.json().catch(()=>({}));
+        if(typeof b.id!=='string'||!/^EV-[A-Za-z0-9_-]{1,120}$/.test(b.id)||!['hide','publish','edit'].includes(b.action))return reply({error:'Evento o acción inválidos.'},400);
+        const found=await db.prepare("SELECT id,status,data_json FROM events WHERE id=? AND json_valid(data_json) AND json_extract(data_json,'$.created_by_account_id')=? AND status IN ('published','hidden')").bind(b.id,identity.accountId).first();
+        if(!found)return reply({error:'Evento no disponible para esta cuenta.'},404);
+        const state=b.action==='edit'?found.status:b.action==='hide'?'hidden':'published',current=JSON.parse(found.data_json);
+        if(!current||current.created_by_account_id!==identity.accountId)return reply({error:'No autorizado'},403);
+        if(b.action!=='edit'&&found.status===state)return reply({success:true,id:found.id,estado:state,unchanged:true});
+        const before={...current,id:found.id,estado:found.status};
+        const after={...before,estado:state,actualizado:isoNow()};
+        if(b.action==='edit'){
+          const patch=b.patch;
+          const limits={titulo:180,descripcion_corta:300,lugar:180,ciudad:120,fecha:10,hora:5};
+          if(!patch||typeof patch!=='object'||Array.isArray(patch)||!Object.keys(patch).length||Object.keys(patch).some(k=>!Object.hasOwn(limits,k)||typeof patch[k]!=='string'||patch[k].length>limits[k]))return reply({error:'Campos de edición inválidos.'},400);
+          if(Object.hasOwn(patch,'titulo')&&!patch.titulo.trim())return reply({error:'El título es obligatorio.'},400);
+          for(const [key,value] of Object.entries(patch))after[key]=value.trim();
+          if(Object.hasOwn(patch,'titulo'))after.nombre=after.titulo;
+          if(Object.hasOwn(patch,'fecha'))after.fecha_inicio=after.fecha;
+          const invalid=uadavEventScheduleError(after,{required:true});
+          if(invalid)return reply({error:invalid},400);
+        }
+        const saved=await mutateCanonicalEvent(before,after);
+        if(saved.conflict)return reply({error:'El evento cambió. Actualizá antes de intentar de nuevo.'},409);
+        return reply({success:true,id:found.id,estado:state});
+      }catch{return reply({error:'No se pudo confirmar la operación. Actualizá la lista.'},503)}
     }
 
     if(path==='/api/eventos/receipt'&&request.method==='GET'){
