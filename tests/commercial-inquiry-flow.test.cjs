@@ -9,7 +9,7 @@ const tick=()=>new Promise(resolve=>setImmediate(resolve));
 function harness(){
   const calls=[],pending=[],inputs={name:'Operador QA',email:'qa@example.invalid',province:'Santa Fe',objective:'Prueba sin activar campaña'};
   const consent={checked:true,disabled:false},submit={disabled:true,textContent:'Enviar consulta'};
-  const formElements=[consent,submit],form={elements:formElements,onsubmit:null};
+  const formElements=[consent,submit];formElements.consent=consent;const form={elements:formElements,onsubmit:null};
   const availability={textContent:''},status={textContent:''};
   const nodes={commercialForm:form,send:submit,result:status,availability};
   let seq=0;
