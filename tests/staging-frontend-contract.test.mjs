@@ -47,3 +47,14 @@ test('Commercial requests are not silently retried or auto-activated', () => {
   assert.match(js, /advertising\/inquiries\/capabilities/);
   assert.match(js, /advertising\/inquiries'/);
 });
+
+test('Cartelera publication preserves timeout, cancellation and uncertain receipt checking', () => {
+  const html = read('publicar-evento.html');
+  assert.match(html, /setTimeout\(cancel,15000\)/);
+  assert.match(html, /opt\.signal\.addEventListener\('abort',cancel,\{once:true\}\)/);
+  assert.match(html, /signal:ctl\.signal,cache:'no-store'/);
+  assert.match(html, /opt\.signal\?\.removeEventListener\('abort',cancel\)/);
+  assert.match(html, /eventDeliveryUncertain=true/);
+  assert.match(html, /eventos\/receipt\?request_id=/);
+  assert.match(html, /eventRequestId \|\|= crypto\.randomUUID\(\)/);
+});
