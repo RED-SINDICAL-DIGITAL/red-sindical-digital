@@ -16,11 +16,11 @@ function list(){
 function save(event){
  const item=sanitize({...event,saved_at:Date.now()});if(!item)return false;
  const updated=[item,...list().filter(x=>x.id!==item.id)].slice(0,MAX);
- try{storage()?.setItem(KEY,JSON.stringify(updated));root.dispatchEvent?.(new CustomEvent('uadav:local-event-receipts'));return true}catch{return false}
+ try{const store=storage();if(!store)return false;store.setItem(KEY,JSON.stringify(updated));root.dispatchEvent?.(new CustomEvent('uadav:local-event-receipts'));return true}catch{return false}
 }
 function remove(id){
  if(!ID.test(String(id||'')))return false;
- try{storage()?.setItem(KEY,JSON.stringify(list().filter(x=>x.id!==id)));root.dispatchEvent?.(new CustomEvent('uadav:local-event-receipts'));return true}catch{return false}
+ try{const store=storage();if(!store)return false;store.setItem(KEY,JSON.stringify(list().filter(x=>x.id!==id)));root.dispatchEvent?.(new CustomEvent('uadav:local-event-receipts'));return true}catch{return false}
 }
 root.UADAVLocalEventReceipts=Object.freeze({list,save,remove});
 })(window);
