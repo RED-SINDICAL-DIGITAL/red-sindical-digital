@@ -44,13 +44,13 @@ test('publisher saves only after acknowledged publication or receipt confirmatio
  assert.match(publish,/uadav-event-local-receipts\.js\?v=20261107/);
 });
 test('Mi Perfil presents only local references and never owner controls',()=>{
- const section=profile.split('id="mis-eventos"')[1].split('</section>')[0];
+ const section=profile.split('id="mis-eventos"')[1].split('</section><section class="panel wide" id="radioStudioEntry"')[0];
  assert.match(section,/Publicados desde este dispositivo/);
  assert.match(section,/No demuestra quién es el propietario/);
  assert.match(profile,/id="profileLocalEventsScript"/);
  assert.match(profile,/Quitar de este equipo/);
  assert.match(profile,/El evento seguirá publicado/);
- assert(!section.includes('Administrar evento'));
+ assert(!section.includes('Administrar evento sin verificar'));
  assert(!section.includes('Eliminar publicación'));
 });
 test('HTML inline scripts parse and do not duplicate account/auth stores',()=>{

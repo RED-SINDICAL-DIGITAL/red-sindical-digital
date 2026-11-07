@@ -17,10 +17,10 @@ test('only real publishing and promotion actions are provided',()=>{
  const content=html.split('id="mis-eventos"')[1].split('</section><section class="panel wide" id="radioStudioEntry"')[0];
  for(const url of ['/publicar-evento.html','/cartelera.html','/consultar-publicidad.html'])
   assert(content.includes('href="'+url+'"'),url);
- assert.match(content,/falta una verificación privada de propietario/);
- assert(!content.includes('Editar evento'));
+ assert.match(content,/publicaciones asociadas a tu cuenta verificada/);
+ assert.match(html,/id="profileOwnedEventEditor"/);
  assert(!content.includes('Eliminar evento'));
- assert(!content.includes('Reactivar evento'));
+ assert.match(html,/action:item.estado==='hidden'\?'publish':'hide'/);
 });
 test('event controls are isolated from private jobs and artist identity',()=>{
  for(const id of ['profileJobLookup','linkedArtists','artistProfile','profileSettings','recoverAccount'])assert(html.includes('id="'+id+'"'),id);
