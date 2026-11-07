@@ -490,6 +490,16 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] #mis-eventos{
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] #mis-eventos>h2{display:none!important}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-events-options{display:grid;gap:2px}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-events-start{margin:0 0 16px}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owner-heading{display:flex;align-items:start;justify-content:space-between;gap:10px}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owner-heading .chip{flex:0 0 auto;min-height:44px}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-row{padding:13px 0;border-top:1px solid rgba(100,186,247,.16);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-title{min-width:0;flex:1 1 180px}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-title strong{display:block;font-size:14px}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-title small{display:block;font-size:12px;color:#a8c8da;margin-top:5px}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-actions a,body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;border:1px solid rgba(122,206,255,.22);border-radius:999px;background:#143454;color:#dcf5ff;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-actions button:disabled{opacity:.55;cursor:wait}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-actions button:focus-visible{outline:3px solid #8fe2ff;outline-offset:3px}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-event{display:flex;gap:10px;justify-content:space-between;align-items:center;min-height:62px;padding:12px 0;border-top:1px solid rgba(112,184,244,.14)}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-event a{flex:1;min-width:0;color:#90ddff;text-decoration:none;overflow-wrap:anywhere;font-size:14px;font-weight:750}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-event button{border:1px solid rgba(125,192,237,.28);background:transparent;color:#b7cde0;padding:9px 10px;border-radius:999px;min-height:44px;font-size:12px;cursor:pointer}
@@ -530,11 +540,12 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-eve
  </section><section class="panel wide u2-detail-screen" id="mis-eventos" aria-labelledby="profileEventsTitle">
 <header class="u2-detail-intro"><span class="u2-section-eyebrow">CARTELERA PERSONAL</span><h2 id="profileEventsTitle">Mis eventos</h2><p class="muted">Todo empieza publicando tu evento.</p></header>
 <div class="u2-list-group u2-events-start"><h3>Publicar un evento</h3><p class="muted">Compartí tu espectáculo gratis en Cartelera.</p><a class="u2-action-primary" href="/publicar-evento.html">Publicar evento</a></div>
+<section id="profileOwnedEvents" class="u2-list-group" aria-labelledby="profileOwnedEventsTitle"><div class="u2-owner-heading"><div><h3 id="profileOwnedEventsTitle">Mis publicaciones verificadas</h3><p class="muted">Solo eventos asociados a tu cuenta.</p></div><button type="button" id="profileOwnedEventsRefresh" class="chip" aria-label="Actualizar publicaciones propias">Actualizar</button></div><div id="profileOwnedEventsList" role="status" aria-live="polite"><p class="muted">Consultando cuenta…</p></div></section>
 <section id="profileLocalEvents" class="u2-list-group" aria-labelledby="profileLocalEventsTitle"><h3 id="profileLocalEventsTitle">Publicados desde este dispositivo</h3><p class="muted">Solo referencias guardadas aquí. No demuestra quién es el propietario ni sincroniza otros equipos.</p><div id="profileLocalEventsList" role="status" aria-live="polite"><p class="muted">Cargando referencias…</p></div></section>
 <nav class="u2-events-options" aria-label="Opciones de Cartelera">
 <a class="u2-list-link" href="/cartelera.html"><span>Ver Cartelera</span><small>Consultá los eventos publicados</small><span aria-hidden="true">›</span></a>
 <a class="u2-list-link" href="/consultar-publicidad.html"><span>Promocionar un evento</span><small>Solicitar una propuesta de destacado</small><span aria-hidden="true">›</span></a></nav>
-<p class="muted u2-detail-note">Para editar, ocultar o restaurar un evento desde Mi Perfil todavía falta una verificación privada de propietario. Quitar una referencia de este equipo no borra el evento publicado.</p>
+<p class="muted u2-detail-note">Podés ocultar o reactivar solamente las publicaciones asociadas a tu cuenta verificada. La edición detallada aún requiere completar el editor autorizado. Las referencias locales no otorgan permisos.</p>
 </section><section class="panel wide" id="radioStudioEntry" hidden><h2>Mi radio</h2><p class="muted">Revisá los pedidos de tu audiencia y organizá la emisión.</p><a class="chip" href="/radio-studio.html">Abrir Radio Studio</a></section><section class="panel wide" id="accountNotices" hidden><div class="prefs" style="justify-content:space-between"><h2>Mis avisos</h2><button class="chip" id="noticeToggle" aria-expanded="false" aria-controls="noticePanel">🔔 Avisos</button></div><div id="noticePanel" hidden><div class="prefs"><button class="chip" id="noticeRefresh">Actualizar</button><button class="chip" id="noticeReadAll">Marcar todos leídos</button></div><p class="muted" id="noticeStatus" role="status" aria-live="polite"></p><div id="noticeList"></div></div></section><details class="panel profile-library-details"><summary>Tu biblioteca <span class="muted" id="librarySummary">Tus contenidos guardados.</span></summary><div class="prefs"><a class="chip" href="/biblioteca.html?tab=favorites">Favoritos</a><a class="chip" href="/biblioteca.html?tab=playlists">Playlists</a><a class="chip" href="/biblioteca.html?tab=following">Artistas seguidos</a><a class="chip" href="/biblioteca.html?tab=radios">Radios favoritas</a><a class="chip" href="/biblioteca.html">Abrir toda mi biblioteca →</a><a class="chip" href="/podcasts.html">Podcasts · Audio y video</a></div></details></div><details id="profileSettings" class="panel profile-settings"><summary>Cuenta y seguridad</summary><div class="profile-account-top"><a href="/usuario.html" class="profile-back" aria-label="Volver a Mi Perfil">← Volver a Mi Perfil</a><h2>Cuenta y seguridad</h2><p class="muted">Correo, dispositivos y recuperación.</p></div><div class="settings-grid"><section class="panel wide"><h2>Tu cuenta</h2><p class="muted">Tu cuenta se sincroniza entre tus dispositivos.</p><p id="syncStatus" class="muted" role="status" aria-live="polite">Comprobando sincronización…</p><div class="prefs"><button class="chip" id="createAccount" disabled>Crear mi cuenta</button><button class="chip" id="linkAccount" disabled>Ya tengo cuenta · Vincular dispositivo</button><button class="chip" id="showAccountCode" hidden>Vincular otro dispositivo</button><button class="chip" id="accountDevices" hidden>Mis dispositivos</button><details id="accountAdvanced" hidden><summary>Más opciones de cuenta</summary><div class="prefs"><button class="chip" id="syncNow" hidden>Volver a guardar</button><button class="chip" id="unlinkAccount" hidden>Desvincular este dispositivo</button></div></details></div><div id="syncConflict" hidden><p class="muted">Una misma parte de tu cuenta cambió en dos dispositivos. Elegí cuál conservar para esas diferencias. Los cambios que no se superponen se mantienen.</p><button class="chip" id="keepLocal">Conservar los cambios de este dispositivo</button><button class="chip" id="keepCloud">Conservar los cambios de la cuenta</button></div><p class="muted">El QR y el código vencen en cinco minutos. Confirmás el nuevo dispositivo desde tu cuenta antes de darle acceso. Tu artista queda asociado a tu cuenta. Podés abrir su gestión desde tus dispositivos vinculados.</p></section><section class="panel"><h2>Foto de perfil</h2><p class="muted">Podés subir una foto desde este dispositivo. Se reduce automáticamente para no ocupar espacio innecesario.</p><button class="chip" id="photoBtn">📷 Elegir foto</button><button class="chip" id="removePhoto">Quitar foto</button><div class="photoNote">La foto acompaña tu cuenta cuando activás la sincronización. Sin vinculación, se guarda en este navegador.</div></section><section class="panel wide"><h2>Elegí lo que te gusta</h2><p class="muted">Marcá todos los intereses que quieras. Esto prepara la personalización del Inicio y de Descubrir; no estás limitado a unas pocas categorías.</p><details><summary>Elegir mis intereses</summary><div id="prefs" class="prefs"></div></details></section><section class="panel wide"><h2>Tus datos</h2><p class="muted">Sin vinculación, tus datos permanecen en este navegador. Al activar la cuenta sincronizada, también se guardan en tu cuenta privada para usarlos en otros dispositivos.</p><button class="danger" id="clear">Borrar mi perfil local e historial reciente</button><p class="muted">Esta opción solo borra tu foto, nombre, intereses e historial reciente de este navegador. No elimina favoritos, playlists, la cuenta sincronizada ni gestiones guardadas.</p><details style="margin-top:20px"><summary>Eliminar mi cuenta</summary><p class="muted">Borra tu cuenta personal y cierra el acceso en todos tus dispositivos. Si administrás un artista, primero eliminá ese perfil o solicitá transferirlo. Después podés crear una cuenta nueva; los datos borrados no se recuperan.</p><button class="danger" id="deleteAccount" hidden>Eliminar mi cuenta personal</button></details></section><details class="panel" style="margin:0 auto 80px;width:min(1144px,calc(100% - 28px))"><summary>Recuperación de cuenta</summary><p class="muted">El código de recuperación largo queda como respaldo. No se comparte al vincular otros dispositivos. Quien lo tenga puede recuperar el acceso a tu cuenta; guardalo en un lugar seguro.</p><button class="chip" id="showRecovery">Ver mi código de recuperación</button><button class="chip" id="recoverAccount">Tengo un código de recuperación</button><p id="recoveryNote" class="muted"></p></details></div></details></main><dialog id="profileDialog"><form id="profileForm"><h2>Editar mi perfil</h2><label for="profileName">¿Cómo querés que te llamemos?</label><input id="profileName" maxlength="100" autocomplete="name" required><div class="prefs"><button class="chip active" type="submit">Guardar</button><button class="chip" type="button" id="cancelProfile">Cancelar</button></div></form></dialog><script src="/uadav-security.js?v=11729"></script><script src="/uadav-account-sync.js?v=20261104-library-events"></script><script>const $=id=>document.getElementById(id),KEY='uadav_user_v11';const INTERESTS=['Música','Pop','Rock','Indie','Electrónica','Dance','Latino','Tropical','Cumbia','Cuarteto','Folklore','Tango','Jazz','Blues','Clásica','Reggae','Hip hop','Rap','Metal','Punk','Country','World music','Hits actuales','Clásicos','Décadas 60','Décadas 70','Décadas 80','Décadas 90','Décadas 2000','Conciertos','Festivales','Recitales','DJ sets','Videoclips','Karaoke','Radio','Podcasts','Entrevistas','Teatro','Musicales','Comedia','Stand up','Humor','Improvisación','Circo','Acrobacia','Trapecio','Malabares','Clown','Magia','Ilusionismo','Mentalismo','Danza','Ballet','Danza urbana','Danza contemporánea','Flamenco','Folklore danza','Variedades','Transformismo','Imitación','Ventriloquia','Performance','Arte callejero','Infantiles','Familia','Cine','Cortometrajes','Documentales','Series','Animación','Creadores','YouTubers','Streaming','Gaming','En vivo','Eventos','Cartelera','Cultura','Nuevos artistas'];
 function normalizeProfile(value){
  const data=value&&typeof value==='object'&&!Array.isArray(value)?value:{},name=typeof data.name==='string'&&data.name.trim()?data.name.trim().slice(0,100):'Mi cuenta';
@@ -695,6 +706,64 @@ if(selected==='artista'||selected==='trabajos'||selected==='eventos'){
  window.addEventListener('pageshow',()=>{if(document.body?.dataset.profileView==='home')mount()});
 })();
 
+</script><script id="profileOwnerEventsScript">
+(function(){
+'use strict';
+const container=document.getElementById('profileOwnedEventsList'),refresh=document.getElementById('profileOwnedEventsRefresh');
+if(!container||!refresh)return;
+const endpoint='https://uadav-api-staging.uadavstream.workers.dev/api/eventos/mis';
+let busy=false;
+function message(text){
+ container.replaceChildren();
+ const p=document.createElement('p');p.className='muted';p.textContent=text;container.appendChild(p);
+}
+function access(){try{return localStorage.getItem('uadav_account_access_v1')||''}catch{return ''}}
+async function request(method='GET',payload){
+ const credential=access();
+ if(!credential)throw Object.assign(new Error('Para administrar tus eventos, ingresá a Cuenta y seguridad y verificá tu correo.'),{status:401});
+ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),14000);
+ try{
+  const response=await fetch(endpoint,{method,headers:{Authorization:'Bearer '+credential,...(payload?{'Content-Type':'application/json'}:{})},body:payload?JSON.stringify(payload):undefined,cache:'no-store',signal:ctrl.signal});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||data.success!==true)throw Object.assign(new Error(data.error||'No se confirmó la operación.'),{status:response.status});
+  if(credential!==access())throw new Error('Tu cuenta cambió. Volvé a abrir Mis eventos.');
+  return data;
+ }finally{clearTimeout(timer)}
+}
+function render(items){
+ container.replaceChildren();
+ if(!items.length){message('No hay publicaciones vinculadas a esta cuenta. Los eventos anteriores no se vinculan automáticamente.');return}
+ for(const item of items){
+  if(!/^EV-[A-Za-z0-9_-]{1,120}$/.test(String(item.id||''))||!['published','hidden'].includes(item.estado))continue;
+  const row=document.createElement('div');row.className='u2-owned-row';
+  const info=document.createElement('div');info.className='u2-owned-title';
+  const title=document.createElement('strong');title.textContent=String(item.titulo||'Evento').slice(0,150);
+  const status=document.createElement('small');status.textContent=item.estado==='hidden'?'Oculto':'Publicado';info.append(title,status);
+  const actions=document.createElement('div');actions.className='u2-owned-actions';
+  if(item.estado==='published'){const link=document.createElement('a');link.href='/evento.html?id='+encodeURIComponent(item.id);link.textContent='Ver ficha';actions.appendChild(link)}
+  const toggle=document.createElement('button');toggle.type='button';toggle.textContent=item.estado==='hidden'?'Reactivar':'Ocultar';
+  toggle.addEventListener('click',async()=>{
+    if(busy||!confirm(item.estado==='hidden'?'¿Reactivar este evento?':'¿Ocultar este evento de Cartelera?'))return;
+    busy=true;toggle.disabled=true;const previous=toggle.textContent;toggle.textContent='Guardando…';
+    try{await request('POST',{id:item.id,action:item.estado==='hidden'?'publish':'hide'});await load()}
+    catch(e){message(e.message||'No se confirmó el cambio. Actualizá la lista antes de repetir.')}
+    finally{toggle.disabled=false;toggle.textContent=previous;busy=false}
+  });
+  actions.appendChild(toggle);row.append(info,actions);container.appendChild(row);
+ }
+}
+async function load(){
+ if(document.body?.dataset.profileView!=='eventos')return;
+ if(location.hostname!=='uadav-stream-staging.pages.dev'){message('La gestión privada se está probando solamente en staging.');return}
+ refresh.disabled=true;
+ try{const data=await request();if(!Array.isArray(data.items))throw Error('Respuesta de eventos inválida.');render(data.items)}
+ catch(e){message(e.status===401?'Verificá tu cuenta en Cuenta y seguridad para ver las publicaciones propias.':e.status===404?'Gestión privada pendiente de desplegar en el Worker de staging.':e.message||'No se pudo conectar.')}
+ finally{refresh.disabled=false}
+}
+refresh.addEventListener('click',load);
+window.addEventListener('pageshow',load);
+load();
+})();
 </script><script id="profileLocalEventsScript">
 (function(){
 'use strict';
