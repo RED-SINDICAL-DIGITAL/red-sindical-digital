@@ -17,6 +17,8 @@ on:
       - tests/jobs-profile-email.test.cjs tests/account-email-admin.test.cjs
       - account-email-version.json
       - uadav-account-sync.js
+      - uadav-account-ui.js
+      - tests/profile-canonical-refresh.test.cjs
       - uadav-api-config.js
       - tests/api-config-pages-preview.test.cjs
       - tests/account-staging-api-isolation.test.cjs
@@ -79,6 +81,8 @@ on:
       - tests/jobs-profile-email.test.cjs tests/account-email-admin.test.cjs
       - account-email-version.json
       - uadav-account-sync.js
+      - uadav-account-ui.js
+      - tests/profile-canonical-refresh.test.cjs
       - uadav-api-config.js
       - tests/api-config-pages-preview.test.cjs
       - tests/account-staging-api-isolation.test.cjs
@@ -143,6 +147,7 @@ jobs:
       - run: node --test tests/api-config-pages-preview.test.cjs
       - run: node --test tests/job-artist-profile-availability.test.cjs
       - run: node --test tests/admin-job-application-ids.test.cjs
+      - run: node --test tests/profile-canonical-refresh.test.cjs
       - run: node --test tests/commercial-delivery-placement.test.cjs
       - run: node tests/account-notices-ui.mjs
       - run: node tests/admin-import-export.mjs
