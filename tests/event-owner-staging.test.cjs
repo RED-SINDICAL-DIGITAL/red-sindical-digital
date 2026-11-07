@@ -31,16 +31,16 @@ test('private listing and mutations filter by server-associated owner in D1',()=
  assert.match(route,/\.bind\(b\.id,identity\.accountId\)\.first\(\)/);
  assert.match(route,/current\.created_by_account_id!==identity\.accountId/);
  assert.match(route,/status IN \('published','hidden'\)/);
- assert.match(route,/\['hide','publish'\]\.includes\(b\.action\)/);
+ assert.match(route,/\['hide','publish','edit'\]\.includes\(b\.action\)/);
  assert.match(route,/await mutateCanonicalEvent\(before,after\)/);
  assert.match(route,/saved\.conflict/);
 });
 test('owner list does not leak contact email, private keys or authorization credentials',()=>{
- assert.match(route,/SELECT id,title,start_date,status FROM events/);
+ assert.match(route,/SELECT id,title,start_date,status,data_json FROM events/);
  assert(!route.includes('SELECT * FROM events'));
  assert(!route.includes('Authorization'));
  assert(!route.includes('secret'));
- assert.match(route,/\.map\(e=>\(\{id:e\.id,titulo:e\.title,fecha:e\.start_date,estado:e\.status\}\)\)/);
+ assert.match(route,/descripcion_corta:String\(data\.descripcion_corta/);
 });
 test('public receipt route never grants ownership and legacy events cannot be auto-claimed',()=>{
  const receipt=worker.slice(worker.indexOf("if(path==='/api/eventos/receipt'"),worker.indexOf("if(path==='/api/eventos/capabilities'"));
@@ -48,4 +48,16 @@ test('public receipt route never grants ownership and legacy events cannot be au
  assert.match(publish,/if\(atomicEventsEnabled&&request\.headers\.get\('Authorization'\)\)/);
  assert(!route.includes('INSERT OR REPLACE'));
  assert(!route.includes('UPDATE events SET created_by_account_id'));
+});
+
+test('owner edit permits only bounded safe text and schedule changes',()=>{
+ assert.match(route,/const limits=\{titulo:180,descripcion_corta:300,lugar:180,ciudad:120,fecha:10,hora:5\}/);
+ assert.match(route,/!Object\.hasOwn\(limits,k\)/);
+ assert.match(route,/typeof patch\[k\]!=='string'/);
+ assert.match(route,/uadavEventScheduleError\(after,\{required:true\}\)/);
+ assert.match(route,/after\.nombre=after\.titulo/);
+ assert.match(route,/after\.fecha_inicio=after\.fecha/);
+ assert(!route.includes('patch.destacado_pagado'));
+ assert(!route.includes('patch.pago_referencia'));
+ assert(!route.includes('patch.created_by_account_id'));
 });
