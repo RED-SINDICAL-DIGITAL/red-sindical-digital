@@ -31,6 +31,6 @@ test('account, artist, jobs and player wiring is unchanged',()=>{
  assert.match(html,/uadav-account-sync\.js/);
 });
 test('cache revision identifies this substantial redesign',()=>{
- assert.match(html,/data-ui-revision="profile-native-v4-inline"/);
- assert.match(html,/uadav-profile-home-v2\.css\?v=20261107-native-navigation/);
+ assert.match(html,/data-ui-revision="profile-native-v4-inline-styles"/);
+ assert.match(html,/data-uadav-inline-source="uadav-profile-home-v2.css"/);
 });
