@@ -28,6 +28,7 @@ on:
       - email-access-version.json
       - tests/email-access.test.cjs
       - bolsa-trabajo.html
+      - publicar-evento.html
       - consultar-publicidad.js
       - consultar-publicidad.html
       - tests/staging-frontend-contract.test.mjs
@@ -82,6 +83,7 @@ on:
       - email-access-version.json
       - tests/email-access.test.cjs
       - bolsa-trabajo.html
+      - publicar-evento.html
       - consultar-publicidad.js
       - consultar-publicidad.html
       - tests/staging-frontend-contract.test.mjs
