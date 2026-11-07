@@ -41,7 +41,10 @@ test('mounted page supports pageshow without duplicating UI',()=>{
  const x=simulate();x.listeners.pageshow();assert.equal(x.target.children.length,4);assert.equal(x.original.hidden,true);
 });
 test('new mount loads independently and preserves CSS and account hookups',()=>{
- assert.match(html,/defer src="\/design\/uadav-profile-native-mount-v4\.js\?v=20261107-mount-fix"/);
+ assert.match(html,/id="profileNativeInlineJS"/);
+ assert.match(html,/id="profileNativeInlineCSS"/);
+ assert(html.includes(js),'inline JS must match the maintained source');
+ assert(html.includes(css),'inline CSS must match the maintained source');
  assert.match(html,/data-ui-revision="profile-native-v4-inline"/);
  assert.match(css,/#profileLegacyViews\[hidden\],#profileNativeHome\[hidden\]\{display:none!important\}/);
  for(const id of ['avatar','name','edit','profileTasks','recent','mi-artista','mis-trabajos','profileSettings','accountDevices','recoverAccount','profileJobLookup'])assert(html.includes('id="'+id+'"'),id);
