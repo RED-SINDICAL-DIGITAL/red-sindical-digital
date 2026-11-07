@@ -6,8 +6,8 @@ const html=readFileSync(join(__dirname,'..','usuario.html'),'utf8');
 const css=readFileSync(join(__dirname,'..','design/uadav-profile-home-v2.css'),'utf8');
 const legacy=readFileSync(join(__dirname,'..','uadav-responsive-v120.css'),'utf8');
 test('new visual styles are versioned and limited to usuario v2',()=>{
- assert.match(html,/class="uadav-ui-v2" data-ui-revision="profile-native-v4-inline"/);
- assert.match(html,/uadav-profile-home-v2\.css\?v=20261107-native-navigation/);
+ assert.match(html,/class="uadav-ui-v2" data-ui-revision="profile-native-v4-inline-styles"/);
+ assert.match(html,/data-uadav-inline-source="uadav-profile-home-v2.css"/);
  assert.match(css,/body\[data-page="usuario"\]\.uadav-ui-v2/);
 });
 test('compatibility layer explicitly overrides legacy important properties only for new profile',()=>{
