@@ -14,7 +14,7 @@ test('verified owner UI never derives permission from a locally saved reference'
  const section=html.split('id="mis-eventos"')[1].split('</section><section class="panel wide" id="radioStudioEntry"')[0];
  assert.match(section,/id="profileOwnedEventsList"/);
  assert.match(section,/id="profileLocalEventsList"/);
- assert.match(section,/publicaciones vinculadas a tu cuenta/);
+ assert.match(section,/Solo eventos asociados a tu cuenta/);
  assert.match(section,/referencias locales no otorgan permisos/i);
  const js=html.match(/<script id="profileOwnerEventsScript">([\s\S]*?)<\/script>/)?.[1];
  assert(js);assert.match(js,/Authorization:'Bearer '\+credential/);
