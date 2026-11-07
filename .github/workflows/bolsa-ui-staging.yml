@@ -40,6 +40,7 @@ on:
       - tests/staging-frontend-contract.test.mjs
       - tests/commercial-inquiry-flow.test.cjs
       - admin.html
+      - tests/admin-job-application-ids.test.cjs
       - manual.html
       - uadav-jobs-migration-admin.js
       - uadav-jobs-expiry-admin.js
@@ -101,6 +102,7 @@ on:
       - tests/staging-frontend-contract.test.mjs
       - tests/commercial-inquiry-flow.test.cjs
       - admin.html
+      - tests/admin-job-application-ids.test.cjs
       - manual.html
       - uadav-jobs-migration-admin.js
       - uadav-jobs-expiry-admin.js
@@ -140,6 +142,7 @@ jobs:
       - run: node --test tests/account-staging-api-isolation.test.cjs
       - run: node --test tests/api-config-pages-preview.test.cjs
       - run: node --test tests/job-artist-profile-availability.test.cjs
+      - run: node --test tests/admin-job-application-ids.test.cjs
       - run: node --test tests/commercial-delivery-placement.test.cjs
       - run: node tests/account-notices-ui.mjs
       - run: node tests/admin-import-export.mjs
