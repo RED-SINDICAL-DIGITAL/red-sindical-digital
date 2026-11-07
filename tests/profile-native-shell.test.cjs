@@ -23,7 +23,7 @@ function simulate(view='home',options={}){
   return ({profileNativeHome:home,profileLegacyViews:original,nativeHomeSections:target,profileTasks:sections.tasks,accountNotices:options.noNotices?null:sections.notices})[id]||null;
  }};
  const window={addEventListener(name,fn){listeners[name]=fn}};
- const location={search:'',hash:''};
+ const location={search:view==='home'?'':'?vista='+view,hash:''};
  vm.runInNewContext(js,{document,window,location,URLSearchParams,MutationObserver:undefined});
  return{home,original,target,body,document,sections,listeners,location,grid};
 }
@@ -82,11 +82,11 @@ test('fragment navigation restores original live controls and remounts without c
 });
 test('history navigation to account view and back preserves interactive node identity',()=>{
  const x=simulate();
- x.body.dataset.profileView='account';
+ x.location.search='?vista=cuenta';
  x.listeners.popstate();
  assert.equal(x.target.children.length,0);
  assert.equal(x.original.hidden,false);
- x.body.dataset.profileView='home';
+ x.location.search='';
  x.listeners.popstate();
  assert.equal(x.target.children[0],x.sections.hero);
  assert.equal(x.target.children[1],x.sections.tasks);
