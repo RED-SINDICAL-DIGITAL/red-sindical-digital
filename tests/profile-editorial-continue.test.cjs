@@ -30,7 +30,7 @@ test('music-app profile hero remains accessible and exposes account actions',()=
  assert.match(html,/class="profile-identity"/);
  assert.match(html,/aria-label="Cambiar foto de perfil"/);
  assert.match(html,/aria-label="Editar perfil"/);
- assert.match(html,/href="#profileSettings"[\s\S]*?<span>Cuenta y seguridad<\/span>/);
+ assert.match(html,/href="\/usuario\.html\?vista=cuenta"[\s\S]*?<span>Cuenta y seguridad<\/span>/);
 });
 test('all inline scripts retain valid JavaScript syntax',()=>{
  for(const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){
