@@ -8,6 +8,7 @@ on:
       - worker.js
       - tests/event-owner-staging.test.cjs
       - tests/event-owner-behavior.test.cjs
+      - tests/ads-geo-public.test.cjs
       - .github/workflows/event-owner-staging.yml
 jobs:
   owner-security:
@@ -22,4 +23,4 @@ jobs:
       - name: Check Worker syntax
         run: node --check worker.js
       - name: Test event owner authorization
-        run: node --test tests/event-owner-staging.test.cjs tests/event-owner-behavior.test.cjs
+        run: node --test tests/event-owner-staging.test.cjs tests/event-owner-behavior.test.cjs tests/ads-geo-public.test.cjs
