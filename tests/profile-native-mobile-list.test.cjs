@@ -13,7 +13,7 @@ test('profile home is a compact action list on small screens, not a four-card da
 });
 test('primary actions retain working targets and are ordered by user need',()=>{
  const content=html.split('id="profileTasks"')[1].split('</section>')[0];
- const paths=['/usuario.html?vista=artista','/usuario.html?vista=trabajos','/biblioteca.html','/publicar-evento.html'];
+ const paths=['/usuario.html?vista=artista','/usuario.html?vista=trabajos','/publicar-evento.html','/biblioteca.html'];
  let prev=-1;
  for(const p of paths){const idx=content.indexOf('href="'+p+'"');assert(idx>prev,p);prev=idx}
  assert.equal((content.match(/class="profile-task"/g)||[]).length,4);
@@ -31,6 +31,6 @@ test('account, artist, jobs and player wiring is unchanged',()=>{
  assert.match(html,/uadav-account-sync\.js/);
 });
 test('cache revision identifies this substantial redesign',()=>{
- assert.match(html,/data-ui-revision="native-navigation-20261107"/);
+ assert.match(html,/data-ui-revision="profile-native-shell-20261107"/);
  assert.match(html,/uadav-profile-home-v2\.css\?v=20261107-native-navigation/);
 });
