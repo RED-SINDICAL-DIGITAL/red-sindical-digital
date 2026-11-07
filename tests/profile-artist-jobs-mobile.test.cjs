@@ -10,7 +10,7 @@ test('artist is a dedicated accessible screen with current authorization and rec
  assert.match(html,/id="mi-artista" aria-labelledby="profileArtistTitle"/);
  assert.match(html,/href="\/soy-artista\.html"/);
  assert.match(html,/href="\/gestionar-artista\.html\?tab=consultas"/);
- assert.match(html,/No necesitás vincular un artista para buscar trabajo/);
+ assert.match(html,/Para adjuntarlo a un trabajo, primero vinculalo acá/);
 });
 test('jobs separates applications and offers and preserves receipt privacy',()=>{
  for(const id of ['profileJobsApplications','profileJobsOffers','profileJobImportBtn','profileJobImportFile','profileJobImportStatus','profileJobLookup','profileJobId','profileJobSecret','profileJobResult'])
