@@ -61,3 +61,8 @@ test('owner edit permits only bounded safe text and schedule changes',()=>{
  assert(!route.includes('patch.pago_referencia'));
  assert(!route.includes('patch.created_by_account_id'));
 });
+
+test('staging health exposes event owner capability only when D1 atomic mode is enabled',()=>{
+ assert.match(worker,/event_owner_revision:'20261107-owner-verified-v1'/);
+ assert.match(worker,/event_owner_enabled:atomicEventsEnabled&&hasD1\(\)/);
+});
