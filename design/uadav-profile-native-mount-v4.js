@@ -12,7 +12,8 @@
    if(!body||!home||!legacy||!target)return false;
    const section=new URLSearchParams(location.search).get('vista');
    const hashView=legacyHashes.includes(location.hash);
-   const selected=body.dataset.profileView || (section==='cuenta'?'account':section||'home');
+   const selected=hashView?({'#profileSettings':'account','#mi-artista':'artista','#mis-trabajos':'trabajos'}[location.hash]):(section==='cuenta'?'account':['account','artista','trabajos'].includes(section)?section:'home');
+   body.dataset.profileView=selected;
    if(selected!=='home'||hashView){
      // Keep originals accessible after a History/fragment navigation without cloning nodes.
      for(const [node,place] of origins){
