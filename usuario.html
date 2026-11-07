@@ -499,6 +499,20 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-tit
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-actions a,body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-actions button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;border:1px solid rgba(122,206,255,.22);border-radius:999px;background:#143454;color:#dcf5ff;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-actions button:disabled{opacity:.55;cursor:wait}
+
+body[data-page="usuario"] .u2-event-editor{width:min(460px,calc(100vw - 24px));max-height:85dvh;overflow:auto;padding:22px;border:1px solid rgba(97,198,252,.3);border-radius:19px;background:#0b1b30;color:#eff9ff;box-shadow:0 26px 90px #000b}
+body[data-page="usuario"] .u2-event-editor::backdrop{background:rgba(0,0,0,.78);backdrop-filter:blur(5px)}
+body[data-page="usuario"] .u2-event-editor h3{margin:0 0 7px;font-size:22px;font-weight:900}
+body[data-page="usuario"] .u2-event-editor label{display:grid;gap:7px;margin:12px 0;font-size:13px;font-weight:800}
+body[data-page="usuario"] .u2-event-editor input,body[data-page="usuario"] .u2-event-editor textarea{width:100%;min-height:46px;border:1px solid rgba(108,190,248,.32);border-radius:11px;background:#081422;color:white;padding:11px;font:inherit;font-size:14px}
+body[data-page="usuario"] .u2-event-editor textarea{resize:vertical}
+body[data-page="usuario"] .u2-editor-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+body[data-page="usuario"] .u2-editor-buttons{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
+body[data-page="usuario"] .u2-editor-buttons button{min-height:44px;border:1px solid rgba(94,194,251,.28);border-radius:999px;padding:10px 16px;background:#183652;color:#eff8ff;font-weight:800;cursor:pointer}
+body[data-page="usuario"] #profileOwnedEventSave{background:#26c6f6;color:#041523}
+body[data-page="usuario"] .u2-event-editor button:disabled{opacity:.55}
+@media(max-width:400px){body[data-page="usuario"] .u2-editor-fields{grid-template-columns:1fr}}
+
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-owned-actions button:focus-visible{outline:3px solid #8fe2ff;outline-offset:3px}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-event{display:flex;gap:10px;justify-content:space-between;align-items:center;min-height:62px;padding:12px 0;border-top:1px solid rgba(112,184,244,.14)}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-event a{flex:1;min-width:0;color:#90ddff;text-decoration:none;overflow-wrap:anywhere;font-size:14px;font-weight:750}
@@ -540,6 +554,7 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-eve
  </section><section class="panel wide u2-detail-screen" id="mis-eventos" aria-labelledby="profileEventsTitle">
 <header class="u2-detail-intro"><span class="u2-section-eyebrow">CARTELERA PERSONAL</span><h2 id="profileEventsTitle">Mis eventos</h2><p class="muted">Todo empieza publicando tu evento.</p></header>
 <div class="u2-list-group u2-events-start"><h3>Publicar un evento</h3><p class="muted">Compartí tu espectáculo gratis en Cartelera.</p><a class="u2-action-primary" href="/publicar-evento.html">Publicar evento</a></div>
+<dialog id="profileOwnedEventEditor" class="u2-event-editor" aria-labelledby="profileOwnedEventEditorTitle"><form id="profileOwnedEventForm"><h3 id="profileOwnedEventEditorTitle">Editar evento</h3><p class="muted">Podés actualizar los datos básicos de tu publicación.</p><label>Título<input name="titulo" required maxlength="180"></label><label>Descripción breve<textarea name="descripcion_corta" maxlength="300" rows="3"></textarea></label><label>Lugar<input name="lugar" maxlength="180"></label><label>Ciudad<input name="ciudad" maxlength="120"></label><div class="u2-editor-fields"><label>Fecha<input name="fecha" type="date" required></label><label>Horario<input name="hora" type="time"></label></div><p id="profileOwnedEventEditStatus" class="muted" role="status" aria-live="polite"></p><div class="u2-editor-buttons"><button type="button" id="profileOwnedEventCancel">Cancelar</button><button type="submit" id="profileOwnedEventSave">Guardar cambios</button></div></form></dialog>
 <section id="profileOwnedEvents" class="u2-list-group" aria-labelledby="profileOwnedEventsTitle"><div class="u2-owner-heading"><div><h3 id="profileOwnedEventsTitle">Mis publicaciones verificadas</h3><p class="muted">Solo eventos asociados a tu cuenta.</p></div><button type="button" id="profileOwnedEventsRefresh" class="chip" aria-label="Actualizar publicaciones propias">Actualizar</button></div><div id="profileOwnedEventsList" role="status" aria-live="polite"><p class="muted">Consultando cuenta…</p></div></section>
 <section id="profileLocalEvents" class="u2-list-group" aria-labelledby="profileLocalEventsTitle"><h3 id="profileLocalEventsTitle">Publicados desde este dispositivo</h3><p class="muted">Solo referencias guardadas aquí. No demuestra quién es el propietario ni sincroniza otros equipos.</p><div id="profileLocalEventsList" role="status" aria-live="polite"><p class="muted">Cargando referencias…</p></div></section>
 <nav class="u2-events-options" aria-label="Opciones de Cartelera">
@@ -712,6 +727,27 @@ if(selected==='artista'||selected==='trabajos'||selected==='eventos'){
 const container=document.getElementById('profileOwnedEventsList'),refresh=document.getElementById('profileOwnedEventsRefresh');
 if(!container||!refresh)return;
 const endpoint='https://uadav-api-staging.uadavstream.workers.dev/api/eventos/mis';
+const editor=document.getElementById('profileOwnedEventEditor'),form=document.getElementById('profileOwnedEventForm'),cancel=document.getElementById('profileOwnedEventCancel'),save=document.getElementById('profileOwnedEventSave'),editStatus=document.getElementById('profileOwnedEventEditStatus');
+let editing=null;
+function openEditor(item){
+ if(!editor||!form||typeof editor.showModal!=='function')return;
+ editing=item;
+ for(const key of ['titulo','descripcion_corta','lugar','ciudad','fecha','hora'])form.elements.namedItem(key).value=String(item[key]||'');
+ editStatus.textContent='';
+ editor.showModal();
+ form.elements.namedItem('titulo').focus();
+}
+cancel?.addEventListener('click',()=>editor.close());
+form?.addEventListener('submit',async e=>{
+ e.preventDefault();if(busy||!editing)return;
+ const patch={};for(const key of ['titulo','descripcion_corta','lugar','ciudad','fecha','hora'])patch[key]=form.elements.namedItem(key).value.trim();
+ if(!patch.titulo||!patch.fecha){editStatus.textContent='Completá el título y la fecha.';return}
+ busy=true;save.disabled=true;editStatus.textContent='Guardando…';
+ try{await request('POST',{id:editing.id,action:'edit',patch});editor.close();editing=null;await load()}
+ catch(error){editStatus.textContent=error.message||'No se confirmó la edición. Conservamos tus cambios.'}
+ finally{busy=false;save.disabled=false}
+});
+
 let busy=false;
 function message(text){
  container.replaceChildren();
@@ -749,6 +785,7 @@ function render(items){
     catch(e){message(e.message||'No se confirmó el cambio. Actualizá la lista antes de repetir.')}
     finally{toggle.disabled=false;toggle.textContent=previous;busy=false}
   });
+  const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.addEventListener('click',()=>openEditor(item));actions.prepend(edit);
   actions.appendChild(toggle);row.append(info,actions);container.appendChild(row);
  }
 }
