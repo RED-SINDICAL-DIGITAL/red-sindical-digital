@@ -74,6 +74,8 @@ on:
       - tests/pwa-profile-scroll-meta.test.cjs
       - tests/profile-artist-jobs-mobile.test.cjs
       - tests/profile-events-hub.test.cjs
+      - tests/biblioteca-mobile-first.test.cjs
+      - biblioteca.html
       - app.html
       - uadav-profile-email.js
       - tests/jobs-account-ui.test.cjs
@@ -157,6 +159,8 @@ on:
       - tests/pwa-profile-scroll-meta.test.cjs
       - tests/profile-artist-jobs-mobile.test.cjs
       - tests/profile-events-hub.test.cjs
+      - tests/biblioteca-mobile-first.test.cjs
+      - biblioteca.html
       - app.html
       - uadav-profile-email.js
       - tests/jobs-account-ui.test.cjs
@@ -199,6 +203,7 @@ jobs:
       - run: node --test tests/pwa-profile-scroll-meta.test.cjs
       - run: node --test tests/profile-artist-jobs-mobile.test.cjs
       - run: node --test tests/profile-events-hub.test.cjs
+      - run: node --test tests/biblioteca-mobile-first.test.cjs
       - run: node --test tests/commercial-delivery-placement.test.cjs
       - run: node tests/account-notices-ui.mjs
       - run: node tests/admin-import-export.mjs
