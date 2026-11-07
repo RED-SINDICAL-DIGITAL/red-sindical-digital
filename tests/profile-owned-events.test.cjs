@@ -38,3 +38,14 @@ test('profile retains existing artist, job, receipt, password and account screen
  for(const id of ['mi-artista','mis-trabajos','profileJobSecret','profileLocalEvents','recoverAccount','profileSettings'])assert(html.includes('id="'+id+'"'),id);
  for(const page of [html,publish])for(const m of page.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(m[1]);
 });
+
+test('verified event editor sends only whitelisted text fields to authenticated Worker',()=>{
+ const js=html.match(/<script id="profileOwnerEventsScript">([\s\S]*?)<\/script>/)[1];
+ assert.match(html,/id="profileOwnedEventEditor" class="u2-event-editor"/);
+ assert.match(html,/id="profileOwnedEventForm"/);
+ assert.match(js,/action:'edit',patch/);
+ assert.match(js,/for\(const key of \['titulo','descripcion_corta','lugar','ciudad','fecha','hora'\]\)/);
+ assert.match(js,/!patch\.titulo\|\|!patch\.fecha/);
+ assert(!js.includes('patch.destacado_pagado'));
+ assert(!js.includes('patch.created_by_account_id'));
+});
