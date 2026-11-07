@@ -17,7 +17,7 @@ test('only real publishing and promotion actions are provided',()=>{
  const content=html.split('id="mis-eventos"')[1].split('</section><section class="panel wide" id="radioStudioEntry"')[0];
  for(const url of ['/publicar-evento.html','/cartelera.html','/consultar-publicidad.html'])
   assert(content.includes('href="'+url+'"'),url);
- assert.match(content,/gestión privada de eventos propios todavía no está habilitada/);
+ assert.match(content,/falta una verificación privada de propietario/);
  assert(!content.includes('Editar evento'));
  assert(!content.includes('Eliminar evento'));
  assert(!content.includes('Reactivar evento'));
