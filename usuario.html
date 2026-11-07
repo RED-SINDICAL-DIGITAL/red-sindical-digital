@@ -238,16 +238,16 @@ expandHash();
 (()=>{
 'use strict';
 const params=new URLSearchParams(location.search),requested=params.get('vista');
-const legacyHash=location.hash==='#profileSettings'?'cuenta':location.hash==='#mi-artista'?'artista':location.hash==='#mis-trabajos'?'trabajos':'';
-const allowed=['cuenta','artista','trabajos'];
-const selected=allowed.includes(requested)?requested:(legacyHash||'home');
+const legacyHash=location.hash==='#profileSettings'?'account':location.hash==='#mi-artista'?'artista':location.hash==='#mis-trabajos'?'trabajos':'';
+const allowed=['account','artista','trabajos'];
+const selected=(requested==='cuenta'?'account':allowed.includes(requested)?requested:legacyHash)||'home';
 document.body.dataset.profileView=selected;
 const settings=document.getElementById('profileSettings');
-const titles={cuenta:'Cuenta y seguridad',artista:'Mi artista',trabajos:'Mis trabajos'};
+const titles={account:'Cuenta y seguridad',artista:'Mi artista',trabajos:'Mis trabajos'};
 const header=document.getElementById('profileViewHeader');
 const title=document.getElementById('profileViewTitle');
 if(selected!=='home'&&header){header.hidden=false;if(title)title.textContent=titles[selected]}
-if(selected==='cuenta'&&settings){settings.open=true;document.title='Cuenta y seguridad · UADAV STREAM'}
+if(selected==='account'&&settings){settings.open=true;document.title='Cuenta y seguridad · UADAV STREAM'}
 if(selected==='artista'||selected==='trabajos'){
  const panel=document.getElementById(selected==='artista'?'mi-artista':'mis-trabajos');
  if(panel&&panel.classList.contains('is-collapsed')){
