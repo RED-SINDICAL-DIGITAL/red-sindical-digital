@@ -31,6 +31,7 @@ on:
       - email-access-version.json
       - tests/email-access.test.cjs
       - bolsa-trabajo.html
+      - tests/job-artist-profile-availability.test.cjs
       - publicar-evento.html
       - consultar-publicidad.js
       - uadav-commercial-delivery.js
@@ -91,6 +92,7 @@ on:
       - email-access-version.json
       - tests/email-access.test.cjs
       - bolsa-trabajo.html
+      - tests/job-artist-profile-availability.test.cjs
       - publicar-evento.html
       - consultar-publicidad.js
       - uadav-commercial-delivery.js
@@ -137,6 +139,7 @@ jobs:
       - run: node --test tests/staging-frontend-contract.test.mjs tests/commercial-inquiry-flow.test.cjs
       - run: node --test tests/account-staging-api-isolation.test.cjs
       - run: node --test tests/api-config-pages-preview.test.cjs
+      - run: node --test tests/job-artist-profile-availability.test.cjs
       - run: node --test tests/commercial-delivery-placement.test.cjs
       - run: node tests/account-notices-ui.mjs
       - run: node tests/admin-import-export.mjs
