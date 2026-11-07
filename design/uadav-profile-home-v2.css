@@ -131,3 +131,36 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-shortcu
  body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #recent .item{flex-basis:min(16vw,180px)!important}
  body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-shortcuts a{flex:1 1 42%;min-width:0}
 }
+
+/* Native-style mobile information architecture v3:
+   replace the legacy large cards with short action rows on small screens.
+   Older scripts and all original functional IDs remain untouched. */
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks{background:transparent!important;border:0!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks h2{margin:0 2px 14px!important;font-size:22px!important;letter-spacing:-.05em!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-more{margin:14px 0 0;border:0}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-more>summary{display:inline-flex;align-items:center;min-height:44px;padding:9px 14px;border-radius:999px;background:rgba(14,50,78,.78);border:1px solid rgba(72,177,245,.2);color:#a7dbf8;font-size:13px;font-weight:800;cursor:pointer}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-more[open]>summary{background:#123f61;color:#fff}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-more .profile-shortcuts{padding-top:12px;margin-top:0}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-account-shortcut{display:inline-flex;align-items:center;gap:10px;min-height:44px;margin:9px 0 0;padding:7px 2px;color:#a6c8e0;font-size:13px;font-weight:740;text-decoration:none}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-account-shortcut svg{width:18px;height:18px;color:var(--u-cyan)}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-account-shortcut:focus-visible{outline:2px solid var(--u-focus);outline-offset:3px}
+@media(max-width:760px){
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .wrap{padding-top:9px!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .hero{min-height:0!important;padding:13px 14px!important;margin-bottom:18px!important;border-radius:16px!important;box-shadow:none!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .hero .avatar{width:58px!important;height:58px!important;flex:0 0 58px!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .hero h1{font-size:clamp(24px,7vw,32px)!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .hero p{font-size:11px!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-tasks{display:flex!important;flex-direction:column!important;gap:7px!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-task{display:grid!important;grid-template-columns:44px minmax(0,1fr) 18px!important;grid-template-rows:auto auto!important;min-height:67px!important;align-content:center!important;gap:1px 12px!important;padding:9px 13px!important;border:0!important;border-radius:12px!important;background:linear-gradient(105deg,rgba(16,40,64,.96),rgba(11,26,44,.94))!important;box-shadow:none!important;transform:none!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-task::after{content:"›";grid-column:3;grid-row:1/3;align-self:center;color:#7eafca;font-size:29px;font-weight:350;line-height:1}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-task .profile-icon{display:block!important;grid-column:1;grid-row:1/3;align-self:center;justify-self:center;width:23px!important;height:23px!important;margin:0!important;color:#2cc7ff}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-task strong{grid-column:2;grid-row:1;font-size:15px!important;letter-spacing:-.025em;align-self:end}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-task span{grid-column:2;grid-row:2;font-size:11px!important;line-height:1.15!important;white-space:normal}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-task:hover{background:#173a58!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-continue{margin-top:8px!important;padding-top:10px!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #recent .item{flex-basis:52vw!important;max-width:220px!important}
+}
+@media(min-width:761px){
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-tasks{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #profileTasks .profile-task{min-height:85px!important}
+}
