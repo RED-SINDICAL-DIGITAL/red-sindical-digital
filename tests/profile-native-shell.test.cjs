@@ -45,3 +45,8 @@ test('critical account, artist, job, and player IDs and event hooks are retained
  assert.match(html,/openRecent\(a\[Number\(el\.dataset\.i\)\]\)/);
 });
 test('new mount script parses',()=>new vm.Script(script));
+
+const app=fs.readFileSync(path.join(__dirname,'..','app.html'),'utf8');
+test('the host PWA iframe uses a new revision for Mi Perfil only',()=>{
+ assert.match(app,/frameURL\.searchParams\.set\('rev',routePath\(to\)==='\/usuario\.html'\?'profile-native-shell-20261107':'12059'\)/);
+});
