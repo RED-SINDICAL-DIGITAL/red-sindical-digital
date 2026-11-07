@@ -13,7 +13,7 @@ test('profile home is a compact action list on small screens, not a four-card da
 });
 test('primary actions retain working targets and are ordered by user need',()=>{
  const content=html.split('id="profileTasks"')[1].split('</section>')[0];
- const paths=['/usuario.html?vista=artista','/usuario.html?vista=trabajos','/publicar-evento.html','/biblioteca.html'];
+ const paths=['/usuario.html?vista=artista','/usuario.html?vista=trabajos','/usuario.html?vista=eventos','/biblioteca.html'];
  let prev=-1;
  for(const p of paths){const idx=content.indexOf('href="'+p+'"');assert(idx>prev,p);prev=idx}
  assert.equal((content.match(/class="profile-task"/g)||[]).length,4);

@@ -20,7 +20,7 @@ test('Mi Perfil keeps all business-critical hooks and private account controls',
 test('simple hero has four clear primary choices and concise secondary actions',()=>{
  const section=html.split('<section class="panel wide" id="profileTasks"')[1].split('</section>')[0];
  assert.equal((section.match(/class="profile-task"/g)||[]).length,4);
- for(const label of ['Mis trabajos','Mi artista','Favoritos','Publicar evento','Cuenta y seguridad','Ayuda'])assert(section.includes(label),label);
+ for(const label of ['Mis trabajos','Mi artista','Favoritos','Mis eventos','Cuenta y seguridad','Ayuda'])assert(section.includes(label),label);
  assert.doesNotMatch(section,/Elegí qué querés hacer/);
 });
 test('mobile layout uses compact two-column actions and full-width shortcuts',()=>{
