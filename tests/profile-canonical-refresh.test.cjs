@@ -38,6 +38,6 @@ test('local deletion clearly excludes library and saved job records',()=>{
  assert.match(profileHTML,/Tus favoritos, playlists y gestiones no se eliminan/);
 });
 test('saved job and private receipt paths are distinguished',()=>{
- assert.match(profileHTML,/Tus ofertas y postulaciones guardadas/);
- assert.match(profileHTML,/Consultar comprobante \(\.txt\)/);
+ assert.match(profileHTML,/id="profileJobsApplications"/);\n assert.match(profileHTML,/id="profileJobsOffers"/);
+ assert.match(profileHTML,/Abrir comprobante \(\.txt\)/);\n assert.match(profileHTML,/id="profileJobSecret" required type="password"/);
 });
