@@ -7486,17 +7486,28 @@ async function saveEntityVersion(type,id,data){
       catch{return reply({error:'Ingresá a Mi Perfil con una cuenta válida.'},401)}
       try{
         const db=env.DB;
-        const list=async()=>{const result=await db.prepare("SELECT id,title,start_date,status FROM events WHERE json_valid(data_json) AND json_extract(data_json,'$.created_by_account_id')=? AND status IN ('published','hidden') ORDER BY updated_at DESC,id DESC LIMIT 100").bind(identity.accountId).all();return (result.results||[]).map(e=>({id:e.id,titulo:e.title,fecha:e.start_date,estado:e.status}))};
+        const list=async()=>{const result=await db.prepare("SELECT id,title,start_date,status,data_json FROM events WHERE json_valid(data_json) AND json_extract(data_json,'$.created_by_account_id')=? AND status IN ('published','hidden') ORDER BY updated_at DESC,id DESC LIMIT 100").bind(identity.accountId).all();return (result.results||[]).map(e=>{const data=JSON.parse(e.data_json);return {id:e.id,titulo:e.title,fecha:e.start_date,estado:e.status,lugar:String(data.lugar||'').slice(0,180),ciudad:String(data.ciudad||'').slice(0,120),descripcion_corta:String(data.descripcion_corta||'').slice(0,300),hora:String(data.hora||'').slice(0,5)}})};
         if(request.method==='GET')return reply({success:true,items:await list()});
         const b=await request.json().catch(()=>({}));
-        if(typeof b.id!=='string'||!/^EV-[A-Za-z0-9_-]{1,120}$/.test(b.id)||!['hide','publish'].includes(b.action))return reply({error:'Evento o acción inválidos.'},400);
+        if(typeof b.id!=='string'||!/^EV-[A-Za-z0-9_-]{1,120}$/.test(b.id)||!['hide','publish','edit'].includes(b.action))return reply({error:'Evento o acción inválidos.'},400);
         const found=await db.prepare("SELECT id,status,data_json FROM events WHERE id=? AND json_valid(data_json) AND json_extract(data_json,'$.created_by_account_id')=? AND status IN ('published','hidden')").bind(b.id,identity.accountId).first();
         if(!found)return reply({error:'Evento no disponible para esta cuenta.'},404);
-        const state=b.action==='hide'?'hidden':'published',current=JSON.parse(found.data_json);
+        const state=b.action==='edit'?found.status:b.action==='hide'?'hidden':'published',current=JSON.parse(found.data_json);
         if(!current||current.created_by_account_id!==identity.accountId)return reply({error:'No autorizado'},403);
-        if(found.status===state)return reply({success:true,id:found.id,estado:state,unchanged:true});
+        if(b.action!=='edit'&&found.status===state)return reply({success:true,id:found.id,estado:state,unchanged:true});
         const before={...current,id:found.id,estado:found.status};
         const after={...before,estado:state,actualizado:isoNow()};
+        if(b.action==='edit'){
+          const patch=b.patch;
+          const limits={titulo:180,descripcion_corta:300,lugar:180,ciudad:120,fecha:10,hora:5};
+          if(!patch||typeof patch!=='object'||Array.isArray(patch)||!Object.keys(patch).length||Object.keys(patch).some(k=>!Object.hasOwn(limits,k)||typeof patch[k]!=='string'||patch[k].length>limits[k]))return reply({error:'Campos de edición inválidos.'},400);
+          if(Object.hasOwn(patch,'titulo')&&!patch.titulo.trim())return reply({error:'El título es obligatorio.'},400);
+          for(const [key,value] of Object.entries(patch))after[key]=value.trim();
+          if(Object.hasOwn(patch,'titulo'))after.nombre=after.titulo;
+          if(Object.hasOwn(patch,'fecha'))after.fecha_inicio=after.fecha;
+          const invalid=uadavEventScheduleError(after,{required:true});
+          if(invalid)return reply({error:invalid},400);
+        }
         const saved=await mutateCanonicalEvent(before,after);
         if(saved.conflict)return reply({error:'El evento cambió. Actualizá antes de intentar de nuevo.'},409);
         return reply({success:true,id:found.id,estado:state});
