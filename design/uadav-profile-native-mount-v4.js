@@ -14,6 +14,24 @@
    const hashView=legacyHashes.includes(location.hash);
    const selected=hashView?({'#profileSettings':'account','#mi-artista':'artista','#mis-trabajos':'trabajos'}[location.hash]):(section==='cuenta'?'account':['account','artista','trabajos'].includes(section)?section:'home');
    body.dataset.profileView=selected;
+   const header=document.getElementById('profileViewHeader');
+   const title=document.getElementById('profileViewTitle');
+   const titles={account:'Cuenta y seguridad',artista:'Mi artista',trabajos:'Mis trabajos'};
+   if(header)header.hidden=selected==='home';
+   if(title&&selected!=='home')title.textContent=titles[selected];
+   if(selected==='account'){
+     const settings=document.getElementById('profileSettings');
+     if(settings)settings.open=true;
+   }
+   if(selected==='artista'||selected==='trabajos'){
+     const panel=document.getElementById(selected==='artista'?'mi-artista':'mis-trabajos');
+     if(panel?.classList.contains('is-collapsed')){
+       panel.classList.remove('is-collapsed');
+       const toggle=panel.querySelector('.profile-fold-toggle');
+       if(toggle){toggle.textContent='Ocultar';toggle.setAttribute('aria-expanded','true')}
+     }
+   }
+   document.title=(selected==='home'?'Mi espacio':titles[selected])+' · UADAV STREAM';
    if(selected!=='home'||hashView){
      // Keep originals accessible after a History/fragment navigation without cloning nodes.
      for(const [node,place] of origins){
