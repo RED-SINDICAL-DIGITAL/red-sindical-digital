@@ -75,6 +75,10 @@ on:
       - tests/profile-artist-jobs-mobile.test.cjs
       - tests/profile-events-hub.test.cjs
       - tests/biblioteca-mobile-first.test.cjs
+      - tests/event-local-receipts.test.cjs
+      - uadav-event-local-receipts.js
+      - publicar-evento.html
+      - usuario.html
       - biblioteca.html
       - app.html
       - uadav-profile-email.js
@@ -160,6 +164,10 @@ on:
       - tests/profile-artist-jobs-mobile.test.cjs
       - tests/profile-events-hub.test.cjs
       - tests/biblioteca-mobile-first.test.cjs
+      - tests/event-local-receipts.test.cjs
+      - uadav-event-local-receipts.js
+      - publicar-evento.html
+      - usuario.html
       - biblioteca.html
       - app.html
       - uadav-profile-email.js
@@ -204,6 +212,7 @@ jobs:
       - run: node --test tests/profile-artist-jobs-mobile.test.cjs
       - run: node --test tests/profile-events-hub.test.cjs
       - run: node --test tests/biblioteca-mobile-first.test.cjs
+      - run: node --test tests/event-local-receipts.test.cjs
       - run: node --test tests/commercial-delivery-placement.test.cjs
       - run: node tests/account-notices-ui.mjs
       - run: node tests/admin-import-export.mjs
