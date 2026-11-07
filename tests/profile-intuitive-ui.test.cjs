@@ -14,7 +14,7 @@ test('primary actions have consistent local SVG icons and preserve navigation',(
    assert(html.includes('id="'+id+'"'),id);
    assert(first.includes('href="#'+id+'"')||first.includes('href="#mis-trabajos"')||first.includes('href="/biblioteca.html"'));
  }
- for(const link of ['href="#mis-trabajos"','href="#mi-artista"','href="/biblioteca.html"','href="/publicar-evento.html"','href="#profileSettings"'])assert(first.includes(link),link);
+ for(const link of ['href="#mis-trabajos"','href="#mi-artista"','href="/biblioteca.html"','href="/publicar-evento.html"','href="/usuario.html?vista=cuenta"'])assert(first.includes(link),link);
  assert(!first.includes('data-symbol='));
 });
 test('continue-watching precedes lower priority editing panels and preserves the player',()=>{
