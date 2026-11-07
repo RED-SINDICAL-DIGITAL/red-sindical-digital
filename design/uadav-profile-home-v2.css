@@ -97,6 +97,9 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #mi-artista,
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] #radioStudioEntry,
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-library-details,
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-settings{display:none!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] .profile-settings,
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] .profile-settings{display:none!important}
+body[data-page="usuario"].uadav-ui-v2[data-profile-view="account"] .profile-account-top{display:none!important}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] .hero,
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="trabajos"] .hero{display:none!important}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] .grid>:not(#mi-artista),
