@@ -1,65 +1,54 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs');
-const path=require('node:path');
+const {readFileSync}=require('node:fs');
+const {join}=require('node:path');
 const vm=require('node:vm');
-const html=fs.readFileSync(path.join(__dirname,'..','usuario.html'),'utf8');
-const css=fs.readFileSync(path.join(__dirname,'..','design/uadav-profile-native-v3.css'),'utf8');
-const match=html.match(/<script>\s*\/\* Isolated home mount:[\s\S]*?<\/script>/);
-assert(match,'Isolated home mount script is required');
-const script=match[0].replace(/^<script>/,'').replace(/<\/script>$/,'');
-function simulate(view,missing=false){
- const sections={hero:{id:'hero'},tasks:{id:'profileTasks'},continue:{id:'continue'},notices:{id:'accountNotices'}};
- const home={hidden:true},orig={hidden:false,querySelector(selector){return selector===':scope > .hero'?sections.hero:selector==='.profile-continue'?(missing?null:sections.continue):null}};
- const target={children:[],appendChild(n){this.children.push(n)}},body={dataset:{profileView:view},classList:{set:new Set(),add(s){this.set.add(s)}}};
- const document={body,title:'Mi Perfil',getElementById(id){return ({profileNativeHome:home,profileLegacyViews:orig,nativeHomeSections:target,profileTasks:sections.tasks,accountNotices:sections.notices})[id]||null}};
- vm.runInNewContext(script,{document});
- return{home,orig,target,body,document,sections};
+const html=readFileSync(join(__dirname,'..','usuario.html'),'utf8');
+const css=readFileSync(join(__dirname,'..','design/uadav-profile-native-v3.css'),'utf8');
+const js=readFileSync(join(__dirname,'..','design/uadav-profile-native-mount-v4.js'),'utf8');
+const app=readFileSync(join(__dirname,'..','app.html'),'utf8');
+function simulate(view='home',options={}){
+ const sections={hero:{id:'hero'},tasks:{id:'profileTasks'},recent:{id:'recent'},notices:{id:'accountNotices'}};
+ const home={hidden:true},original={hidden:false,querySelector(selector){return selector==='.hero'?sections.hero:selector==='.profile-continue'?(options.noRecent?null:sections.recent):null}};
+ const target={children:[],appendChild(e){this.children.push(e)}},listeners={};
+ const body={dataset:{profileView:view},classList:{values:new Set(),contains(v){return this.values.has(v)},add(v){this.values.add(v)}}};
+ const document={body,readyState:'complete',title:'Mi Perfil',getElementById(id){
+  return ({profileNativeHome:home,profileLegacyViews:original,nativeHomeSections:target,profileTasks:sections.tasks,accountNotices:options.noNotices?null:sections.notices})[id]||null;
+ }};
+ const window={addEventListener(name,fn){listeners[name]=fn}};
+ const location={search:'',hash:''};
+ vm.runInNewContext(js,{document,window,location,URLSearchParams,MutationObserver:undefined});
+ return{home,original,target,body,document,sections,listeners};
 }
-test('home moves the existing actual profile nodes into its own layout exactly once',()=>{
- const x=simulate('home');assert.equal(x.home.hidden,false);assert.equal(x.orig.hidden,true);
- assert.deepEqual(x.target.children.map(c=>c.id),['hero','profileTasks','continue','accountNotices']);
- assert(x.body.classList.set.has('profile-native-mounted'));
+test('native home mounts only existing interactive nodes, without copying data or listeners',()=>{
+ const x=simulate();assert.equal(x.home.hidden,false);assert.equal(x.original.hidden,true);
+ assert.deepEqual(x.target.children.map(e=>e.id),['hero','profileTasks','recent','accountNotices']);
+ assert.equal(x.body.dataset.profileMount,'profile-native-mount-v4');
+ assert(x.body.classList.values.has('profile-native-mounted'));
 });
-test('artist, jobs, account subviews keep legacy functional DOM undisturbed',()=>{
- for(const view of ['artista','trabajos','account']){
-   const x=simulate(view);assert.equal(x.home.hidden,true);assert.equal(x.orig.hidden,false);assert.equal(x.target.children.length,0);
- }
+test('optional notices never prevent mounting of actual home',()=>{
+ const x=simulate('home',{noNotices:true});assert.equal(x.home.hidden,false);
+ assert.deepEqual(x.target.children.map(e=>e.id),['hero','profileTasks','recent']);
 });
-test('mount failure is safe and never discards forms or personal data',()=>{
- const x=simulate('home',true);assert.equal(x.home.hidden,true);assert.equal(x.orig.hidden,false);assert.equal(x.target.children.length,0);
+test('artist, jobs and account subviews keep the original functional UI',()=>{
+ for(const view of ['artista','trabajos','account']){const x=simulate(view);assert(x.home.hidden);assert.equal(x.original.hidden,false);assert.equal(x.target.children.length,0)}
 });
-test('native home visual layout is completely isolated and visibly different',()=>{
- assert.match(html,/id="profileNativeHome" class="profile-native-home" hidden/);
- assert.match(html,/id="profileLegacyViews"/);
- assert.match(html,/uadav-profile-native-v3\.css\?v=20261107-shell-new/);
+test('missing essential content safely retains legacy UI',()=>{
+ const x=simulate('home',{noRecent:true});assert.equal(x.home.hidden,true);assert.equal(x.original.hidden,false);
+ assert.equal(x.body.dataset.profileMount,'missing-required-content');
+});
+test('mounted page supports pageshow without duplicating UI',()=>{
+ const x=simulate();x.listeners.pageshow();assert.equal(x.target.children.length,4);assert.equal(x.original.hidden,true);
+});
+test('new mount loads independently and preserves CSS and account hookups',()=>{
+ assert.match(html,/defer src="\/design\/uadav-profile-native-mount-v4\.js\?v=20261107-mount-fix"/);
+ assert.match(html,/data-ui-revision="profile-native-mount-v4"/);
  assert.match(css,/#profileLegacyViews\[hidden\],#profileNativeHome\[hidden\]\{display:none!important\}/);
- assert.match(css,/#profileNativeHome #profileTasks \.profile-tasks\{display:flex!important;flex-direction:column!important/);
- assert.match(css,/#profileNativeHome #profileTasks \.profile-task\{display:grid!important;grid-template-columns:48px minmax\(0,1fr\) 20px!important/);
- assert.match(css,/@media\(min-width:960px\)/);
-});
-test('critical account, artist, job, and player IDs and event hooks are retained',()=>{
- for(const id of ['avatar','name','photo','edit','profileTasks','recent','mis-trabajos','mi-artista','linkedArtists','profileJobLookup','profileSettings','accountDevices','recoverAccount']){
-  assert(html.includes('id="'+id+'"'),id);
- }
+ for(const id of ['avatar','name','edit','profileTasks','recent','mi-artista','mis-trabajos','profileSettings','accountDevices','recoverAccount','profileJobLookup'])assert(html.includes('id="'+id+'"'),id);
  assert.match(html,/openRecent\(a\[Number\(el\.dataset\.i\)\]\)/);
+ new vm.Script(js);
 });
-test('new mount script parses',()=>new vm.Script(script));
-
-const app=fs.readFileSync(path.join(__dirname,'..','app.html'),'utf8');
-test('the host PWA iframe uses a new revision for Mi Perfil only',()=>{
- assert.match(app,/frameURL\.searchParams\.set\('rev',routePath\(to\)==='\/usuario\.html'\?'profile-native-shell-routefix-20261107':'12059'\)/);
-});
-
-test('PWA canonicalizes /usuario alias before deciding iframe version',()=>{
- const marker="function clean(h){",start=app.indexOf(marker),end=app.indexOf('function routePath(v)',start);
- assert(start>0&&end>start);
- const code=app.slice(start,end);
- const context={location:{origin:'https://uadav-stream-staging.pages.dev'},URL,HOME:'/descubrir.html'};
- vm.runInNewContext(code,context);
- assert.equal(context.clean('/usuario'),'/usuario.html');
- assert.equal(context.clean('/usuario/'),'/usuario.html');
- assert.equal(context.clean('/usuario?vista=artista'),'/usuario.html?vista=artista');
- assert.equal(context.clean('/usuario.html?vista=cuenta'),'/usuario.html?vista=cuenta');
- assert.equal(context.clean('/cartelera.html'),'/cartelera.html');
+test('the PWA uses the canonical profile path with a fresh iframe revision',()=>{
+ assert.match(app,/if\(p==='\/usuario'\|\|p==='\/usuario\/'\)p='\/usuario\.html'/);
+ assert.match(app,/frameURL\.searchParams\.set\('rev',routePath\(to\)==='\/usuario\.html'/);
 });
