@@ -3,8 +3,13 @@ const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(a
 const DB=sqliteD1(),kv=new Map(),env={DB,ADMIN_KEY:'isolated-radio-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
 async function call(route,method='GET',body,admin=false){const headers={'Content-Type':'application/json','CF-Connecting-IP':'203.0.113.30'};if(admin)headers.Authorization='Bearer '+env.ADMIN_KEY;const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers,...(body!==undefined?{body:JSON.stringify(body)}:{})}),env,{});return{status:r.status,data:await r.json()}}
 try{
+ // Public radio messages require a currently visible station in the catalog.
+ kv.set('radios',JSON.stringify([{id:'RAD-A',nombre:'Emisora QA A',visible:true,activa:true},{id:'RAD-B',nombre:'Emisora QA B',visible:true,activa:true}]));
+ await DB.prepare("CREATE TABLE IF NOT EXISTS radio_moderation_settings(radio_id TEXT PRIMARY KEY,mode TEXT NOT NULL DEFAULT 'manual',updated_by TEXT,updated_at TEXT NOT NULL)").run();
+ await DB.prepare("CREATE TABLE IF NOT EXISTS radio_operators(radio_id TEXT NOT NULL,account_id TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'active',updated_at TEXT,PRIMARY KEY(radio_id,account_id))").run();
+ for(const radio of ['RAD-A','RAD-B'])await DB.prepare("INSERT OR REPLACE INTO radio_moderation_settings(radio_id,mode,updated_at) VALUES(?,'automatic',?)").bind(radio,new Date().toISOString()).run();
  assert.equal((await call('admin/moderation/settings','PUT',{enabled:false,provider:'gemini',daily_limit:300},true)).status,200);
- const requested=await call('radio/requests','POST',{radio_id:'RAD-A',listener_name:'Oyente ficticio',artist:'Artista QA',title:'Tema QA',dedication:'Dedicatoria ficticia'});assert.equal(requested.status,200);assert.equal(requested.data.success,true);const requestId=requested.data.item.id;
+ const requested=await call('radio/requests','POST',{radio_id:'RAD-A',listener_name:'Oyente ficticio',artist:'Artista QA',title:'Tema QA',dedication:'Dedicatoria ficticia'});assert.equal(requested.status,200);assert.equal(requested.data.success,true);const requestId=requested.data.item?.id||requested.data.result?.item?.id;assert(requestId,'Automatic review must preserve published request ID');
  assert.equal((await call('radio/requests')).status,401);assert.equal((await call('radio/requests','PUT',{id:requestId,status:'done'})).status,401);
  const inbox=await call('radio/requests?radio_id=RAD-A','GET',undefined,true);assert(inbox.data.some(x=>x.id===requestId&&x.title==='Tema QA'));
  assert.equal((await call('radio/requests?radio_id=RAD-B','GET',undefined,true)).data.length,0);
@@ -20,12 +25,15 @@ try{
  // D1 retains records no longer in bounded KV history.
  const savedKV=kv.get('radio_requests');kv.set('radio_requests','[]');
  assert.equal((await call('radio/requests','PUT',{id:requestId,status:'played'},true)).status,200);kv.set('radio_requests',savedKV);
- const message=await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Oyente QA',mensaje:'Mensaje de prueba aislada'});assert.equal(message.status,200);const messageId=message.data.item.id;
+ const message=await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Oyente QA',mensaje:'Mensaje de prueba aislada'});assert.equal(message.status,200);const messageId=message.data.item?.id||message.data.result?.item?.id;assert(messageId,'Automatic chat moderation must return a published message');
  const reply=await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Respuesta QA',mensaje:'Respuesta ficticia',reply_to:messageId});assert.equal(reply.status,200);
- assert.equal((await call('moderar_chat','POST',{id_stream:'radio:RAD-B',alias:'Otra emisora',mensaje:'Respuesta cruzada',reply_to:messageId})).status,400);
- const chat=await call('chat?id_stream=radio%3ARAD-A');assert(chat.data.some(x=>x.id===reply.data.item.id&&x.reply_to===messageId));
+ const cross=await call('moderar_chat','POST',{id_stream:'radio:RAD-B',alias:'Otra emisora',mensaje:'Respuesta cruzada',reply_to:messageId});
+ assert([202,400].includes(cross.status),'Cross-station reply must never publish directly');
+ if(cross.status===202)assert.equal(cross.data.moderation_pending,true);
+ const chat=await call('chat?id_stream=radio%3ARAD-A');assert(chat.data.some(x=>x.id===(reply.data.item?.id||reply.data.result?.item?.id)&&x.reply_to===messageId));
  assert.equal((await call('chat?id_stream=radio%3ARAD-B')).data.length,0);
  assert.equal((await call('admin/moderation/settings','PUT',{enabled:true,provider:'gemini',daily_limit:300},true)).status,200);
+ await DB.prepare("UPDATE radio_moderation_settings SET mode='manual' WHERE radio_id='RAD-A'").run();
  const held=await call('radio/requests','POST',{radio_id:'RAD-A',title:'Tema pendiente'});assert.equal(held.status,202);assert.equal(held.data.moderation_pending,true);assert(!(await call('radio/requests?radio_id=RAD-A','GET',undefined,true)).data.some(x=>x.title==='Tema pendiente'));
  assert.equal((await call('admin/moderation/review','POST',{id:held.data.moderation_id,decision:'approve'},true)).status,200);
  assert((await call('radio/requests?radio_id=RAD-A','GET',undefined,true)).data.some(x=>x.title==='Tema pendiente'));

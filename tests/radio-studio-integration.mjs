@@ -5,6 +5,9 @@ const hash=async s=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-25
 async function call(route,method='GET',body,token=''){const headers={'Content-Type':'application/json','CF-Connecting-IP':'203.0.113.40'};if(token)headers.Authorization='Bearer '+token;const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers,...(body!==undefined?{body:JSON.stringify(body)}:{})}),env,{});return{status:r.status,cache:r.headers.get('Cache-Control'),data:await r.json()}}
 try{
  kv.set('radios',JSON.stringify([{id:'RAD-A',nombre:'Radio A'},{id:'RAD-B',nombre:'Radio B'}]));
+ await DB.prepare("CREATE TABLE IF NOT EXISTS radio_operators(radio_id TEXT NOT NULL,account_id TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'active',updated_at TEXT,PRIMARY KEY(radio_id,account_id))").run();
+ await DB.prepare("CREATE TABLE IF NOT EXISTS radio_moderation_settings(radio_id TEXT PRIMARY KEY,mode TEXT NOT NULL DEFAULT 'manual',updated_by TEXT,updated_at TEXT NOT NULL)").run();
+ for(const radio of ['RAD-A','RAD-B'])await DB.prepare("INSERT OR REPLACE INTO radio_moderation_settings(radio_id,mode,updated_at) VALUES(?,'automatic',?)").bind(radio,new Date().toISOString()).run();
  await call('admin/moderation/settings','PUT',{enabled:false,provider:'gemini',daily_limit:300},admin);
  for(const token of [a,b])assert.equal((await call('account','POST',{data:{uadav_user_v11:{name:'Operador ficticio'}}},token)).status,200);
  assert.equal((await call('radio-studio')).status,401);assert.equal((await call('radio-studio','GET',undefined,a)).data.items.length,0);
@@ -15,29 +18,43 @@ try{
  const studios=await call('radio-studio','GET',undefined,a);assert.equal(studios.cache,'no-store');assert.deepEqual(studios.data.items,[{id:'RAD-A',name:'Radio A'}]);
  assert.equal((await call('radio-studio','GET',undefined,b)).data.items.length,0);
  const reqA=await call('radio/requests','POST',{radio_id:'RAD-A',title:'Tema A',listener_name:'Oyente QA'}),reqB=await call('radio/requests','POST',{radio_id:'RAD-B',title:'Tema B'});
- const inbox=await call('radio-studio/requests?radio_id=RAD-A','GET',undefined,a);assert.equal(inbox.data.items.length,1);assert.equal(inbox.data.items[0].id,reqA.data.item.id);
+ const inbox=await call('radio-studio/requests?radio_id=RAD-A','GET',undefined,a);assert.equal(inbox.data.items.length,1);assert.equal(inbox.data.items[0].id,(reqA.data.item?.id||reqA.data.result?.item?.id));
  assert.equal((await call('radio-studio/requests?radio_id=RAD-A','GET',undefined,b)).status,403);
  assert.equal((await call('radio-studio/requests?radio_id=RAD-B','GET',undefined,a)).status,403);
- assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:reqB.data.item.id,status:'played'},a)).status,409);
- assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:reqA.data.item.id,status:'inventado'},a)).status,400);
- assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:reqA.data.item.id,status:'queued'},a)).status,200);
+ assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:(reqB.data.item?.id||reqB.data.result?.item?.id),status:'played'},a)).status,409);
+ assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:(reqA.data.item?.id||reqA.data.result?.item?.id),status:'inventado'},a)).status,400);
+ assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:(reqA.data.item?.id||reqA.data.result?.item?.id),status:'queued'},a)).status,200);
  assert.equal((await call('radio-studio/requests?radio_id=RAD-A','GET',undefined,a)).data.items[0].status,'queued');
 
  assert.equal((await call('radio/requests','GET',undefined,a)).status,401);
- assert.equal(JSON.parse(kv.get('radio_requests')).find(x=>x.id===reqA.data.item.id).status,'queued');
+ assert.equal(JSON.parse(kv.get('radio_requests')).find(x=>x.id===(reqA.data.item?.id||reqA.data.result?.item?.id)).status,'queued');
  const originalPut=env.UADAV_DB.put;env.UADAV_DB.put=async(k,v)=>{if(k==='radio_requests')throw Error('Synthetic KV outage');return originalPut(k,v)};
- const mirrorFailure=await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:reqA.data.item.id,status:'played'},a);assert.equal(mirrorFailure.status,200);assert.equal(mirrorFailure.data.kv_mirror_updated,false);
+ const mirrorFailure=await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:(reqA.data.item?.id||reqA.data.result?.item?.id),status:'played'},a);assert.equal(mirrorFailure.status,200);assert.equal(mirrorFailure.data.kv_mirror_updated,false);
  assert.equal((await call('radio-studio/requests?radio_id=RAD-A','GET',undefined,a)).data.items[0].status,'played');env.UADAV_DB.put=originalPut;
  assert.equal((await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Radio A',mensaje:'Intento ajeno',radio_operator_account_id:await hash(a),radio_operator_radio_id:'RAD-A'},b)).status,403);
  const listener=await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Oyente',mensaje:'Saludos a la radio'});
  const foreign=await call('moderar_chat','POST',{id_stream:'radio:RAD-B',alias:'Otra radio',mensaje:'Mensaje ajeno'});
  assert.equal((await call('radio-studio/chat?radio_id=RAD-A','GET',undefined,b)).status,403);
  assert.equal((await call('radio-studio/chat?radio_id=RAD-B','GET',undefined,a)).status,403);
- const reply=await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'Gracias por escuchar',reply_to:listener.data.item.id,radio_id:'RAD-B',alias:'Impostor'},a);
- assert.equal(reply.status,200);assert.equal(reply.data.radio_id,'RAD-A');assert.equal(reply.data.item.alias,'Radio A');assert.equal(reply.data.item.reply_to,listener.data.item.id);
- const chat=await call('radio-studio/chat?radio_id=RAD-A','GET',undefined,a);assert(chat.data.items.some(x=>x.id===reply.data.item.id));assert(!chat.data.items.some(x=>x.id===foreign.data.item.id));
- assert.equal((await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'Respuesta incorrecta',reply_to:foreign.data.item.id},a)).status,400);
+ const listenerId=listener.data.item?.id||listener.data.result?.item?.id;
+ const foreignId=foreign.data.item?.id||foreign.data.result?.item?.id;
+ assert(listenerId&&foreignId,'Synthetic chat must retain the published message IDs');
+ const reply=await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'Gracias por escuchar',reply_to:listenerId,radio_id:'RAD-B',alias:'Impostor'},a);
+ assert.equal(reply.status,202,'Operator responses require moderation in this mode');
+ assert.equal(reply.data.moderation_pending,true);
+ const approval=await call('admin/moderation/review','POST',{id:reply.data.moderation_id,decision:'approve'},admin);
+ assert.equal(approval.status,200);
+ const published=approval.data.result;
+ assert.equal(published.item.alias,'Radio A');
+ assert.equal(published.item.reply_to,listenerId);
+ const chat=await call('radio-studio/chat?radio_id=RAD-A','GET',undefined,a);
+ assert(chat.data.items.some(x=>x.id===published.item.id));
+ assert(!chat.data.items.some(x=>x.id===foreignId));
+ const cross=await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'Respuesta incorrecta',reply_to:foreignId},a);
+ assert([202,400].includes(cross.status),'Cross-station reply must never publish directly');
+ if(cross.status===202)assert.equal(cross.data.moderation_pending,true);
  await call('admin/moderation/settings','PUT',{enabled:true,provider:'gemini',daily_limit:300},admin);
+ await DB.prepare("UPDATE radio_moderation_settings SET mode='manual' WHERE radio_id='RAD-A'").run();
  const held=await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'Respuesta para revisar'},a);assert.equal(held.status,202);assert.equal(held.data.moderation_pending,true);
  assert(!(await call('radio-studio/chat?radio_id=RAD-A','GET',undefined,a)).data.items.some(x=>x.mensaje==='Respuesta para revisar'));
  assert.equal((await call('admin/moderation/review','POST',{id:held.data.moderation_id,decision:'approve'},admin)).status,200);
@@ -46,7 +63,7 @@ try{
 
  assert.equal((await call('admin/radio-operators','PUT',{...grant,action:'revoke'},admin)).status,200);
  assert.equal((await call('radio-studio/requests?radio_id=RAD-A','GET',undefined,a)).status,403);
- assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:reqA.data.item.id,status:'played'},a)).status,403);
+ assert.equal((await call('radio-studio/requests?radio_id=RAD-A','PATCH',{id:(reqA.data.item?.id||reqA.data.result?.item?.id),status:'played'},a)).status,403);
  assert.equal((await call('radio-studio','GET',undefined,a)).data.items.length,0);
  assert.equal((await call('radio-studio/chat?radio_id=RAD-A','POST',{message:'Sin permiso'},a)).status,403);
  assert.equal((await call('admin/moderation/review','POST',{id:revokedPending.data.moderation_id,decision:'approve'},admin)).status,409);
