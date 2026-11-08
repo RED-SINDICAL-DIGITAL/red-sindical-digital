@@ -24,3 +24,5 @@ jobs:
           node-version: '22'
       - run: node --test tests/profile-native-shell.test.cjs tests/profile-beta-integration.test.cjs tests/beta-staging-api-routing.test.cjs
       - run: node --check uadav-profile-email.js && node --check uadav-jobs-account.js
+      - name: Inventory deployed public staging version (GET only, informational)
+        run: node scripts/probe-beta-staging.mjs
