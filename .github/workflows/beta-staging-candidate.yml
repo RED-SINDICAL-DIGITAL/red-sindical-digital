@@ -1,0 +1,40 @@
+name: Beta staging candidate checks
+on:
+  push:
+    branches:
+      - release/beta-staging-candidate-20261108
+  pull_request:
+    paths:
+      - worker.js
+      - tests/event-owner-staging.test.cjs
+      - tests/event-owner-behavior.test.cjs
+      - tests/artist-pro-integration.mjs
+      - tests/pro-payment-fulfillment.mjs
+      - tests/pro-bank-confirmation.mjs
+      - tests/presskit-publication-privacy.mjs
+      - tests/media-source-link.test.cjs
+      - tests/video-feedback.test.cjs
+      - .github/workflows/beta-staging-candidate.yml
+permissions:
+  contents: read
+jobs:
+  integration-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Worker syntax
+        run: node --check worker.js
+      - name: Owner authorization and input size
+        run: node --test tests/event-owner-staging.test.cjs tests/event-owner-behavior.test.cjs
+      - name: Retired artist memberships and privacy
+        run: |
+          node tests/artist-pro-integration.mjs
+          node tests/pro-payment-fulfillment.mjs
+          node tests/pro-bank-confirmation.mjs
+          node tests/presskit-publication-privacy.mjs
+      - name: Browser media simulations
+        run: node --test tests/media-source-link.test.cjs tests/video-feedback.test.cjs
