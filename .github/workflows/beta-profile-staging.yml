@@ -26,3 +26,26 @@ jobs:
       - run: node --check uadav-profile-email.js && node --check uadav-jobs-account.js
       - name: Inventory deployed public staging version (GET only, informational)
         run: node scripts/probe-beta-staging.mjs
+
+  responsive-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium test tools
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Test live anonymous beta Preview at mobile and desktop sizes
+        run: node scripts/visual-qa-beta.mjs
+      - name: Upload anonymous layout screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: beta-responsive-screenshots
+          path: artifacts/beta-visual/*.png
+          if-no-files-found: ignore
+          retention-days: 7
