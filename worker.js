@@ -7488,7 +7488,9 @@ async function saveEntityVersion(type,id,data){
         const db=env.DB;
         const list=async()=>{const result=await db.prepare("SELECT id,title,start_date,status,data_json FROM events WHERE json_valid(data_json) AND json_extract(data_json,'$.created_by_account_id')=? AND status IN ('published','hidden') ORDER BY updated_at DESC,id DESC LIMIT 100").bind(identity.accountId).all();return (result.results||[]).map(e=>{const data=JSON.parse(e.data_json);return {id:e.id,titulo:e.title,fecha:e.start_date,estado:e.status,lugar:String(data.lugar||'').slice(0,180),ciudad:String(data.ciudad||'').slice(0,120),descripcion_corta:String(data.descripcion_corta||'').slice(0,300),hora:String(data.hora||'').slice(0,5)}})};
         if(request.method==='GET')return reply({success:true,items:await list()});
-        const b=await request.json().catch(()=>({}));
+        let b;
+        try{b=await uadavSecurityJSON(request,4096)}
+        catch(e){return reply({error:e?.status===413?'La solicitud supera el tamaño permitido.':'La solicitud contiene datos inválidos.'},e?.status===413?413:400)}
         if(typeof b.id!=='string'||!/^EV-[A-Za-z0-9_-]{1,120}$/.test(b.id)||!['hide','publish','edit'].includes(b.action))return reply({error:'Evento o acción inválidos.'},400);
         const found=await db.prepare("SELECT id,status,data_json FROM events WHERE id=? AND json_valid(data_json) AND json_extract(data_json,'$.created_by_account_id')=? AND status IN ('published','hidden')").bind(b.id,identity.accountId).first();
         if(!found)return reply({error:'Evento no disponible para esta cuenta.'},404);

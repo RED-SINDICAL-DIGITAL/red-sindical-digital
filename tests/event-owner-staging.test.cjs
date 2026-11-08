@@ -66,3 +66,10 @@ test('staging health exposes event owner capability only when D1 atomic mode is 
  assert.match(worker,/event_owner_revision:'20261107-owner-verified-v1'/);
  assert.match(worker,/event_owner_enabled:atomicEventsEnabled&&hasD1\(\)/);
 });
+
+test('owner mutations reject oversized or malformed JSON before database writes',()=>{
+ assert.match(route,/uadavSecurityJSON\(request,4096\)/);
+ assert.match(route,/e\?\.status===413\?413:400/);
+ assert.match(route,/La solicitud supera el tamaño permitido/);
+ assert(!route.includes('request.json().catch'));
+});

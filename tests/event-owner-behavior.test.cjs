@@ -26,6 +26,7 @@ function harness({method='GET',owner='A',requestOwner='A',origin='https://uadav-
   isoNow:()=>new Date('2026-11-07T23:00:00Z').toISOString(),
   mutateCanonicalEvent:async(before,after)=>{mutations.push({before,after});return {conflict}},
   uadavEventScheduleError:()=>null,
+  uadavSecurityJSON:async(_request,max)=>{const payload=JSON.stringify(body);if(Buffer.byteLength(payload,'utf8')>max)throw Object.assign(Error('Too large'),{status:413});return JSON.parse(payload)},
   Object,JSON,Array,String
  };
  const script=new vm.Script('(async()=>{'+ownerRoute+'return {status:404};})()');
@@ -68,4 +69,10 @@ test('attempts to escalate privileges through edit patch are rejected',async()=>
   const h=harness({method:'POST',body:{id:'EV-123',action:'edit',patch}});
   const res=await h.run();assert.equal(res.status,400,JSON.stringify(patch));assert.equal(h.mutations.length,0);
  }
+});
+
+test('owner endpoint rejects oversized edits before querying D1',async()=>{
+ const h=harness({method:'POST',body:{id:'EV-123',action:'edit',patch:{titulo:'x'.repeat(5000)}}});
+ const result=await h.run();
+ assert.equal(result.status,413);assert.equal(h.mutations.length,0);assert.equal(h.queries.length,0);
 });
