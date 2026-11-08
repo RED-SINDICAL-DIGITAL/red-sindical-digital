@@ -11,8 +11,8 @@ test('native profile visual overrides are scoped to the profile home',()=>{
  assert.match(page,/id="profileLegacyViews"/);
 });
 test('profile empty history gives an accessible route to explore content',()=>{
- assert.match(page,/class=\\"empty profile-empty-recent\\"/);
- assert.match(page,/class=\\"profile-empty-action\\" href=\\"\/descubrir\.html\\"/);
+ assert.match(page,/class="empty profile-empty-recent"/);
+ assert.match(page,/class="profile-empty-action" href="\/descubrir\.html"/);
  assert.match(page,/Tu próxima reproducción empieza acá/);
 });
 test('desktop navigation uses four clear destinations and mobile keeps five',()=>{
