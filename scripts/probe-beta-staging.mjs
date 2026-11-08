@@ -1,3 +1,10 @@
+import {lookup} from 'node:dns/promises';
+try{
+  const records=await lookup('uadav-stream-staging.pages.dev',{all:true});
+  console.log(JSON.stringify({name:'pages-dns',addresses:records.map(x=>x.address),count:records.length}));
+}catch(error){
+  console.log(JSON.stringify({name:'pages-dns',error:String(error?.code||error?.message||error)}));
+}
 // Read-only staging deployment inventory. Never sends credentials or personal data.
 const targets=[
   ['pages-profile','https://uadav-stream-staging.pages.dev/usuario.html'],
@@ -32,7 +39,7 @@ for(const [name,address] of targets){
     if(!response.ok)failures++;
   }catch(error){
     failures++;
-    console.log(JSON.stringify({name,error:String(error?.message??error).slice(0,160)}));
+    console.log(JSON.stringify({name,error:String(error?.message??error).slice(0,160),cause:String(error?.cause?.code||error?.cause?.message||'').slice(0,160)}));
   }
 }
 console.log('probe_status='+ (failures?'HTTP_CHECK_FAILED':'HTTP_READ_OK'));
