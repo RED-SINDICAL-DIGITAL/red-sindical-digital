@@ -1,0 +1,40 @@
+name: Rebuild isolated Bolsa mail QA artifacts
+on:
+  push:
+    branches:
+      - fix/bolsa-mail-lab-rebuild-20261107
+    paths:
+      - scripts/repackage-job-mail-lab.py
+      - .github/workflows/bolsa-mail-qa-rebuild.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  rebuild-isolated-qa:
+    if: github.ref == 'refs/heads/fix/bolsa-mail-lab-rebuild-20261107'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/bolsa-mail-lab-rebuild-20261107
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Regenerate only synthetic QA files
+        run: |
+          node scripts/build-job-mail-lab.mjs
+          python3 scripts/repackage-job-mail-lab.py
+          node scripts/build-job-mail-lab.mjs --check
+          node --check releases/uadav-bolsa-mail-lab-11766.js
+      - name: Commit QA artifacts to this feature branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- releases/uadav-bolsa-mail-lab-11766.js releases/uadav-bolsa-mail-lab-11766.zip
+          if git diff --cached --quiet; then
+            echo "Artifacts already match their sources."
+          else
+            git commit -m "build(qa): synchronize isolated Bolsa email lab JS and ZIP [skip ci]"
+            git push origin HEAD:fix/bolsa-mail-lab-rebuild-20261107
+          fi
