@@ -1,0 +1,26 @@
+name: Beta native Mi Perfil staging checks
+on:
+  push:
+    branches:
+      - feat/beta-staging-profile-20261108
+  pull_request:
+    paths:
+      - usuario.html
+      - design/uadav-profile-*
+      - design/uadav-ui-*
+      - tests/profile-beta-integration.test.cjs
+      - tests/profile-native-shell.test.cjs
+      - .github/workflows/beta-profile-staging.yml
+permissions:
+  contents: read
+jobs:
+  native-profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/profile-native-shell.test.cjs tests/profile-beta-integration.test.cjs
+      - run: node --check uadav-profile-email.js && node --check uadav-jobs-account.js
