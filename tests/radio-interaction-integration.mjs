@@ -3,6 +3,8 @@ const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(a
 const DB=sqliteD1(),kv=new Map(),env={DB,ADMIN_KEY:'isolated-radio-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
 async function call(route,method='GET',body,admin=false){const headers={'Content-Type':'application/json','CF-Connecting-IP':'203.0.113.30'};if(admin)headers.Authorization='Bearer '+env.ADMIN_KEY;const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers,...(body!==undefined?{body:JSON.stringify(body)}:{})}),env,{});return{status:r.status,data:await r.json()}}
 try{
+ // Public radio messages require a currently visible station in the catalog.
+ kv.set('radios',JSON.stringify([{id:'RAD-A',nombre:'Emisora QA A',visible:true,activa:true},{id:'RAD-B',nombre:'Emisora QA B',visible:true,activa:true}]));
  assert.equal((await call('admin/moderation/settings','PUT',{enabled:false,provider:'gemini',daily_limit:300},true)).status,200);
  const requested=await call('radio/requests','POST',{radio_id:'RAD-A',listener_name:'Oyente ficticio',artist:'Artista QA',title:'Tema QA',dedication:'Dedicatoria ficticia'});assert.equal(requested.status,200);assert.equal(requested.data.success,true);const requestId=requested.data.item.id;
  assert.equal((await call('radio/requests')).status,401);assert.equal((await call('radio/requests','PUT',{id:requestId,status:'done'})).status,401);
