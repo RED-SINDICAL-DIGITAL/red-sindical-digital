@@ -1,0 +1,16 @@
+/* UADAV Stream 2.0 — shared components.
+   Opt-in via body.uadav-ui-v2; Admin overrides can be applied to tokens. */
+body.uadav-ui-v2{color:var(--u-text);background:var(--u-bg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.uadav-ui-v2 .u2-surface{background:var(--u-surface);border:1px solid var(--u-border);border-radius:var(--u-radius-md)}
+.uadav-ui-v2 .u2-glass{background:var(--u-glass);border:1px solid var(--u-border);border-radius:var(--u-radius-lg)}
+@supports(backdrop-filter:blur(12px)){.uadav-ui-v2 .u2-glass{backdrop-filter:blur(12px)}}
+.uadav-ui-v2 .u2-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--u-touch-size);padding:10px 16px;border-radius:999px;border:1px solid transparent;background:var(--u-cyan);color:#041321;font-weight:800;text-decoration:none}
+.uadav-ui-v2 .u2-action--secondary{background:rgba(132,197,240,.1);border-color:var(--u-border);color:var(--u-text)}
+.uadav-ui-v2 .u2-action:focus-visible,.uadav-ui-v2 .u2-tile:focus-visible,.uadav-ui-v2 .u2-link:focus-visible{outline:3px solid var(--u-focus);outline-offset:3px}
+.uadav-ui-v2 .u2-tile{display:flex;align-items:center;gap:12px;min-height:var(--u-touch-size);border-radius:var(--u-radius-md);background:var(--u-surface);color:var(--u-text);text-decoration:none}
+.uadav-ui-v2 .u2-tile:hover,.uadav-ui-v2 .u2-tile:focus-visible{background:var(--u-surface-hover)}
+.uadav-ui-v2 .u2-muted{color:var(--u-muted)}
+.uadav-ui-v2 .u2-rail{display:flex;overflow-x:auto;gap:12px;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
+.uadav-ui-v2 .u2-rail>*{scroll-snap-align:start}
+.uadav-ui-v2 .u2-link{color:var(--u-cyan);text-decoration:none;font-weight:750}
+@media(prefers-reduced-motion:reduce){.uadav-ui-v2 .u2-tile{transition:none!important}}
