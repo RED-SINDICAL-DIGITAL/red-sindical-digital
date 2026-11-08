@@ -1,0 +1,27 @@
+name: Media browser mock QA
+on:
+  push:
+    branches:
+      - test/media-browser-mocks-20261107
+    paths:
+      - tests/media-source-link.test.cjs
+      - tests/video-feedback.test.cjs
+      - app.html
+      - uadav-video-feedback-v151.js
+      - .github/workflows/media-browser-mocks-qa.yml
+  pull_request:
+    paths:
+      - tests/media-source-link.test.cjs
+      - tests/video-feedback.test.cjs
+      - .github/workflows/media-browser-mocks-qa.yml
+permissions:
+  contents: read
+jobs:
+  media-browser-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/media-source-link.test.cjs tests/video-feedback.test.cjs
