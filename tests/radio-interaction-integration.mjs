@@ -6,6 +6,7 @@ try{
  // Public radio messages require a currently visible station in the catalog.
  kv.set('radios',JSON.stringify([{id:'RAD-A',nombre:'Emisora QA A',visible:true,activa:true},{id:'RAD-B',nombre:'Emisora QA B',visible:true,activa:true}]));
  await DB.prepare("CREATE TABLE IF NOT EXISTS radio_moderation_settings(radio_id TEXT PRIMARY KEY,mode TEXT NOT NULL DEFAULT 'manual',updated_by TEXT,updated_at TEXT NOT NULL)").run();
+ await DB.prepare("CREATE TABLE IF NOT EXISTS radio_operators(radio_id TEXT NOT NULL,account_id TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'active',updated_at TEXT,PRIMARY KEY(radio_id,account_id))").run();
  for(const radio of ['RAD-A','RAD-B'])await DB.prepare("INSERT OR REPLACE INTO radio_moderation_settings(radio_id,mode,updated_at) VALUES(?,'automatic',?)").bind(radio,new Date().toISOString()).run();
  assert.equal((await call('admin/moderation/settings','PUT',{enabled:false,provider:'gemini',daily_limit:300},true)).status,200);
  const requested=await call('radio/requests','POST',{radio_id:'RAD-A',listener_name:'Oyente ficticio',artist:'Artista QA',title:'Tema QA',dedication:'Dedicatoria ficticia'});assert.equal(requested.status,200);assert.equal(requested.data.success,true);const requestId=requested.data.item?.id||requested.data.result?.item?.id;assert(requestId,'Automatic review must preserve published request ID');
