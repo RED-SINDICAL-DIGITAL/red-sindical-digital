@@ -1,0 +1,22 @@
+name: Probe public beta staging endpoints
+on:
+  push:
+    branches:
+      - feat/beta-staging-profile-20261108
+    paths:
+      - scripts/probe-beta-staging.mjs
+      - .github/workflows/beta-staging-public-probe.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  readonly-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect public staging endpoints without modifying anything
+        run: node scripts/probe-beta-staging.mjs
