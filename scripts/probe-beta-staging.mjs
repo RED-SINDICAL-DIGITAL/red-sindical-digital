@@ -14,9 +14,19 @@ const targets=[
 let failures=0;
 for(const [name,address] of targets){
   try{
-    const response=await fetch(address,{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000),redirect:'error'});
+    const redirects=[];let nextAddress=address,response;
+    for(let n=0;n<4;n++){
+      response=await fetch(nextAddress,{headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(15000),redirect:'manual'});
+      if(response.status<300||response.status>=400)break;
+      const location=response.headers.get('location');
+      if(!location)break;
+      const dest=new URL(location,nextAddress),from=new URL(address);
+      redirects.push({status:response.status,hostname:dest.hostname,path:dest.pathname});
+      if(dest.origin!==from.origin||dest.protocol!=='https:'||n===3)break;
+      nextAddress=dest.href;
+    }
     const body=await response.text();
-    const facts={name,status:response.status,bytes:body.length};
+    const facts={name,status:response.status,bytes:body.length,redirects};
     if(name==='pages-profile'){
       facts.native_profile=body.includes('id="profileNativeHome"');
       facts.legacy_view=body.includes('id="profileLegacyViews"');
