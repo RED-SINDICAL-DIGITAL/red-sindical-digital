@@ -3,7 +3,7 @@ const page=fs.readFileSync(path.join(__dirname,'../usuario.html'),'utf8');
 const code=page.slice(page.indexOf('// Profile edit identity and asynchronous photo protection.'),page.indexOf('// End profile edit identity protection.'));
 function setup(){
  let identity='device-A',writes=0,paints=0;const readers=[],images=[],alerts=[],events={},nodes={photo:{files:[{size:100}],value:'file'},profileName:{value:''},profileDialog:{showModal(){this.open=true},close(){this.open=false}}};
- const ctx={window:{UADAVAccount:{code:()=>identity},addEventListener:(name,fn)=>events[name]=fn},$:id=>nodes[id],user:{name:'Account A',photo:'original'},save(){writes++},paint(){paints++},alert:message=>alerts.push(message),document:{createElement:()=>({getContext:()=>({drawImage(){}}),toDataURL:()=> 'new-photo'})},FileReader:class{constructor(){readers.push(this)}readAsDataURL(){this.result='read-data'}},Image:class{constructor(){images.push(this);this.width=this.height=100}}};
+ const ctx={window:{UADAVAccount:{code:()=>identity},addEventListener:(name,fn)=>events[name]=fn},$:id=>nodes[id],user:{name:'Account A',photo:'original'},save(next){writes++;ctx.user=next;return true},paint(){paints++},alert:message=>alerts.push(message),document:{createElement:()=>({getContext:()=>({drawImage(){}}),toDataURL:()=> 'new-photo'})},FileReader:class{constructor(){readers.push(this)}readAsDataURL(){this.result='read-data'}},Image:class{constructor(){images.push(this);this.width=this.height=100}}};
  vm.runInNewContext(code,ctx);return {ctx,nodes,readers,images,alerts,change(value){identity=value;events['uadav:account']?.()},writes:()=>writes};
 }
 test('photo selected in one account cannot be applied after switching accounts',()=>{
