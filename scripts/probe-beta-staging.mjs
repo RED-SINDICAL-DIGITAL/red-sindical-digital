@@ -1,4 +1,6 @@
 import {lookup} from 'node:dns/promises';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 try{
   const records=await lookup('uadav-stream-staging.pages.dev',{all:true});
   console.log(JSON.stringify({name:'pages-dns',addresses:records.map(x=>x.address),count:records.length}));
@@ -27,6 +29,15 @@ for(const [name,address] of targets){
     }
     const body=await response.text();
     const facts={name,status:response.status,bytes:body.length,redirects};
+    if(name==='pages-profile'||name==='pages-shell'){
+      const filename=name==='pages-profile'?'usuario.html':'app.html';
+      const local=readFileSync(new URL('../'+filename,import.meta.url),'utf8');
+      const sha=text=>createHash('sha256').update(text).digest('hex').slice(0,16);
+      facts.deployed_sha16=sha(body);
+      facts.candidate_sha16=sha(local);
+      facts.matches_candidate=sha(body)===sha(local);
+      facts.candidate_bytes=local.length;
+    }
     if(name==='pages-profile'){
       facts.native_profile=body.includes('id="profileNativeHome"');
       facts.legacy_view=body.includes('id="profileLegacyViews"');
@@ -35,6 +46,8 @@ for(const [name,address] of targets){
     }else if(name==='pages-shell'){
       facts.native_profile_iframe=body.includes('profile-native-v4-inline-20261107');
       facts.staging_api_resolver=body.includes("location.hostname==='uadav-stream-staging.pages.dev'");
+      facts.staging_api_refs=body.split('https://uadav-api-staging.uadavstream.workers.dev/api/').length-1;
+      facts.production_api_refs=body.split('https://uadav-api.uadavstream.workers.dev/api/').length-1;
     }else{
       try{
         const health=JSON.parse(body);
