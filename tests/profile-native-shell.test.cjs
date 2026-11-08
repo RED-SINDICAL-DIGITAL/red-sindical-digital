@@ -13,9 +13,12 @@ function simulate(view='home',options={}){
    return {children:[],...extra,appendChild(e){if(e.parentNode){const prev=e.parentNode.children;prev.splice(prev.indexOf(e),1)}this.children.push(e);e.parentNode=this},insertBefore(e,next){if(e.parentNode){const prev=e.parentNode.children;prev.splice(prev.indexOf(e),1)}const i=this.children.indexOf(next);this.children.splice(i<0?this.children.length:i,0,e);e.parentNode=this}};
  }
  const sections={hero:{id:'hero'},tasks:{id:'profileTasks'},recent:{id:'recent'},notices:{id:'accountNotices'}};
+ const withSibling=node=>Object.defineProperty(node,'nextSibling',{configurable:true,get(){const siblings=this.parentNode?.children||[];return siblings[siblings.indexOf(this)+1]||null}});
+ Object.values(sections).forEach(withSibling);
  const header={hidden:true},heading={textContent:''},settings={open:false};
  const home={hidden:true},original=container({hidden:false,querySelector(selector){return selector==='.hero'?sections.hero:selector==='.profile-continue'?(options.noRecent?null:sections.recent):null}});
  const grid=container();
+ withSibling(grid);
  original.appendChild(sections.hero);original.appendChild(grid);
  for(const x of [sections.tasks,sections.recent,sections.notices])grid.appendChild(x);
  const target=container();
