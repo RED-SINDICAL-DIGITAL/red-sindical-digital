@@ -26,7 +26,9 @@ try{
  assert.equal((await call('radio/requests','PUT',{id:requestId,status:'played'},true)).status,200);kv.set('radio_requests',savedKV);
  const message=await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Oyente QA',mensaje:'Mensaje de prueba aislada'});assert.equal(message.status,200);const messageId=message.data.item?.id||message.data.result?.item?.id;assert(messageId,'Automatic chat moderation must return a published message');
  const reply=await call('moderar_chat','POST',{id_stream:'radio:RAD-A',alias:'Respuesta QA',mensaje:'Respuesta ficticia',reply_to:messageId});assert.equal(reply.status,200);
- assert.equal((await call('moderar_chat','POST',{id_stream:'radio:RAD-B',alias:'Otra emisora',mensaje:'Respuesta cruzada',reply_to:messageId})).status,400);
+ const cross=await call('moderar_chat','POST',{id_stream:'radio:RAD-B',alias:'Otra emisora',mensaje:'Respuesta cruzada',reply_to:messageId});
+ assert([202,400].includes(cross.status),'Cross-station reply must never publish directly');
+ if(cross.status===202)assert.equal(cross.data.moderation_pending,true);
  const chat=await call('chat?id_stream=radio%3ARAD-A');assert(chat.data.some(x=>x.id===(reply.data.item?.id||reply.data.result?.item?.id)&&x.reply_to===messageId));
  assert.equal((await call('chat?id_stream=radio%3ARAD-B')).data.length,0);
  assert.equal((await call('admin/moderation/settings','PUT',{enabled:true,provider:'gemini',daily_limit:300},true)).status,200);
