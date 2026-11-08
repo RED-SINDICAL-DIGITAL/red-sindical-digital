@@ -1,3 +1,5 @@
+> **BLOQUEO PREVIO A DESPLIEGUE — auditoría 2026-11-08.** La inspección GET desde GitHub Actions confirmó que Pages de staging responde HTTP 200 después de la redirección canónica 308 (/usuario.html → /usuario, /app.html → /app), pero **su HTML publicado no coincide con este candidato GitHub**. Mi Perfil publicado tiene 112944 caracteres frente a 69049 en esta rama; el shell publicado 51270 frente a 43544. La página pública incluye Mi Perfil nativo. El shell publicado contiene cuatro referencias a la API de staging y cero referencias directas a la API de producción. El Worker staging responde build 11770 con D1 y KV correctos y revisión de dueño de eventos 20261107-owner-verified-v1. **No reemplazar Pages staging con esta rama hasta identificar en Cloudflare el deployment/commit de origen, recuperar su contenido y comparar los cambios posteriores; podría ser una regresión.** Esta nota prevalece sobre los pasos genéricos de despliegue que siguen.
+
 # Beta UADAV STREAM — puerta de despliegue a staging
 
 ## Alcance aprobado
