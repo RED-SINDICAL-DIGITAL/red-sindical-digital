@@ -5,6 +5,8 @@ async function call(route,method='GET',body,admin=false){const headers={'Content
 try{
  // Public radio messages require a currently visible station in the catalog.
  kv.set('radios',JSON.stringify([{id:'RAD-A',nombre:'Emisora QA A',visible:true,activa:true},{id:'RAD-B',nombre:'Emisora QA B',visible:true,activa:true}]));
+ await DB.prepare("CREATE TABLE IF NOT EXISTS radio_moderation_settings(radio_id TEXT PRIMARY KEY,mode TEXT NOT NULL DEFAULT 'manual',updated_by TEXT,updated_at TEXT NOT NULL)").run();
+ for(const radio of ['RAD-A','RAD-B'])await DB.prepare("INSERT OR REPLACE INTO radio_moderation_settings(radio_id,mode,updated_at) VALUES(?,'automatic',?)").bind(radio,new Date().toISOString()).run();
  assert.equal((await call('admin/moderation/settings','PUT',{enabled:false,provider:'gemini',daily_limit:300},true)).status,200);
  const requested=await call('radio/requests','POST',{radio_id:'RAD-A',listener_name:'Oyente ficticio',artist:'Artista QA',title:'Tema QA',dedication:'Dedicatoria ficticia'});assert.equal(requested.status,200);assert.equal(requested.data.success,true);const requestId=requested.data.item.id;
  assert.equal((await call('radio/requests')).status,401);assert.equal((await call('radio/requests','PUT',{id:requestId,status:'done'})).status,401);
@@ -28,6 +30,7 @@ try{
  const chat=await call('chat?id_stream=radio%3ARAD-A');assert(chat.data.some(x=>x.id===reply.data.item.id&&x.reply_to===messageId));
  assert.equal((await call('chat?id_stream=radio%3ARAD-B')).data.length,0);
  assert.equal((await call('admin/moderation/settings','PUT',{enabled:true,provider:'gemini',daily_limit:300},true)).status,200);
+ await DB.prepare("UPDATE radio_moderation_settings SET mode='manual' WHERE radio_id='RAD-A'").run();
  const held=await call('radio/requests','POST',{radio_id:'RAD-A',title:'Tema pendiente'});assert.equal(held.status,202);assert.equal(held.data.moderation_pending,true);assert(!(await call('radio/requests?radio_id=RAD-A','GET',undefined,true)).data.some(x=>x.title==='Tema pendiente'));
  assert.equal((await call('admin/moderation/review','POST',{id:held.data.moderation_id,decision:'approve'},true)).status,200);
  assert((await call('radio/requests?radio_id=RAD-A','GET',undefined,true)).data.some(x=>x.title==='Tema pendiente'));
