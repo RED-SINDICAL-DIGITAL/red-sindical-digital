@@ -11,6 +11,8 @@ try{
 const targets=[
   ['pages-profile','https://uadav-stream-staging.pages.dev/usuario.html'],
   ['pages-shell','https://uadav-stream-staging.pages.dev/app.html'],
+  ['preview-profile','https://feat-beta-staging-profile-20.uadav-stream-staging.pages.dev/usuario.html'],
+  ['preview-shell','https://feat-beta-staging-profile-20.uadav-stream-staging.pages.dev/app.html'],
   ['worker-health','https://uadav-api-staging.uadavstream.workers.dev/api/health']
 ];
 let failures=0;
@@ -29,8 +31,8 @@ for(const [name,address] of targets){
     }
     const body=await response.text();
     const facts={name,status:response.status,bytes:body.length,redirects};
-    if(name==='pages-profile'||name==='pages-shell'){
-      const filename=name==='pages-profile'?'usuario.html':'app.html';
+    if(name==='pages-profile'||name==='pages-shell'||name==='preview-profile'||name==='preview-shell'){
+      const filename=name.endsWith('profile')?'usuario.html':'app.html';
       const local=readFileSync(new URL('../'+filename,import.meta.url),'utf8');
       const sha=text=>createHash('sha256').update(text).digest('hex').slice(0,16);
       facts.deployed_sha16=sha(body);
@@ -38,12 +40,12 @@ for(const [name,address] of targets){
       facts.matches_candidate=sha(body)===sha(local);
       facts.candidate_bytes=local.length;
     }
-    if(name==='pages-profile'){
+    if(name.endsWith('profile')){
       facts.native_profile=body.includes('id="profileNativeHome"');
       facts.legacy_view=body.includes('id="profileLegacyViews"');
       facts.has_account_ui=body.includes('uadav-account-ui.js');
       facts.profile_rev=body.includes('profile-native-v4-inline');
-    }else if(name==='pages-shell'){
+    }else if(name.endsWith('shell')){
       facts.native_profile_iframe=body.includes('profile-native-v4-inline-20261107');
       facts.staging_api_resolver=body.includes("location.hostname==='uadav-stream-staging.pages.dev'");
       facts.staging_api_refs=body.split('https://uadav-api-staging.uadavstream.workers.dev/api/').length-1;
