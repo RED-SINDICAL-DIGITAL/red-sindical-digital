@@ -18,6 +18,8 @@ try{
   try{
    const response=await page.goto(base+'/usuario.html',{waitUntil:'domcontentloaded',timeout:30000});
    await page.waitForTimeout(600);
+   const rendered=await page.content();
+   console.log(JSON.stringify({kind:'render-diagnostic',viewport:viewport.name,finalUrl:page.url(),htmlChars:rendered.length,htmlStart:rendered.slice(0,280),frameCount:page.frames().length}));
    const state=await page.evaluate(()=>{
     const home=document.getElementById('profileNativeHome');
     const legacy=document.getElementById('profileLegacyViews');
