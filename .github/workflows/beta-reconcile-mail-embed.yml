@@ -5,6 +5,7 @@ on:
       - feat/beta-staging-profile-20261108
     paths:
       - .github/workflows/beta-reconcile-mail-embed.yml
+      - scripts/job-mail-live-runtime.js
       - scripts/job-backup-runtime.js
       - scripts/job-backup-digest.mjs
       - scripts/job-closure-page.html
