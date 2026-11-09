@@ -17,21 +17,24 @@ try{
   await page.addInitScript(()=>{window.UADAV_ENV='staging';window.PLATFORM_ENV='staging'});
   try{
    const response=await page.goto(base+'/usuario.html',{waitUntil:'domcontentloaded',timeout:30000});
-   await page.waitForTimeout(600);
-   const rendered=await page.content();
-   console.log(JSON.stringify({kind:'render-diagnostic',viewport:viewport.name,finalUrl:page.url(),htmlChars:rendered.length,htmlStart:rendered.slice(0,280),frameCount:page.frames().length}));
+   await page.waitForFunction(()=>{
+    const doc=document.getElementById('view')?.contentDocument||document;
+    return !!doc.getElementById('profileNativeHome')&&!!doc.getElementById('profileLegacyViews');
+   },null,{timeout:15000});
+   await page.waitForTimeout(400);
    const state=await page.evaluate(()=>{
-    const home=document.getElementById('profileNativeHome');
-    const legacy=document.getElementById('profileLegacyViews');
-    const style=document.getElementById('beta-profile-visual-20261108');
+    const doc=document.getElementById('view')?.contentDocument||document;
+    const home=doc.getElementById('profileNativeHome');
+    const legacy=doc.getElementById('profileLegacyViews');
+    const style=doc.getElementById('beta-profile-visual-20261108');
     return {
      status:document.readyState,
      home:!!home,legacy:!!legacy,style:!!style,
-     jobsTabs:!!document.getElementById('profileJobsTabApplications')&&!!document.getElementById('profileJobsTabOffers'),
-     ownedEvents:!!document.getElementById('profileOwnedEventSave')&&!!document.getElementById('profileOwnedEventsList'),
-     scrollWidth:document.documentElement.scrollWidth,viewport:innerWidth,
-     overflow:document.documentElement.scrollWidth>innerWidth+3,
-     nativeVisible:!!home&&!home.hidden&&getComputedStyle(home).display!=='none'
+     jobsTabs:!!doc.getElementById('profileJobsTabApplications')&&!!doc.getElementById('profileJobsTabOffers'),
+     ownedEvents:!!doc.getElementById('profileOwnedEventSave')&&!!doc.getElementById('profileOwnedEventsList'),
+     scrollWidth:doc.documentElement.scrollWidth,viewport:innerWidth,
+     overflow:doc.documentElement.scrollWidth>innerWidth+3,
+     nativeVisible:!!home&&!home.hidden&&doc.defaultView.getComputedStyle(home).display!=='none'
     };
    });
    await page.screenshot({path:out+'/profile-'+viewport.name+'.png',fullPage:true,animations:'disabled'});
