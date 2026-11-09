@@ -120,6 +120,12 @@ test('retired public recovery stays disabled while private synthetic redemption 
   const row=await f.send();assert.equal(f.calls.length,1);
   const legacy=await f.call({route:'/api/bolsa_trabajo/acceso/restablecer',method:'POST',origin:PAGES,admin:null,data:{job_id:row.job,token:f.proof().token,new_secret:'d'.repeat(64)}});
   assert.equal(legacy.status,503);
+  f.env.JOB_RECOVERY_HTTP_STAGING='public';
+  const publicCaps=await f.call({route:'/api/bolsa_trabajo/acceso/capabilities',origin:PAGES,admin:null});
+  assert.equal(publicCaps.data.http_qa_enabled,false);
+  assert.equal(publicCaps.data.public_job_key_recovery_enabled,false);
+  assert.equal((await f.call({route:'/api/bolsa_trabajo/acceso/solicitar',method:'POST',origin:PAGES,admin:null,data:{job_id:row.job}})).status,503);
+  assert.equal((await f.call({route:'/api/bolsa_trabajo/acceso/restablecer',method:'POST',origin:PAGES,admin:null,data:{job_id:row.job,token:f.proof().token,new_secret:'d'.repeat(64)}})).status,503);
   const redeemed=await f.redeem(row);
   assert.equal(redeemed.status,200,JSON.stringify(redeemed.data));
   assert.equal(redeemed.data.success,true);
