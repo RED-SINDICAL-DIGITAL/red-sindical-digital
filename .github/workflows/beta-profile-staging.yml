@@ -45,6 +45,8 @@ jobs:
         run: node scripts/functional-qa-beta.mjs
       - name: Check isolated local profile history across tabs and page reload
         run: node scripts/functional-qa-profile-history.mjs
+      - name: Verify non-sensitive event and job drafts survive navigation without contact storage
+        run: node scripts/functional-qa-safe-drafts.mjs
       - name: Upload anonymous layout screenshots
         if: always()
         uses: actions/upload-artifact@v4
