@@ -3,7 +3,7 @@ import {chromium} from 'playwright';
 const base='http://127.0.0.1:8765';
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const errors=[];
-const normalize=p=>String(p||'').split('?')[0].replace(/\\.html$/,'');
+const normalize=p=>String(p||'').split('?')[0].replace(/\.html$/,'');
 try{
  for(const device of [{name:'mobile',width:390,height:844},{name:'desktop',width:1365,height:768}]){
   const page=await browser.newPage({viewport:{width:device.width,height:device.height},locale:'es-AR'});
