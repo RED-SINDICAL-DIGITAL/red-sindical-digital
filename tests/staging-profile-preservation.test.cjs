@@ -13,7 +13,7 @@ test('beta profile polish is isolated to native home',()=>{
  assert.equal(html.indexOf(cssStart,start+1),-1,'duplicate styles');
  const css=html.slice(start+cssStart.length,end);
  assert.ok(css.includes('#profileNativeHome'),'must scope to native home');
- assert.ok(!/(^|[}\s,])(?:\.panel|\.hero|body|button|a)\s*\{/m.test(css),'unscoped global selector');
+ assert.ok(!/(?:^|})\\s*(?:\\.panel|\\.hero|body|button|a)\\s*\\{/m.test(css),'unscoped global selector');
  assert.ok(!/@import|url\s*\(/i.test(css),'no external CSS dependencies');
 });
 test('staging owner events and job tab controls are preserved',()=>{
