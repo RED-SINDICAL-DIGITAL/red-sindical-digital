@@ -49,6 +49,8 @@ jobs:
         run: node scripts/functional-qa-safe-drafts.mjs
       - name: Check actual synthetic WAV playback through section navigation
         run: node scripts/functional-qa-synthetic-audio.mjs
+      - name: Check anonymous Admin login and staging-only API in Chromium
+        run: node scripts/functional-qa-admin-isolation.mjs
       - name: Upload anonymous layout screenshots
         if: always()
         uses: actions/upload-artifact@v4
