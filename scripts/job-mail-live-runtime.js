@@ -54,10 +54,26 @@ async function liveFixture(c,row){
  return record;
 }
 async function liveStatus(c,row){
- const result={result:'status',ready:c.received,initialized:!!c.marker,diagnostic_received:c.received,encryption_key_configured:true,provider_configured:!!c.adapter,complete:false,can_start:!row||row.expires_at<=c.now||!!row.completed_at};
+ // Read-only quota/status view. Never creates tables, initiates email or exposes credentials.
+ const day=uadavJobToday(c.now),bucket='mail-live-qa:daily:'+day;
+ const quota=c.marker?await c.db.prepare('SELECT hits,resets_at FROM job_store_rates WHERE bucket=?').bind(bucket).first():null;
+ const hits=quota&&Number(quota.resets_at)>c.now?Math.max(0,Number(quota.hits)||0):0;
+ const dailyRemaining=Math.max(0,2-hits),active=!!row&&row.expires_at>c.now&&!row.completed_at;
+ const startBlocker=dailyRemaining===0?'daily_limit':active?'active_trial':null;
+ const result={result:'status',ready:c.received,initialized:!!c.marker,diagnostic_received:c.received,
+  encryption_key_configured:true,provider_configured:!!c.adapter,complete:false,
+  qa_revision:'11770-qa-status-2',daily_remaining:dailyRemaining,
+  daily_reset_at:Date.parse(day+'T03:00:00Z')+86400000,
+  start_blocker:startBlocker,can_start:!startBlocker,expired:!!row&&row.expires_at<=c.now};
  if(!row)return result;
- await liveFixture(c,row);const outbox=await c.db.prepare('SELECT state,provider_id,attempts,expires_at FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();
- return{...result,request_id:row.id,job_id:row.job_id,expires_at:row.expires_at,expired:row.expires_at<=c.now,dispatch_reserved:!!row.dispatch_at,provider_accepted:!!outbox?.provider_id,email_attempts:outbox?.attempts||0,link_redeemed:outbox?.state==='redeemed',complete:!!row.completed_at,result:row.completed_at?'complete':'status',checks:row.completed_at?LIVE_LABELS.map(x=>x+': aprobado'):[]};
+ await liveFixture(c,row);
+ const outbox=await c.db.prepare('SELECT state,provider_id,attempts,expires_at FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();
+ return{...result,request_id:row.id,job_id:row.job_id,expires_at:row.expires_at,
+  expired:row.expires_at<=c.now,dispatch_reserved:!!row.dispatch_at,
+  provider_accepted:!!outbox?.provider_id,email_attempts:outbox?.attempts||0,
+  link_redeemed:outbox?.state==='redeemed',complete:!!row.completed_at,
+  result:row.completed_at?'complete':'status',
+  checks:row.completed_at?LIVE_LABELS.map(x=>x+': aprobado'):[]};
 }
 async function uadavJobMailLiveRoute(request,env){
  const url=new URL(request.url),origin=request.headers.get('Origin'),allowed=[LIVE_SITE,LIVE_PAGES];
