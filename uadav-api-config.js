@@ -1,7 +1,7 @@
 // White-label CORE · API centralizada
 // PLATFORM_* es la interfaz genérica; UADAV_* se conserva como alias de compatibilidad.
 // Staging and every Cloudflare Pages branch preview must never fall back to production.
-const UADAV_STAGING_PAGES=/^(?:[a-z0-9-]+\\.)?uadav-stream-staging\\.pages\\.dev$/i.test(location.hostname);
+const UADAV_STAGING_PAGES=/^(?:[a-z0-9-]+[.])?uadav-stream-staging[.]pages[.]dev$/i.test(location.hostname);
 if(UADAV_STAGING_PAGES){
   window.PLATFORM_API_BASE='https://uadav-api-staging.uadavstream.workers.dev/api/';
   window.UADAV_API_BASE=window.PLATFORM_API_BASE;
