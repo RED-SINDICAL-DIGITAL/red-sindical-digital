@@ -24,7 +24,10 @@ jobs:
       - name: Regenerate private QA embed from versioned source modules only
         run: |
           node scripts/embed-job-mail-live.mjs
+          node scripts/embed-job-backup.mjs
           node scripts/embed-job-mail-live.mjs --check
+          node scripts/embed-job-backup.mjs --check
+          node scripts/package-job-backup.mjs --check
           node scripts/package-job-mail-live.mjs --check
           node --check worker.js
           git diff --check
