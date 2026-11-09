@@ -1,0 +1,25 @@
+name: Staging integration preservation checks
+on:
+  push:
+    branches:
+      - integration/staging-preserve-beta-20261109
+  pull_request:
+    paths:
+      - uadav-api-config.js
+      - tests/staging-integration-api-routing.test.cjs
+      - .github/workflows/staging-integration-preservation.yml
+permissions:
+  contents: read
+jobs:
+  api-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: node --check uadav-api-config.js
+      - name: Verify isolation and original production behavior
+        run: node --test tests/staging-integration-api-routing.test.cjs
