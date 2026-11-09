@@ -37,7 +37,7 @@ const [profile,app,health]=await Promise.all([
 assert.match(profile,/id="profileNativeHome"/,'Native Mi Perfil not deployed');
 assert.match(profile,/id="profileLegacyViews"/,'Mi Perfil legacy controls missing');
 assert.match(app,/profile-native-v4-inline-20261107/,'PWA iframe revision not deployed');
-assert.match(app,/uadav-api-staging\\.uadavstream\\.workers\\.dev/,'PWA does not reference staging API');
+assert.ok(app.includes('uadav-api-staging.uadavstream.workers.dev'),'PWA does not reference staging API');
 assert.equal(health.ok,true,'Staging Worker health not OK');
 assert.equal(health.kv,true,'Staging KV unavailable');
 assert.equal(health.d1,true,'Staging D1 unavailable');
