@@ -47,6 +47,8 @@ jobs:
         run: node scripts/functional-qa-profile-history.mjs
       - name: Verify non-sensitive event and job drafts survive navigation without contact storage
         run: node scripts/functional-qa-safe-drafts.mjs
+      - name: Check actual synthetic WAV playback through section navigation
+        run: node scripts/functional-qa-synthetic-audio.mjs
       - name: Upload anonymous layout screenshots
         if: always()
         uses: actions/upload-artifact@v4
