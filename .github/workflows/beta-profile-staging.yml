@@ -24,6 +24,8 @@ jobs:
           node-version: '22'
       - run: node --test tests/profile-native-shell.test.cjs tests/profile-beta-integration.test.cjs tests/beta-staging-api-routing.test.cjs tests/beta-profile-visual-polish.test.cjs tests/beta-admin-isolation.test.cjs
       - run: node --check uadav-profile-email.js && node --check uadav-jobs-account.js
+      - name: Isolated Admin artist lifecycle and synthetic snapshot recovery (no external writes)
+        run: node scripts/qa-admin-synthetic-lifecycle.mjs
       - name: Read-only anonymous Admin endpoint authorization guard
         run: node scripts/functional-qa-admin-guards.mjs
       - name: Inventory deployed public staging version (GET only, informational)
