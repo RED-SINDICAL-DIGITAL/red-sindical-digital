@@ -18,8 +18,10 @@ try {
     await page.locator(selector+' [data-route="'+destination+'"]').click();
     await page.waitForTimeout(600);
     const state=await route();checks.push({viewport:viewport.name,step:label,...state});
-    if(new URLSearchParams(state.url.split('?')[1]||'').get('view')?.replace(/\\.html$/,'')!==destination.replace(/\\.html$/,''))failures.push(viewport.name+': '+label+' URL not synchronized');
-    if(state.frame?.replace(/\\.html$/,'')!==destination.replace(/\\.html$/,''))failures.push(viewport.name+': '+label+' iframe missing');
+    const normalize=p=>p?.endsWith('.html')?p.slice(0,-5):p;
+    const queryView=new URLSearchParams(state.url.split('?')[1]||'').get('view');
+    if(normalize(queryView)!==normalize(destination))failures.push(viewport.name+': '+label+' URL not synchronized');
+    if(normalize(state.frame)!==normalize(destination))failures.push(viewport.name+': '+label+' iframe missing');
     if(!state.active.includes(destination))failures.push(viewport.name+': '+label+' tab is not highlighted');
    }
    await page.locator(viewport.name==='mobile'?'#mobile [data-route="/usuario.html"]':'#userBtn').click();
