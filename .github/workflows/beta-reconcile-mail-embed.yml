@@ -30,6 +30,7 @@ jobs:
           node scripts/package-job-backup.mjs --check
           node scripts/build-account-restore-qa.mjs
           node scripts/build-account-restore-qa.mjs --check
+          node --check releases/uadav-bolsa-account-restore-11769.js
           node scripts/package-bolsa-11769.mjs --check
           node scripts/package-job-mail-live.mjs --check
           node --check worker.js
