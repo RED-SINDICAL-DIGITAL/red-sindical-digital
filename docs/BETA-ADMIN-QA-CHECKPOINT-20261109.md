@@ -26,3 +26,9 @@ Commit with green checks: `18df94be3e7b35edf029b3959a02c76dd6f4c89e`.
 - No se ha probado con sesión Admin real, ni ejecutado una restauración real en D1. La publicación de la rama de pruebas no cambia el Worker desplegado de staging o producción.
 
 - El bloque histórico de respaldo/cierre sintético (`embed-job-backup.mjs`) también fue regenerado desde su fuente versionada, exclusivamente dentro de `worker.js` de la rama beta. Esta acción **no realizó un backup o restore real** ni publicó el Worker.
+
+## Regeneración final de laboratorio 11769
+
+- La ejecución aislada del generador produjo `releases/uadav-bolsa-account-restore-11769.js` a partir de `worker.js` y módulos versionados. Se conservó el archivo ZIP histórico sin convertirlo en un despliegue del Worker actual.
+- Los cambios se verifican mediante la batería `Bolsa staging policy checks`, que exige correspondencia de fuentes y comprueba el paquete congelado por separado.
+- No se infiere que una prueba con copia sintética equivalga a recuperar un respaldo real en Cloudflare.
