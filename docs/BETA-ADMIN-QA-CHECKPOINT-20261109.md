@@ -32,3 +32,11 @@ Commit with green checks: `18df94be3e7b35edf029b3959a02c76dd6f4c89e`.
 - La ejecución aislada del generador produjo `releases/uadav-bolsa-account-restore-11769.js` a partir de `worker.js` y módulos versionados. Se conservó el archivo ZIP histórico sin convertirlo en un despliegue del Worker actual.
 - Los cambios se verifican mediante la batería `Bolsa staging policy checks`, que exige correspondencia de fuentes y comprueba el paquete congelado por separado.
 - No se infiere que una prueba con copia sintética equivalga a recuperar un respaldo real en Cloudflare.
+
+## Aseguramiento adicional de correo QA y referencias de eventos
+
+- El respaldo privado de D1 incluye las referencias canónicas `event_publication_intents` cuando esa tabla existe, conservando identificadores de publicación y deduplicación sin exportar el catálogo KV antiguo.
+- El envío de prueba por correo se limita a `{jobId, requestId}` de la solicitud sintética reservada. No puede tomar otra oferta pendiente.
+- El estado privado consulta de forma solo lectura el cupo de dos ensayos por día, el bloqueo de un ensayo activo y la fecha de reinicio del cupo.
+- La recuperación pública anterior sigue inhabilitada (HTTP 503); únicamente el enlace controlado del laboratorio puede confirmar el ensayo sintético.
+- Se regeneraron los artefactos QA desde fuentes versionadas; no se desplegó ningún Worker ni se restauró ninguna base real.
