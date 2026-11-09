@@ -2143,13 +2143,9 @@ return {createBrevoStagingMail};
 })();
 const outbox=(()=>{
 
-/* Preparatory STAGING-only engine. Not imported/embedded by worker.js.
- * No HTTP endpoint, timer, provider, secret or remote database is configured here.
- * Possession of the 256-bit emailed token authorizes one atomic redemption after
- * a dispatch reservation. No token/credential is returned when requesting mail.
- * Provider acceptance is an audit fact, not an authentication prerequisite.
- * HTTP, email-link receiver, backup and live recovery QA remain unimplemented.
- */
+/* Recovery engine embedded in worker.js for private synthetic staging QA.
+ * Standalone source may contain preparatory changes not yet embedded; see audit
+ * docs. Public recovery for real offers remains disabled. */
 const TTL=15*60000,LEASE=30000,ATTEMPTS=5;
 // Cover the full issuance lifetime plus an in-flight lease and bounded send.
 // A provider's shorter window must never be silently declared as one hour.
@@ -2349,15 +2345,10 @@ async function liveFixture(c,row){
  return record;
 }
 async function liveStatus(c,row){
- const day=uadavJobToday(c.now),reset=Date.parse(day+'T03:00:00Z')+86400000;
- const daily=await c.db.prepare('SELECT hits FROM job_store_rates WHERE bucket=?').bind('mail-live-qa:daily:'+day).first();
- const remaining=Math.max(0,2-Number(daily?.hits||0));
- const active=c.marker?!!await c.db.prepare('SELECT 1 AS found FROM job_mail_live_qa WHERE expires_at>? AND completed_at IS NULL LIMIT 1').bind(c.now).first():false;
- const blocker=remaining===0?'daily_limit':active?'active_trial':null;
- const result={result:'status',ready:c.received,initialized:!!c.marker,diagnostic_received:c.received,encryption_key_configured:true,provider_configured:!!c.adapter,complete:false,can_start:!blocker,start_blocker:blocker,daily_remaining:remaining,daily_reset_at:reset,qa_revision:'11770-qa-status-2'};
+ const result={result:'status',ready:c.received,initialized:!!c.marker,diagnostic_received:c.received,encryption_key_configured:true,provider_configured:!!c.adapter,complete:false,can_start:!row||row.expires_at<=c.now||!!row.completed_at};
  if(!row)return result;
- await liveFixture(c,row);const outbox=await c.db.prepare('SELECT state,provider_id,attempts,expires_at FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();const httpQa=(await c.db.prepare('SELECT value FROM job_store_meta WHERE key=?').bind('mail-http-qa:'+row.id).first())?.value==='requested';
- return{...result,http_qa_flow:httpQa,request_id:row.id,job_id:row.job_id,expires_at:row.expires_at,expired:row.expires_at<=c.now,dispatch_reserved:!!row.dispatch_at,provider_accepted:!!outbox?.provider_id,email_attempts:outbox?.attempts||0,link_redeemed:outbox?.state==='redeemed',complete:!!row.completed_at,result:row.completed_at?'complete':'status',checks:row.completed_at?LIVE_LABELS.map(x=>x+': aprobado'):[]};
+ await liveFixture(c,row);const outbox=await c.db.prepare('SELECT state,provider_id,attempts,expires_at FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();
+ return{...result,request_id:row.id,job_id:row.job_id,expires_at:row.expires_at,expired:row.expires_at<=c.now,dispatch_reserved:!!row.dispatch_at,provider_accepted:!!outbox?.provider_id,email_attempts:outbox?.attempts||0,link_redeemed:outbox?.state==='redeemed',complete:!!row.completed_at,result:row.completed_at?'complete':'status',checks:row.completed_at?LIVE_LABELS.map(x=>x+': aprobado'):[]};
 }
 async function uadavJobMailLiveRoute(request,env){
  const url=new URL(request.url),origin=request.headers.get('Origin'),allowed=[LIVE_SITE,LIVE_PAGES];
@@ -2419,12 +2410,12 @@ async function uadavJobMailLiveRoute(request,env){
    return reply(await liveStatus(c,c.marker?await c.latest():null));
   }
   const row=await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE id=?').bind(body.request_id).first();await liveFixture(c,row);liveNeed(row.expires_at>Date.now()&&!row.completed_at,'RECOVERY_QA_LINK',400);
-  if(body.action==='request'){if(env.JOB_RECOVERY_HTTP_STAGING==='qa-only'){const response=await uadavJobRecoveryHttpRoute(new Request(LIVE_SITE+'/api/bolsa_trabajo/acceso/solicitar',{method:'POST',headers:{Origin:LIVE_SITE,'Content-Type':'application/json','CF-Connecting-IP':request.headers.get('CF-Connecting-IP')||''},body:JSON.stringify({job_id:row.job_id,email:c.recipient,request_id:row.id})}),env);liveNeed(response.status===202,'RECOVERY_QA_HTTP_REQUEST',503);return reply(await liveStatus(c,row));}await c.engine({clock:()=>row.created_at}).enqueue({jobId:row.job_id,recipient:c.recipient,requestId:row.id,actorHash:await liveHash('mail-live-qa-admin:'+row.id)});return reply(await liveStatus(c,row));}
+  if(body.action==='request'){await c.engine({clock:()=>row.created_at}).enqueue({jobId:row.job_id,recipient:c.recipient,requestId:row.id,actorHash:await liveHash('mail-live-qa-admin:'+row.id)});return reply(await liveStatus(c,row));}
   // Exactly one dispatch reservation per fixture. A timeout never sends again.
   const pending=await c.db.prepare('SELECT id FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();liveNeed(pending,'RECOVERY_QA_REQUEST_REQUIRED',409);
   const unexpected=await c.db.prepare("SELECT COUNT(*) AS n FROM job_recovery_outbox o WHERE NOT EXISTS(SELECT 1 FROM job_mail_live_qa q WHERE q.job_id=o.job_id AND q.id=o.request_id) AND NOT EXISTS(SELECT 1 FROM job_store_meta m WHERE m.key='job-recovery-public:'||o.request_id AND m.value=o.job_id)").first();liveNeed(unexpected.n===0,'RECOVERY_QA_FOREIGN_OUTBOX',423);
   const reserved=await c.db.prepare('UPDATE job_mail_live_qa SET dispatch_at=? WHERE id=? AND dispatch_at IS NULL AND expires_at>?').bind(Date.now(),row.id,Date.now()).run();
-  if(reserved.meta?.changes===1)await c.engine().dispatch(c.adapter,{jobId:row.job_id,requestId:row.id});
+  if(reserved.meta?.changes===1)await c.engine().dispatch(c.adapter);
   return reply(await liveStatus(c,await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE id=?').bind(row.id).first()));
  }catch(error){const code=/^RECOVERY_QA_[A-Z_]{1,60}$/.test(error?.liveCode||'')?error.liveCode:'RECOVERY_QA_UNCONFIRMED';const status=error?.liveStatus||(error?.code==='JOB_RECOVERY_INPUT'?400:503);return reply({result:'error',success:false,code,error:code==='RECOVERY_QA_LINK'||status===400?'Este enlace ya no está disponible. Solicitá uno nuevo.':'No se confirmó la operación. Consultá el estado antes de reintentar.'},status)}
 }
