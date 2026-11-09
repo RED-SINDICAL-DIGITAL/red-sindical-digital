@@ -9,6 +9,13 @@ on:
       - uadav-api-config.js
       - scripts/visual-qa-staging-integration.mjs
       - .github/workflows/staging-integration-visual.yml
+  pull_request:
+    paths:
+      - usuario.html
+      - app.html
+      - uadav-api-config.js
+      - scripts/visual-qa-staging-integration.mjs
+      - .github/workflows/staging-integration-visual.yml
   workflow_dispatch:
 permissions:
   contents: read
