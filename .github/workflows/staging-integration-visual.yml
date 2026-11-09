@@ -1,0 +1,39 @@
+name: Staging integration offline visual QA
+on:
+  push:
+    branches:
+      - integration/staging-preserve-beta-20261109
+    paths:
+      - usuario.html
+      - app.html
+      - uadav-api-config.js
+      - scripts/visual-qa-staging-integration.mjs
+      - .github/workflows/staging-integration-visual.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium QA tools
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Start local static server and check responsive profile
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/uadav-static-qa.log 2>&1 &
+          node scripts/visual-qa-staging-integration.mjs
+      - name: Upload screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-integration-profile-visual
+          path: artifacts/staging-integration-visual/*.png
+          if-no-files-found: ignore
+          retention-days: 7
