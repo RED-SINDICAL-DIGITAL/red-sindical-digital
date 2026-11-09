@@ -124,7 +124,7 @@ async function uadavJobMailLiveRoute(request,env){
   const pending=await c.db.prepare('SELECT id FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();liveNeed(pending,'RECOVERY_QA_REQUEST_REQUIRED',409);
   const unexpected=await c.db.prepare("SELECT COUNT(*) AS n FROM job_recovery_outbox o WHERE NOT EXISTS(SELECT 1 FROM job_mail_live_qa q WHERE q.job_id=o.job_id AND q.id=o.request_id) AND NOT EXISTS(SELECT 1 FROM job_store_meta m WHERE m.key='job-recovery-public:'||o.request_id AND m.value=o.job_id)").first();liveNeed(unexpected.n===0,'RECOVERY_QA_FOREIGN_OUTBOX',423);
   const reserved=await c.db.prepare('UPDATE job_mail_live_qa SET dispatch_at=? WHERE id=? AND dispatch_at IS NULL AND expires_at>?').bind(Date.now(),row.id,Date.now()).run();
-  if(reserved.meta?.changes===1)await c.engine().dispatch(c.adapter);
+  if(reserved.meta?.changes===1)await c.engine().dispatch(c.adapter,{jobId:row.job_id,requestId:row.id});
   return reply(await liveStatus(c,await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE id=?').bind(row.id).first()));
  }catch(error){const code=/^RECOVERY_QA_[A-Z_]{1,60}$/.test(error?.liveCode||'')?error.liveCode:'RECOVERY_QA_UNCONFIRMED';const status=error?.liveStatus||(error?.code==='JOB_RECOVERY_INPUT'?400:503);return reply({result:'error',success:false,code,error:code==='RECOVERY_QA_LINK'||status===400?'Este enlace ya no está disponible. Solicitá uno nuevo.':'No se confirmó la operación. Consultá el estado antes de reintentar.'},status)}
 }
