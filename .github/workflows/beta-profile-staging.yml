@@ -43,6 +43,8 @@ jobs:
         run: node scripts/visual-qa-beta.mjs
       - name: Exercise navigation, browser history and public form access (no writes)
         run: node scripts/functional-qa-beta.mjs
+      - name: Check isolated local profile history across tabs and page reload
+        run: node scripts/functional-qa-profile-history.mjs
       - name: Upload anonymous layout screenshots
         if: always()
         uses: actions/upload-artifact@v4
