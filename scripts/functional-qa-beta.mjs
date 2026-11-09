@@ -18,17 +18,18 @@ try {
     await page.locator(selector+' [data-route="'+destination+'"]').click();
     await page.waitForTimeout(600);
     const state=await route();checks.push({viewport:viewport.name,step:label,...state});
-    if(!state.url.includes(encodeURIComponent(destination)))failures.push(viewport.name+': '+label+' URL not synchronized');
-    if(!state.frame||!state.frame.includes(destination.replace('.html','')))failures.push(viewport.name+': '+label+' iframe missing');
+    if(new URLSearchParams(state.url.split('?')[1]||'').get('view')?.replace(/\\.html$/,'')!==destination.replace(/\\.html$/,''))failures.push(viewport.name+': '+label+' URL not synchronized');
+    if(state.frame?.replace(/\\.html$/,'')!==destination.replace(/\\.html$/,''))failures.push(viewport.name+': '+label+' iframe missing');
+    if(!state.active.includes(destination))failures.push(viewport.name+': '+label+' tab is not highlighted');
    }
-   await page.locator('#userBtn').click();
+   await page.locator(viewport.name==='mobile'?'#mobile [data-route="/usuario.html"]':'#userBtn').click();
    await page.waitForTimeout(450);
    const returned=await route();checks.push({viewport:viewport.name,step:'return-profile',...returned});
    if(!returned.url.includes('usuario.html'))failures.push(viewport.name+': profile return not working');
    await page.goBack({waitUntil:'domcontentloaded'}).catch(()=>{});
    await page.waitForTimeout(550);
    const back=await route();checks.push({viewport:viewport.name,step:'browser-back',...back});
-   if(!back.url.includes('en-vivo.html'))failures.push(viewport.name+': browser history not restored');
+   if(!back.url.includes('en-vivo'))failures.push(viewport.name+': browser history not restored');
    await page.goForward({waitUntil:'domcontentloaded'}).catch(()=>{});
    await page.waitForTimeout(550);
    const forward=await route();checks.push({viewport:viewport.name,step:'browser-forward',...forward});
