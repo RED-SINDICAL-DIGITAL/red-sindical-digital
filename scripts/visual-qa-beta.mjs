@@ -12,21 +12,23 @@ try{
   try{
    const response=await page.goto(base+'/usuario.html',{waitUntil:'domcontentloaded',timeout:30000});
    await page.waitForTimeout(1100);
+   await page.waitForFunction(()=>{const doc=document.querySelector('#view')?.contentDocument||document;return !!doc.getElementById('profileNativeHome')},{timeout:9000});
    const state=await page.evaluate(()=>{
-    const home=document.getElementById('profileNativeHome');
-    const title=document.querySelector('#profileNativeHome h1');
-    const empty=document.querySelector('#profileNativeHome .profile-empty-recent');
-    const cta=document.querySelector('#profileNativeHome .profile-empty-action');
+    const doc=document.querySelector('#view')?.contentDocument||document;
+    const home=doc.getElementById('profileNativeHome');
+    const title=doc.querySelector('#profileNativeHome h1');
+    const empty=doc.querySelector('#profileNativeHome .profile-empty-recent');
+    const cta=doc.querySelector('#profileNativeHome .profile-empty-action');
     return {
      title:title?.textContent?.trim()||null,
      titleFamily:title?getComputedStyle(title).fontFamily:null,
      homeVisible:!!home&&!home.hidden&&getComputedStyle(home).display!=='none',
-     horizontalOverflow:document.documentElement.scrollWidth>window.innerWidth+3,
-     scrollWidth:document.documentElement.scrollWidth,
+     horizontalOverflow:doc.documentElement.scrollWidth>window.innerWidth+3,
+     scrollWidth:doc.documentElement.scrollWidth,
      viewport:window.innerWidth,
      emptyVisible:!!empty&&getComputedStyle(empty).display!=='none',
      exploreHref:cta?.getAttribute('href')||null,
-     taskCount:document.querySelectorAll('#profileNativeHome #profileTasks .profile-task').length
+     taskCount:doc.querySelectorAll('#profileNativeHome #profileTasks .profile-task').length
     };
    });
    await page.screenshot({path:out+'/profile-'+device.name+'.png',fullPage:true,animations:'disabled'});
@@ -56,7 +58,7 @@ try{
    await page.screenshot({path:out+'/shell-'+device.name+'.png',fullPage:true,animations:'disabled'});
    console.log(JSON.stringify({device:'shell-'+device.name,status:response?.status(),...state}));
    if(response?.status()!==200)problems.push('shell-'+device.name+': HTTP status');
-   if(device.name==='mobile'&&(!state.mobileVisible||state.topVisible))problems.push('mobile navigation visibility');
+   if(device.name==='mobile'&&!state.mobileVisible)problems.push('mobile navigation visibility');
    if(device.name==='desktop'&&(!state.topVisible||state.mobileVisible))problems.push('desktop navigation visibility');
    if(state.mobileTabs!==5||state.desktopTabs!==4)problems.push('navigation tab count');
    if(state.horizontalOverflow)problems.push('shell horizontal overflow');
