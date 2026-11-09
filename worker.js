@@ -5043,7 +5043,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     // Artista PRO was retired: historical plan reads remain read-only for compatibility.
     if (path === '/api/admin/artist-plan' && request.method === 'PUT') {
       if(!isAdmin())return json({error:'No autorizado'},401);
-      return json({error:'ARTIST_MEMBERSHIP_RETIRED',retired:true},410);
+      return json({code:'ARTIST_MEMBERSHIP_RETIRED',error:'Artista PRO retirado',retired:true},410);
     }
 
     if (path === '/api/admin/artist-support-links' && request.method === 'PUT') {
