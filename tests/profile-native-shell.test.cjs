@@ -64,7 +64,9 @@ test('new mount loads independently and preserves CSS and account hookups',()=>{
  new vm.Script(js);
 });
 test('the PWA uses the canonical profile path with a fresh iframe revision',()=>{
- assert.match(app,/if\(p==='\/usuario'\|\|p==='\/usuario\/'\)p='\/usuario\.html'/);
+ assert.match(app,/CANONICAL_ROUTE_NAMES=new Set/);
+ assert.match(app,/'usuario','cartelera'/);
+ assert.match(app,/CANONICAL_ROUTE_NAMES\.has\(name\)\?'\/'\+name\+'\.html'/);
  assert.match(app,/frameURL\.searchParams\.set\('rev',routePath\(to\)==='\/usuario\.html'/);
 });
 
