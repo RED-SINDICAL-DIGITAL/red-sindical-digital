@@ -17,3 +17,10 @@ Commit with green checks: `18df94be3e7b35edf029b3959a02c76dd6f4c89e`.
 - Promotion to main staging project must wait for comparing main deployment content against this Preview; main staging is on a different branch. Production is out of scope.
 
 **No deployment, production change, live data mutation, or real credentials used in this checkpoint.**
+
+## Actualización de cierre de QA en rama beta
+
+- Prueba nueva `scripts/qa-admin-synthetic-lifecycle.mjs`: creó dos perfiles ficticios con un Worker cargado desde la rama, probó edición, ocultamiento público, exportación en memoria, baja y restauración. Todo ocurrió en SQLite/KV aislados, nunca en Cloudflare. **No equivale a un respaldo real de D1**.
+- Se retiraron de la pantalla de edición del artista los controles PRO, columna y pestaña de plan. El endpoint `PUT /api/admin/artist-plan` devuelve `410 ARTIST_MEMBERSHIP_RETIRED` incluso para Admin, sin crear planes ni alterar registros históricos.
+- Los archivos JS/ZIP del laboratorio sintético de correo fueron sincronizados desde PR #53. `worker.js` recibió solo la reconstrucción del bloque privado QA para el check `embed-job-mail-live.mjs --check`; el paquete congelado 11767 sigue intacto.
+- No se ha probado con sesión Admin real, ni ejecutado una restauración real en D1. La publicación de la rama de pruebas no cambia el Worker desplegado de staging o producción.
