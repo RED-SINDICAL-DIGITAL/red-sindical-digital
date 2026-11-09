@@ -40,3 +40,5 @@ Commit with green checks: `18df94be3e7b35edf029b3959a02c76dd6f4c89e`.
 - El estado privado consulta de forma solo lectura el cupo de dos ensayos por día, el bloqueo de un ensayo activo y la fecha de reinicio del cupo.
 - La recuperación pública anterior sigue inhabilitada (HTTP 503); únicamente el enlace controlado del laboratorio puede confirmar el ensayo sintético.
 - Se regeneraron los artefactos QA desde fuentes versionadas; no se desplegó ningún Worker ni se restauró ninguna base real.
+
+- La ruta heredada de recuperación de claves de oferta ahora rechaza también flags de QA o habilitación pública, con HTTP 503 y respuesta sin caché. El laboratorio privado de correo y el acceso por correo de cuenta permanecen independientes. Se verifica con las pruebas reales del Worker en SQLite/KV aislados.
