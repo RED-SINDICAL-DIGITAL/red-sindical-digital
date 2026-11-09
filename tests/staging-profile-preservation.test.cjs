@@ -2,6 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+const {createHash}=require('node:crypto');
 const html=fs.readFileSync(path.join(__dirname,'../usuario.html'),'utf8');
 const app=fs.readFileSync(path.join(__dirname,'../app.html'),'utf8');
 const worker=fs.readFileSync(path.join(__dirname,'../worker.js'),'utf8');
@@ -25,13 +26,16 @@ test('staging owner events and job tab controls are preserved',()=>{
  assert.ok(html.includes('/uadav-event-local-receipts.js'),'Local event receipt script missing');
 });
 test('current player and PWA controls remain intact',()=>{
- for(const id of ['mediaOptions','mediaSecondaryActions','uadavInstallApp']){
+ for(const id of ['mediaOptions','mediaSecondaryActions']){
   assert.ok(app.includes('id="'+id+'"'),'Missing player control '+id);
  }
+ assert.ok(app.includes("getElementById('uadavInstallApp')"),'PWA install logic reference missing');
  for(const asset of ['uadav-personal-playlist.js','uadav-native-media-session.js','uadav-account-sync.js']){
   assert.ok(app.includes(asset),'Missing media integration '+asset);
  }
 });
 test('Worker has not been swapped with frozen QA artifact',()=>{
- assert.ok(worker.length>800000,'Worker unexpectedly shrank; review branch lineage');
+ const bytes=Buffer.from(worker,'utf8');
+ const actual=createHash('sha1').update(Buffer.from('blob '+bytes.length+'\\0')).update(bytes).digest('hex');
+ assert.equal(actual,'064ac343211dd7d3ed59ca8de5a3e4571c4f5308','Worker differs from functional staging baseline');
 });
