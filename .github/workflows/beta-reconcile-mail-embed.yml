@@ -28,6 +28,9 @@ jobs:
           node scripts/embed-job-mail-live.mjs --check
           node scripts/embed-job-backup.mjs --check
           node scripts/package-job-backup.mjs --check
+          node scripts/build-account-restore-qa.mjs
+          node scripts/build-account-restore-qa.mjs --check
+          node scripts/package-bolsa-11769.mjs --check
           node scripts/package-job-mail-live.mjs --check
           node --check worker.js
           git diff --check
@@ -35,7 +38,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- worker.js
+          git add -- worker.js releases/uadav-bolsa-account-restore-11769.js
           if git diff --cached --quiet; then
             echo "Isolated mail QA embed already matches source."
           else
