@@ -1,12 +1,12 @@
 // White-label CORE · API centralizada
 // PLATFORM_* es la interfaz genérica; UADAV_* se conserva como alias de compatibilidad.
 // Keep all staging Pages previews on staging Worker; never use local/production API there.
-const UADAV_STAGING_PAGES = /^(?:[a-z0-9-]+\\.)?uadav-stream-staging\\.pages\\.dev$/i.test(location.hostname);
+const UADAV_STAGING_PAGES = /^(?:[a-z0-9-]+\.)?uadav-stream-staging\.pages\.dev$/i.test(location.hostname);
 const UADAV_STAGING_HOST = UADAV_STAGING_PAGES ||
   window.UADAV_ENV === 'staging' ||
   window.PLATFORM_ENV === 'staging' ||
   /(?:^|[.-])(?:staging|preview)(?:[.-]|$)/i.test(location.hostname) ||
-  /(?:^|\\.)pages\\.dev$/i.test(location.hostname);
+  /(?:^|\.)pages\.dev$/i.test(location.hostname);
 const UADAV_DEFAULT_API = UADAV_STAGING_HOST
   ? 'https://uadav-api-staging.uadavstream.workers.dev/api/'
   : 'https://uadav-api.uadavstream.workers.dev/api/';
