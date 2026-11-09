@@ -24,3 +24,5 @@ Commit with green checks: `18df94be3e7b35edf029b3959a02c76dd6f4c89e`.
 - Se retiraron de la pantalla de edición del artista los controles PRO, columna y pestaña de plan. El endpoint `PUT /api/admin/artist-plan` devuelve `410 ARTIST_MEMBERSHIP_RETIRED` incluso para Admin, sin crear planes ni alterar registros históricos.
 - Los archivos JS/ZIP del laboratorio sintético de correo fueron sincronizados desde PR #53. `worker.js` recibió solo la reconstrucción del bloque privado QA para el check `embed-job-mail-live.mjs --check`; el paquete congelado 11767 sigue intacto.
 - No se ha probado con sesión Admin real, ni ejecutado una restauración real en D1. La publicación de la rama de pruebas no cambia el Worker desplegado de staging o producción.
+
+- El bloque histórico de respaldo/cierre sintético (`embed-job-backup.mjs`) también fue regenerado desde su fuente versionada, exclusivamente dentro de `worker.js` de la rama beta. Esta acción **no realizó un backup o restore real** ni publicó el Worker.
