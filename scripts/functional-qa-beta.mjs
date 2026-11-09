@@ -39,13 +39,27 @@ try {
   }catch(error){failures.push(viewport.name+': '+String(error.message).slice(0,180))}
   finally{await page.close()}
  }
- for(const [name,path] of [['evento','/publicar-evento.html'],['trabajo','/bolsa-trabajo.html']]){
+ for(const [name,path,minFields] of [['evento','/publicar-evento.html',12],['trabajo','/bolsa-trabajo.html',8]]){
   const page=await browser.newPage({viewport:{width:390,height:844},locale:'es-AR'});
   try{
-   const res=await page.goto(base+path,{waitUntil:'domcontentloaded',timeout:30000});
-   const state=await page.evaluate(()=>({url:location.pathname,title:document.title,formCount:document.querySelectorAll('form').length,fields:document.querySelectorAll('input,select,textarea').length,overflow:document.documentElement.scrollWidth>innerWidth+3}));
-   checks.push({step:'public-page-'+name,status:res?.status(),...state});
-   if(res?.status()!==200||state.overflow)failures.push(name+': page not available or overflows mobile viewport');
+   const res=await page.goto(base+'/app.html?view='+encodeURIComponent(path),{waitUntil:'domcontentloaded',timeout:30000});
+   await page.waitForTimeout(1100);
+   const state=await page.evaluate(()=>{
+    const frame=document.getElementById('view'),doc=frame?.contentDocument;
+    return {
+      shellURL:location.pathname+location.search,
+      framePath:frame?.contentWindow?.location.pathname||null,
+      title:doc?.title||null,
+      formCount:doc?.querySelectorAll('form').length||0,
+      fields:doc?.querySelectorAll('input,select,textarea').length||0,
+      horizontalOverflow:!!doc&&doc.documentElement.scrollWidth>frame.clientWidth+3
+    };
+   });
+   checks.push({step:'embedded-public-form-'+name,status:res?.status(),...state});
+   const norm=p=>p?.endsWith('.html')?p.slice(0,-5):p;
+   if(res?.status()!==200||norm(state.framePath)!==norm(path)||state.fields<minFields||state.formCount<1||state.horizontalOverflow){
+    failures.push(name+': actual public form not fully reachable or overflows in shell iframe');
+   }
   }catch(error){failures.push(name+': '+String(error.message).slice(0,180))}
   finally{await page.close()}
  }
