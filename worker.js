@@ -2143,13 +2143,9 @@ return {createBrevoStagingMail};
 })();
 const outbox=(()=>{
 
-/* Preparatory STAGING-only engine. Not imported/embedded by worker.js.
- * No HTTP endpoint, timer, provider, secret or remote database is configured here.
- * Possession of the 256-bit emailed token authorizes one atomic redemption after
- * a dispatch reservation. No token/credential is returned when requesting mail.
- * Provider acceptance is an audit fact, not an authentication prerequisite.
- * HTTP, email-link receiver, backup and live recovery QA remain unimplemented.
- */
+/* Recovery engine embedded in worker.js for private synthetic staging QA.
+ * Standalone source may contain preparatory changes not yet embedded; see audit
+ * docs. Public recovery for real offers remains disabled. */
 const TTL=15*60000,LEASE=30000,ATTEMPTS=5;
 // Cover the full issuance lifetime plus an in-flight lease and bounded send.
 // A provider's shorter window must never be silently declared as one hour.
@@ -2349,15 +2345,26 @@ async function liveFixture(c,row){
  return record;
 }
 async function liveStatus(c,row){
- const day=uadavJobToday(c.now),reset=Date.parse(day+'T03:00:00Z')+86400000;
- const daily=await c.db.prepare('SELECT hits FROM job_store_rates WHERE bucket=?').bind('mail-live-qa:daily:'+day).first();
- const remaining=Math.max(0,2-Number(daily?.hits||0));
- const active=c.marker?!!await c.db.prepare('SELECT 1 AS found FROM job_mail_live_qa WHERE expires_at>? AND completed_at IS NULL LIMIT 1').bind(c.now).first():false;
- const blocker=remaining===0?'daily_limit':active?'active_trial':null;
- const result={result:'status',ready:c.received,initialized:!!c.marker,diagnostic_received:c.received,encryption_key_configured:true,provider_configured:!!c.adapter,complete:false,can_start:!blocker,start_blocker:blocker,daily_remaining:remaining,daily_reset_at:reset,qa_revision:'11770-qa-status-2'};
+ // Read-only quota/status view. Never creates tables, initiates email or exposes credentials.
+ const day=uadavJobToday(c.now),bucket='mail-live-qa:daily:'+day;
+ const quota=c.marker?await c.db.prepare('SELECT hits,resets_at FROM job_store_rates WHERE bucket=?').bind(bucket).first():null;
+ const hits=quota&&Number(quota.resets_at)>c.now?Math.max(0,Number(quota.hits)||0):0;
+ const dailyRemaining=Math.max(0,2-hits),active=!!row&&row.expires_at>c.now&&!row.completed_at;
+ const startBlocker=dailyRemaining===0?'daily_limit':active?'active_trial':null;
+ const result={result:'status',ready:c.received,initialized:!!c.marker,diagnostic_received:c.received,
+  encryption_key_configured:true,provider_configured:!!c.adapter,complete:false,
+  qa_revision:'11770-qa-status-2',daily_remaining:dailyRemaining,
+  daily_reset_at:Date.parse(day+'T03:00:00Z')+86400000,
+  start_blocker:startBlocker,can_start:!startBlocker,expired:!!row&&row.expires_at<=c.now};
  if(!row)return result;
- await liveFixture(c,row);const outbox=await c.db.prepare('SELECT state,provider_id,attempts,expires_at FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();const httpQa=(await c.db.prepare('SELECT value FROM job_store_meta WHERE key=?').bind('mail-http-qa:'+row.id).first())?.value==='requested';
- return{...result,http_qa_flow:httpQa,request_id:row.id,job_id:row.job_id,expires_at:row.expires_at,expired:row.expires_at<=c.now,dispatch_reserved:!!row.dispatch_at,provider_accepted:!!outbox?.provider_id,email_attempts:outbox?.attempts||0,link_redeemed:outbox?.state==='redeemed',complete:!!row.completed_at,result:row.completed_at?'complete':'status',checks:row.completed_at?LIVE_LABELS.map(x=>x+': aprobado'):[]};
+ await liveFixture(c,row);
+ const outbox=await c.db.prepare('SELECT state,provider_id,attempts,expires_at FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();
+ return{...result,request_id:row.id,job_id:row.job_id,expires_at:row.expires_at,
+  expired:row.expires_at<=c.now,dispatch_reserved:!!row.dispatch_at,
+  provider_accepted:!!outbox?.provider_id,email_attempts:outbox?.attempts||0,
+  link_redeemed:outbox?.state==='redeemed',complete:!!row.completed_at,
+  result:row.completed_at?'complete':'status',
+  checks:row.completed_at?LIVE_LABELS.map(x=>x+': aprobado'):[]};
 }
 async function uadavJobMailLiveRoute(request,env){
  const url=new URL(request.url),origin=request.headers.get('Origin'),allowed=[LIVE_SITE,LIVE_PAGES];
@@ -2419,7 +2426,7 @@ async function uadavJobMailLiveRoute(request,env){
    return reply(await liveStatus(c,c.marker?await c.latest():null));
   }
   const row=await c.db.prepare('SELECT * FROM job_mail_live_qa WHERE id=?').bind(body.request_id).first();await liveFixture(c,row);liveNeed(row.expires_at>Date.now()&&!row.completed_at,'RECOVERY_QA_LINK',400);
-  if(body.action==='request'){if(env.JOB_RECOVERY_HTTP_STAGING==='qa-only'){const response=await uadavJobRecoveryHttpRoute(new Request(LIVE_SITE+'/api/bolsa_trabajo/acceso/solicitar',{method:'POST',headers:{Origin:LIVE_SITE,'Content-Type':'application/json','CF-Connecting-IP':request.headers.get('CF-Connecting-IP')||''},body:JSON.stringify({job_id:row.job_id,email:c.recipient,request_id:row.id})}),env);liveNeed(response.status===202,'RECOVERY_QA_HTTP_REQUEST',503);return reply(await liveStatus(c,row));}await c.engine({clock:()=>row.created_at}).enqueue({jobId:row.job_id,recipient:c.recipient,requestId:row.id,actorHash:await liveHash('mail-live-qa-admin:'+row.id)});return reply(await liveStatus(c,row));}
+  if(body.action==='request'){await c.engine({clock:()=>row.created_at}).enqueue({jobId:row.job_id,recipient:c.recipient,requestId:row.id,actorHash:await liveHash('mail-live-qa-admin:'+row.id)});return reply(await liveStatus(c,row));}
   // Exactly one dispatch reservation per fixture. A timeout never sends again.
   const pending=await c.db.prepare('SELECT id FROM job_recovery_outbox WHERE request_id=? AND job_id=?').bind(row.id,row.job_id).first();liveNeed(pending,'RECOVERY_QA_REQUEST_REQUIRED',409);
   const unexpected=await c.db.prepare("SELECT COUNT(*) AS n FROM job_recovery_outbox o WHERE NOT EXISTS(SELECT 1 FROM job_mail_live_qa q WHERE q.job_id=o.job_id AND q.id=o.request_id) AND NOT EXISTS(SELECT 1 FROM job_store_meta m WHERE m.key='job-recovery-public:'||o.request_id AND m.value=o.job_id)").first();liveNeed(unexpected.n===0,'RECOVERY_QA_FOREIGN_OUTBOX',423);
@@ -2565,7 +2572,7 @@ const UADAV_JOB_CLOSURE_HTML="<!doctype html><html lang=\"es\"><head><meta chars
 const JOB_BACKUP_SITE='https://uadav-api-staging.uadavstream.workers.dev';
 const JOB_BACKUP_PAGES='https://uadav-stream-staging.pages.dev';
 const JOB_BACKUP_KV=['config_global','apariencia','secciones','web_visibility','home_layout','landing_config','footer_config','site_pages','estado_sitio','radios','senales_oficiales','artistas','artistas_prospectos','cartelera','eventos','bolsa_trabajo','postulaciones_trabajo','federated_sources','federated_source_state','content_items','collections','banners'];
-const JOB_BACKUP_TABLES=['access_email_identities','audience_recovery_epochs','job_expiry_notices','job_account_links','job_store_meta','job_store_records','job_owner_credentials','sources','artists','producers','events','event_publication_intents','event_notification_dispatch','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
+const JOB_BACKUP_TABLES=['access_email_identities','audience_recovery_epochs','job_expiry_notices','job_account_links','job_store_meta','job_store_records','job_owner_credentials','sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','event_publication_intents','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
 const JOB_BACKUP_TEMP=['job_owner_recovery_tokens','job_owner_recovery_v2','job_recovery_outbox','job_mail_live_qa','job_store_rates','job_store_checks','audience_pairings','access_email_settings','access_email_outbox','access_email_rates','access_email_checks','audience_recovery_rotations','audience_atomic_checks'];
 const JOB_BACKUP_META_PREFIXES=['brevo:','mail:','mail-http-qa:','job-recovery-public:','cron:lease'];
 const JOB_CLOSURE_QA={job:'JOB-MVPJ9WRW-439D4126D9AE',application:'POST-MVPJCNGX-E7683EC0',deadline:'2026-10-26'};
@@ -5040,14 +5047,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       return json({artist_id:artistId,plan:plan||{artist_id:artistId,plan:'free',analytics_enabled:0,ai_enabled:0},support_links:links.results||[]});
     }
 
+    // Artista PRO was retired: historical plan reads remain read-only for compatibility.
     if (path === '/api/admin/artist-plan' && request.method === 'PUT') {
-      if(!isAdmin())return json({error:'No autorizado'},401); if(!hasD1())return json({error:'D1 no configurado'},503);
-      await ensureD1Schema(); const body=await request.json().catch(()=>({})),artistId=String(body.artist_id||'').trim(),plan=body.plan==='pro'?'pro':'free';
-      if(!artistId)return json({error:'artist_id requerido'},400); const now=isoNow();
-      await env.DB.prepare(`INSERT INTO artist_plan_state(artist_id,plan,pro_started_at,pro_expires_at,source,analytics_enabled,ai_enabled,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(artist_id) DO UPDATE SET plan=excluded.plan,pro_started_at=excluded.pro_started_at,pro_expires_at=excluded.pro_expires_at,source=excluded.source,analytics_enabled=excluded.analytics_enabled,ai_enabled=excluded.ai_enabled,updated_at=excluded.updated_at`)
-        .bind(artistId,plan,plan==='pro'?(body.pro_started_at||now):null,plan==='pro'?(body.pro_expires_at||null):null,String(body.source||'admin'),plan==='pro'&&body.analytics_enabled!==false?1:0,plan==='pro'&&body.ai_enabled!==false?1:0,now).run();
-      await audit('artist_plan_update','artist',artistId,{plan,source:body.source||'admin'});
-      return json({success:true,artist_id:artistId,plan});
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      return json({code:'ARTIST_MEMBERSHIP_RETIRED',error:'Artista PRO retirado',retired:true},410);
     }
 
     if (path === '/api/admin/artist-support-links' && request.method === 'PUT') {
@@ -7599,8 +7602,8 @@ const uadavStagingWorker={...uadavWorker,async scheduled(event,env){if(event?.cr
    const origin=request.headers.get('Origin'),allowed=['https://uadav-stream-staging.pages.dev','https://uadav-api-staging.uadavstream.workers.dev'],headers={'Content-Type':'application/json','Cache-Control':'no-store',Vary:'Origin',...(allowed.includes(origin)?{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Allow-Methods':'GET, OPTIONS'}:{})};const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers});
    if(url.origin!=='https://uadav-api-staging.uadavstream.workers.dev'||origin&&!allowed.includes(origin))return reply({error:'Origen no autorizado.'},403);if(request.method==='OPTIONS')return new Response(null,{status:204,headers});if(!env.ADMIN_KEY||request.headers.get('Authorization')!=='Bearer '+String(env.ADMIN_KEY).trim())return reply({error:'No autorizado.'},401);if(request.method!=='GET')return reply({error:'Método no permitido.'},405);return reply(await uadavPublicJobRecoveryReadiness(env));
   }
-  if(path==='/api/bolsa_trabajo/acceso/capabilities'){const allowed=new Set(['https://uadav-stream-staging.pages.dev','https://uadav-api-staging.uadavstream.workers.dev']),origin=request.headers.get('Origin');return new Response(JSON.stringify({recovery_revision:'11770-public-recovery-20261104',http_qa_enabled:url.origin==='https://uadav-api-staging.uadavstream.workers.dev'&&env.JOB_RECOVERY_HTTP_STAGING==='qa-only',public_job_key_recovery_enabled:url.origin==='https://uadav-api-staging.uadavstream.workers.dev'&&env.JOB_RECOVERY_HTTP_STAGING==='public'&&env.JOB_STORE_D1==='true'&&env.JOB_STORE_MAINTENANCE!=='true'&&uadavSecurityConfig(env).enabled}),{status:request.method==='GET'?200:405,headers:{'Content-Type':'application/json','Cache-Control':'no-store',Vary:'Origin',...(allowed.has(origin)?{'Access-Control-Allow-Origin':origin}:{})}})}
-  if(['/api/bolsa_trabajo/acceso/solicitar','/api/bolsa_trabajo/acceso/restablecer'].includes(path))return env.JOB_RECOVERY_HTTP_STAGING==='public'?uadavPublicJobRecoveryRoute(request,env,ctx):uadavJobRecoveryHttpRoute(request,env);
+  if(path==='/api/bolsa_trabajo/acceso/capabilities'){const allowed=new Set(['https://uadav-stream-staging.pages.dev','https://uadav-api-staging.uadavstream.workers.dev']),origin=request.headers.get('Origin');return new Response(JSON.stringify({recovery_revision:'11770-public-recovery-20261104',http_qa_enabled:false,public_job_key_recovery_enabled:false,retired:true}),{status:request.method==='GET'?200:405,headers:{'Content-Type':'application/json','Cache-Control':'no-store',Vary:'Origin',...(allowed.has(origin)?{'Access-Control-Allow-Origin':origin}:{})}})}
+  if(['/api/bolsa_trabajo/acceso/solicitar','/api/bolsa_trabajo/acceso/restablecer'].includes(path))return Response.json({error:'La recuperación mediante claves antiguas está deshabilitada. Usá Mi Perfil y el correo de tu cuenta.',code:'JOB_KEY_RECOVERY_RETIRED'},{status:503,headers:{'Cache-Control':'no-store'}});
   if(path.startsWith('/api/access/email/')||path==='/api/admin/access-email')return uadavAccountEmailRoute(request,env,ctx);
   if(['/qa/bolsa-cierre','/api/admin/jobs/closure-check','/api/v7/export'].includes(path))return uadavJobBackupRoute(request,env);
   if(['/qa/recuperacion-oferta','/api/admin/jobs/email-recovery-qa','/api/qa/bolsa/email-recovery/redeem'].includes(path))return uadavJobMailLiveRoute(request,env);

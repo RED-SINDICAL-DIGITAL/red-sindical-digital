@@ -1,0 +1,44 @@
+# Beta staging — Admin safety checkpoint (2026-11-09)
+
+## Verified against branch Preview
+Branch: `feat/beta-staging-profile-20261108`.
+Commit with green checks: `18df94be3e7b35edf029b3959a02c76dd6f4c89e`.
+
+- `uadav-api-config.js` forces **staging** API on the main staging hostname and its Pages branch previews. Production hostnames keep existing explicit API/fallback behavior.
+- Chromium anonymous Admin login checks on 390 px and 1365 px: 200 response, login gate visible, private Admin shell hidden, no horizontal overflow, zero calls to production and zero write requests.
+- Read-only API calls without credentials to `admin/d1/status`, `admin/youtube-provider`, `admin/audit-log`, `admin/moderation/settings` and `admin/artist-analytics` all return HTTP 401 on staging.
+- Module configuration defaults and Admin's module toggles cannot re-enable the retired `pro` module. Other legacy PRO artist/account UI and obsolete commercial sections **have not yet been fully removed**.
+- Existing beta navigation, synthetic audio playback, profile history, event/job draft recovery, job status contracts and platform integration remain green.
+
+## Still not verified
+- Authorized administrator permissions, edit/save/delete, export, restore and rollback workflows using **synthetic data only**.
+- Real outside streaming provider playback and authenticated Radio Studio operators.
+- End-to-end user recovery and email delivery; browser security/access checks are not substitutes.
+- Promotion to main staging project must wait for comparing main deployment content against this Preview; main staging is on a different branch. Production is out of scope.
+
+**No deployment, production change, live data mutation, or real credentials used in this checkpoint.**
+
+## Actualización de cierre de QA en rama beta
+
+- Prueba nueva `scripts/qa-admin-synthetic-lifecycle.mjs`: creó dos perfiles ficticios con un Worker cargado desde la rama, probó edición, ocultamiento público, exportación en memoria, baja y restauración. Todo ocurrió en SQLite/KV aislados, nunca en Cloudflare. **No equivale a un respaldo real de D1**.
+- Se retiraron de la pantalla de edición del artista los controles PRO, columna y pestaña de plan. El endpoint `PUT /api/admin/artist-plan` devuelve `410 ARTIST_MEMBERSHIP_RETIRED` incluso para Admin, sin crear planes ni alterar registros históricos.
+- Los archivos JS/ZIP del laboratorio sintético de correo fueron sincronizados desde PR #53. `worker.js` recibió solo la reconstrucción del bloque privado QA para el check `embed-job-mail-live.mjs --check`; el paquete congelado 11767 sigue intacto.
+- No se ha probado con sesión Admin real, ni ejecutado una restauración real en D1. La publicación de la rama de pruebas no cambia el Worker desplegado de staging o producción.
+
+- El bloque histórico de respaldo/cierre sintético (`embed-job-backup.mjs`) también fue regenerado desde su fuente versionada, exclusivamente dentro de `worker.js` de la rama beta. Esta acción **no realizó un backup o restore real** ni publicó el Worker.
+
+## Regeneración final de laboratorio 11769
+
+- La ejecución aislada del generador produjo `releases/uadav-bolsa-account-restore-11769.js` a partir de `worker.js` y módulos versionados. Se conservó el archivo ZIP histórico sin convertirlo en un despliegue del Worker actual.
+- Los cambios se verifican mediante la batería `Bolsa staging policy checks`, que exige correspondencia de fuentes y comprueba el paquete congelado por separado.
+- No se infiere que una prueba con copia sintética equivalga a recuperar un respaldo real en Cloudflare.
+
+## Aseguramiento adicional de correo QA y referencias de eventos
+
+- El respaldo privado de D1 incluye las referencias canónicas `event_publication_intents` cuando esa tabla existe, conservando identificadores de publicación y deduplicación sin exportar el catálogo KV antiguo.
+- El envío de prueba por correo se limita a `{jobId, requestId}` de la solicitud sintética reservada. No puede tomar otra oferta pendiente.
+- El estado privado consulta de forma solo lectura el cupo de dos ensayos por día, el bloqueo de un ensayo activo y la fecha de reinicio del cupo.
+- La recuperación pública anterior sigue inhabilitada (HTTP 503); únicamente el enlace controlado del laboratorio puede confirmar el ensayo sintético.
+- Se regeneraron los artefactos QA desde fuentes versionadas; no se desplegó ningún Worker ni se restauró ninguna base real.
+
+- La ruta heredada de recuperación de claves de oferta ahora rechaza también flags de QA o habilitación pública, con HTTP 503 y respuesta sin caché. El laboratorio privado de correo y el acceso por correo de cuenta permanecen independientes. Se verifica con las pruebas reales del Worker en SQLite/KV aislados.

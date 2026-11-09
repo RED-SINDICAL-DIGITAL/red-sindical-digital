@@ -1,0 +1,56 @@
+name: Reconcile isolated staging mail QA embed in beta Worker
+on:
+  push:
+    branches:
+      - feat/beta-staging-profile-20261108
+    paths:
+      - .github/workflows/beta-reconcile-mail-embed.yml
+      - worker.js
+      - scripts/job-mail-live-runtime.js
+      - scripts/job-backup-runtime.js
+      - scripts/job-backup-digest.mjs
+      - scripts/job-closure-page.html
+      - scripts/account-restore-runtime.js
+      - scripts/account-restore-page.html
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  reconcile-mail-embed:
+    if: github.ref == 'refs/heads/feat/beta-staging-profile-20261108'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/beta-staging-profile-20261108
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Regenerate private QA embed from versioned source modules only
+        run: |
+          node scripts/embed-job-mail-live.mjs
+          node scripts/embed-job-backup.mjs
+          node scripts/embed-job-mail-live.mjs --check
+          node scripts/embed-job-backup.mjs --check
+          node scripts/package-job-backup.mjs --check
+          node scripts/build-account-restore-qa.mjs
+          node scripts/build-account-restore-qa.mjs --check
+          node --check releases/uadav-bolsa-account-restore-11769.js
+          # Historical 11769 ZIP integrity is checked separately by Bolsa staging policy.
+          # It is deliberately not rebuilt from the current beta Worker.
+          node scripts/package-job-mail-live.mjs --check
+          node --check worker.js
+          git diff --check
+      - name: Commit only changed beta Worker source (never deploy)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- worker.js releases/uadav-bolsa-account-restore-11769.js
+          if git diff --cached --quiet; then
+            echo "Isolated mail QA embed already matches source."
+          else
+            git commit -m "build(beta qa): synchronize private mail test embed from frozen sources"
+            git push origin HEAD:feat/beta-staging-profile-20261108
+          fi

@@ -1,0 +1,65 @@
+name: Beta native Mi Perfil staging checks
+on:
+  push:
+    branches:
+      - feat/beta-staging-profile-20261108
+  pull_request:
+    paths:
+      - usuario.html
+      - design/uadav-profile-*
+      - design/uadav-ui-*
+      - tests/profile-beta-integration.test.cjs
+      - tests/profile-native-shell.test.cjs
+      - .github/workflows/beta-profile-staging.yml
+permissions:
+  contents: read
+jobs:
+  native-profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/profile-native-shell.test.cjs tests/profile-beta-integration.test.cjs tests/beta-staging-api-routing.test.cjs tests/beta-profile-visual-polish.test.cjs tests/beta-admin-isolation.test.cjs
+      - run: node --check uadav-profile-email.js && node --check uadav-jobs-account.js
+      - name: Isolated Admin artist lifecycle and synthetic snapshot recovery (no external writes)
+        run: node scripts/qa-admin-synthetic-lifecycle.mjs
+      - name: Read-only anonymous Admin endpoint authorization guard
+        run: node scripts/functional-qa-admin-guards.mjs
+      - name: Inventory deployed public staging version (GET only, informational)
+        run: node scripts/probe-beta-staging.mjs
+
+  responsive-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium test tools
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Test live anonymous beta Preview at mobile and desktop sizes
+        run: node scripts/visual-qa-beta.mjs
+      - name: Exercise navigation, browser history and public form access (no writes)
+        run: node scripts/functional-qa-beta.mjs
+      - name: Check isolated local profile history across tabs and page reload
+        run: node scripts/functional-qa-profile-history.mjs
+      - name: Verify non-sensitive event and job drafts survive navigation without contact storage
+        run: node scripts/functional-qa-safe-drafts.mjs
+      - name: Check actual synthetic WAV playback through section navigation
+        run: node scripts/functional-qa-synthetic-audio.mjs
+      - name: Check anonymous Admin login and staging-only API in Chromium
+        run: node scripts/functional-qa-admin-isolation.mjs
+      - name: Upload anonymous layout screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: beta-responsive-screenshots
+          path: artifacts/beta-visual/*.png
+          if-no-files-found: ignore
+          retention-days: 7
