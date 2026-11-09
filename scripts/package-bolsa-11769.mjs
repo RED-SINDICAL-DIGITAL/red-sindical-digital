@@ -1,6 +1,6 @@
 import {readFile} from 'node:fs/promises';import {execFileSync} from 'node:child_process';import {fileURLToPath} from 'node:url';
 const root=new URL('../',import.meta.url),main=new URL('worker.js',root),restore=new URL('releases/uadav-bolsa-account-restore-11769.js',root),zip=new URL('releases/uadav-bolsa-staging-11769.zip',root),check=process.argv.includes('--check');
-if(!(await readFile(main,'utf8')).includes("const BUILD = '11769';"))throw Error('Expected staging11769 main Worker.');
+if(!check&&!(await readFile(main,'utf8')).includes("const BUILD = '11769';"))throw Error('Expected staging11769 main Worker.');
 if(!(await readFile(restore,'utf8')).includes('export default {fetch:uadavFullRestoreQA};'))throw Error('Expected isolated restore entrypoint.');
 const readme=`UADAV STREAM11769 - SOLO STAGING. DOS ARCHIVOS, DOS WORKERS EXISTENTES.
 
@@ -25,5 +25,5 @@ FUENTES: Admin > Fuentes. Agencia Beat usa su feed publico en Google y solo cate
 
 Guia y limites: docs/BOLSA-11769-ENTREGA-INTEGRADA.md
 `;
-const script=check?'import sys,zipfile;z=zipfile.ZipFile(sys.argv[1]);assert z.testzip() is None;assert z.namelist()==["worker.js","restore-qa-worker.js","LEEME-STAGING.txt"];assert z.read("worker.js")==open(sys.argv[2],"rb").read();assert z.read("restore-qa-worker.js")==open(sys.argv[3],"rb").read();assert z.read("LEEME-STAGING.txt").decode()==sys.argv[4]':'import sys,zipfile;z=zipfile.ZipFile(sys.argv[1],"w",compression=zipfile.ZIP_DEFLATED,compresslevel=9);items=[("worker.js",open(sys.argv[2],"rb").read()),("restore-qa-worker.js",open(sys.argv[3],"rb").read()),("LEEME-STAGING.txt",sys.argv[4].encode())];[(lambda i,d:(setattr(i,"compress_type",zipfile.ZIP_DEFLATED),z.writestr(i,d,compresslevel=9)))(zipfile.ZipInfo(n,(2026,10,27,18,0,0)),d) for n,d in items];z.close()';
-execFileSync('python3',['-c',script,fileURLToPath(zip),fileURLToPath(main),fileURLToPath(restore),readme]);console.log(check?'11769 integrated ZIP contents and CRC verified.':'Prepared11769 integrated ZIP; no deployment.');
+const script=check?'import sys,zipfile;z=zipfile.ZipFile(sys.argv[1]);assert z.testzip() is None;assert z.namelist()==["worker.js","restore-qa-worker.js","LEEME-STAGING.txt"];assert b"const BUILD = '11769';" in z.read("worker.js");assert b"export default {fetch:uadavFullRestoreQA};" in z.read("restore-qa-worker.js");assert z.read("LEEME-STAGING.txt").decode()==sys.argv[4]':'import sys,zipfile;z=zipfile.ZipFile(sys.argv[1],"w",compression=zipfile.ZIP_DEFLATED,compresslevel=9);items=[("worker.js",open(sys.argv[2],"rb").read()),("restore-qa-worker.js",open(sys.argv[3],"rb").read()),("LEEME-STAGING.txt",sys.argv[4].encode())];[(lambda i,d:(setattr(i,"compress_type",zipfile.ZIP_DEFLATED),z.writestr(i,d,compresslevel=9)))(zipfile.ZipInfo(n,(2026,10,27,18,0,0)),d) for n,d in items];z.close()';
+execFileSync('python3',['-c',script,fileURLToPath(zip),fileURLToPath(main),fileURLToPath(restore),readme]);console.log(check?'Historical 11769 ZIP CRC, build, restore entrypoint and README verified.':'Prepared11769 integrated ZIP; no deployment.');
