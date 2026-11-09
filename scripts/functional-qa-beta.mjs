@@ -12,6 +12,13 @@ try {
    await page.waitForFunction(()=>document.querySelector('#view')?.contentDocument?.getElementById('profileNativeHome'),{timeout:15000});
    const route=()=>page.evaluate(()=>({url:location.pathname+location.search,frame:document.querySelector('#view')?.contentWindow?.location.pathname||null,active:[...document.querySelectorAll('#mobile button.active,#top .nav button.active')].map(x=>x.dataset.route)}));
    const first=await route();checks.push({viewport:viewport.name,step:'start-profile',...first,status:res?.status()});
+   await page.evaluate(()=>{
+    window.__qaMediaIdentity={
+     dock:document.getElementById('mediaDock'),
+     audio:document.getElementById('radioAudio'),
+     frame:document.getElementById('view')
+    };
+   });
    if(first.frame!=='/usuario'&&first.frame!=='/usuario.html')failures.push(viewport.name+': profile iframe missing');
    const selector=viewport.name==='mobile'?'#mobile':'#top .nav';
    for(const [label,destination] of [['Cartelera','/cartelera.html'],['Trabajo',viewport.name==='mobile'?'/bolsa-trabajo.html':'/trabajo.html'],['Explorar','/descubrir.html'],['En vivo','/en-vivo.html']]){
@@ -27,6 +34,17 @@ try {
    await page.locator(viewport.name==='mobile'?'#mobile [data-route="/usuario.html"]':'#userBtn').click();
    await page.waitForTimeout(450);
    const returned=await route();checks.push({viewport:viewport.name,step:'return-profile',...returned});
+   const persistence=await page.evaluate(()=>{
+    const refs=window.__qaMediaIdentity||{};
+    return {
+     dock:!!refs.dock&&refs.dock===document.getElementById('mediaDock'),
+     audio:!!refs.audio&&refs.audio===document.getElementById('radioAudio'),
+     frame:!!refs.frame&&refs.frame===document.getElementById('view')
+    };
+   });
+   checks.push({viewport:viewport.name,step:'persistent-shell-media-elements',...persistence});
+   if(!persistence.dock||!persistence.audio||!persistence.frame)failures.push(viewport.name+': persistent player DOM recreated during navigation');
+
    if(!returned.url.includes('usuario.html'))failures.push(viewport.name+': profile return not working');
    await page.goBack({waitUntil:'domcontentloaded'}).catch(()=>{});
    await page.waitForTimeout(550);
