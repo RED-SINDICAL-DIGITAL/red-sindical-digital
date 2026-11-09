@@ -5040,14 +5040,10 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       return json({artist_id:artistId,plan:plan||{artist_id:artistId,plan:'free',analytics_enabled:0,ai_enabled:0},support_links:links.results||[]});
     }
 
+    // Artista PRO was retired: historical plan reads remain read-only for compatibility.
     if (path === '/api/admin/artist-plan' && request.method === 'PUT') {
-      if(!isAdmin())return json({error:'No autorizado'},401); if(!hasD1())return json({error:'D1 no configurado'},503);
-      await ensureD1Schema(); const body=await request.json().catch(()=>({})),artistId=String(body.artist_id||'').trim(),plan=body.plan==='pro'?'pro':'free';
-      if(!artistId)return json({error:'artist_id requerido'},400); const now=isoNow();
-      await env.DB.prepare(`INSERT INTO artist_plan_state(artist_id,plan,pro_started_at,pro_expires_at,source,analytics_enabled,ai_enabled,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(artist_id) DO UPDATE SET plan=excluded.plan,pro_started_at=excluded.pro_started_at,pro_expires_at=excluded.pro_expires_at,source=excluded.source,analytics_enabled=excluded.analytics_enabled,ai_enabled=excluded.ai_enabled,updated_at=excluded.updated_at`)
-        .bind(artistId,plan,plan==='pro'?(body.pro_started_at||now):null,plan==='pro'?(body.pro_expires_at||null):null,String(body.source||'admin'),plan==='pro'&&body.analytics_enabled!==false?1:0,plan==='pro'&&body.ai_enabled!==false?1:0,now).run();
-      await audit('artist_plan_update','artist',artistId,{plan,source:body.source||'admin'});
-      return json({success:true,artist_id:artistId,plan});
+      if(!isAdmin())return json({error:'No autorizado'},401);
+      return json({error:'ARTIST_MEMBERSHIP_RETIRED',retired:true},410);
     }
 
     if (path === '/api/admin/artist-support-links' && request.method === 'PUT') {
