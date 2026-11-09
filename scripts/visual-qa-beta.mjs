@@ -12,7 +12,7 @@ try{
   try{
    const response=await page.goto(base+'/usuario.html',{waitUntil:'domcontentloaded',timeout:30000});
    await page.waitForTimeout(1100);
-   await page.waitForFunction(()=>{const doc=document.querySelector('#view')?.contentDocument||document;return !!doc.getElementById('profileNativeHome')},{timeout:9000});
+   await page.waitForFunction(()=>{const doc=document.querySelector('#view')?.contentDocument||document,home=doc.getElementById('profileNativeHome');return !!home&&!home.hidden&&doc.defaultView.getComputedStyle(home).display!=='none'&&!!home.querySelector('#profileTasks .profile-task')},null,{timeout:15000});
    const state=await page.evaluate(()=>{
     const doc=document.querySelector('#view')?.contentDocument||document;
     const home=doc.getElementById('profileNativeHome');
@@ -22,7 +22,7 @@ try{
     return {
      title:title?.textContent?.trim()||null,
      titleFamily:title?getComputedStyle(title).fontFamily:null,
-     homeVisible:!!home&&!home.hidden&&getComputedStyle(home).display!=='none',
+     homeVisible:!!home&&!home.hidden&&doc.defaultView.getComputedStyle(home).display!=='none',
      horizontalOverflow:doc.documentElement.scrollWidth>window.innerWidth+3,
      scrollWidth:doc.documentElement.scrollWidth,
      viewport:window.innerWidth,
