@@ -12,9 +12,10 @@ export function verifyBackup(value){
  if(!value.kv||typeof value.kv!=='object'||Array.isArray(value.kv))failures.push('Missing KV object');
  if(!value.tables||typeof value.tables!=='object'||Array.isArray(value.tables))failures.push('Missing D1 tables object');
  if(value.backup_integrity?.complete!==true)failures.push('Backup integrity not explicitly confirmed complete');
- if(value.backup_integrity?.d1_configured===false)failures.push('D1 is not configured');
+ if(value.backup_integrity?.d1_configured!==true)failures.push('D1 configuration not positively confirmed');
  const kv=value.kv&&typeof value.kv==='object'&&!Array.isArray(value.kv)?value.kv:{};
  const tables=value.tables&&typeof value.tables==='object'&&!Array.isArray(value.tables)?value.tables:{};
+ if(Object.keys(tables).length===0)failures.push('No D1 tables present in backup');
  for(const name of ['bolsa_trabajo','postulaciones_trabajo']){
   if(!Array.isArray(kv[name]))failures.push('Critical KV collection invalid: '+name);
  }
