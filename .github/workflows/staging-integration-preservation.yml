@@ -10,8 +10,10 @@ on:
       - app.html
       - tests/staging-profile-preservation.test.cjs
       - tests/staging-integration-api-routing.test.cjs
-      - tests/staging-backup-verification.test.mjs
+      - tests/staging-backup-verification.test.mjs tests/staging-health-readonly.test.mjs
       - scripts/verify-staging-backup.mjs
+      - scripts/qa-staging-health-readonly.mjs
+      - tests/staging-health-readonly.test.mjs
       - .github/workflows/staging-integration-preservation.yml
 permissions:
   contents: read
