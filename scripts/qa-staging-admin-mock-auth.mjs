@@ -6,7 +6,7 @@ const problems=[];
 try {
  for(const viewport of [{name:'mobile',width:390,height:844},{name:'desktop',width:1365,height:768}]){
   const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height},locale:'es-AR'});
-  let adminChecks=0,denied=0,otherWrites=0;
+  let adminChecks=0,denied=0,otherWrites=0,revokeNext=false;
   await context.route('**/*',route=>{
    const req=route.request(),url=new URL(req.url());
    if(url.origin===base)return route.continue();
@@ -21,7 +21,7 @@ try {
    }else if(path==='/api/health')body={ok:true,version:'QA',d1:true,kv:true};
    else if(path==='/api/config')body={branding:{name:'PLATFORM QA'}};
    else if(auth!=='Bearer QA-ADMIN-VALID'&&path.startsWith('/api/admin/')){status=401;denied++;body={error:'Acceso privado rechazado'};}
-   else if(path==='/api/admin/d1/status')body={configured:true};
+   else if(path==='/api/admin/d1/status'){if(revokeNext){revokeNext=false;status=401;denied++;body={error:'Sesión revocada'};}else body={configured:true};}
    else body={success:true,items:[],total:0};
    return route.fulfill({status,contentType:'application/json',body:JSON.stringify(body),headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization,content-type'}});
   });
@@ -40,12 +40,20 @@ try {
    await page.locator('#app').waitFor({state:'visible',timeout:14000});
    const entered=await page.evaluate(()=>({gateHidden:document.getElementById('loginGate').classList.contains('hidden'),stored:sessionStorage.getItem('uadav_admin_v8'),appVisible:!document.getElementById('app').classList.contains('hidden')}));
    if(!entered.gateHidden||!entered.appVisible||entered.stored!=='QA-ADMIN-VALID')problems.push(viewport.name+': mock accepted login failed');
+   revokeNext=true;
+   await page.evaluate(()=>window.refreshSystemPills());
+   await page.waitForFunction(()=>document.getElementById('app').classList.contains('hidden')&&!sessionStorage.getItem('uadav_admin_v8'),null,{timeout:10000});
+   const revoked=await page.evaluate(()=>({gate:!document.getElementById('loginGate').classList.contains('hidden'),appHidden:document.getElementById('app').classList.contains('hidden')}));
+   if(!revoked.gate||!revoked.appHidden)problems.push(viewport.name+': revoked session still displays Admin');
+   await page.locator('#loginKey').fill('QA-ADMIN-VALID');
+   await page.locator('#loginBtn').click();
+   await page.locator('#app').waitFor({state:'visible',timeout:14000});
    await page.locator('#logoutTop').click();
    await page.locator('#loginGate').waitFor({state:'visible',timeout:10000});
    const after=await page.evaluate(()=>({hidden:document.getElementById('app').classList.contains('hidden'),stored:sessionStorage.getItem('uadav_admin_v8'),field:document.getElementById('loginKey').value}));
    if(!after.hidden||after.stored||after.field)problems.push(viewport.name+': logout did not clear private access');
    if(otherWrites)problems.push(viewport.name+': unexpected API write');
-   console.log(JSON.stringify({device:viewport.name,invalidRejected:rejected.hidden,accepted:entered.appVisible,logoutCleared:after.hidden&&!after.stored,checks:adminChecks,denied,externalWrites:otherWrites}));
+   console.log(JSON.stringify({device:viewport.name,invalidRejected:rejected.hidden,accepted:entered.appVisible,logoutCleared:after.hidden&&!after.stored,revocationHidden:true,checks:adminChecks,denied,externalWrites:otherWrites}));
   }catch(e){problems.push(viewport.name+': '+String(e.message).slice(0,210));}
   finally{await context.close()}
  }
