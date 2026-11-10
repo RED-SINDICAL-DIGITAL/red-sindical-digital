@@ -48,13 +48,15 @@ try {
     const fake=data=>({files:[{size:JSON.stringify(data).length,text:async()=>JSON.stringify(data)}]});
     await window.previewBackupFile(fake(basic));
     const incomplete=document.getElementById('backupPreviewResult').textContent;
+    await window.previewBackupFile(fake({generated_at:'2026-11-10T00:00:00Z',kv:{bolsa_trabajo:{oops:true},postulaciones_trabajo:[]},tables:{},backup_integrity:{complete:true}}));
+    const invalidCritical=document.getElementById('backupPreviewResult').textContent;
     const blocked=await window.restoreMissingJobs();
     const blockedText=document.getElementById('backupPreviewResult').textContent;
     const invalid=await window.previewBackupFile(fake({generated_at:'2026-11-10'}));
     const invalidText=document.getElementById('backupPreviewResult').textContent;
-    return {incomplete:incomplete.includes('INCOMPLETO')&&incomplete.includes('Integridad del respaldo'),blocked:blocked===false&&blockedText.includes('Restauración bloqueada'),invalid:invalidText.includes('No se pudo validar')};
+    return {invalidCritical:invalidCritical.includes('bolsa_trabajo')&&invalidCritical.includes('no son listas válidas'),incomplete:incomplete.includes('INCOMPLETO')&&incomplete.includes('Integridad del respaldo'),blocked:blocked===false&&blockedText.includes('Restauración bloqueada'),invalid:invalidText.includes('No se pudo validar')};
    });
-   if(!backupCheck.incomplete||!backupCheck.blocked||!backupCheck.invalid)problems.push(viewport.name+': backup integrity/restore guard failed');
+   if(!backupCheck.incomplete||!backupCheck.invalidCritical||!backupCheck.blocked||!backupCheck.invalid)problems.push(viewport.name+': backup integrity/restore guard failed');
    const backupDownloadEvent=page.waitForEvent('download',{timeout:12000});
    await page.evaluate(()=>window.exportAll());
    const backupDownload=await backupDownloadEvent;
