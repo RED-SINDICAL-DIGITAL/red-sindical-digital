@@ -37,6 +37,29 @@ try{
    });
    await page.screenshot({path:out+'/profile-'+viewport.name+'.png',fullPage:true,animations:'disabled'});
    if(result?.status()!==200||!profile.style||!profile.jobs||!profile.events||!profile.homeVisible||profile.horizontalOverflow)failures.push(viewport.name+': public profile smoke failed');
+   // Exercise the deployed shell itself, not just static HTML. No API calls are allowed.
+   const shell=await page.evaluate(()=>({
+    dock:document.getElementById('mediaDock'),
+    radio:document.getElementById('radioAudio'),
+    frame:document.getElementById('view')
+   }));
+   if(!shell.dock||!shell.radio||!shell.frame)failures.push(viewport.name+': persistent shell elements missing');
+   const nav=viewport.width<=390?'#mobile':'#top .nav';
+   for(const route of ['/cartelera.html','/en-vivo.html','/bolsa-trabajo.html','/index-v117.html','/usuario.html']){
+    await page.locator(nav+' [data-route="'+route+'"]').click();
+    await page.waitForFunction(expected=>{
+     const view=document.querySelector('#view');
+     return new URLSearchParams(location.search).get('view')===expected&&view?.contentWindow?.location.pathname===expected;
+    },route,{timeout:12000});
+    const same=await page.evaluate(()=>({
+     dock:!!document.getElementById('mediaDock'),
+     radio:!!document.getElementById('radioAudio'),
+     frame:!!document.getElementById('view'),
+     overflow:document.documentElement.scrollWidth>innerWidth+3
+    }));
+    if(!same.dock||!same.radio||!same.frame||same.overflow)failures.push(viewport.name+': shell lost elements on '+route);
+   }
+   await page.screenshot({path:out+'/shell-'+viewport.name+'.png',fullPage:true,animations:'disabled'});
    const adminResponse=await page.goto(origin+'/admin.html',{waitUntil:'domcontentloaded',timeout:25000});
    await page.locator('#loginGate').waitFor({state:'visible',timeout:12000});
    const admin=await page.evaluate(()=>({
