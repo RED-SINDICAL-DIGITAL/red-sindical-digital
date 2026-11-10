@@ -59,7 +59,7 @@ try {
    await page.evaluate(()=>window.exportAll());
    const backupDownload=await backupDownloadEvent;
    const exportFilename=backupDownload.suggestedFilename();
-   if(!/backup-.*\\.json$/.test(exportFilename)||exportFilename.includes('INCOMPLETO'))problems.push(viewport.name+': complete JSON export filename is incorrect');
+   if(!/backup-.*\.json$/.test(exportFilename)||exportFilename.includes('INCOMPLETO'))problems.push(viewport.name+': complete JSON export filename is incorrect');
 
    await page.evaluate(()=>window.go('imports'));
    await page.locator('#importFile').waitFor({state:'attached',timeout:12000});
