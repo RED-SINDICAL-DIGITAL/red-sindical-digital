@@ -54,7 +54,7 @@ try{
      return {expected,view:new URLSearchParams(location.search).get('view'),framePath,frameError,url:location.href};
     },route);
     console.log('PREVIEW_NAV',JSON.stringify({viewport:viewport.name,...navigation}));
-    const canonical=value=>String(value||'').replace(/\\.html$/,'');
+    const canonical=value=>String(value||'').replace(/\.html$/,'');
     if(canonical(navigation.view)!==canonical(route)||canonical(navigation.framePath)!==canonical(route))failures.push(viewport.name+': route mismatch '+JSON.stringify(navigation));
     const same=await page.evaluate(()=>({
      dock:window.__qaShellNodes?.dock===document.getElementById('mediaDock'),
