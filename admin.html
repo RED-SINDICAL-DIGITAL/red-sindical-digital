@@ -678,7 +678,7 @@ window.previewImport=async()=>{
 window.invalidateImportPreview=()=>{importPreviewTurn++;S.importRows=[];S.importBatches=[];$('importCommit').disabled=true;$('importCommit').textContent='2. Confirmar incorporación';$('importPreview').textContent='Cambiaste el archivo o sus opciones. Volvé a revisarlo antes de confirmar.'};
 let importCommitBusy=false;
 window.commitImport=async()=>{
- if(importCommitBusy||!S.importBatches?.length)return;
+ if(importCommitBusy||!S.importBatches?.length||!S.importRows?.length||$('importCommit')?.disabled)return;
  const draft=S.importBatches,button=$('importCommit'),preview=$('importPreview'),current=()=>S.view==='imports'&&$('importPreview')===preview&&S.importBatches===draft;
  if(!confirm(`¿Procesar ${S.importRows.length} registros en ${draft.length} lote(s)?`))return;
  importCommitBusy=true;button.disabled=true;button.textContent='Procesando…';const results=[];let completed=0;
