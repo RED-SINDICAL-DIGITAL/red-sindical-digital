@@ -9,6 +9,7 @@ on:
       - app.html
       - uadav-api-config.js
       - scripts/qa-staging-published-preview.mjs
+      - scripts/qa-staging-health-readonly.mjs
       - .github/workflows/staging-integration-published-preview.yml
   workflow_dispatch:
 permissions:
@@ -26,6 +27,8 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
           npx playwright install --with-deps chromium
+      - name: Check staging Worker public health (read-only)
+        run: node scripts/qa-staging-health-readonly.mjs
       - name: Check published branch preview (read-only)
         run: node scripts/qa-staging-published-preview.mjs
       - name: Store screenshots
