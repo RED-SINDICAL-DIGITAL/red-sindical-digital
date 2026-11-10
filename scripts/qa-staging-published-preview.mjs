@@ -19,7 +19,11 @@ try{
   await page.addInitScript(()=>{window.UADAV_ENV='staging';window.PLATFORM_ENV='staging'});
   try{
    const result=await page.goto(origin+'/usuario.html',{waitUntil:'domcontentloaded',timeout:25000});
-   await page.waitForFunction(()=>!!document.querySelector('#view')?.contentDocument?.getElementById('profileNativeHome'),null,{timeout:18000});
+   await page.waitForFunction(()=>{
+    const doc=document.querySelector('#view')?.contentDocument;
+    const home=doc?.getElementById('profileNativeHome');
+    return !!home&&!home.hidden&&doc.defaultView.getComputedStyle(home).display!=='none';
+   },null,{timeout:18000});
    const profile=await page.evaluate(()=>{
     const doc=document.querySelector('#view').contentDocument;
     const home=doc.getElementById('profileNativeHome');
