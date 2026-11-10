@@ -1,0 +1,38 @@
+name: Published staging preview acceptance
+on:
+  pull_request:
+    branches:
+      - audit/continuidad-demo-20261019
+    paths:
+      - usuario.html
+      - admin.html
+      - app.html
+      - uadav-api-config.js
+      - scripts/qa-staging-published-preview.mjs
+      - .github/workflows/staging-integration-published-preview.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  published-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Check published branch preview (read-only)
+        run: node scripts/qa-staging-published-preview.mjs
+      - name: Store screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-integration-published-preview
+          path: artifacts/staging-integration-remote-preview/*.png
+          if-no-files-found: ignore
+          retention-days: 7
