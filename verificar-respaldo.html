@@ -23,9 +23,10 @@ function check(v){
  if(!v.kv||typeof v.kv!=='object'||Array.isArray(v.kv))errors.push('Colecciones KV no válidas');
  if(!v.tables||typeof v.tables!=='object'||Array.isArray(v.tables))errors.push('Tablas D1 no válidas');
  if(v.backup_integrity?.complete!==true)errors.push('El servidor no declaró integridad completa');
- if(v.backup_integrity?.d1_configured===false)errors.push('D1 no estaba configurada');
+ if(v.backup_integrity?.d1_configured!==true)errors.push('No se confirmó explícitamente que D1 estuviera configurada');
  const kv=v.kv&&typeof v.kv==='object'&&!Array.isArray(v.kv)?v.kv:{};
  const tables=v.tables&&typeof v.tables==='object'&&!Array.isArray(v.tables)?v.tables:{};
+ if(Object.keys(tables).length===0)errors.push('El respaldo no contiene ninguna tabla D1');
  for(const k of ['bolsa_trabajo','postulaciones_trabajo'])if(!Array.isArray(kv[k]))errors.push('Colección crítica ausente o inválida: '+k);
  for(const [k,row] of Object.entries(kv))if(row&&typeof row==='object'&&!Array.isArray(row)&&Object.hasOwn(row,'error'))errors.push('Error declarado de lectura en colección '+k);
  for(const [k,rows] of Object.entries(tables))if(!Array.isArray(rows))errors.push('Tabla D1 inválida: '+k);
