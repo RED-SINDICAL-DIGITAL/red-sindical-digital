@@ -671,6 +671,7 @@ window.previewImport=async()=>{
   batches=window.UADAVJobsImport?window.UADAVJobsImport.splitBatches(batches):batches;
   if(!current())return;
   S.importBatches=batches;S.importRows=batches.flatMap(batch=>batch.rows);
+  if(!S.importRows.length)throw Error('No encontramos registros válidos para incorporar. Revisá el archivo y sus campos obligatorios.');
   preview.textContent=JSON.stringify({archivo:file.name,total:S.importRows.length,lotes:batches.map(batch=>({hoja:batch.sheet,tipo:batch.entity,registros:batch.rows.length,muestra:batch.rows.slice(0,2)}))},null,2);
   button.disabled=!S.importRows.length;button.textContent='2. Confirmar incorporación';
  }catch(error){if(!current())return;S.importBatches=[];S.importRows=[];button.disabled=true;preview.textContent='No se pudo revisar: '+error.message;toast('No se pudo revisar: '+error.message,'bad')}
