@@ -198,7 +198,7 @@ async function api(path,opt={}){
       if(res.ok)API_ACTIVE=base;
       if(opt.raw)return res;
       const data=ct.includes('json')?await res.json().catch(()=>({})):await res.text();
-      if(!res.ok){if(res.status===401&&ADMIN_KEY)toast('Sesión no autorizada. Revisá la clave ADMIN_KEY.','bad');const error=new Error((data&&data.error)||data||`HTTP ${res.status}`);error.status=res.status;error.code=data?.code||'';error.data=data;throw error}
+      if(!res.ok){if(res.status===401&&ADMIN_KEY&&key===ADMIN_KEY){logout();toast('La sesión administrativa venció. Volvé a ingresar.','bad')}const error=new Error((data&&data.error)||data||`HTTP ${res.status}`);error.status=res.status;error.code=data?.code||'';error.data=data;throw error}
       return data;
     }catch(e){if(!['GET','HEAD'].includes(method.toUpperCase())||e.status)throw e;lastErr=e;continue;}
   }
