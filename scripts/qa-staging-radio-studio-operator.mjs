@@ -58,13 +58,36 @@ try{
    await page.waitForFunction(()=>document.getElementById('modeStatus')?.textContent.includes('Rechazo simulado'),null,{timeout:12000});
    const rollback=await page.locator('#modeSelect').inputValue();
    if(rollback!=='manual'||mock.mode!=='manual')errors.push(device.name+': rejected mode not rolled back');
+   // Account isolation: swapping credentials must immediately hide the previous station.
+   await page.evaluate(()=>{
+    window.UADAVAccount={code:()=> 'QA-OTHER-ACCOUNT-UNAUTHORIZED'};
+    window.dispatchEvent(new Event('uadav:account'));
+   });
+   await page.waitForFunction(()=>document.getElementById('studio')?.hidden===true,null,{timeout:12000});
+   const accountSwitch=await page.evaluate(()=>({
+    hidden:document.getElementById('studio').hidden,
+    stations:document.getElementById('station').options.length,
+    privateRequests:document.getElementById('requests').children.length,
+    privateChat:document.getElementById('chatMessages').children.length
+   }));
+   if(!accountSwitch.hidden||accountSwitch.stations||accountSwitch.privateRequests||accountSwitch.privateChat)errors.push(device.name+': account switch leaked previous operator state');
+   await page.locator('#refresh').click();
+   await page.waitForFunction(()=>document.getElementById('status')?.textContent.includes('Acceso privado rechazado'),null,{timeout:12000});
+   if(!await page.locator('#studio').isHidden())errors.push(device.name+': unauthorized second account exposed studio');
+   // Restore local test identity to exercise explicit API revocation after account switch.
+   await page.evaluate(()=>{
+    window.UADAVAccount={code:()=> 'QA-FAKE-LOCAL-CREDENTIAL'};
+    window.dispatchEvent(new Event('uadav:account'));
+   });
+   await page.locator('#refresh').click();
+   await page.locator('#studio').waitFor({state:'visible',timeout:12000});
    // Unauthorized operator: API returns 403; private studio must be hidden.
    mock.denyNext=true;
    await page.locator('#refresh').click();
    await page.waitForFunction(()=>document.getElementById('studio')?.hidden===true,null,{timeout:12000});
    const state=await page.evaluate(()=>({studioHidden:document.getElementById('studio').hidden,status:document.getElementById('status').textContent}));
    if(!state.studioHidden||!state.status.includes('permiso'))errors.push(device.name+': revocation did not hide private controls');
-   console.log(JSON.stringify({device:device.name,verifiedModes:mock.settingsWrites,rollback,permissionGate:state.studioHidden,mockRequests:mock.requests.length}));
+   console.log(JSON.stringify({device:device.name,verifiedModes:mock.settingsWrites,rollback,permissionGate:state.studioHidden,accountSwitchIsolated:accountSwitch.hidden,mockRequests:mock.requests.length}));
   }catch(e){errors.push(device.name+': '+String(e.message).slice(0,240));}
   finally{await context.close();}
  }
