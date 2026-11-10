@@ -74,6 +74,20 @@ try{
    }));
    await page.screenshot({path:out+'/admin-'+viewport.name+'.png',fullPage:true,animations:'disabled'});
    if(adminResponse?.status()!==200||!admin.loginVisible||!admin.appHidden||!admin.noSession)failures.push(viewport.name+': public admin guard failed');
+   const verifierPage=await page.goto(origin+'/verificar-respaldo.html',{waitUntil:'domcontentloaded',timeout:25000});
+   if(verifierPage?.status()!==200)failures.push(viewport.name+': offline backup verifier not deployed');
+   const mock={generated_at:'2026-11-10T14:00:00Z',kv:{bolsa_trabajo:[],postulaciones_trabajo:[]},tables:{audit:[]},backup_integrity:{complete:true,d1_configured:true}};
+   await page.locator('#backup').setInputFiles({name:'backup-qa.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(mock))});
+   await page.locator('#inspect').click();
+   await page.waitForFunction(()=>document.querySelector('#result')?.dataset.verified==='true',null,{timeout:8000});
+   const valid=await page.locator('#result').innerText();
+   if(!valid.includes('ESTRUCTURA CORRECTA')||!/SHA-256: [a-f0-9]{64}/.test(valid))failures.push(viewport.name+': backup checker positive case failed');
+   await page.locator('#backup').setInputFiles({name:'backup-incompleto.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({...mock,backup_integrity:{complete:false}}))});
+   await page.locator('#inspect').click();
+   await page.waitForFunction(()=>document.querySelector('#result')?.dataset.verified==='false',null,{timeout:8000});
+   const denied=await page.locator('#result').innerText();
+   if(!denied.includes('RESPALDO INCOMPLETO'))failures.push(viewport.name+': incomplete backup not rejected');
+   console.log('BACKUP_BROWSER_QA',JSON.stringify({viewport:viewport.name,valid:true,incompleteRejected:denied.includes('RESPALDO INCOMPLETO')}));
    console.log(JSON.stringify({viewport:viewport.name,profile,admin,origin}));
   }catch(e){failures.push(viewport.name+': '+String(e?.message||e).slice(0,240));}
   finally{await context.close();}
