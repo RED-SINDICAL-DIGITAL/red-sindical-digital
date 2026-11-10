@@ -6,7 +6,7 @@ const problems=[];
 try {
  for(const viewport of [{name:'mobile',width:390,height:844},{name:'desktop',width:1365,height:768}]){
   const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height},locale:'es-AR'});
-  let adminChecks=0,denied=0,otherWrites=0,revokeNext=false;
+  let adminChecks=0,denied=0,otherWrites=0,revokeNext=false,backupIncompleteNext=false;
   await context.route('**/*',route=>{
    const req=route.request(),url=new URL(req.url());
    if(url.origin===base)return route.continue();
@@ -21,7 +21,7 @@ try {
    }else if(path==='/api/health')body={ok:true,version:'QA',d1:true,kv:true};
    else if(path==='/api/config')body={branding:{name:'PLATFORM QA'}};
    else if(auth!=='Bearer QA-ADMIN-VALID'&&path.startsWith('/api/admin/')){status=401;denied++;body={error:'Acceso privado rechazado'};}
-   else if(path==='/api/v7/export')body={generated_at:'2026-11-10T00:00:00Z',kv:{bolsa_trabajo:[],postulaciones_trabajo:[]},tables:{},backup_integrity:{complete:true}};
+   else if(path==='/api/v7/export'){body={generated_at:'2026-11-10T00:00:00Z',kv:backupIncompleteNext?{}:{bolsa_trabajo:[],postulaciones_trabajo:[]},tables:{},backup_integrity:{complete:true}};backupIncompleteNext=false;}
    else if(path==='/api/admin/d1/status'){if(revokeNext){revokeNext=false;status=401;denied++;body={error:'Sesión revocada'};}else body={configured:true};}
    else body={success:true,items:[],total:0};
    return route.fulfill({status,contentType:'application/json',body:JSON.stringify(body),headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization,content-type'}});
@@ -61,6 +61,12 @@ try {
    const exportFilename=backupDownload.suggestedFilename();
    if(!/backup-.*\.json$/.test(exportFilename)||exportFilename.includes('INCOMPLETO'))problems.push(viewport.name+': complete JSON export filename is incorrect');
 
+   backupIncompleteNext=true;
+   let cancelledIncomplete=false;
+   page.once('dialog',async dialog=>{cancelledIncomplete=true;await dialog.dismiss()});
+   await page.evaluate(()=>window.exportAll());
+   if(!cancelledIncomplete)problems.push(viewport.name+': absent critical KV was not flagged as incomplete');
+
    await page.evaluate(()=>window.go('imports'));
    await page.locator('#importFile').waitFor({state:'attached',timeout:12000});
    await page.locator('#importEntity').selectOption('events');
@@ -73,6 +79,8 @@ try {
    await page.locator('#importOrigin').dispatchEvent('change');
    const invalidated=await page.evaluate(()=>({disabled:document.getElementById('importCommit').disabled,count:window.S.importRows.length}));
    if(!invalidated.disabled||invalidated.count!==0)problems.push(viewport.name+': changing settings did not invalidate import');
+   await page.evaluate(()=>window.commitImport());
+   if(otherWrites!==0)problems.push(viewport.name+': invalidated import invoked remote write');
 
    await page.locator('#importFile').setInputFiles({name:'qa-invalid.json',mimeType:'application/json',buffer:Buffer.from('{invalid-json')});
    await page.evaluate(()=>window.previewImport());
