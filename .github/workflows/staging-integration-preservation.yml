@@ -10,6 +10,8 @@ on:
       - app.html
       - tests/staging-profile-preservation.test.cjs
       - tests/staging-integration-api-routing.test.cjs
+      - tests/staging-backup-verification.test.mjs
+      - scripts/verify-staging-backup.mjs
       - .github/workflows/staging-integration-preservation.yml
 permissions:
   contents: read
@@ -25,4 +27,4 @@ jobs:
       - name: Check JavaScript syntax
         run: node --check uadav-api-config.js
       - name: Verify isolation and original production behavior
-        run: node --test tests/staging-integration-api-routing.test.cjs tests/staging-profile-preservation.test.cjs
+        run: node --test tests/staging-integration-api-routing.test.cjs tests/staging-profile-preservation.test.cjs tests/staging-backup-verification.test.mjs
