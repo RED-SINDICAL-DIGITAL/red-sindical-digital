@@ -11,6 +11,7 @@ on:
       - scripts/functional-qa-staging-shell.mjs
       - scripts/qa-staging-synthetic-playback.mjs
       - scripts/qa-staging-profile-subviews.mjs
+      - scripts/qa-staging-radio-studio-operator.mjs
       - .github/workflows/staging-integration-visual.yml
   pull_request:
     paths:
@@ -21,6 +22,7 @@ on:
       - scripts/functional-qa-staging-shell.mjs
       - scripts/qa-staging-synthetic-playback.mjs
       - scripts/qa-staging-profile-subviews.mjs
+      - scripts/qa-staging-radio-studio-operator.mjs
       - .github/workflows/staging-integration-visual.yml
   workflow_dispatch:
 permissions:
@@ -45,6 +47,7 @@ jobs:
           node scripts/functional-qa-staging-shell.mjs
           node scripts/qa-staging-synthetic-playback.mjs
           node scripts/qa-staging-profile-subviews.mjs
+          node scripts/qa-staging-radio-studio-operator.mjs
       - name: Upload screenshots for review
         if: always()
         uses: actions/upload-artifact@v4
