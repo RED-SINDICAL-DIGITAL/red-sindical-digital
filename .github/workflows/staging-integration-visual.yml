@@ -10,6 +10,7 @@ on:
       - scripts/visual-qa-staging-integration.mjs
       - scripts/functional-qa-staging-shell.mjs
       - scripts/qa-staging-synthetic-playback.mjs
+      - scripts/qa-staging-profile-subviews.mjs
       - .github/workflows/staging-integration-visual.yml
   pull_request:
     paths:
@@ -19,6 +20,7 @@ on:
       - scripts/visual-qa-staging-integration.mjs
       - scripts/functional-qa-staging-shell.mjs
       - scripts/qa-staging-synthetic-playback.mjs
+      - scripts/qa-staging-profile-subviews.mjs
       - .github/workflows/staging-integration-visual.yml
   workflow_dispatch:
 permissions:
@@ -42,6 +44,7 @@ jobs:
           node scripts/visual-qa-staging-integration.mjs
           node scripts/functional-qa-staging-shell.mjs
           node scripts/qa-staging-synthetic-playback.mjs
+          node scripts/qa-staging-profile-subviews.mjs
       - name: Upload screenshots for review
         if: always()
         uses: actions/upload-artifact@v4
