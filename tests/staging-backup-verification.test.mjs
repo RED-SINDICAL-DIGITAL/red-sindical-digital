@@ -41,3 +41,12 @@ test('malformed document and timestamps are rejected',()=>{
  const data=make();data.generated_at='not-a-date';
  assert.equal(verifyBackup(data).ok,false);
 });
+
+test('empty D1 table inventory cannot pass even if report says complete',()=>{
+ const data=make();data.tables={};
+ assert.equal(verifyBackup(data).ok,false);
+});
+test('unspecified D1 binding cannot pass by omission',()=>{
+ const data=make();delete data.backup_integrity.d1_configured;
+ assert.equal(verifyBackup(data).ok,false);
+});
