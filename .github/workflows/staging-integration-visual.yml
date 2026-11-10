@@ -6,6 +6,7 @@ on:
     paths:
       - usuario.html
       - app.html
+      - admin.html
       - uadav-api-config.js
       - scripts/visual-qa-staging-integration.mjs
       - scripts/functional-qa-staging-shell.mjs
@@ -19,6 +20,7 @@ on:
     paths:
       - usuario.html
       - app.html
+      - admin.html
       - uadav-api-config.js
       - scripts/visual-qa-staging-integration.mjs
       - scripts/functional-qa-staging-shell.mjs
