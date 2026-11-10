@@ -72,7 +72,7 @@ try {
    await page.evaluate(()=>window.go('imports'));
    await page.locator('#importFile').waitFor({state:'attached',timeout:12000});
    await page.locator('#importEntity').selectOption('events');
-   await page.locator('#importFile').setInputFiles({name:'qa-events.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({entity:'events',rows:[{titulo:'Evento sintético QA',descripcion:'Prueba aislada'}]}))});
+   await page.locator('#importFile').setInputFiles({name:'qa-events.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({entity:'events',rows:[{titulo:'Evento sintético QA',descripcion:'Prueba aislada',source_url:'https://example.com/qa-evento-externo'}]}))});
    await page.locator('#importPreview').evaluate(()=>{});
    await page.evaluate(()=>window.previewImport());
    const preview=await page.evaluate(()=>({count:window.S.importRows.length,enabled:!document.getElementById('importCommit').disabled,text:document.getElementById('importPreview').textContent}));
