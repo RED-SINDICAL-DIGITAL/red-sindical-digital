@@ -14,6 +14,8 @@ on:
       - scripts/verify-staging-backup.mjs
       - scripts/qa-staging-health-readonly.mjs
       - tests/staging-health-readonly.test.mjs
+      - tests/staging-release-gate.test.mjs
+      - scripts/staging-release-gate.mjs
       - .github/workflows/staging-integration-preservation.yml
 permissions:
   contents: read
@@ -29,4 +31,4 @@ jobs:
       - name: Check JavaScript syntax
         run: node --check uadav-api-config.js
       - name: Verify isolation and original production behavior
-        run: node --test tests/staging-integration-api-routing.test.cjs tests/staging-profile-preservation.test.cjs tests/staging-backup-verification.test.mjs tests/staging-health-readonly.test.mjs
+        run: node --test tests/staging-integration-api-routing.test.cjs tests/staging-profile-preservation.test.cjs tests/staging-backup-verification.test.mjs tests/staging-health-readonly.test.mjs tests/staging-release-gate.test.mjs
