@@ -29,6 +29,8 @@ Estas comprobaciones deben hacerse con cuentas **de laboratorio**, nunca con cla
 ## Puerta 3 — Respaldo verificable (operación en Cloudflare, no en el navegador público)
 - [ ] Obtener copia **solo lectura** de KV y D1 del entorno staging **correcto**. Verificar en Cloudflare los bindings de la instancia antes de exportar.
 - [ ] Confirmar la integridad del respaldo: `backup_integrity.complete=true`, colecciones `bolsa_trabajo` y `postulaciones_trabajo` presentes como listas; tablas D1 legibles. Conservar checksum SHA-256 del archivo.
+- [ ] Ejecutar en un equipo privado, **fuera de GitHub Actions**, el verificador local del repositorio: `node scripts/verify-staging-backup.mjs "RUTA_PRIVADA_AL_ARCHIVO.json"`. Debe devolver `verified: true` y `sha256`. Esta prueba es de **estructura e integridad declarada**, no demuestra por sí sola que se pueda restaurar D1/KV.
+- [ ] Conservar el hash SHA-256, fecha y resultado de la verificación en el registro de aprobación; **nunca** incorporar el JSON original, sus filas, correos ni contraseñas al PR.
 - [ ] Guardar archivo en espacio privado cifrado, con control de acceso y fecha. **Nunca** subir contenido del respaldo, credenciales o emails de usuarios al repositorio ni adjuntarlos al PR.
 - [ ] Confirmar restauración en entorno **desechable** o disponer de plan de restauración manual documentado y probado. El botón de restauración del Admin continúa bloqueado deliberadamente.
 - [ ] Confirmar en Cloudflare que la rama de Pages a modificar es la de **staging**, no la producción UADAV.
