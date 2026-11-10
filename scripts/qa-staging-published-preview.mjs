@@ -46,10 +46,15 @@ try{
    const nav=viewport.width<=390?'#mobile':'#top .nav';
    for(const route of ['/cartelera.html','/en-vivo.html','/bolsa-trabajo.html','/index-v117.html','/usuario.html']){
     await page.locator(nav+' [data-route="'+route+'"]').click();
-    await page.waitForFunction(expected=>{
+    await page.waitForTimeout(900);
+    const navigation=await page.evaluate(expected=>{
      const view=document.querySelector('#view');
-     return new URLSearchParams(location.search).get('view')===expected&&view?.contentWindow?.location.pathname===expected;
-    },route,{timeout:12000});
+     let framePath='',frameError='';
+     try{framePath=view?.contentWindow?.location.pathname||''}catch(e){frameError=String(e?.message||e)}
+     return {expected,view:new URLSearchParams(location.search).get('view'),framePath,frameError,url:location.href};
+    },route);
+    console.log('PREVIEW_NAV',JSON.stringify({viewport:viewport.name,...navigation}));
+    if(navigation.view!==route||navigation.framePath!==route)failures.push(viewport.name+': route mismatch '+JSON.stringify(navigation));
     const same=await page.evaluate(()=>({
      dock:window.__qaShellNodes?.dock===document.getElementById('mediaDock'),
      radio:window.__qaShellNodes?.radio===document.getElementById('radioAudio'),
