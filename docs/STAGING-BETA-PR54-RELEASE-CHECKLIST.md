@@ -35,6 +35,13 @@ Estas comprobaciones deben hacerse con cuentas **de laboratorio**, nunca con cla
 - [ ] Confirmar restauración en entorno **desechable** o disponer de plan de restauración manual documentado y probado. El botón de restauración del Admin continúa bloqueado deliberadamente.
 - [ ] Confirmar en Cloudflare que la rama de Pages a modificar es la de **staging**, no la producción UADAV.
 
+## Evidencia de autorización (sin datos privados)
+El script `scripts/staging-release-gate.mjs` determina si el candidato está listo a partir de un archivo **local y privado de metadatos**. No consulta Cloudflare, no genera respaldos y no autoriza despliegues por sí solo. Ejecutar `node scripts/staging-release-gate.mjs "RUTA_PRIVADA_EVIDENCIA.json"` en el equipo encargado del pase.
+
+Campos requeridos: `candidate_sha` (40 caracteres hex), `ci` con las cinco suites exitosas y exactamente ese SHA, `backup.environment="staging"`, `backup.verified=true`, `backup.sha256` (64 caracteres hex), `backup.kv_exported=true`, `backup.d1_exported=true`, `backup.restore_plan_approved=true`, y `qa.admin_authenticated`, `qa.radio_operator_authenticated`, `qa.profile_authenticated`, `qa.responsible_approval`, todos `true`. Estos datos deben representar **pruebas y aprobaciones efectivas**, nunca completarse de forma ficticia.
+
+Si cualquiera falta, el verificador devuelve `ready:false` y el pase queda bloqueado. No subir este archivo de evidencia ni el respaldo original al PR.
+
 ## Puerta 4 — Cambio controlado y reversión
 1. Congelar el SHA candidato, anotar el SHA anterior y preservar URL de build anterior.
 2. Publicar la misma versión **solo** en staging principal después de aprobar las puertas 1–3.
