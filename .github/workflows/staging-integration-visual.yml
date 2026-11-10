@@ -9,6 +9,7 @@ on:
       - uadav-api-config.js
       - scripts/visual-qa-staging-integration.mjs
       - scripts/functional-qa-staging-shell.mjs
+      - scripts/qa-staging-synthetic-playback.mjs
       - .github/workflows/staging-integration-visual.yml
   pull_request:
     paths:
@@ -17,6 +18,7 @@ on:
       - uadav-api-config.js
       - scripts/visual-qa-staging-integration.mjs
       - scripts/functional-qa-staging-shell.mjs
+      - scripts/qa-staging-synthetic-playback.mjs
       - .github/workflows/staging-integration-visual.yml
   workflow_dispatch:
 permissions:
@@ -39,6 +41,7 @@ jobs:
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/uadav-static-qa.log 2>&1 &
           node scripts/visual-qa-staging-integration.mjs
           node scripts/functional-qa-staging-shell.mjs
+          node scripts/qa-staging-synthetic-playback.mjs
       - name: Upload screenshots for review
         if: always()
         uses: actions/upload-artifact@v4
