@@ -87,7 +87,12 @@ try{
    await page.waitForFunction(()=>document.querySelector('#result')?.dataset.verified==='false',null,{timeout:8000});
    const denied=await page.locator('#result').innerText();
    if(!denied.includes('RESPALDO INCOMPLETO'))failures.push(viewport.name+': incomplete backup not rejected');
-   console.log('BACKUP_BROWSER_QA',JSON.stringify({viewport:viewport.name,valid:true,incompleteRejected:denied.includes('RESPALDO INCOMPLETO')}));
+   await page.locator('#backup').setInputFiles({name:'backup-sin-d1.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({...mock,tables:{}}))});
+   await page.locator('#inspect').click();
+   await page.waitForFunction(()=>document.querySelector('#result')?.dataset.verified==='false',null,{timeout:8000});
+   const noD1=await page.locator('#result').innerText();
+   if(!noD1.includes('no contiene ninguna tabla D1'))failures.push(viewport.name+': empty D1 table inventory incorrectly accepted');
+   console.log('BACKUP_BROWSER_QA',JSON.stringify({viewport:viewport.name,valid:true,incompleteRejected:denied.includes('RESPALDO INCOMPLETO'),missingD1Rejected:noD1.includes('no contiene ninguna tabla D1')}));
    console.log(JSON.stringify({viewport:viewport.name,profile,admin,origin}));
   }catch(e){failures.push(viewport.name+': '+String(e?.message||e).slice(0,240));}
   finally{await context.close();}
