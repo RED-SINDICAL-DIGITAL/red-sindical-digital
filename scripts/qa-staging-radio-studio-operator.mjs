@@ -84,7 +84,7 @@ try{
    // Unauthorized operator: API returns 403; private studio must be hidden.
    mock.denyNext=true;
    await page.locator('#refresh').click();
-   await page.waitForFunction(()=>document.getElementById('studio')?.hidden===true,null,{timeout:12000});
+   await page.waitForFunction(()=>document.getElementById('studio')?.hidden===true&&document.getElementById('status')?.textContent.includes('permiso'),null,{timeout:12000});
    const state=await page.evaluate(()=>({studioHidden:document.getElementById('studio').hidden,status:document.getElementById('status').textContent}));
    if(!state.studioHidden||!state.status.includes('permiso'))errors.push(device.name+': revocation did not hide private controls');
    console.log(JSON.stringify({device:device.name,verifiedModes:mock.settingsWrites,rollback,permissionGate:state.studioHidden,accountSwitchIsolated:accountSwitch.hidden,mockRequests:mock.requests.length}));
