@@ -40,6 +40,20 @@ try {
    await page.locator('#app').waitFor({state:'visible',timeout:14000});
    const entered=await page.evaluate(()=>({gateHidden:document.getElementById('loginGate').classList.contains('hidden'),stored:sessionStorage.getItem('uadav_admin_v8'),appVisible:!document.getElementById('app').classList.contains('hidden')}));
    if(!entered.gateHidden||!entered.appVisible||entered.stored!=='QA-ADMIN-VALID')problems.push(viewport.name+': mock accepted login failed');
+   await page.evaluate(()=>window.go('audit'));
+   await page.locator('#backupPreviewResult').waitFor({state:'attached',timeout:12000});
+   const backupCheck=await page.evaluate(async()=>{
+    const basic={generated_at:'2026-11-10T00:00:00Z',kv:{bolsa_trabajo:[],postulaciones_trabajo:[]},tables:{},backup_integrity:{complete:false}};
+    const fake=data=>({files:[{size:JSON.stringify(data).length,text:async()=>JSON.stringify(data)}]});
+    await window.previewBackupFile(fake(basic));
+    const incomplete=document.getElementById('backupPreviewResult').textContent;
+    const blocked=await window.restoreMissingJobs();
+    const blockedText=document.getElementById('backupPreviewResult').textContent;
+    const invalid=await window.previewBackupFile(fake({generated_at:'2026-11-10'}));
+    const invalidText=document.getElementById('backupPreviewResult').textContent;
+    return {incomplete:incomplete.includes('INCOMPLETO')&&incomplete.includes('Integridad del respaldo'),blocked:blocked===false&&blockedText.includes('Restauración bloqueada'),invalid:invalidText.includes('No se pudo validar')};
+   });
+   if(!backupCheck.incomplete||!backupCheck.blocked||!backupCheck.invalid)problems.push(viewport.name+': backup integrity/restore guard failed');
    revokeNext=true;
    await page.evaluate(()=>window.refreshSystemPills());
    await page.waitForFunction(()=>document.getElementById('app').classList.contains('hidden')&&!sessionStorage.getItem('uadav_admin_v8'),null,{timeout:10000});
@@ -53,7 +67,7 @@ try {
    const after=await page.evaluate(()=>({hidden:document.getElementById('app').classList.contains('hidden'),stored:sessionStorage.getItem('uadav_admin_v8'),field:document.getElementById('loginKey').value}));
    if(!after.hidden||after.stored||after.field)problems.push(viewport.name+': logout did not clear private access');
    if(otherWrites)problems.push(viewport.name+': unexpected API write');
-   console.log(JSON.stringify({device:viewport.name,invalidRejected:rejected.hidden,accepted:entered.appVisible,logoutCleared:after.hidden&&!after.stored,revocationHidden:true,checks:adminChecks,denied,externalWrites:otherWrites}));
+   console.log(JSON.stringify({device:viewport.name,invalidRejected:rejected.hidden,accepted:entered.appVisible,logoutCleared:after.hidden&&!after.stored,revocationHidden:true,checks:adminChecks,denied,backupCheck,externalWrites:otherWrites}));
   }catch(e){problems.push(viewport.name+': '+String(e.message).slice(0,210));}
   finally{await context.close()}
  }
