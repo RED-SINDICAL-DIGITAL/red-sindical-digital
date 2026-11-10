@@ -72,7 +72,7 @@ try{
    }));
    if(!accountSwitch.hidden||accountSwitch.stations||accountSwitch.privateRequests||accountSwitch.privateChat)errors.push(device.name+': account switch leaked previous operator state');
    await page.locator('#refresh').click();
-   await page.waitForFunction(()=>document.getElementById('status')?.textContent.includes('Acceso privado rechazado'),null,{timeout:12000});
+   await page.waitForFunction(()=>document.getElementById('status')?.textContent.includes('Tu sesión ya no es válida'),null,{timeout:12000});
    if(!await page.locator('#studio').isHidden())errors.push(device.name+': unauthorized second account exposed studio');
    // Restore local test identity to exercise explicit API revocation after account switch.
    await page.evaluate(()=>{
