@@ -7,7 +7,7 @@
   body[data-page] .head{align-items:flex-start;gap:8px;flex-wrap:wrap}body[data-page] .head h2{font-size:22px!important;line-height:1.2}body[data-page] .head>span{font-size:12px}
   body[data-page] .layout{grid-template-columns:minmax(0,1fr)!important}body[data-page] .layout>*{min-width:0}
   body[data-page="app"] #top{display:flex!important;flex:none;height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 14px 0!important;gap:10px!important}
-  body[data-page="app"] #top .nav,body[data-page="app"] #top .artist{display:none!important}
+  body[data-page="app"] #top .nav{display:none!important}
   body[data-page="app"] #top .brand{font-size:14px!important;max-width:calc(100% - 105px);overflow:hidden;text-overflow:ellipsis}
   body[data-page="app"] #top .actions{gap:8px;min-width:0}body[data-page="app"] #top .user{width:40px;height:40px;flex:none;font-size:14px}
   body[data-page="app"] #top .searchbox{width:40px;height:40px;flex:none}body[data-page="app"] #top .searchbox button{width:38px;height:38px;min-height:38px}
@@ -278,7 +278,6 @@
 /* Mobile-first: five destinations, one profile entry and generous touch targets. */
 @media screen and (max-width:1024px){
  body[data-page="app"] #mobile{grid-template-columns:repeat(5,minmax(0,1fr))!important}
- body[data-page="app"] #top #userBtn{display:none!important}
  body[data-page="app"] #top .brand{max-width:calc(100% - 60px)}
  body[data-page="app"] #top .searchbox.open,body[data-page="app"] #top .searchbox:focus-within{width:100%!important}
  body[data-page="app"] #mediaDock.mini #mediaCard{grid-template-columns:72px minmax(0,1fr) 96px!important}

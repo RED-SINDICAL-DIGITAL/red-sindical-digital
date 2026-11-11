@@ -19,7 +19,7 @@ body[data-page="app"] #top .searchbox{order:1;border-radius:999px!important;flex
 body[data-page="app"] #uadavInstallApp{order:2}
 body[data-page="app"] #top .artist{order:3;white-space:nowrap;min-height:44px}
 body[data-page="app"] #top .user{order:4;flex:none;width:44px;height:44px;background:#1c3b52;color:#bcf0ff;border:1px solid #5bd3f844}
-@media(min-width:1001px){
+@media(min-width:1025px){
  body[data-page="app"] #shell{background:#030912}
  body[data-page="app"] #top{position:fixed;inset:12px 12px auto 252px;width:auto;height:64px;padding:10px 18px!important;display:flex;flex-direction:row;align-items:center;background:#0b1726!important;border:0;border-radius:12px}
  body[data-page="app"] #top .brand{position:fixed;left:36px;top:34px;z-index:1;font-size:15px;letter-spacing:-.04em;display:flex;align-items:center;gap:8px}
@@ -40,7 +40,8 @@ body[data-page="app"] #top .user{order:4;flex:none;width:44px;height:44px;backgr
  body[data-page="app"] #mediaDock.mini{bottom:24px;right:24px}
  body[data-page="app"] #mediaDock.expanded{inset:88px 12px 12px 252px;border-radius:14px}
 }
-@media(max-width:1000px){
+@media(max-width:1024px){
+ body[data-page="app"] #viewWrap{margin:0 0 calc(64px + env(safe-area-inset-bottom))}
  body[data-page="app"] #top{position:relative;display:flex!important;flex:none;height:64px;min-height:64px;gap:8px!important;padding:10px 12px!important;background:#0b1726!important;border:0}
  body[data-page="app"] #top .brand{display:flex;align-items:center;font-size:23px;flex:none;padding:0}
  body[data-page="app"] #top .brand [data-brand-name]{display:none}
@@ -150,3 +151,6 @@ body[data-page="radio-studio"] :is(button.primary,#signin){background:#36c6f4!im
 
 body[data-page="playlists"] #playlistSearch{box-sizing:border-box;width:100%;max-width:100%;min-width:0}
 @media(max-width:600px){body[data-page="app"] #top:has(.searchbox:focus-within) .artist,body[data-page="app"] #top:has(.searchbox:focus-within) #uadavInstallApp{display:none!important}}
+body[data-page="app"] #top .searchbox input{height:100%;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none;padding:0 12px 0 0!important;color:#eef6ff!important}
+body[data-page="app"] #top #searchIcon{display:grid;place-items:center}
+body[data-page="app"] #top #searchIcon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}

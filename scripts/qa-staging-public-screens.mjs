@@ -14,7 +14,7 @@ const screens=[
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const failures=[];
 try{
- for(const viewport of [{name:'mobile-320',width:320,height:700},{name:'mobile-390',width:390,height:844},{name:'desktop-1365',width:1365,height:768}]){
+ for(const viewport of [{name:'mobile-320',width:320,height:700},{name:'mobile-390',width:390,height:844},{name:'tablet-1024',width:1024,height:768},{name:'desktop-1365',width:1365,height:768}]){
   const context=await browser.newContext({viewport,locale:'es-AR',serviceWorkers:'block'});
   const writes=[];
   await context.addInitScript(()=>{window.UADAV_ENV='staging';window.PLATFORM_ENV='staging'});
