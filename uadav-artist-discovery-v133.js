@@ -30,6 +30,17 @@ function fromChannelInfo(info){
 }
 
 
+// Reuse explicit YouTube channel identities returned with search results. Never infer a channel from a name.
+function rememberChannel(result){
+ if(!result||result.visible===false||result.review_level==='red')return null;
+ const ref=channelRef(result.channelId||result.channel_id||result.authorId||result.author_url||result.channel_url||'');
+ if(!/^UC[A-Za-z0-9_-]{22}$/.test(ref))return null;
+ const name=String(result.author||result.channelTitle||result.channel_name||'').trim();
+ if(!name)return null;
+ const profile=fromChannelInfo({channelId:ref,nombre:name,foto:result.author_thumbnail||result.channelThumbnail||result.authorThumbnails?.[0]?.url||''});
+ remember(profile);return profile;
+}
+
 function followedProfileHref(a,origin){
  const copy={...a};let saved=null;
  try{const u=new URL(a.url||'',origin);if(u.origin===origin&&!u.username&&!u.password&&/^\/artista(?:\.html)?$/.test(u.pathname))saved=u}catch{}
@@ -42,5 +53,5 @@ function followedProfileHref(a,origin){
  return profileHref({...copy,discovered:true,nombre:saved?.searchParams.get('discover')||a.nombre||a.nombre_artistico||''});
 }
 
-g.UADAVArtistDiscovery={remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,followedProfileHref};
+g.UADAVArtistDiscovery={remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,rememberChannel,followedProfileHref};
 })(globalThis);

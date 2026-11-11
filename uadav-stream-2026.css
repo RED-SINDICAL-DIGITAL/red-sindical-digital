@@ -11,29 +11,49 @@ body[data-page] .chip.active{background:var(--stream-text)!important;color:#0710
 body[data-page] :is(.section-head,.head) h2{font-size:clamp(22px,2.2vw,30px);letter-spacing:-.035em;font-weight:800}
 body[data-page] :is(.section-sub,.lead){color:var(--stream-muted);line-height:1.65}
 body[data-page] :is(.empty,.empty-state){background:#102033!important;border:1px solid var(--stream-line)!important;border-radius:12px!important;color:var(--stream-muted)!important;padding:24px!important}
-/* Desktop application frame: navigation stays beside content and the player stays mounted. */
+/* One persistent top bar for search, installation, the artist portal and personal account. */
+body[data-page="app"] #uadavInstallApp{min-height:44px;border:1px solid #ffffff22;border-radius:999px;background:#182b3e;color:#eaf6ff;padding:10px 16px;font:700 12px system-ui;cursor:pointer;white-space:nowrap}
+body[data-page="app"] #uadavInstallApp[hidden]{display:none!important}
+body[data-page="app"] #top .actions{display:flex!important;align-items:center;gap:10px!important;min-width:0}
+body[data-page="app"] #top .searchbox{order:1;border-radius:999px!important;flex:1;min-width:80px}
+body[data-page="app"] #uadavInstallApp{order:2}
+body[data-page="app"] #top .artist{order:3;white-space:nowrap;min-height:44px}
+body[data-page="app"] #top .user{order:4;flex:none;width:44px;height:44px;background:#1c3b52;color:#bcf0ff;border:1px solid #5bd3f844}
 @media(min-width:1001px){
  body[data-page="app"] #shell{background:#030912}
- body[data-page="app"] #top{position:fixed;inset:12px auto 12px 12px;width:228px;height:auto;padding:28px 14px 20px;display:flex;flex-direction:column;gap:32px;align-items:stretch;background:#0b1726!important;border:0;border-radius:14px}
- body[data-page="app"] #top .brand{font-size:15px;padding:0 10px;letter-spacing:-.04em;display:flex;align-items:center;gap:8px}
- body[data-page="app"] #top [data-brand-icon]{color:var(--stream-accent);font-size:27px}
- body[data-page="app"] #top .nav{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+ body[data-page="app"] #top{position:fixed;inset:12px 12px auto 252px;width:auto;height:64px;padding:10px 18px!important;display:flex;flex-direction:row;align-items:center;background:#0b1726!important;border:0;border-radius:12px}
+ body[data-page="app"] #top .brand{position:fixed;left:36px;top:34px;z-index:1;font-size:15px;letter-spacing:-.04em;display:flex;align-items:center;gap:8px}
+ body[data-page="app"] #top [data-brand-icon]{color:var(--stream-accent);font-size:25px}
+ body[data-page="app"] #top .nav{position:fixed;inset:12px auto 12px 12px;width:228px;padding:88px 14px 20px;display:flex;flex-direction:column;align-items:stretch;gap:6px;background:#0b1726;border-radius:14px}
  body[data-page="app"] #top .nav button{display:flex;align-items:center;gap:14px;min-height:52px;padding:14px 16px;text-align:left;font-size:14px;font-weight:650;border-radius:8px;color:#9fb1c9}
  body[data-page="app"] #top .nav button svg{width:22px;height:22px;flex:none}
  body[data-page="app"] #top .nav button:hover{background:#ffffff09;color:white}
  body[data-page="app"] #top .nav button.active{background:#20374e!important;color:#fff!important}
  body[data-page="app"] #top .nav button.active svg{color:var(--stream-accent)}
- body[data-page="app"] #top .actions{margin:auto 0 0;display:grid;grid-template-columns:44px 1fr;gap:12px;padding-top:20px;border-top:1px solid #ffffff12}
- body[data-page="app"] #top .searchbox,body[data-page="app"] #top .searchbox:focus-within,body[data-page="app"] #top .searchbox.open{grid-column:1/-1;width:100%;height:44px;background:#162536;border-color:transparent;border-radius:8px}
- body[data-page="app"] #top .searchbox input{width:100%;font-size:12px;padding-right:8px}
- body[data-page="app"] #top .artist{font-size:12px;background:#1e3b54;border:0;border-radius:8px}
- body[data-page="app"] #viewWrap{margin:12px 12px 12px 252px;border-radius:14px;overflow:hidden}
+ body[data-page="app"] #top .actions{margin:0!important;width:100%;padding:0;border:0}
+ body[data-page="app"] #top .searchbox,body[data-page="app"] #top .searchbox:focus-within,body[data-page="app"] #top .searchbox.open{width:auto!important;max-width:680px;height:44px;background:#162536;border-color:transparent}
+ body[data-page="app"] #top .searchbox input{width:100%;font-size:14px;padding-right:14px}
+ body[data-page="app"] #top .artist{margin-left:auto;background:#1e3b54;border:1px solid #ffffff12;border-radius:999px;padding:10px 18px}
+ body[data-page="app"] #viewWrap{margin:88px 12px 12px 252px;border-radius:14px;overflow:hidden}
  body[data-page="app"] #view{background:var(--stream-bg)}
  body[data-page="app"] #radioDock{left:calc(50% + 120px);width:min(920px,calc(100vw - 300px));bottom:24px;background:#142639f5;border-radius:10px;border-color:#ffffff20}
  body[data-page="app"] #mediaDock.mini{bottom:24px;right:24px}
- body[data-page="app"] #mediaDock.expanded{inset:12px 12px 12px 252px;border-radius:14px}
+ body[data-page="app"] #mediaDock.expanded{inset:88px 12px 12px 252px;border-radius:14px}
 }
 @media(max-width:1000px){
+ body[data-page="app"] #top{position:relative;display:flex!important;flex:none;height:64px;min-height:64px;gap:8px!important;padding:10px 12px!important;background:#0b1726!important;border:0}
+ body[data-page="app"] #top .brand{display:flex;align-items:center;font-size:23px;flex:none;padding:0}
+ body[data-page="app"] #top .brand [data-brand-name]{display:none}
+ body[data-page="app"] #top .brand [data-brand-icon]{color:#46cdf6}
+ body[data-page="app"] #top .nav{display:none!important}
+ body[data-page="app"] #top .actions{margin:0!important;flex:1;gap:6px!important;min-width:0}
+ body[data-page="app"] #top .searchbox,body[data-page="app"] #top .searchbox:focus-within,body[data-page="app"] #top .searchbox.open{width:auto!important;min-width:44px;flex:1;height:42px;background:#162638;border-color:#ffffff12}
+ body[data-page="app"] #top .searchbox input{width:100%;font-size:12px!important;padding-right:6px}
+ body[data-page="app"] #top .searchbox button{width:36px;flex-basis:36px}
+ body[data-page="app"] #top .artist{font-size:10px!important;padding:8px 10px;border-radius:999px;background:#193c53}
+ body[data-page="app"] #top .user{width:40px;height:40px;font-size:14px}
+ body[data-page="app"] #uadavInstallApp{font-size:0;width:40px;min-height:40px;padding:0;flex:none}
+ body[data-page="app"] #uadavInstallApp::before{content:'↓';font-size:20px}
  body[data-page="app"] #mobile{background:#07111df5!important;border:0;padding-top:5px;box-shadow:0 -12px 24px #07111d88}
  body[data-page="app"] #mobile button{color:#95a7bd;font-weight:600;gap:5px}
  body[data-page="app"] #mobile button.active{background:transparent!important;color:#55d2fa!important}
@@ -129,3 +149,4 @@ body[data-page="radio-studio"] :is(button.primary,#signin){background:#36c6f4!im
 @media(max-width:600px){body[data-page="radio-studio"] header{align-items:flex-start;gap:16px;flex-wrap:wrap}}
 
 body[data-page="playlists"] #playlistSearch{box-sizing:border-box;width:100%;max-width:100%;min-width:0}
+@media(max-width:600px){body[data-page="app"] #top:has(.searchbox:focus-within) .artist,body[data-page="app"] #top:has(.searchbox:focus-within) #uadavInstallApp{display:none!important}}

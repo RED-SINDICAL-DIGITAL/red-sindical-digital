@@ -9,7 +9,7 @@ const screens=[
  ['publicar-evento','/publicar-evento.html'],['evento','/evento.html?id='+event.id],
  ['biblioteca','/biblioteca.html'],['artistas','/artistas.html'],['publicidad','/consultar-publicidad.html'],
  ['buscar','/buscar.html'],['radio','/radio.html'],['radio-studio','/radio-studio.html'],
- ['playlists','/playlists.html'],['podcasts','/podcasts.html'],['cine','/peliculas-series.html']
+ ['playlists','/playlists.html'],['podcasts','/podcasts.html'],['cine','/peliculas-series.html'],['para-artistas','/para-artistas.html'],['alta-artista','/soy-artista.html']
 ];
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const failures=[];
@@ -28,6 +28,8 @@ try{
    if(path==='config')data={branding:{name:'UADAV STREAM'},modules:{artists:true,events:true,jobs:true,radio:true,iptv:true}};
    else if(path==='health')data={ok:true,kv:true,d1:true};
    else if(path==='evento')data=event;
+   else if(path==='senales_oficiales')data=[{nombre:'Canal manual QA',tipo:'youtube',url:'https://www.youtube.com/watch?v=abcdefghijk',activa:true},{nombre:'Canal oculto QA',tipo:'youtube',url:'https://www.youtube.com/watch?v=lmnopqrstuv',activa:false}];
+   else if(path==='public/live-artists')data=[{artist_name:'Emisión detectada QA',provider:'youtube',video_id:'zyxwvutsrqp',detected_at:new Date().toISOString()},{artist_name:'Canal vinculado QA',provider:'twitch',url:'https://www.twitch.tv/qa_local',linked_channel:true}];
    else if(path==='cartelera'||path==='eventos')data=[event];
    else if(path.startsWith('account/')||path.startsWith('radio-studio')){status=401;data={error:'Sin sesión de prueba'};}
    else if(path.includes('bolsa')||path.includes('jobs'))data={items:[],success:true};
@@ -36,6 +38,19 @@ try{
   });
   const page=await context.newPage();
   try{
+   // Exercise the real install control with a synthetic browser prompt, without installing anything.
+   await page.goto(origin+'/app.html?view=%2Fpara-artistas.html',{waitUntil:'domcontentloaded'});
+   await page.waitForFunction(()=>!!document.getElementById('uadavInstallApp'),null,{timeout:12000});
+   await page.evaluate(()=>{const e=new Event('beforeinstallprompt',{cancelable:true});e.prompt=async()=>({outcome:'dismissed'});window.dispatchEvent(e)});
+   await page.locator('#uadavInstallApp').waitFor({state:'visible',timeout:8000});
+   const topbar=await page.evaluate(()=>{
+    const ids=['searchForm','uadavInstallApp','userBtn'];
+    const nodes=[...ids.map(id=>document.getElementById(id)),document.querySelector('#top .artist')];
+    return {topAligned:nodes.every(n=>{const r=n.getBoundingClientRect();return r.width>0&&r.top>=0&&r.bottom<=80&&r.right<=innerWidth+3}),overflow:document.documentElement.scrollWidth>innerWidth+3};
+   });
+   if(!topbar.topAligned||topbar.overflow)failures.push(viewport.name+': topbar controls unavailable or overflowing '+JSON.stringify(topbar));
+   await page.locator('#uadavInstallApp').click();
+   if(!await page.locator('#uadavInstallApp').isHidden())failures.push(viewport.name+': installation button did not consume the simulated prompt');
    for(const [name,path] of screens){
     try{
      await page.goto(origin+'/app.html?view='+encodeURIComponent(path),{waitUntil:'domcontentloaded'});
@@ -46,6 +61,13 @@ try{
       const d=document.querySelector('#view')?.contentDocument;
       return d?.readyState==='complete'&&Array.from(d.styleSheets).some(s=>s.href?.includes('/uadav-stream-2026.css'));
      },null,{timeout:15000});
+     if(name==='en-vivo'){
+      await frame.locator('#official').getByText('Canal manual QA',{exact:true}).waitFor({state:'visible',timeout:8000});
+      const manual=await frame.locator('#official').innerText();
+      if(manual.includes('Canal oculto QA')||manual.includes('EN VIVO'))failures.push(viewport.name+': hidden/manual live state misrepresented');
+      await frame.locator('#verified').getByText('Emisión detectada QA',{exact:true}).waitFor({state:'visible',timeout:8000});
+      if(!(await frame.locator('#verified').innerText()).includes('EN VIVO'))failures.push(viewport.name+': detected broadcast lost its live status');
+     }
      if(name==='trabajo'){
       await frame.getByRole('link',{name:'Ofrecer trabajo',exact:true}).click();
       await frame.locator('#pubJobTitulo').waitFor({state:'visible',timeout:8000});
