@@ -14,7 +14,7 @@ try{
    await page.goto(base+'/app.html?view=%2Fusuario.html',{waitUntil:'domcontentloaded'});
    const frame=page.frameLocator('#view');
    await frame.locator('#profileNativeHome').waitFor({state:'visible',timeout:16000});
-   const studioShortcut=frame.locator('a.profile-task[href="/radio-studio.html"]');
+   const studioShortcut=frame.locator('a.profile-radio-shortcut[href="/radio-studio.html"]');
    await studioShortcut.waitFor({state:'visible',timeout:10000});
    const studioAccessible=await studioShortcut.evaluate(node=>{
      const home=document.getElementById('profileNativeHome');
