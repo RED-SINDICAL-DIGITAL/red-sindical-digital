@@ -112,3 +112,18 @@ body[data-page] input::placeholder,body[data-page] textarea::placeholder{color:#
 body[data-page="consultar-publicidad"] main{max-width:1180px;padding-inline:clamp(20px,4vw,48px)}
 body[data-page="consultar-publicidad"] .intro h1,body[data-page="publicar-evento"] h1{font-size:clamp(36px,5vw,64px);font-weight:800;line-height:1.06;letter-spacing:-.05em}
 body[data-page="consultar-publicidad"] .panel{background:#101f30;border:1px solid #ffffff12;border-radius:12px;box-shadow:none}
+
+/* Secondary catalogs and the operator workspace use the same visual vocabulary. */
+body:is([data-page="playlists"],[data-page="podcasts"],[data-page="radio-studio"]) main{width:100%;max-width:1380px;margin-inline:auto;padding:32px clamp(20px,4vw,54px) 110px}
+body:is([data-page="playlists"],[data-page="podcasts"],[data-page="radio-studio"]) h1{font-size:clamp(34px,4.7vw,62px);font-weight:800;letter-spacing:-.05em;line-height:1.08}
+body[data-page="podcasts"] .podcastHero{border-radius:12px;background:linear-gradient(125deg,#153e59,#101e30);border:0;box-shadow:none}
+body[data-page="podcasts"] .podcastHero small{color:#64d6f8}
+body[data-page="podcasts"] .podcastFilters button{min-height:44px;border-radius:999px;background:#172b3f;color:#c7d7e7;border:1px solid #ffffff12}
+body[data-page="podcasts"] .podcastFilters button[aria-pressed="true"]{background:#36c6f4;color:#061522;border-color:transparent}
+body[data-page="playlists"] .card{border:0;border-radius:8px;background:#122338;box-shadow:none;overflow:hidden}
+body[data-page="radio-studio"] header{padding-bottom:24px;border-bottom:1px solid #ffffff12;margin-bottom:24px}
+body[data-page="radio-studio"] #status{color:#b4c8d9;line-height:1.7}
+body[data-page="radio-studio"] .card{background:#112236;border:1px solid #ffffff12;border-radius:10px;box-shadow:none}
+body[data-page="radio-studio"] :is(button,#signin){min-height:44px;border-radius:999px;padding:10px 18px;font-weight:700}
+body[data-page="radio-studio"] :is(button.primary,#signin){background:#36c6f4!important;color:#061522!important}
+@media(max-width:600px){body[data-page="radio-studio"] header{align-items:flex-start;gap:16px;flex-wrap:wrap}}

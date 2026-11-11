@@ -7,7 +7,9 @@ const event={id:'EV-QA-RESPONSIVE',titulo:'Encuentro de artistas · Prueba local
 const screens=[
  ['cartelera','/cartelera.html'],['trabajo','/bolsa-trabajo.html'],['en-vivo','/en-vivo.html'],
  ['publicar-evento','/publicar-evento.html'],['evento','/evento.html?id='+event.id],
- ['biblioteca','/biblioteca.html'],['artistas','/artistas.html'],['publicidad','/consultar-publicidad.html']
+ ['biblioteca','/biblioteca.html'],['artistas','/artistas.html'],['publicidad','/consultar-publicidad.html'],
+ ['buscar','/buscar.html'],['radio','/radio.html'],['radio-studio','/radio-studio.html'],
+ ['playlists','/playlists.html'],['podcasts','/podcasts.html'],['cine','/peliculas-series.html']
 ];
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const failures=[];

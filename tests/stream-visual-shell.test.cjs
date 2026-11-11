@@ -26,3 +26,7 @@ test('retired profile override is absent and the maintained native CSS is embedd
 });
 
 test("commercial inquiry opts into the common visual system",()=>{assert.match(read("consultar-publicidad.html"),/<body data-page="consultar-publicidad">/)});
+
+test('operator workspace and media catalogs opt into the shared theme',()=>{
+ for(const name of ['radio-studio','playlists','podcasts'])assert.ok(read(name+'.html').includes('data-page="'+name+'"'),name);
+});
