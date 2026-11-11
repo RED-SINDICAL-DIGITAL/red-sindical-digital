@@ -9,7 +9,7 @@ return{image,target,placeholder:new URL(image).pathname==='/assets/editorial/esp
 }
 function mount(config,doc){doc=doc||root.document;const anchors={top:'worldsSection',infeed:'artistsSection',footer:'siteFooter'};
 for(const slot of Object.keys(anchors)){doc.getElementById('homeBanner-'+slot)?.remove();const model=bannerModel(config?.[slot]),anchor=doc.getElementById(anchors[slot]);if(!model||!anchor)continue;
-const section=doc.createElement('aside');section.id='homeBanner-'+slot;section.className='homeBanner shell';section.setAttribute('aria-label','Publicidad');
+const section=doc.createElement('aside');section.id='homeBanner-'+slot;section.className='homeBanner shell';section.setAttribute('data-placeholder',String(model.placeholder));section.setAttribute('aria-label','Publicidad');
 const label=doc.createElement('small');label.textContent=model.placeholder?'PUBLICIDAD · ESPACIO DISPONIBLE':'PUBLICIDAD';section.appendChild(label);
 const image=doc.createElement('img');image.src=model.image;image.alt=model.placeholder?'Tu marca puede estar acá. Espacio publicitario disponible.':'Publicidad';image.loading='lazy';image.decoding='async';image.addEventListener('error',()=>section.remove(),{once:true});
 if(model.target){const link=doc.createElement('a');link.href=model.target;link.target='_blank';link.rel='noopener noreferrer';link.appendChild(image);section.appendChild(link)}else section.appendChild(image);

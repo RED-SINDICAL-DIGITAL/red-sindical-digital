@@ -74,6 +74,7 @@ jobs:
           node scripts/qa-staging-profile-subviews.mjs
           node scripts/qa-staging-public-screens.mjs
           node scripts/qa-staging-home-stage.mjs
+          node scripts/qa-staging-popular-artists.mjs
           node scripts/qa-staging-radio-studio-operator.mjs
           node scripts/qa-staging-admin-anonymous.mjs
           node scripts/qa-staging-admin-mock-auth.mjs

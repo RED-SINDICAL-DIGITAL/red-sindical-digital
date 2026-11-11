@@ -195,3 +195,24 @@ body[data-page="index-v117"].uadav-tv-mode .hero h1{font-size:clamp(42px,4vw,64p
 body[data-page="index-v117"].uadav-tv-mode .hero p{font-size:22px}
 body[data-page="index-v117"].uadav-tv-mode .hero .btn{min-height:56px;font-size:20px}
 body[data-page="index-v117"].uadav-tv-mode :is(a,button,[tabindex]):focus-visible{outline:4px solid #fff;outline-offset:5px;box-shadow:0 0 0 8px #27bdec80}
+
+/* Compact content-first home stage, supersedes the earlier presentation sizing. */
+body[data-page="index-v117"] .hero{height:clamp(240px,24vw,310px);min-height:0;margin:8px 12px;align-items:center}
+body[data-page="index-v117"] .hero .copy{width:65%;padding:24px 34px 46px}
+body[data-page="index-v117"] .hero h1{font-size:clamp(28px,3vw,40px);max-width:26ch;-webkit-line-clamp:2;margin:8px 0}
+body[data-page="index-v117"] .hero p{font:400 14px/1.45 var(--stream-font,Inter,system-ui,sans-serif);max-width:55ch;-webkit-line-clamp:2;margin:8px 0}
+body[data-page="index-v117"] .hero .buttons{margin-top:12px}
+body[data-page="index-v117"] .hero-controls{position:absolute;right:16px;bottom:12px;z-index:3;margin:0;gap:5px}
+body[data-page="index-v117"] .hero-controls .btn{width:36px;height:36px;min-width:36px;min-height:36px;padding:0;background:#07121bd9;border-color:#ffffff25}
+body[data-page="index-v117"] .hero-controls span{font-size:11px}
+body[data-page="index-v117"] #heroPause{width:28px;min-width:28px;font-size:11px}
+#popularMusic[hidden]{display:none!important}.popular-genres{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}.popular-genres button{border:1px solid #ffffff25;background:#142534;color:#d4e4ef;padding:9px 15px;border-radius:99px;cursor:pointer}.popular-genres button[aria-pressed="true"]{background:#2ec4ec;color:#06111b}.popular-music-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(170px,210px);gap:16px;overflow:auto;padding:6px 2px 16px}.popular-artist{min-width:0;background:#10202e;border-radius:14px;padding:14px}.popular-artist img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;display:block;background:#132a3d}.popular-artist a{display:block;color:inherit;text-decoration:none}.popular-artist strong{display:block;margin-top:12px;font-size:17px}.popular-artist small{display:block;color:#a0b7c8;margin:6px 0;font-size:12px}.popular-artist .popular-library{margin-top:10px;font-size:12px;color:#53cfee;min-height:36px;display:flex;align-items:center}.popular-artist a:focus-visible,.popular-genres button:focus-visible{outline:3px solid white;outline-offset:4px}
+@media(max-width:650px){body[data-page="index-v117"] .hero{height:300px;min-height:0;margin:8px}body[data-page="index-v117"] .hero .copy{width:100%;padding:20px 18px 50px}body[data-page="index-v117"] .hero h1{font-size:28px}body[data-page="index-v117"] .hero p{font-size:13px}body[data-page="index-v117"] .hero .eyebrow{font-size:10px}body[data-page="index-v117"] .hero-controls{bottom:10px;right:12px}.popular-music-rail{grid-auto-columns:155px;gap:10px}.popular-artist{padding:12px}}
+@media(min-width:1800px){body[data-page="index-v117"] .hero{height:350px}body[data-page="index-v117"] .hero .copy{padding:28px 48px 48px}body[data-page="index-v117"] .hero h1{font-size:48px}body[data-page="index-v117"] .hero p{font-size:20px}}
+body[data-page="index-v117"].uadav-tv-mode .hero{height:350px;min-height:0}body[data-page="index-v117"].uadav-tv-mode .hero .copy{padding:24px 42px 58px}body[data-page="index-v117"].uadav-tv-mode .hero h1{font-size:42px}body[data-page="index-v117"].uadav-tv-mode .hero p{font-size:20px}body[data-page="index-v117"].uadav-tv-mode .hero-controls .btn{min-width:48px;min-height:48px;font-size:18px}body[data-page="index-v117"].uadav-tv-mode .hero-controls span{font-size:17px}
+body[data-page="index-v117"] .hero{height:clamp(280px,22vw,310px)}
+body[data-page="index-v117"] .homeBanner[data-placeholder="true"]{margin:12px auto}
+body[data-page="index-v117"] .homeBanner[data-placeholder="true"] img{height:68px;max-height:68px;width:100%;object-fit:contain;border-radius:10px}
+@media(max-width:720px){body[data-page="index-v117"] .hero .copy{padding:20px 18px 50px!important}body[data-page="index-v117"] .hero h1{font-size:28px!important;line-height:1.06!important}body[data-page="index-v117"] .hero p{font-size:13px!important;line-height:1.45!important}body[data-page="index-v117"] .hero{height:300px}body[data-page="index-v117"] .homeBanner[data-placeholder="true"] img{height:54px;max-height:54px}}
+@media(min-width:1800px){body[data-page="index-v117"] .hero{height:350px}}
+body[data-page="index-v117"].uadav-tv-mode .hero{height:350px}
