@@ -2,7 +2,7 @@ name: Bolsa UI staging checks
 on:
   workflow_dispatch:
   push:
-    branches: [audit/continuidad-demo-20261019]
+    branches: [audit/continuidad-demo-20261019, integration/staging-preserve-beta-20261109]
     paths:
       - acceso-correo.html
       - entrar-correo.html

@@ -1,5 +1,8 @@
 name: Published staging preview acceptance
 on:
+  push:
+    branches:
+      - integration/staging-preserve-beta-20261109
   pull_request:
     branches:
       - audit/continuidad-demo-20261019

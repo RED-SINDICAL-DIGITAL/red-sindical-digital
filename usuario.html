@@ -442,6 +442,9 @@ body[data-page="usuario"] #profileNativeHome #accountNotices{margin:16px clamp(2
  body[data-page="usuario"] #profileNativeHome .profile-empty-recent{min-height:160px;padding:22px!important}
 }
 @media(prefers-reduced-motion:reduce){body[data-page="usuario"] #profileNativeHome *{transition:none!important}}
+
+body[data-page="usuario"] #profileNativeHome .hero>.edit::before,body[data-page="usuario"] #profileNativeHome .hero>.edit::after{content:none!important}
+body[data-page="usuario"] #profileNativeHome #recent>.empty{flex:1 0 100%!important;width:100%!important;min-height:110px;display:flex;align-items:center}
 </style><style id="u2-profile-detail-v1">
 /* Mobile-first artist/job detail screens. Single scoped layer, no new account or API state. */
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] #mi-artista,
