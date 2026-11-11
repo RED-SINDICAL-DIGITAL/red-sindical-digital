@@ -4,6 +4,9 @@ on:
   push:
     branches: [audit/continuidad-demo-20261019, integration/staging-preserve-beta-20261109]
     paths:
+      - uadav-stream-2026.css
+      - tests/stream-visual-shell.test.cjs
+      - radio-studio.html
       - acceso-correo.html
       - entrar-correo.html
       - configurar-correo.html
@@ -98,6 +101,9 @@ on:
       - .github/workflows/bolsa-ui-staging.yml
   pull_request:
     paths:
+      - uadav-stream-2026.css
+      - tests/stream-visual-shell.test.cjs
+      - radio-studio.html
       - acceso-correo.html
       - entrar-correo.html
       - configurar-correo.html

@@ -4,6 +4,8 @@ on:
     branches:
       - integration/staging-preserve-beta-20261109
     paths:
+      - playlists.html
+      - podcasts.html
       - radio-studio.html
       - uadav-radio-studio-entry.js
       - uadav-account-sync.js
@@ -24,6 +26,8 @@ on:
       - .github/workflows/staging-integration-visual.yml
   pull_request:
     paths:
+      - playlists.html
+      - podcasts.html
       - radio-studio.html
       - uadav-radio-studio-entry.js
       - uadav-account-sync.js
