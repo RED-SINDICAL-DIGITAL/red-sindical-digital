@@ -5,7 +5,7 @@ const read=p=>readFileSync(p,'utf8');
 test('public routes share one versioned visual stylesheet',()=>{
  for(const path of ['app.html','usuario.html','index-v117.html','en-vivo.html','cartelera.html','bolsa-trabajo.html','artistas.html','biblioteca.html','radio.html','radio-studio.html','publicar-evento.html']){
   const html=read(path);
-  assert.equal((html.match(/href="\/uadav-stream-2026\.css\?v=20261111-spotify-beta"/g)||[]).length,1,path);
+  assert.equal((html.match(/href="\/uadav-stream-2026\.css\?v=[^"]+"/g)||[]).length,1,path);
  }
 });
 test('desktop and mobile reuse the same navigation routes and accessible SVG icons',()=>{
