@@ -7,3 +7,5 @@ test('all new inline scripts parse and the compact slider contains no management
 test('album names can match an editorial discography without inventing playlists',()=>{const s=fs.readFileSync('uadav-artist-library-v136.js','utf8'),c={};vm.runInNewContext(s.slice(s.indexOf('function isAlbum('),s.indexOf('const esc=')),c);const artist=popular.find('@sodastereo');assert.equal(c.isAlbum({titulo:'Nada Personal'},artist),true);assert.equal(c.isAlbum({titulo:'Nada Personal'},{}),false);assert.equal(c.isAlbum({titulo:'Mis favoritos - álbum'},artist),false);assert.equal(c.isAlbum({titulo:'Nada Personal mix'},artist),false)});
 
 test('player and legacy responsive styles cannot impose a competing Home hero height',()=>{for(const file of ['uadav-player-v125.css','uadav-responsive-v120.css'])assert.doesNotMatch(fs.readFileSync(file,'utf8'),/index-v117[^\n]*#hero/)});
+
+test('shell typography enhancer delegates Home hero sizing to its stylesheet',()=>{assert.doesNotMatch(fs.readFileSync('uadav-mobile-v108.js','utf8'),/html\.uadav-in-shell #hero(?:Title|Text)/)});
