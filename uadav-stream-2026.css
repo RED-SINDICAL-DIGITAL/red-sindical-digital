@@ -216,3 +216,8 @@ body[data-page="index-v117"] .homeBanner[data-placeholder="true"] img{height:68p
 @media(max-width:720px){body[data-page="index-v117"] .hero .copy{padding:20px 18px 50px!important}body[data-page="index-v117"] .hero h1{font-size:28px!important;line-height:1.06!important}body[data-page="index-v117"] .hero p{font-size:13px!important;line-height:1.45!important}body[data-page="index-v117"] .hero{height:300px}body[data-page="index-v117"] .homeBanner[data-placeholder="true"] img{height:54px;max-height:54px}}
 @media(min-width:1800px){body[data-page="index-v117"] .hero{height:350px}}
 body[data-page="index-v117"].uadav-tv-mode .hero{height:350px}
+body[data-page="index-v117"].uadav-tv-mode .hero .copy{padding:20px 42px 48px}
+body[data-page="index-v117"].uadav-tv-mode .hero h1{font-size:40px}
+body[data-page="index-v117"].uadav-tv-mode .hero p{font-size:18px}
+body[data-page="index-v117"].uadav-tv-mode .hero .eyebrow{font-size:14px}
+body[data-page="index-v117"].uadav-tv-mode .hero .buttons .btn{min-height:50px;font-size:20px}

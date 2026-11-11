@@ -2,15 +2,15 @@
 // Editorial starting points, not a realtime chart or a UADAV verification badge.
 // Source provenance lives in docs/popular-music-seed.md. No API calls at mount.
 const seeds=[
- {ref:'UCYLNGLIzMhRTi6ZOLjAPSmw',handle:'@shakira',nombre:'Shakira',genre:'Pop',video:'BJpCypyvYtc',videoTitle:'Última · Video oficial'},
- {ref:'@sodastereo',nombre:'Soda Stereo',genre:'Rock',video:'LB6_e2uA7rE',videoTitle:'Nada Personal · Gira Me Verás Volver'},
+ {ref:'UCYLNGLIzMhRTi6ZOLjAPSmw',handle:'@shakira',nombre:'Shakira',genre:'Pop',albums:['Las Mujeres Ya No Lloran'],video:'BJpCypyvYtc',videoTitle:'Última · Video oficial'},
+ {ref:'@sodastereo',nombre:'Soda Stereo',genre:'Rock',albums:['Nada Personal'],video:'LB6_e2uA7rE',videoTitle:'Nada Personal · Gira Me Verás Volver'},
  {ref:'@abelpintosVEVO',nombre:'Abel Pintos',genre:'Folklore y pop'},
  {ref:'UCN1uKoxszK8mgaMvT4dBAcw',handle:'@LaKonga',nombre:'La K’onga',genre:'Cuarteto',video:'VwuYkMtCieM',videoTitle:'Enséñame a vivir sin ti · Video oficial'}
 ];
 const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
 const key=x=>String(x.canal||x.channel_id||x.youtube_url||x.youtube||'').replace(/^https?:\/\/(?:www\.)?youtube.com\/(?:channel\/)?/,'').replace(/\/$/,'').toLowerCase();
 const visible=x=>x&&x.visible!==false&&x.active!==false&&x.activa!==false&&x.private!==true&&!x.deleted_at&&!['hidden','oculto','private','draft','borrador','suspended','suspendido','deleted'].includes(String(x.status||x.estado||'').toLowerCase());
-function profile(s){const foto=s.video?'https://i.ytimg.com/vi/'+s.video+'/hqdefault.jpg':'/media-fallback.svg';return{id:'discover:'+s.ref,canal:s.ref,nombre:s.nombre,nombre_artistico:s.nombre,rubro:'Música · '+s.genre,genre:s.genre,foto,portada:foto,visible:true,estado:'descubierto',discovered:true,generated:true,editorial_seed:true,youtube_auto_content:true,auto_content:s.video?[{id:s.video,external_id:s.video,provider:'youtube',url:'https://www.youtube.com/watch?v='+s.video,titulo:s.videoTitle,thumbnail:foto,tipo:'video',content_type:'video'}]:[]}}
+function profile(s){const foto=s.video?'https://i.ytimg.com/vi/'+s.video+'/hqdefault.jpg':'/media-fallback.svg';return{id:'discover:'+s.ref,canal:s.ref,nombre:s.nombre,nombre_artistico:s.nombre,rubro:'Música · '+s.genre,genre:s.genre,album_titles:s.albums||[],foto,portada:foto,visible:true,estado:'descubierto',discovered:true,generated:true,editorial_seed:true,youtube_auto_content:true,auto_content:s.video?[{id:s.video,external_id:s.video,provider:'youtube',url:'https://www.youtube.com/watch?v='+s.video,titulo:s.videoTitle,thumbnail:foto,tipo:'video',content_type:'video'}]:[]}}
 function find(ref){const s=seeds.find(s=>[s.ref,s.handle].filter(Boolean).some(x=>x.toLowerCase()===String(ref).toLowerCase()));return s?profile(s):null}
 function merge(catalog=[],options={}){const rows=Array.isArray(catalog)?catalog:[],out=rows.filter(visible);if(options.popular_music_enabled===false)return out;for(const s of seeds){const duplicate=rows.some(x=>x&&([s.ref,s.handle].filter(Boolean).map(x=>x.toLowerCase()).includes(key(x))||norm(x.nombre||x.nombre_artistico)===norm(s.nombre)));if(!duplicate)out.push(profile(s))}return out}
 function href(a,library=false){const path=root.UADAVArtistDiscovery?.profileHref(a)||'/artista.html?channel='+encodeURIComponent(a.canal);return path+(library?'&tab=playlists':'')}
