@@ -58,7 +58,7 @@ try{
      });
      await page.screenshot({path:out+'/public-'+name+'-'+viewport.name+'.png',fullPage:true});
      console.log('PUBLIC_SCREEN',JSON.stringify({viewport:viewport.name,name,...state}));
-     if(state.overflow||state.overflowingFields||!state.mainVisible)failures.push(viewport.name+'/'+name+': '+JSON.stringify(state));
+     if(!state.page||state.overflow||state.overflowingFields||!state.mainVisible)failures.push(viewport.name+'/'+name+': '+JSON.stringify(state));
     }catch(error){failures.push(viewport.name+'/'+name+': '+String(error.message).slice(0,180));}
    }
    if(writes.length)failures.push(viewport.name+': public read-only inspection attempted writes: '+writes.join(','));

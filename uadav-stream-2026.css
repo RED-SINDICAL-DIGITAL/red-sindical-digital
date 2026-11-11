@@ -108,3 +108,7 @@ body[data-page="publicar-evento"] .panel{border-radius:10px;background:#101e2f;b
 /* Keep form text readable when older page styles use white input backgrounds. */
 body[data-page] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),select,textarea){background:#152638!important;color:#eef6ff!important;border:1px solid #ffffff20!important;border-radius:8px}
 body[data-page] input::placeholder,body[data-page] textarea::placeholder{color:#a5b8ca;opacity:1}
+
+body[data-page="consultar-publicidad"] main{max-width:1180px;padding-inline:clamp(20px,4vw,48px)}
+body[data-page="consultar-publicidad"] .intro h1,body[data-page="publicar-evento"] h1{font-size:clamp(36px,5vw,64px);font-weight:800;line-height:1.06;letter-spacing:-.05em}
+body[data-page="consultar-publicidad"] .panel{background:#101f30;border:1px solid #ffffff12;border-radius:12px;box-shadow:none}

@@ -24,3 +24,5 @@ test('retired profile override is absent and the maintained native CSS is embedd
  assert.ok(html.includes(css));
  assert.equal((html.match(/id="profileNativeInlineCSS"/g)||[]).length,1);
 });
+
+test("commercial inquiry opts into the common visual system",()=>{assert.match(read("consultar-publicidad.html"),/<body data-page="consultar-publicidad">/)});
