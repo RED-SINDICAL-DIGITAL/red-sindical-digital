@@ -114,7 +114,7 @@ body[data-page="consultar-publicidad"] .intro h1,body[data-page="publicar-evento
 body[data-page="consultar-publicidad"] .panel{background:#101f30;border:1px solid #ffffff12;border-radius:12px;box-shadow:none}
 
 /* Secondary catalogs and the operator workspace use the same visual vocabulary. */
-body:is([data-page="playlists"],[data-page="podcasts"],[data-page="radio-studio"]) main{width:100%;max-width:1380px;margin-inline:auto;padding:32px clamp(20px,4vw,54px) 110px}
+body:is([data-page="playlists"],[data-page="podcasts"],[data-page="radio-studio"]) main{box-sizing:border-box;width:100%;max-width:1380px;margin-inline:auto;padding:32px clamp(20px,4vw,54px) 110px}
 body:is([data-page="playlists"],[data-page="podcasts"],[data-page="radio-studio"]) h1{font-size:clamp(34px,4.7vw,62px);font-weight:800;letter-spacing:-.05em;line-height:1.08}
 body[data-page="podcasts"] .podcastHero{border-radius:12px;background:linear-gradient(125deg,#153e59,#101e30);border:0;box-shadow:none}
 body[data-page="podcasts"] .podcastHero small{color:#64d6f8}
@@ -127,3 +127,5 @@ body[data-page="radio-studio"] .card{background:#112236;border:1px solid #ffffff
 body[data-page="radio-studio"] :is(button,#signin){min-height:44px;border-radius:999px;padding:10px 18px;font-weight:700}
 body[data-page="radio-studio"] :is(button.primary,#signin){background:#36c6f4!important;color:#061522!important}
 @media(max-width:600px){body[data-page="radio-studio"] header{align-items:flex-start;gap:16px;flex-wrap:wrap}}
+
+body[data-page="playlists"] #playlistSearch{box-sizing:border-box;width:100%;max-width:100%;min-width:0}
