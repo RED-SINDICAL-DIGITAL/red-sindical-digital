@@ -7,6 +7,8 @@ on:
       - radio-studio.html
       - uadav-radio-studio-entry.js
       - uadav-account-sync.js
+      - uadav-stream-2026.css
+      - scripts/qa-staging-public-screens.mjs
       - usuario.html
       - app.html
       - admin.html
@@ -25,6 +27,8 @@ on:
       - radio-studio.html
       - uadav-radio-studio-entry.js
       - uadav-account-sync.js
+      - uadav-stream-2026.css
+      - scripts/qa-staging-public-screens.mjs
       - usuario.html
       - app.html
       - admin.html
@@ -64,6 +68,7 @@ jobs:
           node scripts/functional-qa-staging-shell.mjs
           node scripts/qa-staging-synthetic-playback.mjs
           node scripts/qa-staging-profile-subviews.mjs
+          node scripts/qa-staging-public-screens.mjs
           node scripts/qa-staging-radio-studio-operator.mjs
           node scripts/qa-staging-admin-anonymous.mjs
           node scripts/qa-staging-admin-mock-auth.mjs
