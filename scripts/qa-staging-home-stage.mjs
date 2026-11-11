@@ -1,0 +1,18 @@
+// Local synthetic acceptance only: no external requests, credentials or writes.
+import {chromium} from 'playwright';
+import {mkdir} from 'node:fs/promises';
+const origin='http://127.0.0.1:8765',out='artifacts/staging-integration-visual';await mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+try{for(const viewport of [{name:'mobile',width:390,height:844},{name:'desktop',width:1365,height:900},{name:'tv',width:1920,height:1080}]){
+ const context=await browser.newContext({viewport,serviceWorkers:'block'});let lynx=false;
+ await context.route('**/*',route=>{const r=route.request(),u=new URL(r.url());if(u.origin===origin&&!u.pathname.startsWith('/api/'))return route.continue();if(r.method()!=='GET'||!u.pathname.startsWith('/api/'))return route.abort();let data=[];const p=u.pathname.slice(5);if(p==='landing_config')data={lynx_music_enabled:lynx,hero_spotlights:[{title:'Escena abierta',description:'Talento para descubrir.',image:origin+'/media-fallback.svg',action_url:'/artistas.html'},{title:'Próximas funciones',description:'Encontrá tu próxima salida.',action_url:'/cartelera.html'}]};else if(p==='monetization/campaigns')data=[{id:'QA-C',label:'Publicidad',entity_type:'artist',entity_id:'QA-A',placement:'hero',starts_at:'2020-01-01',ends_at:'2099-12-31'}];else if(p==='public/artistas')data=[{id:'QA-A',nombre_artistico:'Artista destacado QA',visible:true}];else if(p==='config')data={modules:{artists:true,events:true,jobs:true,radio:true}};return route.fulfill({contentType:'application/json',body:JSON.stringify(data),headers:{'Access-Control-Allow-Origin':'*'}})});
+ const page=await context.newPage();await page.goto(origin+'/app.html?'+(viewport.name==='tv'?'tv=1&':'')+'view=%2Findex-v117.html');const f=page.frameLocator('#view');await f.locator('#heroNext').waitFor({state:'visible'});await f.locator('#heroPause').click();
+ await f.locator('#heroPosition').filter({hasText:'de 3'}).waitFor();
+ const bounds=await f.locator('#hero').evaluate(el=>({h:el.getBoundingClientRect().height,w:el.getBoundingClientRect().width,overflow:document.documentElement.scrollWidth>innerWidth+3}));if(bounds.overflow||bounds.h>550)throw Error('Disproportionate hero '+JSON.stringify({viewport,...bounds}));
+ if(!await f.locator('#lynxBenefit').isHidden())throw Error('Lynx leaked before activation');
+ await page.screenshot({path:out+'/hero-editorial-'+viewport.name+'.png'});
+ await f.locator('#heroNext').click();await f.locator('#heroNext').click();await f.locator('#hero[data-slide-kind="sponsored"]').waitFor();if(!await f.locator('#heroKicker').innerText().then(x=>x.includes('PUBLICIDAD')))throw Error('Missing ad label');await page.screenshot({path:out+'/hero-sponsored-'+viewport.name+'.png'});
+ if(viewport.name==='tv'){if(!await f.locator('body.uadav-tv-mode').count())throw Error('TV shell context not inherited');// Native keyboard checks directional focus inside the TV frame.
+ await f.locator('#heroPrimary').press('ArrowRight');const after=await f.locator(':focus').getAttribute('id');if(after==='heroPrimary')throw Error('TV directional focus did not move');}
+ await page.goto(origin+'/lynx-music.html');await page.locator('#lynxUnavailable').waitFor({state:'visible'});if(!await page.locator('#lynxContent').isHidden())throw Error('Direct hidden Lynx route exposed');lynx=true;await page.reload();await page.locator('#lynxContent').waitFor({state:'visible'});await page.screenshot({path:out+'/lynx-enabled-mock-'+viewport.name+'.png'});await context.close();console.log('PASS hero/editorial/sponsored/Lynx/TV',viewport.name);
+}}finally{await browser.close()}
