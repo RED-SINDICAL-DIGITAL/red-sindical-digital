@@ -14,6 +14,14 @@ try{
    await page.goto(base+'/app.html?view=%2Fusuario.html',{waitUntil:'domcontentloaded'});
    const frame=page.frameLocator('#view');
    await frame.locator('#profileNativeHome').waitFor({state:'visible',timeout:16000});
+   const studioShortcut=frame.locator('a.profile-task[href="/radio-studio.html"]');
+   await studioShortcut.waitFor({state:'visible',timeout:10000});
+   const studioAccessible=await studioShortcut.evaluate(node=>{
+     const home=document.getElementById('profileNativeHome');
+     return !!home&&!home.hidden&&node.getBoundingClientRect().width>=44&&node.getBoundingClientRect().height>=44
+       &&node.closest('#profileTasks')!==null;
+   });
+   if(!studioAccessible)failures.push(viewport.name+': Mi radio shortcut is not visible in native profile home');
    await frame.locator('a.profile-task[href*="vista=trabajos"]').click();
    await page.waitForFunction(()=>{
     const doc=document.querySelector('#view')?.contentDocument;
