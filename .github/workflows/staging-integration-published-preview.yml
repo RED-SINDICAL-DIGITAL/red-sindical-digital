@@ -17,6 +17,10 @@ permissions:
 jobs:
   published-browser:
     runs-on: ubuntu-24.04
+    container:
+      # Browser and OS dependencies are baked in; avoid apt mirror DNS failures.
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --ipc=host
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +30,6 @@ jobs:
       - name: Install isolated Chromium
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
-          npx playwright install --with-deps chromium
       - name: Check staging Worker public health (read-only)
         run: node scripts/qa-staging-health-readonly.mjs
       - name: Check published branch preview (read-only)

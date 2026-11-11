@@ -7,7 +7,7 @@ const errors=[];
 try{
  for(const device of [{name:'mobile',width:390,height:844},{name:'desktop',width:1365,height:768}]){
   const context=await browser.newContext({viewport:{width:device.width,height:device.height},locale:'es-AR'});
-  const mock={mode:'manual',rejectNext:false,denyNext:false,settingsWrites:[],requests:[]};
+  const mock={mode:'manual',rejectNext:false,denyNext:false,noStations:false,failList:false,settingsWrites:[],requests:[]};
   await context.addInitScript(()=>{
    window.UADAV_ENV='staging';window.PLATFORM_ENV='staging';
    window.UADAVAccount={code:()=> 'QA-FAKE-LOCAL-CREDENTIAL'};
@@ -23,7 +23,10 @@ try{
    mock.requests.push({method:req.method(),path});
    let status=200,data={success:true,radio_id:'qa-station'};
    if(mock.denyNext){mock.denyNext=false;status=403;data={success:false,error:'forbidden'};}
-   else if(path==='/api/radio-studio')data={success:true,items:[{id:'qa-station',name:'Emisora QA local'}]};
+   else if(path==='/api/radio-studio'){
+    if(mock.failList){status=503;data={success:false,error:'Lista temporalmente no disponible'};}
+    else data={success:true,items:mock.noStations?[]:[{id:'qa-station',name:'Emisora QA local'}]};
+   }
    else if(path==='/api/radio-studio/requests')data={success:true,radio_id:'qa-station',items:[]};
    else if(path==='/api/radio-studio/settings'){
     if(req.method()==='PUT'){
@@ -58,6 +61,24 @@ try{
    await page.waitForFunction(()=>document.getElementById('modeStatus')?.textContent.includes('Rechazo simulado'),null,{timeout:12000});
    const rollback=await page.locator('#modeSelect').inputValue();
    if(rollback!=='manual'||mock.mode!=='manual')errors.push(device.name+': rejected mode not rolled back');
+   // A successful empty list and a failed refresh must both discard private drafts.
+   for(const failure of ['noStations','failList']){
+    await page.locator('#chatMessage').fill('Borrador privado del operador QA');
+    mock[failure]=true;
+    await page.locator('#refresh').click();
+    await page.waitForFunction(()=>document.getElementById('studio')?.hidden===true,null,{timeout:12000});
+    const cleared=await page.evaluate(()=>({
+     draft:document.getElementById('chatMessage').value,
+     stations:document.getElementById('station').options.length,
+     requests:document.getElementById('requests').children.length,
+     chat:document.getElementById('chatMessages').children.length,
+     moderation:document.getElementById('moderationItems').children.length
+    }));
+    if(Object.values(cleared).some(Boolean))errors.push(device.name+': '+failure+' retained private state');
+    mock[failure]=false;
+    await page.locator('#refresh').click();
+    await page.waitForFunction(()=>document.getElementById('modeStatus')?.textContent.includes('Modo actual')&&!document.getElementById('refresh').disabled&&!document.getElementById('studio').hidden,null,{timeout:12000});
+   }
    // Account isolation: swapping credentials must immediately hide the previous station.
    await page.evaluate(()=>{
     window.UADAVAccount={code:()=> 'QA-OTHER-ACCOUNT-UNAUTHORIZED'};
