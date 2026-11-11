@@ -378,7 +378,8 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-account
 #profileLegacyViews[hidden],#profileNativeHome[hidden]{display:none!important}
 body[data-page="usuario"]{background:#091421!important}
 body[data-page="usuario"] #profileNativeHome{width:100%;max-width:none;margin:0;padding:0 0 calc(110px + env(safe-area-inset-bottom));color:#f5f9ff;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
-body[data-page="usuario"] #profileNativeHome .profile-native-content{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+body[data-page="usuario"] #profileNativeHome .profile-native-content{display:grid;grid-template-columns:minmax(0,1fr)!important;gap:0}
+body[data-page="usuario"] #profileNativeHome .profile-native-content>*{grid-column:1/-1!important;grid-row:auto!important;min-width:0}
 body[data-page="usuario"] #profileNativeHome .hero{display:flex!important;align-items:flex-end!important;gap:28px!important;min-height:290px!important;width:100%!important;margin:0!important;padding:48px clamp(24px,4.5vw,64px) 36px!important;border-radius:0!important;border:0!important;background:linear-gradient(180deg,#24628a 0%,#163953 100%)!important;box-shadow:none!important;position:relative;overflow:hidden}
 body[data-page="usuario"] #profileNativeHome .hero::before{content:none!important}
 body[data-page="usuario"] #profileNativeHome .avatar{flex:0 0 156px!important;width:156px!important;height:156px!important;border-radius:50%!important;border:0!important;background:#0b2235!important;box-shadow:0 12px 32px #0005!important;font-size:48px!important;color:#a9e3fc!important;overflow:hidden}
