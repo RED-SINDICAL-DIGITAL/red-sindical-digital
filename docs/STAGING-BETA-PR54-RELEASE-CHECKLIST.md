@@ -38,7 +38,7 @@ Estas comprobaciones deben hacerse con cuentas **de laboratorio**, nunca con cla
 ## Evidencia de autorización (sin datos privados)
 El script `scripts/staging-release-gate.mjs` determina si el candidato está listo a partir de un archivo **local y privado de metadatos**. No consulta Cloudflare, no genera respaldos y no autoriza despliegues por sí solo. Ejecutar `node scripts/staging-release-gate.mjs "RUTA_PRIVADA_EVIDENCIA.json"` en el equipo encargado del pase.
 
-Campos requeridos: `candidate_sha` (40 caracteres hex), `ci` con las cinco suites exitosas y exactamente ese SHA, `backup.environment="staging"`, `backup.verified=true`, `backup.sha256` (64 caracteres hex), `backup.kv_exported=true`, `backup.d1_exported=true`, `backup.restore_plan_approved=true`, y `qa.admin_authenticated`, `qa.radio_operator_authenticated`, `qa.profile_authenticated`, `qa.responsible_approval`, todos `true`. Estos datos deben representar **pruebas y aprobaciones efectivas**, nunca completarse de forma ficticia.
+Campos requeridos: `candidate_sha` (40 caracteres hex), `ci` con las cinco suites exitosas y exactamente ese SHA, `backup.environment="staging"`, `backup.verified=true`, `backup.sha256` (64 caracteres hex), `backup.kv_exported=true`, `backup.d1_exported=true`, `backup.restore_plan_approved=true`, `backup.restore_rehearsal_verified=true` y `backup.restore_rehearsal_sha256` igual al SHA-256 del respaldo realmente ensayado, y `qa.admin_authenticated`, `qa.radio_operator_authenticated`, `qa.profile_authenticated`, `qa.responsible_approval`, todos `true`. Estos datos deben representar **pruebas y aprobaciones efectivas**, nunca completarse de forma ficticia.
 
 Si cualquiera falta, el verificador devuelve `ready:false` y el pase queda bloqueado. No subir este archivo de evidencia ni el respaldo original al PR.
 
@@ -58,3 +58,13 @@ No fusionar ni desplegar si: alguna CI falla, hay divergencia entre preview/comm
 - Conservar estado de radio/video al *recargar* la página depende de políticas de reproducción del navegador; no prometer autoplay sin gesto.
 - La API y las operaciones de importación/exportación autenticadas requieren aceptación manual en staging.
 - Ninguna prueba realizada hasta el momento constituye autorización para cambiar producción.
+
+## Continuidad de revisión · 11 de noviembre de 2026
+
+- Navegación Mi Perfil → Radio Studio y acceso táctil comprobados en preview.
+- Lectura autenticada de Cuentas, Bolsa, postulaciones, Cartelera y Auditoría comprobada; no se guardaron cambios.
+- Cuenta Ruso Radio QA: permiso activo comprobado desde administración para Beat Digital Radio. Esto no sustituye la prueba autenticada con la cuenta operadora.
+- Pendiente: el endpoint de radios excluye emisoras ocultas incluso para administración. La emisora de pruebas oculta no se puede verificar desde ese selector. Requiere una solución de backend en otra etapa autorizada; no cambiar el Worker en esta revisión.
+- El verificador local exige ahora catálogo KV de radios y tablas D1 de ofertas, postulaciones, eventos, radios, cuentas, dispositivos, vínculos de artistas y operadores. Un indicador `complete=true` no sustituye estas comprobaciones.
+- La aceptación exige evidencia de un ensayo de recuperación aislado y del mismo archivo identificado por SHA-256. Un plan aprobado o una validación estructural no acreditan recuperación.
+- No se realizó recuperación del respaldo real ni aceptación final. Mantener el PR como borrador, sin fusionar ni reemplazar staging principal.

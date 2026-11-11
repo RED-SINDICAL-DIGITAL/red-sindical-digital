@@ -18,6 +18,8 @@ export function decideRelease(input){
  if(!HEX.test(b.sha256||''))missing.push('Backup SHA-256 not recorded');
  if(b.kv_exported!==true||b.d1_exported!==true)missing.push('KV and D1 backup exports both required');
  if(b.restore_plan_approved!==true)missing.push('Rollback/restore plan has not been accepted');
+ if(b.restore_rehearsal_verified!==true)missing.push('Isolated backup recovery rehearsal has not been verified');
+ if(!HEX.test(b.restore_rehearsal_sha256||'')||b.restore_rehearsal_sha256!==b.sha256)missing.push('Recovery rehearsal must match the exact backup SHA-256');
  if(input.qa?.admin_authenticated!==true)missing.push('Real staging Admin QA not accepted');
  if(input.qa?.radio_operator_authenticated!==true)missing.push('Real staging radio operator QA not accepted');
  if(input.qa?.profile_authenticated!==true)missing.push('Real staging profile QA not accepted');

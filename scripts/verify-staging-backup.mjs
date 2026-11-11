@@ -16,8 +16,11 @@ export function verifyBackup(value){
  const kv=value.kv&&typeof value.kv==='object'&&!Array.isArray(value.kv)?value.kv:{};
  const tables=value.tables&&typeof value.tables==='object'&&!Array.isArray(value.tables)?value.tables:{};
  if(Object.keys(tables).length===0)failures.push('No D1 tables present in backup');
- for(const name of ['bolsa_trabajo','postulaciones_trabajo']){
+ for(const name of ['bolsa_trabajo','postulaciones_trabajo','radios']){
   if(!Array.isArray(kv[name]))failures.push('Critical KV collection invalid: '+name);
+ }
+ for(const name of ['jobs','job_applications','events','radios','audience_accounts','audience_devices','audience_artist_links','radio_operators']){
+  if(!Object.hasOwn(tables,name)||!Array.isArray(tables[name]))failures.push('Critical D1 table missing or invalid: '+name);
  }
  for(const [name,rows] of Object.entries(kv)){
   if(rows&&typeof rows==='object'&&!Array.isArray(rows)&&Object.hasOwn(rows,'error'))failures.push('KV error: '+name);
