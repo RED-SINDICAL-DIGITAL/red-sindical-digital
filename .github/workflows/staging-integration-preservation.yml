@@ -28,6 +28,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check shared visual shell contract
+        run: node --test tests/stream-visual-shell.test.cjs
       - name: Check JavaScript syntax
         run: node --check uadav-api-config.js
       - name: Verify isolation and original production behavior

@@ -26,14 +26,14 @@ try{
     const doc=document.getElementById('view')?.contentDocument||document;
     const home=doc.getElementById('profileNativeHome');
     const legacy=doc.getElementById('profileLegacyViews');
-    const style=doc.getElementById('beta-profile-visual-20261108');
+    const style=doc.getElementById('profileNativeInlineCSS');
     return {
      status:document.readyState,
      home:!!home,legacy:!!legacy,style:!!style,
      jobsTabs:!!doc.getElementById('profileJobsTabApplications')&&!!doc.getElementById('profileJobsTabOffers'),
      ownedEvents:!!doc.getElementById('profileOwnedEventSave')&&!!doc.getElementById('profileOwnedEventsList'),
      scrollWidth:doc.documentElement.scrollWidth,viewport:innerWidth,
-     overflow:doc.documentElement.scrollWidth>innerWidth+3,
+     overflow:doc.documentElement.scrollWidth>doc.defaultView.innerWidth+3,
      nativeVisible:!!home&&!home.hidden&&doc.defaultView.getComputedStyle(home).display!=='none'
     };
    });

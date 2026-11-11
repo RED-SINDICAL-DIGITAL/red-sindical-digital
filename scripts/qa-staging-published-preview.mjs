@@ -28,15 +28,18 @@ try{
     const doc=document.querySelector('#view').contentDocument;
     const home=doc.getElementById('profileNativeHome');
     return {
-     style:!!doc.getElementById('beta-profile-visual-20261108'),
+     style:!!doc.getElementById('profileNativeInlineCSS'),
+     themeLoaded:Array.from(doc.styleSheets).some(sheet=>sheet.href?.includes('/uadav-stream-2026.css')),
+     profileHeader:home.querySelector('.hero').getBoundingClientRect().height>=230,
+     desktopSidebar:innerWidth<=1000||document.getElementById('view').getBoundingClientRect().left>=250,
      jobs:!!doc.getElementById('profileJobsTabOffers'),
      events:!!doc.getElementById('profileOwnedEventSave'),
      homeVisible:!!home&&!home.hidden&&doc.defaultView.getComputedStyle(home).display!=='none',
-     horizontalOverflow:doc.documentElement.scrollWidth>innerWidth+3
+     horizontalOverflow:doc.documentElement.scrollWidth>doc.defaultView.innerWidth+3
     };
    });
    await page.screenshot({path:out+'/profile-'+viewport.name+'.png',fullPage:true,animations:'disabled'});
-   if(result?.status()!==200||!profile.style||!profile.jobs||!profile.events||!profile.homeVisible||profile.horizontalOverflow)failures.push(viewport.name+': public profile smoke failed');
+   if(result?.status()!==200||!profile.style||!profile.themeLoaded||!profile.profileHeader||!profile.desktopSidebar||!profile.jobs||!profile.events||!profile.homeVisible||profile.horizontalOverflow)failures.push(viewport.name+': public profile smoke failed');
    // Exercise the deployed shell itself, not just static HTML. No API calls are allowed.
    const shell=await page.evaluate(()=>{
     window.__qaShellNodes={dock:document.getElementById('mediaDock'),radio:document.getElementById('radioAudio'),frame:document.getElementById('view')};

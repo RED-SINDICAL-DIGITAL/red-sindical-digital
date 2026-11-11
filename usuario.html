@@ -374,71 +374,73 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-account
 }
 
 </style><style id="profileNativeInlineCSS">
-/* UADAV Stream — Mi espacio: standalone visual shell v3.
-   Exactly one DOM for each existing business function, re-mounted only on Home.
-   This CSS is isolated to #profileNativeHome and does not touch subviews. */
+/* Canonical profile presentation. Existing interactive nodes are moved, never copied. */
 #profileLegacyViews[hidden],#profileNativeHome[hidden]{display:none!important}
-body[data-page="usuario"] #profileNativeHome{width:100%;max-width:1120px;margin:0 auto;padding:18px 18px calc(126px + env(safe-area-inset-bottom));color:#f5f9ff;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
-body[data-page="usuario"] #profileNativeHome .profile-native-content{display:flex;flex-direction:column;gap:20px}
-body[data-page="usuario"] #profileNativeHome .hero{display:flex!important;align-items:center!important;gap:16px!important;min-height:0!important;width:100%!important;margin:0!important;padding:8px 0 18px!important;border-radius:0!important;background:transparent!important;border:0!important;box-shadow:none!important;position:relative}
+body[data-page="usuario"]{background:#091421!important}
+body[data-page="usuario"] #profileNativeHome{width:100%;max-width:none;margin:0;padding:0 0 calc(110px + env(safe-area-inset-bottom));color:#f5f9ff;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+body[data-page="usuario"] #profileNativeHome .profile-native-content{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+body[data-page="usuario"] #profileNativeHome .hero{display:flex!important;align-items:flex-end!important;gap:28px!important;min-height:290px!important;width:100%!important;margin:0!important;padding:48px clamp(24px,4.5vw,64px) 36px!important;border-radius:0!important;border:0!important;background:linear-gradient(180deg,#24628a 0%,#163953 100%)!important;box-shadow:none!important;position:relative;overflow:hidden}
 body[data-page="usuario"] #profileNativeHome .hero::before{content:none!important}
-body[data-page="usuario"] #profileNativeHome .avatar{flex:0 0 76px!important;width:76px!important;height:76px!important;border-radius:50%!important;border:2px solid rgba(23,189,249,.8)!important;background:#102c48!important;box-shadow:0 0 0 4px rgba(18,188,245,.1)!important;font-size:24px!important}
-body[data-page="usuario"] #profileNativeHome .profile-identity{flex:1;min-width:0}
-body[data-page="usuario"] #profileNativeHome .profile-eyebrow{color:#45ceff!important;font-size:10px!important;letter-spacing:.13em!important}
-body[data-page="usuario"] #profileNativeHome .hero h1{font-size:clamp(26px,4.5vw,42px)!important;line-height:1.06!important;margin:5px 0 4px!important;font-weight:900!important;letter-spacing:-.045em!important;overflow-wrap:anywhere}
-body[data-page="usuario"] #profileNativeHome .hero p{font-size:12px!important;line-height:1.35!important;color:#a8c6de!important;margin:0!important}
-body[data-page="usuario"] #profileNativeHome .hero>.edit{flex:0 0 44px!important;display:grid!important;place-items:center!important;width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;border-radius:50%!important;color:#def4ff!important;border:1px solid rgba(102,193,245,.28)!important;background:rgba(13,45,75,.9)!important;box-shadow:none!important}
-body[data-page="usuario"] #profileNativeHome .hero>.edit span{display:none!important}
-body[data-page="usuario"] #profileNativeHome .hero>.edit .profile-icon{width:20px;height:20px}
-body[data-page="usuario"] #profileNativeHome #profileTasks{width:100%!important;min-width:0!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks h2{margin:0 0 10px!important;font-size:20px!important;line-height:1.2!important;letter-spacing:-.035em!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-tasks{display:flex!important;flex-direction:column!important;gap:0!important;margin:0!important;background:#0f1c2b!important;border:1px solid rgba(102,187,244,.15)!important;border-radius:18px!important;overflow:hidden!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task{display:grid!important;grid-template-columns:48px minmax(0,1fr) 20px!important;grid-template-rows:auto auto!important;column-gap:12px!important;row-gap:1px!important;align-content:center!important;min-height:73px!important;margin:0!important;padding:11px 15px!important;transform:none!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;text-decoration:none!important;color:white!important;position:relative}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:not(:last-child){border-bottom:1px solid rgba(137,190,229,.11)!important}
+body[data-page="usuario"] #profileNativeHome .avatar{flex:0 0 156px!important;width:156px!important;height:156px!important;border-radius:50%!important;border:0!important;background:#0b2235!important;box-shadow:0 12px 32px #0005!important;font-size:48px!important;color:#a9e3fc!important;overflow:hidden}
+body[data-page="usuario"] #profileNativeHome .avatar img{width:100%;height:100%;object-fit:cover}
+body[data-page="usuario"] #profileNativeHome .profile-identity{flex:1;min-width:0;padding-bottom:8px}
+body[data-page="usuario"] #profileNativeHome .profile-eyebrow{color:#c9eafa!important;font-size:11px!important;font-weight:750;letter-spacing:.14em!important}
+body[data-page="usuario"] #profileNativeHome .hero h1{font-size:clamp(40px,6.6vw,88px)!important;line-height:1.02!important;margin:12px 0!important;font-weight:850!important;letter-spacing:-.065em!important;overflow-wrap:anywhere}
+body[data-page="usuario"] #profileNativeHome .hero p{font-size:13px!important;line-height:1.6!important;color:#b9d1e1!important;margin:0!important}
+body[data-page="usuario"] #profileNativeHome .hero>.edit{flex:none!important;align-self:flex-end;display:flex!important;align-items:center!important;gap:8px!important;min-height:44px!important;width:auto!important;height:44px!important;padding:0 16px!important;border-radius:999px!important;border:1px solid #c4eaff55!important;background:transparent!important;color:#fff!important;box-shadow:none!important;margin-bottom:8px}
+body[data-page="usuario"] #profileNativeHome .hero>.edit span{display:inline!important;font-size:12px;font-weight:700}
+body[data-page="usuario"] #profileNativeHome .hero>.edit .profile-icon{width:16px;height:16px}
+body[data-page="usuario"] #profileNativeHome #profileTasks{width:100%!important;min-width:0!important;margin:0!important;padding:30px clamp(24px,4.5vw,64px)!important;background:linear-gradient(#15344b55,#091421)!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks h2{margin:0 0 18px!important;font-size:24px!important;line-height:1.2!important;font-weight:800!important;letter-spacing:-.035em!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-tasks{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;margin:0!important;background:transparent!important;border:0!important;border-radius:0!important;overflow:visible!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task{display:grid!important;grid-template-columns:56px minmax(0,1fr) 18px!important;grid-template-rows:auto auto!important;column-gap:16px!important;row-gap:3px!important;align-content:center!important;min-height:86px!important;margin:0!important;padding:12px 18px 12px 12px!important;transform:none!important;background:#ffffff08!important;border:0!important;border-radius:7px!important;box-shadow:none!important;text-decoration:none!important;color:#f5f9ff!important;position:relative;transition:background .16s!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:not(:last-child){border:0!important}
 body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task::before{content:none!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task::after{content:"›"!important;display:block!important;grid-column:3;grid-row:1/3;align-self:center;font-size:28px;color:#80b9da;font-weight:300}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task .profile-icon{grid-column:1!important;grid-row:1/3!important;justify-self:center!important;align-self:center!important;margin:0!important;width:25px!important;height:25px!important;color:#28c2fd!important;display:block!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task strong{grid-column:2!important;grid-row:1!important;font-size:15px!important;line-height:1.3!important;font-weight:800!important;margin:0!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task span{grid-column:2!important;grid-row:2!important;font-size:11px!important;line-height:1.25!important;color:#a7bdd0!important;margin:0!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:hover,body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:focus-visible{background:#15314d!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more{margin:12px 0 0!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more>summary{display:inline-flex;align-items:center;min-height:44px;padding:9px 14px;border-radius:999px;background:#132a43;border:1px solid rgba(119,198,244,.17);color:#bbd8ed;font-size:13px;font-weight:700;cursor:pointer}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more .profile-shortcuts{display:flex!important;gap:8px!important;flex-wrap:wrap!important;margin:9px 0 0!important;padding:0!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more .profile-shortcuts a{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:9px 13px;background:#14283d;border-radius:12px;font-size:12px;color:#e2eefa;text-decoration:none}
-/* Keep secondary profile links reachable with a 44px touch target. */
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-radio-shortcut,
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-account-shortcut{display:inline-flex!important;align-items:center!important;gap:9px!important;min-height:44px!important;margin:7px 0 0!important;padding:6px 3px!important;color:#a9dafa!important;background:none!important;border:0!important;font-size:13px!important;text-decoration:none!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-account-shortcut .profile-icon{color:#3ccaff;width:17px;height:17px}
-body[data-page="usuario"] #profileNativeHome .profile-continue{display:block!important;width:100%!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task::after{content:"›"!important;display:block!important;grid-column:3;grid-row:1/3;align-self:center;font-size:24px;color:#7c99b0;font-weight:300}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task .profile-icon{grid-column:1!important;grid-row:1/3!important;justify-self:center!important;align-self:center!important;margin:0!important;width:56px!important;height:56px!important;padding:15px!important;border-radius:6px;background:linear-gradient(145deg,#2075a6,#174561);color:#b5edff!important;display:block!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:nth-child(2) .profile-icon{background:linear-gradient(145deg,#3c689a,#203b60)}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:nth-child(3) .profile-icon{background:linear-gradient(145deg,#217f92,#164c62)}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:nth-child(4) .profile-icon{background:linear-gradient(145deg,#4966ad,#294479)}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task strong{grid-column:2!important;grid-row:1!important;font-size:15px!important;line-height:1.3!important;font-weight:750!important;margin:0!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task span{grid-column:2!important;grid-row:2!important;font-size:12px!important;line-height:1.4!important;color:#96abc0!important;margin:0!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:hover,body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:focus-visible{background:#ffffff13!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-radio-shortcut,body[data-page="usuario"] #profileNativeHome #profileTasks .profile-account-shortcut{display:inline-flex!important;align-items:center!important;gap:9px!important;min-height:44px!important;margin:14px 20px 0 0!important;padding:6px 0!important;color:#a9c7dd!important;background:none!important;border:0!important;font-size:12px!important;font-weight:650;text-decoration:none!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-radio-shortcut>span:first-child{display:grid;place-items:center;width:24px;height:24px;font-size:19px}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-account-shortcut .profile-icon{color:#8cb7d5;width:17px;height:17px}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more{display:inline-block!important;margin:14px 20px 0 0!important;vertical-align:top}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more>summary{display:inline-flex;align-items:center;min-height:44px;padding:6px 0;border:0;background:transparent;color:#a9c7dd;font-size:12px;font-weight:650;cursor:pointer}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more .profile-shortcuts{display:flex!important;gap:8px!important;flex-wrap:wrap!important;margin:8px 0 0!important;padding:0!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more .profile-shortcuts a{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:9px 13px;background:#172b3e;border-radius:6px;font-size:12px;color:#e2eefa;text-decoration:none}
+body[data-page="usuario"] #profileNativeHome .profile-continue{display:block!important;width:100%!important;margin:0!important;padding:8px clamp(24px,4.5vw,64px) 24px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 body[data-page="usuario"] #profileNativeHome .profile-continue .profile-eyebrow{display:none!important}
-body[data-page="usuario"] #profileNativeHome .profile-section-heading{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px!important}
-body[data-page="usuario"] #profileNativeHome .profile-section-heading h2{margin:0!important;font-size:19px!important;letter-spacing:-.03em!important}
-body[data-page="usuario"] #profileNativeHome .profile-see-all{font-size:12px;color:#55d1ff}
-body[data-page="usuario"] #profileNativeHome #recent.rail{display:flex!important;gap:11px!important;overflow-x:auto!important;scroll-snap-type:x proximity!important;padding:1px 2px 11px!important;margin:0!important}
-body[data-page="usuario"] #profileNativeHome #recent .item{flex:0 0 206px!important;width:206px!important;max-width:206px!important;min-width:0!important;scroll-snap-align:start;border:0!important;background:transparent!important}
-body[data-page="usuario"] #profileNativeHome #recent .item img{aspect-ratio:16/9!important;width:100%!important;object-fit:cover!important}
-body[data-page="usuario"] #profileNativeHome #accountNotices{padding:12px 14px!important;background:#112236!important;border-radius:15px!important;border:1px solid rgba(108,191,246,.16)!important}
-body[data-page="usuario"] #profileNativeHome a:focus-visible,body[data-page="usuario"] #profileNativeHome button:focus-visible{outline:3px solid #8ce1ff!important;outline-offset:3px!important}
+body[data-page="usuario"] #profileNativeHome .profile-section-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 20px!important}
+body[data-page="usuario"] #profileNativeHome .profile-section-heading h2{font-size:24px!important;line-height:1.25!important;letter-spacing:-.035em!important;font-weight:800!important;margin:0!important}
+body[data-page="usuario"] #profileNativeHome .profile-see-all{font-size:11px!important;white-space:nowrap;color:#a7bed1!important;text-decoration:none;font-weight:650}
+body[data-page="usuario"] #profileNativeHome #recent{gap:16px!important;padding:0 0 12px!important}
+body[data-page="usuario"] #profileNativeHome #recent .item{background:#101f30!important;border:0!important;border-radius:8px!important;box-shadow:none!important;overflow:hidden}
+body[data-page="usuario"] #profileNativeHome .profile-empty-recent{width:100%;min-height:150px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;padding:26px!important;border:1px solid #ffffff0c!important;border-radius:8px!important;background:linear-gradient(120deg,#132b40,#101c2b)!important;color:#9fb4c8!important;text-align:left!important}
+body[data-page="usuario"] #profileNativeHome .profile-empty-recent strong{font-size:17px;color:#eaf5ff;font-weight:750}
+body[data-page="usuario"] #profileNativeHome .profile-empty-recent>span:not(.profile-empty-icon){font-size:13px;line-height:1.7;max-width:520px}
+body[data-page="usuario"] #profileNativeHome .profile-empty-icon{color:#48cff7;font-size:28px}
+body[data-page="usuario"] #profileNativeHome #accountNotices{margin:16px clamp(24px,4.5vw,64px)!important;width:auto!important;background:#13283c!important;border:0!important;border-radius:8px!important}
 @media(max-width:760px){
- body[data-page="usuario"] #profileNativeHome{padding:14px 14px calc(125px + env(safe-area-inset-bottom))!important}
- body[data-page="usuario"] #profileNativeHome .profile-native-content{gap:17px}
- body[data-page="usuario"] #profileNativeHome .hero{padding:5px 0 13px!important;gap:11px!important}
- body[data-page="usuario"] #profileNativeHome .avatar{width:62px!important;height:62px!important;flex-basis:62px!important}
- body[data-page="usuario"] #profileNativeHome .hero h1{font-size:clamp(23px,7vw,31px)!important}
+ body[data-page="usuario"] #profileNativeHome .hero{min-height:240px!important;align-items:center!important;gap:18px!important;padding:36px 22px 28px!important;flex-wrap:wrap}
+ body[data-page="usuario"] #profileNativeHome .avatar{flex-basis:92px!important;width:92px!important;height:92px!important;font-size:30px!important;box-shadow:0 8px 24px #0004!important}
+ body[data-page="usuario"] #profileNativeHome .profile-identity{padding:0}
+ body[data-page="usuario"] #profileNativeHome .hero h1{font-size:clamp(30px,8vw,48px)!important;margin:8px 0!important}
  body[data-page="usuario"] #profileNativeHome .hero p{font-size:11px!important}
- body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task{min-height:70px!important;padding:10px 11px!important;grid-template-columns:40px minmax(0,1fr) 19px!important;column-gap:8px!important}
- body[data-page="usuario"] #profileNativeHome #recent .item{flex-basis:min(56vw,208px)!important;width:min(56vw,208px)!important;max-width:none!important}
-}
-@media(min-width:960px){
- body[data-page="usuario"] #profileNativeHome{padding-top:30px}
- body[data-page="usuario"] #profileNativeHome .profile-native-content{display:grid;grid-template-columns:minmax(320px,1fr) minmax(360px,1fr);gap:24px 30px;align-items:start}
- body[data-page="usuario"] #profileNativeHome .hero{grid-column:1/-1!important}
- body[data-page="usuario"] #profileNativeHome #profileTasks{grid-column:1}
- body[data-page="usuario"] #profileNativeHome .profile-continue{grid-column:2;padding-top:1px!important}
- body[data-page="usuario"] #profileNativeHome #accountNotices{grid-column:1/-1}
+ body[data-page="usuario"] #profileNativeHome .hero>.edit{margin:0 0 0 110px!important;height:36px!important;min-height:44px!important;font-size:11px!important;padding:0 14px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks{padding:26px 20px 20px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks h2,body[data-page="usuario"] #profileNativeHome .profile-section-heading h2{font-size:21px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks .profile-tasks{display:flex!important;flex-direction:column!important;gap:0!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task{min-height:80px!important;background:transparent!important;padding:10px 0!important;grid-template-columns:52px minmax(0,1fr) 18px!important;gap:2px 14px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task .profile-icon{width:52px!important;height:52px!important;padding:14px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task strong{font-size:15px!important}
+ body[data-page="usuario"] #profileNativeHome .profile-continue{padding:8px 20px 20px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks .profile-radio-shortcut,body[data-page="usuario"] #profileNativeHome #profileTasks .profile-account-shortcut{margin-right:14px!important}
+ body[data-page="usuario"] #profileNativeHome .profile-empty-recent{min-height:160px;padding:22px!important}
 }
 @media(prefers-reduced-motion:reduce){body[data-page="usuario"] #profileNativeHome *{transition:none!important}}
-
 </style><style id="u2-profile-detail-v1">
 /* Mobile-first artist/job detail screens. Single scoped layer, no new account or API state. */
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] #mi-artista,
@@ -521,97 +523,8 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-eve
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-event button{border:1px solid rgba(125,192,237,.28);background:transparent;color:#b7cde0;padding:9px 10px;border-radius:999px;min-height:44px;font-size:12px;cursor:pointer}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-event button:focus-visible{outline:2px solid #91e2ff;outline-offset:2px}
 
-</style><script defer src="/uadav-event-local-receipts.js?v=20261107"></script><style id="beta-profile-visual-20261108">
-/* Beta visual polish: native homepage only; legacy account/work forms untouched. */
-body[data-page="usuario"] #profileNativeHome,
-body[data-page="usuario"] #profileNativeHome button,
-body[data-page="usuario"] #profileNativeHome a,
-body[data-page="usuario"] #profileNativeHome h1,
-body[data-page="usuario"] #profileNativeHome h2,
-body[data-page="usuario"] #profileNativeHome strong{
- font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif!important;
-}
-body[data-page="usuario"] #profileNativeHome .hero h1{
- font-size:clamp(27px,3.2vw,43px)!important;
- font-weight:850!important;
- letter-spacing:-.035em!important;
-}
-body[data-page="usuario"] #profileNativeHome .profile-section-heading h2,
-body[data-page="usuario"] #profileNativeHome #profileTasksTitle{
- font-size:clamp(19px,1.8vw,24px)!important;
- font-weight:800!important;
- letter-spacing:-.035em!important;
- line-height:1.2!important;
-}
-body[data-page="usuario"] #profileNativeHome .profile-task strong{
- font-size:14px!important;font-weight:750!important;letter-spacing:-.015em!important;
-}
-body[data-page="usuario"] #profileNativeHome .profile-empty-recent{
- box-sizing:border-box;
- min-height:190px;
- width:100%;
- max-width:560px;
- display:flex;
- flex-direction:column;
- justify-content:center;
- align-items:flex-start;
- gap:9px;
- margin:2px 0 0;
- padding:22px 24px;
- border:1px solid rgba(82,166,225,.20);
- border-radius:18px;
- background:linear-gradient(135deg,rgba(14,39,62,.75),rgba(8,18,29,.48));
- color:#c7d9e7;
- line-height:1.45;
-}
-body[data-page="usuario"] #profileNativeHome .profile-empty-icon{
- display:grid;place-items:center;width:34px;height:34px;
- border-radius:12px;background:rgba(31,157,229,.14);
- color:#63cbff;font-size:13px;
-}
-body[data-page="usuario"] #profileNativeHome .profile-empty-recent strong{
- font-size:15px;font-weight:800;line-height:1.3;color:#f2f9ff;
-}
-body[data-page="usuario"] #profileNativeHome .profile-empty-recent>span:not(.profile-empty-icon){
- font-size:12px;max-width:49ch;color:#adc3d5;
-}
-body[data-page="usuario"] #profileNativeHome .profile-empty-action{
- display:inline-flex;align-items:center;gap:9px;min-height:44px;
- padding:9px 15px;margin-top:5px;border:1px solid rgba(89,185,247,.35);
- border-radius:999px;background:rgba(32,123,186,.22);
- color:#e0f6ff;text-decoration:none;font-size:12px;font-weight:750;
-}
-body[data-page="usuario"] #profileNativeHome .profile-empty-action:hover{
- background:rgba(32,123,186,.4);border-color:#63cbff;
-}
-body[data-page="usuario"] #profileNativeHome .profile-empty-action:focus-visible{
- outline:3px solid #9ce2ff;outline-offset:3px;
-}
-@media(min-width:960px){
- body[data-page="usuario"] #profileNativeHome{
-  max-width:1200px!important;padding-top:22px!important;
- }
- body[data-page="usuario"] #profileNativeHome .profile-native-content{
-  grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)!important;
-  gap:18px 28px!important;
- }
- body[data-page="usuario"] #profileNativeHome .hero{
-  padding-bottom:10px!important;
- }
- body[data-page="usuario"] #profileNativeHome .profile-continue{
-  min-width:0;padding-top:0!important;
- }
-}
-@media(max-width:959px){
- body[data-page="usuario"] #profileNativeHome .profile-empty-recent{
-  max-width:none;min-height:158px;padding:19px 18px;
- }
-}
-@media(prefers-reduced-motion:reduce){
- body[data-page="usuario"] #profileNativeHome .profile-empty-action{transition:none!important}
-}
-</style>
-</head><body data-page="usuario" class="uadav-ui-v2" data-ui-revision="profile-native-v4-inline-styles"><svg class="profile-icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><symbol id="pi-work" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13c5 3 13 3 18 0M12 12v3"/></symbol><symbol id="pi-artist" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5m-5 0h10"/></symbol><symbol id="pi-library" viewBox="0 0 24 24"><rect x="4" y="3" width="5" height="18" rx="1"/><rect x="11" y="3" width="4" height="18" rx="1"/><path d="M17 7l3-1 3 14-3 1-3-14Z"/></symbol><symbol id="pi-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18M12 13v6m-3-3h6"/></symbol><symbol id="pi-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="pi-explore" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 2-2 6 6-2 2-6Z"/></symbol><symbol id="pi-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7 7a7 7 0 0 0 0 10m10-10a7 7 0 0 1 0 10M4 4a11 11 0 0 0 0 16m16-16a11 11 0 0 1 0 16"/></symbol><symbol id="pi-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19 13 2-1-2-1-1-3-3-1-3-2-3 2-3 1-1 3-2 1 2 1 1 3 3 1 3 2 3-2 3-1 1-3Z"/></symbol><symbol id="pi-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 5 2l-2 2v2m0 3h.01"/></symbol><symbol id="pi-edit" viewBox="0 0 24 24"><path d="m4 20 5-1 11-11-4-4L5 15l-1 5ZM14 6l4 4"/></symbol></svg><main id="profileNativeHome" class="profile-native-home" hidden aria-label="Mi espacio personal"><div id="nativeHomeSections" class="profile-native-content"></div></main><main class="wrap" id="profileLegacyViews"><nav id="profileViewHeader" class="profile-view-header" hidden aria-label="Sección personal"><a class="profile-view-back" href="/usuario.html" aria-label="Volver a Mi Perfil">‹ <span>Mi Perfil</span></a><h1 id="profileViewTitle">Mis gestiones</h1></nav><section class="hero"><div class="avatar" id="avatar" role="button" tabindex="0" aria-label="Cambiar foto de perfil" title="Cambiar foto">U</div><div class="profile-identity"><span class="profile-eyebrow">TU PERFIL</span><h1 id="name">Mi perfil</h1><p>Artistas, trabajos y favoritos.</p></div><input class="photo" id="photo" type="file" accept="image/jpeg,image/png,image/webp"><button class="edit" id="edit" aria-label="Editar perfil"><svg class="profile-icon" aria-hidden="true"><use href="#pi-edit"></use></svg><span>Editar perfil</span></button></section><div class="grid"><section class="panel wide" id="profileTasks" aria-labelledby="profileTasksTitle"><h2 id="profileTasksTitle">Accesos</h2><div class="profile-tasks"><a class="profile-task" href="/usuario.html?vista=artista"><svg class="profile-icon" aria-hidden="true"><use href="#pi-artist"></use></svg><strong>Mi artista</strong><span>Crear y administrar</span></a><a class="profile-task" href="/usuario.html?vista=trabajos"><svg class="profile-icon" aria-hidden="true"><use href="#pi-work"></use></svg><strong>Mis trabajos</strong><span>Ofertas y postulaciones</span></a><a class="profile-task" href="/usuario.html?vista=eventos"><svg class="profile-icon" aria-hidden="true"><use href="#pi-calendar"></use></svg><strong>Mis eventos</strong><span>Publicar y consultar</span></a><a class="profile-task" href="/biblioteca.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-library"></use></svg><strong>Mi biblioteca</strong><span>Favoritos y playlists</span></a></div><a class="profile-account-link profile-radio-shortcut" href="/radio-studio.html" aria-label="Mi radio: abrir Radio Studio"><span aria-hidden="true">📻</span><span>Mi radio · Radio Studio</span></a><details class="profile-more"><summary>Más opciones</summary><nav class="profile-shortcuts" aria-label="Más acciones"><a href="/bolsa-trabajo.html#publicar-oportunidad"><svg class="profile-icon" aria-hidden="true"><use href="#pi-plus"></use></svg><span>Publicar oferta</span></a><a href="/artistas.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-explore"></use></svg><span>Explorar artistas</span></a><a href="/manual.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-help"></use></svg><span>Ayuda</span></a></nav></details><a href="/usuario.html?vista=cuenta" class="profile-account-link profile-account-shortcut"><svg class="profile-icon" aria-hidden="true"><use href="#pi-settings"></use></svg><span>Cuenta y seguridad</span></a></section><section class="panel wide profile-continue" aria-labelledby="continueTitle"><div class="profile-section-heading"><div><span class="profile-eyebrow">TU HISTORIAL</span><h2 id="continueTitle">Seguir viendo y escuchando</h2></div><a class="profile-see-all" href="/biblioteca.html?tab=recent">Ver todo <span aria-hidden="true">›</span></a></div><div id="recent" class="rail" aria-label="Contenido reciente, desplazamiento horizontal"></div><p id="recentStatus" class="muted" role="status" aria-live="polite"></p></section><section class="panel wide u2-detail-screen" id="mis-trabajos" aria-labelledby="misTrabajosTitle">
+</style><script defer src="/uadav-event-local-receipts.js?v=20261107"></script>
+<link rel="stylesheet" href="/uadav-stream-2026.css?v=20261111-spotify-beta"></head><body data-page="usuario" class="uadav-ui-v2" data-ui-revision="profile-native-v4-inline-styles"><svg class="profile-icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><symbol id="pi-work" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13c5 3 13 3 18 0M12 12v3"/></symbol><symbol id="pi-artist" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5m-5 0h10"/></symbol><symbol id="pi-library" viewBox="0 0 24 24"><rect x="4" y="3" width="5" height="18" rx="1"/><rect x="11" y="3" width="4" height="18" rx="1"/><path d="M17 7l3-1 3 14-3 1-3-14Z"/></symbol><symbol id="pi-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18M12 13v6m-3-3h6"/></symbol><symbol id="pi-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="pi-explore" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 2-2 6 6-2 2-6Z"/></symbol><symbol id="pi-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7 7a7 7 0 0 0 0 10m10-10a7 7 0 0 1 0 10M4 4a11 11 0 0 0 0 16m16-16a11 11 0 0 1 0 16"/></symbol><symbol id="pi-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19 13 2-1-2-1-1-3-3-1-3-2-3 2-3 1-1 3-2 1 2 1 1 3 3 1 3 2 3-2 3-1 1-3Z"/></symbol><symbol id="pi-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 5 2l-2 2v2m0 3h.01"/></symbol><symbol id="pi-edit" viewBox="0 0 24 24"><path d="m4 20 5-1 11-11-4-4L5 15l-1 5ZM14 6l4 4"/></symbol></svg><main id="profileNativeHome" class="profile-native-home" hidden aria-label="Mi espacio personal"><div id="nativeHomeSections" class="profile-native-content"></div></main><main class="wrap" id="profileLegacyViews"><nav id="profileViewHeader" class="profile-view-header" hidden aria-label="Sección personal"><a class="profile-view-back" href="/usuario.html" aria-label="Volver a Mi Perfil">‹ <span>Mi Perfil</span></a><h1 id="profileViewTitle">Mis gestiones</h1></nav><section class="hero"><div class="avatar" id="avatar" role="button" tabindex="0" aria-label="Cambiar foto de perfil" title="Cambiar foto">U</div><div class="profile-identity"><span class="profile-eyebrow">TU PERFIL</span><h1 id="name">Mi perfil</h1><p>Artistas, trabajos y favoritos.</p></div><input class="photo" id="photo" type="file" accept="image/jpeg,image/png,image/webp"><button class="edit" id="edit" aria-label="Editar perfil"><svg class="profile-icon" aria-hidden="true"><use href="#pi-edit"></use></svg><span>Editar perfil</span></button></section><div class="grid"><section class="panel wide" id="profileTasks" aria-labelledby="profileTasksTitle"><h2 id="profileTasksTitle">Tu actividad</h2><div class="profile-tasks"><a class="profile-task" href="/usuario.html?vista=artista"><svg class="profile-icon" aria-hidden="true"><use href="#pi-artist"></use></svg><strong>Mi artista</strong><span>Crear y administrar</span></a><a class="profile-task" href="/usuario.html?vista=trabajos"><svg class="profile-icon" aria-hidden="true"><use href="#pi-work"></use></svg><strong>Mis trabajos</strong><span>Ofertas y postulaciones</span></a><a class="profile-task" href="/usuario.html?vista=eventos"><svg class="profile-icon" aria-hidden="true"><use href="#pi-calendar"></use></svg><strong>Mis eventos</strong><span>Publicar y consultar</span></a><a class="profile-task" href="/biblioteca.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-library"></use></svg><strong>Mi biblioteca</strong><span>Favoritos y playlists</span></a></div><a class="profile-account-link profile-radio-shortcut" href="/radio-studio.html" aria-label="Mi radio: abrir Radio Studio"><span aria-hidden="true">📻</span><span>Mi radio · Radio Studio</span></a><details class="profile-more"><summary>Más opciones</summary><nav class="profile-shortcuts" aria-label="Más acciones"><a href="/bolsa-trabajo.html#publicar-oportunidad"><svg class="profile-icon" aria-hidden="true"><use href="#pi-plus"></use></svg><span>Publicar oferta</span></a><a href="/artistas.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-explore"></use></svg><span>Explorar artistas</span></a><a href="/manual.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-help"></use></svg><span>Ayuda</span></a></nav></details><a href="/usuario.html?vista=cuenta" class="profile-account-link profile-account-shortcut"><svg class="profile-icon" aria-hidden="true"><use href="#pi-settings"></use></svg><span>Cuenta y seguridad</span></a></section><section class="panel wide profile-continue" aria-labelledby="continueTitle"><div class="profile-section-heading"><div><span class="profile-eyebrow">TU HISTORIAL</span><h2 id="continueTitle">Seguir viendo y escuchando</h2></div><a class="profile-see-all" href="/biblioteca.html?tab=recent">Ver todo <span aria-hidden="true">›</span></a></div><div id="recent" class="rail" aria-label="Contenido reciente, desplazamiento horizontal"></div><p id="recentStatus" class="muted" role="status" aria-live="polite"></p></section><section class="panel wide u2-detail-screen" id="mis-trabajos" aria-labelledby="misTrabajosTitle">
  <header class="u2-detail-intro"><span class="u2-section-eyebrow">TU ACTIVIDAD</span><h2 id="misTrabajosTitle">Mis trabajos</h2><p class="muted">Gestioná tus oportunidades en un solo lugar.</p></header>
  <div class="u2-view-tabs" role="tablist" aria-label="Ver trabajos">
  <button type="button" role="tab" aria-selected="true" aria-controls="profileJobsApplications" id="profileJobsTabApplications" data-profile-jobs-tab="applications">Postulaciones</button>

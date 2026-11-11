@@ -6,7 +6,7 @@ const {createHash}=require('node:crypto');
 const html=fs.readFileSync(path.join(__dirname,'../usuario.html'),'utf8');
 const app=fs.readFileSync(path.join(__dirname,'../app.html'),'utf8');
 const worker=fs.readFileSync(path.join(__dirname,'../worker.js'),'utf8');
-const cssStart='<style id="beta-profile-visual-20261108">';
+const cssStart='<style id="profileNativeInlineCSS">';
 const start=html.indexOf(cssStart), end=html.indexOf('</style>',start);
 test('beta profile polish is isolated to native home',()=>{
  assert.ok(start>=0&&end>start,'Scoped visual style missing');
