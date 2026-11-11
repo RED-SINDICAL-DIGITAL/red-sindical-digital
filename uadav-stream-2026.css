@@ -154,3 +154,7 @@ body[data-page="playlists"] #playlistSearch{box-sizing:border-box;width:100%;max
 body[data-page="app"] #top .searchbox input{height:100%;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:none;padding:0 12px 0 0!important;color:#eef6ff!important}
 body[data-page="app"] #top #searchIcon{display:grid;place-items:center}
 body[data-page="app"] #top #searchIcon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}
+body[data-page="app"] #top .actions{flex-wrap:nowrap!important}
+body[data-page="app"] #top .artist{flex:none}
+@media(max-width:600px){body[data-page="app"] #top #userBtn{min-width:40px;max-width:40px}}
+@media(max-width:360px){body[data-page="app"] #top .artist{font-size:0!important}body[data-page="app"] #top .artist::after{content:'Artistas';font-size:10px}}

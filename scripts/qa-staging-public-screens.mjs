@@ -46,8 +46,10 @@ try{
    const topbar=await page.evaluate(()=>{
     const ids=['searchForm','uadavInstallApp','userBtn'];
     const nodes=[...ids.map(id=>document.getElementById(id)),document.querySelector('#top .artist')];
-    return {topAligned:nodes.every(n=>{const r=n.getBoundingClientRect();return r.width>0&&r.top>=0&&r.bottom<=80&&r.right<=innerWidth+3}),overflow:document.documentElement.scrollWidth>innerWidth+3};
+    return {positions:nodes.map(n=>({id:n.id||n.className,top:n.getBoundingClientRect().top,right:n.getBoundingClientRect().right,bottom:n.getBoundingClientRect().bottom,width:n.getBoundingClientRect().width})),topAligned:nodes.every(n=>{const r=n.getBoundingClientRect();return r.width>0&&r.top>=0&&r.bottom<=80&&r.right<=innerWidth+3}),overflow:document.documentElement.scrollWidth>innerWidth+3};
    });
+   console.log('TOPBAR_QA',JSON.stringify({viewport:viewport.name,...topbar}));
+   await page.screenshot({path:out+'/topbar-'+viewport.name+'.png',fullPage:true});
    if(!topbar.topAligned||topbar.overflow)failures.push(viewport.name+': topbar controls unavailable or overflowing '+JSON.stringify(topbar));
    await page.locator('#uadavInstallApp').click();
    if(!await page.locator('#uadavInstallApp').isHidden())failures.push(viewport.name+': installation button did not consume the simulated prompt');
