@@ -369,3 +369,9 @@ body[data-page="radio"] .station-art img{width:100%!important;height:100%!import
 body[data-page="radio"] .station-copy small{display:none}
 body[data-page="radio"] .station-actions{margin-top:auto}
 @media(max-width:650px){body[data-page="radio"] .radio-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}body[data-page="radio"] .station-play{width:42px;height:42px;right:8px;bottom:8px}}
+
+/* Remove the obsolete sidebar offset from the persistent radio player. */
+@media(min-width:1025px){body[data-page="app"] #radioDock:not(.listeningExpanded){left:50%;right:auto;transform:translateX(-50%);width:min(920px,calc(100vw - 32px));bottom:18px}}
+body[data-page="radio"] .station-play{font-size:0!important}
+body[data-page="radio"] .station-play::before{content:'';width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;border-left:13px solid currentColor;margin-left:3px}
+body[data-page="radio"] .station-play[aria-pressed="true"]::before{width:12px;height:16px;border:0;border-left:4px solid currentColor;border-right:4px solid currentColor;margin-left:0}

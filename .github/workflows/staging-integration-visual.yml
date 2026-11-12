@@ -68,6 +68,7 @@ jobs:
       - name: Start local static server and check responsive profile
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/uadav-static-qa.log 2>&1 &
+          node scripts/qa-staging-section-artwork.mjs
           node scripts/visual-qa-staging-integration.mjs
           node scripts/functional-qa-staging-shell.mjs
           node scripts/qa-staging-synthetic-playback.mjs
@@ -76,7 +77,6 @@ jobs:
           node scripts/qa-staging-home-stage.mjs
           node scripts/qa-staging-popular-artists.mjs
           node scripts/qa-staging-visual-launch.mjs
-          node scripts/qa-staging-section-artwork.mjs
           node scripts/qa-staging-radio-studio-operator.mjs
           node scripts/qa-staging-admin-anonymous.mjs
           node scripts/qa-staging-admin-mock-auth.mjs
