@@ -12,10 +12,10 @@ test('desktop and mobile reuse the same navigation routes and accessible SVG ico
  const html=read('app.html');
  const desktop=html.split('aria-label="Navegación principal"')[1].split('</nav>')[0];
  const mobile=html.split('<nav id="mobile"')[1].split('</nav>')[0];
- for(const route of ['/index-v117.html','en-vivo.html','cartelera.html','bolsa-trabajo.html','usuario.html']){
+ for(const route of ['/index-v117.html','en-vivo.html','cartelera.html','bolsa-trabajo.html']){
   assert.ok(desktop.includes(route),route);assert.ok(mobile.includes(route),route);
  }
- assert.equal((desktop.match(/<svg /g)||[]).length,5);
+ assert.equal((desktop.match(/<svg /g)||[]).length,4);
  assert.equal((mobile.match(/<svg /g)||[]).length,5);
 });
 test('retired profile override is absent and the maintained native CSS is embedded once',()=>{

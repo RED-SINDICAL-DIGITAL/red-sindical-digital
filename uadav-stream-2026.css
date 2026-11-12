@@ -275,3 +275,21 @@ body[data-page="index-v117"].uadav-tv-mode #heroControls button{width:56px;heigh
 .placement-promo{width:100%;box-sizing:border-box}
 @media(max-width:650px){.placement-promo{flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;min-height:0;padding:20px}.placement-promo>span:first-child{width:100%}.placement-promo .ad-brand{font-size:10px;line-height:1.4}.placement-promo strong{font-size:23px;margin:8px 0 0;max-width:18ch}.placement-promo .ad-cta{padding:9px 14px;font-size:12px}}
 body[data-page="index-v117"] .homeBanner .placement-promo:focus-visible{display:flex;outline:3px solid #7bdcff;outline-offset:4px}
+
+/* Desktop returns to a horizontal shell; account remains a single avatar. */
+@media(min-width:1025px){
+ body[data-page="app"] #top{inset:12px 12px auto 12px!important;height:112px!important;display:grid!important;grid-template-columns:210px minmax(0,1fr);grid-template-rows:48px 40px;gap:4px 20px!important;padding:10px 20px!important}
+ body[data-page="app"] #top .brand{position:static!important;grid-column:1;grid-row:1;font-size:17px;white-space:nowrap}
+ body[data-page="app"] #top .actions{grid-column:2;grid-row:1;width:100%;min-width:0}
+ body[data-page="app"] #top .nav{position:static!important;grid-column:1/-1;grid-row:2;width:auto!important;padding:0!important;display:flex!important;flex-direction:row!important;gap:8px;background:transparent!important;align-items:center}
+ body[data-page="app"] #top .nav button{min-height:36px!important;padding:7px 18px!important;font-size:14px!important;gap:8px!important;border-radius:99px!important}
+ body[data-page="app"] #top .nav button svg{width:18px;height:18px}
+ body[data-page="app"] #viewWrap{margin:136px 12px 12px!important;width:auto!important;height:calc(100dvh - 148px)!important}
+ body[data-page="app"].uadav-tv-mode #top{height:140px!important;grid-template-rows:62px 48px}
+ body[data-page="app"].uadav-tv-mode #viewWrap{margin-top:164px!important;height:calc(100dvh - 176px)!important}
+}
+body[data-page="index-v117"] .hero[data-slide-kind="brand"] .back{animation:uadav-stage-drift 12s ease-in-out infinite alternate}
+@keyframes uadav-stage-drift{from{transform:scale(1)}to{transform:scale(1.12) translateX(-1.2%)}}
+@media(prefers-reduced-motion:reduce){body[data-page="index-v117"] .hero .back{animation:none!important}}
+body[data-page="index-v117"] .world:nth-child(3n+2){background-position:65% center}
+body[data-page="index-v117"] .world:nth-child(3n){background-position:25% center}
