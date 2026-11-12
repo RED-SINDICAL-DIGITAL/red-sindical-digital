@@ -23,7 +23,7 @@ function createFeedback({render,alive=()=>true,schedule=setTimeout,cancel=clearT
 }
 window.UADAVVideoFeedback={createFeedback};
 const stage=document.getElementById('mediaStage'),tools=document.getElementById('libraryTools');if(!stage||!tools)return;
-let active=null,serial=0,apiPromise=null;window.UADAVVideoFeedback.hasPlayer=()=>!!active?.player;window.UADAVVideoFeedback.command=(name,args=[])=>{const fn=active?.player?.[name];if(typeof fn!=='function')return false;fn.apply(active.player,args);return true};
+let active=null,serial=0,apiPromise=null;window.UADAVVideoFeedback.progress=()=>{try{const p=active?.player;return p?{time:p.getCurrentTime(),duration:p.getDuration()}:null}catch{return null}};window.UADAVVideoFeedback.hasPlayer=()=>!!active?.player;window.UADAVVideoFeedback.command=(name,args=[])=>{const fn=active?.player?.[name];if(typeof fn!=='function')return false;fn.apply(active.player,args);return true};
 function api(){
  if(window.UADAVPlaylistPlayer?.api)return window.UADAVPlaylistPlayer.api();
  if(window.YT?.Player)return Promise.resolve(window.YT);
