@@ -50,7 +50,7 @@ try{
    const nav=viewport.width<=390?'#mobile':'#top .nav';
    for(const route of ['/cartelera.html','/en-vivo.html','/bolsa-trabajo.html','/index-v117.html','/usuario.html']){
     await page.locator(viewport.width>390&&route==='/usuario.html'?'#userBtn':nav+' [data-route="'+route+'"]').click();
-    await page.waitForTimeout(900);
+    await page.waitForFunction(expected=>{const frame=document.getElementById('view'),canonical=v=>String(v||'').replace(/\.html$/,'');try{return canonical(new URLSearchParams(location.search).get('view'))===canonical(expected)&&canonical(frame?.contentWindow?.location.pathname)===canonical(expected)&&frame?.contentDocument?.readyState==='complete'}catch{return false}},route,{timeout:15000});
     const navigation=await page.evaluate(expected=>{
      const view=document.querySelector('#view');
      let framePath='',frameError='';
