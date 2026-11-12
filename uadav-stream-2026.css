@@ -361,3 +361,11 @@ body[data-page="index-v117"].home-custom-trabajos #jobsSection{display:none!impo
 #jobsRail .entityInitial{background:transparent;color:#ffffffb3;font-size:48px}
 #jobsRail .meta{padding:16px}#jobsRail .meta b{font-size:17px}
 .job-discover-empty{padding:24px;border-radius:12px;background:#112435;min-width:260px}.job-discover-empty p{color:#a9bdcc;font-size:14px;line-height:1.5}
+
+/* Directory: one play control, readable transparent station logos, full square covers. */
+body[data-page="radio"] .radio-hub-grid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(190px,230px))!important;gap:20px!important;align-items:start}
+body[data-page="radio"] .radio-hub-card{display:flex!important;flex-direction:column!important;width:100%;max-width:none!important;gap:12px!important}
+body[data-page="radio"] .station-art img{width:100%!important;height:100%!important;object-fit:contain;background:#e3edf3}
+body[data-page="radio"] .station-copy small{display:none}
+body[data-page="radio"] .station-actions{margin-top:auto}
+@media(max-width:650px){body[data-page="radio"] .radio-hub-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}body[data-page="radio"] .station-play{width:42px;height:42px;right:8px;bottom:8px}}
