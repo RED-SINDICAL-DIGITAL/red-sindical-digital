@@ -100,3 +100,5 @@ body.player-theater.player-controls-idle #playbackBar,body.player-theater.player
 @media(prefers-reduced-motion:reduce){#playbackBar,#mediaDock .tools{transition:none}}
 
 body[data-page=app].player-theater #mediaDock.active:is(.mini,.expanded){inset:0!important;width:100%!important;height:100dvh!important;padding:0!important}
+
+#playbackWakeLayer{display:none}body.player-theater.player-controls-idle #playbackWakeLayer{display:block;position:fixed;inset:0;z-index:5150;background:transparent;cursor:none}
