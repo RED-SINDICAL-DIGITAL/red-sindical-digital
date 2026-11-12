@@ -39,7 +39,7 @@
 }
 .tile button:focus-visible,.tab:focus-visible{outline:3px solid #9bbfff;outline-offset:2px}
 @media(prefers-reduced-motion:reduce){#tab-videos .tile,#tab-musica .tile{transition:none!important}}
-</style><link rel="stylesheet" href="/uadav-stream-2026.css?v=20261112-top-navigation"></head><body data-page="artista"><div id="app"><div class="empty" style="margin:30vh auto;width:min(500px,90vw)">Cargando perfil…</div></div>
+</style><link rel="stylesheet" href="/uadav-stream-2026.css?v=20261112-section-artwork"></head><body data-page="artista"><div id="app"><div class="empty" style="margin:30vh auto;width:min(500px,90vw)">Cargando perfil…</div></div>
 <script>
 const API_REMOTE=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/';async function apiFetchNetwork(path,opt={}){const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),10000);try{const r=await fetch(API_REMOTE+path,{...opt,cache:'no-store',signal:opt.signal||ctl.signal}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d}finally{clearTimeout(timer)}}
 function apiFetch(path,opt={}){const read=!opt.method||opt.method==='GET';return read&&window.UADAVPublicCache?window.UADAVPublicCache.json(API_REMOTE+path,()=>apiFetchNetwork(path,opt),120000):apiFetchNetwork(path,opt)}

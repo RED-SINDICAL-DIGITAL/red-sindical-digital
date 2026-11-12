@@ -41,6 +41,14 @@ try {
    await page.locator('#app').waitFor({state:'visible',timeout:14000});
    const entered=await page.evaluate(()=>({gateHidden:document.getElementById('loginGate').classList.contains('hidden'),stored:sessionStorage.getItem('uadav_admin_v8'),appVisible:!document.getElementById('app').classList.contains('hidden')}));
    if(!entered.gateHidden||!entered.appVisible||entered.stored!=='QA-ADMIN-VALID')problems.push(viewport.name+': mock accepted login failed');
+   await page.evaluate(()=>window.go('home'));
+   await page.getByRole('button',{name:'+ Fila de Trabajo',exact:true}).click();
+   if(await page.locator('#sType').inputValue()!=='trabajos'||await page.locator('#sMode').inputValue()!=='auto')throw Error('Trabajo preset is not editable and automatic');
+   await page.getByRole('button',{name:'Preparar sección',exact:true}).click();
+   await page.getByRole('button',{name:'+ Fila de Cartelera',exact:true}).click();
+   if(await page.locator('#sType').inputValue()!=='eventos')throw Error('Cartelera preset is missing');
+   await page.getByRole('button',{name:'Preparar sección',exact:true}).click();
+   if(otherWrites)throw Error('Preparing sections wrote to the API');
    await page.evaluate(()=>window.go('audit'));
    await page.locator('#backupPreviewResult').waitFor({state:'attached',timeout:12000});
    const backupCheck=await page.evaluate(async()=>{
