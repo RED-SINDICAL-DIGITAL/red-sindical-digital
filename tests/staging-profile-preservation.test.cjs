@@ -26,7 +26,7 @@ test('staging owner events and job tab controls are preserved',()=>{
  assert.ok(html.includes('/uadav-event-local-receipts.js'),'Local event receipt script missing');
 });
 test('current player and PWA controls remain intact',()=>{
- for(const id of ['mediaOptions','mediaSecondaryActions']){
+ for(const id of ['favMedia','laterMedia','playlistMedia','mediaSecondaryActions']){
   assert.ok(app.includes('id="'+id+'"'),'Missing player control '+id);
  }
  assert.ok(app.includes("getElementById('uadavInstallApp')"),'PWA install logic reference missing');
