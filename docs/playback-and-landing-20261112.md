@@ -13,3 +13,9 @@ Alcance: rama integration/staging-preserve-beta-20261109 y preview. Sin cambios 
 - Limpieza: se retira el controlador v135 de playlists sin referencias; se mantiene v136. Se reemplazan el editor parcial de landing, el botón repetido de radio y la dependencia del buscador antiguo para el orden.
 
 Aceptación: pruebas unitarias de cola, validación, migración y orden con espacios publicitarios; navegador aislado con eventos de YouTube sintéticos y final real de archivos WAV, persistencia del elemento al navegar, guardado/recuperación de landing simulados y revisión de tamaños móvil/PC/TV. Las restricciones de reproducción automática o de inserción de cada proveedor se conservan y se muestran al usuario.
+
+## Simplificación de secciones — integración, 12/11
+
+La radio usa una sola ficha con pestañas Ahora, Historial, Pedir canción, Chat e Información. Abrirla desde la barra conserva el audio del shell; cambiar de pestaña no envía mensajes ni pedidos y mantiene las comprobaciones de moderación existentes. El directorio tiene una cabecera compacta. Trabajo presenta las oportunidades antes de publicación y gestión; Cartelera agrupa sus filtros avanzados en un desplegable. Los controles de publicación, postulación, consentimiento y acceso privado conservan sus funciones.
+
+El menú del reproductor es una lista vertical; agregar un enlace a la cola es una opción desplegable. Los videos de YouTube compartidos abren `reproducir.html` dentro de la plataforma y requieren pulsar Reproducir. Otras fuentes conservan su enlace de origen. Compartir mediante el sistema se ofrece solamente si el navegador lo admite. Cambios de frontend en integración; sin despliegue de Worker ni cambios de datos.
