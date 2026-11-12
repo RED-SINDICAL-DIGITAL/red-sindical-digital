@@ -111,3 +111,5 @@ body.unified-radio #radioDock.active{display:none!important}body.unified-radio #
 #playbackQueueDialog .playback-queue-row{grid-template-columns:minmax(0,1fr) 44px}#playbackQueueDialog .queue-row-actions{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;padding:3px 0 8px}#playbackQueueDialog .queue-row-actions[hidden]{display:none!important}#playbackQueueDialog .queue-row-actions button{min-height:40px;min-width:44px;display:flex;align-items:center;justify-content:center}
 
 #playbackOptionsDialog>button{display:flex;align-items:center;width:100%;padding:10px 12px;background:transparent;color:#e4eef6;border:0;border-radius:9px;text-align:left;cursor:pointer}#playbackOptionsDialog>button:hover{background:#ffffff10}
+
+#playbackBar #playbackSaveButton{display:none!important}
