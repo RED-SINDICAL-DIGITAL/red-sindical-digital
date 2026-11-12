@@ -32,7 +32,7 @@ try{
      themeLoaded:Array.from(doc.styleSheets).some(sheet=>sheet.href?.includes('/uadav-stream-2026.css')),
      profileHeader:home.querySelector('.hero').getBoundingClientRect().height>=230&&home.querySelector('.hero').getBoundingClientRect().height<=400,
      profileFullWidth:home.querySelector('.hero').getBoundingClientRect().width>=doc.defaultView.innerWidth-20,
-     desktopSidebar:innerWidth<=1000||document.getElementById('view').getBoundingClientRect().left>=250,
+     desktopHorizontalMenu:innerWidth<=1024||(document.getElementById('view').getBoundingClientRect().left<30&&document.querySelector('#top .nav').getBoundingClientRect().top<130&&document.querySelector('#top .nav').getBoundingClientRect().width>innerWidth*.9),
      jobs:!!doc.getElementById('profileJobsTabOffers'),
      events:!!doc.getElementById('profileOwnedEventSave'),
      homeVisible:!!home&&!home.hidden&&doc.defaultView.getComputedStyle(home).display!=='none',
@@ -40,7 +40,7 @@ try{
     };
    });
    await page.screenshot({path:out+'/profile-'+viewport.name+'.png',fullPage:true,animations:'disabled'});
-   if(result?.status()!==200||!profile.style||!profile.themeLoaded||!profile.profileHeader||!profile.profileFullWidth||!profile.desktopSidebar||!profile.jobs||!profile.events||!profile.homeVisible||profile.horizontalOverflow)failures.push(viewport.name+': public profile smoke failed');
+   if(result?.status()!==200||!profile.style||!profile.themeLoaded||!profile.profileHeader||!profile.profileFullWidth||!profile.desktopHorizontalMenu||!profile.jobs||!profile.events||!profile.homeVisible||profile.horizontalOverflow)failures.push(viewport.name+': public profile smoke failed');
    // Exercise the deployed shell itself, not just static HTML. No API calls are allowed.
    const shell=await page.evaluate(()=>{
     window.__qaShellNodes={dock:document.getElementById('mediaDock'),radio:document.getElementById('radioAudio'),frame:document.getElementById('view')};
@@ -49,7 +49,7 @@ try{
    if(!shell)failures.push(viewport.name+': persistent shell elements missing');
    const nav=viewport.width<=390?'#mobile':'#top .nav';
    for(const route of ['/cartelera.html','/en-vivo.html','/bolsa-trabajo.html','/index-v117.html','/usuario.html']){
-    await page.locator(nav+' [data-route="'+route+'"]').click();
+    await page.locator(viewport.width>390&&route==='/usuario.html'?'#userBtn':nav+' [data-route="'+route+'"]').click();
     await page.waitForTimeout(900);
     const navigation=await page.evaluate(expected=>{
      const view=document.querySelector('#view');
