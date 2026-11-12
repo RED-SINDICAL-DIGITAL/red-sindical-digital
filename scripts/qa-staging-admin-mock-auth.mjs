@@ -60,7 +60,7 @@ try {
    homeWritesAllowed=true;await page.locator('#saveHomeBtn').click();await page.waitForFunction(()=>document.getElementById('saveHomeBtn')?.disabled===false);homeWritesAllowed=false;
    if(homeWrites!==4||!homeSaved['/api/landing_config']?.landing_page)throw Error('Complete landing was not included in the synthetic save');
    if(homeSaved['/api/home_layout'].order.indexOf('jobs')>homeSaved['/api/home_layout'].order.indexOf('cartelera'))throw Error('Home section reorder was not saved');
-   await page.evaluate(()=>window.go('audit'));await page.locator('#backupPreviewResult').waitFor();await page.evaluate(()=>window.go('home',true));await page.locator('[data-landing-field]').first().waitFor({state:'attached'});
+   await page.evaluate(()=>window.go('audit'));await page.locator('#backupPreviewResult').waitFor({state:'attached'});await page.evaluate(()=>window.go('home',true));await page.locator('[data-landing-field]').first().waitFor({state:'attached'});
    if(await page.locator('[data-landing-field="'+heroKey+'"]').inputValue()!=='Landing editada desde Admin QA'||await page.getByLabel('Mostrar Trabajo',{exact:true}).isChecked())throw Error('Full landing did not recover its saved text and visibility');
    if(await page.locator('#landingBlockOrder > div').first().getAttribute('data-landing-order')!=='faq')throw Error('Landing order did not survive save/reload');
    await page.evaluate(()=>window.go('audit'));
