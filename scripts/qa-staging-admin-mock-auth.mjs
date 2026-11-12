@@ -6,15 +6,15 @@ const problems=[];
 try {
  for(const viewport of [{name:'mobile',width:390,height:844},{name:'desktop',width:1365,height:768}]){
   const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height},locale:'es-AR'});
-  let adminChecks=0,denied=0,otherWrites=0,revokeNext=false,backupIncompleteNext=false;
+  let homeWritesAllowed=false,homeWrites=0;const homeSaved={};let adminChecks=0,denied=0,otherWrites=0,revokeNext=false,backupIncompleteNext=false;
   await context.route('**/*',route=>{
    const req=route.request(),url=new URL(req.url());
    if(url.origin===base)return route.continue();
    if(url.origin!==apiOrigin)return route.abort();
-   if(req.method()!=='GET'){otherWrites++;return route.fulfill({status:403,contentType:'application/json',body:'{"error":"mock is read-only"}'});}
+   if(req.method()!=='GET'&&homeWritesAllowed&&['/api/secciones','/api/web_visibility','/api/home_layout','/api/landing_config'].includes(url.pathname)){homeWrites++;homeSaved[url.pathname]=req.postDataJSON();return route.fulfill({contentType:'application/json',body:'{"success":true}'});}if(req.method()!=='GET'){otherWrites++;return route.fulfill({status:403,contentType:'application/json',body:'{"error":"mock is read-only"}'});}
    const path=url.pathname,auth=req.headers().authorization||'';
    let status=200,body={};
-   if(path==='/api/admin_check'){
+   if(Object.hasOwn(homeSaved,path))body=homeSaved[path];else if(path==='/api/admin_check'){
     adminChecks++;
     if(auth!=='Bearer QA-ADMIN-VALID'){status=401;denied++;body={success:false,error:'Credencial de prueba rechazada'};}
     else body={success:true};
@@ -49,6 +49,19 @@ try {
    if(await page.locator('#sType').inputValue()!=='eventos')throw Error('Cartelera preset is missing');
    await page.getByRole('button',{name:'Preparar sección',exact:true}).click();
    if(otherWrites)throw Error('Preparing sections wrote to the API');
+   await page.locator('[data-landing-field]').first().waitFor();
+   const heroKey=await page.evaluate(()=>window.UADAVLandingContent.schema.legacy.promo_title);
+   await page.locator('[data-landing-field="'+heroKey+'"]').fill('Landing editada desde Admin QA');
+   await page.getByRole('button',{name:'Subir Bolsa',exact:true}).click();
+   if(await page.locator('[data-landing-field="'+heroKey+'"]').inputValue()!=='Landing editada desde Admin QA')throw Error('Reordering Home lost the landing draft');
+   await page.getByLabel('Mostrar Trabajo',{exact:true}).uncheck();
+   for(let n=0;n<6;n++)await page.getByRole('button',{name:'Subir bloque Preguntas frecuentes',exact:true}).click();
+   homeWritesAllowed=true;await page.locator('#saveHomeBtn').click();await page.waitForFunction(()=>document.getElementById('saveHomeBtn')?.disabled===false);homeWritesAllowed=false;
+   if(homeWrites!==4||!homeSaved['/api/landing_config']?.landing_page)throw Error('Complete landing was not included in the synthetic save');
+   if(homeSaved['/api/home_layout'].order.indexOf('jobs')>homeSaved['/api/home_layout'].order.indexOf('cartelera'))throw Error('Home section reorder was not saved');
+   await page.evaluate(()=>window.go('audit'));await page.locator('#backupPreviewResult').waitFor();await page.evaluate(()=>window.go('home',true));await page.locator('[data-landing-field]').first().waitFor();
+   if(await page.locator('[data-landing-field="'+heroKey+'"]').inputValue()!=='Landing editada desde Admin QA'||await page.getByLabel('Mostrar Trabajo',{exact:true}).isChecked())throw Error('Full landing did not recover its saved text and visibility');
+   if(await page.locator('#landingBlockOrder > div').first().getAttribute('data-landing-order')!=='faq')throw Error('Landing order did not survive save/reload');
    await page.evaluate(()=>window.go('audit'));
    await page.locator('#backupPreviewResult').waitFor({state:'attached',timeout:12000});
    const backupCheck=await page.evaluate(async()=>{

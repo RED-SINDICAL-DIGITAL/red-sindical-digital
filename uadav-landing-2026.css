@@ -4,3 +4,5 @@
 @media(min-width:1800px){.landing-hero{min-height:950px}.landing-hero-copy{max-width:830px}.landing-hero h1{font-size:125px}.landing-lead{font-size:25px;max-width:680px}.landing-btn{font-size:20px;min-height:60px}.landing-header nav{font-size:18px}.landing-brand{font-size:26px}.landing-section{max-width:1700px}.landing-section p{font-size:21px}.landing-discover h3{font-size:30px}.landing-discover p{font-size:17px}.landing-discover{min-height:450px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.landing-art{animation:none!important}.landing-btn,.landing-card-art{transition:none}}
 .landing-text-link svg{display:inline-block;vertical-align:middle;margin-left:4px}.landing-card-arrow svg{width:18px;height:18px}
+
+[data-landing-block][hidden],a[hidden]{display:none!important}.landing-no-hero .landing-header{position:relative}.landing-hero h1{white-space:pre-line}.landing-brand{display:inline-flex;align-items:center;gap:.2em}

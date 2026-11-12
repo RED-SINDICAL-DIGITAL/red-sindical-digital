@@ -375,3 +375,20 @@ body[data-page="radio"] .station-actions{margin-top:auto}
 body[data-page="radio"] .station-play{font-size:0!important}
 body[data-page="radio"] .station-play::before{content:'';width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;border-left:13px solid currentColor;margin-left:3px}
 body[data-page="radio"] .station-play[aria-pressed="true"]::before{width:12px;height:16px;border:0;border-left:4px solid currentColor;border-right:4px solid currentColor;margin-left:0}
+
+body[data-page="index-v117"] #hero[data-world]:not([data-world=""]) .back{background-image:linear-gradient(90deg,#03101ff2 20%,#03101f40),url('/assets/visual/section-worlds.webp')!important;background-size:100% 100%,400% 400%;background-position:center,var(--world-position)}
+body[data-page="index-v117"] #hero[data-world="music"]{--world-position:0.0% 0.0%}
+body[data-page="index-v117"] #hero[data-world="artists"]{--world-position:33.333333333333336% 0.0%}
+body[data-page="index-v117"] #hero[data-world="live"]{--world-position:66.66666666666667% 0.0%}
+body[data-page="index-v117"] #hero[data-world="radio"]{--world-position:100.0% 0.0%}
+body[data-page="index-v117"] #hero[data-world="podcasts"]{--world-position:0.0% 33.333333333333336%}
+body[data-page="index-v117"] #hero[data-world="cinema"]{--world-position:33.333333333333336% 33.333333333333336%}
+body[data-page="index-v117"] #hero[data-world="shorts"]{--world-position:66.66666666666667% 33.333333333333336%}
+body[data-page="index-v117"] #hero[data-world="events"]{--world-position:100.0% 33.333333333333336%}
+body[data-page="index-v117"] #hero[data-world="jobs"]{--world-position:0.0% 66.66666666666667%}
+body[data-page="index-v117"] #hero[data-world="humor"]{--world-position:33.333333333333336% 66.66666666666667%}
+body[data-page="index-v117"] #hero[data-world="theater"]{--world-position:66.66666666666667% 66.66666666666667%}
+body[data-page="index-v117"] #hero[data-world="dance"]{--world-position:100.0% 66.66666666666667%}
+body[data-page="index-v117"] #hero[data-world="circus"]{--world-position:0.0% 100.0%}
+body[data-page="index-v117"] #hero[data-world="magic"]{--world-position:33.333333333333336% 100.0%}
+body[data-page="index-v117"] #hero[data-world="festivals"]{--world-position:66.66666666666667% 100.0%}
