@@ -25,3 +25,38 @@ body.player-theater #mediaDock.active:is(.expanded,.mini){inset:0 0 118px!import
 @media(max-width:390px){#playbackBar button{min-width:40px;min-height:40px}.playback-queue-row{grid-template-columns:minmax(0,1fr) 40px 40px 40px}#playbackQueueDialog{padding:16px}}
 
 body.player-theater #viewWrap{visibility:hidden}
+/* One explicit mobile player: compact while browsing, full view on tap. */
+#playbackBar #playbackBarTitle{min-width:0;min-height:32px;max-width:28%;padding:0;border:0;border-radius:0;background:transparent;text-align:left;color:#f4f9ff;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#foldPlayback{display:none}#playbackProgress{display:block!important;visibility:visible!important;transition:none!important}#playbackBar{transition:none!important}
+@media(max-width:1099px){
+body[data-page=app] #mediaDock.active.mini{position:fixed!important;inset:auto auto calc(108px + env(safe-area-inset-bottom)) 20px!important;width:96px!important;height:54px!important;padding:0!important;background:transparent!important;backdrop-filter:none!important;display:block!important;opacity:1!important;transform:none!important;z-index:5201!important;overflow:hidden!important;border-radius:6px!important}
+body[data-page=app] #mediaDock.active.mini #mediaCard{width:96px!important;height:54px!important;max-height:54px!important;display:block!important;padding:0!important;border:0!important;border-radius:6px!important;overflow:hidden!important}
+body[data-page=app] #mediaDock.active.mini #mediaStage{width:96px!important;height:54px!important;aspect-ratio:16/9!important;display:block!important;pointer-events:none!important;flex:none!important}
+body[data-page=app] #mediaDock.active.mini #mediaStage :is(iframe,video){display:block!important;width:100%!important;height:100%!important;opacity:1!important;visibility:visible!important}
+body[data-page=app] #mediaDock.active.mini :is(.tools,.mediaCopy){display:none!important}
+body[data-page=app] #playbackBar{min-height:112px;bottom:calc(72px + env(safe-area-inset-bottom))!important;left:8px;right:8px;padding:8px 12px;display:grid;grid-template-columns:minmax(0,1fr);gap:4px;background:#102435!important}
+body[data-page=app] #playbackBar #playbackBarTitle{max-width:100%;margin-left:108px;font-size:12px;min-height:24px}
+body[data-page=app] #playbackBar .playback-bar-controls{justify-content:flex-end;flex-wrap:nowrap;min-height:40px;gap:6px;margin-left:108px}
+body[data-page=app] #playbackBar .queue-automatic,body[data-page=app] #playbackBar #playbackSaveButton,body[data-page=app] #playbackBar #playbackPrevious{display:none}
+body[data-page=app] #playbackBar button{min-height:36px;min-width:36px}
+body[data-page=app] #playbackBar .playback-timeline{min-height:18px;width:100%}
+body[data-page=app] #playbackBar input[type=range]{min-height:18px;touch-action:pan-x}
+body[data-page=app].has-side-player #viewWrap{margin-bottom:190px!important}
+body[data-page=app].mobile-player-expanded #top{visibility:hidden}
+body[data-page=app].mobile-player-expanded #mediaDock.active.expanded{position:fixed!important;inset:0 0 calc(202px + env(safe-area-inset-bottom))!important;width:100%!important;height:auto!important;padding:0!important;display:block!important;background:#09131f!important;backdrop-filter:none!important;z-index:5100!important;overflow:auto!important;transform:none!important;opacity:1!important}
+body[data-page=app].mobile-player-expanded #mediaDock #mediaCard{width:100%!important;max-height:none!important;height:auto!important;display:flex!important;flex-direction:column!important;overflow:visible!important;border:0!important;border-radius:0!important;background:#09131f!important}
+body[data-page=app].mobile-player-expanded #mediaDock #mediaStage{width:100%!important;aspect-ratio:16/9!important;height:auto!important;flex:none!important;display:block!important;min-height:0!important}
+body[data-page=app].mobile-player-expanded #mediaDock #mediaStage :is(iframe,video){width:100%!important;height:100%!important;display:block!important;visibility:visible!important}
+body[data-page=app].mobile-player-expanded #mediaDock .tools{position:relative!important;display:flex!important;justify-content:flex-end;gap:8px;padding:8px;background:#0e1e2c;order:-1!important;inset:auto!important}
+body[data-page=app].mobile-player-expanded #foldPlayback{display:block}
+body[data-page=app].mobile-player-expanded #mediaDock .mediaCopy{display:block!important;padding:16px!important;overflow:visible!important}
+body[data-page=app].mobile-player-expanded #playbackBar #playbackBarTitle,body[data-page=app].mobile-player-expanded #playbackBar .playback-bar-controls{margin-left:0}
+body[data-page=app].mobile-player-expanded #playbackBar .playback-bar-controls{justify-content:center}
+body[data-page=app].mobile-player-expanded #playbackBar #playbackSaveButton,body[data-page=app].mobile-player-expanded #playbackBar #playbackPrevious{display:block}
+body[data-page=app].player-theater #mediaDock.active:is(.mini,.expanded){inset:0 0 130px!important;width:100%!important;height:calc(100dvh - 130px)!important;border-radius:0!important}
+body[data-page=app].player-theater #mediaDock.active #mediaCard{width:100%!important;height:100%!important;max-height:100%!important}
+body[data-page=app].player-theater #mediaDock.active #mediaStage{width:100%!important;height:100%!important;aspect-ratio:auto!important;flex:1 1 auto!important;pointer-events:auto!important}
+body[data-page=app].player-theater #mediaDock.active .mediaCopy{display:none!important}
+body[data-page=app].player-theater #mediaDock.active .tools{display:flex!important;position:absolute!important;right:0!important;top:0!important}
+body[data-page=app].player-theater #playbackBar{bottom:8px!important}body[data-page=app].player-theater #playbackBar #playbackBarTitle,body[data-page=app].player-theater #playbackBar .playback-bar-controls{margin-left:0}
+}
+@media(max-width:1099px){body[data-page=app].mobile-player-expanded #playbackBar .queue-automatic{display:flex;font-size:0;gap:0}body[data-page=app].mobile-player-expanded #playbackBar .queue-automatic input{width:20px;height:20px}}
