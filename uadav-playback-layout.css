@@ -60,3 +60,4 @@ body[data-page=app].player-theater #mediaDock.active .tools{display:flex!importa
 body[data-page=app].player-theater #playbackBar{bottom:8px!important}body[data-page=app].player-theater #playbackBar #playbackBarTitle,body[data-page=app].player-theater #playbackBar .playback-bar-controls{margin-left:0}
 }
 @media(max-width:1099px){body[data-page=app].mobile-player-expanded #playbackBar .queue-automatic{display:flex;font-size:0;gap:0}body[data-page=app].mobile-player-expanded #playbackBar .queue-automatic input{width:20px;height:20px}}
+@media(max-width:1099px){body[data-page=app].mobile-player-expanded #viewWrap{visibility:hidden}body[data-page=app].mobile-player-expanded #playbackBar .playback-timeline{background:#102435}}
