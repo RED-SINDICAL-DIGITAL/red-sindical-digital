@@ -53,6 +53,23 @@ try{
    }));
    console.log(JSON.stringify({viewport:viewport.name,...state,checks:'click-only'}));
    if(state.tabs!==2||!state.ownerEventForm||!state.ownerEventSave||state.horizontalOverflow)failures.push(viewport.name+': profile subview controls/overflow issue');
+   // Verify real navigation from Mi Perfil to Radio Studio, not just a visible link.
+   await page.goto(base+'/app.html?view=%2Fusuario.html',{waitUntil:'domcontentloaded'});
+   await frame.locator('#profileNativeHome').waitFor({state:'visible',timeout:16000});
+   await frame.locator('a.profile-radio-shortcut[href="/radio-studio.html"]').click();
+   await page.waitForFunction(()=>{
+     const shell=document.querySelector('#view');
+     const target=shell?.getAttribute('src')||'';
+     const title=shell?.contentDocument?.querySelector('h1')?.textContent||'';
+     return /radio-studio[.]html/.test(target)||title.trim()==='Radio Studio';
+   },null,{timeout:14000});
+   const studioRoute=await page.evaluate(()=>{
+     const v=document.querySelector('#view');
+     return {src:v?.getAttribute('src')||'',title:v?.contentDocument?.querySelector('h1')?.textContent?.trim()||'',outside:document.documentElement.scrollWidth>innerWidth+3};
+   });
+   if(studioRoute.title!=='Radio Studio'||studioRoute.outside)failures.push(viewport.name+': Mi Perfil did not open Radio Studio within shell '+JSON.stringify(studioRoute));
+   console.log('PROFILE_TO_RADIO_STUDIO_QA',JSON.stringify({viewport:viewport.name,route:studioRoute.src,title:studioRoute.title}));
+
   }catch(error){failures.push(viewport.name+': '+String(error?.message||error).slice(0,230));}
   finally{await context.close();}
  }
