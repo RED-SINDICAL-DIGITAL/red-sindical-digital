@@ -58,3 +58,10 @@ Esta revisión sustituye el criterio anterior de abrir Ahora en la página princ
 - El hero genérico queda oculto; las creatividades y los eventos reales conservan un hero compacto.
 - Trabajo quita la cabecera duplicada dentro de la app y el acceso redundante Buscar trabajo; conserva Ofrecer trabajo y las gestiones desplegables.
 - QA sintético: apertura lateral sin navegar, pestañas, minimizar sin pausa, cerrar sin stream ni iframe, audio persistente, móvil/PC/laptop/TV y acciones de filtros/publicación. Los mensajes QA solo existen en las respuestas de prueba.
+
+### Verificación visual y refinamiento
+- Comprobado manualmente en el preview: el panel abre al costado, minimizar conserva reproducción y cerrar elimina la fuente de audio.
+- Corregidas las áreas de grilla heredadas que superponían el nombre y la canción. Chat, Pedidos, Historial e Info caben en una línea.
+- Cartelera limita el hero a 260 px en PC / 220 px móvil; no muestra destacados vacíos ni los puntos decorativos del slider. Las flechas dejan libre el título.
+- Trabajo usa tarjetas compactas y descripción completa desplegable, sin truncar las condiciones al abrir Detalles.
+- Suite local: 1.093 pruebas aprobadas. Primera batería visual lateral aprobada; el último refinamiento se verifica por separado en CI.
