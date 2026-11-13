@@ -4,6 +4,13 @@ on:
     branches:
       - integration/staging-preserve-beta-20261109
     paths:
+      - radio.html
+      - cartelera.html
+      - bolsa-trabajo.html
+      - uadav-radio-presentation.js
+      - uadav-section-simplicity.js
+      - uadav-section-simplicity.css
+      - scripts/qa-staging-unified-radio.mjs
       - playlists.html
       - podcasts.html
       - radio-studio.html
