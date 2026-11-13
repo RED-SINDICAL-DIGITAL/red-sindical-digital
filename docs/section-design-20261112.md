@@ -18,3 +18,9 @@ Prompt: contacto fotográfico exacto de 4 columnas por 4 filas sin bordes, texto
 
 ## Aceptación
 Las pruebas usan respuestas sintéticas y bloquean escrituras externas. Se comprueban el carrusel sin configuración, imágenes diferentes por categoría, ausencia de buscador duplicado, filtro de ofertas, selector de Admin y reproducción desde portada de radio. Incluye móvil, escritorio y TV, además de la suite responsive existente.
+
+## Continuación 13/11
+- Los enlaces sociales de la emisora se conservan en Información al simplificar Chat.
+- El montaje de la presentación es idempotente: no duplica Ahora ni los controles al reiniciarse.
+- La aceptación sintética de Radio comprueba que Información conserve los enlaces en móvil, PC, laptop y TV.
+- Validación local: 41 pruebas de Radio, Cartelera y aislamiento aprobadas. La aceptación visual requiere CI: Chromium local no puede crear sockets en este entorno.
