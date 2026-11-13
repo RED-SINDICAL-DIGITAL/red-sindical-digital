@@ -58,3 +58,12 @@ test('Admin maintains editable Podcasts section when public module is off',()=>{
  assert.match(html,/id="podcastsVisibilityToggle"/);
  assert.match(html,/Ocultar no borra episodios, fuentes ni el reproductor/);
 });
+
+test('the direct Podcast page obeys its installation-wide visibility policy',()=>{
+ const podcastPage=fs.readFileSync('podcasts.html','utf8');
+ assert.match(podcastPage,/src="\/uadav-module-policy\.js\?/);
+ assert.match(podcastPage,/src="\/platform-brand-runtime\.js\?/);
+ const runtime=fs.readFileSync('platform-brand-runtime.js','utf8');
+ assert.match(runtime,/"podcasts\.html":\["podcasts"\]/);
+ assert.match(runtime,/if\(disabled\(pageKey\(location\.pathname\)\)\)/);
+});
