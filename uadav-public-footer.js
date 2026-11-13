@@ -13,7 +13,7 @@ function node(tag,text){const n=doc.createElement(tag);if(text!==undefined)n.tex
 async function mount(){
  if(doc.getElementById('publicSiteFooter'))return;
  const css=node('link');css.rel='stylesheet';css.href='/uadav-public-footer.css?v=20261113';doc.head.append(css);
- const footer=node('footer');footer.id='publicSiteFooter';footer.setAttribute('aria-label','Información de UADAV STREAM');
+ const footer=node('footer');footer.id='publicSiteFooter';footer.dataset.uadavPublicFooter='1';footer.setAttribute('aria-label','Información de UADAV STREAM');
  const identity=node('div');identity.className='public-footer-identity';const title=node('strong','UADAV STREAM'),description=node('p','El talento tiene su lugar.');identity.append(title,description);
  const nav=node('nav');nav.setAttribute('aria-label','Ayuda, información legal e institucional');for(const [label,href]of links){const a=node('a',label);a.href=href;nav.append(a)}
  const bottom=node('div');bottom.className='public-footer-bottom';const copyright=node('small','© '+new Date().getFullYear()+' UADAV STREAM'),counter=node('small');counter.hidden=true;counter.id='publicFooterVisits';counter.title='Visitas acumuladas del contador del sitio; no equivale a personas únicas ni a audiencia en vivo.';bottom.append(copyright,counter);footer.append(identity,nav,bottom);
