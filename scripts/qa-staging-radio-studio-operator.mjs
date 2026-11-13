@@ -49,6 +49,15 @@ try{
    await page.goto(base+'/radio-studio.html',{waitUntil:'domcontentloaded'});
    await page.locator('#studio').waitFor({state:'visible',timeout:12000});
    await page.waitForFunction(()=>document.getElementById('modeSelect')?.value==='manual'&&document.getElementById('modeStatus')?.textContent.includes('Modo actual'),null,{timeout:12000});
+   const visual=await page.evaluate(()=>({
+    styleLoaded:[...document.styleSheets].some(sheet=>sheet.href?.includes('/uadav-radio-studio-2026.css')),
+    cardRadius:getComputedStyle(document.querySelector('#studio>.card')).borderRadius,
+    statusVisible:!!document.getElementById('status'),
+    overflow:document.documentElement.scrollWidth>innerWidth+3,
+    formColumns:getComputedStyle(document.querySelector('#studio>.toolbar')).gridTemplateColumns
+   }));
+   if(!visual.styleLoaded||visual.cardRadius!=='14px'||visual.overflow)errors.push(device.name+': approved Radio Studio visual/layout contract failed '+JSON.stringify(visual));
+   console.log(JSON.stringify({device:device.name,studioVisual:visual}));
    for(const mode of ['automatic','paused','manual']){
     await page.locator('#modeSelect').selectOption(mode);
     await page.locator('#saveMode').click();
