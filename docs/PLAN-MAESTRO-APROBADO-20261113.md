@@ -88,3 +88,8 @@ Existe un preview funcional y una pasada de 1.093 pruebas aprobadas. Las cuatro 
 - Publicar evento y Publicar oferta visibles, reutilizando los enlaces originales sin duplicarlos.
 - Cuenta y Radio Studio como accesos secundarios claros; exploración y ayuda dentro de Más opciones.
 - Se mantienen montajes, subpantallas y aislamiento de datos por cuenta. QA de accesos y subpantallas en 320 px, móvil, PC y TV.
+
+## Presentación y entrada de artistas
+- Portada con dos entradas por defecto: Explorar y Soy artista; ambas conservan edición desde Admin.
+- Portal y alta más compactos; ayuda de acceso mediante Cuenta y seguridad o vinculación de dispositivo.
+- Se conserva creación de cuenta, búsqueda previa, validación y autorización para gestionar perfiles. No se envían solicitudes reales durante QA.
