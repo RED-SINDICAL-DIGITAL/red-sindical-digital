@@ -76,3 +76,9 @@ Existe un preview funcional y una pasada de 1.093 pruebas aprobadas. Las cuatro 
 - Evento y oferta incorporan vista previa local mientras se completa el formulario, con imagen HTTPS opcional en la vista previa y sin enviar datos.
 - Se conservan campos, validaciones, publicación, accesos y comprobantes existentes. Las opciones plegadas se abren ante campos inválidos.
 - Verificación visual sin publicaciones reales en móvil y PC integrada en CI.
+
+## Explorar y En vivo — entrega compacta
+- Continuar viendo y escuchando abre el contenido de Explorar cuando existe historial, manteniendo el orden personalizado de Admin.
+- En vivo: cabecera reducida, navegación a transmisiones/radios dentro de la sección, tarjetas de emisora compactas.
+- Un video de artista sin confirmación actual queda en canales disponibles; solo emisiones confirmadas o detectadas en los últimos tres minutos aparecen en Transmitiendo ahora.
+- Preservar todos los canales disponibles, errores/reintento y reproducción persistente. QA sintético en móvil, PC y TV.
