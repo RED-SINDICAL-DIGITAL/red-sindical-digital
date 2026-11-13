@@ -13,3 +13,39 @@ body[data-page=artistas] :is(.search input,.search button,#retryArtists):focus-v
 body[data-page=artista] .hero,body[data-page=artista] .hero-inner{min-height:300px}body[data-page=artista] .hero-inner{padding-top:82px;padding-bottom:28px}body[data-page=artista] .artist-avatar{width:104px;height:104px}body[data-page=artista] .title{font-size:clamp(34px,4vw,56px)}body[data-page=artista] .artist-actions{margin-top:14px}body[data-page=artista] .artist-actions #shareArtist{background:transparent!important;border-color:#ffffff30!important}html.uadav-in-shell body[data-page=artista] .top-actions{display:none!important}
 @media(max-width:700px){body[data-page=artista] .hero,body[data-page=artista] .hero-inner{min-height:300px}body[data-page=artista] .hero-inner{padding-top:74px;padding-bottom:24px}body[data-page=artista] .artist-avatar{width:72px;height:72px}body[data-page=artista] .title{font-size:clamp(28px,7vw,40px)}}
 @media(min-width:1800px){body[data-page=artista] .hero,body[data-page=artista] .hero-inner{min-height:400px}body[data-page=artista] .artist-avatar{width:140px;height:140px}body[data-page=artista] .title{font-size:68px}}
+
+/* Artist directory and profile: compact discovery with touch-safe navigation. */
+body[data-page=artistas] .search{max-width:760px;margin:18px 0 16px;min-width:0}
+body[data-page=artistas] .search input{min-width:0;min-height:46px;border-radius:12px;background:#102333;padding:10px 16px}
+body[data-page=artistas] .search button{min-height:46px;border-radius:12px;background:#32c4e9;color:#071923;padding:10px 20px;font-size:13px}
+body[data-page=artistas] .categories{display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;overflow-y:hidden;max-width:100%;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#466d88 transparent;margin:12px 0 18px;padding:4px 2px 12px}
+body[data-page=artistas] .categories .chip{flex:0 0 auto;min-height:44px;scroll-snap-align:start;font-size:13px;padding:10px 16px;background:#132637;border-color:#ffffff18;color:#d5e7f1}
+body[data-page=artistas] .categories .chip.active{background:#32c4e9;color:#061923;border-color:transparent}
+body[data-page=artistas] .head{gap:12px;align-items:center;margin:18px 0 12px}
+body[data-page=artistas] .head h2{font-size:clamp(20px,2.4vw,27px);line-height:1.2}
+body[data-page=artistas] .card{min-width:0;overflow-wrap:anywhere;padding:10px;border-radius:12px;box-shadow:none}
+body[data-page=artistas] .card img{aspect-ratio:1;border-radius:50%;width:100%;object-fit:cover}
+body[data-page=artistas] .card .copy{padding:10px 3px 4px}
+body[data-page=artistas] .card .name{font-size:14px;line-height:1.35;font-weight:750}
+body[data-page=artistas] .card .type{font-size:12px;line-height:1.4}
+body[data-page=artistas] .card:focus-visible{outline:3px solid #65dcff;outline-offset:3px}
+body[data-page=artista] .tabs{scroll-snap-type:x proximity;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#466d88 transparent}
+body[data-page=artista] .tabs .tab{flex:none;scroll-snap-align:start;white-space:nowrap;min-height:48px;font-size:13px;padding:12px 16px}
+body[data-page=artista] .rail{overscroll-behavior-inline:contain;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#466d88 transparent}
+body[data-page=artista] .rail .tile{min-width:0;scroll-snap-align:start;flex-basis:clamp(220px,26vw,290px);border-radius:12px}
+body[data-page=artista] .tile button{width:100%;box-sizing:border-box;min-height:44px}
+body[data-page=artista] .tile-title{font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+body[data-page=artista] .tile-meta{overflow-wrap:anywhere}
+@media(max-width:700px){
+ body[data-page=artistas] .search{gap:8px;margin-top:16px}
+ body[data-page=artistas] .search input{flex:1 1 auto;width:0;padding:10px 12px;font-size:13px}
+ body[data-page=artistas] .search button{padding:10px 14px}
+ body[data-page=artistas] .grid{gap:12px!important}
+ body[data-page=artistas] .card{padding:8px!important}
+ body[data-page=artistas] .card .name{font-size:13px}
+ body[data-page=artistas] .categories .chip{font-size:12px;padding:9px 14px}
+ body[data-page=artista] .rail .tile{flex-basis:min(74vw,276px)}
+ body[data-page=artista] .heading h2{font-size:22px}
+}
+@media(max-width:350px){body[data-page=artistas] .search button{padding:10px 11px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){body[data-page=artista] .rail,body[data-page=artista] .tabs,body[data-page=artistas] .categories{scroll-behavior:auto;scroll-snap-type:none}}
