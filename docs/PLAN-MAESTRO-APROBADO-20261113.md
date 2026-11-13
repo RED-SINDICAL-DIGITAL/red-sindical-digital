@@ -71,3 +71,8 @@ Existe un preview funcional y una pasada de 1.093 pruebas aprobadas. Las cuatro 
 - Publicar evento restituido en Cartelera, conservando Mi Perfil. Grilla de tres columnas en PC, tarjetas apaisadas y filtros abiertos inicialmente en PC.
 - Radio: carátula grande y comunidad en pantalla completa, pausa/stop/compartir/cierre visibles, stop conserva la emisora y permite reanudar; deslizar minimiza manteniendo audio. Video conserva su comportamiento aprobado.
 - Validar esta entrega en CI y en el preview antes de declarar terminado el resto del plan.
+
+## Publicación — siguiente entrega
+- Evento y oferta incorporan vista previa local mientras se completa el formulario, con imagen HTTPS opcional en la vista previa y sin enviar datos.
+- Se conservan campos, validaciones, publicación, accesos y comprobantes existentes. Las opciones plegadas se abren ante campos inválidos.
+- Verificación visual sin publicaciones reales en móvil y PC integrada en CI.
