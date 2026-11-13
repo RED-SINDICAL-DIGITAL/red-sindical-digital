@@ -8,3 +8,4 @@ Leer `docs/PLAN-MAESTRO-APROBADO-20261113.md` antes de cambiar diseño, navegaci
 - Publicar evento debe permanecer en Cartelera Y Mi Perfil.
 - Trabajar en `integration/staging-preserve-beta-20261109`, PR #54. No fusionar ni modificar producción/Worker sin la autorización de despliegue correspondiente.
 - No inventar audiencia, contactos, documentos, afiliación, acuerdos ni vigencias. Separar CCT de convenios de beneficios.
+- Podcasts queda reservado para Beat Digital/marca blanca; en UADAV debe estar oculto por configuración de Admin hasta habilitación expresa de Ruso. Conservar código y catálogo. Ver estado de guardado en la guía.

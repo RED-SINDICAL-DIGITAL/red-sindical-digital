@@ -93,3 +93,10 @@ Existe un preview funcional y una pasada de 1.093 pruebas aprobadas. Las cuatro 
 - Portada con dos entradas por defecto: Explorar y Soy artista; ambas conservan edición desde Admin.
 - Portal y alta más compactos; ayuda de acceso mediante Cuenta y seguridad o vinculación de dispositivo.
 - Se conserva creación de cuenta, búsqueda previa, validación y autorización para gestionar perfiles. No se envían solicitudes reales durante QA.
+
+## Podcasts — decisión de Ruso
+- Reservado para la marca blanca propia Beat Digital. Ocultar el módulo en UADAV mediante Admin; habilitarlo en el sindicato solo por decisión expresa posterior de Ruso.
+- No borrar el catálogo ni retirar la función del producto de marca blanca. No distraer el rediseño actual con ampliaciones del módulo.
+- Mantener soporte de contenido manual, YouTube y fuentes RSS/Atom. Objetivo futuro: Apple Podcasts/iTunes mediante resolución al RSS público y otros proveedores compatibles; no prometer importar todos los catálogos ni reproducción donde la fuente no la permita.
+- Estado verificado en código: reproductor de episodios y editor de fuentes RSS con vista previa/importación. La interfaz contempla que el Worker RSS pueda no estar desplegado. Resolver enlaces de Apple/iTunes sigue pendiente de comprobación/implementación.
+- **Cambio de visibilidad pendiente de guardar**: el 13/11/2026 Admin solicitó la clave y no había sesión autenticada disponible. No confundir esta decisión documentada con configuración ya guardada en el servidor.
