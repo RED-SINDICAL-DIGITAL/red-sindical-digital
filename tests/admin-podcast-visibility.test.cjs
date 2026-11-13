@@ -21,6 +21,7 @@ function harness({visible=true,allow=true,fail=false}={}){
  go:async(view)=>calls.push({action:'go',view}),
  toast:message=>calls.push({action:'toast',message})
  };
+ context.window=context;
  vm.createContext(context);vm.runInContext(code,context);
  return {click:()=>context.togglePodcastsVisibility(),calls,cache};
 }
