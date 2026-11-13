@@ -31,3 +31,8 @@ Las pruebas usan respuestas sintéticas y bloquean escrituras externas. Se compr
 - El estado de carga oculta el botón de paginación anterior y no se reemplaza por resultados antiguos al cambiar favoritos.
 - Una respuesta de catálogo no pisa una búsqueda escrita mientras carga; las cargas concurrentes comparten una petición.
 - La aceptación visual prueba caída, reintento y recuperación en móvil y PC sin escrituras externas.
+
+## Cartelera y Trabajo · accesos directos
+- El resumen de filtros indica cuántos están activos y se abre al recibir filtros por URL; Limpiar filtros actualiza el resumen.
+- Los enlaces internos a publicar y ver postulantes abren el formulario de Trabajo tanto al entrar como al cambiar el fragmento.
+- Aceptación sintética ampliada para comprobar los filtros y la reapertura del formulario.
