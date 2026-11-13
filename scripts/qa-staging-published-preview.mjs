@@ -30,7 +30,7 @@ try{
     return {
      style:!!doc.getElementById('profileNativeInlineCSS'),
      themeLoaded:Array.from(doc.styleSheets).some(sheet=>sheet.href?.includes('/uadav-stream-2026.css')),
-     profileHeader:home.querySelector('.hero').getBoundingClientRect().height>=230&&home.querySelector('.hero').getBoundingClientRect().height<=400,
+     profileHeader:(()=>{const hero=home.querySelector('.hero'),r=hero.getBoundingClientRect();return r.height>=120&&r.height<=210&&['#name','#avatar','#edit'].every(selector=>{const b=hero.querySelector(selector).getBoundingClientRect();return b.width>0&&b.height>0&&b.left>=r.left&&b.right<=r.right&&b.top>=r.top&&b.bottom<=r.bottom})})(),
      profileFullWidth:home.querySelector('.hero').getBoundingClientRect().width>=doc.defaultView.innerWidth-20,
      desktopHorizontalMenu:innerWidth<=1024||(document.getElementById('view').getBoundingClientRect().left<30&&document.querySelector('#top .nav').getBoundingClientRect().top<130&&document.querySelector('#top .nav').getBoundingClientRect().width>innerWidth*.9),
      jobs:!!doc.getElementById('profileJobsTabOffers'),
