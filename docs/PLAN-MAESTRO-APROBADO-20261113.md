@@ -48,7 +48,7 @@ Contador secundario: el endpoint actual tiene una base precargada de 15.651 y pe
 
 Separar convenios colectivos de acuerdos institucionales y beneficios. Publicar acuerdos solo con documentos confirmados, alcance, vigencia, requisitos y contacto. No tomar conversaciones o maquetas como prueba de un convenio vigente.
 
-Conservar Términos/Privacidad y edición desde Admin. Antes del cierre jurídico completar con datos confirmados el responsable legal, domicilio, contacto operativo, finalidades y circuito de derechos; requiere revisión jurídica. Fuente orientativa oficial: https://www.argentina.gob.ar/aaip/datospersonales/derechos .
+Correo oficial confirmado por Ruso: **uadavstream@gmail.com**. Los demás datos legales e institucionales se completan desde Admin. Conservar Términos/Privacidad y edición desde Admin. Antes del cierre jurídico completar con datos confirmados el responsable legal, domicilio, contacto operativo, finalidades y circuito de derechos; requiere revisión jurídica. Fuente orientativa oficial: https://www.argentina.gob.ar/aaip/datospersonales/derechos .
 
 Media Kit mantiene el modelo comercial existente, sin inventar métricas, precios públicos, planes PRO, exposición garantizada o ventas.
 
@@ -65,3 +65,9 @@ D. Artistas, Biblioteca y catálogos.
 E. Admin/Radio Studio, QA por tamaño y aceptación en staging antes de producción.
 
 Existe un preview funcional y una pasada de 1.093 pruebas aprobadas. Las cuatro láminas posteriores siguen siendo objetivo pendiente de implementación integral; no declarar las 16 pantallas terminadas por haber generado sus imágenes.
+
+## Entrega de implementación: correo y controles
+- Correo oficial predeterminado: uadavstream@gmail.com; editable desde Admin. Los datos legales y documentos se incorporan desde allí.
+- Publicar evento restituido en Cartelera, conservando Mi Perfil. Grilla de tres columnas en PC, tarjetas apaisadas y filtros abiertos inicialmente en PC.
+- Radio: carátula grande y comunidad en pantalla completa, pausa/stop/compartir/cierre visibles, stop conserva la emisora y permite reanudar; deslizar minimiza manteniendo audio. Video conserva su comportamiento aprobado.
+- Validar esta entrega en CI y en el preview antes de declarar terminado el resto del plan.

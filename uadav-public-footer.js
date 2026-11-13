@@ -1,8 +1,9 @@
 /* Shared public footer. Read-only configuration, no analytics writes or fabricated counts. */
 (function(root){
 'use strict';
+const OFFICIAL_EMAIL='uadavstream@gmail.com';
 const links=[['Ayuda','/guia.html'],['Contacto','/contacto.html'],['Términos','/terminos.html'],['Privacidad','/privacidad.html'],['Derechos y CCT','/documentacion.html'],['Media Kit','/mediakit.html'],['Convenios','/convenios.html'],['Publicidad','/consultar-publicidad.html']];
-function settings(value){const x=value?.data||value||{};return{name:typeof x.nombre==='string'&&x.nombre.trim()?x.nombre.trim().slice(0,100):'UADAV STREAM',description:typeof x.descripcion==='string'?x.descripcion.slice(0,300):'El talento tiene su lugar.',email:typeof x.email==='string'&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x.email.trim())?x.email.trim():'',legalName:typeof x.legal_name==='string'?x.legal_name.slice(0,200):'',legalAddress:typeof x.legal_address==='string'?x.legal_address.slice(0,300):'',verified:x.visits_verified===true}}
+function settings(value){const x=value?.data||value||{};return{name:typeof x.nombre==='string'&&x.nombre.trim()?x.nombre.trim().slice(0,100):'UADAV STREAM',description:typeof x.descripcion==='string'?x.descripcion.slice(0,300):'El talento tiene su lugar.',email:typeof x.email==='string'&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x.email.trim())?x.email.trim():OFFICIAL_EMAIL,legalName:typeof x.legal_name==='string'?x.legal_name.slice(0,200):'',legalAddress:typeof x.legal_address==='string'?x.legal_address.slice(0,300):'',verified:x.visits_verified===true}}
 function count(value,config){const x=value?.data||value||{},v=x.visitas_totales;return config.verified&&x.mostrar_visitas===true&&typeof v==='number'&&Number.isSafeInteger(v)&&v>=0?v:null}
 root.UADAVPublicFooter={settings,count,links};if(typeof module==='object'&&module.exports)module.exports=root.UADAVPublicFooter;
 if(!root.document||root.__uadavFooterMounted)return;

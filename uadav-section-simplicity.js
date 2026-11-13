@@ -20,7 +20,7 @@ function start(){
    const details=document.createElement('details');details.className='section-filter-details';
    const title=document.createElement('summary');filters.before(details);details.append(title,filters);
    function update(){const count=[...filters.querySelectorAll('input,select')].filter(el=>el.value.trim()).length;title.textContent=count?'Filtros · '+count+' '+(count===1?'activo':'activos'):'Ubicación, fecha y más filtros';return count}
-   if(update())details.open=true;
+   if(update())details.open=true;const wide=matchMedia('(min-width:1100px)'),adapt=()=>{if(wide.matches)details.open=true};adapt();wide.addEventListener('change',adapt);
    filters.addEventListener('input',update);filters.addEventListener('change',update);
    document.getElementById('clearEventFilters')?.addEventListener('click',update);
   }
