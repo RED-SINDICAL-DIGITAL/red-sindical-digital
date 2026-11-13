@@ -4,6 +4,8 @@ on:
     branches:
       - integration/staging-preserve-beta-20261109
     paths:
+      - uadav-radio-panel.css
+      - uadav-playback-layout.js
       - radio.html
       - cartelera.html
       - bolsa-trabajo.html

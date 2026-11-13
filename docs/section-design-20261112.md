@@ -48,3 +48,13 @@ Las pruebas usan respuestas sintéticas y bloquean escrituras externas. Se compr
 - Iniciar otra consulta limpia el panel anterior para no mezclar ofertas.
 - Los botones de ofertas de una sesión anterior no pueden consultar, renovar, cerrar ni quitar usando otra cuenta.
 - Tres pruebas nuevas; suite local de 1.092 pruebas aprobada.
+
+## Revisión solicitada · Radio lateral y secciones sin duplicados
+Esta revisión sustituye el criterio anterior de abrir Ahora en la página principal.
+- Radio ocupa el mismo lateral que el video en PC. En móvil abre un panel que puede minimizarse; el audio sigue en el reproductor persistente.
+- Chat, Pedidos, Historial e Información reutilizan la emisora dentro de un iframe de comunidad sin crear otro stream. Chat usa una lista vertical compacta; los pedidos conservan sus validaciones y moderación.
+- La X detiene la señal, descarga el iframe y libera el espacio; minimizar mantiene la señal. Los accesos desde el player abren el panel sin cambiar la sección principal.
+- Cartelera quita la navegación duplicada a Artistas y Películas/Series; Publicar evento pasa a Más opciones de Mi Perfil y sigue disponible en Mis eventos.
+- El hero genérico queda oculto; las creatividades y los eventos reales conservan un hero compacto.
+- Trabajo quita la cabecera duplicada dentro de la app y el acceso redundante Buscar trabajo; conserva Ofrecer trabajo y las gestiones desplegables.
+- QA sintético: apertura lateral sin navegar, pestañas, minimizar sin pausa, cerrar sin stream ni iframe, audio persistente, móvil/PC/laptop/TV y acciones de filtros/publicación. Los mensajes QA solo existen en las respuestas de prueba.
