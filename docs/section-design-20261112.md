@@ -42,3 +42,9 @@ Las pruebas usan respuestas sintéticas y bloquean escrituras externas. Se compr
 - Las respuestas de cargas anteriores se descartan; solo la carga vigente actualiza la lista y su botón.
 - Los controles de filas anteriores no pueden editar ni modificar eventos con otra sesión.
 - Cuatro pruebas de comportamiento cubren cambio de cuenta, respuestas tardías, controles separados del DOM y cierre de sesión.
+
+## Mi Perfil · Trabajo y postulantes
+- Cerrar sesión invalida también las consultas de postulantes pendientes y restablece los controles de carga.
+- Iniciar otra consulta limpia el panel anterior para no mezclar ofertas.
+- Los botones de ofertas de una sesión anterior no pueden consultar, renovar, cerrar ni quitar usando otra cuenta.
+- Tres pruebas nuevas; suite local de 1.092 pruebas aprobada.

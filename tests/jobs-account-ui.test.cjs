@@ -99,3 +99,24 @@ test('both pages load the same account module and keep existing private receipt 
 });
 test('closed offers explain republication and cancelling never sends a management request',async()=>{const calls=[],x=await mount({profile:true,transport:async(url,options)=>{calls.push(url);return reply({...empty(),items:[{...item(),estado:'cerrada',recibe_postulaciones:false,fecha_limite:'2026-12-04'}]})}});const b=walk(x.nodes['mis-trabajos']).find(n=>n.tag==='button'&&n.textContent==='Volver a publicar 30 días');assert(b);assert.match(x.nodes['mis-trabajos'].textContent,/04\/12\/2026/);let prompt;x.root.confirm=text=>{prompt=text;return false};await b.handlers.click({currentTarget:b});assert.match(prompt,/visible.*postulaciones/);assert.equal(calls.some(url=>url.endsWith('/mi-oferta/gestionar')),false);assert.equal(b.disabled,false)});
 test('empty private inbox confirms access instead of looking like an authorization failure',async()=>{const x=await mount({profile:true,transport:async url=>url.endsWith('mis-postulantes')?reply({success:true,items:[]}):reply({...empty(),items:[item()]})});const b=walk(x.nodes['mis-trabajos']).find(n=>n.tag==='button'&&n.textContent==='Ver postulantes');await b.handlers.click({currentTarget:b});assert.match(x.nodes['mis-trabajos'].textContent,/Acceso confirmado. Todavía no hay postulantes/)});
+
+test('logout invalidates pending inbox status and restores disabled loading controls',async()=>{
+ let finish;const x=await mount({profile:true,transport:async url=>url.endsWith('mis-postulantes')?new Promise(resolve=>finish=resolve):reply({...empty(),items:[item()],next_offset:20})});
+ const host=x.nodes['mis-trabajos'],button=walk(host).find(n=>n.textContent==='Ver postulantes'&&n.tag==='button');
+ const pending=button.handlers.click({currentTarget:button});x.switch('');const disconnected=host.textContent;
+ finish(reply({success:true,items:[{nombre:'PRIVATE_A'}]}));await pending;
+ assert.equal(host.textContent,disconnected);assert.match(host.textContent,/Creá o vinculá tu cuenta/);
+ const more=walk(host).find(n=>n.textContent==='Cargar más gestiones'&&n.tag==='button');assert(more.hidden);assert.equal(more.disabled,false);
+});
+test('opening another offer clears the previous private candidate panel immediately',async()=>{
+ let calls=0,finish;const x=await mount({profile:true,transport:async url=>url.endsWith('mis-postulantes')?(++calls===1?reply({success:true,items:[{nombre:'Previous candidate'}]}):new Promise(resolve=>finish=resolve)):reply({...empty(),items:[item()]})});
+ const host=x.nodes['mis-trabajos'],button=walk(host).find(n=>n.textContent==='Ver postulantes'&&n.tag==='button');
+ await button.handlers.click({currentTarget:button});assert(host.textContent.includes('Previous candidate'));
+ const pending=button.handlers.click({currentTarget:button});assert(!host.textContent.includes('Previous candidate'));finish(reply({success:true,items:[]}));await pending;
+});
+test('detached offer controls cannot issue operations using the next account',async()=>{
+ const x=await mount({profile:true,transport:async()=>reply({...empty(),items:[item()]})});x.root.confirm=()=>true;
+ const buttons=walk(x.nodes['mis-trabajos']).filter(n=>n.tag==='button'&&['Ver postulantes','Cerrar oferta','Renovar 30 días','Quitar de Mi Perfil'].includes(n.textContent));
+ x.switch(B);await tick();const before=x.fetches.length;
+ for(const button of buttons)await button.handlers.click({currentTarget:button});assert.equal(x.fetches.length,before);
+});
