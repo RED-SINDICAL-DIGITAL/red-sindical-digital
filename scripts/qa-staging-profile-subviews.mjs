@@ -1,11 +1,13 @@
 // Read-only functional browser checks of personal subviews and accessible job tabs.
 // Runs with local files only; all external requests are blocked.
 import {chromium} from 'playwright';
+import {mkdir} from 'node:fs/promises';
+await mkdir('artifacts/staging-integration-visual',{recursive:true});
 const base='http://127.0.0.1:8765';
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const failures=[];
 try{
- for(const viewport of [{name:'mobile',width:390,height:844},{name:'desktop',width:1365,height:768}]){
+ for(const viewport of [{name:'mobile-320',width:320,height:700},{name:'mobile',width:390,height:844},{name:'desktop',width:1365,height:768},{name:'tv',width:1920,height:1080}]){
   const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height},locale:'es-AR'});
   await context.route('**/*',route=>new URL(route.request().url()).origin===base?route.continue():route.abort());
   const page=await context.newPage();
@@ -22,6 +24,15 @@ try{
        &&node.closest('#profileTasks')!==null;
    });
    if(!studioAccessible)failures.push(viewport.name+': Mi radio shortcut is not visible in native profile home');
+   const publish=frame.locator('.profile-publish-actions');
+   await publish.waitFor({state:'visible'});
+   if(await publish.locator('a').count()!==2||await frame.locator('#profileTasks a[href="/publicar-evento.html"]').count()!==1)failures.push(viewport.name+': publication links missing or duplicated');
+   if(await frame.locator('.profile-more a[href="/publicar-evento.html"]').count())failures.push(viewport.name+': publish remains hidden under more options');
+   const header=await frame.locator('#profileNativeHome .hero').boundingBox();
+   if(header.height>210)failures.push(viewport.name+': oversized identity header');
+   const radioIcon=await studioShortcut.locator('svg use').getAttribute('href');
+   if(radioIcon!=='#pi-radio')failures.push(viewport.name+': inconsistent radio icon');
+   await frame.locator('#profileNativeHome').screenshot({path:'artifacts/staging-integration-visual/profile-dashboard-'+viewport.name+'.png'});
    await frame.locator('a.profile-task[href*="vista=trabajos"]').click();
    await page.waitForFunction(()=>{
     const doc=document.querySelector('#view')?.contentDocument;

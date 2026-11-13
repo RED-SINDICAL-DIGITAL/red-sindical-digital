@@ -82,3 +82,9 @@ Existe un preview funcional y una pasada de 1.093 pruebas aprobadas. Las cuatro 
 - En vivo: cabecera reducida, navegación a transmisiones/radios dentro de la sección, tarjetas de emisora compactas.
 - Un video de artista sin confirmación actual queda en canales disponibles; solo emisiones confirmadas o detectadas en los últimos tres minutos aparecen en Transmitiendo ahora.
 - Preservar todos los canales disponibles, errores/reintento y reproducción persistente. QA sintético en móvil, PC y TV.
+
+## Mi Perfil — accesos compactos
+- Cabecera personal reducida y controles conservados; Radio Studio usa el icono SVG existente.
+- Publicar evento y Publicar oferta visibles, reutilizando los enlaces originales sin duplicarlos.
+- Cuenta y Radio Studio como accesos secundarios claros; exploración y ayuda dentro de Más opciones.
+- Se mantienen montajes, subpantallas y aislamiento de datos por cuenta. QA de accesos y subpantallas en 320 px, móvil, PC y TV.
