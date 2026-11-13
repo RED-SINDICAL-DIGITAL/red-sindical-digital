@@ -6,3 +6,5 @@ body[data-page=artistas] .grid{grid-template-columns:repeat(auto-fill,minmax(155
 @media(prefers-reduced-motion:reduce){body[data-page=artistas] .card{transition:none;transform:none}}
 
 .artist-following-mark{display:inline-flex;margin-top:7px;color:#66d9f3;font-size:11px;font-weight:650}body[data-page=artista] .artist-actions #followArtist:not(.primary){background:#ffffff0a!important;border:1px solid #ffffff40!important;color:#fff!important}body[data-page=artista] .artist-actions #followArtist.on{color:#66d9f3!important;border-color:#66d9f3!important}
+
+body[data-page=artistas] :is(.search input,.search button,#retryArtists):focus-visible,body[data-page=artista] .artist-bio-more:focus-visible{outline:3px solid #65dcff;outline-offset:4px}body[data-page=artistas] #retryArtists{justify-self:start;min-height:44px}body[data-page=artistas] .grid[aria-busy=true]{opacity:.75}

@@ -24,3 +24,10 @@ Las pruebas usan respuestas sintéticas y bloquean escrituras externas. Se compr
 - El montaje de la presentación es idempotente: no duplica Ahora ni los controles al reiniciarse.
 - La aceptación sintética de Radio comprueba que Información conserve los enlaces en móvil, PC, laptop y TV.
 - Validación local: 41 pruebas de Radio, Cartelera y aislamiento aprobadas. La aceptación visual requiere CI: Chromium local no puede crear sockets en este entorno.
+
+## Artistas · recuperación del directorio
+- La revisión visual de la pasada de Radio/Cartelera/Trabajo terminó aprobada en GitHub para `689632d`.
+- Fallos o respuestas inválidas del catálogo muestran Reintentar carga; no se presentan como resultados vacíos. Se conserva el fallback al segundo endpoint.
+- El estado de carga oculta el botón de paginación anterior y no se reemplaza por resultados antiguos al cambiar favoritos.
+- Una respuesta de catálogo no pisa una búsqueda escrita mientras carga; las cargas concurrentes comparten una petición.
+- La aceptación visual prueba caída, reintento y recuperación en móvil y PC sin escrituras externas.

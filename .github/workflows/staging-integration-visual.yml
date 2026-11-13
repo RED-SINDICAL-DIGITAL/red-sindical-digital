@@ -11,6 +11,11 @@ on:
       - uadav-section-simplicity.js
       - uadav-section-simplicity.css
       - scripts/qa-staging-unified-radio.mjs
+      - tests/artist-directory-loading.test.cjs
+      - artistas.html
+      - artista.html
+      - uadav-artist-presentation.css
+      - scripts/qa-staging-artist-presentation.mjs
       - playlists.html
       - podcasts.html
       - radio-studio.html
@@ -33,6 +38,11 @@ on:
       - .github/workflows/staging-integration-visual.yml
   pull_request:
     paths:
+      - tests/artist-directory-loading.test.cjs
+      - artistas.html
+      - artista.html
+      - uadav-artist-presentation.css
+      - scripts/qa-staging-artist-presentation.mjs
       - playlists.html
       - podcasts.html
       - radio-studio.html
@@ -69,6 +79,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check artist directory recovery
+        run: node --test tests/artist-directory-loading.test.cjs tests/artist-directory-state.test.cjs tests/artist-search-return.test.cjs
       - name: Install isolated Chromium QA tools
         run: |
           npm install --no-save --no-package-lock playwright@1.58.2
