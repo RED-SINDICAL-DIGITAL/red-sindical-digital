@@ -36,3 +36,9 @@ Las pruebas usan respuestas sintéticas y bloquean escrituras externas. Se compr
 - El resumen de filtros indica cuántos están activos y se abre al recibir filtros por URL; Limpiar filtros actualiza el resumen.
 - Los enlaces internos a publicar y ver postulantes abren el formulario de Trabajo tanto al entrar como al cambiar el fragmento.
 - Aceptación sintética ampliada para comprobar los filtros y la reapertura del formulario.
+
+## Mi Perfil · eventos privados y cambio de cuenta
+- Cambiar o cerrar la cuenta borra inmediatamente la lista privada anterior y cierra/limpia su editor.
+- Las respuestas de cargas anteriores se descartan; solo la carga vigente actualiza la lista y su botón.
+- Los controles de filas anteriores no pueden editar ni modificar eventos con otra sesión.
+- Cuatro pruebas de comportamiento cubren cambio de cuenta, respuestas tardías, controles separados del DOM y cierre de sesión.

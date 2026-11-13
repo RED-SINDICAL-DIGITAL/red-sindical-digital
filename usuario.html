@@ -737,10 +737,12 @@ const container=document.getElementById('profileOwnedEventsList'),refresh=docume
 if(!container||!refresh)return;
 const endpoint='https://uadav-api-staging.uadavstream.workers.dev/api/eventos/mis';
 const editor=document.getElementById('profileOwnedEventEditor'),form=document.getElementById('profileOwnedEventForm'),cancel=document.getElementById('profileOwnedEventCancel'),save=document.getElementById('profileOwnedEventSave'),editStatus=document.getElementById('profileOwnedEventEditStatus');
-let editing=null;
-function openEditor(item){
+let editing=null,editingCredential='',loadVersion=0;
+let observedAccess=access();
+function openEditor(item,credential=access()){
+ if(credential!==access()){sessionChanged();return}
  if(!editor||!form||typeof editor.showModal!=='function')return;
- editing=item;
+ editing=item;editingCredential=credential;
  for(const key of ['titulo','descripcion_corta','lugar','ciudad','fecha','hora'])form.elements.namedItem(key).value=String(item[key]||'');
  editStatus.textContent='';
  editor.showModal();
@@ -749,11 +751,13 @@ function openEditor(item){
 cancel?.addEventListener('click',()=>editor.close());
 form?.addEventListener('submit',async e=>{
  e.preventDefault();if(busy||!editing)return;
+ if(editingCredential!==access()){sessionChanged();return}
+ const sessionCredential=editingCredential;
  const patch={};for(const key of ['titulo','descripcion_corta','lugar','ciudad','fecha','hora'])patch[key]=form.elements.namedItem(key).value.trim();
  if(!patch.titulo||!patch.fecha){editStatus.textContent='Completá el título y la fecha.';return}
  busy=true;save.disabled=true;editStatus.textContent='Guardando…';
  try{await request('POST',{id:editing.id,action:'edit',patch});editor.close();editing=null;await load()}
- catch(error){editStatus.textContent=error.message||'No se confirmó la edición. Conservamos tus cambios.'}
+ catch(error){if(sessionCredential===access())editStatus.textContent=error.message||'No se confirmó la edición. Conservamos tus cambios.'}
  finally{busy=false;save.disabled=false}
 });
 
@@ -776,6 +780,7 @@ async function request(method='GET',payload){
  }finally{clearTimeout(timer)}
 }
 function render(items){
+ const renderedCredential=access();
  container.replaceChildren();
  if(!items.length){message('No hay publicaciones vinculadas a esta cuenta. Los eventos anteriores no se vinculan automáticamente.');return}
  for(const item of items){
@@ -788,24 +793,34 @@ function render(items){
   if(item.estado==='published'){const link=document.createElement('a');link.href='/evento.html?id='+encodeURIComponent(item.id);link.textContent='Ver ficha';actions.appendChild(link)}
   const toggle=document.createElement('button');toggle.type='button';toggle.textContent=item.estado==='hidden'?'Reactivar':'Ocultar';
   toggle.addEventListener('click',async()=>{
+    if(renderedCredential!==access()){sessionChanged();return}
     if(busy||!confirm(item.estado==='hidden'?'¿Reactivar este evento?':'¿Ocultar este evento de Cartelera?'))return;
     busy=true;toggle.disabled=true;const previous=toggle.textContent;toggle.textContent='Guardando…';
     try{await request('POST',{id:item.id,action:item.estado==='hidden'?'publish':'hide'});await load()}
-    catch(e){message(e.message||'No se confirmó el cambio. Actualizá la lista antes de repetir.')}
+    catch(e){if(renderedCredential===access())message(e.message||'No se confirmó el cambio. Actualizá la lista antes de repetir.')}
     finally{toggle.disabled=false;toggle.textContent=previous;busy=false}
   });
-  const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.addEventListener('click',()=>openEditor(item));actions.prepend(edit);
+  const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.addEventListener('click',()=>openEditor(item,renderedCredential));actions.prepend(edit);
   actions.appendChild(toggle);row.append(info,actions);container.appendChild(row);
  }
 }
 async function load(){
  if(document.body?.dataset.profileView!=='eventos')return;
  if(location.hostname!=='uadav-stream-staging.pages.dev'){message('La gestión privada se está probando solamente en staging.');return}
- refresh.disabled=true;
- try{const data=await request();if(!Array.isArray(data.items))throw Error('Respuesta de eventos inválida.');render(data.items)}
- catch(e){message(e.status===401?'Verificá tu cuenta en Cuenta y seguridad para ver las publicaciones propias.':e.status===404?'Gestión privada pendiente de desplegar en el Worker de staging.':e.message||'No se pudo conectar.')}
- finally{refresh.disabled=false}
+ const version=++loadVersion;refresh.disabled=true;message('Cargando tus eventos…');
+ try{const data=await request();if(version!==loadVersion)return;if(!Array.isArray(data.items))throw Error('Respuesta de eventos inválida.');render(data.items)}
+ catch(e){if(version!==loadVersion)return;message(e.status===401?'Verificá tu cuenta en Cuenta y seguridad para ver las publicaciones propias.':e.status===404?'Gestión privada pendiente de desplegar en el Worker de staging.':e.message||'No se pudo conectar.')}
+ finally{if(version===loadVersion)refresh.disabled=false}
 }
+function sessionChanged(){
+ const credential=access();if(credential===observedAccess)return;
+ observedAccess=credential;++loadVersion;editing=null;editingCredential='';
+ if(editor?.open)editor.close();form?.reset();if(editStatus)editStatus.textContent='';
+ message('La cuenta cambió. Actualizando tus eventos…');load();
+}
+window.addEventListener('storage',e=>{if(e.key===null||e.key==='uadav_account_access_v1')sessionChanged()});
+window.addEventListener('uadav:account',sessionChanged);
+window.addEventListener('uadav:account-data',sessionChanged);
 refresh.addEventListener('click',load);
 window.addEventListener('pageshow',load);
 load();
