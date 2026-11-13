@@ -11,7 +11,7 @@ function harness({visible=true,allow=true,fail=false}={}){
  const cache={config:{branding:{name:'UADAV STREAM'},modules:{podcasts:visible,radio:true,artists:true}}};
  const calls=[];let serverConfig=JSON.parse(JSON.stringify(cache.config));
  const context={
- S:cache,
+ S:{cache},
  obj:value=>value&&typeof value==='object'?value:{},
  effectiveModules:cfg=>({podcasts:true,...(cfg?.modules||{})}),
  confirm:()=>allow,
