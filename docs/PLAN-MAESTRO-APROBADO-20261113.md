@@ -100,3 +100,9 @@ Existe un preview funcional y una pasada de 1.093 pruebas aprobadas. Las cuatro 
 - Mantener soporte de contenido manual, YouTube y fuentes RSS/Atom. Objetivo futuro: Apple Podcasts/iTunes mediante resolución al RSS público y otros proveedores compatibles; no prometer importar todos los catálogos ni reproducción donde la fuente no la permita.
 - Estado verificado en código: reproductor de episodios y editor de fuentes RSS con vista previa/importación. La interfaz contempla que el Worker RSS pueda no estar desplegado. Resolver enlaces de Apple/iTunes sigue pendiente de comprobación/implementación.
 - **Cambio de visibilidad pendiente de guardar**: el 13/11/2026 Admin solicitó la clave y no había sesión autenticada disponible. No confundir esta decisión documentada con configuración ya guardada en el servidor.
+
+## Artistas y Biblioteca — continuidad visual
+- Perfil artístico con cabecera más compacta y acceso inmediato a contenido; se conservan seguimiento, contratación autorizada, biografía, pestañas con contenido y retorno al directorio.
+- Biblioteca prioriza guardados y búsqueda; Mis archivos permanece plegado debajo del listado, conservando el reproductor local.
+- Artistas y radios guardados usan filas amplias; acciones secundarias de quitar/eliminar conservadas con menor énfasis. QA sintético de favoritos, búsqueda, seguidos, radios, playlists y archivos en 320 px, móvil, PC y TV.
+- Al terminar el rediseño aprobado, pedir acceso a Admin para guardar la ocultación de Podcasts. No adelantar esa solicitud.
