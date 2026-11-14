@@ -10,7 +10,7 @@
 - **Producción, Worker y D1/KV no forman parte del PR.** No se cambia ninguna vinculación de producción ni se restauran tablas desde el Admin.
 
 ## Puerta 1 — Validación automatizada
-- [ ] `Platform integration checks`, `Bolsa UI staging checks`, `Staging integration preservation checks`, `Staging integration offline visual QA` y `Published staging preview acceptance` en verde **para el mismo SHA del candidato**.
+- [ ] `Platform integration checks`, `Bolsa UI staging checks`, `Staging integration preservation checks`, `Staging integration offline visual QA`, `Published staging preview acceptance` y `Job status contract checks` en verde **para el mismo SHA del candidato**.
 - [ ] Revisar capturas de tres tamaños del workflow remoto: `profile-*`, `shell-*`, `admin-*`.
 - [ ] Comparación PR contra `audit/continuidad-demo-20261019` sin modificaciones de `worker.js`, archivos de secretos, enlaces de producción ni scripts de migración.
 - [ ] Confirmar URL y SHA de la vista previa en el comentario Cloudflare Pages del PR.
