@@ -67,3 +67,44 @@ test('the direct Podcast page obeys its installation-wide visibility policy',()=
  assert.match(runtime,/"podcasts\.html":\["podcasts"\]/);
  assert.match(runtime,/if\(disabled\(pageKey\(location\.pathname\)\)\)/);
 });
+
+test('System opens the same Modules tab it marks selected',()=>{
+ assert.match(html,/function renderSystemTab\(mods,d1,h,yt\)\{const tab=S\.systemTab\|\|'modules'/);
+ assert.match(html,/\(S\.systemTab\|\|'modules'\)===id/);
+});
+function moduleSaveHarness({fail=false,serverOverride=null}={}){
+ const cache={config:{branding:{name:'UADAV STREAM'},modules:{podcasts:false,radio:true,artists:true}}};
+ let server={...cache.config,modules:{...cache.config.modules}};
+ const events=[];
+ const context={
+  S:{cache},window:null,
+  obj:x=>x&&typeof x==='object'?x:{},
+  moduleValues:()=>({podcasts:false,radio:false,artists:true}),
+  saveJSON:async(path,data)=>{events.push('write');if(fail)throw Error('Network error');server={...data,modules:serverOverride||{...data.modules}}},
+  api:async()=>{events.push('read');return server},
+  effectiveModules:c=>({podcasts:true,radio:true,artists:true,...c.modules}),
+  renderNav:()=>events.push('nav'),
+  toast:message=>events.push(message),
+  go:async()=>events.push('go')
+ };
+ context.window=context;
+ const a=html.indexOf('window.saveSystemModules=async()=>'),b=html.indexOf('window.runMaintenance=',a);
+ vm.createContext(context);vm.runInContext(html.slice(a,b),context);
+ return {save:()=>context.saveSystemModules(),cache,events};
+}
+test('Admin verifies module settings against the server before claiming success',async()=>{
+ const x=moduleSaveHarness();await x.save();
+ assert.equal(x.cache.config.modules.radio,false);
+ assert(x.events.includes('read'));
+ assert(x.events.includes('Módulos de la marca guardados y verificados'));
+});
+test('Admin refuses to claim success when server retains old module state',async()=>{
+ const x=moduleSaveHarness({serverOverride:{podcasts:false,radio:true,artists:true}});await x.save();
+ assert.equal(x.cache.config.modules.radio,true);
+ assert.equal(x.events.some(t=>t.includes('Módulos de la marca guardados y verificados')),false);
+});
+test('Admin save failure does not mutate visible cached configuration',async()=>{
+ const x=moduleSaveHarness({fail:true});await x.save();
+ assert.equal(x.cache.config.modules.radio,true);
+ assert.equal(x.events.some(t=>t.includes('Módulos de la marca guardados y verificados')),false);
+});
