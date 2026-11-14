@@ -61,7 +61,7 @@ try{
      const shell=document.querySelector('#view');
      const target=shell?.getAttribute('src')||'';
      const title=shell?.contentDocument?.querySelector('h1')?.textContent||'';
-     return /radio-studio[.]html/.test(target)||title.trim()==='Radio Studio';
+     return /radio-studio[.]html/.test(target)&&title.trim()==='Radio Studio';
    },null,{timeout:14000});
    const studioRoute=await page.evaluate(()=>{
      const v=document.querySelector('#view');
