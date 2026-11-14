@@ -3,7 +3,7 @@
 import {readFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 const SHA=/^[a-f0-9]{40}$/i,HEX=/^[a-f0-9]{64}$/i;
-const requiredChecks=['Platform integration checks','Bolsa UI staging checks','Staging integration preservation checks','Staging integration offline visual QA','Published staging preview acceptance'];
+const requiredChecks=['Platform integration checks','Bolsa UI staging checks','Staging integration preservation checks','Staging integration offline visual QA','Published staging preview acceptance','Job status contract checks'];
 export function decideRelease(input){
  const missing=[];
  if(!input||typeof input!=='object'||Array.isArray(input))return {ready:false,missing:['Valid release evidence required']};
