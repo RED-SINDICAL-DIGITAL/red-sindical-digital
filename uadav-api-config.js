@@ -1,14 +1,24 @@
 // White-label CORE · API centralizada
 // PLATFORM_* es la interfaz genérica; UADAV_* se conserva como alias de compatibilidad.
-const UADAV_STAGING_HOST = window.UADAV_ENV === 'staging' || window.PLATFORM_ENV === 'staging' || /(?:^|[.-])(?:staging|preview)(?:[.-]|$)/i.test(location.hostname) || /(?:^|\.)pages\.dev$/i.test(location.hostname);
+// Keep all staging Pages previews on staging Worker; never use local/production API there.
+const UADAV_STAGING_PAGES = /^(?:[a-z0-9-]+\.)?uadav-stream-staging\.pages\.dev$/i.test(location.hostname);
+const UADAV_STAGING_HOST = UADAV_STAGING_PAGES ||
+  window.UADAV_ENV === 'staging' ||
+  window.PLATFORM_ENV === 'staging' ||
+  /(?:^|[.-])(?:staging|preview)(?:[.-]|$)/i.test(location.hostname) ||
+  /(?:^|\.)pages\.dev$/i.test(location.hostname);
 const UADAV_DEFAULT_API = UADAV_STAGING_HOST
   ? 'https://uadav-api-staging.uadavstream.workers.dev/api/'
   : 'https://uadav-api.uadavstream.workers.dev/api/';
 window.PLATFORM_API_BASE = UADAV_STAGING_HOST
   ? UADAV_DEFAULT_API
   : (window.PLATFORM_API_BASE || window.UADAV_API_BASE || UADAV_DEFAULT_API);
-window.UADAV_API_BASE = UADAV_STAGING_HOST ? UADAV_DEFAULT_API : (window.UADAV_API_BASE || window.PLATFORM_API_BASE);
-window.PLATFORM_USE_LOCAL_API = window.PLATFORM_USE_LOCAL_API === true || window.UADAV_USE_LOCAL_API === true;
+window.UADAV_API_BASE = UADAV_STAGING_HOST
+  ? UADAV_DEFAULT_API
+  : (window.UADAV_API_BASE || window.PLATFORM_API_BASE);
+window.PLATFORM_USE_LOCAL_API = UADAV_STAGING_HOST
+  ? false
+  : (window.PLATFORM_USE_LOCAL_API === true || window.UADAV_USE_LOCAL_API === true);
 window.UADAV_USE_LOCAL_API = window.PLATFORM_USE_LOCAL_API;
 
 (function(){

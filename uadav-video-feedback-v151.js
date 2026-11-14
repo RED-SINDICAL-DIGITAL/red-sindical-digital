@@ -23,8 +23,9 @@ function createFeedback({render,alive=()=>true,schedule=setTimeout,cancel=clearT
 }
 window.UADAVVideoFeedback={createFeedback};
 const stage=document.getElementById('mediaStage'),tools=document.getElementById('libraryTools');if(!stage||!tools)return;
-let active=null,serial=0,apiPromise=null;
+let active=null,serial=0,apiPromise=null;window.UADAVVideoFeedback.progress=()=>{try{const p=active?.player;return p?{time:p.getCurrentTime(),duration:p.getDuration()}:null}catch{return null}};window.UADAVVideoFeedback.hasPlayer=()=>!!active?.player;window.UADAVVideoFeedback.command=(name,args=[])=>{const fn=active?.player?.[name];if(typeof fn!=='function')return false;fn.apply(active.player,args);return true};
 function api(){
+ if(window.UADAVPlaylistPlayer?.api)return window.UADAVPlaylistPlayer.api();
  if(window.YT?.Player)return Promise.resolve(window.YT);
  if(apiPromise)return apiPromise;
  apiPromise=new Promise((resolve,reject)=>{
@@ -50,7 +51,7 @@ function attach(){
  frame.id='uadav-single-video-'+(++serial);
  api().then(YT=>{if(!alive())return;current.player=new YT.Player(frame,{events:{
   onReady:()=>{if(alive())current.feedback.ready()},
-  onStateChange:e=>{if(alive()){current.feedback.state(e.data);window.UADAVMediaSession?.youtube(current.player,e.data)}},
+  onStateChange:e=>{if(alive()){current.feedback.state(e.data);window.dispatchEvent(new CustomEvent('uadav:single-video-state',{detail:{frame,state:e.data}}));window.UADAVMediaSession?.youtube(current.player,e.data,{next:()=>window.dispatchEvent(new CustomEvent('uadav:queue-step',{detail:{delta:1}})),previous:()=>window.dispatchEvent(new CustomEvent('uadav:queue-step',{detail:{delta:-1}}))})}},
   onError:e=>{if(alive()){window.UADAVMediaSession?.release(current.player);current.feedback.error(e.data)}},
   onAutoplayBlocked:()=>{if(alive())current.feedback.blocked()}
  }})}).catch(()=>{if(alive())current.feedback.error(0)});

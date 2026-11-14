@@ -1,0 +1,145 @@
+name: Staging integration offline visual QA
+on:
+  push:
+    branches:
+      - integration/staging-preserve-beta-20261109
+    paths:
+      - uadav-library-layout.css
+      - scripts/qa-staging-library-layout.mjs
+      - biblioteca.html
+      - uadav-entry-layout.css
+      - scripts/qa-staging-entry-layout.mjs
+      - promo.html
+      - para-artistas.html
+      - soy-artista.html
+      - uadav-landing-content.js
+      - uadav-discovery-layout.css
+      - scripts/qa-staging-discovery-layout.mjs
+      - en-vivo.html
+      - index-v117.html
+      - uadav-public-footer.js
+      - uadav-public-footer.css
+      - contacto.html
+      - convenios.html
+      - scripts/qa-staging-footer.mjs
+      - uadav-radio-panel.css
+      - uadav-playback-layout.js
+      - radio.html
+      - cartelera.html
+      - bolsa-trabajo.html
+      - uadav-radio-presentation.js
+      - uadav-section-simplicity.js
+      - uadav-section-simplicity.css
+      - scripts/qa-staging-unified-radio.mjs
+      - uadav-jobs-account.js
+      - tests/jobs-account-ui.test.cjs
+      - tests/profile-owner-session.test.cjs
+      - tests/artist-directory-loading.test.cjs
+      - artistas.html
+      - artista.html
+      - uadav-artist-presentation.css
+      - scripts/qa-staging-artist-presentation.mjs
+      - playlists.html
+      - podcasts.html
+      - radio-studio.html
+      - uadav-radio-studio-entry.js
+      - uadav-account-sync.js
+      - uadav-stream-2026.css
+      - scripts/qa-staging-public-screens.mjs
+      - usuario.html
+      - app.html
+      - admin.html
+      - uadav-api-config.js
+      - scripts/visual-qa-staging-integration.mjs
+      - scripts/functional-qa-staging-shell.mjs
+      - scripts/qa-staging-synthetic-playback.mjs
+      - scripts/qa-staging-profile-subviews.mjs
+      - scripts/qa-staging-radio-studio-operator.mjs
+      - scripts/qa-staging-admin-anonymous.mjs
+      - scripts/qa-staging-admin-mock-auth.mjs
+      - tests/staging-profile-preservation.test.cjs
+      - .github/workflows/staging-integration-visual.yml
+  pull_request:
+    paths:
+      - uadav-jobs-account.js
+      - tests/jobs-account-ui.test.cjs
+      - tests/profile-owner-session.test.cjs
+      - tests/artist-directory-loading.test.cjs
+      - artistas.html
+      - artista.html
+      - uadav-artist-presentation.css
+      - scripts/qa-staging-artist-presentation.mjs
+      - playlists.html
+      - podcasts.html
+      - radio-studio.html
+      - uadav-radio-studio-entry.js
+      - uadav-account-sync.js
+      - uadav-stream-2026.css
+      - scripts/qa-staging-public-screens.mjs
+      - usuario.html
+      - app.html
+      - admin.html
+      - uadav-api-config.js
+      - scripts/visual-qa-staging-integration.mjs
+      - scripts/functional-qa-staging-shell.mjs
+      - scripts/qa-staging-synthetic-playback.mjs
+      - scripts/qa-staging-profile-subviews.mjs
+      - scripts/qa-staging-radio-studio-operator.mjs
+      - scripts/qa-staging-admin-anonymous.mjs
+      - scripts/qa-staging-admin-mock-auth.mjs
+      - tests/staging-profile-preservation.test.cjs
+      - .github/workflows/staging-integration-visual.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-browser:
+    runs-on: ubuntu-24.04
+    container:
+      # Browser and OS dependencies are baked in; avoid apt mirror DNS failures.
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --ipc=host
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check private event session changes
+        run: node --test tests/profile-owner-session.test.cjs tests/profile-owned-events.test.cjs tests/jobs-account-ui.test.cjs tests/public-footer.test.cjs
+      - name: Check artist directory recovery
+        run: node --test tests/artist-directory-loading.test.cjs tests/artist-directory-state.test.cjs tests/artist-search-return.test.cjs
+      - name: Install isolated Chromium QA tools
+        run: |
+          npm install --no-save --no-package-lock playwright@1.58.2
+      - name: Start local static server and check responsive profile
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/uadav-static-qa.log 2>&1 &
+          node scripts/qa-staging-library-layout.mjs
+          node scripts/qa-staging-entry-layout.mjs
+          node scripts/qa-staging-discovery-layout.mjs
+          node scripts/qa-staging-publication.mjs
+          node scripts/qa-staging-footer.mjs
+          node scripts/qa-staging-unified-radio.mjs
+          node scripts/qa-staging-artist-presentation.mjs
+          node scripts/qa-staging-playback-landing.mjs
+          node scripts/qa-staging-section-artwork.mjs
+          node scripts/visual-qa-staging-integration.mjs
+          node scripts/functional-qa-staging-shell.mjs
+          node scripts/qa-staging-synthetic-playback.mjs
+          node scripts/qa-staging-profile-subviews.mjs
+          node scripts/qa-staging-public-screens.mjs
+          node scripts/qa-staging-home-stage.mjs
+          node scripts/qa-staging-popular-artists.mjs
+          node scripts/qa-staging-visual-launch.mjs
+          node scripts/qa-staging-radio-studio-operator.mjs
+          node scripts/qa-staging-admin-anonymous.mjs
+          node scripts/qa-staging-admin-mock-auth.mjs
+      - name: Upload screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-integration-profile-visual
+          path: artifacts/staging-integration-visual/*.png
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,51 @@
+/* The station shares the same side rail as videos; the transport stays below. */
+body[data-page=app].unified-radio #radioNowSide{display:flex!important;flex-direction:column!important;position:fixed!important;inset:136px 12px 110px auto!important;width:340px!important;padding:0!important;gap:0!important;overflow:hidden!important;border:1px solid #ffffff18;background:#0b1721!important;border-radius:12px;z-index:1250;max-height:none!important}
+body[data-page=app].unified-radio.radio-side-collapsed #radioNowSide{display:none!important}
+body[data-page=app].unified-radio #radioNowSide[hidden]{display:none!important}
+body[data-page=app].unified-radio #radioNowSide .radio-side-tools{display:flex;flex:none;justify-content:flex-end;gap:6px;padding:6px 8px;border-bottom:1px solid #ffffff12}
+body[data-page=app].unified-radio #radioNowSide .radio-side-tools button{position:static!important;display:grid!important;place-items:center;width:40px!important;min-width:40px!important;height:40px;min-height:40px;padding:8px!important;background:transparent;border:0}
+.radio-side-now{display:grid;grid-template-columns:64px minmax(0,1fr);grid-template-rows:auto auto;gap:4px 12px;align-items:center;padding:14px;flex:none}
+body[data-page=app].unified-radio #radioNowSide .station-now-art{grid-column:1;grid-row:1/3;width:64px!important;min-width:0!important;height:64px!important;aspect-ratio:1;max-height:none!important;border-radius:8px;object-fit:cover;box-shadow:none!important}
+body[data-page=app].unified-radio #radioNowSide h2,body[data-page=app].unified-radio #radioNowSide p{grid-column:2;margin:0!important;text-align:left!important;max-width:100%;overflow-wrap:anywhere}
+body[data-page=app].unified-radio #radioNowSide h2{font-size:15px!important;line-height:1.3}
+body[data-page=app].unified-radio #radioNowSide p{font-size:12px!important;color:#a6bed0;line-height:1.4}
+#radioCommunityFrame{display:block;flex:1;width:100%;min-height:0;border:0;background:#0b1721}
+@media(min-width:1100px){body[data-page=app].unified-radio:not(.radio-side-collapsed) #viewWrap{margin-right:370px!important}body[data-page=app].unified-radio.radio-side-collapsed #viewWrap{margin-right:0!important}}
+@media(min-width:1800px){body[data-page=app].unified-radio #radioNowSide{width:420px!important;top:164px!important}body[data-page=app].unified-radio:not(.radio-side-collapsed) #viewWrap{margin-right:450px!important}}
+@media(max-width:1099px){body[data-page=app].unified-radio #radioNowSide{inset:10px 10px calc(166px + env(safe-area-inset-bottom)) 10px!important;width:auto!important;z-index:5100;border-radius:16px}body[data-page=app].unified-radio:not(.radio-player-focus) #radioNowSide{display:none!important}}
+/* Compact live community. All existing posting and moderation handlers are reused. */
+body.radio-side-panel{background:#0b1721!important}
+body.radio-side-panel .shell{width:100%!important;max-width:none!important;padding:0 12px 12px!important;margin:0!important}
+body.radio-side-panel :is(.top,footer,.radio-all-link,#app>.hero,#app>.now){display:none!important}
+body.radio-side-panel .radio-tabs{position:sticky!important;top:0!important;margin:0 0 10px!important;padding:0!important;background:#0b1721!important;gap:0!important;z-index:30}
+body.radio-side-panel .radio-tabs button{padding:10px!important;font-size:12px!important;min-height:44px}
+body.radio-side-panel .radio-tabs [data-radio-target=radioNowPanel]{display:none!important}
+body.radio-side-panel #app>.section{margin:0!important}
+body.radio-side-panel :is(#chatSection>.section-head,.panel-head){display:none!important}
+body.radio-side-panel .panel{border:0;border-radius:0;background:transparent}
+body.radio-side-panel .messages{height:clamp(100px,calc(100dvh - 235px),520px);padding:4px 0;scrollbar-width:thin}
+body.radio-side-panel .composer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px 0;background:#0b1721}
+body.radio-side-panel #alias{grid-column:1/-1;min-height:40px}
+body.radio-side-panel #message{min-width:0}
+body.radio-side-panel .composer input{background:#142633;border-radius:20px;border:1px solid #ffffff16;padding:10px 12px}
+body.radio-side-panel .composer button{padding:10px 14px;min-height:44px}
+body.radio-side-panel .request-grid,body.radio-side-panel .meta-grid,body.radio-side-panel .history{grid-template-columns:minmax(0,1fr)!important}
+body.radio-side-panel .request-card{padding:12px;background:transparent;border:0}
+body.radio-side-panel .section-title{font-size:18px}body.radio-side-panel .section-sub{font-size:12px}
+body.radio-side-panel .status{font-size:12px;line-height:1.4}
+
+body.radio-side-panel .messages{display:flex;flex-direction:column;justify-content:flex-start;gap:8px}body.radio-side-panel .msg{flex:none;background:transparent;padding:5px 2px;font-size:13px;line-height:1.5}body.radio-side-panel .msg b{color:#6ee3f3}body.radio-side-panel .msg [data-chat-reply]{min-height:28px;padding:2px 8px;border:0;background:transparent;color:#8ea9ba;font-size:11px}body.radio-side-panel .msg small{color:#8ea9ba}
+body[data-page=app].unified-radio #radioNowSide{align-items:stretch!important;justify-content:flex-start!important}body[data-page=app].unified-radio #radioNowSide .radio-side-now{display:grid!important;width:100%;grid-template-columns:64px minmax(0,1fr)!important;grid-template-rows:auto auto!important;grid-template-areas:none!important;align-items:center;flex:none;padding:14px;gap:4px 12px}body[data-page=app].unified-radio #radioNowSide .station-now-art{grid-area:auto!important;grid-column:1!important;grid-row:1/3!important}body[data-page=app].unified-radio #radioNowSide h2{grid-area:auto!important;grid-column:2!important;grid-row:1!important}body[data-page=app].unified-radio #radioNowSide p{grid-area:auto!important;grid-column:2!important;grid-row:2!important}body.radio-side-panel .composer{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;padding:10px 0!important}body.radio-side-panel .composer #alias{grid-column:1/-1!important}body.radio-side-panel .composer #message{grid-column:1!important}body.radio-side-panel .composer #send{grid-column:2!important;min-width:0!important}body.radio-side-panel .messages{height:clamp(100px,calc(100dvh - 195px),520px)!important}
+/* Explicit transport, shared with the approved video player. */
+body.unified-radio #playbackOptionsButton{display:none!important}body.unified-radio #fullscreenPlayback{display:inline-flex!important}#playbackBar [hidden]{display:none!important}
+body.unified-radio #radioStopPlayback,body.unified-radio #radioSharePlayback,body.unified-radio #radioClosePlayback{display:inline-flex;align-items:center;justify-content:center}body.unified-radio #radioStopPlayback svg path{fill:currentColor}
+/* Fullscreen radio uses the canvas for artwork and community, not empty black space. */
+body[data-page=app].unified-radio.player-theater #radioNowSide{display:grid!important;inset:12px 12px 110px 12px!important;width:auto!important;grid-template-columns:minmax(260px,1fr) minmax(280px,380px)!important;grid-template-rows:44px minmax(0,1fr)!important;gap:12px 24px!important;padding:12px 20px 20px!important;border-radius:14px;z-index:5100;background:radial-gradient(ellipse at 30% 30%,#123447,#071019 70%)!important}
+body[data-page=app].unified-radio.player-theater #radioNowSide .radio-side-tools{grid-column:1/-1;grid-row:1;padding:0;border:0}
+body[data-page=app].unified-radio.player-theater #radioNowSide .radio-side-now{grid-column:1;grid-row:2;display:flex!important;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:12px}
+body[data-page=app].unified-radio.player-theater #radioNowSide .station-now-art{width:min(48vh,460px)!important;height:auto!important;aspect-ratio:1;object-fit:cover;border-radius:14px;box-shadow:0 20px 60px #0006!important}
+body[data-page=app].unified-radio.player-theater #radioNowSide h2{font-size:clamp(22px,3vw,36px)!important;text-align:center!important}
+body[data-page=app].unified-radio.player-theater #radioNowSide p{font-size:clamp(14px,1.8vw,20px)!important;text-align:center!important}
+body.unified-radio.player-theater #radioCommunityFrame{grid-column:2;grid-row:2;height:100%;border:1px solid #ffffff16;border-radius:12px}
+@media(max-width:1099px){body.unified-radio #playbackBar{grid-template-columns:minmax(0,1fr) auto!important}body.unified-radio #playbackBar .playback-bar-controls{gap:4px;flex-wrap:nowrap}body.unified-radio #playbackBar .playback-utilities{display:none!important}body.unified-radio #playbackBar .playback-metadata{min-width:0}body.unified-radio #radioNowSide .radio-side-tools{touch-action:none}body.unified-radio .radio-side-now{touch-action:pan-x}body[data-page=app].unified-radio.player-theater #radioNowSide{inset:8px 8px calc(166px + env(safe-area-inset-bottom))!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:40px auto minmax(120px,1fr)!important;padding:8px!important;gap:8px!important}body[data-page=app].unified-radio.player-theater #radioNowSide .radio-side-now{grid-column:1;grid-row:2;gap:5px;padding:0!important}body[data-page=app].unified-radio.player-theater #radioNowSide .station-now-art{width:min(22vh,170px)!important;min-width:70px!important}body[data-page=app].unified-radio.player-theater #radioNowSide h2{font-size:19px!important}body[data-page=app].unified-radio.player-theater #radioNowSide p{font-size:12px!important}body.unified-radio.player-theater #radioCommunityFrame{grid-column:1;grid-row:3;height:100%}}
+@media(min-width:1100px){body.unified-radio #playbackBar{grid-template-columns:minmax(0,1fr) max-content minmax(0,1fr)!important;column-gap:20px!important}body.unified-radio #playbackBar .playback-bar-controls{justify-self:center;flex-wrap:nowrap!important}body.unified-radio #playbackBar .playback-utilities{justify-self:end;min-width:0;justify-content:flex-end;gap:8px}}

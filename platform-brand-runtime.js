@@ -1,6 +1,7 @@
 // White-label runtime · CORE compatible with legacy UADAV globals.
 (() => {
   'use strict';
+  const logoStyle=document.createElement('style');logoStyle.textContent='[data-brand-icon]{color:#36c6f4!important}.uadav-wordmark{display:inline-flex;align-items:center;gap:.25em;font-weight:800;white-space:nowrap}.uadav-wordmark [data-brand-name]{color:inherit}';document.head.appendChild(logoStyle);
   const API = window.PLATFORM_API_BASE || window.UADAV_API_BASE || '/api/';
   const routes = {"index.html":["home"],"index-v117.html":["home"],"descubrir.html":["discover"],"buscar.html":["discover"],"usuario.html":["profile"],"biblioteca.html":["library"],"playlists.html":["playlists"],"peliculas-series.html":["media"],"media.html":["media"],"pelicula.html":["media"],"serie.html":["media"],"shorts.html":["shorts"],"artistas.html":["artists"],"artista.html":["artists"],"gestionar-artista.html":["artists"],"mi-espacio-artista.html":["artists"],"reclamar-artista.html":["artists"],"sumate-artista.html":["artists"],"soy-artista.html":["artists"],"para-artistas.html":["artists"],"radio.html":["radio"],"radio-studio.html":["radio_studio"],"podcasts.html":["podcasts"],"en-vivo.html":["iptv"],"tv.html":["iptv"],"cartelera.html":["events"],"evento.html":["events"],"publicar-evento.html":["events"],"trabajo.html":["jobs"],"bolsa-trabajo.html":["jobs"],"marketplace.html":["marketplace"],"contratar-artista.html":["marketplace"],"planes-artistas.html":["pro"],"cct.html":["union"]};
   const defaults = {"home":true,"discover":true,"profile":true,"library":true,"playlists":true,"media":true,"shorts":true,"artists":true,"radio":true,"radio_requests":true,"radio_chat":true,"radio_studio":true,"podcasts":true,"iptv":true,"events":true,"jobs":true,"marketplace":true,"ticketing":false,"pro":true,"ads":true,"union":false};
@@ -60,7 +61,7 @@
     const [head,cfg,instance]=await Promise.all([read('seo/head'),read('config'),read('/platform-instance.json',true)]);
     const configured=cfg.branding||cfg.platform||{};
     const b={...(head.brand||{}),...(instance.branding||{}),...configured},seo=head.seo||cfg.seo||{};
-    if((!b.name||b.name==='PLATFORM')&&instance.branding?.name&&!configured.name)b.name=instance.branding.name;
+    if((!b.name||b.name==='PLATFORM')&&instance.branding?.name&&(!configured.name||configured.name==='PLATFORM'))b.name=instance.branding.name;
     const color=/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(b.primary_color||'')?b.primary_color:'#2f6df6';
     const brand={name:String(b.name||'PLATFORM'),icon:String(b.icon??'★'),logo_url:safeURL(b.logo_url||''),favicon_url:safeURL(b.favicon_url||''),tagline:String(b.tagline||''),primary_color:color,support_email:String(b.support_email||''),seo};
     window.PlatformBrand=brand;window.UADAVBrand=brand;
@@ -69,6 +70,7 @@
     for(const key of Object.keys(defaults)) if(typeof flags[key]==='boolean') window.PlatformModules[key]=flags[key];
     for(const name of ['--platform-primary','--brand-primary','--accent','--blue']) document.documentElement.style.setProperty(name,color);
     up('[data-brand-name]',null,brand.name);up('[data-brand-icon]',null,brand.icon);up('[data-brand-full]',null,[brand.icon,brand.name].filter(Boolean).join(' '));
+    if(/^UADAV STREAM$/i.test(brand.name.replace(/^★\s*/,''))){document.querySelectorAll('.brand,[data-brand-full]').forEach(el=>{el.classList.add('uadav-wordmark');const star=document.createElement('span');star.dataset.brandIcon='';star.textContent='★';const name=document.createElement('span');name.dataset.brandName='';name.textContent='UADAV STREAM';el.replaceChildren(star,name)})}
     if(brand.logo_url)up('[data-brand-logo]','src',brand.logo_url);
     if(seo.title)document.title=seo.title;
     meta('description',seo.description);meta('keywords',seo.keywords);

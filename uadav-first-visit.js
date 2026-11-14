@@ -1,0 +1,8 @@
+(function(root){'use strict';
+const ENTRY_KEY='uadav_entered_v1',TIME_KEY='uadav_first_enter_at_v1';
+function entered(store){try{return store?.getItem(ENTRY_KEY)==='1'}catch{return false}}
+function route({embedded=false,search='',mode='',intro=true,returning=false}={}){if(embedded)return '/index-v117.html';const full=new URLSearchParams(search).has('full');return !full&&(String(mode).toLowerCase()==='promo'||intro!==false&&!returning)?'/promo.html':'/app.html?build=12058&view='+encodeURIComponent('/index-v117.html')}
+function markEntry(){let known=false;try{known=entered(root.localStorage);root.localStorage.setItem(ENTRY_KEY,'1');if(!known)root.localStorage.setItem(TIME_KEY,String(Date.now()))}catch{try{root.sessionStorage.setItem(ENTRY_KEY,'1')}catch{}}}
+async function start(){if(root.parent!==root){root.location.replace('/index-v117.html');return}const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),1500),base=root.PLATFORM_API_BASE||root.UADAV_API_BASE;let state={},landing={};try{if(base){const get=async path=>{try{const r=await fetch(base+path,{cache:'no-store',signal:controller.signal});return r.ok?await r.json():{}}catch{return{}}};[state,landing]=await Promise.all([get('estado_sitio'),get('landing_config')])}}finally{clearTimeout(timer)}root.location.replace(route({search:root.location.search,mode:state.modo,intro:(landing.data||landing).intro_v2_enabled,returning:entered(root.localStorage)||entered(root.sessionStorage)}))}
+root.UADAVFirstVisit={route,entered,markEntry,start};if(typeof module==='object'&&module.exports)module.exports=root.UADAVFirstVisit;
+})(typeof window!=='undefined'?window:globalThis);
