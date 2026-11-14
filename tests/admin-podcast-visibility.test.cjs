@@ -3,19 +3,19 @@ const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
 const html=fs.readFileSync('admin.html','utf8');
-const start=html.indexOf('window.togglePodcastsVisibility=async()=>{');
+const start=html.indexOf('let moduleSettingsBusy=false;');
 const end=html.indexOf('window.saveSystemModules=async()=>',start);
 assert(start>0&&end>start,'Podcast button handler must exist');
 const code=html.slice(start,end);
-function harness({visible=true,allow=true,fail=false}={}){
+function harness({visible=true,allow=true,fail=false,pending=false}={}){
  const cache={config:{branding:{name:'UADAV STREAM'},modules:{podcasts:visible,radio:true,artists:true}}};
- const calls=[];let serverConfig=JSON.parse(JSON.stringify(cache.config));
+ const calls=[];let serverConfig=JSON.parse(JSON.stringify(cache.config));let unblock=()=>{};
  const context={
  S:{cache},
  obj:value=>value&&typeof value==='object'?value:{},
  effectiveModules:cfg=>({podcasts:true,...(cfg?.modules||{})}),
  confirm:()=>allow,
- saveJSON:async(path,data)=>{calls.push({action:'save',path,data});if(fail)throw Error('Fallo local sintético');serverConfig=JSON.parse(JSON.stringify(data))},
+ saveJSON:async(path,data)=>{calls.push({action:'save',path,data});if(fail)throw Error('Fallo local sintético');if(pending)await new Promise(resolve=>{unblock=resolve});serverConfig=JSON.parse(JSON.stringify(data))},
  api:async(path)=>{calls.push({action:'read',path});return serverConfig},
  renderNav:()=>calls.push({action:'nav'}),
  go:async(view)=>calls.push({action:'go',view}),
@@ -23,7 +23,7 @@ function harness({visible=true,allow=true,fail=false}={}){
  };
  context.window=context;
  vm.createContext(context);vm.runInContext(code,context);
- return {click:()=>context.togglePodcastsVisibility(),calls,cache};
+ return {click:()=>context.togglePodcastsVisibility(),calls,cache,unblock:()=>unblock()};
 }
 test('Podcasts is only hidden with explicit Admin confirmation, other modules are untouched',async()=>{
  const x=harness();
@@ -77,7 +77,7 @@ function moduleSaveHarness({fail=false,serverOverride=null}={}){
  let server={...cache.config,modules:{...cache.config.modules}};
  const events=[];
  const context={
-  S:{cache},window:null,
+  S:{cache},window:null,moduleSettingsBusy:false,setModuleSettingsBusy:value=>{context.moduleSettingsBusy=value},
   obj:x=>x&&typeof x==='object'?x:{},
   moduleValues:()=>({podcasts:false,radio:false,artists:true}),
   saveJSON:async(path,data)=>{events.push('write');if(fail)throw Error('Network error');server={...data,modules:serverOverride||{...data.modules}}},
@@ -107,4 +107,26 @@ test('Admin save failure does not mutate visible cached configuration',async()=>
  const x=moduleSaveHarness({fail:true});await x.save();
  assert.equal(x.cache.config.modules.radio,true);
  assert.equal(x.events.some(t=>t.includes('Módulos de la marca guardados y verificados')),false);
+});
+
+test('rapid double click on Podcasts sends only one write',async()=>{
+ const x=harness({pending:true});
+ const first=x.click();
+ await Promise.resolve();
+ const second=x.click();
+ assert.equal(x.calls.filter(c=>c.action==='save').length,1);
+ x.unblock();
+ await Promise.all([first,second]);
+ assert.equal(x.cache.config.modules.podcasts,false);
+});
+test('save locks until server verification and unlocks on network error',async()=>{
+ const x=moduleSaveHarness({fail:true});
+ await x.save();
+ assert.equal(x.events.filter(v=>v==='write').length,1);
+ assert.equal(x.cache.config.modules.radio,true);
+});
+test('module save guard is shared with the Podcasts toggle',()=>{
+ assert.match(html,/if\(moduleSettingsBusy\)return;/);
+ assert.match(html,/finally\{setModuleSettingsBusy\(false\);\}/);
+ assert.match(html,/id="saveSystemModulesButton"/);
 });
