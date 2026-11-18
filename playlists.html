@@ -9,11 +9,27 @@ body[data-page="playlists"] #grid{margin-top:0}
 #grid .copy{overflow-wrap:anywhere}
 @media(max-width:600px){.playlist-head #playlistSearch{width:100%}.playlist-head{gap:10px}}
 </style></head><body data-page="playlists"><main class="shell"><header class="playlist-head">
-  <button class="btn" type="button" onclick="history.back()" aria-label="Volver">←</button>
+  <button class="btn" type="button" id="playlistBack" aria-label="Volver a Explorar">←</button>
   <h1>Playlists</h1>
   <input id="playlistSearch" disabled type="search" aria-label="Filtrar playlists por nombre o fuente" placeholder="Filtrar por nombre o fuente" autocomplete="off">
 </header><p id="catalogStatus" role="status" aria-live="polite"></p><button id="retryCatalog" class="btn" hidden>Volver a intentar</button><div id="grid" class="grid"></div></main><script>
 const API=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/',$=id=>document.getElementById(id);
+// A shared link can be the first page in the tab.
+function setupPlaylistBack() {
+  const host = parent !== window && parent.UADAVShellHost;
+  const navigation = (host ? parent : window).navigation;
+  const previous = navigation?.entries().find(entry => entry.index === navigation.currentEntry?.index - 1);
+  const previousURL = previous?.url && new URL(previous.url);
+  const internal = previousURL && previousURL.origin === location.origin && previousURL.pathname === '/app.html';
+  const back = $('playlistBack');
+  if (internal) back.setAttribute('aria-label', 'Volver');
+  back.onclick = () => {
+    if (internal) return parent.history.back();
+    if (host) return host.navigate('/index-v117.html');
+    location.assign('/app.html?view=%2Findex-v117.html');
+  };
+}
+setupPlaylistBack();
 let catalog=[],busy=false;
 function render(){const q=$('playlistSearch').value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),items=catalog.filter(x=>String((x.titulo||x.title||'')+' '+(x.provider||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(q));$('grid').replaceChildren();$('catalogStatus').textContent=items.length+' '+(items.length===1?'playlist':'playlists');if(!items.length){const p=document.createElement('p');p.className='muted';p.textContent=q?'No encontramos playlists con esa búsqueda.':'Todavía no hay playlists publicadas.';$('grid').append(p);return}
 for(const x of items){const b=document.createElement('button');b.className='card';b.type='button';b.style.cssText='color:inherit;text-align:left;padding:0;cursor:pointer';const img=document.createElement('img');img.alt='';img.loading='lazy';let image='/media-fallback.svg';try{const u=new URL(x.thumbnail||'',location.origin);if(String(x.thumbnail||'').trim()&&['https:','http:'].includes(u.protocol))image=u.href}catch{}img.src=image;img.onerror=()=>{img.onerror=null;img.src='/media-fallback.svg'};const copy=document.createElement('div');copy.className='copy';const title=document.createElement('strong');title.textContent=x.titulo||x.title||'Playlist';const meta=document.createElement('div');meta.className='muted';meta.textContent=x.provider||'';copy.append(title,meta);b.append(img,copy);b.setAttribute('aria-label','Abrir playlist: '+title.textContent);b.onclick=()=>{try{const host=parent!==window&&parent.UADAVShellHost;if(host?.playContent)return host.playContent(x)}catch{}window.UADAVContentPlayer?.open(x)};$('grid').append(b)}}
