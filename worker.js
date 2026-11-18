@@ -110,7 +110,14 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
  try{info=JSON.parse(await env.UADAV_DB?.get(infoKey)||'null');channelId=info?.channelId||channelId}catch{}
  try{
   if(!channelId||kind==='info'&&!info){
-   try{info=await Promise.any(instances.map(async base=>{if(!channelId)throw Error();const d=await fetchJSON(base+'/api/v1/channels/'+channelId+'?hl=es');if(!d.authorId)throw Error();return{channelId:d.authorId,nombre:d.author||'',bio:d.description||'',thumbnail:d.authorThumbnails?.[0]?.url||'',banner:d.authorBanners?.[0]?.url||'',source:'invidious'}}))}catch{
+   try{info=await Promise.any(instances.map(async base=>{let resolved=channelId;
+     if(!resolved){
+       const target='https://www.youtube.com/'+reference;
+       const match=await fetchJSON(base+'/api/v1/resolveurl?url='+encodeURIComponent(target));
+       resolved=match.ucid;
+     }
+     if(!/^UC[A-Za-z0-9_-]{22}$/.test(resolved||''))throw Error('Canal no resuelto');
+     const d=await fetchJSON(base+'/api/v1/channels/'+resolved+'?hl=es');if(d.authorId!==resolved)throw Error('Canal no confirmado');return{channelId:d.authorId,nombre:d.author||'',bio:d.description||'',thumbnail:d.authorThumbnails?.[0]?.url||'',banner:d.authorBanners?.[0]?.url||'',source:'invidious'}}))}catch{
     const d=await official('channels',{part:'snippet,brandingSettings,contentDetails',...(channelId?{id:channelId}:{forHandle:reference.slice(1)})}),ch=d.items?.[0];if(!ch)throw Error('Canal no encontrado');info={channelId:ch.id,nombre:ch.snippet?.title||'',bio:ch.snippet?.description||'',thumbnail:thumb(ch.snippet),banner:ch.brandingSettings?.image?.bannerExternalUrl||'',uploads:ch.contentDetails?.relatedPlaylists?.uploads||'',source:'youtube_api'};
    }
    channelId=info.channelId;if(!/^UC[A-Za-z0-9_-]{22}$/.test(channelId))throw Error('Canal inválido');try{await env.UADAV_DB?.put(infoKey,JSON.stringify(info),{expirationTtl:21600})}catch{}
@@ -3652,11 +3659,12 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       d.meta={...(d.meta||{}),name:meta.name||d.meta?.name||''};const days=Object.keys(d.daily);if(days.length>400){for(const k of days.slice(0,days.length-400))delete d.daily[k];}
       await env.UADAV_DB.put(key,JSON.stringify(d),{expirationTtl:90*86400});return {...d,accepted};
     }
-    async function maybeConsolidateDiscovered(a,interest){
-      if(!a?.canal||a.review_level!=='green'||Number(a.confidence||0)<78||Number(interest?.score||0)<12)return false;
+    async function maybeConsolidateDiscovered(a,interest,exactMatch=false){
+      if(!a?.canal||a.review_level!=='green'||Number(a.confidence||0)<78||(!exactMatch&&Number(interest?.score||0)<12))return false;
       const list=await getArray('artistas');const channel=String(a.canal);
       if(await uadavDeletedArtist(env,a.id,channel))return false;
       if(list.some(x=>String(x.canal||x.channel_id||'')===channel))return true;
+      if(list.length>=5000)return false;
       const item={...a,id:'ART-'+channel,nombre:a.nombre,nombre_artistico:a.nombre,estado:'publicado',visible:true,claimed:false,claim_status:'none',origen:'descubrimiento_automatico',auto_consolidated:true,interest_score:Number(interest.score||0),creado:isoNow()};
       list.unshift(item);await putJSON('artistas',list.slice(0,5000));await safeD1('auto_artist_consolidate',()=>syncArtistsD1([item]));await audit('artist_auto_consolidated','artist',item.id,{confidence:a.confidence,interest_score:interest.score});return true;
     }
@@ -3705,7 +3713,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         disclaimer:'Perfil generado automáticamente a partir de información pública. No implica afiliación, representación ni verificación por UADAV.',
         interest_score:Number(interest?.score||0)
       };
-      const consolidated=await maybeConsolidateDiscovered(discoveredProfile,interest);
+      const consolidated=await maybeConsolidateDiscovered(discoveredProfile,interest,nn===nq);
       return json({...discoveredProfile,consolidated});
     }
 
