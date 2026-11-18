@@ -79,7 +79,15 @@ function artistRows(data){
  return valid;
 }
 function directoryState(message,busy=false){directoryPending=true;$('grid').setAttribute('aria-busy',String(busy));$('grid').innerHTML='<div class="empty" role="status">'+esc(message)+'</div>';$('count').textContent='';const more=$('artistMore');if(more)more.hidden=true}
-function load(){if(catalogPromise)return catalogPromise;if(!$('q').value.trim())directoryState('Cargando artistas…',true);catalogPromise=(async()=>{let rows;const snapshotKey='uadav_artist_directory_snapshot_v1:'+ (typeof API==='string'?API:'');try{try{rows=artistRows(await api('public/artistas'))}catch{rows=artistRows(await api('artistas'))}}catch{
+function load(){if(catalogPromise)return catalogPromise;if(!$('q').value.trim())directoryState('Cargando artistas…',true);catalogPromise=(async()=>{let rows;const snapshotKey='uadav_artist_directory_snapshot_v1:'+ (typeof API==='string'?API:'');try{
+  if(typeof location!=='undefined'&&location.hostname==='integration-staging-preserve.uadav-stream-staging.pages.dev'){
+   try{
+    const response=await fetch('/directorio/artistas',{cache:'no-store',signal:AbortSignal.timeout(10000)});
+    if(response.ok)rows=artistRows(await response.json());
+   }catch(error){console.warn('Directorio local:',error.message)}
+  }
+  if(!rows){try{rows=artistRows(await api('public/artistas'))}catch{rows=artistRows(await api('artistas'))}}
+ }catch{
  let saved;
  try{saved=JSON.parse(sessionStorage.getItem(snapshotKey));if(!saved||Date.now()-saved.time>3600000)saved=null;else all=artistRows(saved.artists)}catch{saved=null}
  if(saved&&all.length){
