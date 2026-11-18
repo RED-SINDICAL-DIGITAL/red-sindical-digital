@@ -107,3 +107,9 @@ Existe un preview funcional y una pasada de 1.093 pruebas aprobadas. Las cuatro 
 - Biblioteca prioriza guardados y búsqueda; Mis archivos permanece plegado debajo del listado, conservando el reproductor local.
 - Artistas y radios guardados usan filas amplias; acciones secundarias de quitar/eliminar conservadas con menor énfasis. QA sintético de favoritos, búsqueda, seguidos, radios, playlists y archivos en 320 px, móvil, PC y TV.
 - Al terminar el rediseño aprobado, pedir acceso a Admin para guardar la ocultación de Podcasts. No adelantar esa solicitud.
+
+## Continuidad 18/11/2026 — ficha de evento y catálogo
+- Incorporados los commits posteriores de Radio Studio, visibilidad configurable de Podcasts y control de seis suites de CI para el SHA candidato.
+- Ficha de evento con afiche y cabecera compactos; descripción, funciones, información y accesos conservados.
+- Cine y series con cabecera y filtros compactos, sin accesos repetidos a Podcasts/Playlists. Hero solo si existen títulos. Carga fallida o respuesta inválida muestra reintento y conserva los títulos ya cargados.
+- Podcasts: solicitar acceso a Admin después de completar el rediseño aprobado, como indicó Ruso.

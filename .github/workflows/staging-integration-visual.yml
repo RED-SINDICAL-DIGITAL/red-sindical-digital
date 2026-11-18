@@ -4,6 +4,10 @@ on:
     branches:
       - integration/staging-preserve-beta-20261109
     paths:
+      - uadav-catalog-detail-layout.css
+      - scripts/qa-staging-catalog-detail.mjs
+      - evento.html
+      - peliculas-series.html
       - uadav-library-layout.css
       - scripts/qa-staging-library-layout.mjs
       - biblioteca.html
@@ -115,6 +119,7 @@ jobs:
       - name: Start local static server and check responsive profile
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/uadav-static-qa.log 2>&1 &
+          node scripts/qa-staging-catalog-detail.mjs
           node scripts/qa-staging-library-layout.mjs
           node scripts/qa-staging-entry-layout.mjs
           node scripts/qa-staging-discovery-layout.mjs
