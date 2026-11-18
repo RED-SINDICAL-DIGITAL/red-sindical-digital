@@ -49,11 +49,25 @@ for(const label of ['',...musicGenres.map(([name])=>name)]){
 for(const [id,direction] of [['genrePrev',-1],['genreNext',1]])$(id).onclick=()=>genreSelect.scrollBy({left:direction*genreSelect.clientWidth*.8});
 genreSelect.addEventListener('scroll',syncGenreArrows,{passive:true});
 window.addEventListener('resize',syncGenreArrows);
+function artistGenreText(a){
+ return genreWords([a.rubro,a.actividad,a.categoria,a.genre,a.genero,a.genres,a.generos].flat().join(' '));
+}
+let orderedCatalog=null;
+function orderAvailableGenres(){
+ if(!catalogReady||orderedCatalog===all)return;
+ orderedCatalog=all;
+ const texts=all.map(artistGenreText);
+ const groups=musicGenres.map(([name,aliases])=>({name,available:texts.some(text=>matchesGenre(text,aliases))}));
+ groups.sort((a,b)=>Number(b.available)-Number(a.available));
+ const buttons=new Map(Array.from(genreSelect.children,button=>[button.dataset.genre,button]));
+ for(const group of groups)genreSelect.append(buttons.get(group.name));
+ syncGenreArrows();
+}
 function categoryMatches(a){
  if(!cat)return true;
  const specialty=norm([a.rubro,a.actividad,a.categoria].join(' '));
  if(cat!=='musica')return categoryTerms[cat]?.test(specialty)||false;
- const text=genreWords([specialty,a.genre,a.genero,...[a.genres,a.generos].flatMap(v=>Array.isArray(v)?v:[])].join(' '));
+ const text=artistGenreText(a);
  const selected=musicGenres.find(([label])=>label===activeGenre);
  return selected?matchesGenre(text,selected[1]):categoryTerms.musica.test(specialty)||musicGenres.some(([,aliases])=>matchesGenre(text,aliases));
 }
@@ -70,7 +84,7 @@ let directoryReturn=null;try{directoryReturn=UADAVArtistDirectoryState.take(sess
  };
  $('grid').firstElementChild.append(document.createElement('br'),reset);
 }
-let more=$('artistMore');if(!more){more=document.createElement('button');more.id='artistMore';more.className='chip';more.type='button';more.textContent='Ver más artistas';$('grid').after(more);more.onclick=()=>{shown+=60;paintArtists()}}more.hidden=shown>=a.length;const nextCount=Math.min(60,Math.max(0,a.length-shown));more.textContent='Ver '+nextCount+' '+(nextCount===1?'artista más':'artistas más');restoreDirectoryPosition()}function render(a){directoryPending=false;$('grid').setAttribute('aria-busy','false');visibleArtists=UADAVArtistDiscovery.rankMatches(a.filter(categoryMatches),$('q').value.trim());shown=60;paintArtists()}
+let more=$('artistMore');if(!more){more=document.createElement('button');more.id='artistMore';more.className='chip';more.type='button';more.textContent='Ver más artistas';$('grid').after(more);more.onclick=()=>{shown+=60;paintArtists()}}more.hidden=shown>=a.length;const nextCount=Math.min(60,Math.max(0,a.length-shown));more.textContent='Ver '+nextCount+' '+(nextCount===1?'artista más':'artistas más');restoreDirectoryPosition()}function render(a){orderAvailableGenres();directoryPending=false;$('grid').setAttribute('aria-busy','false');visibleArtists=UADAVArtistDiscovery.rankMatches(a.filter(categoryMatches),$('q').value.trim());shown=60;paintArtists()}
 function artistRows(data){
  const rows=Array.isArray(data)?data:[data?.items,data?.artistas,data?.results].find(Array.isArray);
  if(!rows)throw Error('Catálogo no válido');
