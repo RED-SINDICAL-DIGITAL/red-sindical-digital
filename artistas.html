@@ -24,6 +24,15 @@ const musicGenres=[
  ['Folklore','folklore,folclore,folk'],['Regional mexicano','regional mexicano,norteno,ranchera,corrido'],
  ['Afrobeats','afrobeats'],['K-pop','k-pop,kpop']
 ];
+const incomingGenre=(new URLSearchParams(location.search).get('genero')||'').trim();
+const broaderGenres={
+ 'Cumbia y tropical':'cumbia,tropical', 'Urbano':'urbano,hip hop,rap,trap,regueton,reggaeton',
+ 'Jazz y blues':'jazz,blues', 'Latino':'latino,latina,salsa,bachata,regueton,cumbia',
+ 'Soul y funk':'soul,funk,r&b,rnb', 'Clásicos de siempre':'clasicos de siempre,greatest hits'
+};
+if(incomingGenre&&incomingGenre.length<=60&&!musicGenres.some(([label])=>label===incomingGenre)){
+ musicGenres.push([incomingGenre,Object.hasOwn(broaderGenres,incomingGenre)?broaderGenres[incomingGenre]:incomingGenre]);
+}
 const genreWords=value=>' '+norm(String(value)).replace(/[^a-z0-9&]+/g,' ').trim()+' ';
 function matchesGenre(text,aliases){return aliases.split(',').some(alias=>text.includes(genreWords(alias)))}
 const genreSelect=$('musicGenre'),genreField=$('genreField');
@@ -40,7 +49,7 @@ function syncGenreArrows(){
 for(const label of ['',...musicGenres.map(([name])=>name)]){
  const button=document.createElement('button'),photo=document.createElement('span');
  button.type='button';button.dataset.genre=label;photo.className='picture';photo.setAttribute('aria-hidden','true');
- if(label){const tile=genrePictures[label];photo.style.backgroundPosition=(tile%4)*100/3+'% '+Math.floor(tile/4)*100/3+'%'}
+ if(label){const tile=Object.hasOwn(genrePictures,label)?genrePictures[label]:13;photo.style.backgroundPosition=(tile%4)*100/3+'% '+Math.floor(tile/4)*100/3+'%'}
  else{photo.classList.add('all-genres');photo.textContent='♫'}
  button.append(photo,document.createTextNode(label||'Todos los géneros'));
  button.onclick=()=>{activeGenre=label;syncGenreButtons();search()};
