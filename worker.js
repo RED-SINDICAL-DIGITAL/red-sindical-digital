@@ -91,7 +91,7 @@ function uadavArtistSharePage({request,env,kind,id,artist,kit,share}){
 // Public channel library. Only fixed provider hosts are contacted; cursors bind to channel and kind.
 async function uadavYouTubeLibrary(url,env,instances,cors={}){
  const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,'Content-Type':'application/json','Cache-Control':'public, max-age=60'}});
- const kind=url.searchParams.get('kind')||'videos';if(!['info','videos','playlists'].includes(kind))return reply({error:'Tipo inválido'},400);
+ const kind=url.searchParams.get('kind')||'videos';if(!['info','videos','playlists','releases'].includes(kind))return reply({error:'Tipo inválido'},400);
  let reference=String(url.searchParams.get('id')||url.searchParams.get('handle')||'').trim();
  if(/^https?:\/\//i.test(reference)){try{const u=new URL(reference);if(!/(^|\.)youtube\.com$/i.test(u.hostname))throw Error();const parts=u.pathname.split('/').filter(Boolean);reference=parts[0]==='channel'?parts[1]:parts[0]?.startsWith('@')?parts[0]:''}catch{return reply({error:'Usá una URL de canal de YouTube'},400)}}
  const isId=/^UC[A-Za-z0-9_-]{22}$/.test(reference);if(!isId&&!/^@[A-Za-z0-9_.-]{1,100}$/.test(reference))return reply({error:'Ingresá el ID UC… o @usuario del canal'},400);
@@ -120,7 +120,36 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
    let data=null,baseIndex=null;
    if(!cursor||cursor.provider==='iv')try{const selected=cursor?[cursor.base]:instances.map((_,i)=>i);const result=await Promise.any(selected.map(async i=>{const qs=new URLSearchParams({hl:'es',...(kind==='videos'?{sort_by:'newest'}:{}),...(cursor?.token?{continuation:cursor.token}:{})});const d=await fetchJSON(instances[i]+'/api/v1/channels/'+channelId+'/'+kind+'?'+qs);const items=d?.videos||d?.playlists||(Array.isArray(d)?d:null);if(!Array.isArray(items))throw Error();return{data:d,base:i,items}}));data=result;baseIndex=result.base}catch{if(cursor)throw Error('La fuente de esta página no responde. Reintentá.')}
    if(data){out={channel_id:channelId,kind,source:'invidious',items:data.items.map(x=>(kind==='videos'?video:playlist)(x,'iv')).filter(Boolean),next_cursor:encode('iv',data.data.continuation||null,baseIndex)}}else{
+    if(kind==='releases')throw Error('No pudimos consultar los lanzamientos del canal.');
     const params={part:'snippet,contentDetails',maxResults:'50',...(cursor?.token?{pageToken:cursor.token}:{})};const d=kind==='videos'?await official('playlistItems',{...params,playlistId:info?.uploads||'UU'+channelId.slice(2)}):await official('playlists',{...params,channelId});out={channel_id:channelId,kind,source:'youtube_api',items:(d.items||[]).map(x=>(kind==='videos'?video:playlist)(x,'yt')).filter(Boolean),next_cursor:encode('yt',d.nextPageToken||null)};
+   }
+   if(kind==='releases'&&out.items.length){
+    // Only enrich an exact channel relationship. A missing match must never block playback.
+    try{
+     const metadataKey='mb_release_years_v1_'+channelId;
+     let years=JSON.parse(await env.UADAV_DB?.get(metadataKey)||'null');
+     if(!years){
+      const mb=async(resource,params)=>{
+       const endpoint='https://musicbrainz.org/ws/2/'+resource+'?'+new URLSearchParams({...params,fmt:'json'});
+       const response=await fetch(endpoint,{signal:AbortSignal.timeout(1800),headers:{'User-Agent':'UADAVStream/1.0 (uadavstream@gmail.com)'}});
+       if(!response.ok)throw Error('MusicBrainz no disponible');
+       return response.json();
+      };
+      const link=await mb('url',{resource:'https://www.youtube.com/channel/'+channelId,inc:'artist-rels'});
+      const ids=[...new Set((link.relations||[]).map(r=>r.artist?.id).filter(Boolean))];
+      years={};
+      if(ids.length===1){
+       await new Promise(resolve=>setTimeout(resolve,1100));
+       const groups=await mb('release-group',{artist:ids[0],limit:'100'});
+       for(const group of groups['release-groups']||[]){
+        const title=String(group.title||'').trim().toLowerCase(),year=String(group['first-release-date']||'').slice(0,4);
+        if(title&&/^\d{4}$/.test(year))years[title]=Object.hasOwn(years,title)&&years[title]!==year?'':year;
+       }
+      }
+      await env.UADAV_DB?.put(metadataKey,JSON.stringify(years),{expirationTtl:86400});
+     }
+     for(const item of out.items){const year=years[item.titulo.trim().toLowerCase()];if(typeof year==='string'&&/^\d{4}$/.test(year))item.release_year=year}
+    }catch{}
    }
    if(kind==='playlists'){
     const incomplete=out.items.filter(x=>!x.titulo||!x.thumbnail||x.count===null).slice(0,50);
