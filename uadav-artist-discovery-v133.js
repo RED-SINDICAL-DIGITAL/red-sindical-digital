@@ -1,11 +1,30 @@
 (function(g){'use strict';const KEY='uadav_artist_discovery_v133',TTL=7*86400000,MAX=80,normal=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 function read(){try{const a=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(a)?a.filter(x=>x&&x.visible!==false&&Date.now()-Number(x.seen_at||0)<TTL).slice(0,MAX):[]}catch{return[]}}
-function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombre||a.nombre_artistico)||!(a.id||a.canal||a.channel_id))return;const item={id:String(a.id||'').slice(0,180),nombre:String(a.nombre||a.nombre_artistico).slice(0,180),nombre_artistico:String(a.nombre_artistico||a.nombre||'').slice(0,180),rubro:String(a.rubro||'Artista').slice(0,140),ciudad:String(a.ciudad||'').slice(0,140),foto:String(a.foto||a.thumbnail||'').slice(0,2000),portada:String(a.portada||'').slice(0,2000),bio:String(a.bio||'').slice(0,1200),canal:String(a.canal||a.channel_id||'').slice(0,100),discovered:a.existing===true?false:a.discovered===true,visible:true,seen_at:Date.now()};const key=identity(item);try{localStorage.setItem(KEY,JSON.stringify([item,...read().filter(x=>identity(x)!==key)].slice(0,MAX)));g.dispatchEvent(new Event('uadav:artist-discovered'))}catch{}}
+function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombre||a.nombre_artistico)||!(a.id||a.canal||a.channel_id))return;const item={id:String(a.id||'').slice(0,180),nombre:String(a.nombre||a.nombre_artistico).slice(0,180),nombre_artistico:String(a.nombre_artistico||a.nombre||'').slice(0,180),rubro:String(a.rubro||'Artista').slice(0,140),ciudad:String(a.ciudad||'').slice(0,140),foto:String(a.foto||a.thumbnail||'').slice(0,2000),portada:String(a.portada||'').slice(0,2000),bio:String(a.bio||'').slice(0,1200),canal:String(a.canal||a.channel_id||'').slice(0,100),discovered:a.existing===true?false:a.discovered===true,visible:true,seen_at:Date.now()};const key=identity(item);try{
+ const recent=read();
+ const previous=recent.find(x=>identity(x)===key);
+ if(item.discovered&&previous?.discovered&&item.canal&&item.canal===previous.canal){
+  for(const field of ['foto','portada','bio'])if(!item[field])item[field]=previous[field]||'';
+ }
+ localStorage.setItem(KEY,JSON.stringify([item,...recent.filter(x=>identity(x)!==key)].slice(0,MAX)));g.dispatchEvent(new Event('uadav:artist-discovered'))}catch{}}
 function identity(a){return a.canal||a.channel_id||a.id||normal(a.nombre||a.nombre_artistico)}
 function merge(catalog=[]){const seen=new Set(),result=[];const ordered=[...read().map(x=>catalog.find(a=>identity(a)===identity(x)||(a.id&&a.id===x.id))||x),...catalog];for(const a of ordered){if(!a||a.visible===false||!(a.id||a.canal||a.channel_id))continue;const keys=[identity(a),a.id].filter(Boolean);if(!keys.length||keys.some(k=>seen.has(k)))continue;keys.forEach(k=>seen.add(k));result.push(a)}return result}
-function find(q){return read().find(a=>normal(a.nombre)===normal(q)||normal(a.nombre_artistico)===normal(q))||null}
+function exactName(a,query){
+ return [a.nombre,a.nombre_artistico].some(n=>n&&normal(n)===query);
+}
+function topicAlias(a,query){
+ if(!a.discovered||a.claimed||a.self_managed||!query)return false;
+ return [a.nombre,a.nombre_artistico].some(n=>n&&/\s+[-–—]\s+topic$/i.test(n.trim())&&normal(n.replace(/\s+[-–—]\s+topic\s*$/i,''))===query);
+}
+function find(q){
+ const query=normal(q),artists=read();
+ const exact=artists.find(a=>exactName(a,query));
+ if(exact)return exact;
+ const aliases=artists.filter(a=>topicAlias(a,query));
+ return aliases.length===1?aliases[0]:null;
+}
 function rankMatches(artists,q){const query=normal(q).replace(/\s+/g,' ');if(!query)return [...artists];const score=a=>Math.max(...[a.nombre,a.nombre_artistico,a.name,a.title].filter(Boolean).map(v=>{const name=normal(v).replace(/\s+/g,' ');return name===query?300:name.startsWith(query+' ')?200:name.includes(query)?100:0}),0);return artists.map((a,i)=>({a,i,score:score(a)})).sort((a,b)=>b.score-a.score||a.i-b.i).map(x=>x.a)}
-function rememberMatches(q,artists){for(const a of artists||[])if(normal(a.nombre||a.nombre_artistico)===normal(q))remember(a)}
+function rememberMatches(q,artists){for(const a of artists||[])if(exactName(a,normal(q))||topicAlias(a,normal(q)))remember(a)}
 
 // Accept an explicit channel identity; never guess one from a person's name.
 function channelRef(value){
