@@ -9,6 +9,11 @@ function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombr
  localStorage.setItem(KEY,JSON.stringify([item,...recent.filter(x=>identity(x)!==key)].slice(0,MAX)));g.dispatchEvent(new Event('uadav:artist-discovered'))}catch{}}
 function identity(a){return a.canal||a.channel_id||a.id||normal(a.nombre||a.nombre_artistico)}
 function merge(catalog=[]){const seen=new Set(),result=[];const ordered=[...read().map(x=>catalog.find(a=>identity(a)===identity(x)||(a.id&&a.id===x.id))||x),...catalog];for(const a of ordered){if(!a||a.visible===false||!(a.id||a.canal||a.channel_id))continue;const keys=[identity(a),a.id].filter(Boolean);if(!keys.length||keys.some(k=>seen.has(k)))continue;keys.forEach(k=>seen.add(k));result.push(a)}return result}
+const confirmed={masterboy:'UC5-7ih_aKoazZr5Fk98HW9g',erasure:'UCYSJBcJ37dq0TJWTjJJu23Q',aqua:'UCXPUjGFDr4tcKkaFm6PiV-A'};
+function confirmedMusicChannel(a){
+ const refs=[a.canal,a.channel_id,String(a.id||'').replace(/^discover:/,'')].map(channelRef).filter(Boolean);
+ return refs.some(id=>Object.values(confirmed).includes(id)||normal(id)==='@masterboy90s');
+}
 // Group display cards only. Channel IDs still address their own catalogs.
 function directoryCards(artists){
  const suffix=/\s+[-–—]\s*topic$/i;
@@ -16,7 +21,7 @@ function directoryCards(artists){
  const isTopic=a=>!a.claimed&&!a.self_managed&&names(a).some(n=>suffix.test(n));
  const base=a=>normal(a.nombre||a.nombre_artistico).replace(suffix,'').replace(/\s*(?:\((?:official|oficial)\)|\s+(?:official|oficial))$/,'').trim();
  const ref=a=>channelRef(a.canal||a.channel_id)||channelRef(String(a.id||'').replace(/^discover:/,''));
- const confirmed={masterboy:'UC5-7ih_aKoazZr5Fk98HW9g',erasure:'UCYSJBcJ37dq0TJWTjJJu23Q',aqua:'UCXPUjGFDr4tcKkaFm6PiV-A'};
+
  const fullMasterboy=artists.some(a=>ref(a)===confirmed.masterboy);
  if(fullMasterboy)artists=artists.filter(a=>!(a.discovered&&!a.claimed&&!a.self_managed&&normal(ref(a))==='@masterboy90s'));
  const canonical=new Map();
@@ -151,5 +156,5 @@ function followedProfileHref(a,origin){
  return profileHref({...copy,discovered:true,nombre:saved?.searchParams.get('discover')||a.nombre||a.nombre_artistico||''});
 }
 
-g.UADAVArtistDiscovery={channelMatch,resolveTopic,directoryCards,preferredHandle,remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,rememberChannel,followedProfileHref};
+g.UADAVArtistDiscovery={confirmedMusicChannel,channelMatch,resolveTopic,directoryCards,preferredHandle,remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,rememberChannel,followedProfileHref};
 })(globalThis);
