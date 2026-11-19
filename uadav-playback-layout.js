@@ -87,50 +87,40 @@ metadataSync();
 const desktopLayout=matchMedia('(min-width:1100px)');
 const foldedTools=document.createElement('div');
 foldedTools.id='foldedPlaybackTools';
-const restoreBar=button('restorePlaybackBar','Volver al reproductor','Volver al reproductor',()=>{
+const restoreBar=button('restorePlaybackBar','↑ Mostrar reproductor','Mostrar reproductor',()=>{
  unfold();
- optionsButton.focus();
+ (radioDock.classList.contains('active')?sideFold:fold).focus();
 });
-const compactToggle=button('compactPlaybackToggle','Pausar','Pausar',()=>toggle.click());
-foldedTools.append(restoreBar,compactToggle);
+foldedTools.append(restoreBar);
 document.body.append(foldedTools);
 function unfold(){delete document.body.dataset.playbackFold}
-function isVisual(){return !radioDock.classList.contains('active') && !!stage.querySelector('video,iframe')}
-function foldBar(hideVideo){
- if(!desktopLayout.matches)return;
+function hidePanel(){
  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
  document.body.classList.remove('player-focus','player-theater','radio-player-focus','player-controls-idle');
- if(hideVideo)command('pauseVideo');
- document.body.dataset.playbackFold=hideVideo?'paused':isVisual()?'video':'audio';
- restoreBar.textContent=hideVideo?'Volver al video':(label.textContent||'Volver al reproductor');
- compactToggle.hidden=hideVideo;
- syncCompactToggle();
- options.close();
+ document.body.dataset.playbackFold='hidden';
  restoreBar.focus();
 }
-function syncCompactToggle(){
- const text=playing?'Pausar':'Reanudar';
- compactToggle.textContent=text;
- compactToggle.setAttribute('aria-label',text);
+function updateFoldControl(){
+ for(const control of [fold,sideFold]){
+  control.title=desktopLayout.matches?'Ocultar reproductor':'Seguir navegando';
+  control.setAttribute('aria-label',control.title);
+ }
 }
-const foldAction=button('foldBarAction','Plegar barra','Plegar barra',()=>foldBar(false));
-const hideAction=button('hideVideoAction','Pausar y ocultar','Pausar y ocultar el video',()=>foldBar(true));
-options.prepend(foldAction,hideAction);
-optionsButton.addEventListener('click',()=>{hideAction.hidden=!desktopLayout.matches||!isVisual()||toggle.disabled;foldAction.hidden=!desktopLayout.matches});
-new MutationObserver(syncCompactToggle).observe(toggle,{attributes:true,attributeFilter:['aria-label']});
+fold.onclick=()=>desktopLayout.matches?hidePanel():leavePlayer();
+sideFold.onclick=()=>desktopLayout.matches?hidePanel():focusPlayer(false);
+updateFoldControl();
+desktopLayout.addEventListener('change',updateFoldControl);
 for(const event of ['uadav:player-closed','uadav:content-selected','uadav:radio-selected'])window.addEventListener(event,unfold);
 desktopLayout.addEventListener('change',unfold);
 const foldedStyle=document.createElement('style');
 foldedStyle.textContent=`
 #foldedPlaybackTools{display:none}
-@media(max-width:1099px){#foldBarAction,#hideVideoAction{display:none!important}}
+
 @media(min-width:1100px){
  body[data-playback-fold] #foldedPlaybackTools{position:fixed;right:16px;bottom:12px;z-index:1400;display:flex;gap:4px;padding:4px;background:#102031;border-radius:24px}
  #foldedPlaybackTools button{min-height:40px;border-radius:20px;padding:0 14px;background:#172d40;color:white;border:0;max-width:32ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- body[data-page=app][data-playback-fold] #playbackBar,body[data-page=app][data-playback-fold] #radioNowSide,body[data-page=app][data-playback-fold]:not([data-playback-fold=video]) #mediaDock.active{display:none!important}
+ body[data-page=app][data-playback-fold] #playbackBar,body[data-page=app][data-playback-fold] #radioNowSide,body[data-page=app][data-playback-fold] #mediaDock.active{display:none!important}
  body[data-page=app][data-playback-fold].has-side-player #viewWrap{margin-right:0!important;margin-bottom:0!important;height:calc(100dvh - 136px)!important}
- body[data-page=app][data-playback-fold=video] #mediaDock.active:is(.expanded,.mini){inset:auto 16px 68px auto!important;width:360px!important;height:auto!important}
- body[data-playback-fold=video] #mediaDock :is(.tools,.mediaCopy){display:none!important}
 }`;
 document.head.append(foldedStyle);
 
