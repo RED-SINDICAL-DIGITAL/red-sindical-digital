@@ -32,7 +32,7 @@ function searchEmptyHTML(s){
  if(s.failures)return '<div class="empty">No pudimos completar la búsqueda.</div>';
  return '<div class="empty">No encontramos resultados para “'+esc(s.q)+'” en las fuentes disponibles.</div>';
 }
-const SEARCH_SNAPSHOT_KEY='uadav_public_search_return_v3_'+(API.includes('uadav-api-staging.')?'staging':'production');
+const SEARCH_SNAPSHOT_KEY='uadav_public_search_return_v4_'+(API.includes('uadav-api-staging.')?'staging':'production');
 function saveSearchSnapshot(scrollTop=0){try{if(searchState.pending||searchState.failures||!searchState.q)return;const raw=JSON.stringify({at:searchState.completedAt||Date.now(),state:searchState,filter:activeFilter,scrollTop});if(raw.length<=1000000)sessionStorage.setItem(SEARCH_SNAPSHOT_KEY,raw)}catch{}}
 function restoreSearchSnapshot(q){try{const saved=JSON.parse(sessionStorage.getItem(SEARCH_SNAPSHOT_KEY)||'null'),s=saved?.state;if(!saved||Date.now()-saved.at>600000||Date.now()<saved.at||s?.q!==q||s.pending||s.failures||!['content','artists','events','radios'].every(k=>Array.isArray(s[k])))return false;s.completedAt=s.completedAt||saved.at;searchState=s;activeFilter=['','Contenido','Artistas','Cartelera','Radios'].includes(saved.filter)?saved.filter:'';renderSearch();if(Number.isFinite(saved.scrollTop)&&saved.scrollTop>0)requestAnimationFrame(()=>window.scrollTo(0,saved.scrollTop));return true}catch{return false}}
 function artistReturnHref(href){try{const u=new URL(href,location.origin);if(u.origin===location.origin&&/^\/artista(?:\.html)?$/.test(u.pathname))u.searchParams.set('from','/buscar.html?q='+encodeURIComponent(searchState.q));return u.pathname+u.search+u.hash}catch{return href}}
@@ -73,6 +73,16 @@ function syncSearchRoute(q){history.replaceState(null,'',location.pathname+'?q='
  if(exact){try{const info=await api('youtube/channel_library?kind=info&id='+encodeURIComponent(exact));if(version!==searchVersion)return;const artist=UADAVArtistDiscovery.fromChannelInfo(info);if(exact.startsWith('UC')&&artist.canal!==exact)throw Error('Canal diferente al solicitado.');UADAVArtistDiscovery.remember(artist);searchState.artists=[artist]}catch{if(version!==searchVersion)return;searchState.failures++}if(version!==searchVersion)return;searchState.pending=false;searchState.completedAt=Date.now();renderSearch();return}
  const handle=UADAVArtistDiscovery.preferredHandle?.(q);
  const preferred=handle?{nombre:q.trim().replace(/^./,c=>c.toUpperCase()),canal:handle,discovered:true,rubro:'Música'}:null;
+ if(preferred){
+  const cached=UADAVArtistDiscovery.read?.().find(a=>a.canal===handle&&a.foto);
+  if(cached)preferred.foto=cached.foto;
+  else api('youtube/channel_library?kind=info&id='+encodeURIComponent(handle)).then(info=>{
+   if(version!==searchVersion||!info.thumbnail||(handle.startsWith('UC')&&info.channelId!==handle))return;
+   preferred.foto=info.thumbnail;
+   UADAVArtistDiscovery.remember(preferred);
+   if(searchState.artists.includes(preferred))renderSearch();
+  }).catch(()=>{});
+ }
  const knownArtist=preferred||UADAVArtistDiscovery.find?.(q);
  if(knownArtist){searchState.artists=[knownArtist];renderSearch()}
  let d={};try{d=await api('public/search?q='+encodeURIComponent(q))}catch(e){recordFailure(e)}if(version!==searchVersion)return;
