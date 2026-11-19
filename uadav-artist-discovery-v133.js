@@ -69,7 +69,7 @@ async function resolveTopic(query,profiles,api,videos=[]){
   return fromChannelInfo(info);
  }catch{return null}
 }
-function preferredHandle(query){const name=normal(query);if(name==='aqua')return 'UCXPUjGFDr4tcKkaFm6PiV-A';return name==='masterboy'?'@Masterboy90s':''}
+function preferredHandle(query){const name=normal(query);if(['erasure','erasure (official)','erasure official'].includes(name))return 'UCYSJBcJ37dq0TJWTjJJu23Q';if(name==='aqua')return 'UCXPUjGFDr4tcKkaFm6PiV-A';return name==='masterboy'?'@Masterboy90s':''}
 function rankMatches(artists,q){const query=normal(q).replace(/\s+/g,' ');if(!query)return [...artists];const score=a=>Math.max(...[a.nombre,a.nombre_artistico,a.name,a.title].filter(Boolean).map(v=>{const name=normal(v).replace(/\s+/g,' ');if(a.canal&&preferredHandle(query)&&normal(a.canal)===normal(preferredHandle(query)))return 310;if(topicAlias(a,query))return 50;if(name===query+' official'||name===query+' oficial')return 250;return name===query?300:name.startsWith(query+' ')?200:name.includes(query)?100:0}),0);return artists.map((a,i)=>({a,i,score:score(a)})).sort((a,b)=>b.score-a.score||a.i-b.i).map(x=>x.a)}
 function rememberMatches(q,artists){for(const a of artists||[])if(exactName(a,normal(q))||topicAlias(a,normal(q)))remember(a)}
 
@@ -86,7 +86,7 @@ function channelRef(value){
 function profileHref(a){
  const stable=a.id&&!String(a.id).startsWith('discover:');
  if(stable&&!a.discovered)return '/artista.html?id='+encodeURIComponent(a.id);
- const ref=channelRef(a.canal||a.channel_id||a.youtube_url||a.youtube);
+ const ref=channelRef(a.canal||a.channel_id||a.youtube_url||a.youtube)||preferredHandle(a.nombre||a.nombre_artistico||a.name||a.title);
  return '/artista.html?'+(ref?'channel='+encodeURIComponent(ref):'discover='+encodeURIComponent(a.nombre||a.nombre_artistico||a.name||a.title||''));
 }
 function fromChannelInfo(info){
