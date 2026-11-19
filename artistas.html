@@ -93,7 +93,7 @@ let directoryReturn=null;try{directoryReturn=UADAVArtistDirectoryState.take(sess
  };
  $('grid').firstElementChild.append(document.createElement('br'),reset);
 }
-let more=$('artistMore');if(!more){more=document.createElement('button');more.id='artistMore';more.className='chip';more.type='button';more.textContent='Ver más artistas';$('grid').after(more);more.onclick=()=>{shown+=60;paintArtists()}}more.hidden=shown>=a.length;const nextCount=Math.min(60,Math.max(0,a.length-shown));more.textContent='Ver '+nextCount+' '+(nextCount===1?'artista más':'artistas más');restoreDirectoryPosition()}function render(a){orderAvailableGenres();directoryPending=false;$('grid').setAttribute('aria-busy','false');visibleArtists=UADAVArtistDiscovery.rankMatches(a.filter(categoryMatches),$('q').value.trim());shown=60;paintArtists()}
+let more=$('artistMore');if(!more){more=document.createElement('button');more.id='artistMore';more.className='chip';more.type='button';more.textContent='Ver más artistas';$('grid').after(more);more.onclick=()=>{shown+=60;paintArtists()}}more.hidden=shown>=a.length;const nextCount=Math.min(60,Math.max(0,a.length-shown));more.textContent='Ver '+nextCount+' '+(nextCount===1?'artista más':'artistas más');restoreDirectoryPosition()}function render(a){orderAvailableGenres();directoryPending=false;$('grid').setAttribute('aria-busy','false');visibleArtists=UADAVArtistDiscovery.rankMatches(UADAVArtistDiscovery.directoryCards(a.filter(categoryMatches)),$('q').value.trim());shown=60;paintArtists()}
 function artistRows(data){
  const rows=Array.isArray(data)?data:[data?.items,data?.artistas,data?.results].find(Array.isArray);
  if(!rows)throw Error('Catálogo no válido');
