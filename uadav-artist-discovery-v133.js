@@ -14,6 +14,25 @@ function directoryCards(artists){
  const suffix=/\s+[-–—]\s*topic$/i;
  const names=a=>[a.nombre,a.nombre_artistico].filter(Boolean).map(normal);
  const isTopic=a=>!a.claimed&&!a.self_managed&&names(a).some(n=>suffix.test(n));
+ const base=a=>normal(a.nombre||a.nombre_artistico).replace(suffix,'').replace(/\s*(?:\((?:official|oficial)\)|\s+(?:official|oficial))$/,'').trim();
+ const ref=a=>channelRef(a.canal||a.channel_id)||channelRef(String(a.id||'').replace(/^discover:/,''));
+ const confirmed={masterboy:'UC5-7ih_aKoazZr5Fk98HW9g',erasure:'UCYSJBcJ37dq0TJWTjJJu23Q',aqua:'UCXPUjGFDr4tcKkaFm6PiV-A'};
+ const fullMasterboy=artists.some(a=>ref(a)===confirmed.masterboy);
+ if(fullMasterboy)artists=artists.filter(a=>!(a.discovered&&!a.claimed&&!a.self_managed&&normal(ref(a))==='@masterboy90s'));
+ const canonical=new Map();
+ for(const a of artists){
+  if(isTopic(a)||!ref(a))continue;
+  const key=base(a);
+  if(!canonical.has(key))canonical.set(key,new Set());
+  canonical.get(key).add(ref(a));
+ }
+ artists=artists.filter(a=>{
+  if(a.claimed||a.self_managed||(!a.discovered&&a.id&&!String(a.id).startsWith('discover:')))return true;
+  const key=base(a),ids=canonical.get(key);
+  if(!ids)return true;
+  if(isTopic(a))return !(ids.size===1||ids.has(confirmed[key]));
+  return !!ref(a)||ids.size!==1&&!ids.has(confirmed[key]);
+ });
  const candidates=new Map();
  for(const artist of artists){
   if(isTopic(artist))continue;
