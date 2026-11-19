@@ -9,7 +9,7 @@ function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombr
  localStorage.setItem(KEY,JSON.stringify([item,...recent.filter(x=>identity(x)!==key)].slice(0,MAX)));g.dispatchEvent(new Event('uadav:artist-discovered'))}catch{}}
 function identity(a){return a.canal||a.channel_id||a.id||normal(a.nombre||a.nombre_artistico)}
 function merge(catalog=[]){const seen=new Set(),result=[];const ordered=[...read().map(x=>catalog.find(a=>identity(a)===identity(x)||(a.id&&a.id===x.id))||x),...catalog];for(const a of ordered){if(!a||a.visible===false||!(a.id||a.canal||a.channel_id))continue;const keys=[identity(a),a.id].filter(Boolean);if(!keys.length||keys.some(k=>seen.has(k)))continue;keys.forEach(k=>seen.add(k));result.push(a)}return result}
-const confirmed={roxette:'UCjVf2FirkZsEW8LN6nZcnog',sade:'UCegKDBFMUSQNeWe4FAB7aig',masterboy:'UC5-7ih_aKoazZr5Fk98HW9g',erasure:'UCYSJBcJ37dq0TJWTjJJu23Q',aqua:'UCXPUjGFDr4tcKkaFm6PiV-A'};
+const confirmed={sandra:'UCefMqcCMiUxvMxdBtIFd6uw','sandra cretu':'UCefMqcCMiUxvMxdBtIFd6uw',roxette:'UCjVf2FirkZsEW8LN6nZcnog',sade:'UCegKDBFMUSQNeWe4FAB7aig',masterboy:'UC5-7ih_aKoazZr5Fk98HW9g',erasure:'UCYSJBcJ37dq0TJWTjJJu23Q',aqua:'UCXPUjGFDr4tcKkaFm6PiV-A'};
 function confirmedMusicChannel(a){
  const refs=[a.canal,a.channel_id,String(a.id||'').replace(/^discover:/,'')].map(channelRef).filter(Boolean);
  return refs.some(id=>Object.values(confirmed).includes(id)||normal(id)==='@masterboy90s');
