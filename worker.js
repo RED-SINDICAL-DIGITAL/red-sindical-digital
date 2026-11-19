@@ -96,7 +96,7 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
  if(/^https?:\/\//i.test(reference)){try{const u=new URL(reference);if(!/(^|\.)youtube\.com$/i.test(u.hostname))throw Error();const parts=u.pathname.split('/').filter(Boolean);reference=parts[0]==='channel'?parts[1]:parts[0]?.startsWith('@')?parts[0]:''}catch{return reply({error:'Usá una URL de canal de YouTube'},400)}}
  const isId=/^UC[A-Za-z0-9_-]{22}$/.test(reference);if(!isId&&!/^@[A-Za-z0-9_.-]{1,100}$/.test(reference))return reply({error:'Ingresá el ID UC… o @usuario del canal'},400);
  let cursor=null;const rawCursor=url.searchParams.get('cursor');if(rawCursor){if(rawCursor.length>6000)return reply({error:'Cursor inválido'},400);try{cursor=JSON.parse(atob(rawCursor.replace(/-/g,'+').replace(/_/g,'/')));if(cursor.v!==1||cursor.ref!==reference||cursor.kind!==kind||!['iv','yt'].includes(cursor.provider)||typeof cursor.token!=='string'||cursor.token.length>4000)throw Error();if(cursor.provider==='iv'&&(!Number.isInteger(cursor.base)||cursor.base<0||cursor.base>=instances.length))throw Error()}catch{return reply({error:'Cursor inválido para este canal'},400)}}
- const key='youtube_library_v2_'+encodeURIComponent([reference,kind,rawCursor||'first'].join('|'));
+ const key='youtube_library_v3_'+encodeURIComponent([reference,kind,rawCursor||'first'].join('|'));
  try{const cached=await env.UADAV_DB?.get(key);if(cached)return reply(JSON.parse(cached))}catch{}
  const fetchJSON=async href=>{const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),2800);try{const r=await fetch(href,{signal:ctl.signal,headers:{Accept:'application/json'}});if(!r.ok)throw Error('Proveedor no disponible');const d=await r.json();if(d.error)throw Error('Proveedor no disponible');return d}finally{clearTimeout(timer)}};
  const enabled=async()=>{try{const raw=await env.UADAV_DB?.get('youtube_api_enabled');if(raw!==null&&raw!==undefined){const value=JSON.parse(raw);if(value===false||String(value).toLowerCase()==='false')return false}}catch{}return !!env.YOUTUBE_API_KEY};
@@ -104,6 +104,39 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
  const thumb=x=>x?.thumbnails?.high?.url||x?.thumbnails?.medium?.url||x?.thumbnails?.default?.url||'';
  const video=(x,provider)=>{const id=String(provider==='iv'?x.videoId:x.contentDetails?.videoId||x.snippet?.resourceId?.videoId||'');if(!/^[A-Za-z0-9_-]{11}$/.test(id))return null;return{id,external_id:id,provider:'youtube',url:'https://www.youtube.com/watch?v='+id,titulo:provider==='iv'?x.title:x.snippet?.title,author:provider==='iv'?x.author:x.snippet?.videoOwnerChannelTitle||x.snippet?.channelTitle,thumbnail:provider==='iv'?x.videoThumbnails?.find?.(t=>t.quality==='medium')?.url||x.videoThumbnails?.[0]?.url||'':thumb(x.snippet),content_type:'video',tipo:'video'}};
  const playlist=(x,provider)=>{const id=String(provider==='iv'?x.playlistId:x.id||'');if(!/^[A-Za-z0-9_-]{10,100}$/.test(id))return null;const title=String((provider==='iv'?x.title:x.snippet?.title)||'').trim(),image=String((provider==='iv'?x.playlistThumbnail:thumb(x.snippet))||''),rawCount=provider==='iv'?x.videoCount:x.contentDetails?.itemCount,count=title&&rawCount!==null&&rawCount!==undefined&&rawCount!==''&&Number.isFinite(Number(rawCount))&&Number(rawCount)>=0?Number(rawCount):null;return{id,playlist_id:id,provider:'youtube',url:'https://www.youtube.com/playlist?list='+id,titulo:title,thumbnail:/\/no_thumbnail\./i.test(image)?'':image,count,content_type:'playlist'}};
+ // Read only the selected public channel tab, excluding sidebar recommendations.
+ async function publicChannelPage(channelId,kind){
+  const response=await fetch('https://www.youtube.com/channel/'+channelId+'/'+kind+'?hl=en',{
+   signal:AbortSignal.timeout(3800),headers:{Accept:'text/html','Accept-Language':'en'}
+  });
+  if(!response.ok)throw Error('Página del canal no disponible');
+  const html=await response.text();
+  const raw=html.match(/(?:var\s+ytInitialData\s*=\s*|window\["ytInitialData"\]\s*=\s*)(\{[\s\S]*?\});\s*<\/script>/);
+  if(!raw)throw Error('Página del canal sin catálogo');
+  const page=JSON.parse(raw[1]);
+  const owner=page.metadata?.channelMetadataRenderer?.externalId;
+  if(owner&&owner!==channelId)throw Error('El catálogo pertenece a otro canal');
+  const tabs=page.contents?.twoColumnBrowseResultsRenderer?.tabs||page.contents?.singleColumnBrowseResultsRenderer?.tabs||[];
+  const tab=tabs.map(x=>x.tabRenderer).find(x=>x?.selected);
+  if(!tab||!(tab.endpoint?.commandMetadata?.webCommandMetadata?.url||'').split('?')[0].endsWith('/'+kind))throw Error('Sección no disponible');
+  const items=new Map(),stack=[tab.content];
+  const label=value=>value?.simpleText||value?.runs?.map(r=>r.text).join('')||value?.content||'';
+  while(stack.length){
+   const node=stack.pop();if(!node||typeof node!=='object')continue;
+   const card=node.videoRenderer||node.gridVideoRenderer||node.playlistRenderer||node.gridPlaylistRenderer||node.lockupViewModel;
+   if(!card){stack.push(...Object.values(node).reverse());continue}
+   if(node.lockupViewModel&&card.contentType!==(kind==='videos'?'LOCKUP_CONTENT_TYPE_VIDEO':'LOCKUP_CONTENT_TYPE_PLAYLIST')&&!(kind==='releases'&&card.contentType==='LOCKUP_CONTENT_TYPE_ALBUM'))continue;
+   const id=(kind==='videos'?card.videoId:card.playlistId)||card.contentId;
+   const title=label(card.title)||label(card.metadata?.lockupMetadataViewModel?.title);
+   if(!id||!title)continue;
+   const images=card.thumbnail?.thumbnails||card.thumbnails?.[0]?.thumbnails||card.contentImage?.collectionThumbnailViewModel?.primaryThumbnail?.thumbnailViewModel?.image?.sources||card.contentImage?.thumbnailViewModel?.image?.sources||[];
+   const image=images.at(-1)?.url||'';
+   const item=kind==='videos'?video({videoId:id,title,videoThumbnails:[{url:image}]},'iv'):playlist({playlistId:id,title,playlistThumbnail:image},'iv');
+   if(item)items.set(item.id,item);
+  }
+  if(!items.size)throw Error('Sin contenido identificable en la página');
+  return {channel_id:channelId,kind,source:'youtube_channel_page',items:[...items.values()],next_cursor:null,catalog_limited:true};
+ }
  const encode=(provider,token,base)=>token?btoa(JSON.stringify({v:1,ref:reference,kind,provider,token,...(base!==undefined?{base}:{})})).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''):null;
  let info=null,channelId=isId?reference:null;
  const infoKey='youtube_library_info_'+encodeURIComponent(reference);
@@ -120,8 +153,9 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
    let data=null,baseIndex=null;
    if(!cursor||cursor.provider==='iv')try{const selected=cursor?[cursor.base]:instances.map((_,i)=>i);const result=await Promise.any(selected.map(async i=>{const qs=new URLSearchParams({hl:'es',...(kind==='videos'?{sort_by:'newest'}:{}),...(cursor?.token?{continuation:cursor.token}:{})});const d=await fetchJSON(instances[i]+'/api/v1/channels/'+channelId+'/'+kind+'?'+qs);const items=d?.videos||d?.playlists||(Array.isArray(d)?d:null);if(!Array.isArray(items))throw Error();return{data:d,base:i,items}}));data=result;baseIndex=result.base}catch{if(cursor)throw Error('La fuente de esta página no responde. Reintentá.')}
    if(data){out={channel_id:channelId,kind,source:'invidious',items:data.items.map(x=>(kind==='videos'?video:playlist)(x,'iv')).filter(Boolean),next_cursor:encode('iv',data.data.continuation||null,baseIndex)}}else{
-    if(kind==='releases')throw Error('No pudimos consultar los lanzamientos del canal.');
+    if(kind==='releases')out=await publicChannelPage(channelId,kind);else try{
     const params={part:'snippet,contentDetails',maxResults:'50',...(cursor?.token?{pageToken:cursor.token}:{})};const d=kind==='videos'?await official('playlistItems',{...params,playlistId:info?.uploads||'UU'+channelId.slice(2)}):await official('playlists',{...params,channelId});out={channel_id:channelId,kind,source:'youtube_api',items:(d.items||[]).map(x=>(kind==='videos'?video:playlist)(x,'yt')).filter(Boolean),next_cursor:encode('yt',d.nextPageToken||null)};
+    }catch(error){if(cursor)throw error;out=await publicChannelPage(channelId,kind)}
    }
    if(kind==='releases'&&out.items.length){
     // Only enrich an exact channel relationship. A missing match must never block playback.
@@ -157,6 +191,11 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
      const details=await official('playlists',{part:'snippet,contentDetails',id:incomplete.map(x=>x.id).join(',')});
      const byId=new Map((details.items||[]).map(x=>playlist(x,'yt')).filter(Boolean).map(x=>[x.id,x]));
      out.items=out.items.map(item=>{const detail=byId.get(item.id);if(!detail)return item;return{...item,titulo:detail.titulo||item.titulo,thumbnail:detail.thumbnail||item.thumbnail,count:detail.count!==null?detail.count:item.count}});
+    }catch{}
+    if(!cursor&&out.items.some(x=>!x.titulo))try{
+     const page=await publicChannelPage(channelId,kind);
+     const cards=new Map(page.items.map(x=>[x.id,x]));
+     for(const item of out.items){const card=cards.get(item.id);if(card){item.titulo||=card.titulo;item.thumbnail||=card.thumbnail}}
     }catch{}
     out.metadata_incomplete=out.items.some(x=>!x.titulo||!x.thumbnail||x.count===null);
    }
