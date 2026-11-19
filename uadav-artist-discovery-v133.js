@@ -40,6 +40,34 @@ function find(q){
  const aliases=artists.filter(a=>topicAlias(a,query));
  return aliases.length===1?aliases[0]:null;
 }
+async function resolveTopic(query,profiles,api,videos=[]){
+ const key=normal(query);
+ const topic=a=>!a.claimed&&!a.self_managed&&[a.nombre,a.nombre_artistico].some(n=>normal(n).replace(/\s+[-–—]\s*topic$/,'')===key&&/[-–—]\s*topic$/i.test(n||''));
+ if(!profiles.some(topic)||profiles.some(a=>!topic(a)&&exactName(a,key)))return null;
+ const candidates=rows=>{
+  const ids=new Set();
+  for(const row of rows){
+   const name=normal(row.author||row.channelTitle||row.channel_name);
+   const id=channelRef(row.authorId||row.channelId||row.channel_id||row.channel_url);
+   if(/^UC/.test(id)&&[key,key+' official',key+' oficial',key.replace(/ /g,'')+'vevo'].includes(name))ids.add(id);
+  }
+  return [...ids];
+ };
+ try{
+  let ids=candidates(videos);
+  if(!ids.length){
+   const result=await api('youtube/search?q='+encodeURIComponent(query+' official music video'));
+   ids=candidates(Array.isArray(result)?result:result?.items||[]);
+  }
+  if(ids.length!==1)return null;
+  const info=await api('youtube/channel_library?kind=info&id='+encodeURIComponent(ids[0]));
+  const name=normal(info.nombre||info.title),bio=normal(info.bio||info.description);
+  if(info.channelId!==ids[0]||![key,key+' official',key+' oficial',key.replace(/ /g,'')+'vevo'].includes(name))return null;
+  if(/\b(unofficial|fanmade|fan channel|fan account|canal de fans|tributo|tribute)\b/.test(bio))return null;
+  if(!(info.isOfficialArtist===true||name.endsWith('vevo')||(/\b(official|oficial)\b/.test(bio)&&bio.includes(key))))return null;
+  return fromChannelInfo(info);
+ }catch{return null}
+}
 function preferredHandle(query){const name=normal(query);if(name==='aqua')return 'UCXPUjGFDr4tcKkaFm6PiV-A';return name==='masterboy'?'@Masterboy90s':''}
 function rankMatches(artists,q){const query=normal(q).replace(/\s+/g,' ');if(!query)return [...artists];const score=a=>Math.max(...[a.nombre,a.nombre_artistico,a.name,a.title].filter(Boolean).map(v=>{const name=normal(v).replace(/\s+/g,' ');if(a.canal&&preferredHandle(query)&&normal(a.canal)===normal(preferredHandle(query)))return 310;if(topicAlias(a,query))return 50;if(name===query+' official'||name===query+' oficial')return 250;return name===query?300:name.startsWith(query+' ')?200:name.includes(query)?100:0}),0);return artists.map((a,i)=>({a,i,score:score(a)})).sort((a,b)=>b.score-a.score||a.i-b.i).map(x=>x.a)}
 function rememberMatches(q,artists){for(const a of artists||[])if(exactName(a,normal(q))||topicAlias(a,normal(q)))remember(a)}
@@ -90,5 +118,5 @@ function followedProfileHref(a,origin){
  return profileHref({...copy,discovered:true,nombre:saved?.searchParams.get('discover')||a.nombre||a.nombre_artistico||''});
 }
 
-g.UADAVArtistDiscovery={directoryCards,preferredHandle,remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,rememberChannel,followedProfileHref};
+g.UADAVArtistDiscovery={resolveTopic,directoryCards,preferredHandle,remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,rememberChannel,followedProfileHref};
 })(globalThis);
