@@ -9,7 +9,7 @@ function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombr
  localStorage.setItem(KEY,JSON.stringify([item,...recent.filter(x=>identity(x)!==key)].slice(0,MAX)));g.dispatchEvent(new Event('uadav:artist-discovered'))}catch{}}
 function identity(a){return a.canal||a.channel_id||a.id||normal(a.nombre||a.nombre_artistico)}
 function merge(catalog=[]){const seen=new Set(),result=[];const ordered=[...read().map(x=>catalog.find(a=>identity(a)===identity(x)||(a.id&&a.id===x.id))||x),...catalog];for(const a of ordered){if(!a||a.visible===false||!(a.id||a.canal||a.channel_id))continue;const keys=[identity(a),a.id].filter(Boolean);if(!keys.length||keys.some(k=>seen.has(k)))continue;keys.forEach(k=>seen.add(k));result.push(a)}return result}
-const confirmed={masterboy:'UC5-7ih_aKoazZr5Fk98HW9g',erasure:'UCYSJBcJ37dq0TJWTjJJu23Q',aqua:'UCXPUjGFDr4tcKkaFm6PiV-A'};
+const confirmed={roxette:'UCjVf2FirkZsEW8LN6nZcnog',sade:'UCegKDBFMUSQNeWe4FAB7aig',masterboy:'UC5-7ih_aKoazZr5Fk98HW9g',erasure:'UCYSJBcJ37dq0TJWTjJJu23Q',aqua:'UCXPUjGFDr4tcKkaFm6PiV-A'};
 function confirmedMusicChannel(a){
  const refs=[a.canal,a.channel_id,String(a.id||'').replace(/^discover:/,'')].map(channelRef).filter(Boolean);
  return refs.some(id=>Object.values(confirmed).includes(id)||normal(id)==='@masterboy90s');
@@ -93,7 +93,11 @@ async function resolveTopic(query,profiles,api,videos=[]){
   return fromChannelInfo(info);
  }catch{return null}
 }
-function preferredHandle(query){const name=normal(query);if(['erasure','erasure (official)','erasure official'].includes(name))return 'UCYSJBcJ37dq0TJWTjJJu23Q';if(name==='aqua')return 'UCXPUjGFDr4tcKkaFm6PiV-A';return name==='masterboy'?'@Masterboy90s':''}
+function preferredHandle(query){
+ const name=normal(query).replace(/\s+(?:\(official\)|official)$/,'');
+ if(name==='masterboy')return '@Masterboy90s';
+ return Object.hasOwn(confirmed,name)?confirmed[name]:'';
+}
 function rankMatches(artists,q){const query=normal(q).replace(/\s+/g,' ');if(!query)return [...artists];const score=a=>Math.max(...[a.nombre,a.nombre_artistico,a.name,a.title].filter(Boolean).map(v=>{const name=normal(v).replace(/\s+/g,' ');if(a.canal&&preferredHandle(query)&&normal(a.canal)===normal(preferredHandle(query)))return 310;if(topicAlias(a,query))return 50;if(name===query+' official'||name===query+' oficial')return 250;return name===query?300:name.startsWith(query+' ')?200:name.includes(query)?100:0}),0);return artists.map((a,i)=>({a,i,score:score(a)})).sort((a,b)=>b.score-a.score||a.i-b.i).map(x=>x.a)}
 function rememberMatches(q,artists){for(const a of artists||[])if(exactName(a,normal(q))||topicAlias(a,normal(q)))remember(a)}
 
