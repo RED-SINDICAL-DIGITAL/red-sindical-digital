@@ -1,10 +1,10 @@
 (function(g){'use strict';const KEY='uadav_artist_discovery_v133',TTL=7*86400000,MAX=80,normal=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 function read(){try{const a=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(a)?a.filter(x=>x&&x.visible!==false&&Date.now()-Number(x.seen_at||0)<TTL).slice(0,MAX):[]}catch{return[]}}
-function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombre||a.nombre_artistico)||!(a.id||a.canal||a.channel_id))return;const item={id:String(a.id||'').slice(0,180),nombre:String(a.nombre||a.nombre_artistico).slice(0,180),nombre_artistico:String(a.nombre_artistico||a.nombre||'').slice(0,180),rubro:String(a.rubro||'Artista').slice(0,140),ciudad:String(a.ciudad||'').slice(0,140),foto:String(a.foto||a.thumbnail||'').slice(0,2000),portada:String(a.portada||'').slice(0,2000),bio:String(a.bio||'').slice(0,1200),canal:String(a.canal||a.channel_id||'').slice(0,100),discovered:a.existing===true?false:a.discovered===true,visible:true,seen_at:Date.now()};const key=identity(item);try{
+function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombre||a.nombre_artistico)||!(a.id||a.canal||a.channel_id))return;const item={id:String(a.id||'').slice(0,180),nombre:String(a.nombre||a.nombre_artistico).slice(0,180),nombre_artistico:String(a.nombre_artistico||a.nombre||'').slice(0,180),rubro:String(a.rubro||'Artista').slice(0,140),ciudad:String(a.ciudad||'').slice(0,140),foto:String(a.foto||a.thumbnail||'').slice(0,2000),portada:String(a.portada||'').slice(0,2000),bio:String(a.bio||'').slice(0,1200),bio_es:String(a.bio_es||'').slice(0,1200),canal:String(a.canal||a.channel_id||'').slice(0,100),discovered:a.existing===true?false:a.discovered===true,visible:true,seen_at:Date.now()};const key=identity(item);try{
  const recent=read();
  const previous=recent.find(x=>identity(x)===key);
  if(item.discovered&&previous?.discovered&&item.canal&&item.canal===previous.canal){
-  for(const field of ['foto','portada','bio'])if(!item[field])item[field]=previous[field]||'';
+  for(const field of ['foto','portada','bio','bio_es'])if(!item[field])item[field]=previous[field]||'';
  }
  localStorage.setItem(KEY,JSON.stringify([item,...recent.filter(x=>identity(x)!==key)].slice(0,MAX)));g.dispatchEvent(new Event('uadav:artist-discovered'))}catch{}}
 function identity(a){return a.canal||a.channel_id||a.id||normal(a.nombre||a.nombre_artistico)}
@@ -46,7 +46,7 @@ function profileHref(a){
 function fromChannelInfo(info){
  const channelId=String(info?.channelId||'');if(!/^UC[A-Za-z0-9_-]{22}$/.test(channelId))throw Error('No encontramos ese canal. Revisá el enlace o @usuario.');
  const name=String(info.nombre||info.title||info.name||'Canal de YouTube');
- return {id:'discover:'+channelId,canal:channelId,nombre:name,nombre_artistico:name,foto:info.foto||info.thumbnail||'',portada:info.portada||info.banner||'',bio:info.bio||info.description||'',rubro:'Creador',visible:true,discovered:true,generated:true,source:'Canal público de YouTube'};
+ return {id:'discover:'+channelId,canal:channelId,nombre:name,nombre_artistico:name,foto:info.foto||info.thumbnail||'',portada:info.portada||info.banner||'',bio:info.bio||info.description||'',bio_es:typeof info.bio_es==='string'?info.bio_es:'',rubro:info.rubro||'Creador',visible:true,discovered:true,generated:true,source:'Canal público de YouTube'};
 }
 
 
