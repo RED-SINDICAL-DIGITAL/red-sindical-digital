@@ -49,7 +49,7 @@ async function resolveTopic(query,profiles,api,videos=[]){
   const ids=new Set();
   for(const row of rows){
    const name=channelName(row.author||row.channelTitle||row.channel_name);
-   const id=channelRef(row.authorId||row.channelId||row.channel_id||row.channel_url);
+   const id=resultChannelRef(row);
    if(/^UC/.test(id)&&[key,key+' official',key+' oficial',key.replace(/ /g,'')+'vevo'].includes(name))ids.add(id);
   }
   return [...ids];
@@ -86,7 +86,7 @@ function channelRef(value){
 function profileHref(a){
  const stable=a.id&&!String(a.id).startsWith('discover:');
  if(stable&&!a.discovered)return '/artista.html?id='+encodeURIComponent(a.id);
- const ref=channelRef(a.canal||a.channel_id||a.youtube_url||a.youtube)||preferredHandle(a.nombre||a.nombre_artistico||a.name||a.title);
+ const ref=channelRef(a.canal||a.channel_id||a.youtube_url||a.youtube)||channelRef(String(a.id||'').replace(/^discover:/,''))||preferredHandle(a.nombre||a.nombre_artistico||a.name||a.title);
  return '/artista.html?'+(ref?'channel='+encodeURIComponent(ref):'discover='+encodeURIComponent(a.nombre||a.nombre_artistico||a.name||a.title||''));
 }
 function fromChannelInfo(info){
@@ -97,9 +97,22 @@ function fromChannelInfo(info){
 
 
 // Reuse explicit YouTube channel identities returned with search results. Never infer a channel from a name.
+function resultChannelRef(row){
+ return [row.authorId,row.channelId,row.channel_id,row.author_url,row.channel_url,row.authorUrl,row.channelUrl].map(channelRef).find(ref=>/^UC[A-Za-z0-9_-]{22}$/.test(ref))||'';
+}
+function channelMatch(rows,query){
+ const key=normal(query),matches=new Map();
+ for(const row of rows){
+  const name=normal(row.author||row.channelTitle||row.channel_name).replace(/\s*\((official|oficial)\)$/,' $1');
+  if(row.visible===false||row.review_level==='red'||![key,key+' official',key+' oficial',key.replace(/ /g,'')+'vevo'].includes(name))continue;
+  const id=resultChannelRef(row);
+  if(id)matches.set(id,row);
+ }
+ return matches.size===1?rememberChannel(matches.values().next().value):null;
+}
 function rememberChannel(result){
  if(!result||result.visible===false||result.review_level==='red')return null;
- const ref=channelRef(result.channelId||result.channel_id||result.authorId||result.author_url||result.channel_url||'');
+ const ref=resultChannelRef(result);
  if(!/^UC[A-Za-z0-9_-]{22}$/.test(ref))return null;
  const name=String(result.author||result.channelTitle||result.channel_name||'').trim();
  if(!name)return null;
@@ -119,5 +132,5 @@ function followedProfileHref(a,origin){
  return profileHref({...copy,discovered:true,nombre:saved?.searchParams.get('discover')||a.nombre||a.nombre_artistico||''});
 }
 
-g.UADAVArtistDiscovery={resolveTopic,directoryCards,preferredHandle,remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,rememberChannel,followedProfileHref};
+g.UADAVArtistDiscovery={channelMatch,resolveTopic,directoryCards,preferredHandle,remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,rememberChannel,followedProfileHref};
 })(globalThis);
