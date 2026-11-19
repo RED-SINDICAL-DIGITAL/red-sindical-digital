@@ -22,7 +22,7 @@ test('failed sources do not masquerade as a definitive empty result',async()=>{
 });
 test('partial source failure retains valid content while reporting incomplete search',async()=>{
  const h=setup(async path=>{if(path.startsWith('public/search'))return{...empty(),content:[{id:'valid',title:'Valid content'}]};throw Error('Temporary source failure')});await h.ctx.search();
- assert.equal(h.ctx.searchState.content.length,1);assert.match(h.ctx.searchStatusText(h.ctx.searchState),/1 resultados.*no respondieron/);
+ assert.equal(h.ctx.searchState.content.length,1);assert.match(h.ctx.searchStatusText(h.ctx.searchState),/1 resultado .*no respondieron/);
 });
 test('local Cartelera is still queried when federated feed fails',async()=>{
  const paths=[];const h=setup(async path=>{paths.push(path);if(path.startsWith('public/search'))return empty();if(path.startsWith('public/federated-feed'))throw Error('Feed offline');if(path==='cartelera')return[{id:'event',titulo:'Masterboy en escena'}];return[];});
