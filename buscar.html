@@ -38,7 +38,7 @@ let loadingMore=false;async function loadMore(){if(loadingMore||!searchState.has
 function syncSearchRoute(q){history.replaceState(null,'',location.pathname+'?q='+encodeURIComponent(q));if(parent!==window)parent.postMessage({type:'uadav:search-route',query:q},location.origin)}async function search(){const version=++searchVersion,q=$('q').value.trim();if(q.length<2){$('results').innerHTML='';$('status').textContent='Escribí al menos 2 caracteres.';return}syncSearchRoute(q);searchState={q,cursor:null,hasMore:false,content:[],artists:[],events:[],radios:[],discovered:null,pending:true,failures:0};renderSearch();const recordFailure=e=>{if(version===searchVersion&&![400,404].includes(Number(e?.status)))searchState.failures++;};try{
  const exact=UADAVArtistDiscovery.channelRef?.(q)||'';
  if(exact){try{const info=await api('youtube/channel_library?kind=info&id='+encodeURIComponent(exact));if(version!==searchVersion)return;const artist=UADAVArtistDiscovery.fromChannelInfo(info);if(exact.startsWith('UC')&&artist.canal!==exact)throw Error('Canal diferente al solicitado.');UADAVArtistDiscovery.remember(artist);searchState.artists=[artist]}catch{if(version!==searchVersion)return;searchState.failures++}if(version!==searchVersion)return;searchState.pending=false;searchState.completedAt=Date.now();renderSearch();return}
- const handle=UADAVArtistDiscovery.preferredHandle(q);
+ const handle=UADAVArtistDiscovery.preferredHandle?.(q);
  const preferred=handle?{nombre:'Masterboy',canal:handle,discovered:true,rubro:'Música'}:null;
  const knownArtist=preferred||UADAVArtistDiscovery.find?.(q);
  if(knownArtist){searchState.artists=[knownArtist];renderSearch()}
