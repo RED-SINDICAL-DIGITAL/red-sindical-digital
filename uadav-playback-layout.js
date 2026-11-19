@@ -94,10 +94,21 @@ const restoreBar=button('restorePlaybackBar','↑ Mostrar reproductor','Mostrar 
 foldedTools.append(restoreBar);
 document.body.append(foldedTools);
 function unfold(){delete document.body.dataset.playbackFold}
+function updateRestoreTitle(){
+ if(!document.body.dataset.playbackFold)return;
+ const name=label.textContent.trim();
+ const action='Mostrar reproductor';
+ const description=name?action+' · '+name:action;
+ restoreBar.textContent='↑ '+(name||action);
+ restoreBar.title=description;
+ restoreBar.setAttribute('aria-label',description);
+}
+new MutationObserver(updateRestoreTitle).observe(label,{childList:true,characterData:true,subtree:true});
 function hidePanel(){
  if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
  document.body.classList.remove('player-focus','player-theater','radio-player-focus','player-controls-idle');
  document.body.dataset.playbackFold='hidden';
+ updateRestoreTitle();
  restoreBar.focus();
 }
 function updateFoldControl(){
@@ -118,7 +129,8 @@ foldedStyle.textContent=`
 
 @media(min-width:1100px){
  body[data-playback-fold] #foldedPlaybackTools{position:fixed;right:16px;bottom:12px;z-index:1400;display:flex;gap:4px;padding:4px;background:#102031;border-radius:24px}
- #foldedPlaybackTools button{min-height:40px;border-radius:20px;padding:0 14px;background:#172d40;color:white;border:0;max-width:32ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #foldedPlaybackTools button:focus-visible{outline:2px solid #35c8ed;outline-offset:2px}
+ #foldedPlaybackTools button{cursor:pointer;min-height:44px;border-radius:20px;padding:0 14px;background:#172d40;color:white;border:0;max-width:32ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  body[data-page=app][data-playback-fold] #playbackBar,body[data-page=app][data-playback-fold] #radioNowSide,body[data-page=app][data-playback-fold] #mediaDock.active{display:none!important}
  body[data-page=app][data-playback-fold].has-side-player #viewWrap{margin-right:0!important;margin-bottom:0!important;height:calc(100dvh - 136px)!important}
 }`;
