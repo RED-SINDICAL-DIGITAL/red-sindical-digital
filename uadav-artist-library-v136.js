@@ -23,15 +23,30 @@ async function releaseMetadata(ref){
   if(!response.ok)throw Error('Discografía no disponible');
   return response.json();
  };
- const link=await get('url',{resource:'https://www.youtube.com/channel/'+ref,inc:'artist-rels'});
- const ids=[...new Set((link.relations||[]).map(row=>row.artist?.id).filter(Boolean))];
- if(ids.length!==1)return null;
- await new Promise(resolve=>setTimeout(resolve,1100));
- const data=await get('release-group',{artist:ids[0],type:'album',limit:'100'});
+ const knownChannels={
+  UCefMqcCMiUxvMxdBtIFd6uw:'9809d784-037f-46e7-8d2d-7ecad897f355',
+  'UCCUeTp5Qv9FF6apVk-t9kEA':'9809d784-037f-46e7-8d2d-7ecad897f355',
+  UCoIOOL7QKuBhQHVKL8y7BEQ:'f27ec8db-af05-4f36-916e-3d57f91ecf5e'
+ };
+ let artistId=knownChannels[ref];
+ if(!artistId){
+  for(const host of ['www.youtube.com','music.youtube.com']){
+   const query=new URLSearchParams({resource:'https://'+host+'/channel/'+ref,inc:'artist-rels',fmt:'json'});
+   const response=await fetch('https://musicbrainz.org/ws/2/url?'+query,{signal:AbortSignal.timeout(4500)});
+   if(response.status!==404&&!response.ok)throw Error('Discografía no disponible');
+   const link=response.ok?await response.json():{};
+   const ids=[...new Set((link.relations||[]).map(row=>row.artist?.id).filter(Boolean))];
+   if(ids.length>1)return null;
+   await new Promise(resolve=>setTimeout(resolve,1100));
+   if(ids.length){artistId=ids[0];break}
+  }
+ }
+ if(!artistId)return null;
+ const data=await get('release-group',{artist:artistId,type:'album',limit:'100'});
  const items=(data['release-groups']||[]).filter(x=>x.title&&/^[a-f0-9-]{36}$/i.test(x.id)).map(x=>({id:x.id,titulo:x.title,release_year:(x['first-release-date']||'').slice(0,4),metadata_only:true}));
  return items.length?{channel_id:ref,kind:'releases',items,next_cursor:null}:null;
 }
-async function request(ref,kind,cursor,artistName=''){const api=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/',path='youtube/channel_library?id='+encodeURIComponent(ref)+'&kind='+kind+(cursor?'&cursor='+encodeURIComponent(cursor):'');const loader=async()=>{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),12000);try{let r,d;try{r=await fetch(api+path,{signal:ctl.signal,cache:'no-store'});d=await r.json()}catch(error){if(cursor||!['videos','releases'].includes(kind))throw error;r={ok:false,status:503}}if(kind==='releases'&&!cursor&&r.status>=500){const metadata=await releaseMetadata(ref);if(metadata)return metadata}if(r.status>=500&&kind==='videos'&&!cursor&&artistName){
+async function request(ref,kind,cursor,artistName=''){const api=window.UADAV_API_BASE||'https://uadav-api.uadavstream.workers.dev/api/',path='youtube/channel_library?id='+encodeURIComponent(ref)+'&kind='+kind+(cursor?'&cursor='+encodeURIComponent(cursor):'');const loader=async()=>{const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),12000);try{let r,d;try{r=await fetch(api+path,{signal:ctl.signal,cache:'no-store'});d=await r.json()}catch(error){if(cursor||!['videos','releases'].includes(kind))throw error;r={ok:false,status:503}}if(kind==='releases'&&!cursor&&(r.status>=500||(r.ok&&Array.isArray(d?.items)&&!d.items.length&&!d.next_cursor))){try{const metadata=await releaseMetadata(ref);if(metadata)return metadata}catch(error){if(!r.ok)throw error}}if(r.status>=500&&kind==='videos'&&!cursor&&artistName){
  const secondary=await fetch(api+'youtube/search?q='+encodeURIComponent(artistName+' official music videos'),{signal:AbortSignal.timeout(10000)});
  if(secondary.ok){
   const results=await secondary.json();
