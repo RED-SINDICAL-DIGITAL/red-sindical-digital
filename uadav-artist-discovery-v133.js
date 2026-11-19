@@ -44,10 +44,11 @@ async function resolveTopic(query,profiles,api,videos=[]){
  const key=normal(query);
  const topic=a=>!a.claimed&&!a.self_managed&&[a.nombre,a.nombre_artistico].some(n=>normal(n).replace(/\s+[-–—]\s*topic$/,'')===key&&/[-–—]\s*topic$/i.test(n||''));
  if(!profiles.some(topic)||profiles.some(a=>!topic(a)&&exactName(a,key)))return null;
+ const channelName=value=>normal(value).replace(/\s*\((official|oficial)\)$/,' $1').trim();
  const candidates=rows=>{
   const ids=new Set();
   for(const row of rows){
-   const name=normal(row.author||row.channelTitle||row.channel_name);
+   const name=channelName(row.author||row.channelTitle||row.channel_name);
    const id=channelRef(row.authorId||row.channelId||row.channel_id||row.channel_url);
    if(/^UC/.test(id)&&[key,key+' official',key+' oficial',key.replace(/ /g,'')+'vevo'].includes(name))ids.add(id);
   }
@@ -61,7 +62,7 @@ async function resolveTopic(query,profiles,api,videos=[]){
   }
   if(ids.length!==1)return null;
   const info=await api('youtube/channel_library?kind=info&id='+encodeURIComponent(ids[0]));
-  const name=normal(info.nombre||info.title),bio=normal(info.bio||info.description);
+  const name=channelName(info.nombre||info.title),bio=normal(info.bio||info.description);
   if(info.channelId!==ids[0]||![key,key+' official',key+' oficial',key.replace(/ /g,'')+'vevo'].includes(name))return null;
   if(/\b(unofficial|fanmade|fan channel|fan account|canal de fans|tributo|tribute)\b/.test(bio))return null;
   if(!(info.isOfficialArtist===true||name.endsWith('vevo')||(/\b(official|oficial)\b/.test(bio)&&bio.includes(key))))return null;
