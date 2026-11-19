@@ -9,6 +9,23 @@ function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombr
  localStorage.setItem(KEY,JSON.stringify([item,...recent.filter(x=>identity(x)!==key)].slice(0,MAX)));g.dispatchEvent(new Event('uadav:artist-discovered'))}catch{}}
 function identity(a){return a.canal||a.channel_id||a.id||normal(a.nombre||a.nombre_artistico)}
 function merge(catalog=[]){const seen=new Set(),result=[];const ordered=[...read().map(x=>catalog.find(a=>identity(a)===identity(x)||(a.id&&a.id===x.id))||x),...catalog];for(const a of ordered){if(!a||a.visible===false||!(a.id||a.canal||a.channel_id))continue;const keys=[identity(a),a.id].filter(Boolean);if(!keys.length||keys.some(k=>seen.has(k)))continue;keys.forEach(k=>seen.add(k));result.push(a)}return result}
+// Group display cards only. Channel IDs still address their own catalogs.
+function directoryCards(artists){
+ const suffix=/\s+[-–—]\s*topic$/i;
+ const names=a=>[a.nombre,a.nombre_artistico].filter(Boolean).map(normal);
+ const isTopic=a=>!a.claimed&&!a.self_managed&&names(a).some(n=>suffix.test(n));
+ const candidates=new Map();
+ for(const artist of artists){
+  if(isTopic(artist))continue;
+  const aliases=names(artist).map(n=>n.replace(/\s+(?:official|oficial)$/,''));
+  if(aliases.includes('sandra lauer cretu')&&
+     (names(artist).includes('sandra lauer cretu official')||normal(artist.canal)==='@sandralauercretuofficial87'))aliases.push('sandra');
+  for(const alias of new Set(aliases)){
+   candidates.set(alias,(candidates.get(alias)||0)+1);
+  }
+ }
+ return artists.filter(a=>!isTopic(a)||!names(a).some(n=>suffix.test(n)&&candidates.get(n.replace(suffix,'').trim())===1));
+}
 function exactName(a,query){
  return [a.nombre,a.nombre_artistico].some(n=>n&&normal(n)===query);
 }
@@ -73,5 +90,5 @@ function followedProfileHref(a,origin){
  return profileHref({...copy,discovered:true,nombre:saved?.searchParams.get('discover')||a.nombre||a.nombre_artistico||''});
 }
 
-g.UADAVArtistDiscovery={preferredHandle,remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,rememberChannel,followedProfileHref};
+g.UADAVArtistDiscovery={directoryCards,preferredHandle,remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,rememberChannel,followedProfileHref};
 })(globalThis);
