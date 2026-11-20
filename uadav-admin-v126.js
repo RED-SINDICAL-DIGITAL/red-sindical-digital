@@ -8,12 +8,12 @@ if(['integration-staging-preserve.uadav-stream-staging.pages.dev','uadavstream.c
   const demoActions=document.createElement('div');
   demoActions.className='admin-demo-actions';
   demoActions.setAttribute('role','group');
-  demoActions.setAttribute('aria-label','Acceso a la demo');
+  demoActions.setAttribute('aria-label','Acceso a la plataforma');
   byId('logoutSide').closest('.sidebar-user').before(demoActions);
   const manage=document.createElement('button');
   manage.className='btn btn-ghost';
   manage.type='button';
-  manage.textContent='Invitaciones y acceso';
+  manage.textContent='Acceso a la plataforma';
   demoActions.append(manage);
   manage.onclick=async()=>{
     const key=await new Promise(resolve=>{
@@ -30,7 +30,7 @@ if(['integration-staging-preserve.uadav-stream-staging.pages.dev','uadavstream.c
     });
     if(!key)return;
     const dialog=document.createElement('dialog');dialog.className='demo-owner-panel';
-    const heading=document.createElement('h2');heading.textContent='Invitaciones y acceso';
+    const heading=document.createElement('h2');heading.textContent='Acceso a la plataforma';
     const status=document.createElement('p');status.setAttribute('role','status');
     dialog.append(heading,status);
     const action=(label,callback,parent=dialog)=>{
@@ -40,39 +40,19 @@ if(['integration-staging-preserve.uadav-stream-staging.pages.dev','uadavstream.c
     const call=async(name,body)=>{
       const response=await fetch('/demo/admin/'+name,{method:'POST',headers:{Authorization:'Bearer '+sessionStorage.getItem('uadav_admin_v8'),'X-Demo-Owner':key},body});
       const type=response.headers.get('Content-Type')?.split(';')[0].trim();
-      if((type==='text/plain' && response.headers.get('X-UADAV-Response')==='demo-v1') || (type==='application/json' && response.ok && name==='lista'))return response;
+      if((type==='text/plain' && response.headers.get('X-UADAV-Response')==='demo-v1'))return response;
       const ray=response.headers.get('cf-ray');
       return new Response('Cloudflare no pudo completar la operación.'+(ray?' Referencia: '+ray:''),{status:502});
     };
     action('Cerrar',()=>dialog.close());
     document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove(),{once:true});dialog.showModal();
     try{
-      const result=await call('lista');if(!result.ok){status.textContent=await result.text();if(result.status===403)action('Volver a ingresar',()=>{dialog.close();manage.click()});return}
-      const rows=await result.json();status.textContent=rows.length?'Solicitudes pendientes':'Sin solicitudes pendientes.';
+      const result=await call('estado');status.textContent=await result.text();if(!result.ok)return;
     for(const [label,route] of [['Pausar acceso','pausar'],['Reabrir acceso','reabrir']]){
-      action(label,async()=>{if(!window.confirm(label+' para los invitados?'))return;status.textContent=await (await call(route)).text()});
+      action(label,async()=>{if(!window.confirm(label+' a la plataforma?'))return;status.textContent=await (await call(route)).text()});
     }
-      for(const item of rows){
-        const row=document.createElement('p');row.textContent=item.email+' ';dialog.append(row);
-        action('Enviar invitación',async()=>{const r=await call('invitar',item.id);status.textContent=await r.text();if(r.ok)row.remove()},row);
-      }
-    }catch{status.textContent='No se pudo cargar la lista.'}
+    }catch{status.textContent='No se pudo consultar el estado de la plataforma.'}
   };
-  const button=document.createElement('button');
-  button.type='button';
-  button.textContent='Configurar código de demo';
-  button.className='btn btn-ghost';
-  demoActions.append(button);
-  button.addEventListener('click',async()=>{
-    const code=window.prompt('Ingresá el código compartido para la demo (6 a 128 caracteres).');
-    if(!code)return;
-    button.disabled=true;
-    try{
-      const response=await fetch('/demo/configurar',{method:'POST',headers:{Authorization:'Bearer '+sessionStorage.getItem('uadav_admin_v8')},body:code});
-      window.alert(response.headers.get('content-type')?.includes('text/plain') ? await response.text() : 'La configuración de la demo todavía no está disponible.');
-    }catch{window.alert('No se pudo conectar. Volvé a intentar.')}
-    finally{button.disabled=false}
-  });
 }
 const tv=byId('adminTV'),storageKey=document.body.dataset.adminPreview?'uadav_admin_preview_tv_v1':'uadav_admin_tv_v1';const setTV=enabled=>{document.body.dataset.adminTv=String(enabled);tv?.setAttribute('aria-pressed',String(enabled));tv?.setAttribute('aria-label',enabled?'Desactivar vista para TV':'Activar vista para TV');try{localStorage.setItem(storageKey,String(enabled))}catch{}};
 let saved=false;try{saved=localStorage.getItem(storageKey)==='true'}catch{}setTV(saved);tv?.addEventListener('click',()=>setTV(document.body.dataset.adminTv!=='true'));
