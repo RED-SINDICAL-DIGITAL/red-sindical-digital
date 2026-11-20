@@ -24,7 +24,7 @@ test('request, approve, redeem once, pause an existing session and recover',asyn
     ticket=JSON.parse(options.body).text.split('#').pop();return Response.json({id:'fixture'});
   });
   for(let i=0;i<2;i++)assert.equal((await visit('/demo/solicitar',post(new URLSearchParams({email:'qa@example.invalid'})))).status,200);
-  assert.equal((await visit('/demo/admin/lista',post(''))).status,403);
+  assert.equal((await visit('/demo/admin/lista',post(''))).status,401);
   const rows=await (await visit('/demo/admin/lista',post('',owner))).json();
   assert.equal(rows.length,1);
   assert.equal((await visit('/demo/admin/invitar',post(rows[0].id,owner))).status,200);
