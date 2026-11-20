@@ -892,7 +892,7 @@ tabs.forEach((tab,index)=>{
   select(tabs[target].dataset.profileJobsTab,true);
  });
 });
-select('applications');
+select(new URLSearchParams(location.search).get('tab')==='ofertas'?'offers':'applications');
 })();
 </script><script>
 document.querySelector('.profile-view-back').addEventListener('click',event=>{
