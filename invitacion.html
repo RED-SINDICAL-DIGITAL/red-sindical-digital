@@ -8,11 +8,18 @@
 <form id="request" method="post" action="/demo/solicitar"><label for="email">¿A qué correo te enviamos la invitación?</label><input id="email" name="email" type="email" autocomplete="email" maxlength="254" required><button>Solicitar invitación</button></form>
 <form id="redeem" method="post" action="/demo/canjear" hidden><input type="hidden" name="ticket"><button>Entrar con mi invitación</button></form>
 <details id="tester"><summary>Ya tengo un código</summary><form method="post" action="/demo/entrar"><label for="code">Código de invitación</label><input id="code" name="code" required type="password" maxlength="128"><button>Entrar a la demo</button></form></details>
+<a id="requestLink" hidden href="/invitacion">Solicitar una invitación por correo</a>
 <p id="status" role="status"></p></main>
 <script>
 const form=document.getElementById('request'),redeem=document.getElementById('redeem'),statusText=document.getElementById('status');
 if(location.hash.length>1){redeem.elements.ticket.value=location.hash.slice(1);history.replaceState(null,'',location.pathname);form.hidden=true;redeem.hidden=false;document.getElementById('tester').hidden=true}
-if(location.search==='?codigo')document.getElementById('tester').open=true;
+else if(new URLSearchParams(location.search).has('codigo')){
+  const tester=document.getElementById('tester');
+  form.hidden=true;
+  tester.open=true;
+  tester.querySelector('summary').hidden=true;
+  document.getElementById('requestLink').hidden=false;
+}
 if(location.search==='?estado=espera')statusText.textContent='El acceso a la demo está en pausa o tu invitación venció.';
 form.addEventListener('submit',async event=>{
   event.preventDefault();
