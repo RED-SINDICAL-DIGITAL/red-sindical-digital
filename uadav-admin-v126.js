@@ -4,7 +4,48 @@ function setMenu(open){const side=byId('sidebar'),menu=byId('mobileMenu'),back=b
 function pick(rect,candidates,key){const axis=key==='ArrowLeft'||key==='ArrowRight'?'x':'y',sign=key==='ArrowLeft'||key==='ArrowUp'?-1:1,other=axis==='x'?'y':'x';let best=null,score=Infinity;for(const c of candidates){const distance=(c[axis]-rect[axis])*sign;if(distance<=1)continue;const cross=Math.abs(c[other]-rect[other]);const weight=distance+cross*2+Math.max(0,cross-distance)*4;if(weight<score){score=weight;best=c}}return best}
 window.UADAVAdminLayout={setMenu,next:pick};
 function init(){if(document.body?.dataset.page!=='admin')return;
-if(location.hostname==='integration-staging-preserve.uadav-stream-staging.pages.dev' && byId('logoutSide')){
+if(['integration-staging-preserve.uadav-stream-staging.pages.dev','uadavstream.com.ar','www.uadavstream.com.ar'].includes(location.hostname) && byId('logoutSide')){
+  const manage=document.createElement('button');
+  manage.type='button';
+  manage.textContent='Invitaciones y acceso';
+  byId('logoutSide').before(manage);
+  manage.onclick=async()=>{
+    const key=await new Promise(resolve=>{
+      const gate=document.createElement('dialog'),form=document.createElement('form');
+      form.method='dialog';
+      const label=document.createElement('label'),input=document.createElement('input');
+      label.textContent='Clave privada del propietario';input.type='password';input.required=true;label.append(input);
+      const enter=document.createElement('button'),cancel=document.createElement('button');
+      enter.textContent='Ingresar';cancel.textContent='Cancelar';cancel.type='button';cancel.onclick=()=>gate.close();
+      form.append(label,enter,cancel);gate.append(form);document.body.append(gate);
+      form.onsubmit=e=>{e.preventDefault();gate.close('ok')};
+      gate.onclose=()=>{resolve(gate.returnValue==='ok'?input.value:'');gate.remove()};
+      gate.showModal();input.focus();
+    });
+    if(!key)return;
+    const dialog=document.createElement('dialog');
+    const heading=document.createElement('h2');heading.textContent='Invitaciones y acceso';
+    const status=document.createElement('p');status.setAttribute('role','status');
+    dialog.append(heading,status);
+    const action=(label,callback,parent=dialog)=>{
+      const control=document.createElement('button');control.textContent=label;control.type='button';parent.append(control);
+      control.onclick=async()=>{control.disabled=true;try{await callback()}catch{status.textContent='No se pudo conectar.'}finally{control.disabled=false}};
+    };
+    const call=(name,body)=>fetch('/demo/admin/'+name,{method:'POST',headers:{Authorization:'Bearer '+sessionStorage.getItem('uadav_admin_v8'),'X-Demo-Owner':key},body});
+    for(const [label,route] of [['Pausar acceso','pausar'],['Reabrir acceso','reabrir']]){
+      action(label,async()=>{if(!window.confirm(label+' para los invitados?'))return;status.textContent=await (await call(route)).text()});
+    }
+    action('Cerrar',()=>dialog.close());
+    document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove(),{once:true});dialog.showModal();
+    try{
+      const result=await call('lista');if(!result.ok){status.textContent=await result.text();return}
+      const rows=await result.json();status.textContent=rows.length?'Solicitudes pendientes':'Sin solicitudes pendientes.';
+      for(const item of rows){
+        const row=document.createElement('p');row.textContent=item.email+' ';dialog.append(row);
+        action('Enviar invitación',async()=>{const r=await call('invitar',item.id);status.textContent=await r.text();if(r.ok)row.remove()},row);
+      }
+    }catch{status.textContent='No se pudo cargar la lista.'}
+  };
   const button=document.createElement('button');
   button.type='button';
   button.textContent='Configurar código de demo';
