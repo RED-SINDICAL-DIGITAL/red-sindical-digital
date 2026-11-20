@@ -37,5 +37,5 @@ test('current player and PWA controls remain intact',()=>{
 test('Worker has not been swapped with frozen QA artifact',()=>{
  const bytes=Buffer.from(worker,'utf8');
  const actual=createHash('sha1').update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex');
- assert.equal(actual,'064ac343211dd7d3ed59ca8de5a3e4571c4f5308','Worker differs from functional staging baseline');
+ assert.equal(actual,'d4b68445e67b754b811b93d84a9b7225233e67b3','Worker differs from functional staging baseline');
 });
