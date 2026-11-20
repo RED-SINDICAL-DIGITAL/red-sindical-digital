@@ -22,4 +22,16 @@ await Promise.all([nodes.noticeReadAll.onclick(),nodes.noticeReadAll.onclick()])
 pendingRead(snapshot(false));await earlier;
 assert.equal(updates,1);assert.equal(nodes.noticeToggle.textContent,'🔔 1 aviso nuevo');
 assert(texts(nodes.noticeList).includes('Recién llegado'));
+let confirmSingle,singleWrites=0;
+ctx.fetch=async(_,opt)=>{
+ if(opt.method==='PATCH'){singleWrites++;return new Promise(resolve=>confirmSingle=resolve)}
+ return snapshot(false);
+};
+await nodes.noticeRefresh.onclick();
+const single=nodes.noticeList.children[0].children.find(n=>n.textContent==='Marcar leído');
+const saving=single.onclick();await single.onclick();
+await nodes.noticeRefresh.onclick();
+ctx.fetch=async()=>snapshot(true);
+confirmSingle({ok:true,json:async()=>({success:true})});await saving;
+assert.equal(singleWrites,1);assert.equal(nodes.noticeToggle.textContent,'🔔 Sin avisos nuevos');
 map.clear();events.storage.forEach(fn=>fn({key:null}));assert.equal(nodes.accountNotices.hidden,true);assert.equal(nodes.noticeList.children.length,0);
