@@ -15,10 +15,21 @@ if(location.hash.length>1){redeem.elements.ticket.value=location.hash.slice(1);h
 if(location.search==='?codigo')document.getElementById('tester').open=true;
 if(location.search==='?estado=espera')statusText.textContent='El acceso a la demo está en pausa o tu invitación venció.';
 form.addEventListener('submit',async event=>{
-  event.preventDefault();const button=form.querySelector('button');button.disabled=true;
-  try{const r=await fetch(form.action,{method:'POST',body:new FormData(form)});statusText.textContent=await r.text();if(r.ok)form.hidden=true}
-  catch{statusText.textContent='No se pudo enviar. Volvé a intentar.'}
-  finally{button.disabled=false}
+  event.preventDefault();
+  const button=form.querySelector('button');
+  if(button.disabled)return;
+  button.disabled=true;
+  statusText.textContent='Enviando tu solicitud…';
+  try {
+    const response=await fetch(form.action,{method:'POST',body:new FormData(form)});
+    if(response.headers.get('X-UADAV-Response')!=='demo-v1')throw new Error();
+    statusText.textContent=await response.text();
+    if(response.ok)form.hidden=true;
+  } catch {
+    statusText.textContent='No pudimos confirmar tu solicitud. Volvé a intentar con el mismo correo.';
+  } finally {
+    button.disabled=false;
+  }
 });
 </script>
 </body>
