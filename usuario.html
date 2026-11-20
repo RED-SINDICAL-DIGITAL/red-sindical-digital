@@ -539,7 +539,7 @@ body[data-page] a.profile-view-back:hover {text-decoration:underline}
  <button type="button" role="tab" aria-selected="false" aria-controls="profileJobsOffers" id="profileJobsTabOffers" data-profile-jobs-tab="offers" tabindex="-1">Ofertas</button>
  </div>
  <div id="profileJobsApplications" role="tabpanel" aria-labelledby="profileJobsTabApplications" class="u2-work-pane">
- <div class="u2-list-group"><div class="u2-list-header"><h3>Consultar una postulación</h3><p class="muted">Ingresá con el comprobante que recibiste al postularte.</p></div>
+ <div id="deviceApplications"></div><div class="u2-list-group"><div class="u2-list-header"><h3>Consultar una postulación</h3><p class="muted">Ingresá con el comprobante que recibiste al postularte.</p></div>
  <button class="chip active" id="profileJobImportBtn" type="button">Abrir comprobante (.txt)</button>
  <input type="file" id="profileJobImportFile" accept=".txt,text/plain" hidden aria-label="Seleccionar comprobante privado de postulación">
  <p id="profileJobImportStatus" class="muted" role="status"></p>
@@ -643,7 +643,7 @@ out.textContent='Estado: '+(labels[data.estado]||String(data.estado||'Sin inform
 finally{document.getElementById('profileJobSecret').value='';busy=false;submit.disabled=false;}
 });
 })();
-</script><script src="/uadav-jobs-account.js?v=20261113-session"></script><script>
+</script><script src="/uadav-jobs-account.js?v=20261120-device"></script><script>
 /* Progressive disclosure: the existing modules keep their DOM and operate as before. */
 (()=>{'use strict';
 const panels=['mis-trabajos','mi-artista'];
