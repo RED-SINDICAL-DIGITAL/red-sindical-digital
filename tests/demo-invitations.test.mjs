@@ -17,16 +17,22 @@ test('request, approve, redeem once, pause an existing session and recover',asyn
   const visit=(path,options={})=>onRequest({env,next:()=>new Response('Contenido'),request:new Request(origin+path,options)});
   const post=(body,headers={})=>({method:'POST',headers:{Origin:origin,...headers},body});
   const owner={Authorization:'Bearer fixture','X-Demo-Owner':env.DEMO_OWNER_KEY};
-  let ticket;
+  let ticket, attempts=0;
   t.mock.method(globalThis,'fetch',async(url,options)=>{
     if(url.endsWith('/api/admin_check'))return Response.json({success:true,role:'admin_nacional'});
-    assert.equal(url,'https://api.resend.com/emails');
-    ticket=JSON.parse(options.body).text.split('#').pop();return Response.json({id:'fixture'});
+    assert.equal(url,'https://api.brevo.com/v3/smtp/email');
+    assert.equal(options.headers['api-key'],'fixture-mail');
+    const payload=JSON.parse(options.body);
+    assert.equal(payload.sender.email,env.DEMO_FROM);
+    assert.deepEqual(payload.to,[{email:'qa@example.invalid'}]);
+    if (++attempts===1) return new Response(null,{status:401});
+    ticket=payload.textContent.split('#').pop();return Response.json({messageId:'fixture'},{status:201});
   });
   for(let i=0;i<2;i++)assert.equal((await visit('/demo/solicitar',post(new URLSearchParams({email:'qa@example.invalid'})))).status,200);
   assert.equal((await visit('/demo/admin/lista',post(''))).status,401);
   const rows=await (await visit('/demo/admin/lista',post('',owner))).json();
   assert.equal(rows.length,1);
+  assert.equal((await visit('/demo/admin/invitar',post(rows[0].id,owner))).status,502);
   assert.equal((await visit('/demo/admin/invitar',post(rows[0].id,owner))).status,200);
   const redeem=()=>visit('/demo/canjear',post(new URLSearchParams({ticket})));
   const ok=await redeem(); assert.equal(ok.status,303);
