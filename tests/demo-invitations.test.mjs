@@ -41,3 +41,14 @@ test('request, approve, redeem once, pause an existing session and recover',asyn
   env.DEMO_EMERGENCY_PAUSE='1';assert.equal((await state()).status,503);
   assert.equal((await visit('/demo/admin/lista',post('',owner))).status,200);
 });
+test('admin handles gateway HTML, network failures and an unavailable D1 list',async t=>{
+  const origin='https://integration-staging-preserve.uadav-stream-staging.pages.dev';
+  const request=new Request(origin+'/demo/admin/lista',{method:'POST',headers:{Origin:origin,Authorization:'Bearer fixture','X-Demo-Owner':'fixture'}});
+  const env={DEMO_OWNER_KEY:'fixture',DEMO_DB:{prepare(){throw Error('fixture')}}};
+  const mock=t.mock.method(globalThis,'fetch',async()=>new Response('<html>gateway</html>'));
+  assert.equal((await onRequest({request,env})).status,502);
+  mock.mock.mockImplementation(async()=>{throw Error('network')});
+  assert.equal((await onRequest({request,env})).status,502);
+  env.DEMO_ADMIN_API={fetch:async()=>Response.json({success:true,role:'admin_nacional'})};
+  assert.equal((await onRequest({request,env})).status,503);
+});
