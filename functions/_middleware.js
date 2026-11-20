@@ -33,10 +33,12 @@ export async function onRequest({request, env, next}) {
   if (ownerRoute) {
     if (!sameOrigin) return reply('Solicitud inválida.',403);
     const authorization = request.headers.get('Authorization');
-    if (!authorization?.startsWith('Bearer ') || !env.DEMO_OWNER_KEY || request.headers.get('X-Demo-Owner') !== env.DEMO_OWNER_KEY) return reply('Acceso reservado al propietario.',403);
+    if (!authorization?.startsWith('Bearer ')) return reply('Volvé a ingresar al Admin.',401);
     const check = await fetch(adminApi,{headers:{Authorization:authorization},redirect:'error'});
     const account = check.ok && await check.json();
-    if (!account?.success || account.role !== 'admin_nacional') return reply('Acceso denegado.',403);
+    if (!account?.success || account.role !== 'admin_nacional') return reply('Volvé a ingresar con la cuenta de administración nacional.',403);
+    if (!env.DEMO_OWNER_KEY) return reply('Falta configurar DEMO_OWNER_KEY en Pages para este entorno.',503);
+    if (request.headers.get('X-Demo-Owner') !== env.DEMO_OWNER_KEY) return reply('La clave del propietario no coincide. Volvé a ingresarla.',403);
     if (!db) return reply('Falta configurar la base de invitaciones.',503);
     if (path === '/demo/admin/lista') {
       const rows = await db.prepare('SELECT id,email FROM demo_requests WHERE sent IS NULL AND redeemed IS NULL ORDER BY created LIMIT 100').all();
