@@ -40,7 +40,7 @@ if(['integration-staging-preserve.uadav-stream-staging.pages.dev','uadavstream.c
     const call=async(name,body)=>{
       const response=await fetch('/demo/admin/'+name,{method:'POST',headers:{Authorization:'Bearer '+sessionStorage.getItem('uadav_admin_v8'),'X-Demo-Owner':key},body});
       const type=response.headers.get('Content-Type')?.split(';')[0].trim();
-      if(type==='text/plain' || (type==='application/json' && response.ok && name==='lista'))return response;
+      if((type==='text/plain' && response.headers.get('X-UADAV-Response')==='demo-v1') || (type==='application/json' && response.ok && name==='lista'))return response;
       const ray=response.headers.get('cf-ray');
       return new Response('Cloudflare no pudo completar la operación.'+(ray?' Referencia: '+ray:''),{status:502});
     };
