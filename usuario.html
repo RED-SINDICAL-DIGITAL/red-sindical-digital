@@ -680,7 +680,7 @@ finally{document.getElementById('profileJobSecret').value='';busy=false;submit.d
       actions.className='job-account-actions';
       const link=document.createElement('a');
       link.className='chip active';link.textContent='Ver postulantes';
-      link.href='/bolsa-trabajo.html?oferta='+encodeURIComponent(id)+'#ownerInbox';
+      link.href='/bolsa-trabajo.html?misPostulantes='+encodeURIComponent(id)+'#ownerInbox';
       const forget=document.createElement('button');
       forget.type='button';forget.className='chip';forget.textContent='Quitar de este dispositivo';
       forget.onclick=()=>{try{localStorage.removeItem(storageKey);card.remove();}catch{forget.textContent='No se pudo quitar. Reintentar';}};
