@@ -5,7 +5,7 @@ const label=document.createElement('button');label.type='button';label.setAttrib
 function button(id,text,aria,fn){const b=document.createElement('button');b.type='button';b.id=id;b.textContent=text;b.setAttribute('aria-label',aria);b.onclick=fn;return b}
 function command(name,args=[]){if(radioDock.classList.contains('active')){const audio=$('radioAudio');if(name==='playVideo')(host()?.resumeRadio?.()||audio?.play())?.catch(()=>{});if(name==='pauseVideo')audio?.pause();return}if(stage.querySelector('iframe[data-uadav-video]')&&window.UADAVVideoFeedback?.command?.(name,args))return;const node=stage.querySelector('audio,video,iframe');if(node?.matches('iframe[data-uadav-playlist]')&&window.UADAVPlaylistPlayer?.command?.(name,args))return;if(node?.matches('audio,video')){if(name==='playVideo')node.play().catch(()=>{});if(name==='pauseVideo')node.pause();return}if(node?.matches('iframe[data-uadav-video],iframe[data-uadav-playlist]')){node.contentWindow?.postMessage(JSON.stringify({event:'command',func:name,args}),'https://www.youtube.com')}}
 let playing=false;const previous=button('playbackPrevious','⏮︎','Contenido anterior',()=>queue.state().items.length?queue.move(-1):window.UADAVPlaylistPlayer?.step?.(-1)),toggle=button('playbackToggle','▶︎','Reproducir contenido',()=>command((radioDock.classList.contains('active')?!$('radioAudio').paused:playing)?'pauseVideo':'playVideo')),next=button('playbackNext','⏭︎','Contenido siguiente',()=>queue.state().items.length?queue.move(1):window.UADAVPlaylistPlayer?.step?.(1));
-const automatic=document.createElement('label');automatic.className='queue-automatic';const check=document.createElement('input');check.type='checkbox';check.checked=true;check.onchange=()=>{if(!check.checked)repeatMode=0;queue.automatic(check.checked);try{localStorage.setItem('uadav_autoplay_v1',check.checked?'1':'0')}catch{}};automatic.append(check,document.createTextNode('Continuar automáticamente'));
+const automatic=document.createElement('label');automatic.className='queue-automatic';const check=document.createElement('input');check.type='checkbox';check.checked=true;check.onchange=()=>{if(!check.checked)repeatMode=0;queue.automatic(check.checked);try{localStorage.setItem('uadav_autoplay_v1',check.checked?'1':'0')}catch{}};automatic.append(check,document.createTextNode('Reproducir el siguiente tema'));
 controls.append(previous,toggle,next,automatic);const progress=document.createElement('input');progress.id='playbackProgress';progress.type='range';progress.min='0';progress.max='0';progress.step='1';progress.value='0';progress.hidden=true;progress.setAttribute('aria-label','Posición de reproducción');progress.oninput=()=>{const node=stage.querySelector('audio,video,iframe');if(node?.matches('audio,video')&&Number.isFinite(node.duration))node.currentTime=Number(progress.value);else command('seekTo',[Number(progress.value),true])};const volume=document.createElement('input');volume.id='playbackVolume';volume.type='range';volume.min='0';volume.max='1';volume.step='.05';volume.value='.85';volume.setAttribute('aria-label','Volumen del contenido');volume.oninput=()=>{const node=radioDock.classList.contains('active')?$('radioAudio'):stage.querySelector('audio,video,iframe');if(node?.matches('audio,video'))node.volume=Number(volume.value);else command('setVolume',[Number(volume.value)*100])};controls.append(volume);const timeline=document.createElement('div');timeline.className='playback-timeline';const elapsed=document.createElement('time'),durationLabel=document.createElement('time');elapsed.id='playbackElapsed';durationLabel.id='playbackDuration';elapsed.textContent='0:00';durationLabel.textContent='--:--';timeline.append(elapsed,progress,durationLabel);bar.append(label,controls,timeline);document.body.append(bar);
 function position(time,duration){if(dragging||Date.now()<seekUntil)return;const stable=timelineState.sample(time,duration);progress.hidden=false;progress.disabled=stable.duration<=0;elapsed.textContent=window.UADAVPlaybackQueue.formatTime(stable.time);durationLabel.textContent=stable.duration?window.UADAVPlaybackQueue.formatTime(stable.duration):'--:--';progress.setAttribute('aria-valuetext',elapsed.textContent+' de '+durationLabel.textContent);progress.max=String(stable.duration||1);progress.value=String(stable.time)}
 progress.addEventListener('pointerdown',()=>{dragging=true});for(const event of ['pointerup','pointercancel','blur'])window.addEventListener(event,()=>{dragging=false});progress.addEventListener('input',()=>{seekUntil=Date.now()+800;elapsed.textContent=window.UADAVPlaybackQueue.formatTime(Number(progress.value));timelineState.sample(Number(progress.value),Number(progress.max))});
@@ -76,7 +76,7 @@ function iconButton(b,name){b.replaceChildren(svg(name));b.title=b.getAttribute(
 for(const [b,name]of [[previous,'previous'],[next,'next'],[toggle,playing?'pause':'play'],[qButton,'queue'],[saveButton,'playlist']])iconButton(b,name);
 iconButton(qClose,'remove');iconButton($('closeMedia'),'remove');iconButton($('radioSideFold'),'down');iconButton(sideClose,'remove');iconButton(sideFullscreen,'expand');const metadata=document.createElement('div');metadata.className='playback-metadata';const cover=document.createElement('img'),author=document.createElement('span');cover.id='playbackCover';cover.alt='';author.id='playbackAuthor';metadata.append(cover,label,author);bar.prepend(metadata);
 const utilities=document.createElement('div');utilities.className='playback-utilities';const expand=button('expandPlayback','','Ampliar reproductor',()=>focusPlayer(!(document.body.classList.contains('player-focus')||document.body.classList.contains('radio-player-focus')))),fullscreenControl=button('fullscreenPlayback','','Pantalla completa',toggleFullscreen);iconButton(expand,'up');iconButton(fullscreenControl,'expand');utilities.append(volume,qButton,saveButton,expand,fullscreenControl);bar.append(utilities);
-automatic.title='Continuar automáticamente';automatic.append(svg('flow'));
+automatic.title='Al terminar, reproducir el siguiente tema';check.setAttribute('role','switch');
 function focusPlayer(on){if(radioDock.classList.contains('active')){if(on)openRadioPanel();else{document.body.classList.remove('radio-player-focus','player-theater');document.body.classList.add('radio-side-collapsed');if(document.fullscreenElement)document.exitFullscreen?.().catch(()=>{})}updateFullscreenLabel();return}document.body.classList.toggle('player-focus',!!on);if(on)host()?.setMediaMode('expanded');else if(matchMedia('(max-width:1099px)').matches)host()?.setMediaMode('mini');updateFullscreenLabel()}
 window.addEventListener('uadav:before-navigate',()=>focusPlayer(false));fold.style.display='';fold.onclick=leavePlayer;iconButton(fold,'down');fold.title='Seguir navegando';
 window.addEventListener('keydown',e=>{const active=document.activeElement;if(e.key==='Escape'&&!document.querySelector('.playlistPicker[open],.playback-share[open]')){if(document.getElementById('playbackOptionsDialog')?.open){document.getElementById('playbackOptionsDialog').close()}else if(queueDialog.open){queueDialog.close()}else if(document.body.classList.contains('player-theater')){toggleFullscreen()}else if(document.body.classList.contains('player-focus')||document.body.classList.contains('radio-player-focus')){focusPlayer(false)}else return;e.preventDefault();e.stopImmediatePropagation();return}if(!document.body.classList.contains('player-focus')&&!document.body.classList.contains('player-theater')&&!queueDialog.open)return;if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)||/TEXTAREA|SELECT/.test(active?.tagName||'')||active?.isContentEditable)return;if(active?.tagName==='INPUT'&&(active.type!=='range'||['ArrowLeft','ArrowRight'].includes(e.key)))return;const scope=queueDialog.open?queueDialog:document;const nodes=[...scope.querySelectorAll(queueDialog.open?'button,input':'#playbackBar button,#playbackBar input,#mediaDock .tools button,#libraryTools button')].filter(el=>!el.disabled&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden');const start=active?.getBoundingClientRect?.();if(!start||!nodes.length)return;const x=start.x+start.width/2,y=start.y+start.height/2,horizontal=['ArrowLeft','ArrowRight'].includes(e.key),sign=['ArrowLeft','ArrowUp'].includes(e.key)?-1:1;let best=null,score=Infinity;for(const el of nodes){if(el===active)continue;const r=el.getBoundingClientRect(),dx=r.x+r.width/2-x,dy=r.y+r.height/2-y,forward=(horizontal?dx:dy)*sign;if(forward<4)continue;const distance=forward+Math.abs(horizontal?dy:dx)*2.5;if(distance<score){score=distance;best=el}}if(best){e.preventDefault();e.stopImmediatePropagation();best.focus();best.scrollIntoView({block:'nearest',inline:'nearest'})}},true);
@@ -92,18 +92,40 @@ function revealControls(schedule=true){clearTimeout(idleTimer);document.body.cla
 for(const event of ['pointermove','pointerdown','touchstart','keydown','focusin'])document.addEventListener(event,()=>revealControls(),{passive:true});
 document.addEventListener('fullscreenchange',()=>revealControls());queueDialog.addEventListener('close',()=>revealControls());
 const options=document.createElement('dialog');options.id='playbackOptionsDialog';options.setAttribute('aria-label','Opciones de reproducción');const optionsClose=button('closePlaybackOptions','Cerrar','Cerrar opciones',()=>options.close());const library=$('libraryTools');options.append(optionsClose);if(library)options.append(library);options.append(share,button('stopPlayback','Detener reproducción','Detener reproducción',()=>{options.close();if(radioDock.classList.contains('active'))host()?.closeRadio();else host()?.closeContent()}));document.body.append(options);new MutationObserver(()=>{const feedback=$('videoFeedback');if(feedback&&options.contains(feedback))dock.querySelector('.mediaCopy')?.append(feedback)}).observe(options,{childList:true});const optionsButton=button('playbackOptionsButton','⋮','Más opciones de reproducción',()=>options.showModal());iconButton(optionsButton,'more');controls.append(optionsButton);options.addEventListener('close',()=>{if(!document.querySelector('dialog[open]'))optionsButton.focus()});options.addEventListener('click',e=>{if(e.target.closest('#libraryTools button,#sharePlayback'))options.close()},true);
-const shuffleButton=button('shufflePlayback','','Mezclar los próximos temas',()=>{
- if(stage.querySelector('iframe[data-uadav-playlist]'))return window.UADAVPlaylistPlayer?.shuffle?.();
- const {items,index}=queue.state();
- const mixed=items.slice();
- for(let i=mixed.length-1;i>index+1;i--){
-   const j=index+1+Math.floor(Math.random()*(i-index));
-   [mixed[i],mixed[j]]=[mixed[j],mixed[i]];
+let originalOrder=null;
+const itemKey=item=>item.id+'|'+(item.position??window.UADAVPlaybackQueue.key(item));
+function modeQueue(){
+ return stage.querySelector('iframe[data-uadav-playlist]')?window.UADAVPlaylistPlayer?.queueState?.():queue.state();
+}
+const shuffleButton=button('shufflePlayback','','Aleatorio',()=>{
+ const state=modeQueue();
+ if(!state||state.busy||state.items.length<2)return;
+ const {items,index}=state;
+ const track=items[index],album=!!stage.querySelector('iframe[data-uadav-playlist]');
+ let ordered;
+ if(originalOrder){
+   const rank=new Map(originalOrder.map((key,i)=>[key,i]));
+   ordered=items.slice().sort((a,b)=>(rank.get(itemKey(a))??Infinity)-(rank.get(itemKey(b))??Infinity));
+   originalOrder=null;
+ }else{
+   originalOrder=items.map(itemKey);
+   const upcoming=items.slice(index+1);
+   const prefix=upcoming.length>=2?items.slice(0,index+1):[track];
+   const pool=upcoming.length>=2?upcoming:items.filter(item=>item!==track);
+   const first=pool[0];
+   for(let i=pool.length-1;i>0;i--){
+     const j=Math.floor(Math.random()*(i+1));
+     [pool[i],pool[j]]=[pool[j],pool[i]];
+   }
+   if(pool.length>1&&pool[0]===first)[pool[0],pool[1]]=[pool[1],pool[0]];
+   ordered=prefix.concat(pool);
  }
- for(let i=index+1;i<mixed.length;i++){
-   const at=queue.state().items.findIndex(item=>window.UADAVPlaybackQueue.key(item)===window.UADAVPlaybackQueue.key(mixed[i]));
-   if(at!==i)queue.reorder(at,i);
- }
+ if(album)window.UADAVPlaylistPlayer.order(ordered);
+ else ordered.forEach((item,to)=>{
+   const at=items.findIndex(other=>itemKey(other)===itemKey(item));
+   if(at!==to)queue.reorder(at,to);
+ });
+ refreshModes();
 });
 const repeatButton=button('repeatPlayback','','Repetir',()=>{
  repeatMode=(repeatMode+1)%3;
@@ -118,7 +140,10 @@ function refreshModes(){
  if(window.UADAVPlaylistPlayer)window.UADAVPlaylistPlayer.repeatMode=repeatMode;
  repeatButton.hidden=shuffleButton.hidden=transportStop.hidden=radioDock.classList.contains('active');
  repeatButton.disabled=!available||!!busy;
- shuffleButton.disabled=!available||!!busy||items.length-index-1<2;
+ if(originalOrder&&!items.some(item=>originalOrder.includes(itemKey(item))))originalOrder=null;
+ shuffleButton.disabled=!available||!!busy||items.length<2;
+ shuffleButton.setAttribute('aria-pressed',String(!!originalOrder));
+ shuffleButton.title=shuffleButton.disabled?'Aleatorio requiere al menos dos temas':originalOrder?'Desactivar aleatorio':'Activar aleatorio';
  repeatButton.title=caption;
  repeatButton.replaceChildren(svg('repeat'));
  if(repeatMode===2){
@@ -183,7 +208,10 @@ for(const event of ['uadav:player-closed','uadav:content-selected','uadav:radio-
 desktopLayout.addEventListener('change',unfold);
 const foldedStyle=document.createElement('style');
 foldedStyle.textContent=`
-#playbackBar #repeatPlayback[aria-pressed=true]{color:#55d7ff;border-color:currentColor}
+#playbackOptionsDialog .queue-automatic:not([hidden]){display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 12px;min-height:46px;font:inherit;cursor:pointer}
+#playbackOptionsDialog .queue-automatic input{order:1;appearance:none;width:36px;height:22px;border-radius:12px;background:radial-gradient(circle at 10px center,white 6px,transparent 7px),#465563;cursor:pointer}
+#playbackOptionsDialog .queue-automatic input:checked{background:radial-gradient(circle at 26px center,#082434 6px,transparent 7px),#36c6f4}
+#playbackBar :is(#repeatPlayback,#shufflePlayback)[aria-pressed=true]{color:#55d7ff;border-color:currentColor}
 #playbackBar [hidden]{display:none!important}
 @media(max-width:1099px){
  body[data-page=app]:not(.unified-radio) #playbackBar{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'metadata utilities' 'transport transport' 'timeline timeline';gap:4px}
