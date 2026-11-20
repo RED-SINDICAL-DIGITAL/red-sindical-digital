@@ -80,7 +80,8 @@ async function handleRequest({request, env, next}) {
       return reply(env.DEMO_EMERGENCY_PAUSE==='1' ? 'La pausa de Cloudflare sigue activa.' : 'Estado actualizado.',200);
     }
     if (path === '/demo/admin/invitar') {
-      if (!env.DEMO_MAIL_KEY || !env.DEMO_FROM || !env.DEMO_INVITE_SECRET) return reply('Falta configurar el envío de invitaciones.',503);
+      const missing = ['DEMO_MAIL_KEY','DEMO_FROM','DEMO_INVITE_SECRET'].filter(name => !env[name]?.trim());
+      if (missing.length) return reply('Para enviar invitaciones, configurá en Pages ('+(production?'Production':'Preview')+') los siguientes datos: '+missing.join(', ')+'.',503);
       const id = await request.text();
       const now = Math.floor(Date.now()/1000);
       const row = await db.prepare('UPDATE demo_requests SET expires=CASE WHEN expires IS NULL OR expires<=? THEN ? ELSE expires END WHERE id=? AND redeemed IS NULL AND sent IS NULL RETURNING email,expires').bind(now,now+604800,id).first();
