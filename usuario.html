@@ -540,6 +540,7 @@ body[data-page] a.profile-view-back:hover {text-decoration:underline}
  </div>
  <div id="profileJobsApplications" role="tabpanel" aria-labelledby="profileJobsTabApplications" class="u2-work-pane">
  <div id="deviceApplications"></div><div class="u2-list-group"><div class="u2-list-header"><h3>Consultar una postulación</h3><p class="muted">Ingresá con el comprobante que recibiste al postularte.</p></div>
+ <label class="prefs" style="display:flex;align-items:center;gap:10px;margin:12px 0"><input type="checkbox" id="rememberImportedJob" style="width:auto"> Recordar esta postulación en este navegador</label>
  <button class="chip active" id="profileJobImportBtn" type="button">Abrir comprobante (.txt)</button>
  <input type="file" id="profileJobImportFile" accept=".txt,text/plain" hidden aria-label="Seleccionar comprobante privado de postulación">
  <p id="profileJobImportStatus" class="muted" role="status"></p>
@@ -631,7 +632,9 @@ form.addEventListener('submit',async e=>{
 e.preventDefault();if(busy)return;
 const id=document.getElementById('profileJobId').value.trim().toUpperCase(),key=document.getElementById('profileJobSecret').value.trim();
 if(!/^POST-[A-Z0-9-]{5,60}$/.test(id)||!/^[a-f0-9]{64}$/i.test(key)){out.textContent='Revisá el identificador POST-… y la clave de tu comprobante.';return;}
-busy=true;const submit=form.querySelector('[type=submit]');submit.disabled=true;out.textContent='Consultando…';
+const preference=document.getElementById('rememberImportedJob');
+const remember=preference?.checked===true;
+busy=true;importButton.disabled=true;const submit=form.querySelector('[type=submit]');submit.disabled=true;out.textContent='Consultando…';
 try{
 const api='https://uadav-api-staging.uadavstream.workers.dev/api/';
 const res=await fetch(api+'bolsa_trabajo/mi-postulacion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,clave:key}),cache:'no-store'});
@@ -639,11 +642,23 @@ const data=await res.json().catch(()=>({}));
 if(!res.ok||data.success!==true||data.id!==id)throw Error(data.error||'No pudimos confirmar esta postulación.');
 const labels={pendiente:'Pendiente',recibida:'Recibida',en_revision:'En revisión',en_proceso:'En proceso',aprobada:'Aprobada',rechazada:'No seleccionada',aceptada:'Aceptada',finalizada:'Finalizada'};
 out.textContent='Estado: '+(labels[data.estado]||String(data.estado||'Sin información').replace(/_/g,' '));
-}catch(error){out.textContent=error.message||'No se pudo consultar el estado.'}
-finally{document.getElementById('profileJobSecret').value='';busy=false;submit.disabled=false;}
+importStatus.textContent='';
+if(remember){
+ try{
+  const storageKey='uadav_job_receipt_v1:'+id;
+  const existing=JSON.parse(localStorage.getItem(storageKey)||'null');
+  const title=existing?.title||data.titulo||'Postulación '+id;
+  localStorage.setItem(storageKey,JSON.stringify({title,key,date:existing?.date||Date.now()}));
+  window.dispatchEvent(new Event('uadav:job-receipt-saved'));
+  preference.checked=false;
+  importStatus.textContent='Guardada en este navegador.';
+ }catch{importStatus.textContent='Se consultó el estado. Conservá tu comprobante porque no se pudo guardar en este navegador.';}
+}
+}catch(error){importStatus.textContent='';out.textContent=error.message||'No se pudo consultar el estado.'}
+finally{document.getElementById('profileJobSecret').value='';busy=false;submit.disabled=false;importButton.disabled=false;}
 });
 })();
-</script><script src="/uadav-jobs-account.js?v=20261120-device"></script><script>
+</script><script src="/uadav-jobs-account.js?v=20261120-import"></script><script>
 /* Progressive disclosure: the existing modules keep their DOM and operate as before. */
 (()=>{'use strict';
 const panels=['mis-trabajos','mi-artista'];
