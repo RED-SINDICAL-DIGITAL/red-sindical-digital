@@ -33,8 +33,8 @@ async function signature(secret, expiry) {
   return hex(await crypto.subtle.sign('HMAC', key, encoder.encode(String(expiry))));
 }
 
-function promptPage(message = '') {
-  return new Response(`<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Probar la demo · UADAV STREAM</title><style>*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#091321;color:white;font:1rem system-ui}main{width:min(90%,26rem)}input,button{width:100%;padding:.85rem;border-radius:.65rem;border:0;margin:.5rem 0 1rem;font:inherit}button{background:#31c5ec;font-weight:700}a{color:#84def7}</style><main><a href="/promo.html">Volver a la portada</a><h1>Probar la demo</h1><form method="post" action="/demo/entrar"><label for="code">Código de invitación</label><input id="code" name="code" type="password" maxlength="128" required><p role="status">${message}</p><button>Entrar a la demo</button></form></main></html>`, {status:message?403:200,headers:{...privateHeaders,'Referrer-Policy':'same-origin','Content-Type':'text/html; charset=utf-8'}});
+function promptPage(message = '', usedInvitation = false) {
+  return new Response(`<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Probar la demo · UADAV STREAM</title><style>*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#091321;color:white;font:1rem system-ui}main{width:min(90%,26rem)}input,button{width:100%;padding:.85rem;border-radius:.65rem;border:0;margin:.5rem 0 1rem;font:inherit}button{background:#31c5ec;font-weight:700}a{color:#84def7}</style><main><a href="/promo.html">Volver a la portada</a><h1>Probar la demo</h1>${usedInvitation ? `<p role="status">${message}</p><p>Si ya entraste con esta invitación, abrí la demo en el mismo navegador.</p><p><a href="/app.html">Abrir la demo</a></p><a href="/invitacion">Solicitar otra invitación</a>` : `<form method="post" action="/demo/entrar"><label for="code">Código de invitación</label><input id="code" aria-describedby="code-status" name="code" type="password" maxlength="128" required><p id="code-status" role="status">${message}</p><button>Entrar a la demo</button></form><a href="/invitacion">Solicitar una invitación por correo</a>`}</main></html>`, {status:message?403:200,headers:{...privateHeaders,'Referrer-Policy':'same-origin','Content-Type':'text/html; charset=utf-8'}});
 }
 
 export async function onRequest(context) {
@@ -123,11 +123,11 @@ async function handleRequest({request, env, next}) {
     const [id,proof] = String((await request.formData()).get('ticket') || '').split('.');
     const now = Math.floor(Date.now()/1000);
     const row = await db.prepare('SELECT expires FROM demo_requests WHERE id=? AND expires>? AND redeemed IS NULL').bind(id,now).first();
-    if (!row || await signature(env.DEMO_INVITE_SECRET,id+'.'+row.expires)!==proof) return reply('El enlace venció o ya fue utilizado.',403);
+    if (!row || await signature(env.DEMO_INVITE_SECRET,id+'.'+row.expires)!==proof) return promptPage('El enlace venció o ya fue utilizado.',true);
     const session = crypto.randomUUID();
     const hash = await signature(env.DEMO_INVITE_SECRET,session);
     const update = await db.prepare('UPDATE demo_requests SET redeemed=?,session_hash=?,session_until=? WHERE id=? AND redeemed IS NULL AND expires>?').bind(now,hash,now+604800,id,now).run();
-    if (!update.meta.changes) return reply('El enlace ya fue utilizado.',403);
+    if (!update.meta.changes) return promptPage('El enlace ya fue utilizado.',true);
     return new Response(null,{status:303,headers:{...privateHeaders,Location:'/app.html','Set-Cookie':'__Host-uadav_invite='+session+'; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800'}});
   }
   if (path === '/demo/configurar' || path === '/demo/entrar') {
