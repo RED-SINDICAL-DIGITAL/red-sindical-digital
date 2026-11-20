@@ -8,17 +8,18 @@ const reply = (body, status) => new Response(body, {status, headers:{...privateH
 
 async function checkAdmin(url, authorization, env) {
   try {
-    const options = {headers:{Authorization:authorization,Accept:'application/json'},redirect:'error'};
+    const options = {headers:{Authorization:authorization,Accept:'application/json'},redirect:'manual'};
     const response = env.DEMO_ADMIN_API
-      ? await env.DEMO_ADMIN_API.fetch(url,options)
+      ? await env.DEMO_ADMIN_API.fetch(new Request(url,options))
       : await fetch(url,options);
     if (response.status===401 || response.status===403) return reply('Volvé a ingresar con la cuenta de administración nacional.',403);
-    if (!response.ok) throw Error('upstream');
-    const account = await response.json();
+    if (!response.ok) return reply('La API de administración respondió HTTP '+response.status+'.',502);
+    const account = await response.json().catch(()=>null);
+    if (!account) return reply('La API de administración devolvió un formato inesperado.',502);
     if (!account?.success || account.role !== 'admin_nacional') return reply('Volvé a ingresar con la cuenta de administración nacional.',403);
     return null;
   } catch {
-    return reply('No se pudo verificar la sesión con la API de administración. Revisá la conexión de Pages con el Worker.',502);
+    return reply(env.DEMO_ADMIN_API ? 'Falló la llamada interna al Worker de administración (DEMO_ADMIN_API).':'Falló la conexión pública con la API de administración. El despliegue no tiene DEMO_ADMIN_API.',502);
   }
 }
 
