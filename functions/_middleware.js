@@ -4,7 +4,7 @@ const configKey = 'staging-demo-access-v1';
 const encoder = new TextEncoder();
 const hex = bytes => Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2, '0')).join('');
 const privateHeaders = {'Cache-Control':'private, no-store', 'Content-Type':'text/plain; charset=utf-8'};
-const reply = (body, status) => new Response(body, {status, headers:privateHeaders});
+const reply = (body, status) => new Response(body, {status, headers:{...privateHeaders,'X-UADAV-Response':'demo-v1'}});
 
 async function checkAdmin(url, authorization, env) {
   try {
@@ -36,7 +36,18 @@ function promptPage(message = '') {
   return new Response(`<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Probar la demo · UADAV STREAM</title><style>*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#091321;color:white;font:1rem system-ui}main{width:min(90%,26rem)}input,button{width:100%;padding:.85rem;border-radius:.65rem;border:0;margin:.5rem 0 1rem;font:inherit}button{background:#31c5ec;font-weight:700}a{color:#84def7}</style><main><a href="/promo.html">Volver a la portada</a><h1>Probar la demo</h1><form method="post" action="/demo/entrar"><label for="code">Código de invitación</label><input id="code" name="code" type="password" maxlength="128" required><p role="status">${message}</p><button>Entrar a la demo</button></form></main></html>`, {status:message?403:200,headers:{...privateHeaders,'Content-Type':'text/html; charset=utf-8'}});
 }
 
-export async function onRequest({request, env, next}) {
+export async function onRequest(context) {
+  if (!new URL(context.request.url).pathname.startsWith('/demo/admin/')) return handleRequest(context);
+  try {
+    return await handleRequest(context);
+  } catch (error) {
+    const ray = context.request.headers.get('cf-ray') || '';
+    console.error('demo_admin_exception',ray,error?.name);
+    return reply('No se pudo completar la operación del Admin.'+(ray?' Referencia: '+ray:''),503);
+  }
+}
+
+async function handleRequest({request, env, next}) {
   const url = new URL(request.url);
   const production = ['uadavstream.com.ar','www.uadavstream.com.ar'].includes(url.hostname);
   if (!production && url.hostname !== staging) return next();
