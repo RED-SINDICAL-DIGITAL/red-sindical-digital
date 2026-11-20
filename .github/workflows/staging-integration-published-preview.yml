@@ -35,7 +35,9 @@ jobs:
           npm install --no-save --no-package-lock playwright@1.58.2
       - name: Check staging Worker public health (read-only)
         run: node scripts/qa-staging-health-readonly.mjs
-      - name: Check published branch preview (read-only)
+      - name: Check published branch preview
+        env:
+          STAGING_DEMO_CODE: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/integration/staging-preserve-beta-20261109' && secrets.STAGING_DEMO_CODE || '' }}
         run: node scripts/qa-staging-published-preview.mjs
       - name: Store screenshots
         if: always()
