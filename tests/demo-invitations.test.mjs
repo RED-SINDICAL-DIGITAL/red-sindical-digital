@@ -52,3 +52,15 @@ test('admin handles gateway HTML, network failures and an unavailable D1 list',a
   env.DEMO_ADMIN_API={fetch:async()=>Response.json({success:true,role:'admin_nacional'})};
   assert.equal((await onRequest({request,env})).status,503);
 });
+test('Pages verifies the session through the staging Worker entry point', async ()=>{
+  const {default:worker}=await import('../worker-demo-staging.js');
+  const origin='https://integration-staging-preserve.uadav-stream-staging.pages.dev';
+  const request=new Request(origin+'/demo/admin/lista',{method:'POST',headers:{Origin:origin,Authorization:'Bearer fixture','X-Demo-Owner':'owner'}});
+  const env={DEMO_ADMIN_API:{async fetch(req){
+    assert.equal(req.redirect,'manual');
+    return worker.fetch(req,{ADMIN_KEY:'fixture',UADAV_DB:{get:async()=>null}},{});
+  }},DEMO_OWNER_KEY:'owner',DEMO_DB:{prepare:()=>({all:async()=>({results:[]})})}};
+  const response=await onRequest({request,env});
+  assert.equal(response.status,200);
+  assert.deepEqual(await response.json(),[]);
+});
