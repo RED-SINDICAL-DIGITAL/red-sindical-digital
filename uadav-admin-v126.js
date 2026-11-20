@@ -5,10 +5,16 @@ function pick(rect,candidates,key){const axis=key==='ArrowLeft'||key==='ArrowRig
 window.UADAVAdminLayout={setMenu,next:pick};
 function init(){if(document.body?.dataset.page!=='admin')return;
 if(['integration-staging-preserve.uadav-stream-staging.pages.dev','uadavstream.com.ar','www.uadavstream.com.ar'].includes(location.hostname) && byId('logoutSide')){
+  const demoActions=document.createElement('div');
+  demoActions.className='admin-demo-actions';
+  demoActions.setAttribute('role','group');
+  demoActions.setAttribute('aria-label','Acceso a la demo');
+  byId('logoutSide').closest('.sidebar-user').before(demoActions);
   const manage=document.createElement('button');
+  manage.className='btn btn-ghost';
   manage.type='button';
   manage.textContent='Invitaciones y acceso';
-  byId('logoutSide').before(manage);
+  demoActions.append(manage);
   manage.onclick=async()=>{
     const key=await new Promise(resolve=>{
       const gate=document.createElement('dialog'),form=document.createElement('form');
@@ -49,7 +55,8 @@ if(['integration-staging-preserve.uadav-stream-staging.pages.dev','uadavstream.c
   const button=document.createElement('button');
   button.type='button';
   button.textContent='Configurar código de demo';
-  byId('logoutSide').before(button);
+  button.className='btn btn-ghost';
+  demoActions.append(button);
   button.addEventListener('click',async()=>{
     const code=window.prompt('Ingresá el código compartido para la demo (6 a 128 caracteres).');
     if(!code)return;
