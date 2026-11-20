@@ -87,10 +87,21 @@ async function handleRequest({request, env, next}) {
       const row = await db.prepare('UPDATE demo_requests SET expires=CASE WHEN expires IS NULL OR expires<=? THEN ? ELSE expires END WHERE id=? AND redeemed IS NULL AND sent IS NULL RETURNING email,expires').bind(now,now+604800,id).first();
       if (!row) return reply('La solicitud ya fue procesada.',409);
       const token = await signature(env.DEMO_INVITE_SECRET,id+'.'+row.expires);
-      const mail = await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+env.DEMO_MAIL_KEY,'Content-Type':'application/json','Idempotency-Key':'demo-'+id+'-'+row.expires},body:JSON.stringify({from:env.DEMO_FROM,to:[row.email],subject:'Tu invitación a UADAV STREAM',text:'Ya podés probar UADAV STREAM. Abrí este enlace personal dentro de los próximos siete días: '+url.origin+'/invitacion.html#'+id+'.'+token})});
-      if (!mail.ok) return reply('El proveedor no confirmó el envío. Podés reintentar.',502);
+      const mail = await fetch('https://api.brevo.com/v3/smtp/email',{
+        method:'POST',redirect:'manual',
+        headers:{'api-key':env.DEMO_MAIL_KEY.trim(),'Content-Type':'application/json',Accept:'application/json'},
+        body:JSON.stringify({
+          sender:{email:env.DEMO_FROM.trim(),name:'UADAV STREAM'},
+          to:[{email:row.email}],subject:'Tu invitación a UADAV STREAM',
+          headers:{idempotencyKey:id},
+          textContent:'Ya podés probar UADAV STREAM. Abrí tu enlace personal: '+url.origin+'/invitacion.html#'+id+'.'+token
+        })
+      });
+      if (mail.status===401 || mail.status===403) return reply('Brevo rechazó el acceso. Revisá la API key y los permisos de la cuenta.',502);
+      const receipt=await mail.json().catch(()=>null);
+      if (mail.status!==201 || !receipt?.messageId) return reply('Brevo no confirmó el envío (HTTP '+mail.status+'). La solicitud sigue pendiente.',502);
       await db.prepare('UPDATE demo_requests SET sent=? WHERE id=?').bind(now,id).run();
-      return reply('El proveedor aceptó la invitación.',200);
+      return reply('Brevo aceptó la invitación.',200);
     }
     return reply('Acción desconocida.',404);
   }
