@@ -21,6 +21,35 @@ let eventRequestSent=false;const b=$('submit'),st=$('status'),credential=localSt
 }if(result.confirmed!==true||(result.moderation_pending!==undefined&&result.moderation_pending!==false)||typeof result.id!=='string'||!/^[-A-Za-z0-9_]{1,120}$/.test(result.id))throw Error('Todavía no hay una publicación confirmada. Conservá el formulario y volvé a comprobar.');eventCompleted=true;eventDeliveryUncertain=false;window.UADAVLocalEventReceipts?.save({id:result.id,title:submittedTitle});$('newEvent').hidden=false;$('submit').disabled=true;st.className='status ok';st.innerHTML=`✓ Publicación confirmada. <a href="/evento.html?id=${encodeURIComponent(result.id)}">Ver evento</a><br>Referencia: <strong>${result.id}</strong>`;addProfileLink()}catch(e){receipt.textContent='Volver a comprobar';receipt.disabled=false;receiptStatus.textContent=e.message}};st.appendChild(receipt);st.appendChild(receiptStatus)}else {if(err.confirmedRejection)eventRequestId=null;st.textContent='No se pudo publicar: '+err.message}}finally{eventPosting=false;if(!eventCompleted)for(const {n,disabled} of eventControls)n.disabled=disabled;b.disabled=eventCompleted||eventDeliveryUncertain;b.textContent='Publicar evento'}};
 </script><script src="/uadav-ui-v8.4.js"></script><script src="/uadav-app-bridge-v104.js?v=10112"></script>
 
-<script>if(location.origin==='https://uadav-stream-staging.pages.dev')api('eventos/capabilities').then(c=>{if(c.email_notice_consent_supported===true)document.getElementById('eventNoticeOption').hidden=false}).catch(()=>{});</script>
+<script>
+if(profileEventHost){
+ const option=document.getElementById('eventNoticeOption');
+ const consent=document.getElementById('eventNoticeConsent');
+ let generation=0;
+ async function refreshEventNotice(){
+  previous=localStorage.getItem('uadav_account_access_v1');
+  const current=++generation;
+  option.hidden=true;
+  consent.checked=false;
+  const credential=localStorage.getItem('uadav_account_access_v1');
+  if(!credential)return;
+  try{
+   const response=await fetch(API_REMOTE+'eventos/capabilities',{
+    headers:{Authorization:'Bearer '+credential},cache:'no-store'
+   });
+   if(!response.ok)return;
+   const capabilities=await response.json();
+   if(current===generation&&credential===localStorage.getItem('uadav_account_access_v1')&&capabilities.email_notice_consent_supported===true)option.hidden=false;
+  }catch{}
+ }
+ window.addEventListener('storage',event=>{if(!event.key||event.key==='uadav_account_access_v1')refreshEventNotice()});
+ let previous=localStorage.getItem('uadav_account_access_v1');
+ window.addEventListener('uadav:account',()=>{
+  const next=localStorage.getItem('uadav_account_access_v1');
+  if(next!==previous){previous=next;refreshEventNotice()}
+ });
+ refreshEventNotice();
+}
+</script>
 
 <script src="/uadav-postimages.js"></script><script src="/uadav-public-footer.js?v=20261113-email" defer></script><link rel="stylesheet" href="/uadav-publication-layout.css?v=20261113"><script src="/uadav-publication-layout.js?v=20261113"></script></body></html>
