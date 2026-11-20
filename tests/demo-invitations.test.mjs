@@ -4,7 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 const source=readFileSync('functions/_middleware.js','utf8');
 const {onRequest}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
-test('request, approve, redeem once, pause an existing session and recover',async t=>{
+test('public access, legacy links and owner-only pause and reopen',async t=>{
   const sqlite=new DatabaseSync(':memory:');
   t.after(()=>sqlite.close());
   sqlite.exec(readFileSync('migrations/demo/001.sql','utf8'));
@@ -17,39 +17,23 @@ test('request, approve, redeem once, pause an existing session and recover',asyn
   const visit=(path,options={})=>onRequest({env,next:()=>new Response('Contenido'),request:new Request(origin+path,options)});
   const post=(body,headers={})=>({method:'POST',headers:{Origin:origin,...headers},body});
   const owner={Authorization:'Bearer fixture','X-Demo-Owner':env.DEMO_OWNER_KEY};
-  let ticket, attempts=0;
-  t.mock.method(globalThis,'fetch',async(url,options)=>{
-    if(url.endsWith('/api/admin_check'))return Response.json({success:true,role:'admin_nacional'});
-    assert.equal(url,'https://api.brevo.com/v3/smtp/email');
-    assert.equal(options.headers['api-key'],'fixture-mail');
-    const payload=JSON.parse(options.body);
-    assert.equal(payload.sender.email,env.DEMO_FROM);
-    assert.deepEqual(payload.to,[{email:'qa@example.invalid'}]);
-    if (++attempts===1) return new Response(null,{status:401});
-    ticket=payload.textContent.split('#').pop();return Response.json({messageId:'fixture'},{status:201});
-  });
-  for(let i=0;i<2;i++)assert.equal((await visit('/demo/solicitar',post(new URLSearchParams({email:'qa@example.invalid'})))).status,200);
-  assert.equal((await visit('/demo/admin/lista',post(''))).status,401);
-  const rows=await (await visit('/demo/admin/lista',post('',owner))).json();
-  assert.equal(rows.length,1);
-  assert.equal((await visit('/demo/admin/invitar',post(rows[0].id,owner))).status,502);
-  assert.equal((await visit('/demo/admin/invitar',post(rows[0].id,owner))).status,200);
-  const redeem=()=>visit('/demo/canjear',post(new URLSearchParams({ticket})));
-  const ok=await redeem(); assert.equal(ok.status,303);
-  assert.equal((await redeem()).status,403);
-  const Cookie=ok.headers.get('set-cookie').split(';')[0];
-  const state=()=>visit('/demo/estado',{headers:{Cookie}});
-  assert.equal((await state()).status,200);
+  t.mock.method(globalThis,'fetch',async()=>Response.json({success:true,role:'admin_nacional'}));
+  assert.equal(await (await visit('/app.html')).text(),'Contenido');
+  assert.equal((await visit('/invitacion.html')).status,303);
+  assert.equal((await visit('/demo/solicitar',post(''))).status,410);
+  assert.equal((await visit('/demo/admin/pausar',post(''))).status,401);
+  assert.equal((await visit('/demo/admin/pausar',post('',{Authorization:'Bearer fixture'}))).status,403);
+  const state=()=>visit('/demo/estado');
   await visit('/demo/admin/pausar',post('',owner));
   assert.equal((await state()).status,503);
   assert.equal(await (await visit('/promo')).text(),'Contenido');
   await visit('/demo/admin/reabrir',post('',owner));assert.equal((await state()).status,200);
   env.DEMO_EMERGENCY_PAUSE='1';assert.equal((await state()).status,503);
-  assert.equal((await visit('/demo/admin/lista',post('',owner))).status,200);
+  assert.equal((await visit('/demo/admin/estado',post('',owner))).status,200);
 });
 test('admin handles gateway HTML, network failures and an unavailable D1 list',async t=>{
   const origin='https://integration-staging-preserve.uadav-stream-staging.pages.dev';
-  const request=new Request(origin+'/demo/admin/lista',{method:'POST',headers:{Origin:origin,Authorization:'Bearer fixture','X-Demo-Owner':'fixture'}});
+  const request=new Request(origin+'/demo/admin/estado',{method:'POST',headers:{Origin:origin,Authorization:'Bearer fixture','X-Demo-Owner':'fixture'}});
   const env={DEMO_OWNER_KEY:'fixture',DEMO_DB:{prepare(){throw Error('fixture')}}};
   const mock=t.mock.method(globalThis,'fetch',async()=>new Response('<html>gateway</html>'));
   assert.equal((await onRequest({request,env})).status,502);
@@ -61,12 +45,12 @@ test('admin handles gateway HTML, network failures and an unavailable D1 list',a
 test('Pages verifies the session through the staging Worker entry point', async ()=>{
   const {default:worker}=await import('../worker-demo-staging.js');
   const origin='https://integration-staging-preserve.uadav-stream-staging.pages.dev';
-  const request=new Request(origin+'/demo/admin/lista',{method:'POST',headers:{Origin:origin,Authorization:'Bearer fixture','X-Demo-Owner':'owner'}});
+  const request=new Request(origin+'/demo/admin/estado',{method:'POST',headers:{Origin:origin,Authorization:'Bearer fixture','X-Demo-Owner':'owner'}});
   const env={DEMO_ADMIN_API:{async fetch(req){
     assert.equal(req.redirect,'manual');
     return worker.fetch(req,{ADMIN_KEY:'fixture',UADAV_DB:{get:async()=>null}},{});
-  }},DEMO_OWNER_KEY:'owner',DEMO_DB:{prepare:()=>({all:async()=>({results:[]})})}};
+  }},DEMO_OWNER_KEY:'owner',DEMO_DB:{prepare:()=>({first:async()=>({paused:0})})}};
   const response=await onRequest({request,env});
   assert.equal(response.status,200);
-  assert.deepEqual(await response.json(),[]);
+  assert.equal(await response.text(),'Acceso abierto.');
 });
