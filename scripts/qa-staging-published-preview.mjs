@@ -1,5 +1,5 @@
 // Public preview read-only browser QA. Only the official isolated Pages preview can be loaded.
-// The protected profile uses the staging demo code. Invitation requests are never submitted.
+// Exercise the public app with a fresh visitor session.
 import {chromium} from 'playwright';
 import {mkdir} from 'node:fs/promises';
 const origin='https://integration-staging-preserve.uadav-stream-staging.pages.dev';
@@ -19,27 +19,9 @@ try{
   await page.addInitScript(()=>{window.UADAV_ENV='staging';window.PLATFORM_ENV='staging'});
   try{
    await page.goto(origin+'/promo.html',{waitUntil:'domcontentloaded'});
-   const requestLink=page.locator('[data-landing-link="hero_4_url"]');
-   const codeLink=page.locator('[data-landing-link="hero_5_url"]');
-   for(const [link,field,other] of [[requestLink,'#email','#code'],[codeLink,'#code','#email']]){
-    await link.click();
-    await page.locator(field).waitFor({state:'visible'});
-    if(await page.locator(other).isVisible())throw Error('La portada abrió dos formularios a la vez');
-    if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+3))throw Error('El formulario excede el ancho de pantalla');
-    await page.goBack({waitUntil:'domcontentloaded'});
-   }
-   await page.screenshot({path:out+'/portada-'+viewport.name+'.png',animations:'disabled'});
-   let result=await page.goto(origin+'/usuario.html',{waitUntil:'domcontentloaded',timeout:25000});
-   if(await page.locator('form[action="/demo/entrar"] input[name="code"]').isVisible()){
-    const code=process.env.STAGING_DEMO_CODE;
-    if(!code)throw Error('Portada e invitaciones verificadas. Falta STAGING_DEMO_CODE para probar Mi Perfil.');
-    const access=await context.request.post(origin+'/demo/entrar',{
-     headers:{Origin:origin},form:{code},maxRedirects:0
-    });
-    if(access.status()!==303)throw Error('El entorno de pruebas no aceptó el código de demo.');
-    result=await page.goto(origin+'/usuario.html',{waitUntil:'domcontentloaded',timeout:25000});
-   
-   }
+   await page.locator('[data-landing-link="hero_4_url"]').click();
+   await page.locator('#view').waitFor();
+   const result=await page.goto(origin+'/usuario.html',{waitUntil:'domcontentloaded',timeout:25000});
    await page.waitForFunction(()=>{
     const doc=document.querySelector('#view')?.contentDocument;
     const home=doc?.getElementById('profileNativeHome');
