@@ -37,7 +37,13 @@ if(['integration-staging-preserve.uadav-stream-staging.pages.dev','uadavstream.c
       const control=document.createElement('button');control.textContent=label;control.type='button';control.className='btn btn-ghost';parent.append(control);
       control.onclick=async()=>{control.disabled=true;try{await callback()}catch{status.textContent='No se pudo conectar.'}finally{control.disabled=false}};
     };
-    const call=(name,body)=>fetch('/demo/admin/'+name,{method:'POST',headers:{Authorization:'Bearer '+sessionStorage.getItem('uadav_admin_v8'),'X-Demo-Owner':key},body});
+    const call=async(name,body)=>{
+      const response=await fetch('/demo/admin/'+name,{method:'POST',headers:{Authorization:'Bearer '+sessionStorage.getItem('uadav_admin_v8'),'X-Demo-Owner':key},body});
+      const type=response.headers.get('Content-Type')?.split(';')[0].trim();
+      if(type==='text/plain' || (type==='application/json' && response.ok && name==='lista'))return response;
+      const ray=response.headers.get('cf-ray');
+      return new Response('Cloudflare no pudo completar la operación.'+(ray?' Referencia: '+ray:''),{status:502});
+    };
     action('Cerrar',()=>dialog.close());
     document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove(),{once:true});dialog.showModal();
     try{
