@@ -16,7 +16,7 @@ database_id = "STAGING_D1_ID_REQUIRED"
 
 [vars]
 ACCOUNT_ALLOWED_ORIGINS = "https://uadav-stream-staging.pages.dev"
-TURNSTILE_ALLOWED_HOSTNAMES = "uadav-stream-staging.pages.dev"
+TURNSTILE_ALLOWED_HOSTNAMES = "uadav-stream-staging.pages.dev,integration-staging-preserve.uadav-stream-staging.pages.dev"
 PUBLIC_SITE_URL = "https://uadav-stream-staging.pages.dev"
 
 # Deliberately no routes, production domains, cron triggers, queues, email,
