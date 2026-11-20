@@ -34,7 +34,7 @@ async function signature(secret, expiry) {
 }
 
 function promptPage(message = '') {
-  return new Response(`<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Probar la demo · UADAV STREAM</title><style>*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#091321;color:white;font:1rem system-ui}main{width:min(90%,26rem)}input,button{width:100%;padding:.85rem;border-radius:.65rem;border:0;margin:.5rem 0 1rem;font:inherit}button{background:#31c5ec;font-weight:700}a{color:#84def7}</style><main><a href="/promo.html">Volver a la portada</a><h1>Probar la demo</h1><form method="post" action="/demo/entrar"><label for="code">Código de invitación</label><input id="code" name="code" type="password" maxlength="128" required><p role="status">${message}</p><button>Entrar a la demo</button></form></main></html>`, {status:message?403:200,headers:{...privateHeaders,'Content-Type':'text/html; charset=utf-8'}});
+  return new Response(`<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Probar la demo · UADAV STREAM</title><style>*{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#091321;color:white;font:1rem system-ui}main{width:min(90%,26rem)}input,button{width:100%;padding:.85rem;border-radius:.65rem;border:0;margin:.5rem 0 1rem;font:inherit}button{background:#31c5ec;font-weight:700}a{color:#84def7}</style><main><a href="/promo.html">Volver a la portada</a><h1>Probar la demo</h1><form method="post" action="/demo/entrar"><label for="code">Código de invitación</label><input id="code" name="code" type="password" maxlength="128" required><p role="status">${message}</p><button>Entrar a la demo</button></form></main></html>`, {status:message?403:200,headers:{...privateHeaders,'Referrer-Policy':'same-origin','Content-Type':'text/html; charset=utf-8'}});
 }
 
 export async function onRequest(context) {
@@ -131,6 +131,10 @@ async function handleRequest({request, env, next}) {
     return new Response(null,{status:303,headers:{...privateHeaders,Location:'/app.html','Set-Cookie':'__Host-uadav_invite='+session+'; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800'}});
   }
   if (path === '/demo/configurar' || path === '/demo/entrar') {
+    if (path === '/demo/entrar') {
+      if (request.method === 'GET') return promptPage();
+      if (!sameOrigin) return promptPage('Volvé a ingresar tu código desde este formulario.');
+    }
     if (request.method !== 'POST' || request.headers.get('Origin') !== url.origin) return reply('Solicitud inválida.',403);
     if (!env.DEMO_KV) return reply('Falta vincular DEMO_KV al entorno de pruebas.',503);
     if (path === '/demo/configurar') {
