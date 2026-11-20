@@ -4,6 +4,22 @@ function setMenu(open){const side=byId('sidebar'),menu=byId('mobileMenu'),back=b
 function pick(rect,candidates,key){const axis=key==='ArrowLeft'||key==='ArrowRight'?'x':'y',sign=key==='ArrowLeft'||key==='ArrowUp'?-1:1,other=axis==='x'?'y':'x';let best=null,score=Infinity;for(const c of candidates){const distance=(c[axis]-rect[axis])*sign;if(distance<=1)continue;const cross=Math.abs(c[other]-rect[other]);const weight=distance+cross*2+Math.max(0,cross-distance)*4;if(weight<score){score=weight;best=c}}return best}
 window.UADAVAdminLayout={setMenu,next:pick};
 function init(){if(document.body?.dataset.page!=='admin')return;
+if(location.hostname==='integration-staging-preserve.uadav-stream-staging.pages.dev' && byId('logoutSide')){
+  const button=document.createElement('button');
+  button.type='button';
+  button.textContent='Configurar código de demo';
+  byId('logoutSide').before(button);
+  button.addEventListener('click',async()=>{
+    const code=window.prompt('Ingresá el código compartido para la demo (6 a 128 caracteres).');
+    if(!code)return;
+    button.disabled=true;
+    try{
+      const response=await fetch('/demo/configurar',{method:'POST',headers:{Authorization:'Bearer '+sessionStorage.getItem('uadav_admin_v8')},body:code});
+      window.alert(response.headers.get('content-type')?.includes('text/plain') ? await response.text() : 'La configuración de la demo todavía no está disponible.');
+    }catch{window.alert('No se pudo conectar. Volvé a intentar.')}
+    finally{button.disabled=false}
+  });
+}
 const tv=byId('adminTV'),storageKey=document.body.dataset.adminPreview?'uadav_admin_preview_tv_v1':'uadav_admin_tv_v1';const setTV=enabled=>{document.body.dataset.adminTv=String(enabled);tv?.setAttribute('aria-pressed',String(enabled));tv?.setAttribute('aria-label',enabled?'Desactivar vista para TV':'Activar vista para TV');try{localStorage.setItem(storageKey,String(enabled))}catch{}};
 let saved=false;try{saved=localStorage.getItem(storageKey)==='true'}catch{}setTV(saved);tv?.addEventListener('click',()=>setTV(document.body.dataset.adminTv!=='true'));
 byId('adminMenuClose')?.addEventListener('click',()=>setMenu(false));byId('sidebar')?.addEventListener('transitionend',event=>{const side=byId('sidebar');if(event.propertyName==='transform'&&side.classList.contains('open')&&!side.contains(document.activeElement))byId('adminMenuClose')?.focus()});setMenu(false);window.addEventListener('resize',()=>{if(!matchMedia('(max-width:1024px)').matches)setMenu(false)});
