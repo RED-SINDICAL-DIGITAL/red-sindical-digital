@@ -7,4 +7,19 @@ assert.equal(nodes.noticeList.children[0].children.find(n=>n.textContent==='Abri
 for(const path of ['https://[','https://example.org/usuario.html']){
  noticePath=path;await nodes.noticeRefresh.onclick();assert(texts(nodes.noticeList).includes('Cuenta B'));assert(!texts(nodes.noticeList).includes('Abrir'));
 }
+let pendingRead,loads=0,updates=0;
+const snapshot=read=>({ok:true,json:async()=>({items:[{id:'old',title:'Anterior',read}]})});
+ctx.fetch=async(_,opt)=>{
+ if(opt.method==='PATCH'){updates++;assert.deepEqual(JSON.parse(opt.body).keys,['old']);return{ok:true,json:async()=>({success:true})}}
+ loads++;
+ if(loads===2)return new Promise(resolve=>pendingRead=resolve);
+ if(loads===3)return{ok:true,json:async()=>({items:[{id:'old',read:true},{id:'new',title:'Recién llegado',read:false}]})};
+ return snapshot(false);
+};
+await nodes.noticeRefresh.onclick();
+const earlier=nodes.noticeRefresh.onclick();
+await Promise.all([nodes.noticeReadAll.onclick(),nodes.noticeReadAll.onclick()]);
+pendingRead(snapshot(false));await earlier;
+assert.equal(updates,1);assert.equal(nodes.noticeToggle.textContent,'🔔 1 aviso nuevo');
+assert(texts(nodes.noticeList).includes('Recién llegado'));
 map.clear();events.storage.forEach(fn=>fn({key:null}));assert.equal(nodes.accountNotices.hidden,true);assert.equal(nodes.noticeList.children.length,0);
