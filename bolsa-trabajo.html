@@ -54,7 +54,7 @@ if(previousOffer!==jobId){
   if(filter)filter.value='';
   previousOffer=jobId;
 }
-out.textContent=data.items.length===1?'1 postulación recibida':data.items.length+' postulaciones recibidas';$('ownerClose').hidden=false;$('ownerRenew').hidden=false;
+out.textContent=data.items.length===0?'Todavía no recibiste postulaciones para esta oferta.':data.items.length===1?'1 postulación recibida':data.items.length+' postulaciones recibidas';$('ownerClose').hidden=false;$('ownerRenew').hidden=false;
 const preference=document.getElementById('rememberOwnerOffer');
 if(preference?.checked){
   try{
@@ -128,6 +128,7 @@ const count=document.createElement('p');count.className='small';count.setAttribu
 filterRow.append(label,filter,count);candidates.before(filterRow);
 const render=()=>{
 const cards=[...candidates.querySelectorAll('article.job')];
+filterRow.style.display=cards.length?'':'none';
 const query=foldJob(filter.value);
 let shown=0;
 for(const card of cards){
@@ -138,6 +139,7 @@ for(const card of cards){
 count.textContent=!cards.length?'':shown===0?'No hay coincidencias. Probá otro nombre o estado.':shown+' de '+cards.length+' visibles';
 
 };
+render();
 filter.addEventListener('input',render);
 new MutationObserver(render).observe(candidates,{childList:true,subtree:false});
 })();
