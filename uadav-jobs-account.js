@@ -2,6 +2,7 @@
 (function(root){
   'use strict';
   const ORIGIN='https://uadav-stream-staging.pages.dev',API='https://uadav-api-staging.uadavstream.workers.dev/api/';
+  const supported = origin => origin === ORIGIN || origin === 'https://integration-staging-preserve.uadav-stream-staging.pages.dev';
   const credentialPattern=/^UA[CD]-[a-f0-9]{64}$/;
   function parseProof(value){
     const text=String(value||'');if(text.length>8192)throw Error('El comprobante es demasiado grande.');
@@ -12,7 +13,7 @@
     return {tipo:id.toUpperCase().startsWith('JOB-')?'oferta':'postulacion',id:id.toUpperCase(),clave:clave.toLowerCase()};
   }
   function createClient({origin,apiBase=API,getCredential,getGeneration=()=>0,transport}){
-    if(origin!==ORIGIN||apiBase!==API)throw Error('Mis trabajos solo está preparado para staging.');
+    if(!supported(origin)||apiBase!==API)throw Error('Mis trabajos solo está preparado para staging.');
     let verified='';
     const context=()=>({credential:getCredential()||'',generation:getGeneration()});
     const assertCurrent=ctx=>{if(ctx.credential!==(getCredential()||'')||ctx.generation!==getGeneration())throw Error('La cuenta cambió. Abrí Mis trabajos desde la cuenta que hizo el envío.');};
@@ -37,7 +38,7 @@
     return {list,assertCurrent,selection(checked){const ctx=context();if(checked&&(!credentialPattern.test(ctx.credential)||verified!==ctx.credential))throw Error('Volvé a comprobar Mis trabajos antes de guardarlo en esta cuenta.');return {...ctx,save:checked===true,headers:checked?{Authorization:'Bearer '+ctx.credential}:{}};},link:proof=>call('bolsa_trabajo/cuenta/vincular','POST',{...proof,confirm:'VINCULAR_A_MI_CUENTA'}),unlink:item=>call('bolsa_trabajo/cuenta/quitar','POST',{tipo:item.tipo,id:item.id,confirm:'QUITAR_DE_MI_CUENTA'}),inbox:id=>call('bolsa_trabajo/mis-postulantes','POST',{job_id:id,cuenta:true}),manage:(id,accion)=>call('bolsa_trabajo/mi-oferta/gestionar','POST',{job_id:id,cuenta:true,accion,dias:30})};
   }
   root.UADAVJobsAccount={createClient,parseProof};
-  if(!root.document||root.location?.origin!==ORIGIN)return;
+  if(!root.document||!supported(root.location?.origin))return;
   const doc=root.document,credential=()=>root.UADAVAccount?.code?.()||'',element=(tag,text)=>{const node=doc.createElement(tag);if(text!==undefined)node.textContent=text;return node;};
   let generation=0,current=credential(),turn=0,inboxTurn=0,next=null,items=[],busy=false,profile=null;
   const client=createClient({origin:root.location.origin,getCredential:credential,getGeneration:()=>generation,transport:(...args)=>root.fetch(...args)}),choices=new Map();
@@ -96,9 +97,49 @@
     form.append(label,proof,consentLabel,submit,pick,upload);details.append(summary,form);const more=button('Cargar más gestiones',()=>load(true));more.hidden=true;
     tools.append(refresh,details);container.append(status,tools,list,more,inbox);host.insertBefore(container,host.children[2]||null);profile={host,status,tools,list,inbox,more,refresh,proof,consent};
   }
+  function mountDeviceReceipts(){
+    const prefix='uadav_job_receipt_v1:';
+    const remember=doc.getElementById('rememberApplication');
+    if(remember)remember.addEventListener('click',()=>{
+      const notice=doc.getElementById('rememberStatus');
+      try{
+        const id=doc.getElementById('applyReceiptId').value;
+        const key=doc.getElementById('applyReceiptKey').value;
+        const proof=parseProof(id+'|'+key);
+        if(proof.tipo!=='postulacion')throw Error();
+        root.localStorage.setItem(prefix+id,JSON.stringify({title:doc.getElementById('applyTitle').textContent,key:proof.clave,date:Date.now()}));
+        notice.textContent='Guardada en este navegador. Encontrala en Mi Perfil → Mis postulaciones.';
+      }catch{notice.textContent='No se pudo guardar en este navegador. Guardá el comprobante como respaldo.';}
+    });
+    const list=doc.getElementById('deviceApplications');
+    if(!list)return;
+    async function refresh(){
+      list.replaceChildren();
+      let keys;
+      try{keys=Object.keys(root.localStorage).filter(k=>k.startsWith(prefix));}catch{return;}
+      for(const storageKey of keys.reverse()){
+        const id=storageKey.slice(prefix.length);
+        let record;
+        try{record=JSON.parse(root.localStorage.getItem(storageKey));parseProof(id+'|'+record.key);}catch{continue;}
+        const card=element('article');card.className='job-account-card';
+        const status=element('p','Consultando estado…');
+        const forget=button('Quitar de este dispositivo',()=>{
+          try{root.localStorage.removeItem(storageKey);card.remove();}catch{status.textContent='No se pudo quitar el acceso.';}
+        });
+        card.append(element('h3',record.title),element('small',new Date(record.date).toLocaleDateString('es-AR')),status,forget);
+        list.append(card);
+        fetch(API+'bolsa_trabajo/mi-postulacion',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,clave:record.key})})
+          .then(async response=>{const data=await response.json();if(!response.ok||!data.success||data.id!==id)throw Error();status.textContent='Estado: '+stateLabel(data.estado);})
+          .catch(()=>{status.textContent='No se pudo consultar el estado.';});
+      }
+    }
+    refresh();
+    root.addEventListener('pageshow',refresh);
+    root.addEventListener('storage',event=>{if(!event.key||event.key.startsWith(prefix))refresh();});
+  }
   function mount(){
     const style=element('style');style.textContent='.job-account-save{align-items:flex-start;gap:10px;grid-column:1/-1;padding:12px 0;text-transform:none!important;letter-spacing:normal!important}.job-account-save input{width:20px;min-height:20px;flex:0 0 20px}.job-account-section{margin:16px 0}.job-account-section form{display:grid;gap:12px;margin:14px 0}.job-account-section textarea{width:100%;font:inherit;font-size:16px;background:#121825;color:#fff;border:1px solid #ffffff33;border-radius:12px;padding:12px}.job-account-section form label{display:flex;gap:10px;align-items:flex-start}.job-account-section details{margin:14px 0}.job-account-section summary{cursor:pointer;font-weight:700;padding:12px 0}.job-account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}.job-account-grid>h3{grid-column:1/-1;margin:4px 0 0}.job-account-card{padding:16px;border:1px solid #ffffff22;border-radius:16px;overflow-wrap:anywhere;background:#101620}.job-account-card h3{margin:10px 0}.job-account-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.job-account-button{min-height:44px;white-space:normal}.job-account-button:focus-visible,.job-account-section textarea:focus-visible{outline:3px solid #8fb8ff;outline-offset:3px}@media(max-width:700px){.job-account-grid{grid-template-columns:1fr}.job-account-actions>*{flex:1 1 auto}}';doc.head.append(style);
-    mountProfile();saveChoice('oferta','jobPostForm','Guardar esta oferta en Mi Perfil');saveChoice('postulacion','applyForm','Guardar esta postulación en Mi Perfil');load();
+    mountDeviceReceipts();mountProfile();saveChoice('oferta','jobPostForm','Guardar esta oferta en Mi Perfil');saveChoice('postulacion','applyForm','Guardar esta postulación en Mi Perfil');load();
     root.addEventListener('uadav:account',()=>{if(credential()!==current)load()});root.addEventListener('storage',event=>{if(event.key===null||event.key==='uadav_account_access_v1')load()});root.addEventListener('focus',()=>{if(!profile||profile.host.isConnected)load()});root.addEventListener('online',()=>load());
   }
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
