@@ -117,10 +117,16 @@
       list.replaceChildren();
       let keys;
       try{keys=Object.keys(root.localStorage).filter(k=>k.startsWith(prefix));}catch{return;}
-      for(const storageKey of keys.reverse()){
+      const receipts=[];
+      for(const storageKey of keys){
         const id=storageKey.slice(prefix.length);
         let record;
         try{record=JSON.parse(root.localStorage.getItem(storageKey));parseProof(id+'|'+record.key);}catch{continue;}
+        const timestamp=new Date(record.date??NaN).getTime();
+        receipts.push({id,record,storageKey,timestamp:Number.isFinite(timestamp)?timestamp:null});
+      }
+      receipts.sort((a,b)=>(b.timestamp??-Infinity)-(a.timestamp??-Infinity)||a.id.localeCompare(b.id));
+      for(const {id,record,storageKey,timestamp} of receipts){
         const card=element('article');card.className='job-account-card';
         const status=element('p','Consultando estado…');
         const forget=button('Quitar de este dispositivo',()=>{
@@ -145,7 +151,9 @@
           }
         }
         status.setAttribute('role','status');
-        card.append(element('h3',record.title),element('small',new Date(record.date).toLocaleDateString('es-AR')),status,retry,forget);
+        card.append(element('h3',record.title));
+        if(timestamp!==null)card.append(element('small','Guardada el '+new Date(timestamp).toLocaleDateString('es-AR')));
+        card.append(status,retry,forget);
         list.append(card);
         lookup();
       }
