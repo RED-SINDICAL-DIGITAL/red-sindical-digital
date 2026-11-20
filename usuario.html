@@ -550,7 +550,7 @@ body[data-page] a.profile-view-back:hover {text-decoration:underline}
  <a class="u2-list-link" href="/bolsa-trabajo.html#buscar-oportunidades"><span>Buscar oportunidades</span><small>Explorar trabajos y postularme</small><span aria-hidden="true">›</span></a>
  </div>
  <div id="profileJobsOffers" role="tabpanel" aria-labelledby="profileJobsTabOffers" class="u2-work-pane" hidden>
- <div class="u2-list-group"><h3>Ofertas que publicaste</h3><p class="muted">Consultá postulantes con tu acceso privado o comprobante guardado.</p>
+ <div class="u2-list-group"><h3>Ofertas que publicaste</h3><div id="deviceOwnerOffers"></div><p class="muted">Consultá postulantes con tu acceso privado o comprobante guardado.</p>
  <a class="u2-action-primary" href="/bolsa-trabajo.html#ownerInbox">Administrar mis ofertas</a></div>
  <a class="u2-list-link" href="/bolsa-trabajo.html#publicar-oportunidad"><span>Publicar oferta</span><small>Gratis y sin comisiones</small><span aria-hidden="true">›</span></a>
  </div>
@@ -657,6 +657,39 @@ if(remember){
 }catch(error){importStatus.textContent='';out.textContent=error.message||'No se pudo consultar el estado.'}
 finally{document.getElementById('profileJobSecret').value='';busy=false;submit.disabled=false;importButton.disabled=false;}
 });
+})();
+</script><script>
+(()=>{
+  const list=document.getElementById('deviceOwnerOffers');
+  const prefix='uadav_owner_offer_v1:';
+  function render(){
+    list.replaceChildren();
+    let keys;
+    try{keys=Object.keys(localStorage).filter(key=>key.startsWith(prefix));}catch{return;}
+    for(const storageKey of keys){
+      const id=storageKey.slice(prefix.length);
+      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id))continue;
+      let saved;
+      try{saved=JSON.parse(localStorage.getItem(storageKey));}catch{continue;}
+      if(!/^[a-f0-9]{64}$/i.test(saved?.key||''))continue;
+      const card=document.createElement('article');
+      card.className='job-account-card';
+      const title=document.createElement('h3');
+      title.textContent=saved.title||id;
+      const actions=document.createElement('div');
+      actions.className='job-account-actions';
+      const link=document.createElement('a');
+      link.className='chip active';link.textContent='Ver postulantes';
+      link.href='/bolsa-trabajo.html?oferta='+encodeURIComponent(id)+'#ownerInbox';
+      const forget=document.createElement('button');
+      forget.type='button';forget.className='chip';forget.textContent='Quitar de este dispositivo';
+      forget.onclick=()=>{try{localStorage.removeItem(storageKey);card.remove();}catch{forget.textContent='No se pudo quitar. Reintentar';}};
+      actions.append(link,forget);card.append(title,actions);list.append(card);
+    }
+  }
+  render();
+  window.addEventListener('pageshow',event=>{if(event.persisted)render();});
+  window.addEventListener('storage',event=>{if(!event.key||event.key.startsWith(prefix))render();});
 })();
 </script><script src="/uadav-jobs-account.js?v=20261120-import"></script><script>
 /* Progressive disclosure: the existing modules keep their DOM and operate as before. */
