@@ -102,8 +102,15 @@ function load(force=false){
   try{pref=localStorage.getItem('uadav_region_preference')||'';}catch{}
   if(force!==true && pendingJobs?.province===pref)return pendingJobs.promise;
   const version=++jobsVersion;
+  const button=document.getElementById('jobSearchBtn');
+  const list=document.getElementById('list');
+  button.textContent='Buscando…';
+  list.setAttribute('aria-busy','true');
   const promise=fetchJobs(pref,version).finally(()=>{
-    if(version===jobsVersion)pendingJobs=null;
+    if(version!==jobsVersion)return;
+    pendingJobs=null;
+    button.textContent='Buscar';
+    list.setAttribute('aria-busy','false');
   });
   pendingJobs={province:pref,promise};
   return promise;
