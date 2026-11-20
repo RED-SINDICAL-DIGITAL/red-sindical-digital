@@ -401,3 +401,8 @@ body[data-page=index-v117] #hero{height:clamp(320px,31vw,430px);min-height:320px
 @media(prefers-reduced-motion:reduce){body[data-page=index-v117] #heroControls button{transition:none}}
 
 @media(min-width:1100px) and (max-width:1799px){body[data-page=index-v117] #hero{height:clamp(300px,calc(100dvh - 300px),390px);min-height:300px}body[data-page=index-v117] #hero .copy{padding-top:24px;padding-bottom:30px}body[data-page=index-v117] #hero h1{font-size:clamp(32px,3.4vw,46px);margin-bottom:12px}body[data-page=index-v117] #hero .buttons{margin-top:18px}}
+
+body[data-page=index-v117] #heroControls #heroPause{
+ top:8px;right:8px;left:auto;transform:none;
+ width:44px;height:44px;min-width:44px;min-height:44px;
+}
