@@ -121,9 +121,16 @@ const filter=document.createElement('input');filter.id='ownerCandidateFilter';fi
 const count=document.createElement('p');count.className='small';count.setAttribute('role','status');
 filterRow.append(label,filter,count);candidates.before(filterRow);
 const render=()=>{
-const cards=[...candidates.querySelectorAll('article.job')];const q=filter.value.trim().toLocaleLowerCase('es');
-let shown=0;for(const card of cards){const text=card.textContent.toLocaleLowerCase('es');const ok=!q||text.includes(q);card.hidden=!ok;if(ok)shown++;}
-count.textContent=cards.length?(shown+' de '+cards.length+' postulantes visibles'):'';
+const cards=[...candidates.querySelectorAll('article.job')];
+const query=foldJob(filter.value);
+let shown=0;
+for(const card of cards){
+  const fields=[card.querySelector('h3')?.textContent,card.querySelector('.job-tag')?.textContent];
+  card.hidden=!fields.some(value=>foldJob(value).includes(query));
+  if(!card.hidden)shown++;
+}
+count.textContent=!cards.length?'':shown===0?'No hay coincidencias. Probá otro nombre o estado.':shown+' de '+cards.length+' visibles';
+
 };
 filter.addEventListener('input',render);
 new MutationObserver(render).observe(candidates,{childList:true,subtree:false});
