@@ -672,18 +672,19 @@ const header=document.getElementById('profileViewHeader');
 const title=document.getElementById('profileViewTitle');
 if(selected!=='home'&&header){header.hidden=false;if(title)title.textContent=titles[selected]}
 if(selected==='account'&&settings){settings.open=true;document.title='Cuenta y seguridad · UADAV STREAM'}
-if(selected==='account'&&params.get('desde')==='radio-studio'&&header){
- const studio=document.createElement('a');
- studio.href='/radio-studio.html';
- studio.className='profile-view-back';
- studio.textContent='Volver a Radio Studio';
- studio.addEventListener('click',event=>{
+const source=params.get('desde');
+const returnPath=source==='radio-studio'?'/radio-studio.html':source==='mis-eventos'?'/usuario.html?vista=eventos':'';
+if(selected==='account'&&returnPath&&header){
+ const back=document.createElement('a');
+ back.href=returnPath;
+ back.className='profile-view-back';
+ back.textContent=source==='radio-studio'?'Volver a Radio Studio':'Volver a Mis eventos';
+ back.addEventListener('click',event=>{
    if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||parent===window)return;
-   try{if(parent.UADAVShellHost?.navigate){event.preventDefault();parent.UADAVShellHost.navigate('/radio-studio.html')}}catch{}
+   try{if(parent.UADAVShellHost?.navigate){event.preventDefault();parent.UADAVShellHost.navigate(returnPath)}}catch{}
  });
- header.append(studio);
+ header.append(back);
 }
-
 if(selected==='artista'||selected==='trabajos'||selected==='eventos'){
  const panel=document.getElementById(selected==='artista'?'mi-artista':selected==='trabajos'?'mis-trabajos':'mis-eventos');
  if(panel&&panel.classList.contains('is-collapsed')){
@@ -822,10 +823,16 @@ function render(items){
 }
 async function load(){
  if(document.body?.dataset.profileView!=='eventos')return;
- if(location.hostname!=='uadav-stream-staging.pages.dev'){message('La gestión privada se está probando solamente en staging.');return}
+ if(location.hostname!=='uadav-stream-staging.pages.dev'&&location.hostname!=='integration-staging-preserve.uadav-stream-staging.pages.dev'){message('La gestión privada se está probando solamente en staging.');return}
  const version=++loadVersion;refresh.disabled=true;message('Cargando tus eventos…');
  try{const data=await request();if(version!==loadVersion)return;if(!Array.isArray(data.items))throw Error('Respuesta de eventos inválida.');render(data.items)}
- catch(e){if(version!==loadVersion)return;message(e.status===401?'Verificá tu cuenta en Cuenta y seguridad para ver las publicaciones propias.':e.status===404?'Gestión privada pendiente de desplegar en el Worker de staging.':e.message||'No se pudo conectar.')}
+ catch(e){if(version!==loadVersion)return;message(e.status===401?'Verificá tu cuenta en Cuenta y seguridad para ver las publicaciones propias.':e.status===404?'Gestión privada pendiente de desplegar en el Worker de staging.':e.message||'No se pudo conectar.');
+ if(e.status===401){
+  const link=document.createElement('a');
+  link.className='chip';link.href='/usuario.html?vista=cuenta&desde=mis-eventos';
+  link.textContent='Abrir Cuenta y seguridad';container.appendChild(link);
+ }
+ }
  finally{if(version===loadVersion)refresh.disabled=false}
 }
 function sessionChanged(){
