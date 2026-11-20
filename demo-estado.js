@@ -5,7 +5,7 @@
     checking = true;
     try {
       const response = await fetch('/demo/estado', {cache:'no-store'});
-      if ([403,503].includes(response.status)) location.replace('/invitacion.html?estado=espera');
+      if (response.status===503) location.reload();
     } catch {} finally { checking = false; }
   }
   document.addEventListener('visibilitychange', check);
