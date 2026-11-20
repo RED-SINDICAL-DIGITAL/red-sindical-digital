@@ -1,5 +1,5 @@
 name = "uadav-api-staging"
-main = "worker.js"
+main = "worker-demo-staging.js"
 compatibility_date = "2026-09-28"
 workers_dev = true
 preview_urls = false
@@ -21,3 +21,10 @@ PUBLIC_SITE_URL = "https://uadav-stream-staging.pages.dev"
 
 # Deliberately no routes, production domains, cron triggers, queues, email,
 # payment webhook, AI API keys or push secrets. ADMIN_KEY must be staging-only.
+
+# Bind the same invitation database to Pages and Worker for this environment.
+[[d1_databases]]
+binding = "DEMO_DB"
+database_name = "uadav-demo-staging"
+database_id = "DEMO_D1_ID_REQUIRED"
+migrations_dir = "migrations/demo"
