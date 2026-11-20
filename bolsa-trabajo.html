@@ -106,13 +106,25 @@ new MutationObserver(render).observe(candidates,{childList:true,subtree:false});
  if(save)save.addEventListener('click',()=>{
    const id=document.getElementById('applyReceiptId')?.value||'';
    const key=document.getElementById('applyReceiptKey')?.value||'';
-   if(!/^POST-[A-Z0-9-]{5,60}$/.test(id)||!/^[a-f0-9]{64}$/i.test(key))return;
+   const msg=document.getElementById('applyReceiptCopyStatus');
+   if(!/^POST-[A-Z0-9-]{5,60}$/.test(id)||!/^[a-f0-9]{64}$/i.test(key)){
+     msg.textContent='Falta un comprobante válido para descargar.';return;
+   }
    const lines=['UADAV STREAM — comprobante privado de postulación','Identificador: '+id,'Clave: '+key,'','Guardá este archivo en privado. No compartas tu clave.'];
-   const blob=new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'});
-   const url=URL.createObjectURL(blob),link=document.createElement('a');
-   link.href=url;link.download='uadav-postulacion-'+id+'.txt';link.click();
-   setTimeout(()=>URL.revokeObjectURL(url),3000);
-   const msg=document.getElementById('applyReceiptCopyStatus');if(msg)msg.textContent='Comprobante generado. Guardalo en un lugar seguro.';
+   let url,link;
+   try{
+     link=document.createElement('a');
+     if(!('download' in link))throw Error();
+     url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain;charset=utf-8'}));
+     link.href=url;link.download='uadav-postulacion-'+id+'.txt';link.hidden=true;
+     save.after(link);link.click();
+     msg.textContent='Si el archivo no aparece en Descargas, usá Copiar comprobante.';
+   }catch{
+     msg.textContent='No se pudo iniciar la descarga. Usá Copiar comprobante o copiá el identificador y la clave antes de cerrar.';
+   }finally{
+     link?.remove();
+     if(url)setTimeout(()=>URL.revokeObjectURL(url),3000);
+   }
  });
 })();
 </script><script src="/uadav-account-sync.js?v=20261104-library-events"></script><script src="/uadav-jobs-account.js?v=20261113-session"></script><script src="/uadav-profile-email.js?v=12061"></script><script src="/uadav-jobs-profile-fill.js?v=11769.1"></script><script src="/uadav-job-recovery-public.js?v=20261104"></script><link rel="stylesheet" href="/uadav-publication-layout.css?v=20261113"><script src="/uadav-publication-layout.js?v=20261113"></script></body></html>
