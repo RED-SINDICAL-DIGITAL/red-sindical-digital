@@ -134,7 +134,8 @@
       }
     }
     refresh();
-    root.addEventListener('pageshow',refresh);
+    root.addEventListener('uadav:job-receipt-saved',refresh);
+    root.addEventListener('pageshow',event=>{if(event.persisted)refresh();});
     root.addEventListener('storage',event=>{if(!event.key||event.key.startsWith(prefix))refresh();});
   }
   function mount(){
