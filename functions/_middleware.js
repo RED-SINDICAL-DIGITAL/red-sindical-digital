@@ -6,6 +6,22 @@ const hex = bytes => Array.from(new Uint8Array(bytes), b => b.toString(16).padSt
 const privateHeaders = {'Cache-Control':'private, no-store', 'Content-Type':'text/plain; charset=utf-8'};
 const reply = (body, status) => new Response(body, {status, headers:privateHeaders});
 
+async function checkAdmin(url, authorization, env) {
+  try {
+    const options = {headers:{Authorization:authorization,Accept:'application/json'},redirect:'error'};
+    const response = env.DEMO_ADMIN_API
+      ? await env.DEMO_ADMIN_API.fetch(url,options)
+      : await fetch(url,options);
+    if (response.status===401 || response.status===403) return reply('Volvé a ingresar con la cuenta de administración nacional.',403);
+    if (!response.ok) throw Error('upstream');
+    const account = await response.json();
+    if (!account?.success || account.role !== 'admin_nacional') return reply('Volvé a ingresar con la cuenta de administración nacional.',403);
+    return null;
+  } catch {
+    return reply('No se pudo verificar la sesión con la API de administración. Revisá la conexión de Pages con el Worker.',502);
+  }
+}
+
 async function digest(code, salt) {
   const key = await crypto.subtle.importKey('raw', encoder.encode(code), 'PBKDF2', false, ['deriveBits']);
   return hex(await crypto.subtle.deriveBits({name:'PBKDF2', hash:'SHA-256', salt:encoder.encode(salt), iterations:100000}, key, 256));
@@ -34,15 +50,18 @@ export async function onRequest({request, env, next}) {
     if (!sameOrigin) return reply('Solicitud inválida.',403);
     const authorization = request.headers.get('Authorization');
     if (!authorization?.startsWith('Bearer ')) return reply('Volvé a ingresar al Admin.',401);
-    const check = await fetch(adminApi,{headers:{Authorization:authorization},redirect:'error'});
-    const account = check.ok && await check.json();
-    if (!account?.success || account.role !== 'admin_nacional') return reply('Volvé a ingresar con la cuenta de administración nacional.',403);
+    const denied = await checkAdmin(adminApi,authorization,env);
+    if (denied) return denied;
     if (!env.DEMO_OWNER_KEY) return reply('Falta configurar DEMO_OWNER_KEY en Pages para este entorno.',503);
     if (request.headers.get('X-Demo-Owner') !== env.DEMO_OWNER_KEY) return reply('La clave del propietario no coincide. Volvé a ingresarla.',403);
     if (!db) return reply('Falta configurar la base de invitaciones.',503);
     if (path === '/demo/admin/lista') {
-      const rows = await db.prepare('SELECT id,email FROM demo_requests WHERE sent IS NULL AND redeemed IS NULL ORDER BY created LIMIT 100').all();
-      return Response.json(rows.results,{headers:{'Cache-Control':'no-store'}});
+      try {
+        const rows = await db.prepare('SELECT id,email FROM demo_requests WHERE sent IS NULL AND redeemed IS NULL ORDER BY created LIMIT 100').all();
+        return Response.json(rows.results,{headers:{'Cache-Control':'no-store'}});
+      } catch {
+        return reply('No se pudieron leer las solicitudes en DEMO_DB. Revisá la tabla demo_requests del entorno.',503);
+      }
     }
     if (['/demo/admin/pausar','/demo/admin/reabrir'].includes(path)) {
       await db.prepare('UPDATE demo_state SET paused=? WHERE id=1').bind(Number(path.endsWith('/pausar'))).run();
@@ -93,9 +112,8 @@ export async function onRequest({request, env, next}) {
     if (path === '/demo/configurar') {
       const authorization = request.headers.get('Authorization');
       if (!authorization?.startsWith('Bearer ')) return reply('Ingresá al Admin.',401);
-      const check = await fetch(adminApi,{headers:{Authorization:authorization},redirect:'error'});
-      const account = check.ok && await check.json();
-      if (!account?.success || account.role !== 'admin_nacional') return reply('Acceso denegado.',403);
+      const denied = await checkAdmin(adminApi,authorization,env);
+    if (denied) return denied;
       const code = await request.text();
       if (code.length < 6 || code.length > 128) return reply('Usá entre 6 y 128 caracteres.',400);
       const salt = crypto.randomUUID();
