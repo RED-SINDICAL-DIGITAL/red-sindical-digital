@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {withDemoPause} from '../demo-api-pause.js';
+test('API stops reads and writes and leaves owner authentication and landing available',async()=>{
+  let paused=0;
+  const env={DEMO_DB:{prepare:()=>({first:async()=>({paused})})}};
+  const worker=withDemoPause({fetch:()=>new Response('ok'),scheduled(){},queue(){}});
+  const call=(path,method='GET')=>worker.fetch(new Request('https://qa.invalid'+path,{method}),env);
+  assert.equal((await call('/api/account')).status,200);
+  paused=1;
+  for(const method of ['GET','POST','PUT','DELETE'])assert.equal((await call('/api/account',method)).status,503);
+  assert.equal((await call('/api/admin_check')).status,200);
+  assert.equal((await call('/api/public/landing')).status,200);
+  paused=0;
+  assert.equal((await call('/api/account')).status,200);
+  env.DEMO_EMERGENCY_PAUSE='1';
+  assert.equal((await call('/api/account')).status,503);
+  delete env.DEMO_DB;delete env.DEMO_EMERGENCY_PAUSE;env.DEMO_GATE_REQUIRED='1';
+  assert.equal((await call('/api/account')).status,503);
+});
