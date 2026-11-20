@@ -126,11 +126,28 @@
         const forget=button('Quitar de este dispositivo',()=>{
           try{root.localStorage.removeItem(storageKey);card.remove();}catch{status.textContent='No se pudo quitar el acceso.';}
         });
-        card.append(element('h3',record.title),element('small',new Date(record.date).toLocaleDateString('es-AR')),status,forget);
+        const retry=button('Reintentar consulta',lookup);
+        retry.hidden=true;
+        async function lookup(){
+          retry.hidden=true;
+          status.textContent='Consultando estado…';
+          try{
+            const response=await root.fetch(API+'bolsa_trabajo/mi-postulacion',{
+              method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({id,clave:record.key})
+            });
+            const data=await response.json();
+            if(!response.ok||data.success!==true||data.id!==id)throw Error();
+            status.textContent='Estado: '+stateLabel(data.estado);
+          }catch{
+            status.textContent='No se pudo consultar el estado.';
+            retry.hidden=false;
+          }
+        }
+        status.setAttribute('role','status');
+        card.append(element('h3',record.title),element('small',new Date(record.date).toLocaleDateString('es-AR')),status,retry,forget);
         list.append(card);
-        fetch(API+'bolsa_trabajo/mi-postulacion',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,clave:record.key})})
-          .then(async response=>{const data=await response.json();if(!response.ok||!data.success||data.id!==id)throw Error();status.textContent='Estado: '+stateLabel(data.estado);})
-          .catch(()=>{status.textContent='No se pudo consultar el estado.';});
+        lookup();
       }
     }
     refresh();
