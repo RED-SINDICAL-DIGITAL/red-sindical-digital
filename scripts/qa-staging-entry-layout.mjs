@@ -2,15 +2,9 @@
 import{chromium}from'playwright';import{mkdir}from'node:fs/promises';
 const origin='http://127.0.0.1:8765',out='artifacts/staging-integration-visual';await mkdir(out,{recursive:true});const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 try{for(const viewport of [{name:'mobile-320',width:320,height:700},{name:'mobile',width:390,height:844},{name:'desktop',width:1365,height:900},{name:'tv',width:1920,height:1080}]){const ctx=await browser.newContext({viewport,serviceWorkers:'block'});let writes=0;await ctx.route('**/*',r=>{const q=r.request(),u=new URL(q.url());if(q.method()!=='GET'){writes++;return r.abort()}if(u.origin===origin&&!u.pathname.startsWith('/api/'))return r.continue();if(!u.pathname.startsWith('/api/'))return r.abort();let data=[];if(u.pathname==='/api/config')data={modules:{artists:true}};if(u.pathname==='/api/landing_config')data={};return r.fulfill({contentType:'application/json',body:JSON.stringify(data),headers:{'Access-Control-Allow-Origin':'*'}})});
-const page=await ctx.newPage();await page.goto(origin+'/promo.html');const codeEntry=page.getByRole('link',{name:'Ya tengo invitación'});
-const requestEntry=page.getByRole('link',{name:/Solicitar invitación/}).first();
-await requestEntry.click();
-await page.locator('#request input[type=email]').waitFor({state:'visible'});
-await page.goBack();
-await codeEntry.click();
-await page.locator('#tester input[name=code]').waitFor({state:'visible'});
-if(await page.locator('#request').isVisible())throw Error('Code entry also shows the email form');
-await page.goBack();
+const page=await ctx.newPage();await page.goto(origin+'/promo.html');await page.locator('[data-landing-link="hero_4_url"]').click();
+await page.locator('#view').waitFor();
+await page.goto(origin+'/promo.html');
 const artist=page.locator('[data-landing-link="creators_7_url"]');
 if(await artist.getAttribute('href')!=='/app.html?view=%2Fpara-artistas.html')throw Error('Artist entry destination wrong');
 if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+3))throw Error('Landing overflow');await page.screenshot({path:out+'/landing-two-entries-'+viewport.name+'.png'});await artist.click();const f=page.frameLocator('#view');await f.locator('.portal-options').waitFor();await f.locator('.entry-recovery summary').click();await f.locator('.entry-recovery a[href="/usuario.html?vista=cuenta"]').waitFor({state:'visible'});if(await f.locator('html').evaluate(el=>el.scrollWidth>innerWidth+3))throw Error('Artist portal overflow');await page.screenshot({path:out+'/artist-entry-'+viewport.name+'.png'});await f.locator('.portal-options a[href="/soy-artista.html"]').click();await f.locator('#needAccount').waitFor({state:'visible'});if(!await f.locator('#choose').isHidden())throw Error('Anonymous creation bypasses account');
