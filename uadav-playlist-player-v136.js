@@ -13,14 +13,13 @@ window.UADAVPlaylistPlayer={createQueue,api};const stage=document.getElementById
  player[name](...args);return true;
 };
 window.UADAVPlaylistPlayer.queueState=()=>session?.queue?.state;
-window.UADAVPlaylistPlayer.shuffle=()=>{
- const q=session?.queue;if(!q||q.state.busy)return;
- const {items,index}=q.state;
- for(let i=items.length-1;i>index+1;i--){
-  const j=index+1+Math.floor(Math.random()*(i-index));
-  [items[i],items[j]]=[items[j],items[i]];
- }
- session.render?.(q.state);
+window.UADAVPlaylistPlayer.order=ordered=>{
+ const state=session?.queue?.state;
+ if(!state||state.busy)return;
+ const current=state.items[state.index];
+ state.items.splice(0,state.items.length,...ordered);
+ state.index=state.items.indexOf(current);
+ session.render?.(state);
 };
 window.UADAVPlaylistPlayer.step=delta=>session?.queue?.step(delta);window.addEventListener('message',e=>{if(e.origin!==location.origin||e.source!==document.getElementById('view')?.contentWindow||e.data?.type!=='uadav:playlist-state-request')return;session?.announce?.()});
 function attach(){const frame=stage.querySelector('iframe[data-uadav-playlist]');if(session?.frame===frame)return;if(session){session.dead=true;session.abort.abort();window.UADAVMediaSession?.release(session.player);session.controls.remove();try{session.player?.destroy()}catch{}}session=null;if(!frame){try{document.getElementById('view')?.contentWindow?.postMessage({type:'uadav:playlist-state',playlist_id:'',playing:false},location.origin)}catch{}return;}
