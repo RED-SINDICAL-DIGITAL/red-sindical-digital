@@ -18,7 +18,7 @@ if(['integration-staging-preserve.uadav-stream-staging.pages.dev','uadavstream.c
   manage.onclick=async()=>{
     const key=await new Promise(resolve=>{
       const gate=document.createElement('dialog'),form=document.createElement('form');
-      form.method='dialog';
+      gate.className='demo-owner-panel';form.method='dialog';
       const label=document.createElement('label'),input=document.createElement('input');
       label.textContent='Clave privada del propietario';input.type='password';input.required=true;label.append(input);
       const enter=document.createElement('button'),cancel=document.createElement('button');
@@ -29,23 +29,23 @@ if(['integration-staging-preserve.uadav-stream-staging.pages.dev','uadavstream.c
       gate.showModal();input.focus();
     });
     if(!key)return;
-    const dialog=document.createElement('dialog');
+    const dialog=document.createElement('dialog');dialog.className='demo-owner-panel';
     const heading=document.createElement('h2');heading.textContent='Invitaciones y acceso';
     const status=document.createElement('p');status.setAttribute('role','status');
     dialog.append(heading,status);
     const action=(label,callback,parent=dialog)=>{
-      const control=document.createElement('button');control.textContent=label;control.type='button';parent.append(control);
+      const control=document.createElement('button');control.textContent=label;control.type='button';control.className='btn btn-ghost';parent.append(control);
       control.onclick=async()=>{control.disabled=true;try{await callback()}catch{status.textContent='No se pudo conectar.'}finally{control.disabled=false}};
     };
     const call=(name,body)=>fetch('/demo/admin/'+name,{method:'POST',headers:{Authorization:'Bearer '+sessionStorage.getItem('uadav_admin_v8'),'X-Demo-Owner':key},body});
-    for(const [label,route] of [['Pausar acceso','pausar'],['Reabrir acceso','reabrir']]){
-      action(label,async()=>{if(!window.confirm(label+' para los invitados?'))return;status.textContent=await (await call(route)).text()});
-    }
     action('Cerrar',()=>dialog.close());
     document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove(),{once:true});dialog.showModal();
     try{
-      const result=await call('lista');if(!result.ok){status.textContent=await result.text();return}
+      const result=await call('lista');if(!result.ok){status.textContent=await result.text();if(result.status===403)action('Volver a ingresar',()=>{dialog.close();manage.click()});return}
       const rows=await result.json();status.textContent=rows.length?'Solicitudes pendientes':'Sin solicitudes pendientes.';
+    for(const [label,route] of [['Pausar acceso','pausar'],['Reabrir acceso','reabrir']]){
+      action(label,async()=>{if(!window.confirm(label+' para los invitados?'))return;status.textContent=await (await call(route)).text()});
+    }
       for(const item of rows){
         const row=document.createElement('p');row.textContent=item.email+' ';dialog.append(row);
         action('Enviar invitación',async()=>{const r=await call('invitar',item.id);status.textContent=await r.text();if(r.ok)row.remove()},row);
