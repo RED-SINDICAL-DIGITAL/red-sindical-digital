@@ -27,6 +27,8 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -37,7 +39,7 @@ jobs:
         run: node scripts/qa-staging-health-readonly.mjs
       - name: Check published branch preview
         env:
-          STAGING_DEMO_CODE: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/integration/staging-preserve-beta-20261109' && secrets.STAGING_DEMO_CODE || '' }}
+          STAGING_DEMO_CODE: ${{ ((github.event_name != 'pull_request' && github.ref == 'refs/heads/integration/staging-preserve-beta-20261109') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'integration/staging-preserve-beta-20261109')) && secrets.STAGING_DEMO_CODE || '' }}
         run: node scripts/qa-staging-published-preview.mjs
       - name: Store screenshots
         if: always()
