@@ -7,7 +7,25 @@ if(target?.origin===location.origin&&['/usuario.html','/gestionar-artista.html',
  const a=el('a','Abrir');a.className='chip';a.href=target.pathname+target.search+target.hash;
  a.onclick=()=>{if(!n.read)call('PATCH',{keys:[n.id]},current).catch(()=>{})};row.append(a);
 }
-if(!n.read){const read=el('button','Marcar leído');read.className='chip';read.onclick=async()=>{const credential=current;read.disabled=true;try{await call('PATCH',{keys:[n.id]},credential);if(credential===current){n.read=true;paint()}}catch(e){if(credential===current){status.textContent=e.message;read.disabled=false}}};row.append(read)}list.append(row)}}
+if(!n.read){
+ const read=el('button','Marcar leído');read.className='chip';
+ read.onclick=async()=>{
+  if(read.disabled)return;
+  const credential=current;read.disabled=true;
+  try{
+   await call('PATCH',{keys:[n.id]},credential);
+   if(credential===current)await reconcileRead([n.id]);
+  }catch(e){if(credential===current){status.textContent=e.message;read.disabled=false}}
+ };
+ row.append(read);
+}
+list.append(row)}}
+async function reconcileRead(keys){
+ for(const item of items)if(keys.includes(item.id))item.read=true;
+ paint();
+ turn++;busy=false;
+ await load();
+}
 async function load(){const secret=localStorage.getItem(key)||'';if(secret!==current){current=secret;turn++;busy=false;markingAll=false;items=[];list.replaceChildren();status.textContent='';toggle.textContent='🔔 Avisos';panel.hidden=true;toggle.setAttribute('aria-expanded','false')}host.hidden=!secret;if(!secret||busy)return;const attempt=++turn;busy=true;refresh.disabled=true;try{const d=await call('GET',null,secret);if(attempt!==turn||!host.isConnected)return;if(!Array.isArray(d.items))throw Error('Respuesta de avisos inválida.');items=d.items;paint()}catch(e){if(attempt===turn&&host.isConnected)status.textContent=e.message}finally{if(attempt===turn){busy=false;refresh.disabled=false}}}
 toggle.onclick=()=>{panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden)load()};refresh.onclick=load;all.onclick=async()=>{
  const secret=current,keys=items.filter(item=>!item.read).map(item=>item.id);
@@ -16,11 +34,7 @@ toggle.onclick=()=>{panel.hidden=!panel.hidden;toggle.setAttribute('aria-expande
  try{
   await call('PATCH',{keys},secret);
   if(secret!==current)return;
-  for(const item of items)if(keys.includes(item.id))item.read=true;
-  paint();
-  // Una lectura iniciada antes de la confirmación puede traer el contador anterior.
-  turn++;busy=false;
-  await load();
+  await reconcileRead(keys);
  }catch(e){if(secret===current)status.textContent=e.message}
  finally{if(secret===current){markingAll=false;all.disabled=!items.some(item=>!item.read)}}
 };g.addEventListener('uadav:account',()=>{if((localStorage.getItem(key)||'')!==current)load()});g.addEventListener('focus',load);g.addEventListener('online',load);g.addEventListener('storage',e=>{if(e.key===null||e.key===key)load()});setInterval(()=>{if(!document.hidden&&host.isConnected)load()},30000);load()}
