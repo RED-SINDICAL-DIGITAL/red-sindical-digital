@@ -1,5 +1,5 @@
 const staging = 'integration-staging-preserve.uadav-stream-staging.pages.dev';
-const adminApi = 'https://uadav-api-staging.uadavstream.workers.dev/api/admin_check';
+const stagingAdminApi = 'https://uadav-api-staging.uadavstream.workers.dev/api/admin_check';
 const configKey = 'staging-demo-access-v1';
 const encoder = new TextEncoder();
 const hex = bytes => Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2, '0')).join('');
@@ -22,8 +22,69 @@ function promptPage(message = '') {
 
 export async function onRequest({request, env, next}) {
   const url = new URL(request.url);
-  if (url.hostname !== staging) return next();
+  const production = ['uadavstream.com.ar','www.uadavstream.com.ar'].includes(url.hostname);
+  if (!production && url.hostname !== staging) return next();
+  const adminApi = production ? 'https://uadav-api.uadavstream.workers.dev/api/admin_check' : stagingAdminApi;
   const path = url.pathname;
+  const db = env.DEMO_DB;
+  const maintenance = () => new Response('La demo está en pausa. Podés volver a la portada.', {status:503,headers:{...privateHeaders,'Retry-After':'60'}});
+  const sameOrigin = request.method === 'POST' && request.headers.get('Origin') === url.origin;
+  const ownerRoute = path.startsWith('/demo/admin/');
+  if (ownerRoute) {
+    if (!sameOrigin) return reply('Solicitud inválida.',403);
+    const authorization = request.headers.get('Authorization');
+    if (!authorization?.startsWith('Bearer ') || !env.DEMO_OWNER_KEY || request.headers.get('X-Demo-Owner') !== env.DEMO_OWNER_KEY) return reply('Acceso reservado al propietario.',403);
+    const check = await fetch(adminApi,{headers:{Authorization:authorization},redirect:'error'});
+    const account = check.ok && await check.json();
+    if (!account?.success || account.role !== 'admin_nacional') return reply('Acceso denegado.',403);
+    if (!db) return reply('Falta configurar la base de invitaciones.',503);
+    if (path === '/demo/admin/lista') {
+      const rows = await db.prepare('SELECT id,email FROM demo_requests WHERE sent IS NULL AND redeemed IS NULL ORDER BY created LIMIT 100').all();
+      return Response.json(rows.results,{headers:{'Cache-Control':'no-store'}});
+    }
+    if (['/demo/admin/pausar','/demo/admin/reabrir'].includes(path)) {
+      await db.prepare('UPDATE demo_state SET paused=? WHERE id=1').bind(Number(path.endsWith('/pausar'))).run();
+      return reply(env.DEMO_EMERGENCY_PAUSE==='1' ? 'La pausa de Cloudflare sigue activa.' : 'Estado actualizado.',200);
+    }
+    if (path === '/demo/admin/invitar') {
+      if (!env.DEMO_MAIL_KEY || !env.DEMO_FROM || !env.DEMO_INVITE_SECRET) return reply('Falta configurar el envío de invitaciones.',503);
+      const id = await request.text();
+      const now = Math.floor(Date.now()/1000);
+      const row = await db.prepare('UPDATE demo_requests SET expires=CASE WHEN expires IS NULL OR expires<=? THEN ? ELSE expires END WHERE id=? AND redeemed IS NULL AND sent IS NULL RETURNING email,expires').bind(now,now+604800,id).first();
+      if (!row) return reply('La solicitud ya fue procesada.',409);
+      const token = await signature(env.DEMO_INVITE_SECRET,id+'.'+row.expires);
+      const mail = await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+env.DEMO_MAIL_KEY,'Content-Type':'application/json','Idempotency-Key':'demo-'+id+'-'+row.expires},body:JSON.stringify({from:env.DEMO_FROM,to:[row.email],subject:'Tu invitación a UADAV STREAM',text:'Ya podés probar UADAV STREAM. Abrí este enlace personal dentro de los próximos siete días: '+url.origin+'/invitacion.html#'+id+'.'+token})});
+      if (!mail.ok) return reply('El proveedor no confirmó el envío. Podés reintentar.',502);
+      await db.prepare('UPDATE demo_requests SET sent=? WHERE id=?').bind(now,id).run();
+      return reply('El proveedor aceptó la invitación.',200);
+    }
+    return reply('Acción desconocida.',404);
+  }
+  if (path === '/demo/solicitar') {
+    if (!sameOrigin) return reply('Solicitud inválida.',403);
+    if (!db) return reply('Las solicitudes todavía no están habilitadas.',503);
+    const email = String((await request.formData()).get('email') || '').trim().toLowerCase();
+    if (email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return reply('Revisá tu correo.',400);
+    await db.prepare('INSERT INTO demo_requests(id,email,created) VALUES(?,?,?) ON CONFLICT(email) DO UPDATE SET id=excluded.id,created=excluded.created,expires=NULL,sent=NULL,redeemed=NULL,session_hash=NULL,session_until=NULL WHERE demo_requests.expires<=excluded.created AND COALESCE(demo_requests.session_until,0)<=excluded.created').bind(crypto.randomUUID(),email,Math.floor(Date.now()/1000)).run();
+    return reply('Recibimos tu solicitud. Cuando se habilite tu lugar, te avisamos por correo.',200);
+  }
+  if (/^\/(?:promo|admin|invitacion|privacidad|terminos|contacto|mediakit|guia|documentacion|convenios|consultar-publicidad)(?:\.html)?\/?$/.test(path)) return next();
+  if (path === '/' || /^\/index(?:\.html)?\/?$/.test(path)) return Response.redirect(url.origin+'/promo.html',302);
+  if (/\.(?:css|js|mjs|png|jpe?g|webp|svg|ico|woff2?|gif|avif|webmanifest|mp4)$/i.test(path)) return next();
+  if (env.DEMO_EMERGENCY_PAUSE==='1' || (db && (await db.prepare('SELECT paused FROM demo_state WHERE id=1').first())?.paused)) return maintenance();
+  if (path === '/demo/canjear') {
+    if (!sameOrigin) return reply('Solicitud inválida.',403);
+    if (!db || !env.DEMO_INVITE_SECRET) return reply('Invitaciones pendientes de configuración.',503);
+    const [id,proof] = String((await request.formData()).get('ticket') || '').split('.');
+    const now = Math.floor(Date.now()/1000);
+    const row = await db.prepare('SELECT expires FROM demo_requests WHERE id=? AND expires>? AND redeemed IS NULL').bind(id,now).first();
+    if (!row || await signature(env.DEMO_INVITE_SECRET,id+'.'+row.expires)!==proof) return reply('El enlace venció o ya fue utilizado.',403);
+    const session = crypto.randomUUID();
+    const hash = await signature(env.DEMO_INVITE_SECRET,session);
+    const update = await db.prepare('UPDATE demo_requests SET redeemed=?,session_hash=?,session_until=? WHERE id=? AND redeemed IS NULL AND expires>?').bind(now,hash,now+604800,id,now).run();
+    if (!update.meta.changes) return reply('El enlace ya fue utilizado.',403);
+    return new Response(null,{status:303,headers:{...privateHeaders,Location:'/app.html','Set-Cookie':'__Host-uadav_invite='+session+'; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800'}});
+  }
   if (path === '/demo/configurar' || path === '/demo/entrar') {
     if (request.method !== 'POST' || request.headers.get('Origin') !== url.origin) return reply('Solicitud inválida.',403);
     if (!env.DEMO_KV) return reply('Falta vincular DEMO_KV al entorno de pruebas.',503);
@@ -46,15 +107,26 @@ export async function onRequest({request, env, next}) {
     const expiry = Math.floor(Date.now()/1000)+86400;
     return new Response(null,{status:303,headers:{...privateHeaders,Location:'/app.html','Set-Cookie':`__Host-uadav_demo=${expiry}.${await signature(config.secret,expiry)}; Max-Age=86400; Secure; HttpOnly; Path=/; SameSite=Lax`}});
   }
-  if (path === '/' || /^\/index(?:\.html)?\/?$/.test(path)) return Response.redirect(url.origin+'/promo.html',302);
-  if (/^\/(?:promo|admin|privacidad|terminos|contacto|mediakit|guia|documentacion|convenios|consultar-publicidad)(?:\.html)?\/?$/.test(path) || /\.[a-z0-9]+$/i.test(path) && !/\.html?$/i.test(path)) return next();
-  const config = await env.DEMO_KV?.get(configKey,'json');
-  if (!env.DEMO_KV) return next();
-  if (!config) return promptPage();
-  const match = /(?:^|;\s*)__Host-uadav_demo=(\d{10})\.([0-9a-f]{64})(?:;|$)/.exec(request.headers.get('Cookie') || '');
-  if (!match || Number(match[1]) <= Date.now()/1000 || match[2] !== await signature(config.secret,match[1])) return promptPage();
+  const cookies=request.headers.get('Cookie') || '';
+  const invite=/(?:^|;\s*)__Host-uadav_invite=([a-f0-9-]{36})(?:;|$)/.exec(cookies);
+  let allowed=false;
+  if (invite && db && env.DEMO_INVITE_SECRET) {
+    const hash=await signature(env.DEMO_INVITE_SECRET,invite[1]);
+    allowed=!!await db.prepare('SELECT id FROM demo_requests WHERE session_hash=? AND session_until>?').bind(hash,Math.floor(Date.now()/1000)).first();
+  }
+  if (!allowed) {
+    const config=await env.DEMO_KV?.get(configKey,'json');
+    const match=/(?:^|;\s*)__Host-uadav_demo=(\d{10})\.([0-9a-f]{64})(?:;|$)/.exec(cookies);
+    allowed=!!(config && match && Number(match[1])>Date.now()/1000 && match[2]===await signature(config.secret,match[1]));
+  }
+  if (!production && !db && !env.DEMO_KV) allowed=true;
+  if (path==='/demo/estado') return reply(allowed?'Disponible':'Necesitás una invitación.',allowed?200:403);
+  if (!allowed) return promptPage();
   const asset = await next();
   const response = new Response(asset.body, asset);
   response.headers.set('Cache-Control','private, no-store');
+  if (/^\/app(?:\.html)?\/?$/.test(path) && response.headers.get('content-type')?.includes('text/html')) {
+    return new HTMLRewriter().on('body',{element(el){el.append('<script src="/demo-estado.js" defer></script>',{html:true})}}).transform(response);
+  }
   return response;
 }
