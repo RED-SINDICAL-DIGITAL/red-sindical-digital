@@ -528,7 +528,7 @@ function uadavProfileDisplay(value,strict=false){
 function uadavSafeJSON(v,fallback={}){try{return typeof v==='string'?JSON.parse(v):(v??fallback)}catch{return fallback}}
 function uadavDecodeHTMLText(value){const named={amp:'&',apos:"'",gt:'>',lt:'<',nbsp:' ',quot:'"',ndash:'–',mdash:'—',lsquo:'‘',rsquo:'’',ldquo:'“',rdquo:'”',hellip:'…'};return String(value||'').replace(/&(#(?:x[0-9a-f]{1,6}|[0-9]{1,7})|[a-z]{2,10});/gi,(match,code)=>{if(code[0]==='#'){const raw=code.slice(1),cp=raw[0]?.toLowerCase()==='x'?parseInt(raw.slice(1),16):Number(raw);return Number.isInteger(cp)&&cp>=0x20&&cp<=0x10ffff&&!(cp>=0xd800&&cp<=0xdfff)?String.fromCodePoint(cp):' '}const key=code.toLowerCase();return Object.prototype.hasOwnProperty.call(named,key)?named[key]:match})}
 async function uadavDeliverNotification(payload,env){const url=String(env.EMAIL_AUTOMATION_URL||'').trim();if(!url)return {sent:false,reason:'EMAIL_AUTOMATION_URL no configurada'};try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(env.EMAIL_AUTOMATION_SECRET?{'X-UADAV-Webhook-Secret':String(env.EMAIL_AUTOMATION_SECRET)}:{})},body:JSON.stringify(payload)});return r.ok?{sent:true}:{sent:false,status:r.status}}catch(e){return {sent:false,error:String(e?.message||e)}}}
-async function uadavFlushQueuedNotifications(env,limit=20){if(!env.DB)return {processed:0};let rows;try{rows=await env.DB.prepare(`SELECT id,payload_json FROM notifications WHERE status='queued' ORDER BY created_at ASC LIMIT ?`).bind(Math.min(50,Math.max(1,Number(limit||20)))).all()}catch{return {processed:0}}let processed=0;for(const row of (rows.results||[])){const payload=uadavSafeJSON(row.payload_json,{}),result=await uadavDeliverNotification({notification_id:row.id,...payload},env);if(result.sent){await env.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(new Date().toISOString(),row.id).run();processed++;}}return {processed}}
+async function uadavFlushQueuedNotifications(env,limit=20){if(!env.DB)return {processed:0};let rows;try{rows=await env.DB.prepare(`SELECT id,payload_json FROM notifications WHERE status='queued' ORDER BY created_at ASC LIMIT ?`).bind(Math.min(50,Math.max(1,Number(limit||20)))).all()}catch{return {processed:0}}let processed=0;for(const row of (rows.results||[])){const payload=uadavSafeJSON(row.payload_json,{}),result=await uadavDeliverNotification({...payload,notification_id:row.id},env);if(result.sent){await env.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(new Date().toISOString(),row.id).run();processed++;}}return {processed}}
 async function uadavMaintenance(env){const now=Date.now(),iso=new Date().toISOString();let expiredFeatures=0,expiredJobs=0;try{const raw=await env.UADAV_DB.get('eventos_publicados');const events=raw?uadavSafeJSON(raw,[]):[];let changed=false;for(const e of events){const until=e?.destacado_hasta?Date.parse(e.destacado_hasta):NaN;if(e?.destacado_pagado===true&&Number.isFinite(until)&&until<now){e.destacado_pagado=false;e.destacado_estado='vencido';e.actualizado=iso;expiredFeatures++;changed=true}}if(changed){await env.UADAV_DB.put('eventos_publicados',JSON.stringify(events));const catRaw=await env.UADAV_DB.get('cartelera_aprobada');const cat=catRaw?uadavSafeJSON(catRaw,[]):[];const byId=new Map(events.map(e=>[String(e.id),e]));for(let i=0;i<cat.length;i++){if(byId.has(String(cat[i]?.id)))cat[i]={...cat[i],...byId.get(String(cat[i].id))}}await env.UADAV_DB.put('cartelera_aprobada',JSON.stringify(cat));if(env.DB){for(const e of events.filter(x=>x.destacado_estado==='vencido'))await env.DB.prepare(`UPDATE events SET featured=0,payment_status='vencido',data_json=?,updated_at=? WHERE id=?`).bind(JSON.stringify(e),iso,String(e.id)).run()}}}catch(_){}
 try{const raw=await env.UADAV_DB.get('bolsa_trabajo');const jobs=raw?uadavSafeJSON(raw,[]):[];let changed=false;for(const j of jobs){const deadline=j?.fecha_limite?Date.parse(String(j.fecha_limite).slice(0,10)+'T23:59:59'):NaN;if(j?.activo!==false&&Number.isFinite(deadline)&&deadline<now){j.activo=false;j.estado='vencida';j.actualizado=iso;expiredJobs++;changed=true}}if(changed){await env.UADAV_DB.put('bolsa_trabajo',JSON.stringify(jobs));if(env.DB){for(const j of jobs.filter(x=>x.estado==='vencida'))await env.DB.prepare(`UPDATE jobs SET active=0,status='vencida',data_json=?,updated_at=? WHERE id=?`).bind(JSON.stringify(j),iso,String(j.id)).run()}}}catch(_){}
 let staleExternalJobs=0,staleExternalEvents=0;
@@ -1175,14 +1175,17 @@ const uadavWorker = {
       } catch(e) { return {sent:false,error:String(e?.message||e)}; }
     }
     async function emitNotification(payload) {
-      const item = { id: 'N-'+Date.now().toString(36).toUpperCase(), channel:String(payload.channel||'email'), template:String(payload.template||payload.event||'generic'), recipient:String(payload.to||payload.recipient||''), status:'queued', payload, created_at:isoNow() };
+      const item = { id: 'N-'+crypto.randomUUID(), channel:String(payload.channel||'email'), template:String(payload.template||payload.event||'generic'), recipient:String(payload.to||payload.recipient||''), status:'queued', payload, created_at:isoNow() };
       if (hasD1()) await safeD1('notification_queue',()=>env.DB.prepare(`INSERT INTO notifications(id,channel,template,recipient,status,payload_json,created_at) VALUES(?,?,?,?,?,?,?)`).bind(item.id,item.channel,item.template,item.recipient,item.status,JSON.stringify(payload),item.created_at).run());
       if (env.UADAV_NOTIFY) {
-        try { await env.UADAV_NOTIFY.send(JSON.stringify({notification_id:item.id,...payload})); return item; } catch (_) {}
+        try { await env.UADAV_NOTIFY.send(JSON.stringify({...payload,notification_id:item.id})); return item; } catch (_) {}
       }
-      const send = deliverNotification({notification_id:item.id,...payload},env);
-      if (ctx?.waitUntil) ctx.waitUntil(send);
-      else { const result=await send; if(result.sent && hasD1()) await env.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(isoNow(),item.id).run(); }
+      const send = async () => {
+        const result=await deliverNotification({...payload,notification_id:item.id},env);
+        if(result.sent && hasD1()) await env.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(isoNow(),item.id).run();
+      };
+      if (ctx?.waitUntil) ctx.waitUntil(send());
+      else await send();
       return item;
     }
     async function flushQueuedNotifications(env2=env, limit=20) {
@@ -1191,7 +1194,7 @@ const uadavWorker = {
       let processed=0;
       for(const row of (rows.results||[])){
         const payload=safeJSON(row.payload_json,{});
-        const result=await deliverNotification({notification_id:row.id,...payload},env2);
+        const result=await deliverNotification({...payload,notification_id:row.id},env2);
         if(result.sent){ await env2.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(isoNow(),row.id).run(); processed++; }
       }
       return {processed};
