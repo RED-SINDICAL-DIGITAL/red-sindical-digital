@@ -20,3 +20,20 @@ assert.equal(ctx.chooseHeroSlides(many,{mode:'mixed',slides:[{title:'Campaña'}]
 assert.equal(ctx.chooseHeroSlides(many,{mode:'featured'}).length,40);
 assert(!html.includes('const picks=list.slice('));
 console.log('PASS: slider modes, empty fallback, inactive campaigns and safe URLs');
+
+// The default hero must exist before JavaScript or any API response.
+const initialHero=html.slice(html.indexOf('<div id="heroSlider"'),html.indexOf('<form id="searchForm"'));
+assert.match(initialHero,/<div class="hero-slide active" data-generic-hero>/);
+assert.match(initialHero,/<h1>Encontrá tu próximo espectáculo\.<\/h1>/);
+assert.match(initialHero,/href="#grid"/);
+assert(!initialHero.includes('<img'), 'initial generic hero must not wait for a remote image');
+console.log('PASS: generic hero renders from HTML without API or image dependencies');
+
+const open=[{id:'public',titulo:'Evento abierto',portada:'https://example.test/banner.jpg'},{id:'bad',portada:'javascript:bad'}];
+assert.equal(ctx.chooseHeroSlides([],{},open).length,1);
+assert.equal(ctx.chooseHeroSlides([],{},open)[0].id,'public');
+assert.equal(ctx.chooseHeroSlides([{...open[0],destacado_pagado:true}],{},open).length,1);
+assert.equal(ctx.chooseHeroSlides(paid,{},open)[0].id,'a');
+console.log('PASS: free public horizontal banners join mixed Hero rotation without duplicate featured events');
+
+assert.equal(ctx.chooseHeroSlides([{...open[0],destacado_pagado:true}],{},open)[0].destacado_pagado,true);

@@ -1,0 +1,5 @@
+# Integración comercial pública — 2026-11-04
+Staging. Nuevo consumidor de monetization/campaigns?public=true, sin parámetros territoriales inventados: el Worker decide la elegibilidad usando la ubicación de la solicitud. Petición sin caché con cancelación8s y fallo cerrado. No modifica permisos, pagos ni campañas.
+Hero carga editoriales primero y después campañas admitidas resueltas contra entidades públicas, con PUBLICIDAD y máximo tres comerciales. Cartelera carga agenda primero y después incorpora campañas de eventos presentes y filtrados en la agenda; reusa premiumCard y etiqueta PUBLICIDAD. Combos se admiten en ambos destinos.
+Regresiones cubren expirados, futuros, etiquetas, entidades ocultas, ubicación, deduplicación, límite y combos.857 pruebas aprobadas.
+No se activaron campañas para afirmar entrega real. Campaña sintética sigue pausada. Pendiente validar aparición por provincia/nacional con campaña sintética activada y bonificada en staging, y desaparición real al vencer. Productos restantes (banners/radios/auspicios) no se dan por integrados por este cambio. No migraciones ni Worker nuevo; producción intacta.

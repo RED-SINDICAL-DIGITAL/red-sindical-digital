@@ -1,0 +1,53 @@
+# Worker de staging 11754 — playlists públicas
+
+Archivo completo para reemplazar el código del Worker uadav-api-staging. Preparado desde la rama audit/public-job-status-20261012.
+
+## Aplicación manual
+
+1. Abrir uadav-api-staging en Cloudflare Workers.
+2. Reemplazar el código por worker-staging-11754.js y desplegar.
+3. Conservar las variables, secretos y bindings existentes. Esta entrega no exige migración de D1, cambios de credenciales ni activar cron.
+4. Consultar /api/health del Worker de staging: debe informar build 11754.
+5. Recargar el perfil de artista en la demo, abrir Playlists y comprobar nombres, carátulas y cantidades.
+
+No aplicar al Worker de producción.
+
+## Qué cambia
+
+- Biblioteca del canal usa cache v2 para evitar datos antiguos incompletos.
+- Si faltan metadatos, intenta recuperarlos con una consulta oficial por hasta 50 IDs.
+- Los resultados sólo actualizan playlists presentes en la página solicitada.
+- Una cantidad desconocida se devuelve como null; no se inventa cero.
+- La respuesta indica metadata_incomplete si siguen faltando datos. Se conserva por 60 segundos para permitir una recuperación posterior; la completa, por 600 segundos.
+- El frontend distingue datos incompletos de playlist vacía y usa un nombre de respaldo cuando falta el título.
+
+## Validación y límites
+
+- 197 pruebas CJS locales pasan; integraciones aisladas de módulos, RSS y titularidad pasan.
+- Despliegue confirmado el 2026-10-19: /api/health informa build 11754, KV y D1 activos.
+- El canal Madonna - Topic (UCo4CrqhIV_tSOGdDWfVyCsg) sigue devolviendo 12 playlists sin título ni imagen, count:null y metadata_incomplete:true. La recuperación no completó esos metadatos.
+- El canal Madonna (@madonna, UC81VD6eeuLLSfyY_D-N8sVw) devuelve 39 playlists con títulos, cantidades y URLs de miniaturas; metadata_incomplete:false. La demo muestra los 39 títulos y cantidades, pero las imágenes visibles son de respaldo. No se considera resuelta la carga real de carátulas.
+- Mejora frontend fa83040557c953d3ba26d2bbc35f3430f6338486: el directorio acepta enlace/@usuario/ID de canal, el perfil y compartir conservan ese canal, y la hidratación no mezcla búsquedas por nombre si ya conoce el canal. Búsqueda simple por nombre sigue sin ofrecer todas las coincidencias posibles.
+- 205 pruebas CJS locales y todos los checks del cambio frontend pasan. Prueba real: pegar https://www.youtube.com/@madonna en Artistas, abrir el resultado, Playlists y Compartir; identidad exacta y 39 listas confirmadas. No exige otro despliegue de Worker.
+- No soluciona todavía discografía verificada ni reproducción de YouTube en todos los dispositivos.
+- SHA-256 del Worker entregado: 537862113749cd545a0775655472afb460473796273e060a0530444c1f37c9f1.
+
+## Continuidad de búsqueda exacta
+
+- Buscar general ahora resuelve enlaces/@usuario/ID por channel_library kind=info y conserva el canal al abrir el perfil; no consulta fuentes por nombre ni mezcla videos en esa ruta.
+- Respuestas tardías, referencias inexistentes y canales distintos al solicitado no sustituyen el resultado actual ni se muestran como coincidencias válidas.
+- 208 pruebas CJS locales pasan, incluidos éxito, fallo y cambio de búsqueda durante la consulta exacta.
+- Diagnóstico de carátulas: la navegación directa del navegador de pruebas a https://i.ytimg.com/vi/X_R2uZdTW0A/hqdefault.jpg muestra “Site Unavailable / Unable to access this site.” No prueba una falla universal del cliente ni permite confirmar imágenes en dispositivos reales. No se agregó un proxy para evitar esa limitación.
+
+- Aceptación publicada del buscador general (07cbc2455da05c009f3bfa0627b816f0491defb3): todos los checks y Pages en success. En navegador: @madonna devuelve un perfil, enlaza el canal UC81VD6eeuLLSfyY_D-N8sVw, permite abrirlo y Volver restaura consulta y filtro Artistas. No se probó reproducción ni dispositivos físicos en esta aceptación.
+
+## Artistas seguidos y regreso a la biblioteca
+
+- Nuevos seguimientos guardan el canal y un enlace público canónico, sin arrastrar el origen de una búsqueda anterior.
+- La biblioteca recupera el canal de registros anteriores cuando existe en el ID o enlace guardado. No abre destinos externos ni secciones ajenas al perfil desde un seguimiento.
+- Ver perfil incluye regreso a Biblioteca / Artistas seguidos y conserva el texto buscado. La biblioteca valida la pestaña inicial contra sus claves propias.
+- 212 pruebas CJS locales pasan. Se mantienen los enlaces a artistas registrados y las notificaciones de sincronización de seguir/dejar de seguir.
+
+- Aceptación real de Artistas seguidos: seguir → Mi perfil → Biblioteca → Artistas seguidos → buscar Madonna → Ver perfil abre UC81VD6eeuLLSfyY_D-N8sVw → Volver restaura pestaña y texto Madonna.
+- Corregida tarjeta de Biblioteca: img() omitía foto/avatar/logo. Foto pública de Madonna cargada y comprobada con naturalWidth > 0; esto no resuelve la limitación de miniaturas i.ytimg.com de playlists.
+- 213 pruebas CJS y todos los checks/Pages del último cambio pasan. No requiere otro Worker. No se probó sincronización entre equipos físicos en esta pasada.

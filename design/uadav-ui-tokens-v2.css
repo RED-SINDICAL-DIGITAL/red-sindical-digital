@@ -1,0 +1,35 @@
+/* UADAV Stream DS 2.0: opt-in tokens only.
+   Not loaded in production/staging by this documentation-only PR.
+   The Admin Design Center may override token values at a higher scope.
+*/
+:root {
+  color-scheme: dark;
+  --u-bg: #050A13;
+  --u-bg-raised: #0A1422;
+  --u-surface: #101D2E;
+  --u-surface-hover: #172B43;
+  --u-cyan: #12BCF5;
+  --u-blue: #176FF2;
+  --u-text: #F3F8FF;
+  --u-muted: #A6BED4;
+  --u-border: rgba(122,184,237,.18);
+  --u-glass: rgba(11,29,49,.76);
+  --u-glass-strong: rgba(10,25,44,.92);
+  --u-success: #58D1A1;
+  --u-warning: #F4BB66;
+  --u-danger: #F47C91;
+  --u-focus: #9BE8FF;
+  --u-radius-sm: 10px;
+  --u-radius-md: 16px;
+  --u-radius-lg: 22px;
+  --u-space-1: 4px;
+  --u-space-2: 8px;
+  --u-space-3: 12px;
+  --u-space-4: 16px;
+  --u-space-6: 24px;
+  --u-space-8: 32px;
+  --u-touch-size: 44px;
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root { --u-glass: #0B1D31; --u-glass-strong: #0A192C; }
+}

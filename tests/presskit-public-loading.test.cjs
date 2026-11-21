@@ -1,0 +1,15 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+const source=fs.readFileSync('presskit.html','utf8').match(/<script>\s*([\s\S]*?)<\/script>/)[1];
+function setup(fetcher,share={prepare(){},open(){}}){
+ const nodes=Object.fromEntries(['profile','app','status','retry','print','share'].map(id=>[id,{hidden:false,disabled:false,innerHTML:'',textContent:'',querySelectorAll(){return []}}]));
+ const ctx={URLSearchParams,AbortController,setTimeout,clearTimeout,location:{search:'?artist_id=ART-TEST'},document:{getElementById:id=>nodes[id]},fetch:fetcher,UADAVPressKit:{render:d=>'PUBLIC:'+d.kit.name},UADAVShare:share,print(){}};ctx.window=ctx;
+ vm.runInNewContext(source,ctx);return {ctx,nodes,settle:()=>new Promise(r=>setImmediate(r))};
+}
+const good=()=>({artist_id:'ART-TEST',kit:{name:'Artista',bio:'Propuesta'}});
+const response=d=>({ok:true,json:async()=>d});
+test('matching public kit enables print and share',async()=>{const h=setup(async()=>response(good()));await h.settle();assert.equal(h.nodes.app.innerHTML,'PUBLIC:Artista');assert.equal(h.nodes.print.hidden,false);assert.equal(h.nodes.share.hidden,false)});
+test('another artist and incomplete data never render or enable actions',async()=>{for(const d of [null,{}, {...good(),artist_id:'OTHER'}, {...good(),kit:{name:'Artista'}}]){const h=setup(async()=>response(d));await h.settle();assert.equal(h.nodes.app.innerHTML,'');assert.equal(h.nodes.print.hidden,true);assert.equal(h.nodes.share.hidden,true);assert.equal(h.nodes.retry.hidden,false)}});
+test('failed reload removes stale content and handlers and permits retry',async()=>{let fail=false;const h=setup(async()=>{if(fail)throw Error('Sin conexión');return response(good())});await h.settle();fail=true;await h.nodes.retry.onclick();assert.equal(h.nodes.app.innerHTML,'');assert.equal(h.nodes.print.onclick,null);assert.equal(h.nodes.share.onclick,null);assert.equal(h.nodes.retry.disabled,false);fail=false;await h.nodes.retry.onclick();assert.equal(h.nodes.app.innerHTML,'PUBLIC:Artista')});
+test('missing optional share module does not break presentation or printing',async()=>{const h=setup(async()=>response(good()),null);await h.settle();assert.equal(h.nodes.app.innerHTML,'PUBLIC:Artista');assert.equal(h.nodes.print.hidden,false);assert.equal(h.nodes.share.hidden,true);assert.equal(h.nodes.status.textContent,'')});
+test('share preview failure does not turn a valid presentation into a load error',async()=>{const h=setup(async()=>response(good()),{prepare(){throw Error('preview unavailable')},open(){}});await h.settle();assert.equal(h.nodes.status.textContent,'');assert.equal(h.nodes.print.hidden,false);assert.equal(h.nodes.share.hidden,false)});
+test('concurrent reload does not duplicate the pending request',async()=>{let resolve,count=0;const h=setup(()=>{count++;return new Promise(r=>resolve=r)});await h.nodes.retry.onclick();assert.equal(count,1);resolve(response(good()));await h.settle();assert.equal(h.nodes.print.hidden,false)});

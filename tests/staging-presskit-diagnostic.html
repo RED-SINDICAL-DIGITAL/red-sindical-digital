@@ -1,0 +1,14 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Press Kit · Prueba aislada</title><link rel="stylesheet" href="/uadav-presskit-v138.css"><script src="/uadav-presskit-v138.js"></script><style>.diagnostic{padding:16px;border:1px solid #334155;border-radius:16px;margin-bottom:20px}#diagnosticStatus{white-space:pre-wrap}@media print{.diagnostic,#uadav-staging-banner{display:none!important}}</style></head><body data-page="presskit"><main><section class="diagnostic no-print"><h1>Press Kit de prueba</h1><p>Datos ficticios. Usa el diseño real. No crea cuentas, no publica perfiles y no realiza pagos.</p><div class="kit-toolbar"><button id="printKit" type="button">Imprimir / guardar PDF</button></div><p id="diagnosticStatus" role="status" aria-live="polite"></p></section><article id="kit"></article></main><script>
+'use strict';
+if(location.origin!=='https://uadav-stream-staging.pages.dev'){document.querySelector('main').textContent='Esta prueba sólo está disponible en staging.';}else{
+const sample={kit:{name:'ARTISTA DE PRUEBA',discipline:'Ilusionismo y variedades',city:'Ciudad ficticia',bio:'Una presentación de ejemplo para revisar lectura, navegación e impresión. Ningún dato pertenece a una persona real.',trajectory:'Experiencia ficticia para comprobar el diseño del Press Kit.',contact:'contacto@example.invalid',appearance:{accent:'blue'},private_notes:'PRIVATE-DO-NOT-RENDER'},shows:[{name:'Espectáculo de ejemplo',duration:'45 minutos',audience:'Familiar',members:'2 artistas',setup:'30 minutos de montaje',requirements:'REQUISITO TÉCNICO DE PRUEBA: espacio de 4 × 3 metros y toma eléctrica segura.',price:'PRIVATE-PRICE',notes:'PRIVATE-NOTE'}],quotes:[{client:'PRIVATE-CLIENT'}],agenda:[{notes:'PRIVATE-AGENDA'}]};
+const host=document.getElementById('kit'),status=document.getElementById('diagnosticStatus');host.innerHTML=UADAVPressKit.render(sample);
+let before=0,after=0;
+function report(message){status.textContent=message+'\nAntes de imprimir: '+before+' · Después de imprimir: '+after;}
+const isolated=!host.textContent.includes('PRIVATE-');document.getElementById('printKit').disabled=!isolated;
+report(isolated?'PASS: la presentación excluye los campos privados de la muestra.':'ERROR: la presentación contiene campos privados.');
+window.addEventListener('beforeprint',()=>{before++;const details=Array.from(host.querySelectorAll('details'));report(details.every(d=>d.open)?'PASS: las necesidades técnicas están abiertas para imprimir.':'ERROR: faltan necesidades técnicas al imprimir.');});
+window.addEventListener('afterprint',()=>{after++;report(host.querySelector('details')?.open===false?'PASS: la vista volvió a su estado plegado original.':'La sección técnica sigue abierta; comprobá si la habías abierto antes.');});
+document.getElementById('printKit').onclick=()=>window.print();
+}
+</script></body></html>

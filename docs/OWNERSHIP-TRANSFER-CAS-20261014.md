@@ -1,0 +1,9 @@
+# Conditional ownership transfers — 2026-10-14
+
+Reproduced: force two transfer requests to read the same active owner before either transaction commits. Previously both returned 200; the latter overwrote the former. Now transfer reserves an operation in artist_ownership_transfers only if the claim is still pending, the original owner is active with the same updated_at snapshot and no competing active owner exists. All revocation/insertion/claim writes are gated by that exact operation id in the same D1 batch. A stale reservation produces zero writes and HTTP 409. The successful operation remains as an audit record; the table is included in administrative export selection and created lazily without changing existing data.
+
+Account linkage is attempted immediately after successful transfer; account listings also retain the existing reconciliation path. No new operator permissions or commercial entitlement are granted by transfer itself.
+
+Tests PASS with actual Worker + isolated SQLite: competing transfer returns [200,409], one active owner, only accepted operations in ledger, injected INSERT failure rolls back ledger and ownership, original session remains usable after rollback, successful transfer links destination and invalidates source. Existing claim lifecycle, payments/HMAC/recovery, FREE/PRO and 29 node:test tests passed; Worker syntax passed. Remote Cloudflare integration and current-commit CI not yet checked.
+
+Limits: all ownership writers still need mixed-operation concurrency review (transfer versus revoke/normal approval/draft creation); this test proves competing transfers and transaction rollback, not every writer combination. Downstream catalog metadata synchronization after transfer and API error presentation also remain open. Not deployed to staging or production; main unchanged.

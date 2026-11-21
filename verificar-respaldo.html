@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; form-action 'none'; img-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
+<title>Verificar respaldo de staging · UADAV STREAM</title>
+<style>
+:root{color-scheme:dark;font:16px/1.55 system-ui,-apple-system,sans-serif;background:#080f21;color:#e8f0ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:24px}main{max-width:760px;margin:50px auto;padding:32px;border:1px solid #334466;border-radius:22px;background:#111d36}h1{font-size:clamp(24px,5vw,34px);margin:0 0 12px}p{color:#b8c8e0}label{display:block;font-weight:750;margin:18px 0 8px}input{display:block;width:100%;padding:15px;border:1px dashed #79b7ee;background:#0e1930;border-radius:14px;color:#fff}button{margin-top:15px;padding:13px 22px;border:0;border-radius:12px;background:#65b8fb;color:#061228;font-size:16px;font-weight:750;cursor:pointer}button:disabled{opacity:.5}#result{margin-top:20px;padding:18px;border-radius:14px;border:1px solid #36516c;background:#0d182b;white-space:pre-wrap;overflow-wrap:anywhere}small{color:#a9b9cf}a{color:#a4d3ff}
+</style></head><body><main>
+<h1>Verificar mi respaldo</h1>
+<p>Elegí el JSON que acabás de descargar de <strong>Auditoría → Respaldo avanzado</strong>. El archivo se examina únicamente en este navegador. No se envía a servidores ni se conserva.</p>
+<label for="backup">Archivo JSON de staging</label><input type="file" id="backup" accept=".json,application/json">
+<button type="button" id="inspect">Verificar respaldo</button>
+<div id="result" role="status" aria-live="polite">Todavía no se seleccionó ningún archivo.</div>
+<p><small>Esta revisión comprueba estructura declarada, errores de exportación y huella SHA-256. No demuestra una restauración real ni la identidad del entorno: confirmá que el archivo fue obtenido del Worker de staging. Si aparece INCOMPLETO, no lo uses para restaurar.</small></p>
+</main><script>
+(()=>{
+'use strict';
+const button=document.getElementById('inspect'),input=document.getElementById('backup'),out=document.getElementById('result');
+function check(v){
+ const errors=[];
+ if(!v||typeof v!=='object'||Array.isArray(v))return ['Formato JSON de respaldo inválido'];
+ if(!Number.isFinite(Date.parse(v.generated_at)))errors.push('Fecha de generación ausente o inválida');
+ if(!v.kv||typeof v.kv!=='object'||Array.isArray(v.kv))errors.push('Colecciones KV no válidas');
+ if(!v.tables||typeof v.tables!=='object'||Array.isArray(v.tables))errors.push('Tablas D1 no válidas');
+ if(v.backup_integrity?.complete!==true)errors.push('El servidor no declaró integridad completa');
+ if(v.backup_integrity?.d1_configured!==true)errors.push('No se confirmó explícitamente que D1 estuviera configurada');
+ const kv=v.kv&&typeof v.kv==='object'&&!Array.isArray(v.kv)?v.kv:{};
+ const tables=v.tables&&typeof v.tables==='object'&&!Array.isArray(v.tables)?v.tables:{};
+ if(Object.keys(tables).length===0)errors.push('El respaldo no contiene ninguna tabla D1');
+ for(const k of ['bolsa_trabajo','postulaciones_trabajo'])if(!Array.isArray(kv[k]))errors.push('Colección crítica ausente o inválida: '+k);
+ for(const [k,row] of Object.entries(kv))if(row&&typeof row==='object'&&!Array.isArray(row)&&Object.hasOwn(row,'error'))errors.push('Error declarado de lectura en colección '+k);
+ for(const [k,rows] of Object.entries(tables))if(!Array.isArray(rows))errors.push('Tabla D1 inválida: '+k);
+ if(v.backup_integrity?.missing_critical_kv?.length)errors.push('Faltan colecciones KV según el exportador');
+ if(v.backup_integrity?.errors?.length)errors.push('El exportador registró errores de integridad');
+ return errors;
+}
+button.addEventListener('click',async()=>{
+ const file=input.files?.[0];
+ if(!file){out.textContent='Seleccioná primero un archivo JSON.';return}
+ button.disabled=true;out.textContent='Calculando la huella y revisando el archivo de forma local…';
+ try{
+  if(file.size>150*1024*1024)throw Error('Archivo mayor a 150 MB. Utilizá el verificador local por consola.');
+  const bytes=await file.arrayBuffer();
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  const sha=[...new Uint8Array(digest)].map(v=>v.toString(16).padStart(2,'0')).join('');
+  const result=check(JSON.parse(new TextDecoder().decode(bytes)));
+  const verified=result.length===0;
+  out.textContent=(verified?'ESTRUCTURA CORRECTA':'RESPALDO INCOMPLETO O INVÁLIDO')+'\nSHA-256: '+sha+'\n'+(verified?'No se detectaron errores estructurales declarados. Confirmá origen staging y recuperación por separado.':'Motivos: '+result.join('; '))+'\nNo se realizó ninguna restauración ni envío.';
+  out.dataset.verified=verified?'true':'false';
+ }catch(e){out.dataset.verified='false';out.textContent='No se pudo verificar: '+(e instanceof SyntaxError?'El JSON no tiene un formato válido.':e.message)}
+ finally{button.disabled=false}
+});
+})();
+</script></body></html>

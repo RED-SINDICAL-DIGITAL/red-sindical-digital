@@ -1,0 +1,14 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+const html=fs.readFileSync('artistas.html','utf8');
+const code=html.slice(html.indexOf('function artistRows('),html.indexOf('function navigateArtist('));
+function setup(api){
+ const nodes=Object.fromEntries(['grid','q','count','artistMore'].map(id=>[id,{value:'',textContent:'',innerHTML:'',hidden:false,setAttribute(k,v){this[k]=v},append(n){nodes[n.id]=n}}]));
+ const c={api,Promise,Map,Array,String,Error,catalogPromise:null,catalogReady:false,directoryPending:false,all:[],window:{},document:{createElement:()=>({})},$:id=>nodes[id],esc:x=>x,categoryMatches:()=>true,UADAVArtistDiscovery:{identity:a=>a.id,merge:a=>a},render:a=>{c.rendered=a;c.directoryPending=false}};
+ vm.runInNewContext(code,c);return {c,nodes};
+}
+test('unavailable catalogs show retry and never report a valid empty directory',async()=>{const h=setup(async()=>{throw Error('offline')});await h.c.load();assert.equal(h.c.catalogReady,false);assert.equal(h.c.rendered,undefined);assert.match(h.nodes.grid.innerHTML,/No pudimos cargar/);assert.equal(h.nodes.grid['aria-busy'],'false');assert.equal(h.nodes.artistMore.hidden,true);assert.equal(h.nodes.retryArtists.textContent,'Reintentar carga')});
+test('malformed catalogs fall back and cannot become empty results',async()=>{for(const data of [{error:'unavailable'},[null],[{}]]){const h=setup(async()=>data);await h.c.load();assert.equal(h.c.catalogReady,false);assert(h.nodes.retryArtists)}});
+test('a valid empty catalog is accepted without a retry',async()=>{const h=setup(async p=>p==='public/artistas'?[]:{});await h.c.load();assert(h.c.catalogReady);assert.equal(h.c.rendered.length,0);assert.equal(h.nodes.retryArtists,undefined)});
+test('fallback catalog survives public endpoint failure and optional config failure',async()=>{const h=setup(async p=>{if(p==='artistas')return{items:[{id:'A',nombre:'Ana'}]};throw Error()});await h.c.load();assert(h.c.catalogReady);assert.equal(h.c.rendered[0].id,'A')});
+test('retry recovers and concurrent requests share one load',async()=>{let offline=true,calls=0;const h=setup(async p=>{calls++;if(offline)throw Error();return p==='public/artistas'?[{id:'A',nombre:'Ana'}]:{}});await h.c.load();offline=false;calls=0;const a=h.nodes.retryArtists.onclick(),b=h.c.load();assert.equal(a,b);await a;assert.equal(calls,2);assert(h.c.catalogReady);assert.equal(h.c.rendered[0].id,'A')});
+test('a catalog response does not replace an ongoing typed search',async()=>{let resolve;const h=setup(p=>p==='public/artistas'?new Promise(r=>resolve=r):Promise.resolve({}));const pending=h.c.load();h.nodes.q.value='Ana';resolve([{id:'A',nombre:'Ana'}]);await pending;assert(h.c.catalogReady);assert.equal(h.c.rendered,undefined)});

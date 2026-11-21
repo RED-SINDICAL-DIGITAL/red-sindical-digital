@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src https://uadav-api-staging.uadavstream.workers.dev; base-uri 'none'; form-action 'none'">
+<title>UADAV · Prueba de radio y TV</title>
+<style>body{margin:0;background:#080d16;color:#eef3ff;font:16px/1.6 system-ui}main{max-width:760px;margin:40px auto;padding:24px}section{padding:24px;border:1px solid #334155;border-radius:18px;background:#111827}h1{font-size:28px;line-height:1.2}p,small{color:#b7c5d9}label{display:block;margin-top:20px}input,button{box-sizing:border-box;font:inherit;padding:13px;border-radius:10px}input{width:100%;background:#080d16;border:1px solid #64748b;color:white}button{margin-top:18px;border:0;background:#2f6df6;color:white;font-weight:700;cursor:pointer}button:disabled{opacity:.55;cursor:wait}li{padding:8px 0;overflow-wrap:anywhere}:focus-visible{outline:3px solid #9fc5ff;outline-offset:3px}code{overflow-wrap:anywhere}</style></head>
+<body><main><small>SOLO ENTORNO DE PRUEBAS</small><h1>Probar revisión y publicación de señales</h1>
+<section><p>Destino fijo: <code>uadav-api-staging.uadavstream.workers.dev</code></p>
+<p>Crea dos señales ficticias identificadas como PRUEBA STAGING, las migra a D1 y comprueba revisión, publicación y duplicados. Quedan en los catálogos de pruebas. No reproduce medios ni abre inscripciones. No modifica producción.</p>
+<label for="secret">ADMIN_KEY del Worker de pruebas</label><input id="secret" type="password" autocomplete="off" spellcheck="false" aria-describedby="privacy">
+<small id="privacy">Se envía por HTTPS únicamente a tu API de staging. No se guarda ni se incluye en los resultados. No uses la clave de producción.</small>
+<br><button id="run" type="button">Ejecutar comprobaciones</button><p id="status" role="status" aria-live="polite">Listo para probar.</p><ol id="results"></ol></section></main>
+<script>
+'use strict';
+const BASE='https://uadav-api-staging.uadavstream.workers.dev/api/';
+const field=document.getElementById('secret'),button=document.getElementById('run'),status=document.getElementById('status'),results=document.getElementById('results');
+button.onclick=async()=>{
+ let secret=field.value.trim();if(!secret){status.textContent='Ingresá la clave de staging.';field.focus();return}
+ button.disabled=true;results.replaceChildren();status.textContent='Ejecutando pruebas…';
+ function passed(label){const li=document.createElement('li');li.textContent='✓ '+label;results.append(li)}
+ async function call(path,{method='GET',body,auth=false}={}){
+  const url=new URL(path,BASE);if(url.origin!==new URL(BASE).origin||!url.pathname.startsWith('/api/'))throw Error('Destino no permitido');
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+  try{const r=await fetch(url,{method,redirect:'error',cache:'no-store',signal:controller.signal,headers:{'Content-Type':'application/json',...(auth?{Authorization:'Bearer '+secret}:{})},...(body?{body:JSON.stringify(body)}:{})});return {status:r.status,body:await r.json()}}finally{clearTimeout(timer)}
+ }
+ function check(condition,message){if(!condition)throw Error(message)}
+ try{
+  const health=await call('health');check(health.status===200&&health.body.kv===true&&health.body.d1===true,'No se confirmaron ambos bindings.');passed('Worker con D1 y KV conectados');
+  const anonymous=await call('signal-onboarding/applications');check(anonymous.status===401,'La bandeja administrativa debe denegar accesos anónimos.');passed('Bandeja privada protegida');
+  const inbox=await call('signal-onboarding/applications',{auth:true});check(inbox.status===200&&Array.isArray(inbox.body),'No se pudo verificar Admin y consultar las solicitudes D1. Revisá la clave de staging.');passed('Admin autorizado y consulta D1 completada');
+  const config=await call('signal-onboarding/config');check(config.status===200&&config.body.enabled===false&&config.body.radio===false&&config.body.tv===false,'Las inscripciones deben permanecer cerradas.');passed('Inscripciones públicas cerradas');
+  const legacy=await call('signal_onboarding_applications',{auth:true});
+  check(legacy.status===200,'No se pudo leer la bandeja histórica de pruebas.');
+  const previous=Array.isArray(legacy.body)?legacy.body:[];
+  check(previous.every(x=>String(x.id||'').startsWith('QA-STAGING-')),'Hay solicitudes ajenas a esta prueba en KV. Se detuvo sin reemplazarlas.');
+  const run=crypto.randomUUID(),created_at=new Date().toISOString();
+  const items=['radio','tv'].map(type=>({id:'QA-STAGING-'+type+'-'+run,type,name:'PRUEBA STAGING '+type.toUpperCase()+' · NO REPRODUCIR',contact:'qa@example.invalid',stream_url:'https://media.example.invalid/'+run+'/'+type+(type==='tv'?'.m3u8':'.mp3'),rights_confirmed:true,status:'pending',created_at,description:'Registro sintético de integración. No es una emisión real.'}));
+  const save=await call('signal_onboarding_applications',{method:'POST',body:[...previous,...items],auth:true});
+  check(save.status===200,'No se guardaron las solicitudes ficticias.');passed('Dos solicitudes ficticias guardadas en KV de staging');
+  const preview=await call('signal-onboarding/migrate',{method:'POST',body:{},auth:true});
+  check(preview.status===200&&items.every(x=>preview.body.results?.some(r=>r.id===x.id&&r.status==='ready')),'La vista previa requiere revisión; no se solicitó la copia.');passed('Vista previa de migración válida para ambas señales');
+  const migration=await call('signal-onboarding/migrate',{method:'POST',body:{execute:true},auth:true});
+  check(migration.status===200&&items.every(x=>migration.body.results?.some(r=>r.id===x.id&&r.status==='migrated')),'La migración no confirmó ambas copias. Revisá los registros antes de reintentar.');passed('Solicitudes migradas a D1');
+  for(const item of items){
+   const pending=await call('signal-onboarding/publish',{method:'POST',body:{id:item.id},auth:true});
+   check(pending.status===409,'Una solicitud pendiente no debe publicarse.');passed(item.type+': publicación pendiente rechazada');
+   const review=await call('signal-onboarding/applications',{method:'PATCH',body:{id:item.id,status:'approved',review_note:'Prueba sintética de staging'},auth:true});
+   check(review.status===200,'No se pudo aprobar la solicitud de '+item.type);passed(item.type+': revisión aprobada');
+   const route=item.type==='radio'?'radios':'senales_oficiales';
+   const before=await call(route);check(before.status===200&&Array.isArray(before.body)&&!before.body.some(x=>x.onboarding_id===item.id),'Aprobar no debe publicar la señal.');passed(item.type+': aprobación separada de publicación');
+   const requests=item.type==='tv'?await Promise.all([call('signal-onboarding/publish',{method:'POST',body:{id:item.id},auth:true}),call('signal-onboarding/publish',{method:'POST',body:{id:item.id},auth:true})]):[await call('signal-onboarding/publish',{method:'POST',body:{id:item.id},auth:true})];
+   check(requests.filter(x=>x.status===200).length===1,'La publicación no tuvo exactamente un resultado exitoso para '+item.type);
+   if(item.type==='tv')check(requests.some(x=>x.status===409),'La publicación simultánea debe devolver un conflicto.');passed(item.type+': publicación confirmada'+(item.type==='tv'?' con doble intento protegido':''));
+   const duplicate=await call('signal-onboarding/publish',{method:'POST',body:{id:item.id},auth:true});check(duplicate.status===409,'El reintento debe rechazar un duplicado.');
+   const catalog=await call(route);check(catalog.status===200&&Array.isArray(catalog.body)&&catalog.body.filter(x=>x.onboarding_id===item.id).length===1,'No se verificó una única señal en el catálogo '+item.type+'. Puede haber demora KV; revisá antes de repetir.');passed(item.type+': catálogo contiene una sola copia');
+  }
+  const final=await call('signal-onboarding/applications',{auth:true});check(final.status===200&&items.every(item=>final.body.some(x=>x.id===item.id&&x.status==='published'&&x.published_id)),'D1 no confirmó el estado final de ambas señales.');passed('D1 confirma ambas publicaciones');
+  const closed=await call('signal-onboarding/config');check(closed.body.enabled===false&&closed.body.radio===false&&closed.body.tv===false,'Revisá los interruptores de inscripción.');passed('Inscripciones públicas siguen cerradas');
+  status.textContent='Comprobaciones completadas. Podés compartir una captura de estos resultados.';
+ }catch(error){status.textContent=error.name==='AbortError'?'Una solicitud demoró demasiado. Revisá los pasos completados antes de reintentar.':error.message}
+ finally{secret='';field.value='';button.disabled=false}
+};
+</script></body></html>

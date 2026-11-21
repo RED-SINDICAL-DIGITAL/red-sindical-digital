@@ -1,0 +1,4 @@
+const test=require('node:test'),assert=require('node:assert/strict');const styles=require('../uadav-music-styles.js');
+test('music styles preserve order and support a label without a separate query',()=>{assert.deepEqual(styles.parse('Tango | tango argentino\nRock'),[{label:'Tango',query:'tango argentino'},{label:'Rock',query:'Rock'}]);assert.equal(styles.parse(styles.defaults).length,14);assert.deepEqual(styles.parse(''),[])});
+test('music styles reject duplicate labels, malformed lines and oversized input',()=>{for(const raw of ['Tángo | uno\nTango | dos','Rock |','<script>','A | B | C',Array.from({length:31},(_,i)=>'Estilo '+i).join('\n')])assert.throws(()=>styles.parse(raw));});
+test('invalid public configuration preserves existing working cards',()=>{let queried=false;const host={querySelector(){queried=true}};styles.mount({music_styles_text:'A | B | C'},{getElementById:()=>host});assert.equal(queried,false)});

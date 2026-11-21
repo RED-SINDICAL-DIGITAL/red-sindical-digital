@@ -1,0 +1,19 @@
+{
+  "entity": "radios",
+  "rows": [
+    {
+      "nombre": "Beat Digital Radio",
+      "stream_url": "https://stream.zeno.fm/9s7nnwmknkhvv",
+      "logo": "https://beatdigital.com.ar/img/Logo-web-beat-digital.svg",
+      "portada": "https://beatdigital.com.ar/img/Logo-web-beat-digital.svg",
+      "ciudad": "Rosario",
+      "provincia": "Santa Fe",
+      "pais": "Argentina",
+      "descripcion": "Señal de Beat Digital Radio. Fuente de audio publicada en la web oficial de Beat Digital. Sin pauta paga.",
+      "web": "https://beatdigital.com.ar/radiobeat",
+      "pauta_status": "sin_pauta",
+      "destacada": false,
+      "estado": "active"
+    }
+  ]
+}

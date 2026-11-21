@@ -1,0 +1,5 @@
+# QA comercial real de Admin — 2026-11-04
+Solo staging. Creación real de campaña ficticia Hero 7 días, entidad ART-UCp538Jzy_VRFHAPBjyLTqJw, provincia Santa Fe, país AR, importe ARS12000, fechas 2026-11-04 a 2026-11-10. Notas QA explícitas. Pago pendiente, campaña pendiente, entrega no verificada. Relectura Admin confirmó una campaña, ninguna activa. No se envió cobro ni se mostró como publicidad paga real.
+Fallo observado: guardar desde Monetización saltaba a Publicidad. Corregido en campañas y productos para conservar sección. Campañas bloquean otro guardado mientras la solicitud está en curso, liberan el bloqueo tras fallo y no fuerzan navegación si se cambió de sección.
+852 pruebas de interfaz aprobadas, cero fallos. Dos regresiones nuevas: doble invocación concurrente con un solo envío y recuperación tras fallo. Esto NO prueba idempotencia de servidor ante respuesta perdida.
+Pendiente: entrega territorial real en ubicaciones y configuración de productos operativos. No certifica cierre comercial integral. Producción intacta.

@@ -5,14 +5,27 @@
   "display": "standalone",
   "background_color": "#070b10",
   "theme_color": "#070b10",
-  "description": "Plataforma audiovisual, artistas, radios, eventos y oportunidades de ★ UADAV STREAM",
-  "icons": [],
+  "description": "★ UADAV STREAM — La Plataforma de los Artistas de Variedades. Artistas, radio, videos, cartelera y oportunidades.",
+  "icons": [
+    {
+      "src": "/uadav-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/uadav-app-icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
   "scope": "/",
   "shortcuts": [
     {
       "name": "Radio",
       "short_name": "Radio",
-      "url": "/index.html#radios"
+      "url": "/app.html?view=%2Fradio.html"
     },
     {
       "name": "Cartelera",
@@ -32,7 +45,14 @@
     {
       "name": "Mi perfil",
       "short_name": "Mi perfil",
-      "url": "/mi-perfil.html"
+      "url": "/usuario.html"
     }
+  ],
+  "id": "/app.html",
+  "lang": "es-AR",
+  "categories": [
+    "entertainment",
+    "music",
+    "lifestyle"
   ]
 }

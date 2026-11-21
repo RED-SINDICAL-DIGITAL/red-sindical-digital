@@ -4,6 +4,24 @@ if(window.top===window.self){const qs=new URLSearchParams(location.search);if(qs
 document.documentElement.classList.add('uadav-app-embedded');
 function simplifyEmbeddedChrome(){if(location.pathname==='/'||/\/index\.html$/i.test(location.pathname)){const s=document.createElement('style');s.id='uadav-shell-owned-nav';s.textContent='.v10-primary-nav{display:none!important}';document.head.appendChild(s)}}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',simplifyEmbeddedChrome,{once:true});else simplifyEmbeddedChrome();
+
+function applyInstanceModules(){
+ const parentHost=window.parent,policy=parentHost.UADAVModulePolicy,flags=parentHost.PlatformModules;if(!policy||!flags)return;
+ const controls={radio_requests:['requestsSection','requestOpen','sendRequest'],radio_chat:['chatSection','chatOpen','send']};
+ for(const [key,ids] of Object.entries(controls))for(const id of ids){const el=document.getElementById(id);if(el){const off=flags[key]===false||flags.radio===false;el.hidden=off;if(off)el.style.setProperty('display','none','important');else if(el.dataset.moduleOff){el.style.removeProperty('display')}el.dataset.moduleOff=off?'true':''}}
+ document.querySelectorAll('a[href],[data-route],[data-radio-target]').forEach(el=>{
+  let off=false;
+  const target=el.getAttribute('data-radio-target');if(target==='requestsSection')off=flags.radio_requests===false;if(target==='chatSection')off=flags.radio_chat===false;
+  const href=el.getAttribute('href')||el.getAttribute('data-route');
+  if(href){try{const u=new URL(href,location.href);if(u.origin===location.origin)off=off||!!policy.disabled(u.pathname,flags)}catch{}}
+  if(off){el.hidden=true;el.style.setProperty('display','none','important');el.dataset.moduleHidden='true'}
+  else if(el.dataset.moduleHidden){el.hidden=false;el.style.removeProperty('display');delete el.dataset.moduleHidden}
+ });
+}
+try{window.parent.document.addEventListener('platformmodules',applyInstanceModules)}catch{}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',applyInstanceModules,{once:true});else applyInstanceModules();
+new MutationObserver(entries=>{if(entries.some(e=>e.addedNodes.length))applyInstanceModules()}).observe(document.documentElement,{childList:true,subtree:true});
+
 const API='https://uadav-api.uadavstream.workers.dev/api/';
 const sameOrigin=url=>{try{return new URL(url,location.href).origin===location.origin}catch{return false}};
 const normalizeHref=href=>{const u=new URL(href,location.href);if(u.origin!==location.origin)return'';return u.pathname+u.search+u.hash};
@@ -12,7 +30,7 @@ function navigate(href,opts={}){const h=host(),to=normalizeHref(href);if(!to)ret
 function playContent(item){const h=host();if(h?.playContent)return h.playContent(item);try{window.parent.postMessage({type:'uadav:content-play',item},location.origin);return true}catch{return false}}
 function syncParentMediaIcon(){try{const p=window.parent.document,shell=p.getElementById('shell'),btn=p.getElementById('mediaExpand');if(!shell||!btn)return;const mini=shell.classList.contains('media-mini');btn.textContent=mini?'⌃':'⌄';btn.title=mini?'Expandir reproductor':'Minimizar reproductor';btn.setAttribute('aria-label',btn.title)}catch{}}
 function watchParentMediaIcon(){try{const shell=window.parent.document.getElementById('shell');if(!shell)return;syncParentMediaIcon();new MutationObserver(syncParentMediaIcon).observe(shell,{attributes:true,attributeFilter:['class']})}catch{}}
-document.addEventListener('click',e=>{if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;const a=e.target.closest?.('a[href]');if(!a||a.target==='_blank'||a.hasAttribute('download'))return;const href=a.getAttribute('href')||'';if(!href||href.startsWith('#')||href.startsWith('javascript:')||href.startsWith('mailto:')||href.startsWith('tel:')||!sameOrigin(href))return;if(window.parent===window)return;if(navigate(href)){e.preventDefault();e.stopPropagation()}},false);
+document.addEventListener('click',e=>{if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;const a=e.target.closest?.('a[href]');if(!a||['_blank','_top','_parent'].includes(a.target)||a.hasAttribute('download'))return;const href=a.getAttribute('href')||'';if(!href||href.startsWith('#')||href.startsWith('javascript:')||href.startsWith('mailto:')||href.startsWith('tel:')||!sameOrigin(href))return;if(window.parent===window)return;if(navigate(href)){e.preventDefault();e.stopPropagation()}},false);
 window.UADAVAppBridge={navigate,playContent,host};
 function normalizeMedia(item={}){const n={...item};n.url=n.url||n.href||n.youtube_url||n.webpage_url||n.source_url||n.media_url||n.embed_url||n.stream_url||n.link||'';n.external_id=n.external_id||n.youtube_id||n.videoId||n.video_id||((String(n.provider||'').toLowerCase()==='youtube'&&/^[A-Za-z0-9_-]{11}$/.test(String(n.id||'')))?n.id:'');if(!n.provider){if(/youtu(?:be\.com|\.be)/i.test(n.url)||n.external_id)n.provider='youtube';else if(/vimeo\.com/i.test(n.url))n.provider='vimeo';else if(/soundcloud\.com/i.test(n.url))n.provider='soundcloud';else if(/spotify\.com/i.test(n.url))n.provider='spotify';else if(/\.(mp4|webm)(?:[?#]|$)/i.test(n.url))n.provider='video';else if(/\.(mp3|aac|m4a|ogg|wav)(?:[?#]|$)/i.test(n.url))n.provider='audio'}return n}
 function mediaEmbed(item={}){const n=normalizeMedia(item),u=n.url||'';let id=n.external_id||'';if(!id){const z=u.match(/[?&]v=([\w-]{11})/)||u.match(/youtu\.be\/([\w-]{11})/)||u.match(/\/(?:shorts|embed|live)\/([\w-]{11})/);if(z)id=z[1]}if(id)return '<iframe src="https://www.youtube.com/embed/'+encodeURIComponent(id)+'?autoplay=1&playsinline=1&rel=0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>';if(/vimeo\.com/i.test(u)){const vm=u.match(/vimeo\.com\/(?:video\/)?(\d+)/i);if(vm)return '<iframe src="https://player.vimeo.com/video/'+vm[1]+'?autoplay=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>'}if(/soundcloud\.com/i.test(u))return '<iframe src="https://w.soundcloud.com/player/?url='+encodeURIComponent(u)+'&auto_play=true" allow="autoplay"></iframe>';const sp=u.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([^?]+)/i);if(sp)return '<iframe src="https://open.spotify.com/embed/'+sp[1]+'/'+encodeURIComponent(sp[2])+'" allow="autoplay; encrypted-media"></iframe>';if(/\.(mp4|webm)(?:[?#]|$)/i.test(u))return '<video src="'+String(u).replace(/"/g,'&quot;')+'" controls autoplay playsinline></video>';return''}

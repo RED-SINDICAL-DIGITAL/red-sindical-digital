@@ -1,0 +1,9 @@
+# Isolated Admin visual review — 2026-10-14
+
+Prepared tests/serve-admin-preview.mjs to serve the existing Admin and its repository CSS/JS assets on 127.0.0.1:8789. Run node tests/serve-admin-preview.mjs from a checkout of the audit branch. Visit the printed localhost address, sign in using the fictitious PREVIEW-LOCAL key (never a real key). It includes synthetic artists, a pending claim and an approved claim with catalog mismatch for the recovery button. No real KV/D1 or credentials are used.
+
+The server overrides API configuration to same-origin mock routes, denies mutation methods, allowlists static files and sets a CSP blocking external connections, scripts, frames and workers. The external XLSX CDN dependency is removed only from preview responses; spreadsheet import is not covered. Test node tests/serve-admin-preview.mjs --check passed locally: all 13 static assets served, local config contains no Worker destination, unauthorized fixture access denied, writes denied, worker source not served. CI check added.
+
+Browser limitation: Playwright JS package is available but no Chromium executable was installed. Browser download returned invalid/truncated archives; installation was stopped. No viewport screenshots, visual rendering or pointer/keyboard interaction have been verified. This must not be described as completed responsive validation. No attempt to authenticate to production was made.
+
+Visual targets: 390x844 mobile; 768x1024 tablet; 1440x900 desktop; 1920x1080 emulated TV. Inspect login, navigation drawer, artist catalog, claims, incomplete approval recovery, long titles/URLs, dialogs, tables and focus indicators. Browser TV emulation is not a physical Smart TV test. The preview is read-only and cannot verify real saves, imports or backend integration. No frontend or Worker deployed.

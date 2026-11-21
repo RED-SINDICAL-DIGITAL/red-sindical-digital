@@ -52,3 +52,23 @@ body[data-page="admin"][data-admin-tv="true"] :is(.input,.select,.textarea){font
 body[data-page="admin"][data-admin-tv="true"] .table :is(td,th),body[data-page="admin"][data-admin-tv="true"] .entity strong{font-size:16px}
 body[data-page="admin"][data-admin-tv="true"] .nav-group-title{font-size:14px!important;color:#a7b5c8!important}
 @media(prefers-reduced-motion:reduce){body[data-page="admin"] *,body[data-page="admin"] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+#sidebar .admin-demo-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 0 0 auto;
+  gap: 4px;
+  padding: 6px 12px;
+  border-top: 1px solid rgba(255,255,255,.09);
+}
+#sidebar .admin-demo-actions > button {
+  width: 100%;
+  min-height: 44px;
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+  word-break: normal;
+  font-family: inherit;
+}
+
+dialog.demo-owner-panel{box-sizing:border-box;width:min(30rem,calc(100% - 2rem));padding:1.5rem;overflow-wrap:anywhere}dialog.demo-owner-panel h2{margin-top:0}dialog.demo-owner-panel button{font:inherit;min-height:44px;margin:4px 6px 4px 0}dialog.demo-owner-panel input{display:block;width:100%;margin:.5rem 0 1rem}

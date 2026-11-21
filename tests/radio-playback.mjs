@@ -9,9 +9,10 @@ for(const [saved,expected] of [[null,.85],['',.85],['0',0],['0.4',.4],['oops',.8
 }
 const play=app.slice(app.indexOf('function playRadio('),app.indexOf("$('favMedia')?.addEventListener"));
 let closed=0,emitted=0;const nodes=new Map();const $=id=>{if(!nodes.has(id))nodes.set(id,{});return nodes.get(id)};
-const ra={muted:true,play:()=>Promise.resolve()};const c=vm.createContext({ra,$,rd:{classList:{add(){}}},closeContent:()=>closed++,emitRadioState:()=>emitted++,toast(){}});
+const ra={muted:true,play:()=>Promise.resolve()};const c=vm.createContext({platformModules:{radio:true},saveRadioForReload(){},ra,$,rd:{classList:{add(){}}},closeContent:()=>closed++,emitRadioState:()=>emitted++,toast(){}});
 vm.runInContext(play,c);assert.equal(c.playRadio({id:'test',stream_url:'https://stream.example/radio',nombre:'Radio real'}),true);await Promise.resolve();assert.equal(ra.src,'https://stream.example/radio');assert.equal(ra.muted,false);assert.equal(closed,1);assert.equal(emitted,1);
 assert.equal(c.playRadio({nombre:'Sin señal'}),false);
+c.platformModules.radio=false;const beforeDisabled=closed;assert.equal(c.playRadio({id:'blocked',stream_url:'https://stream.example/blocked'}),false);assert.equal(closed,beforeDisabled);assert.equal(ra.src,'https://stream.example/radio');
 // Exercise the actual hub handlers: open must not call the former undefined shellNavigate.
 const hub=radio.slice(radio.indexOf('function renderRadioHub('),radio.indexOf('\nasync function load()'));
 const link={dataset:{radioId:'test'}},button={dataset:{radioPlay:'test'},getAttribute:()=>null,setAttribute(){}};

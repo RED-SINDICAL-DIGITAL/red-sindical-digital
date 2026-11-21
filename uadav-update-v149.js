@@ -7,16 +7,18 @@
   const reloadKey = 'uadav_update_reload_attempt_v1';
   let checking = false;
   let shownBuild = 0;
+  let dismissedMemory = 0;
 
   function dismissedBuild() {
     try {
-      return Number(localStorage.getItem(dismissedKey)) || 0;
+      return Math.max(dismissedMemory, Number(localStorage.getItem(dismissedKey)) || 0);
     } catch {
-      return 0;
+      return dismissedMemory;
     }
   }
 
   function dismiss(build) {
+    dismissedMemory = Math.max(dismissedMemory, build);
     try { localStorage.setItem(dismissedKey, String(build)); } catch {}
   }
 
@@ -59,6 +61,7 @@
     update.dataset.primary = 'true';
     update.addEventListener('click', () => {
       try { sessionStorage.setItem(reloadKey, String(build)); } catch {}
+      try { localStorage.setItem(reloadKey, String(build)); } catch {}
       // Ask the browser for a fresh navigation rather than reusing the current shell.
       const next = new URL(location.href);
       next.searchParams.set('uadav_build', String(build));
@@ -88,6 +91,7 @@
       if (!Number.isInteger(build) || build <= currentBuild || build <= dismissedBuild()) return;
       // Avoid an endless update prompt when a CDN/browser keeps serving an older shell.
       try { if (Number(sessionStorage.getItem(reloadKey)) === build) return; } catch {}
+      try { if (Number(localStorage.getItem(reloadKey)) === build) return; } catch {}
       render(build, data.message);
     } catch {
       // Version checks are optional; the app remains usable while offline.

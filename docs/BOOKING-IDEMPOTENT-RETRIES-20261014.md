@@ -1,0 +1,7 @@
+# Booking retry protection — 2026-10-14
+
+New optional request_id (16–100 allowed identifier characters) maps to a deterministic D1 inquiry id. Normalized payload fingerprint is stored internally; same id/payload replays the saved result, different payload returns 409 without disclosing the original inquiry. Concurrent same-key INSERT OR IGNORE plus lookup produces one record. Lookup precedes the existing capacity guard so confirmed retries still resolve when full. Older clients without request_id retain distinct-per-submit behavior.
+
+Form generates/reuses an attempt key while form data is unchanged, stores only key/hash in sessionStorage for the same tab and clears it after confirmed success. It blocks overlapping submits and freezes controls during send; resets only on validated successful response. Errors preserve form input. Mutation transport failures are not retried on another API destination. A reload can recover the attempt key if the same data is entered again; this does NOT persist the actual form text across reload.
+
+PASS: actual Worker+SQLite concurrent same-key requests return identical id, one inbox item; changed payload same key 409; invalid key 400; previous distinct simultaneous submissions/legacy merge/write failure tests retained. Three actual-client helper/API tests passed; form and Worker syntax passed. No real personal data or browser form interaction tested. CI updated. Deployment order must be Worker before frontend for the server-backed protection; not deployed to staging or production.
