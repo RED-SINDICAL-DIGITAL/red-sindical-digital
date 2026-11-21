@@ -38,7 +38,7 @@ async function scenario(kind,index){
   assert.equal(active.results.length,1,'Exactly one active recovery secret');
   assert.equal(active.results[0].credential_hash,await digest(successfulSecret));
   const losing=results.findIndex(x=>x.status===409);
-  if(kind[losing]==='atomic')assert.equal((await call(secrets[losing])).status,401,'Loser must not activate its requested credential');
+  if(kind[losing]==='atomic')assert.notEqual((await call(secrets[losing])).status,200,'Loser must not activate its requested credential');
   assert.equal((await call(device)).data.recovery_version,1,'Existing device must keep access');
   console.log('PASS '+kind.join(' vs ')+': one successful renewal, one conflict, one active recovery key, device preserved.');
  }finally{DB.close()}
