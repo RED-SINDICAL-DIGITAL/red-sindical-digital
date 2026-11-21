@@ -60,7 +60,7 @@ test('artists opened from Home and Explore can return only to validated local or
 
 function rotationHarness({reduced=false,count=3}={}){
  const nodes={},listeners={},timers=new Map(),shown=[];let seq=0;
- for(const id of ['hero','heroControls','heroPause','heroPosition','heroPrevious','heroNext'])nodes[id]={style:{},setAttribute(k,v){this[k]=v},addEventListener(k,v){this[k]=v},removeEventListener(k,v){if(this[k]===v)delete this[k]},querySelector:()=>nodes.hero.keyboardFocus?nodes.heroPause:null,contains:el=>el===nodes.heroPause};
+ for(const id of ['hero','heroControls','heroPause','heroPosition','heroPrevious','heroNext'])nodes[id]={style:{setProperty(k,v){this[k]=v},removeProperty(k){delete this[k]}},setAttribute(k,v){this[k]=v},addEventListener(k,v){this[k]=v},removeEventListener(k,v){if(this[k]===v)delete this[k]},querySelector:()=>nodes.hero.keyboardFocus?nodes.heroPause:null,contains:el=>el===nodes.heroPause};
  const ctx={$:id=>nodes[id],window:{matchMedia:()=>({matches:reduced})},document:{hidden:false,addEventListener:(k,v)=>listeners[k]=v,removeEventListener:k=>delete listeners[k]},setInterval:fn=>{timers.set(++seq,fn);return seq},clearInterval:id=>timers.delete(id)};
  vm.runInNewContext(extract('function createHeroRotation(','function applyHero('),ctx);const controller=ctx.createHeroRotation(count,i=>shown.push(i));return {ctx,nodes,listeners,timers,shown,controller};
 }
