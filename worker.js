@@ -246,6 +246,7 @@ async function uadavDeletePersonalAccount(db,accountId){const now=Date.now(),rep
         if(tables.has('artist_deletion_accounts'))batch.push(db.prepare('DELETE FROM artist_deletion_accounts WHERE account_id=?').bind(accountId));
         if(tables.has('audience_push_subscriptions'))batch.push(db.prepare('DELETE FROM audience_push_subscriptions WHERE account_id=?').bind(accountId));
         if(tables.has('audience_notification_reads'))batch.push(db.prepare('DELETE FROM audience_notification_reads WHERE account_id=?').bind(accountId));
+        if(tables.has('audience_recovery_state'))batch.push(db.prepare('DELETE FROM audience_recovery_state WHERE account_id=?').bind(accountId));
         batch.push(db.prepare('DELETE FROM audience_artist_claims WHERE account_id=?').bind(accountId));await db.batch(batch);return reply({success:true,deleted:true});
 }
 // Account credentials and pairing secrets are hashed; no permanent credential is sent through a QR.
@@ -279,6 +280,7 @@ async function uadavAccountSchema(db){
       'CREATE TABLE IF NOT EXISTS audience_announcements(id TEXT PRIMARY KEY,title TEXT NOT NULL,message TEXT NOT NULL,account_id TEXT,created_at TEXT NOT NULL,expires_at TEXT NOT NULL)',
       'CREATE TABLE IF NOT EXISTS audience_rate_limits(id TEXT PRIMARY KEY,count INTEGER NOT NULL,expires_at INTEGER NOT NULL)',
       'CREATE TABLE IF NOT EXISTS audience_recovery_keys(credential_hash TEXT PRIMARY KEY,account_id TEXT NOT NULL,revoked_at INTEGER)',
+      'CREATE TABLE IF NOT EXISTS audience_recovery_state(account_id TEXT PRIMARY KEY,version INTEGER NOT NULL DEFAULT 0,last_request_id TEXT,last_credential_hash TEXT)',
       'CREATE TABLE IF NOT EXISTS audience_artist_links(account_id TEXT NOT NULL,artist_id TEXT NOT NULL,claim_id TEXT,expires_at INTEGER NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(account_id,artist_id))',
       // A validated account association survives the private invitation expiry; ownership and revocation are still checked on every access.
       'UPDATE audience_artist_links SET expires_at=0 WHERE expires_at<>0',
@@ -390,7 +392,10 @@ async function uadavAccountRoute(request,env,identityOnly=false){
       return reply({data,revision});
     }
     if(!account)return reply({error:'Cuenta no encontrada'},404);
-    if(identityOnly)return reply({account_id:accountId});
+    if(identityOnly){
+      const state=await db.prepare('SELECT version FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
+      return reply({account_id:accountId,recovery_version:Number(state?.version||0)});
+    }
     if(path==='/api/account/artists'){
       if(!env.UADAV_DB)return reply({error:'Acceso de artistas no disponible'},503);
       if(request.method==='POST'){
@@ -449,6 +454,43 @@ async function uadavAccountRoute(request,env,identityOnly=false){
       const token='ART-'+random(),expires=link.expires_at===0?now+3600000:Math.min(now+3600000,link.expires_at);
       await env.UADAV_DB.put('artist_access_'+token,JSON.stringify({artist_id:id,claim_id:link.claim_id,expires,account_id:accountId,account_credential_hash:credentialHash,account_device:secret.startsWith('UAD-')}),{expirationTtl:Math.max(60,Math.ceil((expires-now)/1000))});
       return reply({token,expires,artist_id:id});
+    }
+    if(path==='/api/account/recovery/atomic'){
+      if(request.method!=='POST')return reply({error:'Método no permitido'},405);
+      await rate('recovery-atomic',5,3600000);
+      const b=await body();
+      const requestId=String(b.request_id||''),newSecret=String(b.new_secret||'');
+      const expected=Number(b.expected_version);
+      if(!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(requestId)
+        || !/^UAC-[a-f0-9]{64}$/.test(newSecret)
+        || !Number.isSafeInteger(expected)||expected<0||expected>2147483646)
+        return reply({error:'Datos de renovación inválidos'},400);
+      const newHash=await hash(newSecret);
+      if(newHash===credentialHash)return reply({error:'Generá un código de recuperación diferente'},400);
+      const other=await db.prepare('SELECT account_id FROM audience_recovery_keys WHERE credential_hash=?').bind(newHash).first();
+      if(other&&other.account_id!==accountId)return reply({error:'No se pudo utilizar ese código de recuperación'},409);
+      // All statements execute as one D1 transaction. A losing concurrent request cannot revoke a winner.
+      await db.batch([
+        db.prepare('INSERT OR IGNORE INTO audience_recovery_state(account_id,version) VALUES(?,0)').bind(accountId),
+        db.prepare('UPDATE audience_recovery_state SET version=version+1,last_request_id=?,last_credential_hash=? WHERE account_id=? AND version=?').bind(requestId,newHash,accountId,expected),
+        db.prepare(`INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at)
+          SELECT ?,?,NULL FROM audience_recovery_state
+          WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?
+          ON CONFLICT(credential_hash) DO NOTHING`).bind(newHash,accountId,accountId,expected+1,requestId,newHash),
+        // The first root credential may be a valid account ID without a recovery_keys row.
+        db.prepare(`INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at)
+          SELECT ?,?,? FROM audience_recovery_state
+          WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?
+          ON CONFLICT(credential_hash) DO NOTHING`).bind(accountId,accountId,now,accountId,expected+1,requestId,newHash),
+        db.prepare(`UPDATE audience_recovery_keys SET revoked_at=?
+          WHERE account_id=? AND credential_hash<>?
+          AND EXISTS(SELECT 1 FROM audience_recovery_state WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?)`).bind(now,accountId,newHash,accountId,expected+1,requestId,newHash)
+      ]);
+      const state=await db.prepare('SELECT version,last_request_id,last_credential_hash FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
+      const active=await db.prepare('SELECT account_id FROM audience_recovery_keys WHERE credential_hash=? AND revoked_at IS NULL').bind(newHash).first();
+      if(state?.version!==expected+1||state.last_request_id!==requestId||state.last_credential_hash!==newHash||active?.account_id!==accountId)
+        return reply({error:'El respaldo cambió en otro dispositivo. Comprobá tu cuenta antes de reintentar.',code:'RECOVERY_CONFLICT'},409);
+      return reply({success:true,request_id:requestId,secret:newSecret,recovery_version:state.version});
     }
     if(path==='/api/account/recovery'){
       if(request.method!=='POST')return reply({error:'Método no permitido'},405);
