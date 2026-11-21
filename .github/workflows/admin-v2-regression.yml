@@ -12,6 +12,11 @@ on:
       - 'scripts/test-account-recovery-interoperability.mjs'
       - 'scripts/test-account-recovery-rollback.mjs'
       - 'scripts/test-account-recovery-concurrency.mjs'
+      - 'scripts/test-admin-staging-boundaries.mjs'
+      - 'wrangler.admin-v2-qa.toml.example'
+      - 'wrangler.staging.toml.example'
+      - 'worker-demo-staging.js'
+      - 'uadav-api-config.js'
       - 'scripts/audit-account-recovery-contract.mjs'
       - '.github/workflows/admin-v2-regression.yml'
   workflow_dispatch:
@@ -46,5 +51,7 @@ jobs:
         run: node scripts/test-account-recovery-rollback.mjs
       - name: Concurrent recovery requests must not replace each other
         run: node scripts/test-account-recovery-concurrency.mjs
+      - name: Ensure QA Worker stays isolated from staging and production
+        run: node scripts/test-admin-staging-boundaries.mjs
       - name: Block incompatible recovery contracts
         run: node scripts/audit-account-recovery-contract.mjs
