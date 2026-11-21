@@ -41,22 +41,36 @@
   if (status.aviso_visible === true && status.mensaje && window.parent === window) {
     const notice = document.createElement('aside');
     notice.setAttribute('role','status');
-    notice.textContent = status.mensaje;
-    notice.style.cssText = 'position:relative;z-index:10;flex:none;background:#ffe38d;color:#192332;text-align:center;padding:8px 16px;font:600 15px/1.4 system-ui;overflow-wrap:anywhere';
-    notice.style.whiteSpace = 'pre-line';
-    notice.style.maxHeight = '30vh';
-    notice.style.overflowY = 'auto';
-    const viewport = document.getElementById('viewWrap');
-    const frame = document.getElementById('view');
-    if (viewport && frame?.parentElement === viewport) {
-      viewport.style.display = 'flex';
-      viewport.style.flexDirection = 'column';
-      frame.style.flex = '1 1 0%';
-      frame.style.minHeight = '0';
-      frame.style.height = 'auto';
-      viewport.prepend(notice);
-    } else {
-      document.body.prepend(notice);
+    const key = 'uadav-dismissed-public-notice';
+    try { if (sessionStorage.getItem(key) === status.mensaje) return; } catch {}
+    const label = document.createElement('span');
+    label.textContent = status.mensaje;
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.textContent = '×';
+    close.setAttribute('aria-label', 'Cerrar aviso');
+    close.style.cssText = 'color:inherit;background:transparent;border:0;font-size:22px;cursor:pointer;padding:0 10px;min-height:32px';
+    notice.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;flex:none;background:#15283b;color:#edf5ff;padding:2px 12px;font:500 14px/1.4 system-ui;overflow-wrap:anywhere';
+    label.style.cssText = 'white-space:pre-line;max-height:24vh;overflow:auto';
+    notice.append(label, close);
+    const shell = document.getElementById('shell');
+    const header = document.getElementById('top');
+    (shell || document.body).prepend(notice);
+    function positionHeader() {
+      if (header && getComputedStyle(header).position === 'fixed') {
+        header.style.translate = '0 ' + notice.offsetHeight + 'px';
+      } else if (header) header.style.removeProperty('translate');
     }
+    const observer = new ResizeObserver(positionHeader);
+    observer.observe(notice);
+    window.addEventListener('resize', positionHeader);
+    positionHeader();
+    close.onclick = () => {
+      observer.disconnect();
+      window.removeEventListener('resize', positionHeader);
+      if (header) header.style.removeProperty('translate');
+      notice.remove();
+      try { sessionStorage.setItem(key, status.mensaje); } catch {}
+    };
   }
 })();
