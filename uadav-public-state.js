@@ -43,6 +43,20 @@
     notice.setAttribute('role','status');
     notice.textContent = status.mensaje;
     notice.style.cssText = 'position:relative;z-index:10;flex:none;background:#ffe38d;color:#192332;text-align:center;padding:8px 16px;font:600 15px/1.4 system-ui;overflow-wrap:anywhere';
-    document.body.prepend(notice);
+    notice.style.whiteSpace = 'pre-line';
+    notice.style.maxHeight = '30vh';
+    notice.style.overflowY = 'auto';
+    const viewport = document.getElementById('viewWrap');
+    const frame = document.getElementById('view');
+    if (viewport && frame?.parentElement === viewport) {
+      viewport.style.display = 'flex';
+      viewport.style.flexDirection = 'column';
+      frame.style.flex = '1 1 0%';
+      frame.style.minHeight = '0';
+      frame.style.height = 'auto';
+      viewport.prepend(notice);
+    } else {
+      document.body.prepend(notice);
+    }
   }
 })();
