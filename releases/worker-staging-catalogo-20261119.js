@@ -2003,12 +2003,41 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if (path === '/api/v7/export' && request.method === 'GET') {
       if (!isAdmin()) return json({error:'No autorizado'},401);
       const out={generated_at:isoNow(),service:'★ UADAV STREAM',version:VERSION,build:BUILD,kv:{},tables:{}};
-      const kvKeys=['config_global','apariencia','secciones','web_visibility','home_layout','landing_config','footer_config','site_pages','estado_sitio','radios','senales_oficiales','artistas','artistas_prospectos','cartelera','eventos','bolsa_trabajo','content_items','collections','banners'];
-      for(const key of kvKeys){try{const raw=await env.UADAV_DB.get(key);out.kv[key]=raw==null?null:safeJSON(raw,raw)}catch(e){out.kv[key]={error:String(e?.message||e)}}}
-      if(hasD1()){
-        const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
-        for(const t of tables){try{const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[]}catch(e){out.tables[t]={error:String(e?.message||e)}}}
+      const integrity = {complete:false, d1_configured:hasD1(), missing_critical_kv:[], absent_optional_tables:[], errors:[]};
+      out.backup_integrity = integrity;
+      const kvKeys=['config_global','apariencia','secciones','web_visibility','home_layout','landing_config','footer_config','site_pages','estado_sitio','radios','senales_oficiales','artistas','artistas_prospectos','cartelera','eventos','bolsa_trabajo','postulaciones_trabajo','content_items','collections','banners'];
+      for (const key of kvKeys) {
+        try {
+          const raw = await env.UADAV_DB.get(key);
+          out.kv[key] = raw == null ? null : safeJSON(raw, raw);
+        } catch {
+          out.kv[key] = {error:'Lectura KV fallida'};
+          integrity.errors.push('KV ' + key);
+        }
       }
+      integrity.missing_critical_kv = ['bolsa_trabajo','postulaciones_trabajo','radios'].filter(key => !Array.isArray(out.kv[key]));
+      if (integrity.d1_configured) {
+        const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_operators','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
+        const optional = new Set(['artist_ai_usage','artist_ownership_transfers']);
+        for (const table of tables) {
+          try {
+            if (optional.has(table)) {
+              const exists = await env.DB.prepare("SELECT name FROM sqlite_schema WHERE type='table' AND name=?").bind(table).first();
+              if (!exists) {
+                integrity.absent_optional_tables.push(table);
+                continue;
+              }
+            }
+            const result = await env.DB.prepare('SELECT * FROM ' + table).all();
+            if (result.success === false || !Array.isArray(result.results)) throw Error();
+            out.tables[table] = result.results;
+          } catch {
+            out.tables[table] = {error:'Lectura D1 fallida'};
+            integrity.errors.push('D1 ' + table);
+          }
+        }
+      }
+      integrity.complete = Boolean(integrity.d1_configured && !integrity.errors.length && !integrity.missing_critical_kv.length);
       return json(out);
     }
 
