@@ -8,6 +8,7 @@ on:
       - 'worker.js'
       - 'uadav-account-sync.js'
       - 'scripts/test-admin-*.mjs'
+      - 'scripts/test-account-recovery-atomic.mjs'
       - 'scripts/audit-account-recovery-contract.mjs'
       - '.github/workflows/admin-v2-regression.yml'
   workflow_dispatch:
@@ -34,5 +35,7 @@ jobs:
         run: node scripts/test-admin-notification-queue.mjs
       - name: Validate artist registration flow
         run: node scripts/test-admin-artist-registration.mjs
+      - name: Test atomic recovery with isolated D1 adapter
+        run: node scripts/test-account-recovery-atomic.mjs
       - name: Block incompatible recovery contracts
         run: node scripts/audit-account-recovery-contract.mjs
