@@ -392,7 +392,8 @@ async function uadavAccountRoute(request,env,identityOnly=false){
       return reply({data,revision});
     }
     if(!account)return reply({error:'Cuenta no encontrada'},404);
-    if(identityOnly){
+    if(identityOnly||path==='/api/account/identity'){
+      if(request.method!=='GET')return reply({error:'Método no permitido'},405);
       const state=await db.prepare('SELECT version FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
       return reply({account_id:accountId,recovery_version:Number(state?.version||0)});
     }
