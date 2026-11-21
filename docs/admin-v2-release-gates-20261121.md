@@ -46,3 +46,28 @@ Este último resultado **no se arregla actualizando el hash del test**. Exige re
 
 ## Regla de aprobación
 **No fusionar PR #68, no sobrescribir el Worker congelado ni tocar D1/KV productivos** mientras permanezca algún bloqueo técnico o falte QA de staging. El enlace a GitHub no certifica deployment.
+
+
+## Descubrimiento de staging y plan de despliegue QA seguro (21/11/2026)
+
+**Hecho comprobado en el repositorio, no en Cloudflare:**
+- `uadav-api-config.js` fuerza el frontend staging a `https://uadav-api-staging.uadavstream.workers.dev/api/`; frontend público a `https://uadav-api.uadavstream.workers.dev/api/`.
+- `wrangler.staging.toml.example` fija `name = "uadav-api-staging"` y `main = "worker-demo-staging.js"`.
+- `worker-demo-staging.js` reexporta `releases/worker-staging-catalogo-20261119.js`, **no** el `worker.js` que cambia Admin 2.0.
+- El archivo de ejemplo de staging incluye marcadores `STAGING_KV_ID_REQUIRED`, `STAGING_D1_ID_REQUIRED` y `DEMO_D1_ID_REQUIRED`; no prueba qué recursos concretos están configurados actualmente en Cloudflare.
+- El workflow `staging-integration-published-preview.yml` apunta a una vista de staging distinta. Ningún workflow de esta rama confirma que Cloudflare esté ejecutando el nuevo código de cuentas.
+
+**Preparación aislada creada sin desplegar:** `wrangler.admin-v2-qa.toml.example` propone el nombre distinto `uadav-api-admin-v2-qa` y `main = "worker.js"`, con marcadores de **tres recursos QA nuevos**: `UADAV_DB` (KV), `DB` (D1), `DEMO_DB` (D1); no incorpora rutas, cron, colas ni servicios de correo/pago. `scripts/test-admin-staging-boundaries.mjs` detecta cambios que hagan que QA apunte al Worker congelado o a la API productiva.
+
+### Secuencia obligatoria (requiere acceso humano a Cloudflare o Work)
+1. Inspeccionar en Cloudflare la configuración **real** del Worker `uadav-api-staging`, la última versión publicada y sus bindings, sin ejecutar escrituras.
+2. Comprobar que los recursos D1 y KV reales no se comparten con producción. **No reutilizar ni copiar IDs productivos ni nombres de secretos a la plantilla.**
+3. Crear (solo tras autorización específica) un KV QA nuevo y bases D1 QA nuevas e independientes. Guardar IDs únicamente en una configuración privada fuera del repo; nunca commitear esa configuración.
+4. Preparar secretos QA exclusivos y Turnstile QA; usar destinos `.invalid` o casillas de prueba controladas. No habilitar emails reales ni webhooks de pago.
+5. Preparar el frontend de QA con URL del nuevo Worker; **el frontend staging existente sigue forzando `uadav-api-staging`**, por lo que navegar allí **NO valida** el Worker QA nuevo.
+6. Tras backups de los recursos QA y plan de reversión, desplegar **solo** el servicio `uadav-api-admin-v2-qa` con archivo privado derivado de la plantilla y ref/commit revisado.
+7. Comparar `/api/health` del servicio QA, versión de Worker, visibilidad de D1/KV, y efectuar las pruebas de altas, recuperación, revocación, concurrencia, errores de DB y correo simulado, siempre sin usuarios productivos.
+8. Si falla: revertir a la versión anterior del Worker QA o deshabilitar el servicio QA; no tocar `uadav-api-staging` ni `uadav-api`.
+9. Solo tras revisión de resultados, respaldos de staging y autorización expresa se evalúa un despliegue separado al staging protegido. **Producción requiere otra autorización.**
+
+**La plantilla no es una orden de despliegue. No desplegar todavía.** La API de salud no se pudo certificar desde esta sesión y la identificación de los bindings remotos sigue pendiente.
