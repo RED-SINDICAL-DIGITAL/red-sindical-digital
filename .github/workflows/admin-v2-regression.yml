@@ -10,6 +10,7 @@ on:
       - 'scripts/test-admin-*.mjs'
       - 'scripts/test-account-recovery-atomic.mjs'
       - 'scripts/test-account-recovery-interoperability.mjs'
+      - 'scripts/test-account-recovery-rollback.mjs'
       - 'scripts/audit-account-recovery-contract.mjs'
       - '.github/workflows/admin-v2-regression.yml'
   workflow_dispatch:
@@ -40,5 +41,7 @@ jobs:
         run: node scripts/test-account-recovery-atomic.mjs
       - name: Test legacy and atomic recovery interoperability
         run: node scripts/test-account-recovery-interoperability.mjs
+      - name: Test failed D1 transactions roll back without losing credentials
+        run: node scripts/test-account-recovery-rollback.mjs
       - name: Block incompatible recovery contracts
         run: node scripts/audit-account-recovery-contract.mjs
