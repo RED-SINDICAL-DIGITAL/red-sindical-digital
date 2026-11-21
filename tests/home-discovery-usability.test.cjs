@@ -67,8 +67,8 @@ function rotationHarness({reduced=false,count=3}={}){
 test('hero previous, next and pause controls preserve a single bounded timer',()=>{
  const h=rotationHarness();assert.equal(h.timers.size,1);h.nodes.heroNext.onclick();assert.equal(h.nodes.heroPosition.textContent,'2 de 3');h.nodes.heroPrevious.onclick();assert.equal(h.nodes.heroPosition.textContent,'1 de 3');assert.equal(h.timers.size,1);h.nodes.heroPause.onclick();assert.equal(h.timers.size,0);assert.equal(h.nodes.heroPause['aria-pressed'],'true');h.nodes.heroPause.onclick();assert.equal(h.timers.size,1);
 });
-test('hero never automatically rotates with reduced motion or a single proposal',()=>{
- assert.equal(rotationHarness({reduced:true}).timers.size,0);const single=rotationHarness({count:1});assert.equal(single.timers.size,0);assert.equal(single.nodes.heroControls.hidden,true);
+test('hero rotates automatically without a play button; a single proposal stays still',()=>{
+ assert.equal(rotationHarness({reduced:true}).timers.size,1);const single=rotationHarness({count:1});assert.equal(single.timers.size,0);assert.equal(single.nodes.heroControls.hidden,true);
 });
 test('hero keeps rotating on hover and mouse clicks, pauses for keyboard focus and hidden documents',()=>{
  const h=rotationHarness();h.ctx.document.hidden=true;h.listeners.visibilitychange();assert.equal(h.timers.size,0);h.ctx.document.hidden=false;h.listeners.visibilitychange();assert.equal(h.timers.size,1);h.nodes.hero.mouseenter?.();assert.equal(h.timers.size,1);h.nodes.hero.mouseleave?.();assert.equal(h.timers.size,1);h.nodes.hero.focusin();assert.equal(h.timers.size,1);h.nodes.hero.keyboardFocus=true;h.nodes.hero.focusin();assert.equal(h.timers.size,0);h.nodes.hero.focusout({relatedTarget:h.nodes.heroPause});assert.equal(h.timers.size,0);h.nodes.hero.focusout({relatedTarget:null});assert.equal(h.timers.size,1);h.controller.destroy();assert.equal(h.timers.size,0);assert.equal(h.nodes.hero.mouseenter,undefined);assert.equal(h.listeners.visibilitychange,undefined);
