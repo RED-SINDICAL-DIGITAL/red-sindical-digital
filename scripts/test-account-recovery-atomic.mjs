@@ -39,6 +39,6 @@ try{
  assert.equal(reused.status,409,'A previously revoked code must not be reused');
  assert.equal((await call('account/identity',next)).data.recovery_version,2);
  const bad=await call('account/recovery/atomic',device,'POST',{request_id:'bad',new_secret:'UAC-invalid',expected_version:2});
- assert.equal(bad.status,400);
+ assert.equal(bad.status,429,'After five rotation attempts in one hour, further attempts must be rate-limited');
  console.log('PASS: atomic recovery, account version, root revocation, idempotency and stale conflicts (SQLite D1 adapter).');
 }finally{DB.close()}
