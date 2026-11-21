@@ -9,6 +9,7 @@ on:
       - 'uadav-account-sync.js'
       - 'scripts/test-admin-*.mjs'
       - 'scripts/test-account-recovery-atomic.mjs'
+      - 'scripts/test-account-recovery-interoperability.mjs'
       - 'scripts/audit-account-recovery-contract.mjs'
       - '.github/workflows/admin-v2-regression.yml'
   workflow_dispatch:
@@ -37,5 +38,7 @@ jobs:
         run: node scripts/test-admin-artist-registration.mjs
       - name: Test atomic recovery with isolated D1 adapter
         run: node scripts/test-account-recovery-atomic.mjs
+      - name: Test legacy and atomic recovery interoperability
+        run: node scripts/test-account-recovery-interoperability.mjs
       - name: Block incompatible recovery contracts
         run: node scripts/audit-account-recovery-contract.mjs
