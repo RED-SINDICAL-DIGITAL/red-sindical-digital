@@ -468,8 +468,13 @@ async function uadavAccountRoute(request,env,identityOnly=false){
         return reply({error:'Datos de renovación inválidos'},400);
       const newHash=await hash(newSecret);
       if(newHash===credentialHash)return reply({error:'Generá un código de recuperación diferente'},400);
-      const other=await db.prepare('SELECT account_id FROM audience_recovery_keys WHERE credential_hash=?').bind(newHash).first();
-      if(other&&other.account_id!==accountId)return reply({error:'No se pudo utilizar ese código de recuperación'},409);
+      const other=await db.prepare('SELECT account_id,revoked_at FROM audience_recovery_keys WHERE credential_hash=?').bind(newHash).first();
+      if(other){
+        const previous=await db.prepare('SELECT version,last_request_id,last_credential_hash FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
+        if(other.account_id!==accountId||other.revoked_at!=null||previous?.version!==expected+1||previous.last_request_id!==requestId||previous.last_credential_hash!==newHash)
+          return reply({error:'Generá un código de recuperación nuevo y distinto',code:'RECOVERY_SECRET_REUSE'},409);
+        return reply({success:true,request_id:requestId,secret:newSecret,recovery_version:previous.version});
+      }
       // All statements execute as one D1 transaction. A losing concurrent request cannot revoke a winner.
       await db.batch([
         db.prepare('INSERT OR IGNORE INTO audience_recovery_state(account_id,version) VALUES(?,0)').bind(accountId),
