@@ -1941,7 +1941,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(check.decision==='reject')return json({error:check.reason==='submission_limit'?'Demasiados envíos. Intentá más tarde.':check.reason==='queue_full'?'La revisión está ocupada. Intentá más tarde.':'Este contenido fue rechazado por moderación'},check.reason==='submission_limit'?429:check.reason==='queue_full'?503:422);
     }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: (await platformIdentity()).name, version: VERSION, build: BUILD, kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: (await platformIdentity()).name, version: VERSION, build: BUILD, artist_direct_publication:true, kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:(await platformIdentity()).name, architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -3721,7 +3721,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if(path==='/api/admin/artists/reuse-handle'){
       if(!isAdmin())return json({error:'No autorizado'},401);if(request.method!=='POST')return json({error:'Método no permitido'},405);if(!hasD1())return json({error:'Se requiere D1'},503);const b=await uadavSecurityJSON(request,3000),handle=uadavArtistHandle(b.handle),id=String(b.artist_id||''),reason=String(b.reason||'').trim();if(!handle||!id||b.confirm!=='REASIGNAR'||reason.length<10)return json({error:'Nombre de usuario, artista y motivo de verificación requeridos.'},400);await ensureD1Schema();await uadavAccountSchema(env.DB);
       await env.DB.prepare('CREATE TABLE IF NOT EXISTS artist_handles(handle TEXT PRIMARY KEY,artist_id TEXT NOT NULL,created_at TEXT NOT NULL)').run();await env.DB.prepare('CREATE TABLE IF NOT EXISTS artist_current_handles(artist_id TEXT PRIMARY KEY,handle TEXT NOT NULL UNIQUE)').run();
-      const owner=await env.DB.prepare("SELECT claim_id,verification_level FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(id).first();if(!owner||owner.verification_level==='draft_creation'||await uadavDeletedArtist(env,id))return json({error:'Primero verificá la propiedad del nuevo perfil.'},409);
+      const owner=await env.DB.prepare("SELECT claim_id,verification_level FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(id).first();if(!owner||['draft_creation','self_registration'].includes(owner.verification_level)||await uadavDeletedArtist(env,id))return json({error:'Primero verificá la propiedad del nuevo perfil.'},409);
       const old=await env.DB.prepare('SELECT artist_id FROM artist_handles WHERE handle=?').bind(handle).first();if(!old||!await uadavDeletedArtist(env,old.artist_id))return json({error:'Este enlace no pertenece a un perfil eliminado.'},409);
       const result=await env.DB.batch([env.DB.prepare('UPDATE artist_handles SET artist_id=? WHERE handle=? AND artist_id=?').bind(id,handle,old.artist_id),env.DB.prepare('INSERT INTO artist_current_handles(artist_id,handle) SELECT ?,? WHERE EXISTS(SELECT 1 FROM artist_handles WHERE handle=? AND artist_id=?) ON CONFLICT(artist_id) DO UPDATE SET handle=excluded.handle').bind(id,handle,handle,id)]);if(Number(result[1]?.meta?.changes)!==1)return json({error:'El enlace cambió de estado. Actualizá antes de reintentar.'},409);await audit('artist_handle_reassigned','artist',id,{handle,previous_artist_id:old.artist_id,reason});return json({success:true,handle});
     }
@@ -3932,6 +3932,55 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         if(stageName.length<2||stageName.length>160||!category||category.length>120||!contactName||contactName.length>140||email.length>180||!/^\S+@\S+\.\S+$/.test(email))return json({error:'Completá nombre artístico, especialidad, nombre de contacto y un email válido.'},400);
         if(String(b.bio||'').length>3000||String(b.ciudad||'').length>140||String(b.note||'').length>1500)return json({error:'La información supera el tamaño permitido.'},400);
         const social=String(b.social_url||'').trim();if(social&&!/^https?:\/\//i.test(social))return json({error:'El enlace oficial debe comenzar con https:// o http://.'},400);
+        if(accountId){
+          if(!uadavSecurityConfig(env).enabled)return json({error:'La protección del alta de artistas todavía no está habilitada.'},503);
+          const normalized=normalizeSearchText(stageName);
+          if(!normalized)return json({error:'Ingresá un nombre artístico válido.'},400);
+          const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('perfil-publico:'+normalized));
+          const id='ART-'+Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join('').slice(0,32);
+          if(await uadavDeletedArtist(env,id))return json({error:'Este perfil fue retirado. Contactá con UADAV.'},409);
+          await ensureD1Schema();
+          const db=env.DB;
+          const existing=()=>db.prepare('SELECT id,visible,status,data_json FROM artists WHERE id=?').bind(id).first();
+          const conflict=()=>json({error:'Ya existe una ficha con ese nombre. Buscala y solicitá gestionarla.'},409);
+          const receipt=async row=>{
+            const owner=await db.prepare("SELECT l.claim_id FROM audience_artist_links l JOIN artist_owners o ON o.artist_id=l.artist_id AND o.claim_id=l.claim_id WHERE l.account_id=? AND l.artist_id=? AND o.status='active' AND o.verification_level='self_registration'").bind(accountId,id).first();
+            if(!owner)return conflict();
+            if(!row.visible||row.status!=='publicado')return json({error:'El perfil ya existe y está oculto. Consultá Mi Perfil.'},409);
+            const catalog=await getArray('artistas'),copy=catalog.find(x=>x.id===id);
+            if(copy&&!uadavArtistPublicVisible(copy))return json({error:'Este perfil está oculto. Consultá Mi Perfil.'},409);
+            if(!copy)await putJSON('artistas',[JSON.parse(row.data_json),...catalog]);
+            return json({success:true,id:owner.claim_id,artist_id:id,status:'published',account_tracked:true,private_access:true});
+          };
+          const prior=await existing();
+          if(prior)return receipt(prior);
+          const catalog=await allCanonicalArtists();
+          if(catalog.some(a=>normalizeSearchText(a.nombre_artistico||a.nombre)===normalized)||await artistFromD1(stageName))return conflict();
+          const ip=String(request.headers.get('CF-Connecting-IP')||'');
+          if(ip){
+            const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ip));
+            const key='artist_registration_rate_'+Array.from(new Uint8Array(hash),v=>v.toString(16).padStart(2,'0')).join('')+'_'+Math.floor(Date.now()/3600000);
+            const count=Number(await env.UADAV_DB.get(key)||0);
+            if(count>=5)return json({error:'Alcanzaste el límite de altas. Intentá más tarde.'},429);
+            await env.UADAV_DB.put(key,String(count+1),{expirationTtl:7200});
+          }
+          const now=isoNow(),ms=Date.now(),claimId='CL-'+crypto.randomUUID().replace(/-/g,'');
+          const item={id,nombre:stageName,nombre_artistico:stageName,rubro:category,ciudad:String(b.ciudad||'').trim(),bio:String(b.bio||'').trim(),visible:true,estado:'publicado',claimed:true,claim_status:'approved',self_managed:true,claim_id:claimId,afiliado_verificado:false,origen:'alta_artista',creado:now};
+          try{
+            await db.batch([
+              db.prepare("INSERT INTO artists(id,name,stage_name,category,city,country,verified,status,visible,data_json,created_at,updated_at) VALUES(?,?,?,?,?,'Argentina',0,'publicado',1,?,?,?)").bind(id,stageName,stageName,category,item.ciudad,JSON.stringify(item),now,now),
+              db.prepare("INSERT INTO artist_claims(id,artist_id,name,email,status,created_at,reviewed_at) VALUES(?,?,?,?,'approved',?,?)").bind(claimId,id,contactName,email,now,now),
+              db.prepare("INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES(?,?,?,?,'owner','active','self_registration',?,?)").bind('OWN-'+claimId,id,claimId,email,now,now),
+              db.prepare('INSERT INTO audience_artist_claims(claim_id,account_id,artist_id,created_at,linked_at) VALUES(?,?,?,?,?)').bind(claimId,accountId,id,ms,ms),
+              db.prepare('INSERT INTO audience_artist_links(account_id,artist_id,claim_id,expires_at,created_at) VALUES(?,?,?,0,?)').bind(accountId,id,claimId,ms)
+            ]);
+          }catch(error){
+            const concurrent=await existing();
+            if(concurrent)return receipt(concurrent);
+            throw error;
+          }
+          return receipt(await existing());
+        }
         const signature=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(email+'|'+stageName.toLowerCase())))).map(x=>x.toString(16).padStart(2,'0')).join('');
         const dedupeKey='artist_registration_'+signature,previous=safeJSON(await env.UADAV_DB.get(dedupeKey),null);if(previous?.artist_id&&!await uadavDeletedArtist(env,previous.artist_id))artistId=previous.artist_id;
         else {
