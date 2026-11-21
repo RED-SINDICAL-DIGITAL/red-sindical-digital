@@ -91,12 +91,12 @@ function uadavArtistSharePage({request,env,kind,id,artist,kit,share}){
 // Public channel library. Only fixed provider hosts are contacted; cursors bind to channel and kind.
 async function uadavYouTubeLibrary(url,env,instances,cors={}){
  const reply=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,'Content-Type':'application/json','Cache-Control':'public, max-age=60'}});
- const kind=url.searchParams.get('kind')||'videos';if(!['info','videos','playlists'].includes(kind))return reply({error:'Tipo inválido'},400);
+ const kind=url.searchParams.get('kind')||'videos';if(!['info','videos','playlists','releases'].includes(kind))return reply({error:'Tipo inválido'},400);
  let reference=String(url.searchParams.get('id')||url.searchParams.get('handle')||'').trim();
  if(/^https?:\/\//i.test(reference)){try{const u=new URL(reference);if(!/(^|\.)youtube\.com$/i.test(u.hostname))throw Error();const parts=u.pathname.split('/').filter(Boolean);reference=parts[0]==='channel'?parts[1]:parts[0]?.startsWith('@')?parts[0]:''}catch{return reply({error:'Usá una URL de canal de YouTube'},400)}}
  const isId=/^UC[A-Za-z0-9_-]{22}$/.test(reference);if(!isId&&!/^@[A-Za-z0-9_.-]{1,100}$/.test(reference))return reply({error:'Ingresá el ID UC… o @usuario del canal'},400);
  let cursor=null;const rawCursor=url.searchParams.get('cursor');if(rawCursor){if(rawCursor.length>6000)return reply({error:'Cursor inválido'},400);try{cursor=JSON.parse(atob(rawCursor.replace(/-/g,'+').replace(/_/g,'/')));if(cursor.v!==1||cursor.ref!==reference||cursor.kind!==kind||!['iv','yt'].includes(cursor.provider)||typeof cursor.token!=='string'||cursor.token.length>4000)throw Error();if(cursor.provider==='iv'&&(!Number.isInteger(cursor.base)||cursor.base<0||cursor.base>=instances.length))throw Error()}catch{return reply({error:'Cursor inválido para este canal'},400)}}
- const key='youtube_library_v2_'+encodeURIComponent([reference,kind,rawCursor||'first'].join('|'));
+ const key='youtube_library_v3_'+encodeURIComponent([reference,kind,rawCursor||'first'].join('|'));
  try{const cached=await env.UADAV_DB?.get(key);if(cached)return reply(JSON.parse(cached))}catch{}
  const fetchJSON=async href=>{const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),2800);try{const r=await fetch(href,{signal:ctl.signal,headers:{Accept:'application/json'}});if(!r.ok)throw Error('Proveedor no disponible');const d=await r.json();if(d.error)throw Error('Proveedor no disponible');return d}finally{clearTimeout(timer)}};
  const enabled=async()=>{try{const raw=await env.UADAV_DB?.get('youtube_api_enabled');if(raw!==null&&raw!==undefined){const value=JSON.parse(raw);if(value===false||String(value).toLowerCase()==='false')return false}}catch{}return !!env.YOUTUBE_API_KEY};
@@ -104,6 +104,39 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
  const thumb=x=>x?.thumbnails?.high?.url||x?.thumbnails?.medium?.url||x?.thumbnails?.default?.url||'';
  const video=(x,provider)=>{const id=String(provider==='iv'?x.videoId:x.contentDetails?.videoId||x.snippet?.resourceId?.videoId||'');if(!/^[A-Za-z0-9_-]{11}$/.test(id))return null;return{id,external_id:id,provider:'youtube',url:'https://www.youtube.com/watch?v='+id,titulo:provider==='iv'?x.title:x.snippet?.title,author:provider==='iv'?x.author:x.snippet?.videoOwnerChannelTitle||x.snippet?.channelTitle,thumbnail:provider==='iv'?x.videoThumbnails?.find?.(t=>t.quality==='medium')?.url||x.videoThumbnails?.[0]?.url||'':thumb(x.snippet),content_type:'video',tipo:'video'}};
  const playlist=(x,provider)=>{const id=String(provider==='iv'?x.playlistId:x.id||'');if(!/^[A-Za-z0-9_-]{10,100}$/.test(id))return null;const title=String((provider==='iv'?x.title:x.snippet?.title)||'').trim(),image=String((provider==='iv'?x.playlistThumbnail:thumb(x.snippet))||''),rawCount=provider==='iv'?x.videoCount:x.contentDetails?.itemCount,count=title&&rawCount!==null&&rawCount!==undefined&&rawCount!==''&&Number.isFinite(Number(rawCount))&&Number(rawCount)>=0?Number(rawCount):null;return{id,playlist_id:id,provider:'youtube',url:'https://www.youtube.com/playlist?list='+id,titulo:title,thumbnail:/\/no_thumbnail\./i.test(image)?'':image,count,content_type:'playlist'}};
+ // Read only the selected public channel tab, excluding sidebar recommendations.
+ async function publicChannelPage(channelId,kind){
+  const response=await fetch('https://www.youtube.com/channel/'+channelId+'/'+kind+'?hl=en',{
+   signal:AbortSignal.timeout(3800),headers:{Accept:'text/html','Accept-Language':'en'}
+  });
+  if(!response.ok)throw Error('Página del canal no disponible');
+  const html=await response.text();
+  const raw=html.match(/(?:var\s+ytInitialData\s*=\s*|window\["ytInitialData"\]\s*=\s*)(\{[\s\S]*?\});\s*<\/script>/);
+  if(!raw)throw Error('Página del canal sin catálogo');
+  const page=JSON.parse(raw[1]);
+  const owner=page.metadata?.channelMetadataRenderer?.externalId;
+  if(owner&&owner!==channelId)throw Error('El catálogo pertenece a otro canal');
+  const tabs=page.contents?.twoColumnBrowseResultsRenderer?.tabs||page.contents?.singleColumnBrowseResultsRenderer?.tabs||[];
+  const tab=tabs.map(x=>x.tabRenderer).find(x=>x?.selected);
+  if(!tab||!(tab.endpoint?.commandMetadata?.webCommandMetadata?.url||'').split('?')[0].endsWith('/'+kind))throw Error('Sección no disponible');
+  const items=new Map(),stack=[tab.content];
+  const label=value=>value?.simpleText||value?.runs?.map(r=>r.text).join('')||value?.content||'';
+  while(stack.length){
+   const node=stack.pop();if(!node||typeof node!=='object')continue;
+   const card=node.videoRenderer||node.gridVideoRenderer||node.playlistRenderer||node.gridPlaylistRenderer||node.lockupViewModel;
+   if(!card){stack.push(...Object.values(node).reverse());continue}
+   if(node.lockupViewModel&&card.contentType!==(kind==='videos'?'LOCKUP_CONTENT_TYPE_VIDEO':'LOCKUP_CONTENT_TYPE_PLAYLIST')&&!(kind==='releases'&&card.contentType==='LOCKUP_CONTENT_TYPE_ALBUM'))continue;
+   const id=(kind==='videos'?card.videoId:card.playlistId)||card.contentId;
+   const title=label(card.title)||label(card.metadata?.lockupMetadataViewModel?.title);
+   if(!id||!title)continue;
+   const images=card.thumbnail?.thumbnails||card.thumbnails?.[0]?.thumbnails||card.contentImage?.collectionThumbnailViewModel?.primaryThumbnail?.thumbnailViewModel?.image?.sources||card.contentImage?.thumbnailViewModel?.image?.sources||[];
+   const image=images.at(-1)?.url||'';
+   const item=kind==='videos'?video({videoId:id,title,videoThumbnails:[{url:image}]},'iv'):playlist({playlistId:id,title,playlistThumbnail:image},'iv');
+   if(item)items.set(item.id,item);
+  }
+  if(!items.size)throw Error('Sin contenido identificable en la página');
+  return {channel_id:channelId,kind,source:'youtube_channel_page',items:[...items.values()],next_cursor:null,catalog_limited:true};
+ }
  const encode=(provider,token,base)=>token?btoa(JSON.stringify({v:1,ref:reference,kind,provider,token,...(base!==undefined?{base}:{})})).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''):null;
  let info=null,channelId=isId?reference:null;
  const infoKey='youtube_library_info_'+encodeURIComponent(reference);
@@ -120,7 +153,37 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
    let data=null,baseIndex=null;
    if(!cursor||cursor.provider==='iv')try{const selected=cursor?[cursor.base]:instances.map((_,i)=>i);const result=await Promise.any(selected.map(async i=>{const qs=new URLSearchParams({hl:'es',...(kind==='videos'?{sort_by:'newest'}:{}),...(cursor?.token?{continuation:cursor.token}:{})});const d=await fetchJSON(instances[i]+'/api/v1/channels/'+channelId+'/'+kind+'?'+qs);const items=d?.videos||d?.playlists||(Array.isArray(d)?d:null);if(!Array.isArray(items))throw Error();return{data:d,base:i,items}}));data=result;baseIndex=result.base}catch{if(cursor)throw Error('La fuente de esta página no responde. Reintentá.')}
    if(data){out={channel_id:channelId,kind,source:'invidious',items:data.items.map(x=>(kind==='videos'?video:playlist)(x,'iv')).filter(Boolean),next_cursor:encode('iv',data.data.continuation||null,baseIndex)}}else{
+    if(kind==='releases')out=await publicChannelPage(channelId,kind);else try{
     const params={part:'snippet,contentDetails',maxResults:'50',...(cursor?.token?{pageToken:cursor.token}:{})};const d=kind==='videos'?await official('playlistItems',{...params,playlistId:info?.uploads||'UU'+channelId.slice(2)}):await official('playlists',{...params,channelId});out={channel_id:channelId,kind,source:'youtube_api',items:(d.items||[]).map(x=>(kind==='videos'?video:playlist)(x,'yt')).filter(Boolean),next_cursor:encode('yt',d.nextPageToken||null)};
+    }catch(error){if(cursor)throw error;out=await publicChannelPage(channelId,kind)}
+   }
+   if(kind==='releases'&&out.items.length){
+    // Only enrich an exact channel relationship. A missing match must never block playback.
+    try{
+     const metadataKey='mb_release_years_v1_'+channelId;
+     let years=JSON.parse(await env.UADAV_DB?.get(metadataKey)||'null');
+     if(!years){
+      const mb=async(resource,params)=>{
+       const endpoint='https://musicbrainz.org/ws/2/'+resource+'?'+new URLSearchParams({...params,fmt:'json'});
+       const response=await fetch(endpoint,{signal:AbortSignal.timeout(1800),headers:{'User-Agent':'UADAVStream/1.0 (uadavstream@gmail.com)'}});
+       if(!response.ok)throw Error('MusicBrainz no disponible');
+       return response.json();
+      };
+      const link=await mb('url',{resource:'https://www.youtube.com/channel/'+channelId,inc:'artist-rels'});
+      const ids=[...new Set((link.relations||[]).map(r=>r.artist?.id).filter(Boolean))];
+      years={};
+      if(ids.length===1){
+       await new Promise(resolve=>setTimeout(resolve,1100));
+       const groups=await mb('release-group',{artist:ids[0],limit:'100'});
+       for(const group of groups['release-groups']||[]){
+        const title=String(group.title||'').trim().toLowerCase(),year=String(group['first-release-date']||'').slice(0,4);
+        if(title&&/^\d{4}$/.test(year))years[title]=Object.hasOwn(years,title)&&years[title]!==year?'':year;
+       }
+      }
+      await env.UADAV_DB?.put(metadataKey,JSON.stringify(years),{expirationTtl:86400});
+     }
+     for(const item of out.items){const year=years[item.titulo.trim().toLowerCase()];if(typeof year==='string'&&/^\d{4}$/.test(year))item.release_year=year}
+    }catch{}
    }
    if(kind==='playlists'){
     const incomplete=out.items.filter(x=>!x.titulo||!x.thumbnail||x.count===null).slice(0,50);
@@ -128,6 +191,11 @@ async function uadavYouTubeLibrary(url,env,instances,cors={}){
      const details=await official('playlists',{part:'snippet,contentDetails',id:incomplete.map(x=>x.id).join(',')});
      const byId=new Map((details.items||[]).map(x=>playlist(x,'yt')).filter(Boolean).map(x=>[x.id,x]));
      out.items=out.items.map(item=>{const detail=byId.get(item.id);if(!detail)return item;return{...item,titulo:detail.titulo||item.titulo,thumbnail:detail.thumbnail||item.thumbnail,count:detail.count!==null?detail.count:item.count}});
+    }catch{}
+    if(!cursor&&out.items.some(x=>!x.titulo))try{
+     const page=await publicChannelPage(channelId,kind);
+     const cards=new Map(page.items.map(x=>[x.id,x]));
+     for(const item of out.items){const card=cards.get(item.id);if(card){item.titulo||=card.titulo;item.thumbnail||=card.thumbnail}}
     }catch{}
     out.metadata_incomplete=out.items.some(x=>!x.titulo||!x.thumbnail||x.count===null);
    }
@@ -1834,7 +1902,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       if(check.decision==='reject')return json({error:check.reason==='submission_limit'?'Demasiados envíos. Intentá más tarde.':check.reason==='queue_full'?'La revisión está ocupada. Intentá más tarde.':'Este contenido fue rechazado por moderación'},check.reason==='submission_limit'?429:check.reason==='queue_full'?503:422);
     }
     if (path === '/api/health') {
-      return json({ ok: true, success: true, service: (await platformIdentity()).name, version: VERSION, build: BUILD, kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
+      return json({ ok: true, success: true, service: (await platformIdentity()).name, version: VERSION, build: BUILD, artist_direct_publication:true, kv: !!env.UADAV_DB, d1: hasD1(), youtube_api_enabled: await youtubeApiEnabled(), ai_gemini: !!env.GEMINI_API_KEY, ai_groq: !!env.GROQ_API_KEY, email_automation: !!env.EMAIL_AUTOMATION_URL, queue: !!env.UADAV_NOTIFY, youtube_key: !!env.YOUTUBE_API_KEY, youtube_api_mode: (await youtubeApiEnabled())?'enabled':'invidious_only', timestamp: isoNow() });
     }
     if (path === '/api/v7/health') {
       return json({ service:(await platformIdentity()).name, architecture:'D1+KV', d1:hasD1(), ai:{gemini:!!env.GEMINI_API_KEY,groq:!!env.GROQ_API_KEY}, automation:{email:!!env.EMAIL_AUTOMATION_URL,queue:!!env.UADAV_NOTIFY} });
@@ -3585,7 +3653,7 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
     if(path==='/api/admin/artists/reuse-handle'){
       if(!isAdmin())return json({error:'No autorizado'},401);if(request.method!=='POST')return json({error:'Método no permitido'},405);if(!hasD1())return json({error:'Se requiere D1'},503);const b=await uadavSecurityJSON(request,3000),handle=uadavArtistHandle(b.handle),id=String(b.artist_id||''),reason=String(b.reason||'').trim();if(!handle||!id||b.confirm!=='REASIGNAR'||reason.length<10)return json({error:'Nombre de usuario, artista y motivo de verificación requeridos.'},400);await ensureD1Schema();await uadavAccountSchema(env.DB);
       await env.DB.prepare('CREATE TABLE IF NOT EXISTS artist_handles(handle TEXT PRIMARY KEY,artist_id TEXT NOT NULL,created_at TEXT NOT NULL)').run();await env.DB.prepare('CREATE TABLE IF NOT EXISTS artist_current_handles(artist_id TEXT PRIMARY KEY,handle TEXT NOT NULL UNIQUE)').run();
-      const owner=await env.DB.prepare("SELECT claim_id,verification_level FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(id).first();if(!owner||owner.verification_level==='draft_creation'||await uadavDeletedArtist(env,id))return json({error:'Primero verificá la propiedad del nuevo perfil.'},409);
+      const owner=await env.DB.prepare("SELECT claim_id,verification_level FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(id).first();if(!owner||['draft_creation','self_registration'].includes(owner.verification_level)||await uadavDeletedArtist(env,id))return json({error:'Primero verificá la propiedad del nuevo perfil.'},409);
       const old=await env.DB.prepare('SELECT artist_id FROM artist_handles WHERE handle=?').bind(handle).first();if(!old||!await uadavDeletedArtist(env,old.artist_id))return json({error:'Este enlace no pertenece a un perfil eliminado.'},409);
       const result=await env.DB.batch([env.DB.prepare('UPDATE artist_handles SET artist_id=? WHERE handle=? AND artist_id=?').bind(id,handle,old.artist_id),env.DB.prepare('INSERT INTO artist_current_handles(artist_id,handle) SELECT ?,? WHERE EXISTS(SELECT 1 FROM artist_handles WHERE handle=? AND artist_id=?) ON CONFLICT(artist_id) DO UPDATE SET handle=excluded.handle').bind(id,handle,handle,id)]);if(Number(result[1]?.meta?.changes)!==1)return json({error:'El enlace cambió de estado. Actualizá antes de reintentar.'},409);await audit('artist_handle_reassigned','artist',id,{handle,previous_artist_id:old.artist_id,reason});return json({success:true,handle});
     }
@@ -3796,6 +3864,55 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
         if(stageName.length<2||stageName.length>160||!category||category.length>120||!contactName||contactName.length>140||email.length>180||!/^\S+@\S+\.\S+$/.test(email))return json({error:'Completá nombre artístico, especialidad, nombre de contacto y un email válido.'},400);
         if(String(b.bio||'').length>3000||String(b.ciudad||'').length>140||String(b.note||'').length>1500)return json({error:'La información supera el tamaño permitido.'},400);
         const social=String(b.social_url||'').trim();if(social&&!/^https?:\/\//i.test(social))return json({error:'El enlace oficial debe comenzar con https:// o http://.'},400);
+        if(accountId){
+          if(!uadavSecurityConfig(env).enabled)return json({error:'La protección del alta de artistas todavía no está habilitada.'},503);
+          const normalized=normalizeSearchText(stageName);
+          if(!normalized)return json({error:'Ingresá un nombre artístico válido.'},400);
+          const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('perfil-publico:'+normalized));
+          const id='ART-'+Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join('').slice(0,32);
+          if(await uadavDeletedArtist(env,id))return json({error:'Este perfil fue retirado. Contactá con UADAV.'},409);
+          await ensureD1Schema();
+          const db=env.DB;
+          const existing=()=>db.prepare('SELECT id,visible,status,data_json FROM artists WHERE id=?').bind(id).first();
+          const conflict=()=>json({error:'Ya existe una ficha con ese nombre. Buscala y solicitá gestionarla.'},409);
+          const receipt=async row=>{
+            const owner=await db.prepare("SELECT l.claim_id FROM audience_artist_links l JOIN artist_owners o ON o.artist_id=l.artist_id AND o.claim_id=l.claim_id WHERE l.account_id=? AND l.artist_id=? AND o.status='active' AND o.verification_level='self_registration'").bind(accountId,id).first();
+            if(!owner)return conflict();
+            if(!row.visible||row.status!=='publicado')return json({error:'El perfil ya existe y está oculto. Consultá Mi Perfil.'},409);
+            const catalog=await getArray('artistas'),copy=catalog.find(x=>x.id===id);
+            if(copy&&!uadavArtistPublicVisible(copy))return json({error:'Este perfil está oculto. Consultá Mi Perfil.'},409);
+            if(!copy)await putJSON('artistas',[JSON.parse(row.data_json),...catalog]);
+            return json({success:true,id:owner.claim_id,artist_id:id,status:'published',account_tracked:true,private_access:true});
+          };
+          const prior=await existing();
+          if(prior)return receipt(prior);
+          const catalog=await allCanonicalArtists();
+          if(catalog.some(a=>normalizeSearchText(a.nombre_artistico||a.nombre)===normalized)||await artistFromD1(stageName))return conflict();
+          const ip=String(request.headers.get('CF-Connecting-IP')||'');
+          if(ip){
+            const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ip));
+            const key='artist_registration_rate_'+Array.from(new Uint8Array(hash),v=>v.toString(16).padStart(2,'0')).join('')+'_'+Math.floor(Date.now()/3600000);
+            const count=Number(await env.UADAV_DB.get(key)||0);
+            if(count>=5)return json({error:'Alcanzaste el límite de altas. Intentá más tarde.'},429);
+            await env.UADAV_DB.put(key,String(count+1),{expirationTtl:7200});
+          }
+          const now=isoNow(),ms=Date.now(),claimId='CL-'+crypto.randomUUID().replace(/-/g,'');
+          const item={id,nombre:stageName,nombre_artistico:stageName,rubro:category,ciudad:String(b.ciudad||'').trim(),bio:String(b.bio||'').trim(),visible:true,estado:'publicado',claimed:true,claim_status:'approved',self_managed:true,claim_id:claimId,afiliado_verificado:false,origen:'alta_artista',creado:now};
+          try{
+            await db.batch([
+              db.prepare("INSERT INTO artists(id,name,stage_name,category,city,country,verified,status,visible,data_json,created_at,updated_at) VALUES(?,?,?,?,?,'Argentina',0,'publicado',1,?,?,?)").bind(id,stageName,stageName,category,item.ciudad,JSON.stringify(item),now,now),
+              db.prepare("INSERT INTO artist_claims(id,artist_id,name,email,status,created_at,reviewed_at) VALUES(?,?,?,?,'approved',?,?)").bind(claimId,id,contactName,email,now,now),
+              db.prepare("INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES(?,?,?,?,'owner','active','self_registration',?,?)").bind('OWN-'+claimId,id,claimId,email,now,now),
+              db.prepare('INSERT INTO audience_artist_claims(claim_id,account_id,artist_id,created_at,linked_at) VALUES(?,?,?,?,?)').bind(claimId,accountId,id,ms,ms),
+              db.prepare('INSERT INTO audience_artist_links(account_id,artist_id,claim_id,expires_at,created_at) VALUES(?,?,?,0,?)').bind(accountId,id,claimId,ms)
+            ]);
+          }catch(error){
+            const concurrent=await existing();
+            if(concurrent)return receipt(concurrent);
+            throw error;
+          }
+          return receipt(await existing());
+        }
         const signature=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(email+'|'+stageName.toLowerCase())))).map(x=>x.toString(16).padStart(2,'0')).join('');
         const dedupeKey='artist_registration_'+signature,previous=safeJSON(await env.UADAV_DB.get(dedupeKey),null);if(previous?.artist_id&&!await uadavDeletedArtist(env,previous.artist_id))artistId=previous.artist_id;
         else {

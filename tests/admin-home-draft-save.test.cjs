@@ -6,7 +6,14 @@ test('home draft keeps typed fields across section redraws without replacing unt
 const fields={brandHeroTitle:{value:'  Nuevo título  '},promoDesc:{value:'Texto pendiente'},brandHeroEnabled:{value:'false'}};
 const c={S:{cache:{landing:{brand_hero_image:'https://example.test/cover.jpg',hero_spotlights:[{title:'A'}]}}},document:{getElementById:id=>fields[id]}};
 vm.runInNewContext(capture,c);c.captureHomeFields();assert.equal(c.S.cache.landing.brand_hero_title,'Nuevo título');assert.equal(c.S.cache.landing.promo_description,'Texto pendiente');assert.equal(c.S.cache.landing.brand_hero_enabled,false);assert.equal(c.S.cache.landing.brand_hero_image,'https://example.test/cover.jpg');
-assert.match(html,/function renderHome\(\)\{captureHomeFields\(\)/);
+assert.match(html,/function renderHome\(preserveDraft=true\)\{if\(preserveDraft\)captureHomeFields\(\)/);
+});
+test('reloading the saved home ignores old form values and preserves a legacy spotlight',()=>{
+const load=html.slice(html.indexOf('VIEWS.home=async'),html.indexOf('function captureHomeFields'));
+const saved={hero_spotlight:{title:'Destacado guardado'}};
+const c={VIEWS:{},S:{cache:{}},window:{},cache:async key=>key==='landing'?saved:[],arr:x=>Array.isArray(x)?x:[],obj:x=>x,renderHome:keep=>assert.equal(keep,false)};
+vm.runInNewContext(load,c);
+return c.VIEWS.home(true).then(()=>assert.equal(c.S.cache.landing.hero_spotlights[0].title,'Destacado guardado'));
 });
 function fixture(saveJSON){const button={disabled:false,textContent:'Guardar cambios'},notices=[],c={window:{UADAVMusicStyles:require('../uadav-music-styles.js')},S:{cache:{landing:{hero_spotlights:[]},sections:[],visibility:{},layout:{}}},$:()=>button,captureHomeFields(){},arr:x=>Array.isArray(x)?x:[],saveJSON,toast:(...x)=>notices.push(x)};vm.runInNewContext(save,c);return{c,button,notices}}
 test('double save cannot create overlapping requests and reenables the button when finished',async()=>{

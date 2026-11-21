@@ -1,0 +1,40 @@
+name: Staging integration preservation checks
+on:
+  push:
+    branches:
+      - integration/staging-preserve-beta-20261109
+  pull_request:
+    paths:
+      - uadav-api-config.js
+      - usuario.html
+      - app.html
+      - admin.html
+      - tests/admin-podcast-visibility.test.cjs
+      - tests/staging-profile-preservation.test.cjs
+      - tests/staging-integration-api-routing.test.cjs
+      - tests/staging-backup-verification.test.mjs
+      - scripts/verify-staging-backup.mjs
+      - scripts/qa-staging-health-readonly.mjs
+      - tests/staging-health-readonly.test.mjs
+      - tests/staging-release-gate.test.mjs
+      - scripts/staging-release-gate.mjs
+      - .github/workflows/staging-integration-preservation.yml
+permissions:
+  contents: read
+jobs:
+  api-isolation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check shared visual shell contract
+        run: node --test tests/stream-visual-shell.test.cjs tests/channel-discovery-memory.test.cjs tests/live-modules-loading.test.cjs tests/admin-live-visibility.test.cjs tests/admin-podcast-visibility.test.cjs tests/home-lynx-stage.test.cjs tests/popular-artists.test.cjs tests/visual-launch.test.cjs tests/playback-queue.test.cjs tests/landing-complete.test.cjs
+      - name: Check first-visit entry
+        run: node tests/home-entry.mjs
+      - name: Check JavaScript syntax
+        run: node --check uadav-api-config.js
+      - name: Verify isolation and original production behavior
+        run: node --test tests/staging-integration-api-routing.test.cjs tests/staging-profile-preservation.test.cjs tests/staging-backup-verification.test.mjs tests/staging-health-readonly.test.mjs tests/staging-release-gate.test.mjs

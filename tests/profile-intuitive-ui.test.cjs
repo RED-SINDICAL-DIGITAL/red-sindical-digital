@@ -9,12 +9,12 @@ const email=readFileSync(join(__dirname,'..','uadav-profile-email.js'),'utf8');
 test('primary actions have consistent local SVG icons and preserve navigation',()=>{
  const first=html.split('id="profileTasks"')[1].split('</section>')[0];
  assert.equal((first.match(/class="profile-task"/g)||[]).length,4);
- assert.equal((first.match(/<svg class="profile-icon"/g)||[]).length,8);
+ assert.equal((first.match(/<svg class="profile-icon"/g)||[]).length,10);
  for(const id of ['pi-work','pi-artist','pi-library','pi-calendar','pi-plus','pi-explore','pi-settings','pi-help','pi-edit']){
    assert(html.includes('id="'+id+'"'),id);
    assert(first.includes('href="#'+id+'"')||first.includes('href="/usuario.html?vista=trabajos"')||first.includes('href="/biblioteca.html"'));
  }
- for(const link of ['href="/usuario.html?vista=trabajos"','href="/usuario.html?vista=artista"','href="/biblioteca.html"','href="/usuario.html?vista=eventos"','href="/usuario.html?vista=cuenta"'])assert(first.includes(link),link);
+ for(const link of ['href="/usuario.html?vista=trabajos"','href="/usuario.html?vista=artista"','href="/biblioteca.html"','href="/usuario.html?vista=eventos"','href="/usuario.html?vista=cuenta"','href="/publicar-evento.html"'])assert(first.includes(link),link);
  assert(!first.includes('data-symbol='));
 });
 test('continue-watching precedes lower priority editing panels and preserves the player',()=>{

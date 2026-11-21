@@ -49,7 +49,7 @@
     if(m.provider==='vimeo'&&u){const id=(u.pathname.match(/\/(\d+)/)||[])[1];if(id)return `<iframe title="Vimeo" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen src="https://player.vimeo.com/video/${id}?autoplay=1"></iframe>`}
     if(m.provider==='soundcloud'&&m.url)return `<iframe title="SoundCloud" height="166" allow="autoplay" src="https://w.soundcloud.com/player/?url=${encodeURIComponent(m.url)}&auto_play=true"></iframe>`;
     if(m.provider==='drive'&&m.url){const id=(m.url.match(/\/d\/([^/]+)/)||[])[1]||u?.searchParams?.get('id');if(id)return `<iframe title="Google Drive" allow="autoplay" src="https://drive.google.com/file/d/${encodeURIComponent(id)}/preview"></iframe>`}
-    if(m.provider==='okru'&&m.url){const id=(m.url.match(/video\/(?:embed\/)?([^/?]+)/)||[])[1];if(id)return `<iframe title="OK.ru" allow="autoplay" allowfullscreen src="https://ok.ru/videoembed/${encodeURIComponent(id)}"></iframe>`}
+    if(m.provider==='okru'&&m.url){const id=(m.url.match(/(?:videoembed|video)\/(?:embed\/)?([0-9]+)/)||[])[1];if(id)return `<iframe title="OK.ru" allow="autoplay" allowfullscreen src="https://ok.ru/videoembed/${encodeURIComponent(id)}"></iframe>`}
     if(/\.(mp3|aac|m4a)(\?|$)/i.test(m.url))return `<audio controls autoplay src="${esc(m.url)}"></audio>`;
     if(/\.(mp4|webm)(\?|$)/i.test(m.url))return `<video controls autoplay playsinline src="${esc(m.url)}"></video>`;
     return '';

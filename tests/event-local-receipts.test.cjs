@@ -38,9 +38,9 @@ test('malformed storage and disabled storage fail safely',()=>{
  const y=setup(false);assert.equal(y.api.save({id:'EV-OK'}),false);assert.equal(y.api.list().length,0);
 });
 test('publisher saves only after acknowledged publication or receipt confirmation',()=>{
- assert.match(publish,/if\(!d\.moderation_pending\)window\.UADAVLocalEventReceipts\?\.save\(\{id:d\.id,title:body\.titulo\}\)/);
- assert.match(publish,/if\(result\.confirmed!==true\|\|typeof result\.id!=='string'/);
- assert.match(publish,/window\.UADAVLocalEventReceipts\?\.save\(\{id:result\.id,title:body\.titulo\}\)/);
+ assert.match(publish,/if\(!d\.moderation_pending\)window\.UADAVLocalEventReceipts\?\.save\(\{id:d\.id,title:submittedTitle\}\)/);
+ assert.match(publish,/if\(result\.confirmed!==true\|\|\(result\.moderation_pending!==undefined&&result\.moderation_pending!==false\)\|\|typeof result\.id!=='string'/);
+ assert.match(publish,/window\.UADAVLocalEventReceipts\?\.save\(\{id:result\.id,title:submittedTitle\}\)/);
  assert.match(publish,/uadav-event-local-receipts\.js\?v=20261107/);
 });
 test('Mi Perfil presents only local references and never owner controls',()=>{

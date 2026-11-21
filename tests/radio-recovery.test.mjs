@@ -5,10 +5,10 @@ import {readFile} from 'node:fs/promises';
 const source=await readFile(new URL('../app.html',import.meta.url),'utf8');
 const resume=source.match(/function resumeRadio\(\)\{[\s\S]*?(?=function closeRadio)/)?.[0];
 assert(resume);
-for(const failed of ['error','ended','paused']){
+for(const failed of ['error','ended','paused','stopped']){
  test('radio retry '+failed+' preserves original source and paused resume',async()=>{
   let loads=0,plays=0;
-  const ra={error:failed==='error'?{code:2}:null,ended:failed==='ended',src:'old',load(){loads++},play(){plays++;return Promise.resolve()}};
+  const ra={error:failed==='error'?{code:2}:null,ended:failed==='ended',src:failed==='stopped'?'':'old',getAttribute(){return this.src||null},load(){loads++},play(){plays++;return Promise.resolve()}};
   const context={ra,currentRadio:{stream_url:'https://stream.zeno.fm/9s7nnwmknkhvv'}};
   vm.createContext(context);vm.runInContext(resume,context);await context.resumeRadio();
   assert.equal(plays,1);assert.equal(loads,failed==='paused'?0:1);
@@ -43,3 +43,5 @@ test('legacy radios entry preserves station query and hash with local destinatio
  const link={};let destination;vm.runInNewContext(script,{location:{search:'?id=RAD-TEST',hash:'#history',replace:value=>destination=value},document:{getElementById:()=>link}});
  assert.equal(destination,'/radio.html?id=RAD-TEST#history');assert.equal(link.href,destination);
 });
+
+test('stop cuts the stream but keeps the station available for resume',()=>{const code=source.match(/function stopRadio\(\)\{[\s\S]*?(?=function closeRadio)/)[0];let paused=0,loads=0,emitted=0;const radio={id:'RAD-A'},ra={src:'https://example.test/live',pause(){paused++},removeAttribute(){this.src=''},load(){loads++}};const c={ra,currentRadio:radio,emitRadioState(){emitted++}};vm.runInNewContext(code,c);c.stopRadio();assert.equal(ra.src,'');assert.equal(paused,1);assert.equal(loads,1);assert.equal(c.currentRadio,radio);assert.equal(emitted,1)});

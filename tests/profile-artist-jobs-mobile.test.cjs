@@ -30,7 +30,10 @@ test('a11y tabs isolate panes, respond to clicks and arrow keys',()=>{
  const panes={profileJobsApplications:{hidden:false},profileJobsOffers:{hidden:true}};
  const root={querySelectorAll:()=>[t1,t2]};
  const document={getElementById:id=>id==='mis-trabajos'?root:panes[id]||null};
- vm.runInNewContext(js,{document});
+ vm.runInNewContext(js,{document,URLSearchParams,location:{search:'?vista=trabajos&tab=ofertas'}});
+ assert.equal(t2.attrs['aria-selected'],'true');
+ assert.equal(panes.profileJobsOffers.hidden,false);
+ vm.runInNewContext(js,{document,URLSearchParams,location:{search:'?vista=trabajos'}});
  assert.equal(t1.attrs['aria-selected'],'true');
  t2.listeners.click();
  assert.equal(t1.attrs['aria-selected'],'false');

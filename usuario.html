@@ -374,69 +374,77 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="home"] .profile-account
 }
 
 </style><style id="profileNativeInlineCSS">
-/* UADAV Stream — Mi espacio: standalone visual shell v3.
-   Exactly one DOM for each existing business function, re-mounted only on Home.
-   This CSS is isolated to #profileNativeHome and does not touch subviews. */
+/* Canonical profile presentation. Existing interactive nodes are moved, never copied. */
 #profileLegacyViews[hidden],#profileNativeHome[hidden]{display:none!important}
-body[data-page="usuario"] #profileNativeHome{width:100%;max-width:1120px;margin:0 auto;padding:18px 18px calc(126px + env(safe-area-inset-bottom));color:#f5f9ff;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
-body[data-page="usuario"] #profileNativeHome .profile-native-content{display:flex;flex-direction:column;gap:20px}
-body[data-page="usuario"] #profileNativeHome .hero{display:flex!important;align-items:center!important;gap:16px!important;min-height:0!important;width:100%!important;margin:0!important;padding:8px 0 18px!important;border-radius:0!important;background:transparent!important;border:0!important;box-shadow:none!important;position:relative}
+body[data-page="usuario"]{background:#091421!important}
+body[data-page="usuario"] #profileNativeHome{width:100%;max-width:none;margin:0;padding:0 0 calc(110px + env(safe-area-inset-bottom));color:#f5f9ff;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+body[data-page="usuario"] #profileNativeHome .profile-native-content{display:grid;grid-template-columns:minmax(0,1fr)!important;gap:0}
+body[data-page="usuario"] #profileNativeHome .profile-native-content>*{grid-column:1/-1!important;grid-row:auto!important;min-width:0}
+body[data-page="usuario"] #profileNativeHome .hero{display:flex!important;align-items:flex-end!important;gap:28px!important;min-height:290px!important;width:100%!important;margin:0!important;padding:48px clamp(24px,4.5vw,64px) 36px!important;border-radius:0!important;border:0!important;background:linear-gradient(180deg,#24628a 0%,#163953 100%)!important;box-shadow:none!important;position:relative;overflow:hidden}
 body[data-page="usuario"] #profileNativeHome .hero::before{content:none!important}
-body[data-page="usuario"] #profileNativeHome .avatar{flex:0 0 76px!important;width:76px!important;height:76px!important;border-radius:50%!important;border:2px solid rgba(23,189,249,.8)!important;background:#102c48!important;box-shadow:0 0 0 4px rgba(18,188,245,.1)!important;font-size:24px!important}
-body[data-page="usuario"] #profileNativeHome .profile-identity{flex:1;min-width:0}
-body[data-page="usuario"] #profileNativeHome .profile-eyebrow{color:#45ceff!important;font-size:10px!important;letter-spacing:.13em!important}
-body[data-page="usuario"] #profileNativeHome .hero h1{font-size:clamp(26px,4.5vw,42px)!important;line-height:1.06!important;margin:5px 0 4px!important;font-weight:900!important;letter-spacing:-.045em!important;overflow-wrap:anywhere}
-body[data-page="usuario"] #profileNativeHome .hero p{font-size:12px!important;line-height:1.35!important;color:#a8c6de!important;margin:0!important}
-body[data-page="usuario"] #profileNativeHome .hero>.edit{flex:0 0 44px!important;display:grid!important;place-items:center!important;width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;border-radius:50%!important;color:#def4ff!important;border:1px solid rgba(102,193,245,.28)!important;background:rgba(13,45,75,.9)!important;box-shadow:none!important}
-body[data-page="usuario"] #profileNativeHome .hero>.edit span{display:none!important}
-body[data-page="usuario"] #profileNativeHome .hero>.edit .profile-icon{width:20px;height:20px}
-body[data-page="usuario"] #profileNativeHome #profileTasks{width:100%!important;min-width:0!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks h2{margin:0 0 10px!important;font-size:20px!important;line-height:1.2!important;letter-spacing:-.035em!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-tasks{display:flex!important;flex-direction:column!important;gap:0!important;margin:0!important;background:#0f1c2b!important;border:1px solid rgba(102,187,244,.15)!important;border-radius:18px!important;overflow:hidden!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task{display:grid!important;grid-template-columns:48px minmax(0,1fr) 20px!important;grid-template-rows:auto auto!important;column-gap:12px!important;row-gap:1px!important;align-content:center!important;min-height:73px!important;margin:0!important;padding:11px 15px!important;transform:none!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;text-decoration:none!important;color:white!important;position:relative}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:not(:last-child){border-bottom:1px solid rgba(137,190,229,.11)!important}
+body[data-page="usuario"] #profileNativeHome .avatar{flex:0 0 156px!important;width:156px!important;height:156px!important;border-radius:50%!important;border:0!important;background:#0b2235!important;box-shadow:0 12px 32px #0005!important;font-size:48px!important;color:#a9e3fc!important;overflow:hidden}
+body[data-page="usuario"] #profileNativeHome .avatar img{width:100%;height:100%;object-fit:cover}
+body[data-page="usuario"] #profileNativeHome .profile-identity{flex:1;min-width:0;padding-bottom:8px}
+body[data-page="usuario"] #profileNativeHome .profile-eyebrow{color:#c9eafa!important;font-size:11px!important;font-weight:750;letter-spacing:.14em!important}
+body[data-page="usuario"] #profileNativeHome .hero h1{font-size:clamp(40px,6.6vw,88px)!important;line-height:1.02!important;margin:12px 0!important;font-weight:850!important;letter-spacing:-.065em!important;overflow-wrap:anywhere}
+body[data-page="usuario"] #profileNativeHome .hero p{font-size:13px!important;line-height:1.6!important;color:#b9d1e1!important;margin:0!important}
+body[data-page="usuario"] #profileNativeHome .hero>.edit{flex:none!important;align-self:flex-end;display:flex!important;align-items:center!important;gap:8px!important;min-height:44px!important;width:auto!important;height:44px!important;padding:0 16px!important;border-radius:999px!important;border:1px solid #c4eaff55!important;background:transparent!important;color:#fff!important;box-shadow:none!important;margin-bottom:8px}
+body[data-page="usuario"] #profileNativeHome .hero>.edit span{display:inline!important;font-size:12px;font-weight:700}
+body[data-page="usuario"] #profileNativeHome .hero>.edit .profile-icon{width:16px;height:16px}
+body[data-page="usuario"] #profileNativeHome #profileTasks{width:100%!important;min-width:0!important;margin:0!important;padding:30px clamp(24px,4.5vw,64px)!important;background:linear-gradient(#15344b55,#091421)!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks h2{margin:0 0 18px!important;font-size:24px!important;line-height:1.2!important;font-weight:800!important;letter-spacing:-.035em!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-tasks{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;margin:0!important;background:transparent!important;border:0!important;border-radius:0!important;overflow:visible!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task{display:grid!important;grid-template-columns:56px minmax(0,1fr) 18px!important;grid-template-rows:auto auto!important;column-gap:16px!important;row-gap:3px!important;align-content:center!important;min-height:86px!important;margin:0!important;padding:12px 18px 12px 12px!important;transform:none!important;background:#ffffff08!important;border:0!important;border-radius:7px!important;box-shadow:none!important;text-decoration:none!important;color:#f5f9ff!important;position:relative;transition:background .16s!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:not(:last-child){border:0!important}
 body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task::before{content:none!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task::after{content:"›"!important;display:block!important;grid-column:3;grid-row:1/3;align-self:center;font-size:28px;color:#80b9da;font-weight:300}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task .profile-icon{grid-column:1!important;grid-row:1/3!important;justify-self:center!important;align-self:center!important;margin:0!important;width:25px!important;height:25px!important;color:#28c2fd!important;display:block!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task strong{grid-column:2!important;grid-row:1!important;font-size:15px!important;line-height:1.3!important;font-weight:800!important;margin:0!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task span{grid-column:2!important;grid-row:2!important;font-size:11px!important;line-height:1.25!important;color:#a7bdd0!important;margin:0!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:hover,body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:focus-visible{background:#15314d!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more{margin:12px 0 0!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more>summary{display:inline-flex;align-items:center;min-height:44px;padding:9px 14px;border-radius:999px;background:#132a43;border:1px solid rgba(119,198,244,.17);color:#bbd8ed;font-size:13px;font-weight:700;cursor:pointer}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more .profile-shortcuts{display:flex!important;gap:8px!important;flex-wrap:wrap!important;margin:9px 0 0!important;padding:0!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more .profile-shortcuts a{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:9px 13px;background:#14283d;border-radius:12px;font-size:12px;color:#e2eefa;text-decoration:none}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-account-shortcut{display:inline-flex!important;align-items:center!important;gap:9px!important;min-height:44px!important;margin:7px 0 0!important;padding:6px 3px!important;color:#a9dafa!important;background:none!important;border:0!important;font-size:13px!important;text-decoration:none!important}
-body[data-page="usuario"] #profileNativeHome #profileTasks .profile-account-shortcut .profile-icon{color:#3ccaff;width:17px;height:17px}
-body[data-page="usuario"] #profileNativeHome .profile-continue{display:block!important;width:100%!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task::after{content:"›"!important;display:block!important;grid-column:3;grid-row:1/3;align-self:center;font-size:24px;color:#7c99b0;font-weight:300}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task .profile-icon{grid-column:1!important;grid-row:1/3!important;justify-self:center!important;align-self:center!important;margin:0!important;width:56px!important;height:56px!important;padding:15px!important;border-radius:6px;background:linear-gradient(145deg,#2075a6,#174561);color:#b5edff!important;display:block!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:nth-child(2) .profile-icon{background:linear-gradient(145deg,#3c689a,#203b60)}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:nth-child(3) .profile-icon{background:linear-gradient(145deg,#217f92,#164c62)}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:nth-child(4) .profile-icon{background:linear-gradient(145deg,#4966ad,#294479)}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task strong{grid-column:2!important;grid-row:1!important;font-size:15px!important;line-height:1.3!important;font-weight:750!important;margin:0!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task span{grid-column:2!important;grid-row:2!important;font-size:12px!important;line-height:1.4!important;color:#96abc0!important;margin:0!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:hover,body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task:focus-visible{background:#ffffff13!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-radio-shortcut,body[data-page="usuario"] #profileNativeHome #profileTasks .profile-account-shortcut{display:inline-flex!important;align-items:center!important;gap:9px!important;min-height:44px!important;margin:14px 20px 0 0!important;padding:6px 0!important;color:#a9c7dd!important;background:none!important;border:0!important;font-size:12px!important;font-weight:650;text-decoration:none!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-radio-shortcut>span:first-child{display:grid;place-items:center;width:24px;height:24px;font-size:19px}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-account-shortcut .profile-icon{color:#8cb7d5;width:17px;height:17px}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more{display:inline-block!important;margin:14px 20px 0 0!important;vertical-align:top}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more>summary{display:inline-flex;align-items:center;min-height:44px;padding:6px 0;border:0;background:transparent;color:#a9c7dd;font-size:12px;font-weight:650;cursor:pointer}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more .profile-shortcuts{display:flex!important;gap:8px!important;flex-wrap:wrap!important;margin:8px 0 0!important;padding:0!important}
+body[data-page="usuario"] #profileNativeHome #profileTasks .profile-more .profile-shortcuts a{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:9px 13px;background:#172b3e;border-radius:6px;font-size:12px;color:#e2eefa;text-decoration:none}
+body[data-page="usuario"] #profileNativeHome .profile-continue{display:block!important;width:100%!important;margin:0!important;padding:8px clamp(24px,4.5vw,64px) 24px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 body[data-page="usuario"] #profileNativeHome .profile-continue .profile-eyebrow{display:none!important}
-body[data-page="usuario"] #profileNativeHome .profile-section-heading{display:flex;justify-content:space-between;align-items:center;margin:0 0 12px!important}
-body[data-page="usuario"] #profileNativeHome .profile-section-heading h2{margin:0!important;font-size:19px!important;letter-spacing:-.03em!important}
-body[data-page="usuario"] #profileNativeHome .profile-see-all{font-size:12px;color:#55d1ff}
-body[data-page="usuario"] #profileNativeHome #recent.rail{display:flex!important;gap:11px!important;overflow-x:auto!important;scroll-snap-type:x proximity!important;padding:1px 2px 11px!important;margin:0!important}
-body[data-page="usuario"] #profileNativeHome #recent .item{flex:0 0 206px!important;width:206px!important;max-width:206px!important;min-width:0!important;scroll-snap-align:start;border:0!important;background:transparent!important}
-body[data-page="usuario"] #profileNativeHome #recent .item img{aspect-ratio:16/9!important;width:100%!important;object-fit:cover!important}
-body[data-page="usuario"] #profileNativeHome #accountNotices{padding:12px 14px!important;background:#112236!important;border-radius:15px!important;border:1px solid rgba(108,191,246,.16)!important}
-body[data-page="usuario"] #profileNativeHome a:focus-visible,body[data-page="usuario"] #profileNativeHome button:focus-visible{outline:3px solid #8ce1ff!important;outline-offset:3px!important}
+body[data-page="usuario"] #profileNativeHome .profile-section-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 20px!important}
+body[data-page="usuario"] #profileNativeHome .profile-section-heading h2{font-size:24px!important;line-height:1.25!important;letter-spacing:-.035em!important;font-weight:800!important;margin:0!important}
+body[data-page="usuario"] #profileNativeHome .profile-see-all{font-size:11px!important;white-space:nowrap;color:#a7bed1!important;text-decoration:none;font-weight:650}
+body[data-page="usuario"] #profileNativeHome #recent{gap:16px!important;padding:0 0 12px!important}
+body[data-page="usuario"] #profileNativeHome #recent .item{background:#101f30!important;border:0!important;border-radius:8px!important;box-shadow:none!important;overflow:hidden}
+body[data-page="usuario"] #profileNativeHome .profile-empty-recent{width:100%;min-height:150px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;padding:26px!important;border:1px solid #ffffff0c!important;border-radius:8px!important;background:linear-gradient(120deg,#132b40,#101c2b)!important;color:#9fb4c8!important;text-align:left!important}
+body[data-page="usuario"] #profileNativeHome .profile-empty-recent strong{font-size:17px;color:#eaf5ff;font-weight:750}
+body[data-page="usuario"] #profileNativeHome .profile-empty-recent>span:not(.profile-empty-icon){font-size:13px;line-height:1.7;max-width:520px}
+body[data-page="usuario"] #profileNativeHome .profile-empty-icon{color:#48cff7;font-size:28px}
+body[data-page="usuario"] #profileNativeHome #accountNotices{margin:16px clamp(24px,4.5vw,64px)!important;width:auto!important;background:#13283c!important;border:0!important;border-radius:8px!important}
 @media(max-width:760px){
- body[data-page="usuario"] #profileNativeHome{padding:14px 14px calc(125px + env(safe-area-inset-bottom))!important}
- body[data-page="usuario"] #profileNativeHome .profile-native-content{gap:17px}
- body[data-page="usuario"] #profileNativeHome .hero{padding:5px 0 13px!important;gap:11px!important}
- body[data-page="usuario"] #profileNativeHome .avatar{width:62px!important;height:62px!important;flex-basis:62px!important}
- body[data-page="usuario"] #profileNativeHome .hero h1{font-size:clamp(23px,7vw,31px)!important}
+ body[data-page="usuario"] #profileNativeHome .hero{min-height:240px!important;align-items:center!important;gap:18px!important;padding:36px 22px 28px!important;flex-wrap:wrap}
+ body[data-page="usuario"] #profileNativeHome .avatar{flex-basis:92px!important;width:92px!important;height:92px!important;font-size:30px!important;box-shadow:0 8px 24px #0004!important}
+ body[data-page="usuario"] #profileNativeHome .profile-identity{padding:0}
+ body[data-page="usuario"] #profileNativeHome .hero h1{font-size:clamp(30px,8vw,48px)!important;margin:8px 0!important}
  body[data-page="usuario"] #profileNativeHome .hero p{font-size:11px!important}
- body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task{min-height:70px!important;padding:10px 11px!important;grid-template-columns:40px minmax(0,1fr) 19px!important;column-gap:8px!important}
- body[data-page="usuario"] #profileNativeHome #recent .item{flex-basis:min(56vw,208px)!important;width:min(56vw,208px)!important;max-width:none!important}
-}
-@media(min-width:960px){
- body[data-page="usuario"] #profileNativeHome{padding-top:30px}
- body[data-page="usuario"] #profileNativeHome .profile-native-content{display:grid;grid-template-columns:minmax(320px,1fr) minmax(360px,1fr);gap:24px 30px;align-items:start}
- body[data-page="usuario"] #profileNativeHome .hero{grid-column:1/-1!important}
- body[data-page="usuario"] #profileNativeHome #profileTasks{grid-column:1}
- body[data-page="usuario"] #profileNativeHome .profile-continue{grid-column:2;padding-top:1px!important}
- body[data-page="usuario"] #profileNativeHome #accountNotices{grid-column:1/-1}
+ body[data-page="usuario"] #profileNativeHome .hero>.edit{margin:0 0 0 110px!important;height:36px!important;min-height:44px!important;font-size:11px!important;padding:0 14px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks{padding:26px 20px 20px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks h2,body[data-page="usuario"] #profileNativeHome .profile-section-heading h2{font-size:21px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks .profile-tasks{display:flex!important;flex-direction:column!important;gap:0!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task{min-height:80px!important;background:transparent!important;padding:10px 0!important;grid-template-columns:52px minmax(0,1fr) 18px!important;gap:2px 14px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task .profile-icon{width:52px!important;height:52px!important;padding:14px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks .profile-task strong{font-size:15px!important}
+ body[data-page="usuario"] #profileNativeHome .profile-continue{padding:8px 20px 20px!important}
+ body[data-page="usuario"] #profileNativeHome #profileTasks .profile-radio-shortcut,body[data-page="usuario"] #profileNativeHome #profileTasks .profile-account-shortcut{margin-right:14px!important}
+ body[data-page="usuario"] #profileNativeHome .profile-empty-recent{min-height:160px;padding:22px!important}
 }
 @media(prefers-reduced-motion:reduce){body[data-page="usuario"] #profileNativeHome *{transition:none!important}}
 
+body[data-page="usuario"] #profileNativeHome .hero>.edit::before,body[data-page="usuario"] #profileNativeHome .hero>.edit::after{content:none!important}
+body[data-page="usuario"] #profileNativeHome #recent>.empty{flex:1 0 100%!important;width:100%!important;min-height:110px;display:flex;align-items:center}
 </style><style id="u2-profile-detail-v1">
 /* Mobile-first artist/job detail screens. Single scoped layer, no new account or API state. */
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="artista"] #mi-artista,
@@ -519,24 +527,35 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-eve
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-event button{border:1px solid rgba(125,192,237,.28);background:transparent;color:#b7cde0;padding:9px 10px;border-radius:999px;min-height:44px;font-size:12px;cursor:pointer}
 body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-event button:focus-visible{outline:2px solid #91e2ff;outline-offset:2px}
 
-</style><script defer src="/uadav-event-local-receipts.js?v=20261107"></script></head><body data-page="usuario" class="uadav-ui-v2" data-ui-revision="profile-native-v4-inline-styles"><svg class="profile-icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><symbol id="pi-work" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13c5 3 13 3 18 0M12 12v3"/></symbol><symbol id="pi-artist" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5m-5 0h10"/></symbol><symbol id="pi-library" viewBox="0 0 24 24"><rect x="4" y="3" width="5" height="18" rx="1"/><rect x="11" y="3" width="4" height="18" rx="1"/><path d="M17 7l3-1 3 14-3 1-3-14Z"/></symbol><symbol id="pi-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18M12 13v6m-3-3h6"/></symbol><symbol id="pi-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="pi-explore" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 2-2 6 6-2 2-6Z"/></symbol><symbol id="pi-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19 13 2-1-2-1-1-3-3-1-3-2-3 2-3 1-1 3-2 1 2 1 1 3 3 1 3 2 3-2 3-1 1-3Z"/></symbol><symbol id="pi-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 5 2l-2 2v2m0 3h.01"/></symbol><symbol id="pi-edit" viewBox="0 0 24 24"><path d="m4 20 5-1 11-11-4-4L5 15l-1 5ZM14 6l4 4"/></symbol></svg><main id="profileNativeHome" class="profile-native-home" hidden aria-label="Mi espacio personal"><div id="nativeHomeSections" class="profile-native-content"></div></main><main class="wrap" id="profileLegacyViews"><nav id="profileViewHeader" class="profile-view-header" hidden aria-label="Sección personal"><a class="profile-view-back" href="/usuario.html" aria-label="Volver a Mi Perfil">‹ <span>Mi Perfil</span></a><h1 id="profileViewTitle">Mis gestiones</h1></nav><section class="hero"><div class="avatar" id="avatar" role="button" tabindex="0" aria-label="Cambiar foto de perfil" title="Cambiar foto">U</div><div class="profile-identity"><span class="profile-eyebrow">TU PERFIL</span><h1 id="name">Mi perfil</h1><p>Artistas, trabajos y favoritos.</p></div><input class="photo" id="photo" type="file" accept="image/jpeg,image/png,image/webp"><button class="edit" id="edit" aria-label="Editar perfil"><svg class="profile-icon" aria-hidden="true"><use href="#pi-edit"></use></svg><span>Editar perfil</span></button></section><div class="grid"><section class="panel wide" id="profileTasks" aria-labelledby="profileTasksTitle"><h2 id="profileTasksTitle">Accesos</h2><div class="profile-tasks"><a class="profile-task" href="/usuario.html?vista=artista"><svg class="profile-icon" aria-hidden="true"><use href="#pi-artist"></use></svg><strong>Mi artista</strong><span>Crear y administrar</span></a><a class="profile-task" href="/usuario.html?vista=trabajos"><svg class="profile-icon" aria-hidden="true"><use href="#pi-work"></use></svg><strong>Mis trabajos</strong><span>Ofertas y postulaciones</span></a><a class="profile-task" href="/usuario.html?vista=eventos"><svg class="profile-icon" aria-hidden="true"><use href="#pi-calendar"></use></svg><strong>Mis eventos</strong><span>Publicar y consultar</span></a><a class="profile-task" href="/biblioteca.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-library"></use></svg><strong>Mi biblioteca</strong><span>Favoritos y playlists</span></a></div><details class="profile-more"><summary>Más opciones</summary><nav class="profile-shortcuts" aria-label="Más acciones"><a href="/bolsa-trabajo.html#publicar-oportunidad"><svg class="profile-icon" aria-hidden="true"><use href="#pi-plus"></use></svg><span>Publicar oferta</span></a><a href="/artistas.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-explore"></use></svg><span>Explorar artistas</span></a><a href="/manual.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-help"></use></svg><span>Ayuda</span></a></nav></details><a href="/usuario.html?vista=cuenta" class="profile-account-link profile-account-shortcut"><svg class="profile-icon" aria-hidden="true"><use href="#pi-settings"></use></svg><span>Cuenta y seguridad</span></a></section><section class="panel wide profile-continue" aria-labelledby="continueTitle"><div class="profile-section-heading"><div><span class="profile-eyebrow">TU HISTORIAL</span><h2 id="continueTitle">Seguir viendo y escuchando</h2></div><a class="profile-see-all" href="/biblioteca.html?tab=recent">Ver todo <span aria-hidden="true">›</span></a></div><div id="recent" class="rail" aria-label="Contenido reciente, desplazamiento horizontal"></div><p id="recentStatus" class="muted" role="status" aria-live="polite"></p></section><section class="panel wide u2-detail-screen" id="mis-trabajos" aria-labelledby="misTrabajosTitle">
+</style><script defer src="/uadav-event-local-receipts.js?v=20261107"></script>
+<link rel="stylesheet" href="/uadav-stream-2026.css?v=20261112-top-navigation"><link rel="stylesheet" href="/uadav-profile-dashboard.css?v=20261113"><script src="/uadav-profile-dashboard.js?v=20261113" defer></script><style>
+body[data-page] a.profile-view-back {display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;color:#9fe6fa;font-family:inherit;font-size:14px;font-weight:600;text-decoration:none;border-radius:8px}
+body[data-page] a.profile-view-back:focus-visible {outline:2px solid #52d6ff;outline-offset:2px}
+body[data-page] a.profile-view-back:hover {text-decoration:underline}
+</style><style>
+#deviceApplications:not(:empty){display:grid;gap:12px;margin-bottom:12px}
+#jobReceiptLookup>summary{cursor:pointer;font-weight:700;padding:12px 0}
+#jobReceiptLookup p:empty{display:none}
+</style></head><body data-page="usuario" class="uadav-ui-v2" data-ui-revision="profile-native-v4-inline-styles"><svg class="profile-icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><symbol id="pi-work" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13c5 3 13 3 18 0M12 12v3"/></symbol><symbol id="pi-artist" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5m-5 0h10"/></symbol><symbol id="pi-library" viewBox="0 0 24 24"><rect x="4" y="3" width="5" height="18" rx="1"/><rect x="11" y="3" width="4" height="18" rx="1"/><path d="M17 7l3-1 3 14-3 1-3-14Z"/></symbol><symbol id="pi-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18M12 13v6m-3-3h6"/></symbol><symbol id="pi-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="pi-explore" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 2-2 6 6-2 2-6Z"/></symbol><symbol id="pi-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M7 7a7 7 0 0 0 0 10m10-10a7 7 0 0 1 0 10M4 4a11 11 0 0 0 0 16m16-16a11 11 0 0 1 0 16"/></symbol><symbol id="pi-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m19 13 2-1-2-1-1-3-3-1-3-2-3 2-3 1-1 3-2 1 2 1 1 3 3 1 3 2 3-2 3-1 1-3Z"/></symbol><symbol id="pi-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 1 1 5 2l-2 2v2m0 3h.01"/></symbol><symbol id="pi-edit" viewBox="0 0 24 24"><path d="m4 20 5-1 11-11-4-4L5 15l-1 5ZM14 6l4 4"/></symbol></svg><main id="profileNativeHome" class="profile-native-home" hidden aria-label="Mi espacio personal"><div id="nativeHomeSections" class="profile-native-content"></div></main><main class="wrap" id="profileLegacyViews"><nav id="profileViewHeader" class="profile-view-header" hidden aria-label="Sección personal"><a class="profile-view-back" href="/usuario.html" aria-label="Volver a Mi Perfil"><span aria-hidden="true">←</span> Volver a Mi Perfil</a><h1 id="profileViewTitle">Mis gestiones</h1></nav><section class="hero"><div class="avatar" id="avatar" role="button" tabindex="0" aria-label="Cambiar foto de perfil" title="Cambiar foto">U</div><div class="profile-identity"><span class="profile-eyebrow">TU PERFIL</span><h1 id="name">Mi perfil</h1><p>Artistas, trabajos y favoritos.</p></div><input class="photo" id="photo" type="file" accept="image/jpeg,image/png,image/webp"><button class="edit" id="edit" aria-label="Editar perfil"><svg class="profile-icon" aria-hidden="true"><use href="#pi-edit"></use></svg><span>Editar perfil</span></button></section><div class="grid"><section class="panel wide" id="profileTasks" aria-labelledby="profileTasksTitle"><h2 id="profileTasksTitle">Tu actividad</h2><div class="profile-tasks"><a class="profile-task" href="/usuario.html?vista=artista"><svg class="profile-icon" aria-hidden="true"><use href="#pi-artist"></use></svg><strong>Mi artista</strong><span>Crear y administrar</span></a><a class="profile-task" href="/usuario.html?vista=trabajos"><svg class="profile-icon" aria-hidden="true"><use href="#pi-work"></use></svg><strong>Mis trabajos</strong><span>Ofertas y postulaciones</span></a><a class="profile-task" href="/usuario.html?vista=eventos"><svg class="profile-icon" aria-hidden="true"><use href="#pi-calendar"></use></svg><strong>Mis eventos</strong><span>Publicar y consultar</span></a><a class="profile-task" href="/biblioteca.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-library"></use></svg><strong>Mi biblioteca</strong><span>Favoritos y playlists</span></a></div><a class="profile-account-link profile-radio-shortcut" href="/radio-studio.html" aria-label="Mi radio: abrir Radio Studio"><svg class="profile-icon" aria-hidden="true"><use href="#pi-radio"></use></svg><span>Radio Studio</span></a><details class="profile-more"><summary>Más opciones</summary><nav class="profile-shortcuts" aria-label="Más acciones"><a href="/publicar-evento.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-calendar"></use></svg><span>Publicar evento</span></a><a href="/bolsa-trabajo.html#publicar-oportunidad"><svg class="profile-icon" aria-hidden="true"><use href="#pi-plus"></use></svg><span>Publicar oferta</span></a><a href="/artistas.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-explore"></use></svg><span>Explorar artistas</span></a><a href="/manual.html"><svg class="profile-icon" aria-hidden="true"><use href="#pi-help"></use></svg><span>Ayuda</span></a></nav></details><a href="/usuario.html?vista=cuenta" class="profile-account-link profile-account-shortcut"><svg class="profile-icon" aria-hidden="true"><use href="#pi-settings"></use></svg><span>Cuenta y seguridad</span></a></section><section class="panel wide profile-continue" aria-labelledby="continueTitle"><div class="profile-section-heading"><div><span class="profile-eyebrow">TU HISTORIAL</span><h2 id="continueTitle">Seguir viendo y escuchando</h2></div><a class="profile-see-all" href="/biblioteca.html?tab=recent">Ver todo <span aria-hidden="true">›</span></a></div><div id="recent" class="rail" aria-label="Contenido reciente, desplazamiento horizontal"></div><p id="recentStatus" class="muted" role="status" aria-live="polite"></p></section><section class="panel wide u2-detail-screen" id="mis-trabajos" aria-labelledby="misTrabajosTitle">
  <header class="u2-detail-intro"><span class="u2-section-eyebrow">TU ACTIVIDAD</span><h2 id="misTrabajosTitle">Mis trabajos</h2><p class="muted">Gestioná tus oportunidades en un solo lugar.</p></header>
  <div class="u2-view-tabs" role="tablist" aria-label="Ver trabajos">
  <button type="button" role="tab" aria-selected="true" aria-controls="profileJobsApplications" id="profileJobsTabApplications" data-profile-jobs-tab="applications">Postulaciones</button>
  <button type="button" role="tab" aria-selected="false" aria-controls="profileJobsOffers" id="profileJobsTabOffers" data-profile-jobs-tab="offers" tabindex="-1">Ofertas</button>
  </div>
  <div id="profileJobsApplications" role="tabpanel" aria-labelledby="profileJobsTabApplications" class="u2-work-pane">
- <div class="u2-list-group"><div class="u2-list-header"><h3>Consultar una postulación</h3><p class="muted">Ingresá con el comprobante que recibiste al postularte.</p></div>
+ <div id="deviceApplications"></div>
+ <details id="jobReceiptLookup" class="u2-list-group" open><summary>Consultar con un comprobante</summary>
+ <label class="prefs" style="display:flex;align-items:center;gap:10px;margin:12px 0"><input type="checkbox" id="rememberImportedJob" style="width:auto"> Recordar esta postulación en este navegador</label>
  <button class="chip active" id="profileJobImportBtn" type="button">Abrir comprobante (.txt)</button>
  <input type="file" id="profileJobImportFile" accept=".txt,text/plain" hidden aria-label="Seleccionar comprobante privado de postulación">
  <p id="profileJobImportStatus" class="muted" role="status"></p>
  <details class="u2-work-manual"><summary>También puedo ingresar mi código</summary>
  <form id="profileJobLookup" class="u2-work-form"><label>Identificador de postulación<input id="profileJobId" required pattern="POST-[A-Za-z0-9-]{5,60}" placeholder="POST-…" autocomplete="off"></label><label>Clave privada<input id="profileJobSecret" required type="password" autocomplete="off" placeholder="Clave del comprobante"></label><button class="chip active" type="submit">Consultar estado</button></form>
- </details><p id="profileJobResult" role="status" aria-live="polite" class="muted"></p></div>
+ </details><p id="profileJobResult" role="status" aria-live="polite" class="muted"></p></details>
  <a class="u2-list-link" href="/bolsa-trabajo.html#buscar-oportunidades"><span>Buscar oportunidades</span><small>Explorar trabajos y postularme</small><span aria-hidden="true">›</span></a>
  </div>
  <div id="profileJobsOffers" role="tabpanel" aria-labelledby="profileJobsTabOffers" class="u2-work-pane" hidden>
- <div class="u2-list-group"><h3>Ofertas que publicaste</h3><p class="muted">Consultá postulantes con tu acceso privado o comprobante guardado.</p>
+ <div class="u2-list-group"><h3>Ofertas que publicaste</h3><div id="deviceOwnerOffers"></div><p class="muted">Consultá postulantes con tu acceso privado o comprobante guardado.</p>
  <a class="u2-action-primary" href="/bolsa-trabajo.html#ownerInbox">Administrar mis ofertas</a></div>
  <a class="u2-list-link" href="/bolsa-trabajo.html#publicar-oportunidad"><span>Publicar oferta</span><small>Gratis y sin comisiones</small><span aria-hidden="true">›</span></a>
  </div>
@@ -561,7 +580,7 @@ body[data-page="usuario"].uadav-ui-v2[data-profile-view="eventos"] .u2-local-eve
 <a class="u2-list-link" href="/cartelera.html"><span>Ver Cartelera</span><small>Consultá los eventos publicados</small><span aria-hidden="true">›</span></a>
 <a class="u2-list-link" href="/consultar-publicidad.html"><span>Promocionar un evento</span><small>Solicitar una propuesta de destacado</small><span aria-hidden="true">›</span></a></nav>
 <p class="muted u2-detail-note">Podés ocultar o reactivar solamente las publicaciones asociadas a tu cuenta verificada. La edición detallada aún requiere completar el editor autorizado. Las referencias locales no otorgan permisos.</p>
-</section><section class="panel wide" id="radioStudioEntry" hidden><h2>Mi radio</h2><p class="muted">Revisá los pedidos de tu audiencia y organizá la emisión.</p><a class="chip" href="/radio-studio.html">Abrir Radio Studio</a></section><section class="panel wide" id="accountNotices" hidden><div class="prefs" style="justify-content:space-between"><h2>Mis avisos</h2><button class="chip" id="noticeToggle" aria-expanded="false" aria-controls="noticePanel">🔔 Avisos</button></div><div id="noticePanel" hidden><div class="prefs"><button class="chip" id="noticeRefresh">Actualizar</button><button class="chip" id="noticeReadAll">Marcar todos leídos</button></div><p class="muted" id="noticeStatus" role="status" aria-live="polite"></p><div id="noticeList"></div></div></section><details class="panel profile-library-details"><summary>Tu biblioteca <span class="muted" id="librarySummary">Tus contenidos guardados.</span></summary><div class="prefs"><a class="chip" href="/biblioteca.html?tab=favorites">Favoritos</a><a class="chip" href="/biblioteca.html?tab=playlists">Playlists</a><a class="chip" href="/biblioteca.html?tab=following">Artistas seguidos</a><a class="chip" href="/biblioteca.html?tab=radios">Radios favoritas</a><a class="chip" href="/biblioteca.html">Abrir toda mi biblioteca →</a><a class="chip" href="/podcasts.html">Podcasts · Audio y video</a></div></details></div><details id="profileSettings" class="panel profile-settings"><summary>Cuenta y seguridad</summary><div class="profile-account-top"><a href="/usuario.html" class="profile-back" aria-label="Volver a Mi Perfil">← Volver a Mi Perfil</a><h2>Cuenta y seguridad</h2><p class="muted">Correo, dispositivos y recuperación.</p></div><div class="settings-grid"><section class="panel wide"><h2>Tu cuenta</h2><p class="muted">Tu cuenta se sincroniza entre tus dispositivos.</p><p id="syncStatus" class="muted" role="status" aria-live="polite">Comprobando sincronización…</p><div class="prefs"><button class="chip" id="createAccount" disabled>Crear mi cuenta</button><button class="chip" id="linkAccount" disabled>Ya tengo cuenta · Vincular dispositivo</button><button class="chip" id="showAccountCode" hidden>Vincular otro dispositivo</button><button class="chip" id="accountDevices" hidden>Mis dispositivos</button><details id="accountAdvanced" hidden><summary>Más opciones de cuenta</summary><div class="prefs"><button class="chip" id="syncNow" hidden>Volver a guardar</button><button class="chip" id="unlinkAccount" hidden>Desvincular este dispositivo</button></div></details></div><div id="syncConflict" hidden><p class="muted">Una misma parte de tu cuenta cambió en dos dispositivos. Elegí cuál conservar para esas diferencias. Los cambios que no se superponen se mantienen.</p><button class="chip" id="keepLocal">Conservar los cambios de este dispositivo</button><button class="chip" id="keepCloud">Conservar los cambios de la cuenta</button></div><p class="muted">El QR y el código vencen en cinco minutos. Confirmás el nuevo dispositivo desde tu cuenta antes de darle acceso. Tu artista queda asociado a tu cuenta. Podés abrir su gestión desde tus dispositivos vinculados.</p></section><section class="panel"><h2>Foto de perfil</h2><p class="muted">Podés subir una foto desde este dispositivo. Se reduce automáticamente para no ocupar espacio innecesario.</p><button class="chip" id="photoBtn">📷 Elegir foto</button><button class="chip" id="removePhoto">Quitar foto</button><div class="photoNote">La foto acompaña tu cuenta cuando activás la sincronización. Sin vinculación, se guarda en este navegador.</div></section><section class="panel wide"><h2>Elegí lo que te gusta</h2><p class="muted">Marcá todos los intereses que quieras. Esto prepara la personalización del Inicio y de Descubrir; no estás limitado a unas pocas categorías.</p><details><summary>Elegir mis intereses</summary><div id="prefs" class="prefs"></div></details></section><section class="panel wide"><h2>Tus datos</h2><p class="muted">Sin vinculación, tus datos permanecen en este navegador. Al activar la cuenta sincronizada, también se guardan en tu cuenta privada para usarlos en otros dispositivos.</p><button class="danger" id="clear">Borrar mi perfil local e historial reciente</button><p class="muted">Esta opción solo borra tu foto, nombre, intereses e historial reciente de este navegador. No elimina favoritos, playlists, la cuenta sincronizada ni gestiones guardadas.</p><details style="margin-top:20px"><summary>Eliminar mi cuenta</summary><p class="muted">Borra tu cuenta personal y cierra el acceso en todos tus dispositivos. Si administrás un artista, primero eliminá ese perfil o solicitá transferirlo. Después podés crear una cuenta nueva; los datos borrados no se recuperan.</p><button class="danger" id="deleteAccount" hidden>Eliminar mi cuenta personal</button></details></section><details class="panel" style="margin:0 auto 80px;width:min(1144px,calc(100% - 28px))"><summary>Recuperación de cuenta</summary><p class="muted">El código de recuperación largo queda como respaldo. No se comparte al vincular otros dispositivos. Quien lo tenga puede recuperar el acceso a tu cuenta; guardalo en un lugar seguro.</p><button class="chip" id="showRecovery">Ver mi código de recuperación</button><button class="chip" id="recoverAccount">Tengo un código de recuperación</button><p id="recoveryNote" class="muted"></p></details></div></details></main><dialog id="profileDialog"><form id="profileForm"><h2>Editar mi perfil</h2><label for="profileName">¿Cómo querés que te llamemos?</label><input id="profileName" maxlength="100" autocomplete="name" required><div class="prefs"><button class="chip active" type="submit">Guardar</button><button class="chip" type="button" id="cancelProfile">Cancelar</button></div></form></dialog><script src="/uadav-security.js?v=11729"></script><script src="/uadav-account-sync.js?v=20261104-library-events"></script><script>const $=id=>document.getElementById(id),KEY='uadav_user_v11';const INTERESTS=['Música','Pop','Rock','Indie','Electrónica','Dance','Latino','Tropical','Cumbia','Cuarteto','Folklore','Tango','Jazz','Blues','Clásica','Reggae','Hip hop','Rap','Metal','Punk','Country','World music','Hits actuales','Clásicos','Décadas 60','Décadas 70','Décadas 80','Décadas 90','Décadas 2000','Conciertos','Festivales','Recitales','DJ sets','Videoclips','Karaoke','Radio','Podcasts','Entrevistas','Teatro','Musicales','Comedia','Stand up','Humor','Improvisación','Circo','Acrobacia','Trapecio','Malabares','Clown','Magia','Ilusionismo','Mentalismo','Danza','Ballet','Danza urbana','Danza contemporánea','Flamenco','Folklore danza','Variedades','Transformismo','Imitación','Ventriloquia','Performance','Arte callejero','Infantiles','Familia','Cine','Cortometrajes','Documentales','Series','Animación','Creadores','YouTubers','Streaming','Gaming','En vivo','Eventos','Cartelera','Cultura','Nuevos artistas'];
+</section><section class="panel wide" id="radioStudioEntry" hidden><h2>Mi radio</h2><p class="muted">Revisá los pedidos de tu audiencia y organizá la emisión.</p><a class="chip" href="/radio-studio.html">Abrir Radio Studio</a></section><section class="panel wide" id="accountNotices" hidden><div class="prefs" style="justify-content:space-between"><h2>Mis avisos</h2><button class="chip" id="noticeToggle" aria-expanded="false" aria-controls="noticePanel">🔔 Avisos</button></div><div id="noticePanel" hidden><div class="prefs"><button class="chip" id="noticeRefresh">Actualizar</button><button class="chip" id="noticeReadAll">Marcar todos leídos</button></div><p class="muted" id="noticeStatus" role="status" aria-live="polite"></p><div id="noticeList"></div></div></section><details class="panel profile-library-details"><summary>Tu biblioteca <span class="muted" id="librarySummary">Tus contenidos guardados.</span></summary><div class="prefs"><a class="chip" href="/biblioteca.html?tab=favorites">Favoritos</a><a class="chip" href="/biblioteca.html?tab=playlists">Playlists</a><a class="chip" href="/biblioteca.html?tab=following">Artistas seguidos</a><a class="chip" href="/biblioteca.html?tab=radios">Radios favoritas</a><a class="chip" href="/biblioteca.html">Abrir toda mi biblioteca →</a><a class="chip" href="/podcasts.html">Podcasts · Audio y video</a></div></details></div><details id="profileSettings" class="panel profile-settings"><summary>Cuenta y seguridad</summary><div class="profile-account-top"><a href="/usuario.html" class="profile-back" aria-label="Volver a Mi Perfil">← Volver a Mi Perfil</a><h2>Cuenta y seguridad</h2><p class="muted">Correo, dispositivos y recuperación.</p></div><div class="settings-grid"><section class="panel wide"><h2>Tu cuenta</h2><p id="syncStatus" class="muted" role="status" aria-live="polite">Comprobando sincronización…</p><div class="prefs"><button class="chip" id="createAccount" disabled>Crear mi cuenta</button><button class="chip" id="linkAccount" disabled>Ya tengo cuenta · Vincular dispositivo</button><button class="chip" id="showAccountCode" hidden>Vincular otro dispositivo</button><button class="chip" id="accountDevices" hidden>Mis dispositivos</button><details id="accountAdvanced" hidden><summary>Más opciones de cuenta</summary><div class="prefs"><button class="chip" id="syncNow" hidden>Volver a guardar</button><button class="chip" id="unlinkAccount" hidden>Desvincular este dispositivo</button></div></details></div><div id="syncConflict" hidden><p class="muted">Una misma parte de tu cuenta cambió en dos dispositivos. Elegí cuál conservar para esas diferencias. Los cambios que no se superponen se mantienen.</p><button class="chip" id="keepLocal">Conservar los cambios de este dispositivo</button><button class="chip" id="keepCloud">Conservar los cambios de la cuenta</button></div><details><summary>Cómo vincular un dispositivo</summary><ol><li>En el dispositivo donde ya usás tu cuenta, abrí <strong>Cuenta y seguridad</strong> y elegí <strong>Vincular otro dispositivo</strong>.</li><li>En el nuevo, escaneá el QR o elegí <strong>Ya tengo cuenta · Vincular dispositivo</strong> e ingresá el código de seis números. El código vence en cinco minutos.</li><li>Compará el número de verificación en ambas pantallas. Si coincide y vos iniciaste la vinculación, aprobala desde el primer dispositivo.</li></ol></details></section><details class="panel"><summary>Foto de perfil</summary><p class="muted">Podés subir una foto desde este dispositivo. Se reduce automáticamente para no ocupar espacio innecesario.</p><button class="chip" id="photoBtn">📷 Elegir foto</button><button class="chip" id="removePhoto">Quitar foto</button><div class="photoNote">La foto acompaña tu cuenta cuando activás la sincronización. Sin vinculación, se guarda en este navegador.</div></details><details class="panel"><summary>Elegir mis intereses</summary><p class="muted">Elegí las categorías que querés ver en Inicio y Descubrir.</p><div id="prefs" class="prefs"></div></details><details class="panel"><summary>Tus datos</summary><p class="muted">Sin vinculación, tus datos permanecen en este navegador. Al activar la cuenta sincronizada, también se guardan en tu cuenta privada para usarlos en otros dispositivos.</p><button class="danger" id="clear">Borrar mi perfil local e historial reciente</button><p class="muted">Esta opción solo borra tu foto, nombre, intereses e historial reciente de este navegador. No elimina favoritos, playlists, la cuenta sincronizada ni gestiones guardadas.</p><details style="margin-top:20px"><summary>Eliminar mi cuenta</summary><p class="muted">Borra tu cuenta personal y cierra el acceso en todos tus dispositivos. Si administrás un artista, primero eliminá ese perfil o solicitá transferirlo. Después podés crear una cuenta nueva; los datos borrados no se recuperan.</p><button class="danger" id="deleteAccount" hidden>Eliminar mi cuenta personal</button></details></details><details class="panel"><summary>Recuperación de cuenta</summary><p class="muted">El código de recuperación largo queda como respaldo. No se comparte al vincular otros dispositivos. Quien lo tenga puede recuperar el acceso a tu cuenta; guardalo en un lugar seguro.</p><button class="chip" id="showRecovery">Ver mi código de recuperación</button><button class="chip" id="recoverAccount">Tengo un código de recuperación</button><p id="recoveryNote" class="muted"></p></details></div></details></main><dialog id="profileDialog"><form id="profileForm"><h2>Editar mi perfil</h2><label for="profileName">¿Cómo querés que te llamemos?</label><input id="profileName" maxlength="100" autocomplete="name" required><div class="prefs"><button class="chip active" type="submit">Guardar</button><button class="chip" type="button" id="cancelProfile">Cancelar</button></div></form></dialog><script src="/uadav-security.js?v=11729"></script><script src="/uadav-account-sync.js?v=20261104-library-events"></script><script>const $=id=>document.getElementById(id),KEY='uadav_user_v11';const INTERESTS=['Música','Pop','Rock','Indie','Electrónica','Dance','Latino','Tropical','Cumbia','Cuarteto','Folklore','Tango','Jazz','Blues','Clásica','Reggae','Hip hop','Rap','Metal','Punk','Country','World music','Hits actuales','Clásicos','Décadas 60','Décadas 70','Décadas 80','Décadas 90','Décadas 2000','Conciertos','Festivales','Recitales','DJ sets','Videoclips','Karaoke','Radio','Podcasts','Entrevistas','Teatro','Musicales','Comedia','Stand up','Humor','Improvisación','Circo','Acrobacia','Trapecio','Malabares','Clown','Magia','Ilusionismo','Mentalismo','Danza','Ballet','Danza urbana','Danza contemporánea','Flamenco','Folklore danza','Variedades','Transformismo','Imitación','Ventriloquia','Performance','Arte callejero','Infantiles','Familia','Cine','Cortometrajes','Documentales','Series','Animación','Creadores','YouTubers','Streaming','Gaming','En vivo','Eventos','Cartelera','Cultura','Nuevos artistas'];
 function normalizeProfile(value){
  const data=value&&typeof value==='object'&&!Array.isArray(value)?value:{},name=typeof data.name==='string'&&data.name.trim()?data.name.trim().slice(0,100):'Mi cuenta';
  return {...data,name,avatar:typeof data.avatar==='string'&&data.avatar.trim()?data.avatar.trim().slice(0,2):name.slice(0,2),photo:typeof data.photo==='string'?data.photo:'',preferences:Array.isArray(data.preferences)?[...new Set(data.preferences.filter(x=>typeof x==='string'&&x.trim()).map(x=>x.trim()))]:[]};
@@ -592,9 +611,23 @@ function loadProfilePhoto(){
 }
 function removeProfilePhoto(){photoEditVersion++;if(save({...user,photo:''}))paint();}
 // End profile edit identity protection.
-function revealProfileSettings(){if(location.hash!=='#profileSettings')return;const settings=document.getElementById('profileSettings');if(settings){settings.open=true;settings.scrollIntoView({block:'start'})}}window.addEventListener('hashchange',revealProfileSettings);revealProfileSettings();function choosePhoto(){$('photo').click()}paint();window.addEventListener('uadav:account-data',refreshProfileView);window.addEventListener('storage',e=>{if(e.key===null||[KEY,'uadav_recent_v11','uadav_favorites_v1','uadav_playlists_v1','uadav_following_v1','uadav_radio_favorites_v1'].includes(e.key))refreshProfileView()});$('avatar').onclick=choosePhoto;$('avatar').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choosePhoto()}};$('photoBtn').onclick=choosePhoto;$('edit').onclick=beginProfileEdit;$('cancelProfile').onclick=()=>$('profileDialog').close();$('profileForm').onsubmit=submitProfileEdit;$('photo').onchange=loadProfilePhoto;$('removePhoto').onclick=removeProfilePhoto;$('clear').onclick=()=>{if(window.UADAVAccount?.state().linked){alert('Desvinculá este dispositivo antes de borrar sus datos locales.');return}if(confirm('¿Borrar solo tu nombre, foto, intereses e historial reciente de este navegador? Tus favoritos, playlists y gestiones no se eliminan.')){photoEditVersion++;localStorage.removeItem('uadav_recent_v11');localStorage.removeItem(KEY);user={name:'Mi cuenta',avatar:'U',photo:'',preferences:[]};paint()}}</script><script src="/uadav-app-bridge-v104.js?v=11004"></script><dialog id="pairDialog"><h2>Vincular otro dispositivo</h2><p class="muted">Escaneá el QR con la cámara de tu celular. O abrí Mi cuenta en el otro dispositivo e ingresá estos seis números.</p><div id="pairQr" style="background:white;padding:20px;width:240px;margin:16px auto;border-radius:16px"></div><p id="pairCode" style="font-size:36px;text-align:center;letter-spacing:.12em;font-weight:900"></p><p id="pairTime" class="muted"></p><p id="pairMessage" role="status" aria-live="polite"></p><div id="pairApproval" hidden><p class="muted">Compará el número de verificación con el que aparece en tu otro dispositivo. Aprobá sólo si coinciden y lo pediste vos.</p><p id="pairVerification" style="font-size:28px;font-weight:900"></p><button class="chip active" id="approvePair">Sí, es mi dispositivo</button></div><div class="prefs"><button class="chip" id="closePair">Cerrar / cancelar</button></div></dialog><dialog id="deviceDialog"><h2>Mis dispositivos</h2><p class="muted">Cada dispositivo tiene un permiso propio. Revocalo si lo perdiste o ya no lo usás.</p><div id="deviceList"></div><p id="deviceStatus" role="status"></p><button class="chip" id="rotateRecovery">Renovar respaldo de recuperación</button><button class="chip" id="closeDevices">Cerrar</button></dialog><dialog id="recoveryDialog"><h2>Recuperación de cuenta</h2><p class="muted" id="recoveryHelp"></p><input id="recoveryCode" aria-label="Código de recuperación" autocomplete="off" spellcheck="false"><p id="recoveryStatus" role="status"></p><div class="prefs"><button class="chip" id="copyRecovery">Copiar respaldo</button><button class="chip" id="applyRecovery">Recuperar cuenta</button><button class="chip" id="closeRecovery">Cerrar</button></div></dialog><script src="/vendor/qrcode.js?v=1"></script><script src="/uadav-account-ui.js?v=20261016-recovery"></script><script src="/uadav-profile-email.js?v=12061"></script><script src="/uadav-profile-removal-v147.js?v=20261017-removal-safe"></script><script src="/uadav-account-notices-v148.js?v=11763.3"></script><script src="/uadav-update-v149.js?v=12058"></script><script src="/uadav-push-ui-v150.js?v=12048"></script><script src="/uadav-radio-studio-entry.js?v=20261018"></script><script>
+function revealProfileSettings(){if(location.hash!=='#profileSettings')return;const settings=document.getElementById('profileSettings');if(settings){settings.open=true;document.getElementById('profileViewHeader')?.scrollIntoView({block:'start'})}}window.addEventListener('hashchange',revealProfileSettings);revealProfileSettings();function choosePhoto(){$('photo').click()}paint();window.addEventListener('uadav:account-data',refreshProfileView);window.addEventListener('storage',e=>{if(e.key===null||[KEY,'uadav_recent_v11','uadav_favorites_v1','uadav_playlists_v1','uadav_following_v1','uadav_radio_favorites_v1'].includes(e.key))refreshProfileView()});$('avatar').onclick=choosePhoto;$('avatar').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choosePhoto()}};$('photoBtn').onclick=choosePhoto;$('edit').onclick=beginProfileEdit;$('cancelProfile').onclick=()=>$('profileDialog').close();$('profileForm').onsubmit=submitProfileEdit;$('photo').onchange=loadProfilePhoto;$('removePhoto').onclick=removeProfilePhoto;$('clear').onclick=()=>{if(window.UADAVAccount?.state().linked){alert('Desvinculá este dispositivo antes de borrar sus datos locales.');return}if(confirm('¿Borrar solo tu nombre, foto, intereses e historial reciente de este navegador? Tus favoritos, playlists y gestiones no se eliminan.')){photoEditVersion++;localStorage.removeItem('uadav_recent_v11');localStorage.removeItem(KEY);user={name:'Mi cuenta',avatar:'U',photo:'',preferences:[]};paint()}}</script><script src="/uadav-app-bridge-v104.js?v=11004"></script><dialog id="pairDialog"><h2>Vincular otro dispositivo</h2><p class="muted">En el dispositivo nuevo, escaneá este QR o abrí Cuenta y seguridad, elegí «Ya tengo cuenta · Vincular dispositivo» e ingresá los seis números. Dejá esta pantalla abierta para aprobarlo.</p><div id="pairQr" style="background:white;padding:20px;width:240px;margin:16px auto;border-radius:16px"></div><p id="pairCode" style="font-size:36px;text-align:center;letter-spacing:.12em;font-weight:900"></p><p id="pairTime" class="muted"></p><p id="pairMessage" role="status" aria-live="polite"></p><div id="pairApproval" hidden><p class="muted">Compará el número de verificación con el que aparece en tu otro dispositivo. Aprobá sólo si coinciden y lo pediste vos.</p><p id="pairVerification" style="font-size:28px;font-weight:900"></p><button class="chip active" id="approvePair">Sí, es mi dispositivo</button></div><div class="prefs"><button class="chip" id="closePair">Cerrar / cancelar</button></div></dialog><dialog id="deviceDialog"><h2>Mis dispositivos</h2><p class="muted">Cada dispositivo tiene un permiso propio. Revocalo si lo perdiste o ya no lo usás.</p><div id="deviceList"></div><p id="deviceStatus" role="status"></p><button class="chip" id="rotateRecovery">Renovar respaldo de recuperación</button><button class="chip" id="closeDevices">Cerrar</button></dialog><dialog id="recoveryDialog"><h2>Recuperación de cuenta</h2><p class="muted" id="recoveryHelp"></p><input id="recoveryCode" aria-label="Código de recuperación" autocomplete="off" spellcheck="false"><p id="recoveryStatus" role="status"></p><div class="prefs"><button class="chip" id="copyRecovery">Copiar respaldo</button><button class="chip" id="applyRecovery">Recuperar cuenta</button><button class="chip" id="closeRecovery">Cerrar</button></div></dialog><script src="/vendor/qrcode.js?v=1"></script><script src="/uadav-account-ui.js?v=20261016-recovery"></script><script src="/uadav-profile-email.js?v=12061"></script><script src="/uadav-profile-removal-v147.js?v=20261017-removal-safe"></script><script src="/uadav-account-notices-v148.js?v=11763.3"></script><script src="/uadav-update-v149.js?v=12058"></script><script src="/uadav-push-ui-v150.js?v=12048"></script><script src="/uadav-radio-studio-entry.js?v=20261018"></script><script>
 (function(){
 const form=document.getElementById('profileJobLookup');if(!form)return;
+const deviceList=document.getElementById('deviceApplications');
+const receiptLookup=document.getElementById('jobReceiptLookup');
+if(deviceList && receiptLookup){
+ let firstCard=true;
+ const syncLookup=()=>{
+   if(!deviceList.childElementCount){receiptLookup.open=true;return;}
+   if(firstCard){
+     firstCard=false;
+     if(!receiptLookup.contains(document.activeElement))receiptLookup.open=false;
+   }
+ };
+ new MutationObserver(syncLookup).observe(deviceList,{childList:true});
+ syncLookup();
+}
 const out=document.getElementById('profileJobResult');let busy=false;
 const importButton=document.getElementById('profileJobImportBtn'),fileInput=document.getElementById('profileJobImportFile'),importStatus=document.getElementById('profileJobImportStatus');
 importButton.addEventListener('click',()=>fileInput.click());
@@ -618,7 +651,9 @@ form.addEventListener('submit',async e=>{
 e.preventDefault();if(busy)return;
 const id=document.getElementById('profileJobId').value.trim().toUpperCase(),key=document.getElementById('profileJobSecret').value.trim();
 if(!/^POST-[A-Z0-9-]{5,60}$/.test(id)||!/^[a-f0-9]{64}$/i.test(key)){out.textContent='Revisá el identificador POST-… y la clave de tu comprobante.';return;}
-busy=true;const submit=form.querySelector('[type=submit]');submit.disabled=true;out.textContent='Consultando…';
+const preference=document.getElementById('rememberImportedJob');
+const remember=preference?.checked===true;
+busy=true;importButton.disabled=true;const submit=form.querySelector('[type=submit]');submit.disabled=true;out.textContent='Consultando…';
 try{
 const api='https://uadav-api-staging.uadavstream.workers.dev/api/';
 const res=await fetch(api+'bolsa_trabajo/mi-postulacion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,clave:key}),cache:'no-store'});
@@ -626,11 +661,56 @@ const data=await res.json().catch(()=>({}));
 if(!res.ok||data.success!==true||data.id!==id)throw Error(data.error||'No pudimos confirmar esta postulación.');
 const labels={pendiente:'Pendiente',recibida:'Recibida',en_revision:'En revisión',en_proceso:'En proceso',aprobada:'Aprobada',rechazada:'No seleccionada',aceptada:'Aceptada',finalizada:'Finalizada'};
 out.textContent='Estado: '+(labels[data.estado]||String(data.estado||'Sin información').replace(/_/g,' '));
-}catch(error){out.textContent=error.message||'No se pudo consultar el estado.'}
-finally{document.getElementById('profileJobSecret').value='';busy=false;submit.disabled=false;}
+importStatus.textContent='';
+if(remember){
+ try{
+  const storageKey='uadav_job_receipt_v1:'+id;
+  const existing=JSON.parse(localStorage.getItem(storageKey)||'null');
+  const title=existing?.title||data.titulo||'Postulación '+id;
+  localStorage.setItem(storageKey,JSON.stringify({title,key,date:existing?.date||Date.now()}));
+  window.dispatchEvent(new Event('uadav:job-receipt-saved'));
+  preference.checked=false;
+  importStatus.textContent='Guardada en este navegador.';
+ }catch{importStatus.textContent='Se consultó el estado. Conservá tu comprobante porque no se pudo guardar en este navegador.';}
+}
+}catch(error){importStatus.textContent='';out.textContent=error.message||'No se pudo consultar el estado.'}
+finally{document.getElementById('profileJobSecret').value='';busy=false;submit.disabled=false;importButton.disabled=false;}
 });
 })();
-</script><script src="/uadav-jobs-account.js?v=20261104-cierre-ux"></script><script>
+</script><script>
+(()=>{
+  const list=document.getElementById('deviceOwnerOffers');
+  const prefix='uadav_owner_offer_v1:';
+  function render(){
+    list.replaceChildren();
+    let keys;
+    try{keys=Object.keys(localStorage).filter(key=>key.startsWith(prefix));}catch{return;}
+    for(const storageKey of keys){
+      const id=storageKey.slice(prefix.length);
+      if(!/^JOB-[A-Z0-9-]{3,80}$/.test(id))continue;
+      let saved;
+      try{saved=JSON.parse(localStorage.getItem(storageKey));}catch{continue;}
+      if(!/^[a-f0-9]{64}$/i.test(saved?.key||''))continue;
+      const card=document.createElement('article');
+      card.className='job-account-card';
+      const title=document.createElement('h3');
+      title.textContent=saved.title||id;
+      const actions=document.createElement('div');
+      actions.className='job-account-actions';
+      const link=document.createElement('a');
+      link.className='chip active';link.textContent='Ver postulantes';
+      link.href='/bolsa-trabajo.html?misPostulantes='+encodeURIComponent(id)+'#ownerInbox';
+      const forget=document.createElement('button');
+      forget.type='button';forget.className='chip';forget.textContent='Quitar de este dispositivo';
+      forget.onclick=()=>{try{localStorage.removeItem(storageKey);card.remove();}catch{forget.textContent='No se pudo quitar. Reintentar';}};
+      actions.append(link,forget);card.append(title,actions);list.append(card);
+    }
+  }
+  render();
+  window.addEventListener('pageshow',event=>{if(event.persisted)render();});
+  window.addEventListener('storage',event=>{if(!event.key||event.key.startsWith(prefix))render();});
+})();
+</script><script src="/uadav-jobs-account.js?v=20261120-import"></script><script>
 /* Progressive disclosure: the existing modules keep their DOM and operate as before. */
 (()=>{'use strict';
 const panels=['mis-trabajos','mi-artista'];
@@ -659,6 +739,19 @@ const header=document.getElementById('profileViewHeader');
 const title=document.getElementById('profileViewTitle');
 if(selected!=='home'&&header){header.hidden=false;if(title)title.textContent=titles[selected]}
 if(selected==='account'&&settings){settings.open=true;document.title='Cuenta y seguridad · UADAV STREAM'}
+const source=params.get('desde');
+const returnPath=source==='radio-studio'?'/radio-studio.html':source==='mis-eventos'?'/usuario.html?vista=eventos':'';
+if(selected==='account'&&returnPath&&header){
+ const back=document.createElement('a');
+ back.href=returnPath;
+ back.className='profile-view-back';
+ back.textContent=source==='radio-studio'?'Volver a Radio Studio':'Volver a Mis eventos';
+ back.addEventListener('click',event=>{
+   if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||parent===window)return;
+   try{if(parent.UADAVShellHost?.navigate){event.preventDefault();parent.UADAVShellHost.navigate(returnPath)}}catch{}
+ });
+ header.append(back);
+}
 if(selected==='artista'||selected==='trabajos'||selected==='eventos'){
  const panel=document.getElementById(selected==='artista'?'mi-artista':selected==='trabajos'?'mis-trabajos':'mis-eventos');
  if(panel&&panel.classList.contains('is-collapsed')){
@@ -728,10 +821,12 @@ const container=document.getElementById('profileOwnedEventsList'),refresh=docume
 if(!container||!refresh)return;
 const endpoint='https://uadav-api-staging.uadavstream.workers.dev/api/eventos/mis';
 const editor=document.getElementById('profileOwnedEventEditor'),form=document.getElementById('profileOwnedEventForm'),cancel=document.getElementById('profileOwnedEventCancel'),save=document.getElementById('profileOwnedEventSave'),editStatus=document.getElementById('profileOwnedEventEditStatus');
-let editing=null;
-function openEditor(item){
+let editing=null,editingCredential='',loadVersion=0;
+let observedAccess=access();
+function openEditor(item,credential=access()){
+ if(credential!==access()){sessionChanged();return}
  if(!editor||!form||typeof editor.showModal!=='function')return;
- editing=item;
+ editing=item;editingCredential=credential;
  for(const key of ['titulo','descripcion_corta','lugar','ciudad','fecha','hora'])form.elements.namedItem(key).value=String(item[key]||'');
  editStatus.textContent='';
  editor.showModal();
@@ -740,11 +835,13 @@ function openEditor(item){
 cancel?.addEventListener('click',()=>editor.close());
 form?.addEventListener('submit',async e=>{
  e.preventDefault();if(busy||!editing)return;
+ if(editingCredential!==access()){sessionChanged();return}
+ const sessionCredential=editingCredential;
  const patch={};for(const key of ['titulo','descripcion_corta','lugar','ciudad','fecha','hora'])patch[key]=form.elements.namedItem(key).value.trim();
  if(!patch.titulo||!patch.fecha){editStatus.textContent='Completá el título y la fecha.';return}
  busy=true;save.disabled=true;editStatus.textContent='Guardando…';
  try{await request('POST',{id:editing.id,action:'edit',patch});editor.close();editing=null;await load()}
- catch(error){editStatus.textContent=error.message||'No se confirmó la edición. Conservamos tus cambios.'}
+ catch(error){if(sessionCredential===access())editStatus.textContent=error.message||'No se confirmó la edición. Conservamos tus cambios.'}
  finally{busy=false;save.disabled=false}
 });
 
@@ -767,6 +864,7 @@ async function request(method='GET',payload){
  }finally{clearTimeout(timer)}
 }
 function render(items){
+ const renderedCredential=access();
  container.replaceChildren();
  if(!items.length){message('No hay publicaciones vinculadas a esta cuenta. Los eventos anteriores no se vinculan automáticamente.');return}
  for(const item of items){
@@ -779,24 +877,40 @@ function render(items){
   if(item.estado==='published'){const link=document.createElement('a');link.href='/evento.html?id='+encodeURIComponent(item.id);link.textContent='Ver ficha';actions.appendChild(link)}
   const toggle=document.createElement('button');toggle.type='button';toggle.textContent=item.estado==='hidden'?'Reactivar':'Ocultar';
   toggle.addEventListener('click',async()=>{
+    if(renderedCredential!==access()){sessionChanged();return}
     if(busy||!confirm(item.estado==='hidden'?'¿Reactivar este evento?':'¿Ocultar este evento de Cartelera?'))return;
     busy=true;toggle.disabled=true;const previous=toggle.textContent;toggle.textContent='Guardando…';
     try{await request('POST',{id:item.id,action:item.estado==='hidden'?'publish':'hide'});await load()}
-    catch(e){message(e.message||'No se confirmó el cambio. Actualizá la lista antes de repetir.')}
+    catch(e){if(renderedCredential===access())message(e.message||'No se confirmó el cambio. Actualizá la lista antes de repetir.')}
     finally{toggle.disabled=false;toggle.textContent=previous;busy=false}
   });
-  const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.addEventListener('click',()=>openEditor(item));actions.prepend(edit);
+  const edit=document.createElement('button');edit.type='button';edit.textContent='Editar';edit.addEventListener('click',()=>openEditor(item,renderedCredential));actions.prepend(edit);
   actions.appendChild(toggle);row.append(info,actions);container.appendChild(row);
  }
 }
 async function load(){
  if(document.body?.dataset.profileView!=='eventos')return;
- if(location.hostname!=='uadav-stream-staging.pages.dev'){message('La gestión privada se está probando solamente en staging.');return}
- refresh.disabled=true;
- try{const data=await request();if(!Array.isArray(data.items))throw Error('Respuesta de eventos inválida.');render(data.items)}
- catch(e){message(e.status===401?'Verificá tu cuenta en Cuenta y seguridad para ver las publicaciones propias.':e.status===404?'Gestión privada pendiente de desplegar en el Worker de staging.':e.message||'No se pudo conectar.')}
- finally{refresh.disabled=false}
+ if(location.hostname!=='uadav-stream-staging.pages.dev'&&location.hostname!=='integration-staging-preserve.uadav-stream-staging.pages.dev'){message('La gestión privada se está probando solamente en staging.');return}
+ const version=++loadVersion;refresh.disabled=true;message('Cargando tus eventos…');
+ try{const data=await request();if(version!==loadVersion)return;if(!Array.isArray(data.items))throw Error('Respuesta de eventos inválida.');render(data.items)}
+ catch(e){if(version!==loadVersion)return;message(e.status===401?'Verificá tu cuenta en Cuenta y seguridad para ver las publicaciones propias.':e.status===404?'Gestión privada pendiente de desplegar en el Worker de staging.':e.message||'No se pudo conectar.');
+ if(e.status===401){
+  const link=document.createElement('a');
+  link.className='chip';link.href='/usuario.html?vista=cuenta&desde=mis-eventos';
+  link.textContent='Abrir Cuenta y seguridad';container.appendChild(link);
+ }
+ }
+ finally{if(version===loadVersion)refresh.disabled=false}
 }
+function sessionChanged(){
+ const credential=access();if(credential===observedAccess)return;
+ observedAccess=credential;++loadVersion;editing=null;editingCredential='';
+ if(editor?.open)editor.close();form?.reset();if(editStatus)editStatus.textContent='';
+ message('La cuenta cambió. Actualizando tus eventos…');load();
+}
+window.addEventListener('storage',e=>{if(e.key===null||e.key==='uadav_account_access_v1')sessionChanged()});
+window.addEventListener('uadav:account',sessionChanged);
+window.addEventListener('uadav:account-data',sessionChanged);
 refresh.addEventListener('click',load);
 window.addEventListener('pageshow',load);
 load();
@@ -845,6 +959,14 @@ tabs.forEach((tab,index)=>{
   select(tabs[target].dataset.profileJobsTab,true);
  });
 });
-select('applications');
+select(new URLSearchParams(location.search).get('tab')==='ofertas'?'offers':'applications');
 })();
+</script><script>
+document.querySelector('.profile-view-back').addEventListener('click',event=>{
+ if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||parent===window)return;
+ try{
+   const shell=parent.UADAVShellHost;
+   if(shell?.navigate){event.preventDefault();shell.navigate('/usuario.html')}
+ }catch{}
+});
 </script></body></html>

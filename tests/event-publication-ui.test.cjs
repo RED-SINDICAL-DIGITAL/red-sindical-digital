@@ -23,3 +23,14 @@ test('uncertain event checks its receipt using a read, without repeating the pub
 test('event notices are optional and only explicit consent adds account authorization',async()=>{const x=setup();x.nodes.eventNoticeConsent.checked=true;const p=x.send();await tick();assert.equal(JSON.parse(x.requests[0].opt.body).email_notice_consent,true);assert.equal(x.requests[0].opt.headers.Authorization,'Bearer ACCOUNT-A');x.requests[0].resolve({success:true,id:'EV-NOTICE'});await p;const y=setup(),q=y.send();await tick();assert.equal(JSON.parse(y.requests[0].opt.body).email_notice_consent,undefined);assert.equal(y.requests[0].opt.headers,undefined);y.requests[0].resolve({success:true,id:'EV-NO-NOTICE'});await q;});
 test('consented event cannot publish after account changes during security verification',async()=>{const x=setup();x.nodes.eventNoticeConsent.checked=true;let resolve;x.c.window.UADAVSecurity.token=()=>new Promise(r=>resolve=r);const p=x.send();await tick();x.storage.set('uadav_account_access_v1','ACCOUNT-B');resolve('');await p;assert.equal(x.requests.length,0);assert.match(x.nodes.status.textContent,/cuenta o el artista cambió/)});
 test('anonymous visitors can publish without subscribing and get a clear notice consent error',async()=>{const x=setup();x.storage.delete('uadav_account_access_v1');x.nodes.eventNoticeConsent.checked=true;await x.send();assert.equal(x.requests.length,0);assert.match(x.nodes.status.textContent,/publicar sin avisos/);assert.equal(x.nodes.submit.disabled,false)});
+test('receipt under moderation retains its reference without a public event link',async()=>{
+ const x=setup(),sending=x.send();await tick();
+ x.requests[0].reject(Error('Temporal'));await sending;
+ const checking=x.nodes.status.children[1].onclick();await tick();
+ x.requests[1].resolve({confirmed:true,moderation_pending:true,moderation_id:'MOD-QA',id:'EV-QA'});
+ await checking;
+ assert.match(x.nodes.status.textContent,/pendiente de revisión.*MOD-QA/);
+ assert.equal(x.nodes.status.innerHTML,'');
+ assert.equal(x.nodes.submit.disabled,true);
+ assert.equal(x.nodes.newEvent.hidden,false);
+});

@@ -71,10 +71,10 @@ html.uadav-in-shell button,html.uadav-in-shell input,html.uadav-in-shell select,
 html.uadav-in-shell .top .brand{display:none!important}
 html.uadav-in-shell .top{gap:12px}
 html.uadav-in-shell .card:focus-visible,html.uadav-in-shell .tile button:focus-visible,html.uadav-in-shell .btn:focus-visible{outline:3px solid #80aaff!important;outline-offset:3px}
-html.uadav-in-shell #heroTitle{font-size:clamp(38px,5.4vw,76px)!important;line-height:1.02!important;letter-spacing:-.045em!important;max-width:850px;text-wrap:balance}
-html.uadav-in-shell #heroText{font-size:clamp(14px,1.3vw,18px)!important;line-height:1.55!important;max-width:700px}
+html.uadav-in-shell body:not([data-page="index-v117"]) #heroTitle{font-size:clamp(38px,5.4vw,76px)!important;line-height:1.02!important;letter-spacing:-.045em!important;max-width:850px;text-wrap:balance}
+html.uadav-in-shell body:not([data-page="index-v117"]) #heroText{font-size:clamp(14px,1.3vw,18px)!important;line-height:1.55!important;max-width:700px}
 html.uadav-in-shell .card b,html.uadav-in-shell .tile b{line-height:1.35}
-@media(max-width:720px){html.uadav-in-shell #heroTitle{font-size:clamp(32px,8.8vw,46px)!important}html.uadav-in-shell #heroText{font-size:14px!important}html.uadav-in-shell .search input{font-size:16px!important}html.uadav-in-shell .top{margin-bottom:16px!important}}
+@media(max-width:720px){html.uadav-in-shell body:not([data-page="index-v117"]) #heroTitle{font-size:clamp(32px,8.8vw,46px)!important}html.uadav-in-shell body:not([data-page="index-v117"]) #heroText{font-size:14px!important}html.uadav-in-shell .search input{font-size:16px!important}html.uadav-in-shell .top{margin-bottom:16px!important}}
 `;doc.head.appendChild(s)}
  const maintenance=doc.getElementById('maintenance-overlay'),page=doc.getElementById('pageContent');if(maintenance)maintenance.style.display='none';if(page)page.style.display='block';installRailUX(doc);hideEmptySections(doc);automaticArtistProfile(doc,win);if(/\/index\.html/i.test(win.location.pathname)&&new URLSearchParams(win.location.search).has('buscar')){setTimeout(()=>{const input=doc.getElementById('searchInput')||doc.querySelector('input[type="search"]');if(input){input.scrollIntoView({block:'center',behavior:'smooth'});input.focus({preventScroll:true})}},120)}
  }catch(e){console.warn('V11 frame enhancer',e)}

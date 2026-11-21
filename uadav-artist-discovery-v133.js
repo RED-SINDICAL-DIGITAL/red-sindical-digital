@@ -1,11 +1,105 @@
 (function(g){'use strict';const KEY='uadav_artist_discovery_v133',TTL=7*86400000,MAX=80,normal=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 function read(){try{const a=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(a)?a.filter(x=>x&&x.visible!==false&&Date.now()-Number(x.seen_at||0)<TTL).slice(0,MAX):[]}catch{return[]}}
-function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombre||a.nombre_artistico)||!(a.id||a.canal||a.channel_id))return;const item={id:String(a.id||'').slice(0,180),nombre:String(a.nombre||a.nombre_artistico).slice(0,180),nombre_artistico:String(a.nombre_artistico||a.nombre||'').slice(0,180),rubro:String(a.rubro||'Artista').slice(0,140),ciudad:String(a.ciudad||'').slice(0,140),foto:String(a.foto||a.thumbnail||'').slice(0,2000),portada:String(a.portada||'').slice(0,2000),bio:String(a.bio||'').slice(0,1200),canal:String(a.canal||a.channel_id||'').slice(0,100),discovered:a.existing===true?false:a.discovered===true,visible:true,seen_at:Date.now()};const key=identity(item);try{localStorage.setItem(KEY,JSON.stringify([item,...read().filter(x=>identity(x)!==key)].slice(0,MAX)));g.dispatchEvent(new Event('uadav:artist-discovered'))}catch{}}
+function remember(a){if(!a||a.visible===false||a.review_level==='red'||!(a.nombre||a.nombre_artistico)||!(a.id||a.canal||a.channel_id))return;const item={id:String(a.id||'').slice(0,180),nombre:String(a.nombre||a.nombre_artistico).slice(0,180),nombre_artistico:String(a.nombre_artistico||a.nombre||'').slice(0,180),rubro:String(a.rubro||'Artista').slice(0,140),ciudad:String(a.ciudad||'').slice(0,140),foto:String(a.foto||a.thumbnail||'').slice(0,2000),portada:String(a.portada||'').slice(0,2000),bio:String(a.bio||'').slice(0,1200),bio_es:String(a.bio_es||'').slice(0,1200),canal:String(a.canal||a.channel_id||'').slice(0,100),discovered:a.existing===true?false:a.discovered===true,visible:true,seen_at:Date.now()};const key=identity(item);try{
+ const recent=read();
+ const previous=recent.find(x=>identity(x)===key);
+ if(item.discovered&&previous?.discovered&&item.canal&&item.canal===previous.canal){
+  for(const field of ['foto','portada','bio','bio_es'])if(!item[field])item[field]=previous[field]||'';
+ }
+ localStorage.setItem(KEY,JSON.stringify([item,...recent.filter(x=>identity(x)!==key)].slice(0,MAX)));g.dispatchEvent(new Event('uadav:artist-discovered'))}catch{}}
 function identity(a){return a.canal||a.channel_id||a.id||normal(a.nombre||a.nombre_artistico)}
 function merge(catalog=[]){const seen=new Set(),result=[];const ordered=[...read().map(x=>catalog.find(a=>identity(a)===identity(x)||(a.id&&a.id===x.id))||x),...catalog];for(const a of ordered){if(!a||a.visible===false||!(a.id||a.canal||a.channel_id))continue;const keys=[identity(a),a.id].filter(Boolean);if(!keys.length||keys.some(k=>seen.has(k)))continue;keys.forEach(k=>seen.add(k));result.push(a)}return result}
-function find(q){return read().find(a=>normal(a.nombre)===normal(q)||normal(a.nombre_artistico)===normal(q))||null}
-function rankMatches(artists,q){const query=normal(q).replace(/\s+/g,' ');if(!query)return [...artists];const score=a=>Math.max(...[a.nombre,a.nombre_artistico,a.name,a.title].filter(Boolean).map(v=>{const name=normal(v).replace(/\s+/g,' ');return name===query?300:name.startsWith(query+' ')?200:name.includes(query)?100:0}),0);return artists.map((a,i)=>({a,i,score:score(a)})).sort((a,b)=>b.score-a.score||a.i-b.i).map(x=>x.a)}
-function rememberMatches(q,artists){for(const a of artists||[])if(normal(a.nombre||a.nombre_artistico)===normal(q))remember(a)}
+const confirmed={sandra:'UCefMqcCMiUxvMxdBtIFd6uw','sandra cretu':'UCefMqcCMiUxvMxdBtIFd6uw',roxette:'UCjVf2FirkZsEW8LN6nZcnog',sade:'UCegKDBFMUSQNeWe4FAB7aig',masterboy:'UC5-7ih_aKoazZr5Fk98HW9g',erasure:'UCYSJBcJ37dq0TJWTjJJu23Q',aqua:'UCXPUjGFDr4tcKkaFm6PiV-A'};
+function confirmedMusicChannel(a){
+ const refs=[a.canal,a.channel_id,String(a.id||'').replace(/^discover:/,'')].map(channelRef).filter(Boolean);
+ return refs.some(id=>Object.values(confirmed).includes(id)||normal(id)==='@masterboy90s');
+}
+// Group display cards only. Channel IDs still address their own catalogs.
+function directoryCards(artists){
+ const suffix=/\s+[-–—]\s*topic$/i;
+ const names=a=>[a.nombre,a.nombre_artistico].filter(Boolean).map(normal);
+ const isTopic=a=>!a.claimed&&!a.self_managed&&names(a).some(n=>suffix.test(n));
+ const base=a=>normal(a.nombre||a.nombre_artistico).replace(suffix,'').replace(/\s*(?:\((?:official|oficial)\)|\s+(?:official|oficial))$/,'').trim();
+ const ref=a=>channelRef(a.canal||a.channel_id)||channelRef(String(a.id||'').replace(/^discover:/,''));
+
+ const fullMasterboy=artists.some(a=>ref(a)===confirmed.masterboy);
+ if(fullMasterboy)artists=artists.filter(a=>!(a.discovered&&!a.claimed&&!a.self_managed&&normal(ref(a))==='@masterboy90s'));
+ const canonical=new Map();
+ for(const a of artists){
+  if(isTopic(a)||!ref(a))continue;
+  const key=base(a);
+  if(!canonical.has(key))canonical.set(key,new Set());
+  canonical.get(key).add(ref(a));
+ }
+ artists=artists.filter(a=>{
+  if(a.claimed||a.self_managed||(!a.discovered&&a.id&&!String(a.id).startsWith('discover:')))return true;
+  const key=base(a),ids=canonical.get(key);
+  if(!ids)return true;
+  if(isTopic(a))return !(ids.size===1||ids.has(confirmed[key]));
+  return !!ref(a)||ids.size!==1&&!ids.has(confirmed[key]);
+ });
+ const candidates=new Map();
+ for(const artist of artists){
+  if(isTopic(artist))continue;
+  const aliases=names(artist).map(n=>n.replace(/\s+(?:official|oficial)$/,''));
+  if(aliases.includes('sandra lauer cretu')&&
+     (names(artist).includes('sandra lauer cretu official')||normal(artist.canal)==='@sandralauercretuofficial87'))aliases.push('sandra');
+  for(const alias of new Set(aliases)){
+   candidates.set(alias,(candidates.get(alias)||0)+1);
+  }
+ }
+ return artists.filter(a=>!isTopic(a)||!names(a).some(n=>suffix.test(n)&&candidates.get(n.replace(suffix,'').trim())===1));
+}
+function exactName(a,query){
+ return [a.nombre,a.nombre_artistico].some(n=>n&&normal(n)===query);
+}
+function topicAlias(a,query){
+ if(!a.discovered||a.claimed||a.self_managed||!query)return false;
+ return [a.nombre,a.nombre_artistico].some(n=>n&&/\s+[-–—]\s+topic$/i.test(n.trim())&&normal(n.replace(/\s+[-–—]\s+topic\s*$/i,''))===query);
+}
+function find(q){
+ const query=normal(q),artists=read();
+ const exact=artists.find(a=>exactName(a,query));
+ if(exact)return exact;
+ const aliases=artists.filter(a=>topicAlias(a,query));
+ return aliases.length===1?aliases[0]:null;
+}
+async function resolveTopic(query,profiles,api,videos=[]){
+ const key=normal(query);
+ const topic=a=>!a.claimed&&!a.self_managed&&[a.nombre,a.nombre_artistico].some(n=>normal(n).replace(/\s+[-–—]\s*topic$/,'')===key&&/[-–—]\s*topic$/i.test(n||''));
+ if(!profiles.some(topic)||profiles.some(a=>!topic(a)&&exactName(a,key)))return null;
+ const channelName=value=>normal(value).replace(/\s*\((official|oficial)\)$/,' $1').trim();
+ const candidates=rows=>{
+  const ids=new Set();
+  for(const row of rows){
+   const name=channelName(row.author||row.channelTitle||row.channel_name);
+   const id=resultChannelRef(row);
+   if(/^UC/.test(id)&&[key,key+' official',key+' oficial',key.replace(/ /g,'')+'vevo'].includes(name))ids.add(id);
+  }
+  return [...ids];
+ };
+ try{
+  let ids=candidates(videos);
+  if(!ids.length){
+   const result=await api('youtube/search?q='+encodeURIComponent(query+' official music video'));
+   ids=candidates(Array.isArray(result)?result:result?.items||[]);
+  }
+  if(ids.length!==1)return null;
+  const info=await api('youtube/channel_library?kind=info&id='+encodeURIComponent(ids[0]));
+  const name=channelName(info.nombre||info.title),bio=normal(info.bio||info.description);
+  if(info.channelId!==ids[0]||![key,key+' official',key+' oficial',key.replace(/ /g,'')+'vevo'].includes(name))return null;
+  if(/\b(unofficial|fanmade|fan channel|fan account|canal de fans|tributo|tribute)\b/.test(bio))return null;
+  if(!(info.isOfficialArtist===true||name.endsWith('vevo')||(/\b(official|oficial)\b/.test(bio)&&bio.includes(key))))return null;
+  return fromChannelInfo(info);
+ }catch{return null}
+}
+function preferredHandle(query){
+ const name=normal(query).replace(/\s+(?:\(official\)|official)$/,'');
+ if(name==='masterboy')return '@Masterboy90s';
+ return Object.hasOwn(confirmed,name)?confirmed[name]:'';
+}
+function rankMatches(artists,q){const query=normal(q).replace(/\s+/g,' ');if(!query)return [...artists];const score=a=>Math.max(...[a.nombre,a.nombre_artistico,a.name,a.title].filter(Boolean).map(v=>{const name=normal(v).replace(/\s+/g,' ');if(a.canal&&preferredHandle(query)&&normal(a.canal)===normal(preferredHandle(query)))return 310;if(topicAlias(a,query))return 50;if(name===query+' official'||name===query+' oficial')return 250;return name===query?300:name.startsWith(query+' ')?200:name.includes(query)?100:0}),0);return artists.map((a,i)=>({a,i,score:score(a)})).sort((a,b)=>b.score-a.score||a.i-b.i).map(x=>x.a)}
+function rememberMatches(q,artists){for(const a of artists||[])if(exactName(a,normal(q))||topicAlias(a,normal(q)))remember(a)}
 
 // Accept an explicit channel identity; never guess one from a person's name.
 function channelRef(value){
@@ -20,15 +114,39 @@ function channelRef(value){
 function profileHref(a){
  const stable=a.id&&!String(a.id).startsWith('discover:');
  if(stable&&!a.discovered)return '/artista.html?id='+encodeURIComponent(a.id);
- const ref=channelRef(a.canal||a.channel_id||a.youtube_url||a.youtube);
+ const ref=channelRef(a.canal||a.channel_id||a.youtube_url||a.youtube)||channelRef(String(a.id||'').replace(/^discover:/,''))||preferredHandle(a.nombre||a.nombre_artistico||a.name||a.title);
  return '/artista.html?'+(ref?'channel='+encodeURIComponent(ref):'discover='+encodeURIComponent(a.nombre||a.nombre_artistico||a.name||a.title||''));
 }
 function fromChannelInfo(info){
  const channelId=String(info?.channelId||'');if(!/^UC[A-Za-z0-9_-]{22}$/.test(channelId))throw Error('No encontramos ese canal. Revisá el enlace o @usuario.');
  const name=String(info.nombre||info.title||info.name||'Canal de YouTube');
- return {id:'discover:'+channelId,canal:channelId,nombre:name,nombre_artistico:name,foto:info.foto||info.thumbnail||'',portada:info.portada||info.banner||'',bio:info.bio||info.description||'',rubro:'Creador',visible:true,discovered:true,generated:true,source:'Canal público de YouTube'};
+ return {id:'discover:'+channelId,canal:channelId,nombre:name,nombre_artistico:name,foto:info.foto||info.thumbnail||'',portada:info.portada||info.banner||'',bio:info.bio||info.description||'',bio_es:typeof info.bio_es==='string'?info.bio_es:'',rubro:info.rubro||'Creador',visible:true,discovered:true,generated:true,source:'Canal público de YouTube'};
 }
 
+
+// Reuse explicit YouTube channel identities returned with search results. Never infer a channel from a name.
+function resultChannelRef(row){
+ return [row.authorId,row.channelId,row.channel_id,row.author_url,row.channel_url,row.authorUrl,row.channelUrl].map(channelRef).find(ref=>/^UC[A-Za-z0-9_-]{22}$/.test(ref))||'';
+}
+function channelMatch(rows,query){
+ const key=normal(query),matches=new Map();
+ for(const row of rows){
+  const name=normal(row.author||row.channelTitle||row.channel_name).replace(/\s*\((official|oficial)\)$/,' $1');
+  if(row.visible===false||row.review_level==='red'||![key,key+' official',key+' oficial',key.replace(/ /g,'')+'vevo'].includes(name))continue;
+  const id=resultChannelRef(row);
+  if(id)matches.set(id,row);
+ }
+ return matches.size===1?rememberChannel(matches.values().next().value):null;
+}
+function rememberChannel(result){
+ if(!result||result.visible===false||result.review_level==='red')return null;
+ const ref=resultChannelRef(result);
+ if(!/^UC[A-Za-z0-9_-]{22}$/.test(ref))return null;
+ const name=String(result.author||result.channelTitle||result.channel_name||'').trim();
+ if(!name)return null;
+ const profile=fromChannelInfo({channelId:ref,nombre:name,foto:result.author_thumbnail||result.channelThumbnail||result.authorThumbnails?.[0]?.url||''});
+ remember(profile);return profile;
+}
 
 function followedProfileHref(a,origin){
  const copy={...a};let saved=null;
@@ -42,5 +160,5 @@ function followedProfileHref(a,origin){
  return profileHref({...copy,discovered:true,nombre:saved?.searchParams.get('discover')||a.nombre||a.nombre_artistico||''});
 }
 
-g.UADAVArtistDiscovery={remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,followedProfileHref};
+g.UADAVArtistDiscovery={confirmedMusicChannel,channelMatch,resolveTopic,directoryCards,preferredHandle,remember,rememberMatches,rankMatches,read,merge,find,identity,channelRef,profileHref,fromChannelInfo,rememberChannel,followedProfileHref};
 })(globalThis);

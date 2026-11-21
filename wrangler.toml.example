@@ -1,5 +1,5 @@
 name = "uadavstream"
-main = "worker.js"
+main = "worker-demo.js"
 compatibility_date = "2026-09-28"
 
 # Mantiene KV actual.
@@ -36,3 +36,10 @@ database_id = "PEGAR_D1_DATABASE_ID"
 
 [triggers]
 crons = ["*/10 * * * *"]
+
+# Bind the same invitation database to Pages and Worker for this environment.
+[[d1_databases]]
+binding = "DEMO_DB"
+database_name = "uadav-demo-production"
+database_id = "DEMO_D1_ID_REQUIRED"
+migrations_dir = "migrations/demo"
