@@ -33,7 +33,6 @@ window.UADAV_USE_LOCAL_API = window.PLATFORM_USE_LOCAL_API;
     }catch(_){return null}finally{clearTimeout(timer)}
   };
   const unwrap=x=>x&&typeof x==='object'?(x.data||x.config||x):{};
-  const first=(o,keys)=>{for(const k of keys){const v=o?.[k];if(v!==undefined&&v!==null&&String(v).trim()!=='')return v}return null};
   const videoId=x=>{
     const explicit=x?.videoId||x?.video_id||x?.external_id||x?.youtube_id||'';
     if(/^[A-Za-z0-9_-]{11}$/.test(String(explicit)))return String(explicit);
@@ -85,17 +84,4 @@ window.UADAV_USE_LOCAL_API = window.PLATFORM_USE_LOCAL_API;
   };
   window.UADAV_CONFIG=window.UADAV_CONFIG||window.PLATFORM_CONFIG;
 
-  // Home V11.7: Admin/landing_config manda; /public/landing queda como fallback del código heredado.
-  document.addEventListener('DOMContentLoaded',async()=>{
-    if(!/\/index-v117\.html$/i.test(location.pathname))return;
-    const cfg=await window.PLATFORM_CONFIG.landing();
-    if(!cfg||!Object.keys(cfg).length)return;
-    const title=first(cfg,['brand_hero_title','home_title','hero_title','title']);
-    const text=first(cfg,['brand_hero_description','home_description','hero_description','description']);
-    const image=first(cfg,['brand_hero_image','home_image','hero_image','image']);
-    const t=document.getElementById('heroTitle'),p=document.getElementById('heroText'),b=document.getElementById('back');
-    if(t&&title)t.textContent=String(title);
-    if(p&&text)p.textContent=String(text);
-    if(b&&image){const safe=String(image).replace(/["'()]/g,'');b.style.backgroundImage='linear-gradient(90deg,#02050af2 5%,#02050ab8 45%,#02050a33 72%),linear-gradient(0deg,#03070d 0%,transparent 50%),url("'+safe+'")'}
-  });
 })();
