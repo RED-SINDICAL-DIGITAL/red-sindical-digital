@@ -23,8 +23,15 @@ async function mount(){
  doc.body.append(footer);
  const api=root.PLATFORM_API_BASE||root.UADAV_API_BASE;if(!api)return;
  async function read(path){const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),8000);try{const r=await root.fetch(api.replace(/\/?$/,'/')+path,{method:'GET',cache:'no-store',signal:ctl.signal});if(!r.ok)throw Error();return await r.json()}finally{clearTimeout(timer)}}
- const results=await Promise.allSettled([read('footer_config'),read('visits')]);
+ const results=await Promise.allSettled([read('footer_config'),read('visits'),read('site_pages')]);
  const config=settings(results[0].status==='fulfilled'?results[0].value:null);title.textContent=config.name;description.textContent=config.description;copyright.textContent='© '+new Date().getFullYear()+' '+config.name;
+ const pages=results[2].value?.data||results[2].value||{};
+ for(const link of nav.querySelectorAll('a')){
+   const key=new URL(link.href).pathname.slice(1).replace(/\.html$/,'');
+   const page=pages[key];
+   if(page?.enabled===false)link.remove();
+   else if(page?.title)link.textContent=page.title;
+ }
  const total=count(results[1].status==='fulfilled'?results[1].value:null,config);if(total!==null){counter.textContent=new Intl.NumberFormat('es-AR').format(total)+' visitas acumuladas';counter.hidden=false}
  const contact=doc.getElementById('officialContact'),legal=doc.getElementById('officialResponsible');
  if(contact&&config.email){contact.replaceChildren();const a=node('a',config.email);a.href='mailto:'+config.email;contact.append(a)}
