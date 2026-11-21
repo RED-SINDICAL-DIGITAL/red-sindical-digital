@@ -501,12 +501,28 @@ async function uadavAccountRoute(request,env,identityOnly=false){
     if(path==='/api/account/recovery'){
       if(request.method!=='POST')return reply({error:'Método no permitido'},405);
       await rate('recovery-rotate',3,3600000);
-      const newSecret='UAC-'+random(),newHash=await hash(newSecret);
+      // Legacy clients must share the same version counter and transaction as atomic recovery.
+      const state=await db.prepare('SELECT version FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
+      const version=Number(state?.version||0),requestId=crypto.randomUUID(),newSecret='UAC-'+random(),newHash=await hash(newSecret);
       await db.batch([
-        db.prepare('INSERT OR IGNORE INTO audience_recovery_keys(credential_hash,account_id,revoked_at) VALUES(?,?,?)').bind(accountId,accountId,now),
-        db.prepare('UPDATE audience_recovery_keys SET revoked_at=? WHERE account_id=?').bind(now,accountId),
-        db.prepare('INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at) VALUES(?,?,NULL)').bind(newHash,accountId)
+        db.prepare('INSERT OR IGNORE INTO audience_recovery_state(account_id,version) VALUES(?,0)').bind(accountId),
+        db.prepare('UPDATE audience_recovery_state SET version=version+1,last_request_id=?,last_credential_hash=? WHERE account_id=? AND version=?').bind(requestId,newHash,accountId,version),
+        db.prepare(`INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at)
+          SELECT ?,?,NULL FROM audience_recovery_state
+          WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?
+          ON CONFLICT(credential_hash) DO NOTHING`).bind(newHash,accountId,accountId,version+1,requestId,newHash),
+        db.prepare(`INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at)
+          SELECT ?,?,? FROM audience_recovery_state
+          WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?
+          ON CONFLICT(credential_hash) DO NOTHING`).bind(accountId,accountId,now,accountId,version+1,requestId,newHash),
+        db.prepare(`UPDATE audience_recovery_keys SET revoked_at=?
+          WHERE account_id=? AND credential_hash<>?
+          AND EXISTS(SELECT 1 FROM audience_recovery_state WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?)`).bind(now,accountId,newHash,accountId,version+1,requestId,newHash)
       ]);
+      const updated=await db.prepare('SELECT version,last_request_id,last_credential_hash FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
+      const active=await db.prepare('SELECT account_id FROM audience_recovery_keys WHERE credential_hash=? AND revoked_at IS NULL').bind(newHash).first();
+      if(updated?.version!==version+1||updated.last_request_id!==requestId||updated.last_credential_hash!==newHash||active?.account_id!==accountId)
+        return reply({error:'El respaldo cambió en otro dispositivo. Intentá nuevamente.',code:'RECOVERY_CONFLICT'},409);
       return reply({secret:newSecret});
     }
     if(path==='/api/account/devices'){
