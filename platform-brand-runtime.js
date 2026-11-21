@@ -47,7 +47,7 @@
       if(off) { el.hidden=true;el.style.setProperty('display','none','important'); el.setAttribute('aria-hidden','true'); el.setAttribute('data-platform-disabled','true'); }
       else if(el.hasAttribute('data-platform-disabled')) { el.hidden=false;el.style.removeProperty('display'); el.removeAttribute('aria-hidden'); el.removeAttribute('data-platform-disabled'); }
     });
-    const mobile=root.getElementById?.('mobile');if(mobile){const count=[...mobile.querySelectorAll('button')].filter(b=>!b.hidden&&b.style.display!=='none').length;mobile.style.setProperty('grid-template-columns','repeat('+Math.max(1,count)+',minmax(0,1fr))','important')}
+    const mobile=root.getElementById?.('mobile');if(mobile&&!mobile.querySelector('[data-nav-visibility]')){const count=[...mobile.querySelectorAll('button')].filter(b=>!b.hidden&&!b.hasAttribute('data-nav-off')&&b.style.display!=='none').length;mobile.style.setProperty('grid-template-columns','repeat('+Math.max(1,count)+',minmax(0,1fr))','important')}
   }
   function unavailable(brand) {
     // Build with DOM APIs: brand names are text, never executable markup.
