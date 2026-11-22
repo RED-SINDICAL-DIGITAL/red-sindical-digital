@@ -31,7 +31,14 @@ try{
   const content=await readFile(file,'utf8');
   assert.ok(!content.includes('https://uadav-api.uadavstream.workers.dev'),'Production API leaked in '+file);
   assert.ok(!content.includes('https://uadav-api-staging.uadavstream.workers.dev'),'Frozen staging API leaked in '+file);
+  assert.ok(!content.includes('https://uadav-stream-staging.pages.dev'),'Staging Pages link leaked in '+file);
+  assert.ok(!content.includes('https://uadavstream.com.ar'),'Production site link leaked in '+file);
  }
+ const headers=await readFile(join(dest,'_headers'),'utf8');
+ assert.match(headers,/connect-src 'self' https:\/\/uadav-api-admin-v2-qa\.uadavstream\.workers\.dev https:\/\/challenges\.cloudflare\.com/);
+ assert.doesNotMatch(headers,/connect-src[^\n]*(?:uadav-api-staging|uadav-api\.uadavstream)/);
+ assert.match(headers,/X-Robots-Tag: noindex, nofollow/);
+ assert.equal(await readFile(join(dest,'robots.txt'),'utf8'),'User-agent: *\nDisallow: /\n');
  const original=await readFile(join(root,'uadav-api-config.js'),'utf8');
  assert.ok(original.includes('https://uadav-api-staging.uadavstream.workers.dev/api/'),'Build must not modify original API config');
  const forbidden=spawnSync(process.execPath,['scripts/build-admin-v2-qa-frontend.mjs',root],{cwd:root,encoding:'utf8'});
