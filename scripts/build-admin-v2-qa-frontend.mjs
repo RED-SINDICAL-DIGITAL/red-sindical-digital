@@ -9,6 +9,8 @@ if(dirname(out)!==root||!/^dist-admin-v2-qa(?:-test-[0-9]+)?$/.test(basename(out
 const NAME='uadav-admin-v2-qa.pages.dev';
 const qaApi='https://uadav-api-admin-v2-qa.uadavstream.workers.dev';
 const oldApis=['https://uadav-api.uadavstream.workers.dev','https://uadav-api-staging.uadavstream.workers.dev'];
+const oldSites=['https://uadav-stream-staging.pages.dev','https://uadavstream.com.ar','https://www.uadavstream.com.ar'];
+const qaSite='https://'+NAME;
 const textExt=new Set(['.html','.js','.css','.json','.svg','.txt','.xml','.webmanifest']);
 const binExt=new Set(['.png','.jpg','.jpeg','.webp','.ico','.gif','.woff','.woff2','.avif','.mp4','.webm']);
 const dirs=new Set(['assets','img','content','design']);
@@ -28,12 +30,13 @@ async function walk(folder,depth=0){
   if(textExt.has(kind)){
    let source=await readFile(join(root,rel),'utf8'),text=source;
    for(const old of oldApis)text=text.replaceAll(old,qaApi);
+   for(const old of oldSites)text=text.replaceAll(old,qaSite);
    if(rel==='uadav-api-config.js'){
     const guard=`// Isolated Admin 2.0 QA frontend: reject any non-QA Pages origin.\nif (!/^(?:[a-z0-9-]+\\.)?uadav-admin-v2-qa\\.pages\\.dev$/i.test(location.hostname)) throw Error('Admin 2.0 QA: invalid Pages origin');\n`;
     text=guard+text;
     if(!text.includes(qaApi+'/api/'))throw Error('Missing QA API base');
    }
-   if(oldApis.some(old=>text.includes(old)))throw Error('Production/staging API remained in '+rel);
+   if(oldApis.some(old=>text.includes(old))||oldSites.some(old=>text.includes(old)))throw Error('Non-QA application destination remained in '+rel);
    if(text!==source)rewritten++;
    await writeFile(dest,text,'utf8');
   }else await copyFile(join(root,rel),dest);
@@ -43,6 +46,16 @@ async function walk(folder,depth=0){
 await rm(out,{recursive:true,force:true});
 await mkdir(out,{recursive:true});
 await walk('');
+const policy=[
+  '/*',
+  '  Content-Security-Policy: default-src \'self\' https: data: blob:; connect-src \'self\' '+qaApi+' https://challenges.cloudflare.com; form-action \'self\'; object-src \'none\'; base-uri \'self\'; worker-src \'self\';',
+  '  Referrer-Policy: no-referrer',
+  '  X-Robots-Tag: noindex, nofollow, noarchive',
+  '  X-Content-Type-Options: nosniff',
+  ''
+].join('\n');
+await writeFile(join(out,'_headers'),policy,'utf8');
+await writeFile(join(out,'robots.txt'),'User-agent: *\nDisallow: /\n','utf8');
 for(const required of ['index.html','admin.html','app.html','usuario.html','uadav-api-config.js']){
  const content=await readFile(join(out,required),'utf8');
  if(!content)throw Error('Missing required QA page '+required);
