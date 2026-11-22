@@ -102,3 +102,12 @@ Se inspeccionaron los scripts de acceso por correo, avisos personales, perfiles,
 **Evidencia:** workflow específico `Admin 2.0 regression checks` aprobado en commit `ca00bff` (código QA). Se conserva el fallo deliberado de `Staging integration preservation`; no desplegar automáticamente.
 
 **Limitaciones explícitas:** esta protección estática de `connect-src` no sustituye auditoría de rutas compuestas dinámicamente, redirecciones, frames de terceros, extensiones ni integraciones de backend. El archivo `_headers` se debe verificar sobre el dominio Pages efectivamente publicado (puede no aplicar a respuestas de Functions). El frontend QA generado no contiene `service-worker.js`, pero cualquier sesión real debe usar perfil de navegador limpio. Antes de pruebas reales, confirmar Cloudflare Access, CSP, CORS del Worker QA, Turnstile QA, D1/KV nuevos y deshabilitación de emails y pagos.
+
+
+## Restricciones adicionales de Web Push en QA (22/11/2026)
+
+Se encontró `uadav-push-ui-v150.js`, que podía solicitar permiso de notificaciones, registrar `/uadav-push-sw.js` y solicitar una suscripción. Incluso con una API QA aislada, estas acciones no son necesarias para validar Admin 2.0.
+
+El generador del frontend QA **sustituye ese módulo únicamente en el paquete** por un script inerte y excluye `uadav-push-sw.js` y `service-worker.js`. `scripts/test-admin-v2-qa-frontend.mjs` verifica que el paquete generado no tenga estos service workers ni la solicitud de permiso. El código original de producción y staging permanece intacto. Web Push real deberá probarse luego como submódulo separado, con dispositivo, suscripción y backend exclusivamente QA.
+
+El estado de despliegue sigue igual: no existen en este repositorio evidencias de Cloudflare Access efectivo, ni confirmación remota de Pages QA, Worker QA o KV/D1 nuevos. **No publicar ni usar credenciales reales.**
