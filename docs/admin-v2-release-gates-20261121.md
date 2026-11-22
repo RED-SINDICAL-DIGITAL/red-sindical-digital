@@ -87,3 +87,18 @@ node scripts/build-admin-v2-qa-frontend.mjs
 El resultado `dist-admin-v2-qa/` es un artefacto local para publicar en un **nuevo proyecto** Cloudflare Pages con nombre `uadav-admin-v2-qa`, no en `uadav-stream-staging` ni en el dominio público. No se ha creado el proyecto Pages ni el Worker remoto. Antes de subirlo, deben verificarse todas las rutas externas de la web por si hay clientes adicionales con endpoints propios: el reemplazo de URL conocidas **no garantiza aislar integraciones que no usen esas URL**. No activar cuentas de usuario reales, correo, push, pagos ni funciones de administración en este frontend hasta verificar recursos y permisos desde Work.
 
 El control de preservación del Worker congelado seguirá en rojo porque el PR cambia `worker.js`; eso **no se debe** solucionar manipulando el hash del control. Se requiere validación y aprobación específica por separado.
+
+
+## Auditoría de conexiones del frontend QA (22/11/2026)
+
+Se inspeccionaron los scripts de acceso por correo, avisos personales, perfiles, sincronización de cuentas, panel Admin y notificaciones push. Estos archivos incluyen referencias explícitas a Workers API y, en algunos casos, URLs absolutas de páginas staging. También hay integraciones de medios externos (videos/miniaturas), diferentes de las rutas de API.
+
+**Corrección del generador, sin editar HTML/JS públicos:**
+- Sustituye en el artefacto QA las URL absolutas conocidas de los dos Workers y de los sitios UADAV de staging/producción por los destinos QA.
+- Genera `_headers` para Cloudflare Pages con `Content-Security-Policy` restringiendo `connect-src` a la propia web QA, al Worker `uadav-api-admin-v2-qa.uadavstream.workers.dev` y a Cloudflare Turnstile; `form-action 'self'`, `object-src 'none'`, `base-uri 'self'`, `Referrer-Policy: no-referrer`.
+- Genera `robots.txt` y `X-Robots-Tag` para evitar indexación; no son un control de acceso. La web QA DEBE permanecer protegida por autenticación de Cloudflare Access o equivalente antes de usar datos de prueba sensibles.
+- Se reforzó `scripts/test-admin-v2-qa-frontend.mjs` para comprobar que no queden referencias literales a Worker/API o páginas UADAV reales y que las cabeceras estén en el paquete.
+
+**Evidencia:** workflow específico `Admin 2.0 regression checks` aprobado en commit `ca00bff` (código QA). Se conserva el fallo deliberado de `Staging integration preservation`; no desplegar automáticamente.
+
+**Limitaciones explícitas:** esta protección estática de `connect-src` no sustituye auditoría de rutas compuestas dinámicamente, redirecciones, frames de terceros, extensiones ni integraciones de backend. El archivo `_headers` se debe verificar sobre el dominio Pages efectivamente publicado (puede no aplicar a respuestas de Functions). El frontend QA generado no contiene `service-worker.js`, pero cualquier sesión real debe usar perfil de navegador limpio. Antes de pruebas reales, confirmar Cloudflare Access, CSP, CORS del Worker QA, Turnstile QA, D1/KV nuevos y deshabilitación de emails y pagos.
