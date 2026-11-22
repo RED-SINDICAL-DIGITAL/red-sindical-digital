@@ -71,3 +71,19 @@ Este último resultado **no se arregla actualizando el hash del test**. Exige re
 9. Solo tras revisión de resultados, respaldos de staging y autorización expresa se evalúa un despliegue separado al staging protegido. **Producción requiere otra autorización.**
 
 **La plantilla no es una orden de despliegue. No desplegar todavía.** La API de salud no se pudo certificar desde esta sesión y la identificación de los bindings remotos sigue pendiente.
+
+
+## Frontend QA aislado, sin cambios en frontend público (22/11/2026)
+
+El frontend staging original contiene referencias directas a API, además de `uadav-api-config.js`; por eso cambiar una única variable no aísla realmente las pantallas.
+
+Se agregó `scripts/build-admin-v2-qa-frontend.mjs` para **generar una copia estática** de la web en `dist-admin-v2-qa/` con reemplazo de las URL conocidas de ambos Workers (producción y staging) por `https://uadav-api-admin-v2-qa.uadavstream.workers.dev`. El JS de configuración del paquete generado exige host `uadav-admin-v2-qa.pages.dev` o subdominio de preview del mismo proyecto. El generador excluye `worker.js`, artefactos backend, `CNAME`, PWA service worker, carpeta de repositorio, workflows y scripts internos; no altera la web original. Un destino de salida fuera del directorio QA permitido se rechaza. Se automatizó `scripts/test-admin-v2-qa-frontend.mjs` en GitHub Actions.
+
+**Comandos de preparación local, sin despliegue:**
+```sh
+node scripts/test-admin-v2-qa-frontend.mjs
+node scripts/build-admin-v2-qa-frontend.mjs
+```
+El resultado `dist-admin-v2-qa/` es un artefacto local para publicar en un **nuevo proyecto** Cloudflare Pages con nombre `uadav-admin-v2-qa`, no en `uadav-stream-staging` ni en el dominio público. No se ha creado el proyecto Pages ni el Worker remoto. Antes de subirlo, deben verificarse todas las rutas externas de la web por si hay clientes adicionales con endpoints propios: el reemplazo de URL conocidas **no garantiza aislar integraciones que no usen esas URL**. No activar cuentas de usuario reales, correo, push, pagos ni funciones de administración en este frontend hasta verificar recursos y permisos desde Work.
+
+El control de preservación del Worker congelado seguirá en rojo porque el PR cambia `worker.js`; eso **no se debe** solucionar manipulando el hash del control. Se requiere validación y aprobación específica por separado.
