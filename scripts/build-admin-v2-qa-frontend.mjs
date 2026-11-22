@@ -5,7 +5,7 @@ import {join,resolve,dirname,basename,relative} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const out=resolve(process.argv[2]||join(root,'dist-admin-v2-qa'));
-if(out===root||!out.startsWith(root+'/')&&process.argv[2]===undefined)throw Error('Unsafe output path');
+if(dirname(out)!==root||!/^dist-admin-v2-qa(?:-test-[0-9]+)?$/.test(basename(out)))throw Error('Unsafe output path: only dedicated QA dist inside repository');
 const NAME='uadav-admin-v2-qa.pages.dev';
 const qaApi='https://uadav-api-admin-v2-qa.uadavstream.workers.dev';
 const oldApis=['https://uadav-api.uadavstream.workers.dev','https://uadav-api-staging.uadavstream.workers.dev'];
