@@ -24,6 +24,10 @@ try{
  assert.ok(files.some(f=>f.endsWith('/usuario.html')));
  assert.ok(files.some(f=>f.endsWith('/app.html')));
  assert.ok(!files.some(f=>f.endsWith('/worker.js')||f.endsWith('/CNAME')||f.endsWith('/wrangler.staging.toml')));
+ assert.ok(!files.some(f=>f.endsWith('/service-worker.js')||f.endsWith('/uadav-push-sw.js')),'No notification worker may be bundled in QA');
+ const push=await readFile(join(dest,'uadav-push-ui-v150.js'),'utf8');
+ assert.ok(push.includes('no PushManager subscription'));
+ assert.ok(!push.includes('requestPermission')&&!push.includes('serviceWorker.register'),'QA must never ask for push permission');
  const config=await readFile(join(dest,'uadav-api-config.js'),'utf8');
  assert.ok(config.includes(qa+'/api/'));
  assert.match(config,/invalid Pages origin/);
