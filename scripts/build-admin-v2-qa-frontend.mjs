@@ -14,7 +14,7 @@ const qaSite='https://'+NAME;
 const textExt=new Set(['.html','.js','.css','.json','.svg','.txt','.xml','.webmanifest']);
 const binExt=new Set(['.png','.jpg','.jpeg','.webp','.ico','.gif','.woff','.woff2','.avif','.mp4','.webm']);
 const dirs=new Set(['assets','img','content','design']);
-const deny=new Set(['worker.js','worker-demo.js','worker-demo-staging.js','service-worker.js','CNAME','AGENTS.md','_routes.json']);
+const deny=new Set(['worker.js','worker-demo.js','worker-demo-staging.js','service-worker.js','uadav-push-sw.js','CNAME','AGENTS.md','_routes.json']);
 const ext=name=>{let i=name.lastIndexOf('.');return i<0?'':name.slice(i).toLowerCase()};
 let copied=0,rewritten=0;
 async function walk(folder,depth=0){
@@ -31,6 +31,9 @@ async function walk(folder,depth=0){
    let source=await readFile(join(root,rel),'utf8'),text=source;
    for(const old of oldApis)text=text.replaceAll(old,qaApi);
    for(const old of oldSites)text=text.replaceAll(old,qaSite);
+   if(rel==='uadav-push-ui-v150.js'){
+    text="// Admin 2.0 QA: no PushManager subscription, service worker registration or notification prompts.\n";
+   }
    if(rel==='uadav-api-config.js'){
     const guard=`// Isolated Admin 2.0 QA frontend: reject any non-QA Pages origin.\nif (!/^(?:[a-z0-9-]+\\.)?uadav-admin-v2-qa\\.pages\\.dev$/i.test(location.hostname)) throw Error('Admin 2.0 QA: invalid Pages origin');\n`;
     text=guard+text;
