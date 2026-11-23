@@ -1,0 +1,68 @@
+name: Admin 2.0 regression checks (no deployment)
+
+on:
+  pull_request:
+    paths:
+      - 'admin.html'
+      - 'usuario.html'
+      - 'worker.js'
+      - 'uadav-account-sync.js'
+      - 'scripts/test-admin-*.mjs'
+      - 'scripts/test-account-recovery-atomic.mjs'
+      - 'scripts/test-account-recovery-interoperability.mjs'
+      - 'scripts/test-account-recovery-rollback.mjs'
+      - 'scripts/test-account-recovery-concurrency.mjs'
+      - 'scripts/test-admin-staging-boundaries.mjs'
+      - 'scripts/test-admin-v2-qa-origin.mjs'
+      - 'scripts/admin-v2-qa-preflight.mjs'
+      - 'scripts/test-admin-v2-qa-preflight.mjs'
+      - 'scripts/build-admin-v2-qa-frontend.mjs'
+      - 'scripts/test-admin-v2-qa-frontend.mjs'
+      - 'wrangler.admin-v2-qa.toml.example'
+      - 'wrangler.staging.toml.example'
+      - 'worker-demo-staging.js'
+      - 'uadav-api-config.js'
+      - 'scripts/audit-account-recovery-contract.mjs'
+      - '.github/workflows/admin-v2-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check worker.js
+          node --check uadav-account-sync.js
+      - name: Validate Admin navigation
+        run: node scripts/test-admin-simple-nav.mjs
+      - name: Validate notification queue
+        run: node scripts/test-admin-notification-queue.mjs
+      - name: Validate artist registration flow
+        run: node scripts/test-admin-artist-registration.mjs
+      - name: Test atomic recovery with isolated D1 adapter
+        run: node scripts/test-account-recovery-atomic.mjs
+      - name: Test legacy and atomic recovery interoperability
+        run: node scripts/test-account-recovery-interoperability.mjs
+      - name: Test failed D1 transactions roll back without losing credentials
+        run: node scripts/test-account-recovery-rollback.mjs
+      - name: Concurrent recovery requests must not replace each other
+        run: node scripts/test-account-recovery-concurrency.mjs
+      - name: Ensure QA Worker stays isolated from staging and production
+        run: node scripts/test-admin-staging-boundaries.mjs
+      - name: Build and verify isolated QA Pages bundle
+        run: node scripts/test-admin-v2-qa-frontend.mjs
+      - name: Verify QA origin CORS in Worker
+        run: node scripts/test-admin-v2-qa-origin.mjs
+      - name: Refuse QA deployment without verified isolated resources and access
+        run: node scripts/test-admin-v2-qa-preflight.mjs
+      - name: Block incompatible recovery contracts
+        run: node scripts/audit-account-recovery-contract.mjs

@@ -246,6 +246,7 @@ async function uadavDeletePersonalAccount(db,accountId){const now=Date.now(),rep
         if(tables.has('artist_deletion_accounts'))batch.push(db.prepare('DELETE FROM artist_deletion_accounts WHERE account_id=?').bind(accountId));
         if(tables.has('audience_push_subscriptions'))batch.push(db.prepare('DELETE FROM audience_push_subscriptions WHERE account_id=?').bind(accountId));
         if(tables.has('audience_notification_reads'))batch.push(db.prepare('DELETE FROM audience_notification_reads WHERE account_id=?').bind(accountId));
+        if(tables.has('audience_recovery_state'))batch.push(db.prepare('DELETE FROM audience_recovery_state WHERE account_id=?').bind(accountId));
         batch.push(db.prepare('DELETE FROM audience_artist_claims WHERE account_id=?').bind(accountId));await db.batch(batch);return reply({success:true,deleted:true});
 }
 // Account credentials and pairing secrets are hashed; no permanent credential is sent through a QR.
@@ -279,6 +280,7 @@ async function uadavAccountSchema(db){
       'CREATE TABLE IF NOT EXISTS audience_announcements(id TEXT PRIMARY KEY,title TEXT NOT NULL,message TEXT NOT NULL,account_id TEXT,created_at TEXT NOT NULL,expires_at TEXT NOT NULL)',
       'CREATE TABLE IF NOT EXISTS audience_rate_limits(id TEXT PRIMARY KEY,count INTEGER NOT NULL,expires_at INTEGER NOT NULL)',
       'CREATE TABLE IF NOT EXISTS audience_recovery_keys(credential_hash TEXT PRIMARY KEY,account_id TEXT NOT NULL,revoked_at INTEGER)',
+      'CREATE TABLE IF NOT EXISTS audience_recovery_state(account_id TEXT PRIMARY KEY,version INTEGER NOT NULL DEFAULT 0,last_request_id TEXT,last_credential_hash TEXT)',
       'CREATE TABLE IF NOT EXISTS audience_artist_links(account_id TEXT NOT NULL,artist_id TEXT NOT NULL,claim_id TEXT,expires_at INTEGER NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(account_id,artist_id))',
       // A validated account association survives the private invitation expiry; ownership and revocation are still checked on every access.
       'UPDATE audience_artist_links SET expires_at=0 WHERE expires_at<>0',
@@ -390,7 +392,11 @@ async function uadavAccountRoute(request,env,identityOnly=false){
       return reply({data,revision});
     }
     if(!account)return reply({error:'Cuenta no encontrada'},404);
-    if(identityOnly)return reply({account_id:accountId});
+    if(identityOnly||path==='/api/account/identity'){
+      if(request.method!=='GET')return reply({error:'Método no permitido'},405);
+      const state=await db.prepare('SELECT version FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
+      return reply({account_id:accountId,recovery_version:Number(state?.version||0)});
+    }
     if(path==='/api/account/artists'){
       if(!env.UADAV_DB)return reply({error:'Acceso de artistas no disponible'},503);
       if(request.method==='POST'){
@@ -450,15 +456,73 @@ async function uadavAccountRoute(request,env,identityOnly=false){
       await env.UADAV_DB.put('artist_access_'+token,JSON.stringify({artist_id:id,claim_id:link.claim_id,expires,account_id:accountId,account_credential_hash:credentialHash,account_device:secret.startsWith('UAD-')}),{expirationTtl:Math.max(60,Math.ceil((expires-now)/1000))});
       return reply({token,expires,artist_id:id});
     }
+    if(path==='/api/account/recovery/atomic'){
+      if(request.method!=='POST')return reply({error:'Método no permitido'},405);
+      await rate('recovery-atomic',5,3600000);
+      const b=await body();
+      const requestId=String(b.request_id||''),newSecret=String(b.new_secret||'');
+      const expected=Number(b.expected_version);
+      if(!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(requestId)
+        || !/^UAC-[a-f0-9]{64}$/.test(newSecret)
+        || !Number.isSafeInteger(expected)||expected<0||expected>2147483646)
+        return reply({error:'Datos de renovación inválidos'},400);
+      const newHash=await hash(newSecret);
+      if(newHash===credentialHash)return reply({error:'Generá un código de recuperación diferente'},400);
+      const other=await db.prepare('SELECT account_id,revoked_at FROM audience_recovery_keys WHERE credential_hash=?').bind(newHash).first();
+      if(other){
+        const previous=await db.prepare('SELECT version,last_request_id,last_credential_hash FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
+        if(other.account_id!==accountId||other.revoked_at!=null||previous?.version!==expected+1||previous.last_request_id!==requestId||previous.last_credential_hash!==newHash)
+          return reply({error:'Generá un código de recuperación nuevo y distinto',code:'RECOVERY_SECRET_REUSE'},409);
+        return reply({success:true,request_id:requestId,secret:newSecret,recovery_version:previous.version});
+      }
+      // All statements execute as one D1 transaction. A losing concurrent request cannot revoke a winner.
+      await db.batch([
+        db.prepare('INSERT OR IGNORE INTO audience_recovery_state(account_id,version) VALUES(?,0)').bind(accountId),
+        db.prepare('UPDATE audience_recovery_state SET version=version+1,last_request_id=?,last_credential_hash=? WHERE account_id=? AND version=?').bind(requestId,newHash,accountId,expected),
+        db.prepare(`INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at)
+          SELECT ?,?,NULL FROM audience_recovery_state
+          WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?
+          ON CONFLICT(credential_hash) DO NOTHING`).bind(newHash,accountId,accountId,expected+1,requestId,newHash),
+        // The first root credential may be a valid account ID without a recovery_keys row.
+        db.prepare(`INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at)
+          SELECT ?,?,? FROM audience_recovery_state
+          WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?
+          ON CONFLICT(credential_hash) DO NOTHING`).bind(accountId,accountId,now,accountId,expected+1,requestId,newHash),
+        db.prepare(`UPDATE audience_recovery_keys SET revoked_at=?
+          WHERE account_id=? AND credential_hash<>?
+          AND EXISTS(SELECT 1 FROM audience_recovery_state WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?)`).bind(now,accountId,newHash,accountId,expected+1,requestId,newHash)
+      ]);
+      const state=await db.prepare('SELECT version,last_request_id,last_credential_hash FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
+      const active=await db.prepare('SELECT account_id FROM audience_recovery_keys WHERE credential_hash=? AND revoked_at IS NULL').bind(newHash).first();
+      if(state?.version!==expected+1||state.last_request_id!==requestId||state.last_credential_hash!==newHash||active?.account_id!==accountId)
+        return reply({error:'El respaldo cambió en otro dispositivo. Comprobá tu cuenta antes de reintentar.',code:'RECOVERY_CONFLICT'},409);
+      return reply({success:true,request_id:requestId,secret:newSecret,recovery_version:state.version});
+    }
     if(path==='/api/account/recovery'){
       if(request.method!=='POST')return reply({error:'Método no permitido'},405);
       await rate('recovery-rotate',3,3600000);
-      const newSecret='UAC-'+random(),newHash=await hash(newSecret);
+      // Legacy clients must share the same version counter and transaction as atomic recovery.
+      const state=await db.prepare('SELECT version FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
+      const version=Number(state?.version||0),requestId=crypto.randomUUID(),newSecret='UAC-'+random(),newHash=await hash(newSecret);
       await db.batch([
-        db.prepare('INSERT OR IGNORE INTO audience_recovery_keys(credential_hash,account_id,revoked_at) VALUES(?,?,?)').bind(accountId,accountId,now),
-        db.prepare('UPDATE audience_recovery_keys SET revoked_at=? WHERE account_id=?').bind(now,accountId),
-        db.prepare('INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at) VALUES(?,?,NULL)').bind(newHash,accountId)
+        db.prepare('INSERT OR IGNORE INTO audience_recovery_state(account_id,version) VALUES(?,0)').bind(accountId),
+        db.prepare('UPDATE audience_recovery_state SET version=version+1,last_request_id=?,last_credential_hash=? WHERE account_id=? AND version=?').bind(requestId,newHash,accountId,version),
+        db.prepare(`INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at)
+          SELECT ?,?,NULL FROM audience_recovery_state
+          WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?
+          ON CONFLICT(credential_hash) DO NOTHING`).bind(newHash,accountId,accountId,version+1,requestId,newHash),
+        db.prepare(`INSERT INTO audience_recovery_keys(credential_hash,account_id,revoked_at)
+          SELECT ?,?,? FROM audience_recovery_state
+          WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?
+          ON CONFLICT(credential_hash) DO NOTHING`).bind(accountId,accountId,now,accountId,version+1,requestId,newHash),
+        db.prepare(`UPDATE audience_recovery_keys SET revoked_at=?
+          WHERE account_id=? AND credential_hash<>?
+          AND EXISTS(SELECT 1 FROM audience_recovery_state WHERE account_id=? AND version=? AND last_request_id=? AND last_credential_hash=?)`).bind(now,accountId,newHash,accountId,version+1,requestId,newHash)
       ]);
+      const updated=await db.prepare('SELECT version,last_request_id,last_credential_hash FROM audience_recovery_state WHERE account_id=?').bind(accountId).first();
+      const active=await db.prepare('SELECT account_id FROM audience_recovery_keys WHERE credential_hash=? AND revoked_at IS NULL').bind(newHash).first();
+      if(updated?.version!==version+1||updated.last_request_id!==requestId||updated.last_credential_hash!==newHash||active?.account_id!==accountId)
+        return reply({error:'El respaldo cambió en otro dispositivo. Intentá nuevamente.',code:'RECOVERY_CONFLICT'},409);
       return reply({secret:newSecret});
     }
     if(path==='/api/account/devices'){
@@ -528,7 +592,7 @@ function uadavProfileDisplay(value,strict=false){
 function uadavSafeJSON(v,fallback={}){try{return typeof v==='string'?JSON.parse(v):(v??fallback)}catch{return fallback}}
 function uadavDecodeHTMLText(value){const named={amp:'&',apos:"'",gt:'>',lt:'<',nbsp:' ',quot:'"',ndash:'–',mdash:'—',lsquo:'‘',rsquo:'’',ldquo:'“',rdquo:'”',hellip:'…'};return String(value||'').replace(/&(#(?:x[0-9a-f]{1,6}|[0-9]{1,7})|[a-z]{2,10});/gi,(match,code)=>{if(code[0]==='#'){const raw=code.slice(1),cp=raw[0]?.toLowerCase()==='x'?parseInt(raw.slice(1),16):Number(raw);return Number.isInteger(cp)&&cp>=0x20&&cp<=0x10ffff&&!(cp>=0xd800&&cp<=0xdfff)?String.fromCodePoint(cp):' '}const key=code.toLowerCase();return Object.prototype.hasOwnProperty.call(named,key)?named[key]:match})}
 async function uadavDeliverNotification(payload,env){const url=String(env.EMAIL_AUTOMATION_URL||'').trim();if(!url)return {sent:false,reason:'EMAIL_AUTOMATION_URL no configurada'};try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(env.EMAIL_AUTOMATION_SECRET?{'X-UADAV-Webhook-Secret':String(env.EMAIL_AUTOMATION_SECRET)}:{})},body:JSON.stringify(payload)});return r.ok?{sent:true}:{sent:false,status:r.status}}catch(e){return {sent:false,error:String(e?.message||e)}}}
-async function uadavFlushQueuedNotifications(env,limit=20){if(!env.DB)return {processed:0};let rows;try{rows=await env.DB.prepare(`SELECT id,payload_json FROM notifications WHERE status='queued' ORDER BY created_at ASC LIMIT ?`).bind(Math.min(50,Math.max(1,Number(limit||20)))).all()}catch{return {processed:0}}let processed=0;for(const row of (rows.results||[])){const payload=uadavSafeJSON(row.payload_json,{}),result=await uadavDeliverNotification({notification_id:row.id,...payload},env);if(result.sent){await env.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(new Date().toISOString(),row.id).run();processed++;}}return {processed}}
+async function uadavFlushQueuedNotifications(env,limit=20){if(!env.DB)return {processed:0};let rows;try{rows=await env.DB.prepare(`SELECT id,payload_json FROM notifications WHERE status='queued' ORDER BY created_at ASC LIMIT ?`).bind(Math.min(50,Math.max(1,Number(limit||20)))).all()}catch{return {processed:0}}let processed=0;for(const row of (rows.results||[])){const payload=uadavSafeJSON(row.payload_json,{}),result=await uadavDeliverNotification({...payload,notification_id:row.id},env);if(result.sent){await env.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(new Date().toISOString(),row.id).run();processed++;}}return {processed}}
 async function uadavMaintenance(env){const now=Date.now(),iso=new Date().toISOString();let expiredFeatures=0,expiredJobs=0;try{const raw=await env.UADAV_DB.get('eventos_publicados');const events=raw?uadavSafeJSON(raw,[]):[];let changed=false;for(const e of events){const until=e?.destacado_hasta?Date.parse(e.destacado_hasta):NaN;if(e?.destacado_pagado===true&&Number.isFinite(until)&&until<now){e.destacado_pagado=false;e.destacado_estado='vencido';e.actualizado=iso;expiredFeatures++;changed=true}}if(changed){await env.UADAV_DB.put('eventos_publicados',JSON.stringify(events));const catRaw=await env.UADAV_DB.get('cartelera_aprobada');const cat=catRaw?uadavSafeJSON(catRaw,[]):[];const byId=new Map(events.map(e=>[String(e.id),e]));for(let i=0;i<cat.length;i++){if(byId.has(String(cat[i]?.id)))cat[i]={...cat[i],...byId.get(String(cat[i].id))}}await env.UADAV_DB.put('cartelera_aprobada',JSON.stringify(cat));if(env.DB){for(const e of events.filter(x=>x.destacado_estado==='vencido'))await env.DB.prepare(`UPDATE events SET featured=0,payment_status='vencido',data_json=?,updated_at=? WHERE id=?`).bind(JSON.stringify(e),iso,String(e.id)).run()}}}catch(_){}
 try{const raw=await env.UADAV_DB.get('bolsa_trabajo');const jobs=raw?uadavSafeJSON(raw,[]):[];let changed=false;for(const j of jobs){const deadline=j?.fecha_limite?Date.parse(String(j.fecha_limite).slice(0,10)+'T23:59:59'):NaN;if(j?.activo!==false&&Number.isFinite(deadline)&&deadline<now){j.activo=false;j.estado='vencida';j.actualizado=iso;expiredJobs++;changed=true}}if(changed){await env.UADAV_DB.put('bolsa_trabajo',JSON.stringify(jobs));if(env.DB){for(const j of jobs.filter(x=>x.estado==='vencida'))await env.DB.prepare(`UPDATE jobs SET active=0,status='vencida',data_json=?,updated_at=? WHERE id=?`).bind(JSON.stringify(j),iso,String(j.id)).run()}}}catch(_){}
 let staleExternalJobs=0,staleExternalEvents=0;
@@ -1175,14 +1239,17 @@ const uadavWorker = {
       } catch(e) { return {sent:false,error:String(e?.message||e)}; }
     }
     async function emitNotification(payload) {
-      const item = { id: 'N-'+Date.now().toString(36).toUpperCase(), channel:String(payload.channel||'email'), template:String(payload.template||payload.event||'generic'), recipient:String(payload.to||payload.recipient||''), status:'queued', payload, created_at:isoNow() };
+      const item = { id: 'N-'+crypto.randomUUID(), channel:String(payload.channel||'email'), template:String(payload.template||payload.event||'generic'), recipient:String(payload.to||payload.recipient||''), status:'queued', payload, created_at:isoNow() };
       if (hasD1()) await safeD1('notification_queue',()=>env.DB.prepare(`INSERT INTO notifications(id,channel,template,recipient,status,payload_json,created_at) VALUES(?,?,?,?,?,?,?)`).bind(item.id,item.channel,item.template,item.recipient,item.status,JSON.stringify(payload),item.created_at).run());
       if (env.UADAV_NOTIFY) {
-        try { await env.UADAV_NOTIFY.send(JSON.stringify({notification_id:item.id,...payload})); return item; } catch (_) {}
+        try { await env.UADAV_NOTIFY.send(JSON.stringify({...payload,notification_id:item.id})); return item; } catch (_) {}
       }
-      const send = deliverNotification({notification_id:item.id,...payload},env);
-      if (ctx?.waitUntil) ctx.waitUntil(send);
-      else { const result=await send; if(result.sent && hasD1()) await env.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(isoNow(),item.id).run(); }
+      const send = async () => {
+        const result=await deliverNotification({...payload,notification_id:item.id},env);
+        if(result.sent && hasD1()) await env.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(isoNow(),item.id).run();
+      };
+      if (ctx?.waitUntil) ctx.waitUntil(send());
+      else await send();
       return item;
     }
     async function flushQueuedNotifications(env2=env, limit=20) {
@@ -1191,7 +1258,7 @@ const uadavWorker = {
       let processed=0;
       for(const row of (rows.results||[])){
         const payload=safeJSON(row.payload_json,{});
-        const result=await deliverNotification({notification_id:row.id,...payload},env2);
+        const result=await deliverNotification({...payload,notification_id:row.id},env2);
         if(result.sent){ await env2.DB.prepare(`UPDATE notifications SET status='sent',sent_at=? WHERE id=?`).bind(isoNow(),row.id).run(); processed++; }
       }
       return {processed};

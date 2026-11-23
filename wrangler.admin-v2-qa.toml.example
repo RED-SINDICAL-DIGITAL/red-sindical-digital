@@ -1,0 +1,33 @@
+# Plantilla aislada de QA para Admin 2.0. NO usar como configuración del Worker de staging existente.
+# Crear IDs NUEVOS en Cloudflare ANTES de completar y utilizar esta plantilla.
+# Archivo de ejemplo, NO despliega nada.
+name = "uadav-api-admin-v2-qa"
+main = "worker.js"
+compatibility_date = "2026-09-28"
+workers_dev = true
+preview_urls = false
+
+[[kv_namespaces]]
+binding = "UADAV_DB"
+id = "ADMIN_V2_QA_KV_ID_REQUIRED"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "uadav-admin-v2-qa-db"
+database_id = "ADMIN_V2_QA_D1_ID_REQUIRED"
+
+[[d1_databases]]
+binding = "DEMO_DB"
+database_name = "uadav-admin-v2-qa-demo"
+database_id = "ADMIN_V2_QA_DEMO_D1_ID_REQUIRED"
+migrations_dir = "migrations/demo"
+
+[vars]
+PUBLIC_SITE_URL = "https://uadav-admin-v2-qa.pages.dev"
+ACCOUNT_ALLOWED_ORIGINS = "https://uadav-admin-v2-qa.pages.dev"
+TURNSTILE_ALLOWED_HOSTNAMES = "uadav-admin-v2-qa.pages.dev"
+
+# Sin routes, crons, colas, emails reales, pagos ni dominios de producción.
+# TURNSTILE_* y ADMIN_KEY deben ser claves exclusivas de QA, nunca claves productivas.
+# Antes de pruebas en navegador: la UI de staging apunta al Worker staging original;
+# no probar Admin 2.0 desde esa UI sin preparar un frontend QA igualmente aislado.

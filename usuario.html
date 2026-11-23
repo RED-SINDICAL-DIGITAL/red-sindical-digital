@@ -853,7 +853,7 @@ function message(text){
 function access(){try{return localStorage.getItem('uadav_account_access_v1')||''}catch{return ''}}
 async function request(method='GET',payload){
  const credential=access();
- if(!credential)throw Object.assign(new Error('Para administrar tus eventos, ingresá a Cuenta y seguridad y verificá tu correo.'),{status:401});
+ if(!credential)throw Object.assign(new Error('Para administrar tus eventos, ingresá a Mi Perfil → Cuenta y seguridad y activá tu acceso privado.'),{status:401});
  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),14000);
  try{
   const response=await fetch(endpoint,{method,headers:{Authorization:'Bearer '+credential,...(payload?{'Content-Type':'application/json'}:{})},body:payload?JSON.stringify(payload):undefined,cache:'no-store',signal:ctrl.signal});
