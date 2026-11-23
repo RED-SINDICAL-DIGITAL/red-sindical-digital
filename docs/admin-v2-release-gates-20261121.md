@@ -124,3 +124,23 @@ Se ampliaron dos verificaciones en GitHub:
 **Resultado comprobado:** suite específica Admin 2.0 aprobada en commit `571eb1e`, incluida la prueba de CORS.
 
 **Aún no se comprobó Cloudflare:** CORS, Turnstile, Access y D1/KV se deben verificar luego en un Worker QA efectivamente desplegado y configurado con credenciales y recursos QA independientes. **La plantilla de ejemplo no contiene IDs ni secrets reales y no está lista para desplegar.**
+
+
+## Gate independiente y cerrado por defecto para habilitar QA (22/11/2026)
+
+Se agregó `scripts/admin-v2-qa-preflight.mjs`, un verificador **local, de solo lectura**, sin acceso a Cloudflare ni credenciales. Verifica una configuración Wrangler privada y un archivo privado de metadatos de aprobación:
+
+- `name=uadav-api-admin-v2-qa`, `main=worker.js`, origen permitido, URL pública y hostname de Turnstile exclusivamente QA
+- Los tres IDs `UADAV_DB`, `DB` y `DEMO_DB` tienen formato de ID de recurso y son distintos. No certifica por sí solo que sean recursos no productivos
+- Rechazo de rutas, cron, colas, servicios de correo/pagos y referencias explícitas a dominios reales
+- Evidencia independiente declarada por responsable: SHA exacto, recursos nuevos separados, acceso restringido a Pages y Worker, Turnstile y credenciales QA, email/pagos desactivados, plan de reversión y autorización de despliegue QA
+
+**Uso eventual, sin ejecutar despliegue:**
+```sh
+node scripts/admin-v2-qa-preflight.mjs /ruta/privada/wrangler-admin-qa.toml /ruta/privada/evidencia-qa.json
+```
+Los archivos con IDs internos y evidencia real **no deben añadirse al repositorio**. No compartir secretos con la herramienta; el preflight imprime únicamente nombres de verificaciones faltantes.
+
+El test sintético `scripts/test-admin-v2-qa-preflight.mjs` probó que el gate apruebe únicamente una configuración y evidencia completas de ejemplo y que **rechace por defecto** placeholders, IDs repetidos, rutas productivas, cron, falta de Access, de independencia de D1 o de aprobación. El workflow Admin 2.0 fue **SUCCESS** en commit `6b6ffb4`.
+
+**Importante:** ningún conjunto de flags sustituye verificar los recursos en el panel de Cloudflare. El PR continúa sin estar autorizado para staging ni producción.
