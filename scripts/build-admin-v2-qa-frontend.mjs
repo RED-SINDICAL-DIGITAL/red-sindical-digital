@@ -30,7 +30,7 @@ async function walk(folder,depth=0){
   if(folder==='vendor'&&!allowedVendor.has(item.name))continue;
   if(!folder&&(denyRoot.has(item.name)||(ext(item.name)==='.json'&&!allowedRootJson.has(item.name))||ext(item.name)==='.txt'))continue;
   const kind=ext(item.name);
-  if(!textExt.has(kind)&&!binExt.has(kind)&&!(folder==='vendor'&&kind==='.txt'))continue;
+  if(!textExt.has(kind)&&!binExt.has(kind)&&!(folder==='vendor'&&kind==='.txt')&&rel!=='assets/comercial/UADAV_Stream_Media_Kit.pdf')continue;
   const dest=join(out,rel);
   await mkdir(dirname(dest),{recursive:true});
   if(textExt.has(kind)){
