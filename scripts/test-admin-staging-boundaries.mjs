@@ -12,6 +12,13 @@ assert.match(proposed,/^name\s*=\s*"uadav-api-admin-v2-qa"$/m,'QA debe ser otro 
 assert.notEqual(live.match(/^name\s*=\s*"([^"]+)"/m)?.[1],proposed.match(/^name\s*=\s*"([^"]+)"/m)?.[1]);
 for(const binding of ['UADAV_DB','DB','DEMO_DB'])assert.match(proposed,new RegExp('binding\\s*=\\s*"'+binding+'"'),'Falta binding aislado: '+binding);
 for(const marker of ['ADMIN_V2_QA_KV_ID_REQUIRED','ADMIN_V2_QA_D1_ID_REQUIRED','ADMIN_V2_QA_DEMO_D1_ID_REQUIRED'])assert.ok(proposed.includes(marker),'La plantilla debe exigir ID QA nuevo: '+marker);
+const settings=Object.fromEntries([...proposed.matchAll(/^([A-Z_]+) = "([^"]+)"$/gm)].map(m=>[m[1],m[2]]));
+const qaSite='https://uadav-admin-v2-qa.pages.dev';
+assert.equal(settings.PUBLIC_SITE_URL,qaSite,'El sitio público de QA debe ser Pages QA');
+assert.equal(settings.ACCOUNT_ALLOWED_ORIGINS,qaSite,'CORS de cuenta debe aceptar sólo el frontend QA');
+assert.equal(settings.TURNSTILE_ALLOWED_HOSTNAMES,'uadav-admin-v2-qa.pages.dev','Turnstile sólo debe aceptar QA');
+assert.ok(!proposed.includes('https://uadav-stream-staging.pages.dev'),'QA no puede remitir a Pages staging');
+assert.ok(!proposed.includes('https://uadavstream.com.ar'),'QA no puede remitir a dominio público');
 assert.ok(!/^\s*routes?\s*=/m.test(proposed),'No vincular dominios/rutas');
 assert.ok(!/^\s*\[triggers\]/m.test(proposed),'No habilitar cron');
 assert.ok(!/^\s*\[\[queues\./m.test(proposed),'No habilitar colas');
