@@ -13,6 +13,7 @@ on:
       - 'scripts/test-account-recovery-rollback.mjs'
       - 'scripts/test-account-recovery-concurrency.mjs'
       - 'scripts/test-admin-staging-boundaries.mjs'
+      - 'scripts/test-admin-v2-qa-origin.mjs'
       - 'scripts/build-admin-v2-qa-frontend.mjs'
       - 'scripts/test-admin-v2-qa-frontend.mjs'
       - 'wrangler.admin-v2-qa.toml.example'
@@ -57,5 +58,7 @@ jobs:
         run: node scripts/test-admin-staging-boundaries.mjs
       - name: Build and verify isolated QA Pages bundle
         run: node scripts/test-admin-v2-qa-frontend.mjs
+      - name: Verify QA origin CORS in Worker
+        run: node scripts/test-admin-v2-qa-origin.mjs
       - name: Block incompatible recovery contracts
         run: node scripts/audit-account-recovery-contract.mjs
