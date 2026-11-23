@@ -144,3 +144,14 @@ Los archivos con IDs internos y evidencia real **no deben añadirse al repositor
 El test sintético `scripts/test-admin-v2-qa-preflight.mjs` probó que el gate apruebe únicamente una configuración y evidencia completas de ejemplo y que **rechace por defecto** placeholders, IDs repetidos, rutas productivas, cron, falta de Access, de independencia de D1 o de aprobación. El workflow Admin 2.0 fue **SUCCESS** en commit `6b6ffb4`.
 
 **Importante:** ningún conjunto de flags sustituye verificar los recursos en el panel de Cloudflare. El PR continúa sin estar autorizado para staging ni producción.
+
+
+## Endurecimiento del preflight de Wrangler (22/11/2026)
+
+El control `scripts/admin-v2-qa-preflight.mjs` ahora rechaza, además de los casos anteriores:
+- Claves duplicadas y secciones Wrangler duplicadas, incluidas raíces / `[vars]`
+- Cualquier sección o atributo no incluido en una lista mínima estricta de QA, no solo nombres peligrosos conocidos
+- Más o menos bindings que `UADAV_DB`, `DB` y `DEMO_DB`
+- Nombres D1 distintos de `uadav-admin-v2-qa-db` y `uadav-admin-v2-qa-demo`, rutas de migración DEMO_DB diferentes o fecha de compatibilidad inesperada
+
+El nuevo conjunto de casos de rechazo en `scripts/test-admin-v2-qa-preflight.mjs` se aprobó en el workflow específico Admin 2.0 del commit `e910257`. Este test verifica **el parser de configuración y evidencia sintética**; no certifica el aislamiento remoto ni autoriza el despliegue.
