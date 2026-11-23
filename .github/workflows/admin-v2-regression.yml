@@ -14,6 +14,8 @@ on:
       - 'scripts/test-account-recovery-concurrency.mjs'
       - 'scripts/test-admin-staging-boundaries.mjs'
       - 'scripts/test-admin-v2-qa-origin.mjs'
+      - 'scripts/admin-v2-qa-preflight.mjs'
+      - 'scripts/test-admin-v2-qa-preflight.mjs'
       - 'scripts/build-admin-v2-qa-frontend.mjs'
       - 'scripts/test-admin-v2-qa-frontend.mjs'
       - 'wrangler.admin-v2-qa.toml.example'
@@ -60,5 +62,7 @@ jobs:
         run: node scripts/test-admin-v2-qa-frontend.mjs
       - name: Verify QA origin CORS in Worker
         run: node scripts/test-admin-v2-qa-origin.mjs
+      - name: Refuse QA deployment without verified isolated resources and access
+        run: node scripts/test-admin-v2-qa-preflight.mjs
       - name: Block incompatible recovery contracts
         run: node scripts/audit-account-recovery-contract.mjs
