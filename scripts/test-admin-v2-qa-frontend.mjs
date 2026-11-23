@@ -30,6 +30,8 @@ try{
  const adminHtml=await readFile(join(dest,'admin.html'),'utf8'),profileHtml=await readFile(join(dest,'usuario.html'),'utf8');
  assert.ok(adminHtml.includes('/vendor/xlsx-0.20.3.full.min.js'),'Admin must reference XLSX');
  assert.ok(profileHtml.includes('/vendor/qrcode.js'),'Mi Perfil must reference QR library');
+ assert.ok(adminHtml.includes('/assets/comercial/UADAV_Stream_Media_Kit.pdf'),'Admin must reference the media kit');
+ assert.ok(files.some(f=>f.endsWith('/assets/comercial/UADAV_Stream_Media_Kit.pdf')),'Public media kit PDF must be included');
  assert.ok(!files.some(f=>f.endsWith('/service-worker.js')||f.endsWith('/uadav-push-sw.js')),'No notification worker may be bundled in QA');
  const push=await readFile(join(dest,'uadav-push-ui-v150.js'),'utf8');
  assert.ok(push.includes('no PushManager subscription'));
