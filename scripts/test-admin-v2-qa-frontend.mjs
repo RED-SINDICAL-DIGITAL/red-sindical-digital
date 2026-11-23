@@ -24,6 +24,8 @@ try{
  assert.ok(files.some(f=>f.endsWith('/usuario.html')));
  assert.ok(files.some(f=>f.endsWith('/app.html')));
  assert.ok(!files.some(f=>f.endsWith('/worker.js')||f.endsWith('/CNAME')||f.endsWith('/wrangler.staging.toml')));
+ for(const file of ['AUDIT-V9.1.txt','SHA256SUMS-V9.2.3.txt','VALIDATION-V8.3.json','VALIDATION-V8.4.json','VALIDATION-V8.5.json','ejemplos-editoriales-staging.html','qa-responsive-staging.html','staging-preflight.html','publicidad-demo.html','vivo-prueba.html'])assert.ok(!files.some(f=>f.endsWith('/'+file)),'Non-QA document or test fixture leaked: '+file);
+ for(const file of ['index.html','admin.html','app.html','usuario.html','manifest.json','version.json','uadav-api-config.js'])assert.ok(files.some(f=>f.endsWith('/'+file)),'Required public runtime file missing: '+file);
  assert.ok(!files.some(f=>f.endsWith('/service-worker.js')||f.endsWith('/uadav-push-sw.js')),'No notification worker may be bundled in QA');
  const push=await readFile(join(dest,'uadav-push-ui-v150.js'),'utf8');
  assert.ok(push.includes('no PushManager subscription'));
