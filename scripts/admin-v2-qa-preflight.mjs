@@ -7,19 +7,21 @@ const id=value=>typeof value==='string'&&/^[a-f0-9]{32}$/i.test(value.replaceAll
 const requiredBindings={UADAV_DB:'id',DB:'database_id',DEMO_DB:'database_id'};
 const qaSite='https://uadav-admin-v2-qa.pages.dev';
 function sections(text){
- const result=[],lines=String(text||'').split(/\r?\n/);let section='root',values={},duplicateKeys=[];
+ const result=[],lines=String(text||'').split(/\r?\n/);let section='root',values={},duplicateKeys=[],invalidLines=[];
  const commit=()=>result.push({section,values});
  for(const line of lines){
   const mark=line.match(/^\s*\[\[?([^\]]+)\]\]?\s*$/);
   if(mark){commit();section=mark[1];values={};continue}
   const kv=line.match(/^\s*([\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^#\s]+))/);
   if(kv){if(Object.hasOwn(values,kv[1]))duplicateKeys.push(section+':'+kv[1]);values[kv[1]]=kv[2]??kv[3]??kv[4];}
+  else if(line.trim()&&!line.trimStart().startsWith('#'))invalidLines.push(section);
  }
- commit();return {blocks:result,duplicateKeys};
+ commit();return {blocks:result,duplicateKeys,invalidLines};
 }
 export function qaPreflight(wrangler,evidence){
  const problems=[],parsed=sections(wrangler),blocks=parsed.blocks,root=blocks.find(x=>x.section==='root')?.values||{},vars=blocks.find(x=>x.section==='vars')?.values||{};
  if(parsed.duplicateKeys.length)problems.push('Duplicate Wrangler keys are forbidden');
+ if(parsed.invalidLines.length)problems.push('Unrecognized Wrangler syntax is forbidden');
  const allowed={
   root:new Set(['name','main','compatibility_date','workers_dev','preview_urls']),
   vars:new Set(['PUBLIC_SITE_URL','ACCOUNT_ALLOWED_ORIGINS','TURNSTILE_ALLOWED_HOSTNAMES']),
