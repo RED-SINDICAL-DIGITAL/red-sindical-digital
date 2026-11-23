@@ -33,5 +33,7 @@ fails(synthetic.replace('preview_urls = false','preview_urls = false\nrandom_unk
 fails(synthetic.replace('database_name = "uadav-admin-v2-qa-db"','database_name = "uadav-staging-db"'));
 fails(synthetic.replace('migrations_dir = "migrations/demo"','migrations_dir = "migrations/unknown"'));
 fails(synthetic.replace('compatibility_date = "2026-09-28"','compatibility_date = "2027-01-01"'));
+fails(synthetic+'\n"routes" = ["production.example/*"]\n');
+fails(synthetic+'\nmalformed arbitrary config statement\n');
 
 console.log('PASS: fail-closed QA deployment gate rejects missing bindings, reused IDs, real endpoints, triggers, and missing independent sign-off.');
