@@ -162,3 +162,15 @@ El nuevo conjunto de casos de rechazo en `scripts/test-admin-v2-qa-preflight.mjs
 El generador `scripts/build-admin-v2-qa-frontend.mjs` dejó de copiar archivos de auditoría, sumas de verificación, registros de validación antiguos y pantallas de ensayo de staging/ejemplos editoriales. Se restringieron específicamente los archivos JSON de raíz a metadatos de runtime conocidos (`manifest.json`, `version.json`, versión de acceso por email, identidad de instancia y modelo comercial). Las páginas públicas y los recursos JS/CSS de ejecución siguen disponibles.
 
 El test `scripts/test-admin-v2-qa-frontend.mjs` exige simultáneamente la **ausencia de esas fixtures** y la **presencia del shell, Admin, Mi Perfil, manifest y API config**. La suite de Admin 2.0 aprobó para commit `4a3c32c`. Esta validación es estática: debe complementarse con navegación real de QA, sin mezclar Workers ni datos. No implica que los proyectos QA de Cloudflare ya existan ni autoriza desplegar.
+
+
+## Dependencias funcionales que faltaban en el paquete QA (23/11/2026)
+
+La revisión de rutas estáticas de `admin.html` y `usuario.html` identificó que el generador QA omitía **todo** el directorio `vendor/`, pese a que:
+- `admin.html` referencia `/vendor/xlsx-0.20.3.full.min.js` para trabajar con planillas
+- `usuario.html` referencia `/vendor/qrcode.js` para generar códigos QR de vinculación
+- `admin.html` enlaza `/assets/comercial/UADAV_Stream_Media_Kit.pdf`, pero la extensión PDF estaba excluida
+
+Se corrigió **únicamente el generador del paquete QA** para incorporar la carpeta `vendor/` con una lista de archivos permitidos y licencias, y el PDF público específico del media kit. Se mantiene la exclusión de informes, archivos de auditoría y material interno. El test `scripts/test-admin-v2-qa-frontend.mjs` ahora requiere que existan estos archivos y sus referencias en Admin/Mi Perfil. El workflow Admin 2.0 aprobó en el commit `7589d69`.
+
+Esto verifica **la integridad estática del paquete**, no la ejecución de XLSX/QR, la descarga en Pages publicada ni la navegación autenticada; dichas pruebas requieren Work/Cloudflare QA. No hubo despliegue.
