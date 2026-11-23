@@ -155,3 +155,10 @@ El control `scripts/admin-v2-qa-preflight.mjs` ahora rechaza, además de los cas
 - Nombres D1 distintos de `uadav-admin-v2-qa-db` y `uadav-admin-v2-qa-demo`, rutas de migración DEMO_DB diferentes o fecha de compatibilidad inesperada
 
 El nuevo conjunto de casos de rechazo en `scripts/test-admin-v2-qa-preflight.mjs` se aprobó en el workflow específico Admin 2.0 del commit `e910257`. Además se endureció el parser para **rechazar líneas de configuración que no interpreta**, incluidas claves TOML entrecomilladas o directivas malformadas, y esos nuevos casos aprobaron en el commit `ed878a0`. Esto verifica **el parser de configuración y evidencia sintética**; no certifica el aislamiento remoto ni autoriza el despliegue.
+
+
+## Paquete QA con exclusión de material no operativo (22/11/2026)
+
+El generador `scripts/build-admin-v2-qa-frontend.mjs` dejó de copiar archivos de auditoría, sumas de verificación, registros de validación antiguos y pantallas de ensayo de staging/ejemplos editoriales. Se restringieron específicamente los archivos JSON de raíz a metadatos de runtime conocidos (`manifest.json`, `version.json`, versión de acceso por email, identidad de instancia y modelo comercial). Las páginas públicas y los recursos JS/CSS de ejecución siguen disponibles.
+
+El test `scripts/test-admin-v2-qa-frontend.mjs` exige simultáneamente la **ausencia de esas fixtures** y la **presencia del shell, Admin, Mi Perfil, manifest y API config**. La suite de Admin 2.0 aprobó para commit `4a3c32c`. Esta validación es estática: debe complementarse con navegación real de QA, sin mezclar Workers ni datos. No implica que los proyectos QA de Cloudflare ya existan ni autoriza desplegar.
