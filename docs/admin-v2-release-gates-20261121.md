@@ -154,4 +154,4 @@ El control `scripts/admin-v2-qa-preflight.mjs` ahora rechaza, además de los cas
 - Más o menos bindings que `UADAV_DB`, `DB` y `DEMO_DB`
 - Nombres D1 distintos de `uadav-admin-v2-qa-db` y `uadav-admin-v2-qa-demo`, rutas de migración DEMO_DB diferentes o fecha de compatibilidad inesperada
 
-El nuevo conjunto de casos de rechazo en `scripts/test-admin-v2-qa-preflight.mjs` se aprobó en el workflow específico Admin 2.0 del commit `e910257`. Este test verifica **el parser de configuración y evidencia sintética**; no certifica el aislamiento remoto ni autoriza el despliegue.
+El nuevo conjunto de casos de rechazo en `scripts/test-admin-v2-qa-preflight.mjs` se aprobó en el workflow específico Admin 2.0 del commit `e910257`. Además se endureció el parser para **rechazar líneas de configuración que no interpreta**, incluidas claves TOML entrecomilladas o directivas malformadas, y esos nuevos casos aprobaron en el commit `ed878a0`. Esto verifica **el parser de configuración y evidencia sintética**; no certifica el aislamiento remoto ni autoriza el despliegue.
