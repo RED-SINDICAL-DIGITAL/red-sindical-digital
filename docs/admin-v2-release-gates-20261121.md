@@ -111,3 +111,16 @@ Se encontró `uadav-push-ui-v150.js`, que podía solicitar permiso de notificaci
 El generador del frontend QA **sustituye ese módulo únicamente en el paquete** por un script inerte y excluye `uadav-push-sw.js` y `service-worker.js`. `scripts/test-admin-v2-qa-frontend.mjs` verifica que el paquete generado no tenga estos service workers ni la solicitud de permiso. El código original de producción y staging permanece intacto. Web Push real deberá probarse luego como submódulo separado, con dispositivo, suscripción y backend exclusivamente QA.
 
 El estado de despliegue sigue igual: no existen en este repositorio evidencias de Cloudflare Access efectivo, ni confirmación remota de Pages QA, Worker QA o KV/D1 nuevos. **No publicar ni usar credenciales reales.**
+
+
+## Corrección de origen y CORS del Worker QA (22/11/2026)
+
+La plantilla `wrangler.admin-v2-qa.toml.example` contenía un defecto: `ACCOUNT_ALLOWED_ORIGINS`, `PUBLIC_SITE_URL` y `TURNSTILE_ALLOWED_HOSTNAMES` seguían configurados con el dominio del staging protegido, aunque el frontend QA generado utiliza `uadav-admin-v2-qa.pages.dev`. Esos tres valores ahora apuntan exclusivamente al dominio QA.
+
+Se ampliaron dos verificaciones en GitHub:
+- `scripts/test-admin-staging-boundaries.mjs` exige que las tres variables coincidan con la identidad de Pages QA y prohíbe referencias a los dominios de producción/staging en la configuración QA.
+- `scripts/test-admin-v2-qa-origin.mjs` ejecuta el Worker de esta rama y verifica que autorice el Origin de Pages QA, rechace los Orígenes de staging/producción y niegue un hostname con sufijo falsificado. El test usa un entorno sin D1 precisamente para comprobar el filtrado de origen **sin acceder a datos**.
+
+**Resultado comprobado:** suite específica Admin 2.0 aprobada en commit `571eb1e`, incluida la prueba de CORS.
+
+**Aún no se comprobó Cloudflare:** CORS, Turnstile, Access y D1/KV se deben verificar luego en un Worker QA efectivamente desplegado y configurado con credenciales y recursos QA independientes. **La plantilla de ejemplo no contiene IDs ni secrets reales y no está lista para desplegar.**
