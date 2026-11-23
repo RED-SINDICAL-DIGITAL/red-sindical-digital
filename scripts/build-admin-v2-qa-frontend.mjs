@@ -14,6 +14,9 @@ const qaSite='https://'+NAME;
 const textExt=new Set(['.html','.js','.css','.json','.svg','.txt','.xml','.webmanifest']);
 const binExt=new Set(['.png','.jpg','.jpeg','.webp','.ico','.gif','.woff','.woff2','.avif','.mp4','.webm']);
 const dirs=new Set(['assets','img','content','design']);
+// Public QA assets only: never include repository audit fixtures or old staging/demo pages.
+const denyRoot=new Set(['ejemplos-editoriales-staging.html','qa-responsive-staging.html','staging-preflight.html','vivo-prueba.html','vivo-prueba.js','vivo-prueba.css','publicidad-demo.html','AUDIT-V9.1.txt','SHA256SUMS-V9.2.3.txt']);
+const allowedRootJson=new Set(['manifest.json','version.json','account-email-version.json','email-access-version.json','platform-instance.json','uadav-business-model-v1.json']);
 const deny=new Set(['worker.js','worker-demo.js','worker-demo-staging.js','service-worker.js','uadav-push-sw.js','CNAME','AGENTS.md','_routes.json']);
 const ext=name=>{let i=name.lastIndexOf('.');return i<0?'':name.slice(i).toLowerCase()};
 let copied=0,rewritten=0;
@@ -23,6 +26,7 @@ async function walk(folder,depth=0){
   if(rel==='dist-admin-v2-qa'||rel.startsWith('dist-admin-v2-qa/'))continue;
   if(item.isDirectory()){if(depth===0&&dirs.has(item.name))await walk(rel,depth+1);else if(depth>0)await walk(rel,depth+1);continue;}
   if(!item.isFile()||deny.has(item.name)||item.name.startsWith('_'))continue;
+  if(!folder&&(denyRoot.has(item.name)||(ext(item.name)==='.json'&&!allowedRootJson.has(item.name))||ext(item.name)==='.txt'))continue;
   const kind=ext(item.name);
   if(!textExt.has(kind)&&!binExt.has(kind))continue;
   const dest=join(out,rel);
