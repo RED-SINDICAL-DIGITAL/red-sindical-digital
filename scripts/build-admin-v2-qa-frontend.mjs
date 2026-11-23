@@ -13,7 +13,8 @@ const oldSites=['https://uadav-stream-staging.pages.dev','https://uadavstream.co
 const qaSite='https://'+NAME;
 const textExt=new Set(['.html','.js','.css','.json','.svg','.txt','.xml','.webmanifest']);
 const binExt=new Set(['.png','.jpg','.jpeg','.webp','.ico','.gif','.woff','.woff2','.avif','.mp4','.webm']);
-const dirs=new Set(['assets','img','content','design']);
+const dirs=new Set(['assets','img','content','design','vendor']);
+const allowedVendor=new Set(['qrcode.js','xlsx-0.20.3.full.min.js','qrcode-LICENSE.txt','xlsx-LICENSE.txt']);
 // Public QA assets only: never include repository audit fixtures or old staging/demo pages.
 const denyRoot=new Set(['ejemplos-editoriales-staging.html','qa-responsive-staging.html','staging-preflight.html','vivo-prueba.html','vivo-prueba.js','vivo-prueba.css','publicidad-demo.html','AUDIT-V9.1.txt','SHA256SUMS-V9.2.3.txt']);
 const allowedRootJson=new Set(['manifest.json','version.json','account-email-version.json','email-access-version.json','platform-instance.json','uadav-business-model-v1.json']);
@@ -26,9 +27,10 @@ async function walk(folder,depth=0){
   if(rel==='dist-admin-v2-qa'||rel.startsWith('dist-admin-v2-qa/'))continue;
   if(item.isDirectory()){if(depth===0&&dirs.has(item.name))await walk(rel,depth+1);else if(depth>0)await walk(rel,depth+1);continue;}
   if(!item.isFile()||deny.has(item.name)||item.name.startsWith('_'))continue;
+  if(folder==='vendor'&&!allowedVendor.has(item.name))continue;
   if(!folder&&(denyRoot.has(item.name)||(ext(item.name)==='.json'&&!allowedRootJson.has(item.name))||ext(item.name)==='.txt'))continue;
   const kind=ext(item.name);
-  if(!textExt.has(kind)&&!binExt.has(kind))continue;
+  if(!textExt.has(kind)&&!binExt.has(kind)&&!(folder==='vendor'&&kind==='.txt'))continue;
   const dest=join(out,rel);
   await mkdir(dirname(dest),{recursive:true});
   if(textExt.has(kind)){
@@ -63,7 +65,7 @@ const policy=[
 ].join('\n');
 await writeFile(join(out,'_headers'),policy,'utf8');
 await writeFile(join(out,'robots.txt'),'User-agent: *\nDisallow: /\n','utf8');
-for(const required of ['index.html','admin.html','app.html','usuario.html','uadav-api-config.js']){
+for(const required of ['index.html','admin.html','app.html','usuario.html','uadav-api-config.js','vendor/qrcode.js','vendor/xlsx-0.20.3.full.min.js']){
  const content=await readFile(join(out,required),'utf8');
  if(!content)throw Error('Missing required QA page '+required);
 }
