@@ -25,4 +25,13 @@ fails(synthetic+'\n[triggers]\ncrons = [\"*/5 * * * *\"]\n');
 fails(synthetic+'\n[[routes]]\npattern = \"example.com/*\"\n');
 fails(synthetic+'\nEMAIL_AUTOMATION_URL = \"https://example.invalid\"\n');
 fails(synthetic,null);
+fails(synthetic+'\n[vars]\nPUBLIC_SITE_URL = "https://uadav-admin-v2-qa.pages.dev"\n');
+fails(synthetic.replace('name = "uadav-api-admin-v2-qa"','name = "uadav-api-admin-v2-qa"\nname = "uadav-api-admin-v2-qa"'));
+fails(synthetic+'\n[[unsafe_binding]]\nbinding = "LIVE"\n');
+fails(synthetic.replace('preview_urls = false','preview_urls = false\naccount_id = "unsafe"'));
+fails(synthetic.replace('preview_urls = false','preview_urls = false\nrandom_unknown_key = "unsafe"'));
+fails(synthetic.replace('database_name = "uadav-admin-v2-qa-db"','database_name = "uadav-staging-db"'));
+fails(synthetic.replace('migrations_dir = "migrations/demo"','migrations_dir = "migrations/unknown"'));
+fails(synthetic.replace('compatibility_date = "2026-09-28"','compatibility_date = "2027-01-01"'));
+
 console.log('PASS: fail-closed QA deployment gate rejects missing bindings, reused IDs, real endpoints, triggers, and missing independent sign-off.');
