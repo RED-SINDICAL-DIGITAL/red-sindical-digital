@@ -26,6 +26,10 @@ try{
  assert.ok(!files.some(f=>f.endsWith('/worker.js')||f.endsWith('/CNAME')||f.endsWith('/wrangler.staging.toml')));
  for(const file of ['AUDIT-V9.1.txt','SHA256SUMS-V9.2.3.txt','VALIDATION-V8.3.json','VALIDATION-V8.4.json','VALIDATION-V8.5.json','ejemplos-editoriales-staging.html','qa-responsive-staging.html','staging-preflight.html','publicidad-demo.html','vivo-prueba.html'])assert.ok(!files.some(f=>f.endsWith('/'+file)),'Non-QA document or test fixture leaked: '+file);
  for(const file of ['index.html','admin.html','app.html','usuario.html','manifest.json','version.json','uadav-api-config.js'])assert.ok(files.some(f=>f.endsWith('/'+file)),'Required public runtime file missing: '+file);
+ for(const file of ['vendor/qrcode.js','vendor/xlsx-0.20.3.full.min.js','vendor/qrcode-LICENSE.txt','vendor/xlsx-LICENSE.txt'])assert.ok(files.some(f=>f.endsWith('/'+file)),'Required vendor dependency or license missing: '+file);
+ const adminHtml=await readFile(join(dest,'admin.html'),'utf8'),profileHtml=await readFile(join(dest,'usuario.html'),'utf8');
+ assert.ok(adminHtml.includes('/vendor/xlsx-0.20.3.full.min.js'),'Admin must reference XLSX');
+ assert.ok(profileHtml.includes('/vendor/qrcode.js'),'Mi Perfil must reference QR library');
  assert.ok(!files.some(f=>f.endsWith('/service-worker.js')||f.endsWith('/uadav-push-sw.js')),'No notification worker may be bundled in QA');
  const push=await readFile(join(dest,'uadav-push-ui-v150.js'),'utf8');
  assert.ok(push.includes('no PushManager subscription'));
