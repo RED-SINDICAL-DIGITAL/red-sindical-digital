@@ -23,9 +23,9 @@ database_id = "ADMIN_V2_QA_DEMO_D1_ID_REQUIRED"
 migrations_dir = "migrations/demo"
 
 [vars]
-PUBLIC_SITE_URL = "https://uadav-stream-staging.pages.dev"
-ACCOUNT_ALLOWED_ORIGINS = "https://uadav-stream-staging.pages.dev"
-TURNSTILE_ALLOWED_HOSTNAMES = "uadav-stream-staging.pages.dev"
+PUBLIC_SITE_URL = "https://uadav-admin-v2-qa.pages.dev"
+ACCOUNT_ALLOWED_ORIGINS = "https://uadav-admin-v2-qa.pages.dev"
+TURNSTILE_ALLOWED_HOSTNAMES = "uadav-admin-v2-qa.pages.dev"
 
 # Sin routes, crons, colas, emails reales, pagos ni dominios de producción.
 # TURNSTILE_* y ADMIN_KEY deben ser claves exclusivas de QA, nunca claves productivas.
