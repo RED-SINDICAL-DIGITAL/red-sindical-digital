@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {webcrypto} from 'node:crypto';
 import {sqliteD1} from './sqlite-d1.mjs';
 globalThis.crypto ||= webcrypto;
-const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url),'utf8')).toString('base64'));
+const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../qa/admin-v2/worker.js',import.meta.url),'utf8')).toString('base64'));
 const nativeFetch=globalThis.fetch;
 globalThis.fetch=async(url,opt)=>String(url).includes('/turnstile/v0/siteverify')?new Response(JSON.stringify({success:true,action:String(JSON.parse(opt.body).response).slice(3),hostname:'uadavstream.com.ar'}),{status:200}):nativeFetch(url,opt);
 const DB=sqliteD1(),kv=new Map(),root='UAC-'+'a'.repeat(64),fresh='UAC-'+'b'.repeat(64),owner='UAC-'+'c'.repeat(64);

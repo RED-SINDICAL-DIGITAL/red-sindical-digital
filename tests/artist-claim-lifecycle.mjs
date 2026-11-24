@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {webcrypto} from 'node:crypto';
 import {sqliteD1} from './sqlite-d1.mjs';
 globalThis.crypto ||= webcrypto;
-const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url),'utf8')).toString('base64'));
+const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../qa/admin-v2/worker.js',import.meta.url),'utf8')).toString('base64'));
 const DB=sqliteD1(),kv=new Map(),account='UAC-'+'c'.repeat(64),other='UAC-'+'d'.repeat(64);
 let failCatalog=false;
 // Isolated Turnstile emulator: keep the Worker security checks enabled.
