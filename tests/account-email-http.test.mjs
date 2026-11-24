@@ -86,3 +86,37 @@ test('a second email login preserves favorites and rejects a mismatched or expir
   assert.equal((await f.call('/api/account','GET',null,second.new_device_secret)).status,200,'existing valid session survives proof expiry');
  }finally{f.close()}
 });
+
+test('email login keeps verified artist ownership on a second device and never grants access to another account',async()=>{
+ const f=await fixture();try{
+  await f.prepare();
+  const accountId=await hash(root),artistId='QA-EMAIL-ARTIST',claimId='QA-EMAIL-CLAIM';
+  await f.DB.prepare("INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES(?,?,?,?,?,'active','admin_approved',?,?)").bind('QA-EMAIL-OWNER',artistId,claimId,email,'owner',new Date().toISOString(),new Date().toISOString()).run();
+  await f.DB.prepare('INSERT INTO audience_artist_links(account_id,artist_id,claim_id,expires_at,created_at) VALUES(?,?,?,0,?)').bind(accountId,artistId,claimId,Date.now()).run();
+  const linkedBefore=await f.call('/api/account/artists','GET',null,root);
+  assert.equal(linkedBefore.status,200);
+  assert.deepEqual(linkedBefore.data.artists.map(a=>a.artist_id),[artistId]);
+  assert.equal((await f.call('/api/account/artist-session','POST',{artist_id:artistId},root)).status,200);
+  await f.request('verify');
+  const first=await f.proof();
+  assert.equal((await f.call('/api/access/email/redeem','POST',first,root)).status,200);
+  await f.request('request');
+  const second={...await f.proof(),new_device_secret:'UAD-'+'c'.repeat(64)};
+  assert.equal((await f.call('/api/access/email/redeem','POST',second,root)).status,200);
+  const other='UAC-'+'d'.repeat(64);
+  assert.equal((await f.call('/api/account','POST',{data:{uadav_user_v11:{name:'Other QA'}}},other)).status,200);
+  for(const secret of [root,first.new_device_secret,second.new_device_secret]){
+   const artists=await f.call('/api/account/artists','GET',null,secret);
+   assert.equal(artists.status,200);
+   assert.deepEqual(artists.data.artists.map(a=>a.artist_id),[artistId]);
+   const session=await f.call('/api/account/artist-session','POST',{artist_id:artistId},secret);
+   assert.equal(session.status,200,'same account may open its artist from every authenticated device');
+  }
+  assert.deepEqual((await f.call('/api/account/artists','GET',null,other)).data.artists,[]);
+  assert.equal((await f.call('/api/account/artist-session','POST',{artist_id:artistId},other)).status,403);
+  await f.DB.prepare("UPDATE artist_owners SET status='revoked' WHERE artist_id=? AND claim_id=?").bind(artistId,claimId).run();
+  assert.equal((await f.call('/api/account/artists','GET',null,second.new_device_secret)).data.artists.length,0);
+  assert.equal((await f.call('/api/account/artist-session','POST',{artist_id:artistId},second.new_device_secret)).status,403);
+  assert.equal((await f.call('/api/account','GET',null,second.new_device_secret)).data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY','revoking artist does not destroy listener favorites');
+ }finally{f.close()}
+});
