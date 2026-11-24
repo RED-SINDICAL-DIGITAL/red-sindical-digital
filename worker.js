@@ -36,7 +36,19 @@ async function uadavDigest(value){return Array.from(new Uint8Array(await crypto.
 async function uadavFeatureSchema(db){await db.prepare("CREATE TABLE IF NOT EXISTS pro_feature_credits(id TEXT PRIMARY KEY,artist_id TEXT NOT NULL,order_id TEXT NOT NULL,cycle_index INTEGER NOT NULL,starts_at TEXT NOT NULL,ends_at TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'available',event_id TEXT,requested_at TEXT,used_at TEXT,UNIQUE(order_id,cycle_index))").run()}
 function uadavMonthAt(start,index){const d=new Date(start),day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+index);const last=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,last));return d.toISOString()}
 async function uadavGrantFeatures(db,order,start,end){await uadavFeatureSchema(db);const count=({monthly:1,quarterly:3,semiannual:6,annual:12})[order.plan_period]||1;for(let i=0;i<count;i++){const from=uadavMonthAt(start,i),to=i===count-1?end:uadavMonthAt(start,i+1);if(Date.parse(from)>=Date.parse(end))break;await db.prepare('INSERT OR IGNORE INTO pro_feature_credits(id,artist_id,order_id,cycle_index,starts_at,ends_at,status) VALUES(?,?,?,?,?,?,?)').bind(order.id+'-'+i,order.artist_id,order.id,i,from,to,'available').run()}}
-async function uadavArtistPermission(token,env){const a=uadavSafeJSON(await uadavReadArtistAccess(token,env),null);if(!a?.artist_id||!Number.isFinite(Number(a.expires))||Number(a.expires)<=Date.now())return null;const owner=await env.DB.prepare("SELECT claim_id FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(a.artist_id).first();if(a.claim_id?String(owner?.claim_id)!==String(a.claim_id):!!owner)return null;return a}
+async function uadavArtistPermissionResult(token, env) {
+  const access = uadavSafeJSON(await uadavReadArtistAccess(token, env), null);
+  if (!access?.artist_id || !Number.isFinite(Number(access.expires)) || Number(access.expires) <= Date.now()) {
+    return {status: 401};
+  }
+  const owner = await env.DB.prepare("SELECT claim_id FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(access.artist_id).first();
+  const ownershipChanged = access.claim_id ? String(owner?.claim_id) !== String(access.claim_id) : !!owner;
+  if (ownershipChanged) return {status: access.account_id ? 401 : 403};
+  return {status: 200, access};
+}
+async function uadavArtistPermission(token, env) {
+  return (await uadavArtistPermissionResult(token, env)).access || null;
+}
 async function uadavFeatureRoute(request,env,json){const url=new URL(request.url),path=url.pathname,db=env.DB;if(!db)return json({error:'Se requiere D1'},503);await uadavFeatureSchema(db);const admin=!!env.ADMIN_KEY&&request.headers.get('Authorization')==='Bearer '+env.ADMIN_KEY,now=new Date().toISOString();const read=async key=>uadavSafeJSON(await env.UADAV_DB.get(key),[]);
 if(path==='/api/admin/pro-features'){
  if(!admin)return json({error:'No autorizado'},401);
@@ -3739,7 +3751,19 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const b=await request.json(),title=String(b.title||'').trim(),message=String(b.message||'').trim(),account=String(b.account_id||'').trim();if(!title||title.length>100||!message||message.length>2000)return json({error:'Título hasta 100 caracteres y mensaje hasta 2000.'},400);
       if(account&&!await env.DB.prepare('SELECT id FROM audience_accounts WHERE id=?').bind(account).first())return json({error:'Cuenta no encontrada'},404);
       const days=Number(b.days||7);if(!Number.isInteger(days)||days<1||days>90)return json({error:'Vigencia entre 1 y 90 días'},400);
-      const id=crypto.randomUUID(),created=new Date().toISOString(),expires=new Date(Date.now()+days*86400000).toISOString();await env.DB.prepare('INSERT INTO audience_announcements(id,title,message,account_id,created_at,expires_at) VALUES(?,?,?,?,?,?)').bind(id,title,message,account||null,created,expires).run();if(b.push===true){await uadavPushSchema(env.DB);await env.DB.prepare("INSERT OR IGNORE INTO audience_push_deliveries(message_id,subscription_id,status) SELECT ?,id,'pending' FROM audience_push_subscriptions WHERE (?='' OR account_id=?)").bind(id,account,account).run();const task=uadavPushFlush(env);if(ctx?.waitUntil)ctx.waitUntil(task);else await task}return json({success:true,id});
+      const key=b.request_id;
+      if(key!==undefined&&(typeof key!=='string'||!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(key)))return json({error:'Identificador de envío inválido'},400);
+      const id=key?await uadavDigest(JSON.stringify([key,title,message,account,days,b.push===true])):crypto.randomUUID();
+      const now=Date.now(),created=new Date(now).toISOString(),expires=new Date(now+days*86400000).toISOString();
+      const insert=env.DB.prepare('INSERT INTO audience_announcements(id,title,message,account_id,created_at,expires_at) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING').bind(id,title,message,account||null,created,expires);
+      if(b.push===true){
+        await uadavPushSchema(env.DB);
+        const enqueue=env.DB.prepare("INSERT INTO audience_push_deliveries(message_id,subscription_id,status) SELECT ?,id,'pending' FROM audience_push_subscriptions WHERE changes()=1 AND (?='' OR account_id=?)").bind(id,account,account);
+        await env.DB.batch([insert,enqueue]);
+        const task=uadavPushFlush(env);
+        if(ctx?.waitUntil)ctx.waitUntil(task);else await task;
+      }else await insert.run();
+      return json({success:true,id});
     }
     if(path==='/api/admin/accounts'){
       if(!isAdmin())return json({error:'No autorizado'},401);if(!hasD1())return json({error:'Se requiere D1'},503);await ensureD1Schema();await uadavAccountSchema(env.DB);
@@ -4243,8 +4267,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const reply=(d,status=200)=>{const r=json(d,status);r.headers.set('Cache-Control','no-store');return r};
       const token=String(request.headers.get('Authorization')||'').replace(/^Bearer\s+/i,'');
       if(!hasD1())return reply({error:'La verificación de propietario requiere D1.'},503);
-      const access=await uadavArtistPermission(token,env);
-      if(!access)return reply({error:'Acceso de artista inválido, vencido o revocado'},401);
+      const {access,status}=await uadavArtistPermissionResult(token,env);
+      if(!access)return reply({error:'Acceso de artista inválido, vencido o revocado'},status);
       const list=await artistInquiries(),own=list.filter(x=>String(x.artist_id)===String(access.artist_id));
       if(request.method==='GET')return reply({items:own.sort((a,b)=>String(b.creado).localeCompare(String(a.creado)))});
       if(request.method!=='PATCH')return reply({error:'Método no permitido'},405);
