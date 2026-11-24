@@ -285,9 +285,9 @@ async function uadavAttachClaimAccount(env,claimId){
   const claim=await db.prepare('SELECT status FROM artist_claims WHERE id=?').bind(claimId).first(),owner=await db.prepare("SELECT claim_id FROM artist_owners WHERE artist_id=? AND status='active' ORDER BY created_at ASC LIMIT 1").bind(mapping.artist_id).first();if(claim?.status!=='approved'||owner?.claim_id!==claimId)return false;
   await db.batch([db.prepare("INSERT INTO audience_artist_links(account_id,artist_id,claim_id,expires_at,created_at) SELECT m.account_id,m.artist_id,m.claim_id,0,? FROM audience_artist_claims m WHERE m.claim_id=? AND m.detached_at IS NULL AND EXISTS(SELECT 1 FROM artist_owners o WHERE o.artist_id=m.artist_id AND o.claim_id=m.claim_id AND o.status='active') AND EXISTS(SELECT 1 FROM artist_claims c WHERE c.id=m.claim_id AND c.status='approved') ON CONFLICT(account_id,artist_id) DO UPDATE SET claim_id=excluded.claim_id,expires_at=0").bind(Date.now(),claimId),db.prepare('UPDATE audience_artist_claims SET linked_at=? WHERE claim_id=? AND detached_at IS NULL').bind(Date.now(),claimId)]);return true;
 }
-const uadavAccountSchemas=new WeakMap();
+const uadavAccountSchemas=new WeakSet();
 async function uadavAccountSchema(db){
-  if(!uadavAccountSchemas.has(db))uadavAccountSchemas.set(db,(async()=>{
+  if(uadavAccountSchemas.has(db))return;
     for(const sql of [
       'CREATE TABLE IF NOT EXISTS audience_accounts(id TEXT PRIMARY KEY,data_json TEXT NOT NULL,revision INTEGER NOT NULL,updated_at TEXT NOT NULL)',
       'CREATE TABLE IF NOT EXISTS audience_devices(credential_hash TEXT PRIMARY KEY,id TEXT UNIQUE NOT NULL,account_id TEXT NOT NULL,name TEXT NOT NULL,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,revoked_at INTEGER)',
@@ -310,8 +310,7 @@ async function uadavAccountSchema(db){
       'CREATE TABLE IF NOT EXISTS audience_notification_reads(account_id TEXT NOT NULL,notification_key TEXT NOT NULL,read_at INTEGER NOT NULL,PRIMARY KEY(account_id,notification_key))',
       'CREATE TABLE IF NOT EXISTS artist_deletion_accounts(artist_id TEXT NOT NULL,account_id TEXT NOT NULL,PRIMARY KEY(artist_id,account_id))'
     ])await db.prepare(sql).run();
-  })().catch(e=>{uadavAccountSchemas.delete(db);throw e}));
-  return uadavAccountSchemas.get(db);
+  uadavAccountSchemas.add(db);
 }
 const uadavPushEncode=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const uadavPushDecode=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-s.length%4)%4)),c=>c.charCodeAt(0));
