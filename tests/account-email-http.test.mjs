@@ -42,3 +42,47 @@ test('staging preview preserves the requesting device origin throughout verifica
     f.close();
   }
 });
+
+test('one email link is single-account, idempotent only on same device, and cannot open a different device',async()=>{
+ const f=await fixture();try{
+  await f.prepare();
+  assert.equal((await f.request()).status,202);
+  const first=await f.proof();
+  const once=await f.call('/api/access/email/redeem','POST',first,root);
+  assert.equal(once.status,200);assert.equal(once.data.success,true);
+  const retry=await f.call('/api/access/email/redeem','POST',first,root);
+  assert.equal(retry.status,200);assert.equal(retry.data.replayed,true,'lost HTTP response may safely retry on the same device');
+  const stolen={...first,new_device_secret:'UAD-'+'d'.repeat(64)};
+  const different=await f.call('/api/access/email/redeem','POST',stolen,root);
+  assert.notEqual(different.status,200,'single-use link must never create a different device');
+  assert.equal((await f.call('/api/account','GET',null,stolen.new_device_secret)).status,401);
+  assert.equal((await f.call('/api/account','GET',null,first.new_device_secret)).data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY');
+  assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM audience_accounts').first()).n,1,'no duplicate accounts');
+ }finally{f.close()}
+});
+
+test('a second email login preserves favorites and rejects a mismatched or expired proof',async()=>{
+ const f=await fixture();try{
+  await f.prepare();
+  await f.request();
+  const original=await f.proof();
+  assert.equal((await f.call('/api/access/email/redeem','POST',original,root)).status,200);
+  await f.request('request');
+  const second={...await f.proof(),new_device_secret:'UAD-'+'c'.repeat(64)};
+  const invalid=await f.call('/api/access/email/redeem','POST',{...second,token:'0'.repeat(64)},root);
+  assert.notEqual(invalid.status,200,'invalid link cannot authenticate');
+  assert.equal((await f.call('/api/account','GET',null,second.new_device_secret)).status,401);
+  const valid=await f.call('/api/access/email/redeem','POST',second,root);
+  assert.equal(valid.status,200);
+  for(const device of [original.new_device_secret,second.new_device_secret]){
+   const account=await f.call('/api/account','GET',null,device);
+   assert.equal(account.status,200);
+   assert.equal(account.data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY');
+  }
+  assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM audience_accounts').first()).n,1);
+  await f.DB.prepare('UPDATE access_email_outbox SET expires_at=? WHERE id=?').bind(Date.now()-1,second.id).run();
+  const stale=await f.call('/api/access/email/redeem','POST',second,root);
+  assert.notEqual(stale.status,200,'expired proof must not allow a new login');
+  assert.equal((await f.call('/api/account','GET',null,second.new_device_secret)).status,200,'existing valid session survives proof expiry');
+ }finally{f.close()}
+});
