@@ -10,6 +10,7 @@ on:
       - 'scripts/test-admin-*.mjs'
       - 'scripts/test-account-email-first-ui.mjs'
       - 'uadav-profile-email.js'
+      - 'tests/account-email-http.test.mjs'
       - 'scripts/test-account-recovery-atomic.mjs'
       - 'scripts/test-account-recovery-interoperability.mjs'
       - 'scripts/test-account-recovery-rollback.mjs'
@@ -46,6 +47,8 @@ jobs:
           node --check uadav-account-sync.js
       - name: Validate accessible email-first account entry
         run: node scripts/test-account-email-first-ui.mjs
+      - name: Verify one-time email, second device and saved favorites with synthetic D1
+        run: node --test tests/account-email-http.test.mjs
       - name: Validate Admin navigation
         run: node scripts/test-admin-simple-nav.mjs
       - name: Validate notification queue
