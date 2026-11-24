@@ -24,3 +24,19 @@ No fusionar ni desplegar en producción hasta superar estos pasos. La regresión
 
 ## Regresión de interfaz y acceso heredado (24/11/2026)
 El contrato `tests/profile-intuitive-ui.test.cjs` seguía exigiendo colocar el correo debajo de Ajustes. Ahora comprueba su posición destacada antes de las tareas cotidianas, sin eliminar «Cuenta y seguridad» ni el mecanismo anterior de recuperación. Se corrigió además un error de sintaxis de la nueva prueba, con commit `6620192`. El resultado final de CI debe revisarse antes de cualquier promoción; la protección de staging continúa como bloqueo independiente.
+
+## Recorrido integral sintético: correo, dispositivos y biblioteca (24/11/2026)
+
+Se amplió `tests/account-email-http.test.mjs` y se incorporó al workflow `admin-v2-regression.yml`, evitando que las verificaciones de correo dependan de un comando manual olvidado.
+
+Con Worker real cargado en Node, adaptador D1 SQLite sintético y simulación del envío Brevo, se verificó:
+- Emisión y confirmación explícita del correo de una cuenta que ya guardaba el favorito `PRIVATE_LIBRARY`
+- Reintento idempotente del enlace en el **mismo dispositivo** sin crear otra cuenta
+- Rechazo de reutilizar el enlace para crear una **credencial diferente**; ésta sigue sin acceso
+- Segundo inicio de sesión por correo que enlaza otro dispositivo con **la misma cuenta y el mismo favorito**
+- Rechazo del token incorrecto y del enlace vencido sin desconectar sesiones existentes
+- Conteo de **una** cuenta tras las operaciones sintéticas
+
+El workflow **Admin 2.0 regression checks (no deployment)** fue `SUCCESS` en `c44f211`; Platform integration, Bolsa UI y Job status también `SUCCESS` en ese commit.
+
+**No equivale** a validar una bandeja real, la configuración Brevo/Cloudflare ni la titularidad artística remota. Sigue fallando la guarda de preservación del staging y la prueba visual se encontraba en ejecución durante esta verificación. No modificar la guarda ni fusionar/desplegar.
