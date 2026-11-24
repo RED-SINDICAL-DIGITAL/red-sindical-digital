@@ -28,13 +28,19 @@ test('redundant library links are optional rather than a second always-visible c
  assert.match(html,/id="librarySummary"/);
  assert.match(html,/href="\/biblioteca\.html\?tab=playlists"/);
 });
-test('account recovery moves under security settings and keeps mail access',()=>{
- assert.match(email,/document\.querySelector\('#profileSettings \.settings-grid'\)/);
- assert.match(email,/settings\.prepend\(panel\)/);
- assert.match(email,/fetch\('https:\/\/uadav-api-staging\.uadavstream\.workers\.dev\/api\/access\/email\/status'/);
- assert.match(email,/link\.href='\/entrar-correo\.html'/);
+test('email-first access precedes everyday tasks without removing advanced recovery',()=>{
+ assert.match(email,/tasks\\.before\\(panel\\)/);
+ assert.match(email,/panel\\.hidden=true/);
+ assert.match(email,/status\\?\\.installed/);
+ assert.match(email,/status\\.enabled===true/);
+ assert.match(email,/fetch\\('https:\\/\\/uadav-api-staging\\.uadavstream\\.workers\\.dev\\/api\\/access\\/email\\/status'/);
+ assert.match(email,/action\\.href='\\/entrar-correo\\.html'/);
+ assert.match(html,/id="profileTasks"/);
  assert.match(html,/id="profileSettings"/);
+ assert.match(html,/id="showRecovery"/);
+ assert.match(html,/id="showAccountCode"/);
 });
+
 test('duplicate legacy profile design layers are replaced by one coherent stylesheet',()=>{
  assert.doesNotMatch(html,/\/\* Mi Perfil · beta sencilla:/);
  assert.doesNotMatch(html,/\/\* Perfil 2026 · identidad editorial/);
