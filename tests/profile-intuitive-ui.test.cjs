@@ -29,16 +29,13 @@ test('redundant library links are optional rather than a second always-visible c
  assert.match(html,/href="\/biblioteca\.html\?tab=playlists"/);
 });
 test('email-first access precedes everyday tasks without removing advanced recovery',()=>{
- assert.match(email,/tasks\\.before\\(panel\\)/);
- assert.match(email,/panel\\.hidden=true/);
- assert.match(email,/status\\?\\.installed/);
- assert.match(email,/status\\.enabled===true/);
- assert.match(email,/fetch\\('https:\\/\\/uadav-api-staging\\.uadavstream\\.workers\\.dev\\/api\\/access\\/email\\/status'/);
- assert.match(email,/action\\.href='\\/entrar-correo\\.html'/);
- assert.match(html,/id="profileTasks"/);
- assert.match(html,/id="profileSettings"/);
- assert.match(html,/id="showRecovery"/);
- assert.match(html,/id="showAccountCode"/);
+ assert(email.includes('tasks.before(panel)'));
+ assert(email.includes('panel.hidden=true'));
+ assert(email.includes('status?.installed'));
+ assert(email.includes('status.enabled===true'));
+ assert(email.includes('uadav-api-staging.uadavstream.workers.dev/api/access/email/status'));
+ assert(email.includes("action.href='/entrar-correo.html'"));
+ for(const name of ['profileTasks','profileSettings','showRecovery','showAccountCode'])assert(html.includes('id="'+name+'"'),name);
 });
 
 test('duplicate legacy profile design layers are replaced by one coherent stylesheet',()=>{
