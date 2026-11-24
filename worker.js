@@ -246,7 +246,12 @@ async function uadavDeletedArtist(env,id,channel=''){
  return !!await env.DB.prepare("SELECT artist_id FROM artist_deletions WHERE lower(artist_id)=lower(?) OR (channel_id IS NOT NULL AND channel_id<>'' AND lower(channel_id)=lower(?)) LIMIT 1").bind(String(id||''),String(channel||id||'')).first();
 }
 async function uadavFilterDeletedArtists(env,items){
- items=Array.isArray(items)?items:[];if(!env.DB)return items;await uadavAccountSchema(env.DB);const rows=await env.DB.prepare('SELECT artist_id,channel_id FROM artist_deletions').all();if(!rows.results?.length)return items;
+ items=Array.isArray(items)?items:[];
+ if(!env.DB)return items;
+ const table=await env.DB.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='artist_deletions'").first();
+ if(!table)return items;
+ const rows=await env.DB.prepare('SELECT artist_id,channel_id FROM artist_deletions').all();
+ if(!rows.results?.length)return items;
  const ids=new Set(rows.results.map(x=>String(x.artist_id).toLowerCase()));return items.filter(a=>!ids.has(String(a.id||'').toLowerCase()));
 }
 async function uadavDeletePersonalAccount(db,accountId){const now=Date.now(),reply=(data,status=200)=>({data,status});
@@ -3725,8 +3730,8 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       const list=await getArray('artistas');
       const secs=await getArray('secciones');
       const out=[]; const seen=new Set();
-      for(const a of Array.isArray(list)?list:[]){ const p=publicArtistFromItem(a); const k=String(p.id||p.canal||p.nombre).toLowerCase(); if(k&&!seen.has(k)){seen.add(k);out.push(a)} }
-      for(const s of Array.isArray(secs)?secs:[]){ if(s?.tipo_contenido!=='perfiles') continue; for(const a of Array.isArray(s.items)?s.items:[]){const p=publicArtistFromItem(a);const k=String(p.id||p.canal||p.nombre).toLowerCase();if(k&&!seen.has(k)){seen.add(k);out.push({...a,id:p.id})}} }
+      for(const a of Array.isArray(list)?list:[]){ if(!a||typeof a!=='object'||Array.isArray(a))continue; const p=publicArtistFromItem(a); const k=String(p.id||p.canal||p.nombre).toLowerCase(); if(k&&!seen.has(k)){seen.add(k);out.push(a)} }
+      for(const s of Array.isArray(secs)?secs:[]){ if(s?.tipo_contenido!=='perfiles') continue; for(const a of Array.isArray(s.items)?s.items:[]){if(!a||typeof a!=='object'||Array.isArray(a))continue; const p=publicArtistFromItem(a);const k=String(p.id||p.canal||p.nombre).toLowerCase();if(k&&!seen.has(k)){seen.add(k);out.push({...a,id:p.id})}} }
       return uadavFilterDeletedArtists(env,out);
     }
     if(path==='/api/admin/artists/reuse-handle'){
