@@ -71,3 +71,33 @@ La herramienta acepta **únicamente** destinos conocidos de staging o QA indepen
 **Una lectura pública correcta NO certifica entrega por Brevo, titularidad de artistas, seguridad de Cloudflare Access, versión de Pages frente a GitHub ni aptitud para producción.** Verificar por separado las configuraciones reales con Work y no cambiar recursos sin autorización.
 
 El navegador de consulta pública usado en esta conversación no pudo acceder a las tres URLs de staging; eso **no prueba** que estén caídas. Se requiere comprobación desde un entorno con acceso.
+
+
+## Puerta de salida operativa: correo primero (revisión del 24/11/2026)
+
+**Resultado actual:** NO APTO PARA PRODUCCIÓN. En el HEAD `602e250` las suites Admin 2.0, Platform integration, Bolsa UI, Job status y Visual QA están en SUCCESS; `Staging integration preservation checks` sigue en FAILURE. No interpretar los tests sintéticos como entrega efectiva de correo ni como despliegue.
+
+### Orden obligatorio de comprobación en Work (sin modificar producción)
+
+1. **Inventario de Cloudflare (solo lectura):** registrar nombre, URL, build/commit publicado, rutas, bindings y separación de recursos del Worker QA y Pages QA. Verificar expresamente que KV/D1 QA son independientes de staging protegido y producción. Si no se puede comprobar, DETENER.
+2. **Comprobación pública sin datos personales:** en un entorno con acceso al repositorio ejecutar `node scripts/qa-email-readonly.mjs qa` y, por separado, `node scripts/qa-email-readonly.mjs staging`. Guardar JSON sanitizado con hora, URL/entorno y resultados. No asumir equivalencia entre ambos entornos. Un 302/403 puede deberse a Cloudflare Access; no desactivar Access para superar el control.
+3. **Revisión del bloqueo de preservación:** comparar `worker.js` del PR con el Worker congelado, clasificar cada cambio (migración de datos, autenticación, endpoints, notificaciones), documentar reversión y verificar que la protección refleja una diferencia real. No editar hashes de referencia ni quitar la prueba.
+4. **QA de correo real, únicamente tras aislar QA:** usar cuenta y buzón de prueba autorizados, nunca correos personales de producción. Registrar solicitud, recepción en bandeja, caducidad, confirmación explícita y ausencia de tokens en logs/URLs de historial. Distinguir proveedor `accepted` de recepción en casilla. Probar enlace falso, caducado y de un solo uso.
+5. **Recuperación entre dispositivos con datos sintéticos:** crear favoritos, playlist y artista QA con titularidad verificada en A; confirmar email y acceder en B; comparar el mismo ID de cuenta, favoritos, playlist y permisos. Comprobar que otra cuenta no accede a artista ni datos privados (403), que no hay duplicados y que revocar acceso artístico no borra la biblioteca. Cerrar sesión en B y reingresar con un enlace nuevo.
+6. **Interfaz en teléfono y PC:** explorar sin cuenta; ingresar desde Mi Perfil con botón visible; probar textos sin jerga, objetivos táctiles, error de red, correo no recibido, enlace vencido y volver a empezar. Reproducir Radio Studio en vista móvil y comparar con escritorio. Mantener el circuito antiguo durante migración.
+7. **Decisión documentada:** adjuntar evidencia de cada paso, recuperación/rollback probado, estado de protección staging y revisión de privacidad (incluido acceso de menores con responsables según corresponda). Solo entonces considerar despliegue QA/staging bajo autorización específica. Producción requiere aprobación independiente.
+
+### Resultado por puerta (completar con pruebas remotas, no con suposiciones)
+
+| Puerta | Estado a 24/11/2026 | Evidencia mínima para aprobar |
+| --- | --- | --- |
+| CI funcional y visual | PASS sintético | Corridas vinculadas al SHA exacto |
+| Preservación de Worker | BLOQUEADO | Diferencial auditado, reversión y control aprobado |
+| Aislamiento Cloudflare QA | NO VERIFICADO | Bindings y recursos QA independientes |
+| Pages/API remotas | NO VERIFICADO | Tres GET y build publicado coherente |
+| Entrega de email real | NO VERIFICADO | Recepción confirmada en buzón de prueba |
+| Biblioteca y artista en dispositivo B | PASS sintético parcial | Evidencia remota de mismos datos y permisos, playlist incluida |
+| Radio Studio móvil | NO VERIFICADO | Prueba visual y funcional en navegador |
+| Autorización producción | NO AUTORIZADO | Decisión separada y explícita |
+
+**Criterio de experiencia:** uso anónimo para explorar; correo + enlace privado para conservar y gestionar. Ocultar al público los códigos solo después de comprobar la migración; nunca eliminar datos, propietarios ni recuperaciones antiguas por simplificación visual. El acceso por correo no confiere por sí solo titularidad artística.
