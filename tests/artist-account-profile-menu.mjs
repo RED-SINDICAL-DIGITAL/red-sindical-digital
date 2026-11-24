@@ -25,11 +25,11 @@ const visible=actions.childNodes.filter(x=>!x.hidden).map(x=>x.textContent);
 assert.deepEqual(visible,['Editar perfil de artista','Consultas recibidas','Mi presentación y herramientas','Ver perfil público','Compartir perfil']);
 const more=card.childNodes.find(x=>x.tag==='details');
 assert.equal(more.childNodes[0].textContent,'Más opciones');
-for(const label of ['Mi PRO','Desvincular artista','Eliminar perfil de artista'])assert(more.childNodes.some(x=>x.textContent===label),label+' remains accessible');
+for(const label of ['Promoción','Desvincular artista','Eliminar perfil de artista'])assert(more.childNodes.some(x=>x.textContent===label),label+' remains accessible');
 const inquiries=actions.childNodes.find(x=>x.textContent==='Consultas recibidas');await inquiries.onclick({preventDefault(){}});assert.equal(location.href,'/gestionar-artista.html?tab=consultas&artist_id=ART-1');
-const plan=more.childNodes.find(x=>x.textContent==='Mi PRO');
+const plan=more.childNodes.find(x=>x.textContent==='Promoción');
 let prevented=false;await plan.onclick({preventDefault(){prevented=true}});
 assert(prevented);assert.equal(location.href,'/gestionar-artista.html?tab=plan&artist_id=ART-1');
 assert(calls.some(([url,opts])=>url.includes('account/artist-session')&&opts.method==='POST'));
-console.log('PASS: Mi perfil presents one primary artist workspace, keeps tools and profile sharing available, and opens Consultas/PRO through a session for the correct artist');
+console.log('PASS: Mi perfil presents one primary artist workspace, keeps tools and profile sharing available, and opens Consultas/Promoción through a session for the correct artist');
 

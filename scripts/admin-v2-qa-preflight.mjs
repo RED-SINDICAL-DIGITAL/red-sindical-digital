@@ -11,8 +11,12 @@ function sections(text){
  const commit=()=>result.push({section,values});
  for(const line of lines){
   const mark=line.match(/^\s*\[\[?([^\]]+)\]\]?\s*$/);
-  if(mark){commit();section=mark[1];values={};continue}
-  const kv=line.match(/^\s*([\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^#\s]+))/);
+  if(mark){
+   const name=mark[1], array=['kv_namespaces','d1_databases'].includes(name);
+   if(line.trim()!==(array?'[['+name+']]':'['+name+']'))invalidLines.push(name);
+   commit();section=name;values={};continue;
+  }
+  const kv=line.match(/^\s*([\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|(true|false))\s*(?:#.*)?$/);
   if(kv){if(Object.hasOwn(values,kv[1]))duplicateKeys.push(section+':'+kv[1]);values[kv[1]]=kv[2]??kv[3]??kv[4];}
   else if(line.trim()&&!line.trimStart().startsWith('#'))invalidLines.push(section);
  }
@@ -29,7 +33,7 @@ export function qaPreflight(wrangler,evidence){
   d1_databases:new Set(['binding','database_name','database_id','migrations_dir'])
  };
  for(const block of blocks){
-  if(!allowed[block.section])problems.push('Unexpected Wrangler section: '+block.section);
+  if(!Object.hasOwn(allowed,block.section))problems.push('Unexpected Wrangler section: '+block.section);
   else for(const key of Object.keys(block.values))if(!allowed[block.section].has(key))problems.push('Unexpected Wrangler key: '+block.section+'.'+key);
  }
  for(const section of ['root','vars'])if(blocks.filter(x=>x.section===section).length!==1)problems.push('Missing or duplicated Wrangler section: '+section);

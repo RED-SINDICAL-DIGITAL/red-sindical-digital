@@ -10,8 +10,8 @@ const DB=sqliteD1();
 function device(name){
  const storage=new Map(),win={addEventListener(){},dispatchEvent(){},parent:null};win.parent=win;
  const localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)};
- const context={window:win,localStorage,navigator:{userAgent:name},document:{hidden:false,readyState:'complete',querySelector:()=>null,getElementById:()=>null,addEventListener(){}},location:{href:'https://uadavstream.com.ar/app.html'},crypto:webcrypto,AbortController,CustomEvent:class{},StorageEvent:class{},setTimeout:()=>1,clearTimeout(){},setInterval(){},fetch:async(url,opt)=>worker.fetch(new Request(url,{...opt,headers:{...opt.headers,Origin:'https://uadavstream.com.ar','CF-Connecting-IP':name}}),{DB},{})};
- vm.runInNewContext(clientSource,context);return{service:win.UADAVAccount,storage,localStorage};
+ const context={window:win,localStorage,navigator:{userAgent:name,locks:{request:async(key,options,run)=>{assert.equal(key,"uadav-account-recovery-v1");assert.equal(options.ifAvailable,true);return run({name:key})}}},document:{hidden:false,readyState:'complete',querySelector:()=>null,getElementById:()=>null,addEventListener(){}},location:{href:'https://uadavstream.com.ar/app.html'},crypto:webcrypto,AbortController,CustomEvent:class{},StorageEvent:class{},setTimeout:()=>1,clearTimeout(){},setInterval(){},fetch:async(url,opt)=>worker.fetch(new Request(url,{...opt,headers:{...opt.headers,Origin:'https://uadavstream.com.ar','CF-Connecting-IP':name}}),{DB},{})};
+ vm.runInNewContext(clientSource,context);return{service:win.UADAVAccount,storage,localStorage,navigator:context.navigator};
 }
 try{
  const pc=device('Desktop'),phone=device('Android');pc.localStorage.setItem('uadav_user_v11',JSON.stringify({name:'Marcos'}));pc.localStorage.setItem('uadav_favorites_v1',JSON.stringify([{id:'PC-video'}]));
@@ -26,6 +26,11 @@ try{
  assert.equal(JSON.parse(phone.localStorage.getItem('uadav_user_v11')).name,'Marcos');assert.equal(phone.service.recovery(),'');assert.equal(phone.service.code().includes(root),false);
  phone.localStorage.setItem('uadav_following_v1',JSON.stringify([{id:'artist-phone'}]));pc.localStorage.setItem('uadav_favorites_v1',JSON.stringify([{id:'PC-new'}]));await phone.service.sync();await pc.service.sync();await phone.service.sync();assert.equal(JSON.parse(pc.localStorage.getItem('uadav_following_v1'))[0].id,'artist-phone');assert.equal(JSON.parse(phone.localStorage.getItem('uadav_favorites_v1'))[0].id,'PC-new');
  const devices=await pc.service.devices(),other=devices.devices.find(d=>!d.current);assert.ok(other);await pc.service.revoke(other.id);await phone.service.sync();assert.match(phone.service.state().message,/perdió su acceso/);assert.equal(JSON.parse(phone.localStorage.getItem('uadav_user_v11')).name,'Marcos');
+ const locks=pc.navigator.locks;
+ delete pc.navigator.locks;
+ await assert.rejects(pc.service.rotateRecovery(),/acceso actual se conserva/);
+ assert.equal(pc.service.recovery(),root);
+ pc.navigator.locks=locks;
  const newRoot=await pc.service.rotateRecovery();assert.notEqual(newRoot,root);assert.equal(pc.service.recovery(),newRoot);assert.match(pc.service.code(),/^UAD-/);
  console.log('PASS: two independent browser stores, complete approval, independent device credentials, cross-device merge, revocation and recovery rotation through actual Worker + SQLite');
 }finally{DB.close()}

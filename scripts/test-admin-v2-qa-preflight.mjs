@@ -36,4 +36,10 @@ fails(synthetic.replace('compatibility_date = "2026-09-28"','compatibility_date 
 fails(synthetic+'\n"routes" = ["production.example/*"]\n');
 fails(synthetic+'\nmalformed arbitrary config statement\n');
 
+fails(synthetic.replace('[vars]', '[[vars]]'));
+fails(synthetic.replace('[[kv_namespaces]]', '[kv_namespaces]'));
+fails(synthetic.replace('workers_dev = true', 'workers_dev = true unexpected'));
+fails(synthetic+'\n[constructor]\nx = true\n');
+assert.equal(qaPreflight(synthetic.replace('workers_dev = true','workers_dev = true # QA'),evidence).ready,true);
+
 console.log('PASS: fail-closed QA deployment gate rejects missing bindings, reused IDs, real endpoints, triggers, and missing independent sign-off.');

@@ -37,6 +37,20 @@ async function walk(folder,depth=0){
    let source=await readFile(join(root,rel),'utf8'),text=source;
    for(const old of oldApis)text=text.replaceAll(old,qaApi);
    for(const old of oldSites)text=text.replaceAll(old,qaSite);
+   if(rel==='admin.html'){
+    const mediaKit='/assets/comercial/UADAV_Stream_Media_Kit.pdf';
+    text=text.replace('href="'+mediaKit+'"','href="\' + esc(document.body.dataset.mediaKit) + \'"')
+      .replace('<body data-page="admin">','<body data-page="admin" data-media-kit="'+mediaKit+'">');
+    let index=0;
+    for(const [tag,kind,attributes,body] of [...text.matchAll(/<(script|style)([^>]*)>([\s\S]*?)<\/\1>/gi)]){
+     if(!body.trim()||/\bsrc\s*=/.test(attributes))continue;
+     if(kind==='script'&&attributes.trim())throw Error('Unexpected inline Admin script type');
+     const filename='admin-qa-'+(++index)+(kind==='script'?'.js':'.css');
+     await writeFile(join(out,filename),body,'utf8');
+     const replacement=kind==='script'?'<script src="/'+filename+'"></script>':'<link rel="stylesheet"'+attributes+' href="/'+filename+'">';
+     text=text.replace(tag,()=>replacement);
+    }
+   }
    if(rel==='uadav-push-ui-v150.js'){
     text="// Admin 2.0 QA: no PushManager subscription, service worker registration or notification prompts.\n";
    }
