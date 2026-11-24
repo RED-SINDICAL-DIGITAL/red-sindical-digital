@@ -966,7 +966,9 @@ const AE_TABLES=["access_email_settings","access_email_identities","access_email
 const AE_SITE='https://uadav-api-staging.uadavstream.workers.dev',AE_PAGES='https://uadav-stream-staging.pages.dev';
 function aeError(code='ACCESS_UNAVAILABLE',status=503){return Object.assign(Error(code),{aeCode:code,status})}
 function aeRequire(ok,code,status){if(!ok)throw aeError(code,status)}
-async function aeReceiver(){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(AE_PAGES+'/account-email-version.json',{redirect:'manual',cache:'no-store',credentials:'omit',signal:controller.signal});aeRequire(r.status===200&&/^application\/json/.test(r.headers.get('content-type')||''),'ACCESS_RECEIVER');const text=await uadavExternalRead(r,1024,controller.signal),v=JSON.parse(text);aeRequire(v.version==='11769.1'&&v.purpose==='account_email_access'&&v.confirmation==='explicit-post','ACCESS_RECEIVER');}finally{clearTimeout(timer)}}
+const AE_QA_SITE = 'https://uadav-api-admin-v2-qa.uadavstream.workers.dev';
+const AE_QA_PAGES = 'https://uadav-admin-v2-qa.pages.dev';
+async function aeReceiver(pages){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(pages+'/account-email-version.json',{redirect:'manual',cache:'no-store',credentials:'omit',signal:controller.signal});aeRequire(r.status===200&&/^application\/json/.test(r.headers.get('content-type')||''),'ACCESS_RECEIVER');const text=await uadavExternalRead(r,1024,controller.signal),v=JSON.parse(text);aeRequire(v.version==='11769.1'&&v.purpose==='account_email_access'&&v.confirmation==='explicit-post','ACCESS_RECEIVER');}finally{clearTimeout(timer)}}
 async function aeContext(env, pagesOrigin){
  aeRequire(env.JOB_STORE_D1==='true'&&env.DB&&/^[a-f0-9]{64}$/.test(env.JOB_RECOVERY_ENCRYPTION_KEY||'')&&/^[A-Za-z0-9._-]{32,512}$/.test(env.BREVO_API_KEY||''),'ACCESS_CONFIGURATION');
  const recipient=uadavAccountEmail.accountEmailAddress(env.BREVO_QA_RECIPIENT);aeRequire(recipient,'ACCESS_CONFIGURATION');
@@ -987,31 +989,36 @@ async function aeContext(env, pagesOrigin){
  const core=uadavAccountEmail.createAccountEmailCore({db,encryptionKey:env.JOB_RECOVERY_ENCRYPTION_KEY,providerContext,prepareMessage:message=>uadavAccountEmail.prepareAccountEmailMessage(message,pagesOrigin)});
  return{db,setting,core,keyHash,qaHash:await core.emailHash(recipient)};
 }
-async function aeIdentity(request,env){const r=await uadavAccountRoute(new Request(AE_SITE+'/api/account/identity',{headers:request.headers}),env,true);aeRequire(r.status===200,'ACCESS_AUTH',401);const value=await r.json(),secret=(request.headers.get('Authorization')||'').replace(/^Bearer /,'');return{accountId:value.account_id,credentialHash:await uadavDigest(secret),device:secret.startsWith('UAD-')}}
+async function aeIdentity(request,env){const r=await uadavAccountRoute(new Request(new URL('/api/account/identity',request.url),{headers:request.headers}),env,true);aeRequire(r.status===200,'ACCESS_AUTH',401);const value=await r.json(),secret=(request.headers.get('Authorization')||'').replace(/^Bearer /,'');return{accountId:value.account_id,credentialHash:await uadavDigest(secret),device:secret.startsWith('UAD-')}}
 async function aeDispatch(c,id,env){for(let n=0;n<3;n++){const r=await c.core.dispatch(id,async({body,expiresAt})=>{aeRequire(expiresAt>Date.now(),'ACCESS_EXPIRED',400);return uadavAccountEmail.uadavBrevoRequest({mode:'staging-only',apiKey:env.BREVO_API_KEY,body})});if(r.state!=='unconfirmed')return;if(n<2)await new Promise(resolve=>setTimeout(resolve,1000*(n+1)))}}
 async function uadavAccountEmailRoute(request,env,ctx){
- const url=new URL(request.url),origin=request.headers.get('Origin'),allowed=[AE_SITE,AE_PAGES,'https://integration-staging-preserve.uadav-stream-staging.pages.dev'],admin=url.pathname==='/api/admin/access-email';
+ const url=new URL(request.url),origin=request.headers.get('Origin'),admin=url.pathname==='/api/admin/access-email';
+ const qa = url.origin === AE_QA_SITE;
+ const pages = qa ? AE_QA_PAGES : AE_PAGES;
+ const preview = 'https://integration-staging-preserve.uadav-stream-staging.pages.dev';
+ const allowed = qa ? [AE_QA_SITE, pages] : [AE_SITE, pages, preview];
  const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',Vary:'Origin',...(allowed.includes(origin)?{'Access-Control-Allow-Origin':origin}:{})},reply=(d,status=200)=>new Response(JSON.stringify(d),{status,headers});
  const started=Date.now(),uniform=async()=>{const jitter=new Uint8Array(1);crypto.getRandomValues(jitter);const remaining=800+jitter[0]%101-(Date.now()-started);if(remaining>0)await new Promise(r=>setTimeout(r,remaining));return reply({accepted:true,message:'Revisá tu correo. Si corresponde, vas a recibir un enlace para continuar.'},202)};
  try{
-  aeRequire(url.origin===AE_SITE,'ACCESS_STAGING_ONLY',403);aeRequire(!origin||allowed.includes(origin),'ACCESS_ORIGIN',403);aeRequire(!url.search,'ACCESS_METHOD',405);
+  aeRequire(url.origin===AE_SITE || qa,'ACCESS_STAGING_ONLY',403);aeRequire(!origin||allowed.includes(origin),'ACCESS_ORIGIN',403);aeRequire(!url.search,'ACCESS_METHOD',405);
   if(request.method==='OPTIONS'){aeRequire(allowed.includes(origin),'ACCESS_ORIGIN',403);return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Allow-Headers':'Authorization,Content-Type','Access-Control-Max-Age':'0'}})}
   aeRequire(['GET','POST'].includes(request.method),'ACCESS_METHOD',405);if(request.method==='GET')aeRequire(admin||url.pathname==='/api/access/email/status','ACCESS_METHOD',405);
   if(admin)aeRequire(typeof env.ADMIN_KEY==='string'&&env.ADMIN_KEY.trim().length>0&&request.headers.get('Authorization')==='Bearer '+env.ADMIN_KEY.trim(),'ACCESS_ADMIN',401);
   if(env.JOB_STORE_MAINTENANCE==='true')throw aeError('ACCESS_MAINTENANCE',423);
-  const c=await aeContext(env,origin===allowed[2]?origin:AE_PAGES);
-  const status=()=>({build:BUILD,checked_at:new Date().toISOString(),scope:'account-email-staging',installed:!!c.setting,enabled:c.setting?.enabled===1,qa_verification:!!c.setting?.qa_verified_at,qa_login:!!c.setting?.qa_login_at,daily_budget:240,public_job_key_recovery_enabled:false});
+  aeRequire(qa ? env.PUBLIC_SITE_URL===AE_QA_PAGES && env.ACCOUNT_ALLOWED_ORIGINS===AE_QA_PAGES : env.PUBLIC_SITE_URL!==AE_QA_PAGES,'ACCESS_STAGING_ONLY',403);
+  const c=await aeContext(env,!qa && origin===preview ? preview : pages);
+  const status=()=>({build:BUILD,checked_at:new Date().toISOString(),scope:qa?'account-email-qa':'account-email-staging',email_contract:1,installed:!!c.setting,enabled:c.setting?.enabled===1,qa_verification:!!c.setting?.qa_verified_at,qa_login:!!c.setting?.qa_login_at,daily_budget:240,public_job_key_recovery_enabled:false});
   if(admin){
    if(request.method==='GET')return reply(status());
    const b=await uadavSecurityJSON(request,2000);aeRequire(b&&Object.keys(b).length===2&&typeof b.action==='string'&&typeof b.confirm==='string','ACCESS_INPUT',400);
    if(b.action==='prepare'){
-    aeRequire(b.confirm==='PREPARAR ACCESO POR CORREO','ACCESS_CONFIRM',400);await aeReceiver();if(!c.setting){
+    aeRequire(b.confirm==='PREPARAR ACCESO POR CORREO','ACCESS_CONFIRM',400);await aeReceiver(pages);if(!c.setting){
      const ready=await c.db.prepare("SELECT value FROM job_store_meta WHERE key='migration_ready'").first();aeRequire(ready?.value==='true','ACCESS_STORAGE');
      await c.db.batch([...AE_SCHEMA.map(sql=>c.db.prepare(sql)),c.db.prepare('INSERT INTO access_email_settings(id,schema_hash,key_hash,enabled) VALUES(1,?,?,0)').bind(AE_SCHEMA_HASH,c.keyHash)]);
     }return reply({success:true,installed:true,enabled:c.setting?.enabled===1});
    }
    aeRequire(c.setting,'ACCESS_NOT_PREPARED');
-   if(b.action==='enable'){aeRequire(b.confirm==='HABILITAR CORREO EN STAGING'&&c.setting.qa_verified_at&&c.setting.qa_login_at,'ACCESS_QA_PENDING',409);await aeReceiver();const enabled=await c.db.prepare('UPDATE access_email_settings SET enabled=1 WHERE id=1 AND qa_verified_at IS NOT NULL AND qa_login_at IS NOT NULL AND EXISTS(SELECT 1 FROM access_email_identities e JOIN audience_accounts a ON a.id=e.account_id WHERE e.account_id=access_email_settings.qa_account_id AND e.revision=access_email_settings.qa_identity_revision AND e.email_hash=? AND e.key_hash=? AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=a.id))').bind(c.qaHash,c.keyHash).run();aeRequire(enabled.meta?.changes===1,'ACCESS_QA_PENDING',409);return reply({success:true,enabled:true})}
+   if(b.action==='enable'){aeRequire(b.confirm==='HABILITAR CORREO EN STAGING'&&c.setting.qa_verified_at&&c.setting.qa_login_at,'ACCESS_QA_PENDING',409);await aeReceiver(pages);const enabled=await c.db.prepare('UPDATE access_email_settings SET enabled=1 WHERE id=1 AND qa_verified_at IS NOT NULL AND qa_login_at IS NOT NULL AND EXISTS(SELECT 1 FROM access_email_identities e JOIN audience_accounts a ON a.id=e.account_id WHERE e.account_id=access_email_settings.qa_account_id AND e.revision=access_email_settings.qa_identity_revision AND e.email_hash=? AND e.key_hash=? AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=a.id))').bind(c.qaHash,c.keyHash).run();aeRequire(enabled.meta?.changes===1,'ACCESS_QA_PENDING',409);return reply({success:true,enabled:true})}
    if(b.action==='disable'){aeRequire(b.confirm==='PAUSAR CORREO EN STAGING','ACCESS_CONFIRM',400);await c.db.batch([c.db.prepare('UPDATE access_email_settings SET enabled=0 WHERE id=1'),c.db.prepare("UPDATE access_email_outbox SET state='cancelled',sealed_payload=NULL,sealed_address=NULL,lease_owner=NULL,lease_until=0 WHERE state IN ('queued','sending','accepted','failed')")]);return reply({success:true,enabled:false})}
    throw aeError('ACCESS_INPUT',400);
   }

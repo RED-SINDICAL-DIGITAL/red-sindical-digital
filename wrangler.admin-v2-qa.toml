@@ -1,0 +1,31 @@
+# Exclusivo de QA. Requiere Access, secretos de QA y autorización antes del despliegue.
+name = "uadav-api-admin-v2-qa"
+main = "worker.js"
+compatibility_date = "2026-09-28"
+workers_dev = true
+preview_urls = false
+
+[[kv_namespaces]]
+binding = "UADAV_DB"
+id = "354dd2b7182f4957be86e24aa9ff7149"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "uadav-admin-v2-qa-db"
+database_id = "9b99c9ce-6fb3-4e3e-a094-7408c7ed0d1c"
+
+[[d1_databases]]
+binding = "DEMO_DB"
+database_name = "uadav-admin-v2-qa-demo"
+database_id = "ea590be2-c5e0-47e0-bf97-94fad171bd6c"
+migrations_dir = "migrations/demo"
+
+[vars]
+PUBLIC_SITE_URL = "https://uadav-admin-v2-qa.pages.dev"
+ACCOUNT_ALLOWED_ORIGINS = "https://uadav-admin-v2-qa.pages.dev"
+TURNSTILE_ALLOWED_HOSTNAMES = "uadav-admin-v2-qa.pages.dev"
+
+# Sin routes, crons, colas, emails reales, pagos ni dominios de producción.
+# TURNSTILE_* y ADMIN_KEY deben ser claves exclusivas de QA, nunca claves productivas.
+# Antes de pruebas en navegador: la UI de staging apunta al Worker staging original;
+# no probar Admin 2.0 desde esa UI sin preparar un frontend QA igualmente aislado.

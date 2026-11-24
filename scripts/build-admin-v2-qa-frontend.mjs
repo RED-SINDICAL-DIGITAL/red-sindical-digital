@@ -9,7 +9,7 @@ if(dirname(out)!==root||!/^dist-admin-v2-qa(?:-test-[0-9]+)?$/.test(basename(out
 const NAME='uadav-admin-v2-qa.pages.dev';
 const qaApi='https://uadav-api-admin-v2-qa.uadavstream.workers.dev';
 const oldApis=['https://uadav-api.uadavstream.workers.dev','https://uadav-api-staging.uadavstream.workers.dev'];
-const oldSites=['https://uadav-stream-staging.pages.dev','https://uadavstream.com.ar','https://www.uadavstream.com.ar'];
+const oldSites=['https://integration-staging-preserve.uadav-stream-staging.pages.dev','https://uadav-stream-staging.pages.dev','https://uadavstream.com.ar','https://www.uadavstream.com.ar'];
 const qaSite='https://'+NAME;
 const textExt=new Set(['.html','.js','.css','.json','.svg','.txt','.xml','.webmanifest']);
 const binExt=new Set(['.png','.jpg','.jpeg','.webp','.ico','.gif','.woff','.woff2','.avif','.mp4','.webm']);
@@ -37,6 +37,13 @@ async function walk(folder,depth=0){
    let source=await readFile(join(root,rel),'utf8'),text=source;
    for(const old of oldApis)text=text.replaceAll(old,qaApi);
    for(const old of oldSites)text=text.replaceAll(old,qaSite);
+   if(rel==='entrar-correo.html'){
+    const bootstrap=/<script id="accountEmailBootstrap">([\s\S]*?)<\/script>/;
+    const match=text.match(bootstrap);
+    if(!match)throw Error('Missing private email bootstrap');
+    await writeFile(join(out,'account-email-bootstrap.js'),match[1],'utf8');
+    text=text.replace(bootstrap,'<script src="/account-email-bootstrap.js"></script>');
+   }
    if(rel==='admin.html'){
     const mediaKit='/assets/comercial/UADAV_Stream_Media_Kit.pdf';
     text=text.replace('href="'+mediaKit+'"','href="\' + esc(document.body.dataset.mediaKit) + \'"')

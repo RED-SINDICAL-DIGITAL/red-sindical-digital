@@ -1,10 +1,10 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {webcrypto} from 'node:crypto';import {sqliteD1} from './sqlite-d1.mjs';
 globalThis.crypto ||= webcrypto;const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url))).toString('base64')),SITE='https://uadav-api-staging.uadavstream.workers.dev',PAGES='https://uadav-stream-staging.pages.dev',root='UAC-'+'a'.repeat(64),fresh='UAD-'+'b'.repeat(64),email='own@example.invalid';
 const hash=async s=>Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))).toString('hex');
-async function fixture(){const DB=sqliteD1(),mail=[],tasks=[],fetch=globalThis.fetch;const env={DB,ADMIN_KEY:'synthetic-admin',ACCOUNT_ALLOWED_ORIGINS:PAGES,BREVO_API_KEY:'x'.repeat(40),BREVO_QA_RECIPIENT:email,JOB_RECOVERY_ENCRYPTION_KEY:'e'.repeat(64),UADAV_DB:{get:async()=>null,put:async()=>{}}};
- const call=async(path,method='GET',data,key='',origin=PAGES,host=SITE,ctx={waitUntil:p=>tasks.push(p)})=>{const r=await worker.fetch(new Request(host+path,{method,headers:{Origin:origin,'CF-Connecting-IP':'203.0.113.61','Content-Type':'application/json',...(key?{Authorization:'Bearer '+key}:{})},...(data?{body:JSON.stringify(data)}:{})}),env,ctx);return{status:r.status,data:r.status===204?null:await r.json(),headers:r.headers}};
+async function fixture(site=SITE,pages=PAGES){const DB=sqliteD1(),mail=[],tasks=[],fetch=globalThis.fetch;const env={DB,ADMIN_KEY:'synthetic-admin',PUBLIC_SITE_URL:pages,ACCOUNT_ALLOWED_ORIGINS:pages,BREVO_API_KEY:'x'.repeat(40),BREVO_QA_RECIPIENT:email,JOB_RECOVERY_ENCRYPTION_KEY:'e'.repeat(64),UADAV_DB:{get:async()=>null,put:async()=>{}}};
+ const call=async(path,method='GET',data,key='',origin=pages,host=site,ctx={waitUntil:p=>tasks.push(p)})=>{const r=await worker.fetch(new Request(host+path,{method,headers:{Origin:origin,'CF-Connecting-IP':'203.0.113.61','Content-Type':'application/json',...(key?{Authorization:'Bearer '+key}:{})},...(data?{body:JSON.stringify(data)}:{})}),env,ctx);return{status:r.status,data:r.status===204?null:await r.json(),headers:r.headers}};
  assert.equal((await call('/api/account','POST',{data:{uadav_user_v11:{name:'PRIVATE NAME'},uadav_favorites_v1:[{id:'PRIVATE_LIBRARY'}]}},root)).status,200);await DB.prepare('CREATE TABLE job_store_meta(key TEXT PRIMARY KEY,value TEXT)').run();await DB.prepare("INSERT INTO job_store_meta VALUES('migration_ready','true')").run();env.JOB_STORE_D1='true';
- globalThis.fetch=async(input)=>{const url=typeof input==='string'?input:input.url;if(url===PAGES+'/account-email-version.json')return new Response(JSON.stringify({version:'11769.1',purpose:'account_email_access',confirmation:'explicit-post'}),{headers:{'Content-Type':'application/json'}});assert.equal(url,'https://api.brevo.com/v3/smtp/email');const b=JSON.parse(await input.text());mail.push(b);return new Response(JSON.stringify({messageId:'<synthetic-'+mail.length+'@example.invalid>'}),{status:201,headers:{'Content-Type':'application/json'}})};
+ globalThis.fetch=async(input)=>{const url=typeof input==='string'?input:input.url;if(url===pages+'/account-email-version.json')return new Response(JSON.stringify({version:'11769.1',purpose:'account_email_access',confirmation:'explicit-post'}),{headers:{'Content-Type':'application/json'}});assert.equal(url,'https://api.brevo.com/v3/smtp/email');const b=JSON.parse(await input.text());mail.push(b);return new Response(JSON.stringify({messageId:'<synthetic-'+mail.length+'@example.invalid>'}),{status:201,headers:{'Content-Type':'application/json'}})};
  const prepare=()=>call('/api/admin/access-email','POST',{action:'prepare',confirm:'PREPARAR ACCESO POR CORREO'},env.ADMIN_KEY);
  const request=(kind='verify',recipient=email)=>call('/api/access/email/'+kind,'POST',{email:recipient,request_id:crypto.randomUUID(),consent:true},kind==='verify'?root:'');
  async function proof(){await Promise.all(tasks.splice(0));const body=mail.at(-1);assert(body);const link=body.textContent.match(/https:\/\/[^\s]+/)[0],p=new URLSearchParams(new URL(link).hash.slice(1));return{id:p.get('id'),token:p.get('token'),new_device_secret:fresh,device_name:'QA device'}}
@@ -123,4 +123,28 @@ test('email login keeps verified artist ownership on a second device and never g
   assert.equal((await f.call('/api/account/artist-session','POST',{artist_id:artistId},second.new_device_secret)).status,403);
   assert.equal((await f.call('/api/account','GET',null,second.new_device_secret)).data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY','revoking artist does not destroy listener favorites');
  }finally{f.close()}
+});
+
+test('isolated QA prepares, verifies and redeems entirely on its own origins', async () => {
+ const site='https://uadav-api-admin-v2-qa.uadavstream.workers.dev';
+ const pages='https://uadav-admin-v2-qa.pages.dev';
+ const f=await fixture(site,pages);
+ try {
+  assert.equal((await f.call('/api/access/email/status','GET',null,'',PAGES)).status,403);
+  assert.equal((await f.prepare()).status,200);
+  const status=await f.call('/api/access/email/status');
+  assert.equal(status.data.scope,'account-email-qa');
+  assert.equal(status.data.email_contract,1);
+  assert.equal((await f.call('/api/access/email/status','GET',null,'',PAGES,SITE)).status,403);
+  assert.equal((await f.request()).status,202);
+  const proof=await f.proof();
+  assert.equal(new URL(f.mail[0].textContent.match(/https:\/\/[^\s]+/)[0]).origin,pages);
+  assert.equal((await f.call('/api/access/email/redeem','POST',proof,root)).status,200);
+  assert.equal((await f.request('request')).status,202);
+  const login=await f.proof();
+  login.new_device_secret='UAD-'+'c'.repeat(64);
+  assert.equal((await f.call('/api/access/email/redeem','POST',login)).status,200);
+  const account=await f.call('/api/account','GET',null,login.new_device_secret);
+  assert.equal(account.data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY');
+ } finally { f.close(); }
 });
