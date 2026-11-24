@@ -91,6 +91,10 @@ test('email login keeps verified artist ownership on a second device and never g
  const f=await fixture();try{
   await f.prepare();
   const accountId=await hash(root),artistId='QA-EMAIL-ARTIST',claimId='QA-EMAIL-CLAIM';
+  // These ownership tables are initialized by the artist domain, not the email domain.
+  // Establish the artist schema in the isolated fixture before linking the verified account.
+  await f.DB.prepare("CREATE TABLE IF NOT EXISTS artist_owners(id TEXT PRIMARY KEY,artist_id TEXT NOT NULL,claim_id TEXT,contact_email TEXT,role TEXT,status TEXT,verification_level TEXT,created_at TEXT,updated_at TEXT)").run();
+  await f.DB.prepare("CREATE TABLE IF NOT EXISTS audience_artist_links(account_id TEXT NOT NULL,artist_id TEXT NOT NULL,claim_id TEXT,expires_at INTEGER NOT NULL DEFAULT 0,created_at INTEGER NOT NULL,PRIMARY KEY(account_id,artist_id))").run();
   await f.DB.prepare("INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES(?,?,?,?,?,'active','admin_approved',?,?)").bind('QA-EMAIL-OWNER',artistId,claimId,email,'owner',new Date().toISOString(),new Date().toISOString()).run();
   await f.DB.prepare('INSERT INTO audience_artist_links(account_id,artist_id,claim_id,expires_at,created_at) VALUES(?,?,?,0,?)').bind(accountId,artistId,claimId,Date.now()).run();
   const linkedBefore=await f.call('/api/account/artists','GET',null,root);
