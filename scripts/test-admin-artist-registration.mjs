@@ -18,3 +18,6 @@ assert.ok(admin.includes("Los perfiles nuevos creados desde una cuenta ingresan 
 assert.ok(admin.includes("Aprobar solicitud anterior"),'Old requests must be differentiated');
 assert.ok(admin.includes('>Resuelta</span>'),'Resolved previous requests must not offer approve again');
 console.log('OK: alta directa conservada y revisión histórica diferenciada.');
+
+// Exercise the Worker with two synthetic accounts after checking the UI contract.
+await import('../tests/artist-registration-direct-qa.mjs');
