@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - audit/public-job-status-20261012
+      - integration/staging-preserve-beta-20261109
   pull_request:
     paths:
       - service-worker.js

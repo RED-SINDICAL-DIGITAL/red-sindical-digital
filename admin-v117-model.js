@@ -9,7 +9,7 @@
 
     },
     commercial:{memberships:false,placements:['hero','cartelera_slider','infeed','radio_partner'],contract:'campaign_or_agreement'},
-    support:{requiresPro:true,commission:0},
+    support:{requiresPro:false,commission:0},
     marketplace:{commission:0,paymentProcessing:false},
     travelAudiences:['public','artist','artist_pro','uadav_member'],
     analyticsEvents:['profile_view','play_start','follow','favorite','playlist_add','ticket_click','hire_click','support_click','share'],
@@ -18,10 +18,10 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   function isPro(a){if(!a)return false;if(a.plan==='pro'||a.pro_active===true||Number(a.pro_active)===1){if(!a.pro_expires&&!a.pro_expires_at)return true;const x=new Date(a.pro_expires||a.pro_expires_at);return !Number.isNaN(+x)&&x>Date.now()}return false}
   function planBadge(a){return isPro(a)?'<span class="badge warn">Acceso histórico</span>':'<span class="badge info">GRATIS</span>'}
-  function supportAllowed(a){return isPro(a) && !!a && (a.claimed||a.verified||a.claim_status==='approved'||a.verificado===true)}
+  function supportAllowed(a){return !!a && a.support_enabled!==false}
   function normalizeSupportLinks(a){const raw=a?.support_links||a?.apoyar||[];return (Array.isArray(raw)?raw:[]).filter(x=>x&&x.url).map(x=>({provider:esc(x.provider||x.label||'Apoyar'),url:String(x.url)}))}
   function metricLabel(k){return ({profile_view:'Visitas al perfil',play_start:'Reproducciones iniciadas',follow:'Nuevos seguidores',favorite:'Favoritos',playlist_add:'Agregados a playlists',ticket_click:'Clics en entradas',hire_click:'Clics en contratar',support_click:'Clics en apoyar',share:'Compartidos'})[k]||k}
-  function validatePlan(p){return p==='free'||p==='pro'?p:'free'}
+  function validatePlan(p){return 'free'}
   function benefitAudienceLabel(v){return ({public:'Público',artist:'Artistas',artist_pro:'Histórico de artistas',uadav_member:'Afiliados UADAV'})[v]||v}
   window.UADAV_V117={MODEL,isPro,planBadge,supportAllowed,normalizeSupportLinks,metricLabel,validatePlan,benefitAudienceLabel};
   document.documentElement.dataset.uadavModel='v11.7';

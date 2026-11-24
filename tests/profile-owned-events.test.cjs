@@ -6,7 +6,12 @@ const vm=require('node:vm');
 const html=readFileSync(join(__dirname,'..','usuario.html'),'utf8');
 const publish=readFileSync(join(__dirname,'..','publicar-evento.html'),'utf8');
 test('publisher associates staging account even without optional email notices',()=>{
- assert.match(publish,/body\.email_notice_consent\|\|credential&&location\.hostname==='uadav-stream-staging\.pages\.dev'/);
+ const expression=publish.match(/const profileEventHost=(.*?);/)[1];
+ for(const [hostname,expected] of [['integration-staging-preserve.uadav-stream-staging.pages.dev',true],['uadav-stream-staging.pages.dev',true],['example.org',false]]){
+  assert.equal(vm.runInNewContext(expression,{location:{hostname}}),expected);
+ }
+ assert.match(publish,/const linkAccount=!!credential&&\(profileEventHost\|\|body.email_notice_consent\)/);
+ assert.match(publish,/linkAccount\?\{headers:/);
  assert.match(publish,/Authorization:'Bearer '\+credential/);
  assert.match(publish,/credential!==\(localStorage\.getItem\('uadav_account_access_v1'\)/);
 });

@@ -1,6 +1,6 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const vm=require('node:vm');const fs=require('node:fs');
 const source=fs.readFileSync('app.html','utf8').match(/function openRadioSection\(section\)\{[\s\S]*?return true\}/)[0];
-function setup(radio){const routes=[],ctx={currentRadio:radio,platformModules:{},nav:v=>routes.push(v)};vm.createContext(ctx);vm.runInContext(source,ctx);return {ctx,routes}}
+function setup(radio){const routes=[],ctx={window:{},currentRadio:radio,platformModules:{},nav:v=>routes.push(v)};vm.createContext(ctx);vm.runInContext(source,ctx);return {ctx,routes}}
 test('player participation routes to the selected station and requested section',()=>{const {ctx,routes}=setup({id:'RAD/A ?'});assert.equal(ctx.openRadioSection('requestsSection'),true);assert.equal(routes[0],'/radio.html?id=RAD%2FA%20%3F#requestsSection');ctx.openRadioSection('chatSection');assert.ok(routes[1].endsWith('#chatSection'))});
 test('no station or unrecognized section cannot navigate',()=>{let {ctx,routes}=setup(null);assert.equal(ctx.openRadioSection('chatSection'),false);assert.deepEqual(routes,[]);({ctx,routes}=setup({id:'A'}));assert.equal(ctx.openRadioSection('https://other.test'),false);assert.deepEqual(routes,[])});
 test('station change uses current identity instead of a stale destination',()=>{const {ctx,routes}=setup({id:'A'});ctx.openRadioSection('chatSection');ctx.currentRadio={id:'B'};ctx.openRadioSection('requestsSection');assert.ok(routes[1].includes('id=B#'));ctx.currentRadio=null;assert.equal(ctx.openRadioSection('chatSection'),false)});
@@ -31,3 +31,5 @@ test('saved radio without a catalog ID reopens by its stream reference',async()=
  const source=fs.readFileSync('radio.html','utf8'),start=source.indexOf('async function load(){'),end=source.indexOf('async function applyRadioSiteConfig()',start),station={nombre:'Radio sin ID',stream_url:'https://example.test/live'},ctx={wanted:station.stream_url,radio:null,apiJson:async()=>[station],app:{innerHTML:''},render(){ctx.rendered=ctx.radio},renderRadioHub(){throw Error('Wrong hub')},esc:String};
  vm.runInNewContext(source.slice(start,end),ctx);await ctx.load();assert.equal(ctx.rendered.nombre,station.nombre);assert.equal(ctx.app.innerHTML,'');
 });
+
+test('participation opens the persistent side panel without replacing the current page',()=>{const {ctx,routes}=setup({id:'A'}),opened=[];ctx.window.UADAVRadioPanel={open:section=>{opened.push(section);return true}};assert.equal(ctx.openRadioSection('chatSection'),true);assert.deepEqual(opened,['chatSection']);assert.deepEqual(routes,[])});

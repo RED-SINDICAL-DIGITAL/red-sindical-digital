@@ -1,4 +1,37 @@
 import assert from 'node:assert/strict';import vm from 'node:vm';import {readFile} from 'node:fs/promises';
 class Node{constructor(){this.children=[];this.style={};this.isConnected=true}append(...items){this.children.push(...items)}replaceChildren(...items){this.children=items}setAttribute(k,v){this[k]=v}}
-const ids=['accountNotices','noticeToggle','noticePanel','noticeStatus','noticeList','noticeRefresh','noticeReadAll'],nodes=Object.fromEntries(ids.map(k=>[k,new Node()])),map=new Map([['uadav_account_access_v1','A']]),events={},calls=[];let resolveA,read=false;
-const ctx={document:{hidden:false,readyState:'complete',getElementById:id=>nodes[id],createElement:()=>new Node()},localStorage:{getItem:k=>map.get(k)||null},location:{origin:'https://uadavstream.com.ar'},URL,AbortController,setTimeout:()=>1,clearTimeout(){},setInterval(){},addEventListener:(key,fn)=>(events[key]||=[]).push(fn),fetch:async(url,opt)=>{calls.push(opt);if(opt.headers.Authorization==='Bearer A')return{ok:true,json:()=>new Promise(r=>resolveA=r)};if(opt.method==='PATCH'){read=true;return{ok:true,json:async()=>({success:true})}}return{ok:true,json:async()=>({items:[{id:'B-1',title:'Cuenta B',message:'B aviso',path:'/usuario.html',read}],unread:read?0:1})}}};vm.runInNewContext(await readFile(new URL('../uadav-account-notices-v148.js',import.meta.url),'utf8'),ctx);await new Promise(r=>setImmediate(r));map.set('uadav_account_access_v1','B');events.storage.forEach(fn=>fn({key:'uadav_account_access_v1'}));await new Promise(r=>setImmediate(r));resolveA({items:[{id:'A-1',title:'A SECRET',message:'A private',path:'/usuario.html'}],unread:1});await new Promise(r=>setImmediate(r));const texts=n=>[n.textContent||'',...n.children.flatMap(texts)].join(' ');assert(!texts(nodes.noticeList).includes('A SECRET'));assert(texts(nodes.noticeList).includes('Cuenta B'));await nodes.noticeReadAll.onclick();const patch=calls.find(x=>x.method==='PATCH');assert.equal(patch.headers.Authorization,'Bearer B');assert.deepEqual(JSON.parse(patch.body).keys,['B-1']);assert.equal(nodes.noticeToggle.textContent,'🔔 Sin avisos nuevos');console.log('PASS: late old-account notices are discarded and read acknowledgements use the current account only');
+const ids=['accountNotices','noticeToggle','noticePanel','noticeStatus','noticeList','noticeRefresh','noticeReadAll'],nodes=Object.fromEntries(ids.map(k=>[k,new Node()])),map=new Map([['uadav_account_access_v1','A']]),events={},calls=[];let resolveA,read=false,noticePath='/usuario.html#profileSettings';
+const ctx={document:{hidden:false,readyState:'complete',getElementById:id=>nodes[id],createElement:()=>new Node()},localStorage:{getItem:k=>map.get(k)||null},location:{origin:'https://uadavstream.com.ar'},URL,AbortController,setTimeout:()=>1,clearTimeout(){},setInterval(){},addEventListener:(key,fn)=>(events[key]||=[]).push(fn),fetch:async(url,opt)=>{calls.push(opt);if(opt.headers.Authorization==='Bearer A')return{ok:true,json:()=>new Promise(r=>resolveA=r)};if(opt.method==='PATCH'){read=true;return{ok:true,json:async()=>({success:true})}}return{ok:true,json:async()=>({items:[{id:'B-1',title:'Cuenta B',message:'B aviso',path:noticePath,read}],unread:read?0:1})}}};vm.runInNewContext(await readFile(new URL('../uadav-account-notices-v148.js',import.meta.url),'utf8'),ctx);await new Promise(r=>setImmediate(r));map.set('uadav_account_access_v1','B');events.storage.forEach(fn=>fn({key:'uadav_account_access_v1'}));await new Promise(r=>setImmediate(r));resolveA({items:[{id:'A-1',title:'A SECRET',message:'A private',path:'/usuario.html'}],unread:1});await new Promise(r=>setImmediate(r));const texts=n=>[n.textContent||'',...n.children.flatMap(texts)].join(' ');assert(!texts(nodes.noticeList).includes('A SECRET'));assert(texts(nodes.noticeList).includes('Cuenta B'));await nodes.noticeReadAll.onclick();const patch=calls.find(x=>x.method==='PATCH');assert.equal(patch.headers.Authorization,'Bearer B');assert.deepEqual(JSON.parse(patch.body).keys,['B-1']);assert.equal(nodes.noticeToggle.textContent,'🔔 Sin avisos nuevos');console.log('PASS: late old-account notices are discarded and read acknowledgements use the current account only');
+
+assert.equal(nodes.noticeList.children[0].children.find(n=>n.textContent==='Abrir').href,'/usuario.html#profileSettings');
+for(const path of ['https://[','https://example.org/usuario.html']){
+ noticePath=path;await nodes.noticeRefresh.onclick();assert(texts(nodes.noticeList).includes('Cuenta B'));assert(!texts(nodes.noticeList).includes('Abrir'));
+}
+let pendingRead,loads=0,updates=0;
+const snapshot=read=>({ok:true,json:async()=>({items:[{id:'old',title:'Anterior',read}]})});
+ctx.fetch=async(_,opt)=>{
+ if(opt.method==='PATCH'){updates++;assert.deepEqual(JSON.parse(opt.body).keys,['old']);return{ok:true,json:async()=>({success:true})}}
+ loads++;
+ if(loads===2)return new Promise(resolve=>pendingRead=resolve);
+ if(loads===3)return{ok:true,json:async()=>({items:[{id:'old',read:true},{id:'new',title:'Recién llegado',read:false}]})};
+ return snapshot(false);
+};
+await nodes.noticeRefresh.onclick();
+const earlier=nodes.noticeRefresh.onclick();
+await Promise.all([nodes.noticeReadAll.onclick(),nodes.noticeReadAll.onclick()]);
+pendingRead(snapshot(false));await earlier;
+assert.equal(updates,1);assert.equal(nodes.noticeToggle.textContent,'🔔 1 aviso nuevo');
+assert(texts(nodes.noticeList).includes('Recién llegado'));
+let confirmSingle,singleWrites=0;
+ctx.fetch=async(_,opt)=>{
+ if(opt.method==='PATCH'){singleWrites++;return new Promise(resolve=>confirmSingle=resolve)}
+ return snapshot(false);
+};
+await nodes.noticeRefresh.onclick();
+const single=nodes.noticeList.children[0].children.find(n=>n.textContent==='Marcar leído');
+const saving=single.onclick();await single.onclick();
+await nodes.noticeRefresh.onclick();
+ctx.fetch=async()=>snapshot(true);
+confirmSingle({ok:true,json:async()=>({success:true})});await saving;
+assert.equal(singleWrites,1);assert.equal(nodes.noticeToggle.textContent,'🔔 Sin avisos nuevos');
+map.clear();events.storage.forEach(fn=>fn({key:null}));assert.equal(nodes.accountNotices.hidden,true);assert.equal(nodes.noticeList.children.length,0);

@@ -2,11 +2,28 @@
 'use strict';
 const $=id=>document.getElementById(id),service=window.UADAVAccount,pendingKey='uadav_pair_pending_v1',proofKey='uadav_pair_qr_v1';let pending=null,busy=false,timer=null,ready=false;
 try{pending=JSON.parse(sessionStorage.getItem(pendingKey)||'null')}catch{}
-const proof=sessionStorage.getItem(proofKey)||'';
+let proof=sessionStorage.getItem(proofKey)||'';
 if(proof){$('codeLabel').hidden=true;$('shortCode').required=false;$('intro').textContent='QR reconocido. Enviá la solicitud y confirmala desde el dispositivo que mostró el QR.'}else $('shortCode').required=true;
 $('deviceName').value=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||'')?'Mi celular o tablet':'Mi computadora';$('replaceLabel').hidden=!service.state().linked;
 function wait(){ $('joinForm').hidden=true;$('waiting').hidden=false;$('verify').textContent=pending.verification;clearInterval(timer);timer=setInterval(poll,3000);poll() }
-async function poll(){if(busy||!pending||!ready)return;busy=true;try{const d=await service.joinStatus(pending.id,pending.secret);if(d.state==='approved'){clearInterval(timer);await service.connect(pending.secret,pending.importLocal===true);sessionStorage.removeItem(pendingKey);sessionStorage.removeItem(proofKey);sessionStorage.removeItem('uadav_pair_candidate_v1');pending=null;$('waiting').hidden=true;$('status').textContent='Dispositivo vinculado. Tu cuenta ya está disponible aquí.';$('openAccount').hidden=false}else if(['expired','cancelled'].includes(d.state)){clearInterval(timer);sessionStorage.removeItem(pendingKey);sessionStorage.removeItem(proofKey);$('waiting').hidden=true;$('status').textContent='La solicitud venció o fue cancelada. Generá y escaneá otro QR, o volvé a esta página sin QR e ingresá un nuevo código.';pending=null}else $('status').textContent='Esperando tu confirmación en el otro dispositivo…'}catch(e){$('status').textContent=e.message+' Podés volver a comprobar la aprobación.'}finally{busy=false}}
+async function poll(){if(busy||!pending||!ready)return;busy=true;try{const d=await service.joinStatus(pending.id,pending.secret);if(d.state==='approved'){clearInterval(timer);await service.connect(pending.secret,pending.importLocal===true);sessionStorage.removeItem(pendingKey);sessionStorage.removeItem(proofKey);sessionStorage.removeItem('uadav_pair_candidate_v1');pending=null;$('waiting').hidden=true;$('status').textContent='Dispositivo vinculado. Tu cuenta ya está disponible aquí.';$('openAccount').hidden=false}else if(['expired','cancelled'].includes(d.state)){clearInterval(timer);
+ sessionStorage.removeItem(pendingKey);
+ sessionStorage.removeItem(proofKey);
+ sessionStorage.removeItem('uadav_pair_candidate_v1');
+ pending=null;
+ proof='';
+ $('waiting').hidden=true;
+ $('verify').textContent='';
+ $('joinForm').hidden=false;
+ $('codeLabel').hidden=false;
+ $('shortCode').value='';
+ $('shortCode').required=true;
+ $('replaceAccount').checked=false;
+ $('replaceLabel').hidden=!service.state().linked;
+ $('intro').textContent='En el dispositivo vinculado, abrí Cuenta y seguridad y elegí Vincular otro dispositivo.';
+ $('status').textContent='La solicitud venció o fue cancelada. Ingresá el nuevo código de seis números o escaneá el nuevo QR.';
+ $('shortCode').focus();
+}else $('status').textContent='Esperando tu confirmación en el otro dispositivo…'}catch(e){$('status').textContent=e.message+' Podés volver a comprobar la aprobación.'}finally{busy=false}}
 $('joinForm').onsubmit=async e=>{e.preventDefault();if(!ready||busy)return;if(service.state().linked&&!$('replaceAccount').checked){$('status').textContent='Este navegador ya tiene una cuenta. Confirmá que querés abrir otra.';return}busy=true;$('joinButton').disabled=true;try{const code=$('shortCode').value.replace(/\s/g,'');let candidate=null;try{candidate=JSON.parse(sessionStorage.getItem('uadav_pair_candidate_v1')||'null')}catch{}const secret=candidate&&candidate.proof===proof&&candidate.code===code?candidate.secret:service.newDeviceSecret();sessionStorage.setItem('uadav_pair_candidate_v1',JSON.stringify({secret,proof,code}));const d=await service.join({proof,code,name:$('deviceName').value.trim()},secret);pending={...d,secret,importLocal:$('importLibrary').checked};sessionStorage.setItem(pendingKey,JSON.stringify(pending));$('status').textContent='Solicitud enviada. Compará el número y aprobala desde tu otro dispositivo.';}catch(e){$('status').textContent=e.message}finally{busy=false;$('joinButton').disabled=!ready;if(pending)wait()}};
 $('retryStatus').onclick=poll;
 // Return to the shell view without opening a second shell inside its iframe.

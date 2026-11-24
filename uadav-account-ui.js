@@ -9,8 +9,26 @@ function refresh(){try{if(typeof refreshProfileView==='function')refreshProfileV
 window.addEventListener('uadav:account',update);window.addEventListener('uadav:account-data',refresh);window.addEventListener('storage',event=>{if(event.key===null||event.key==='uadav_user_v11'||event.key==='uadav_account_access_v1')refresh()});update();
 function stop(){clearInterval(pairTimer);pairTimer=null;pairGeneration++}
 async function cancel(){stop();const old=pair;pair=null;if(old)try{await service.pairingCancel(old.id)}catch{}}
-async function poll(){if(pairBusy||!pair)return;pairBusy=true;const id=pair.id,generation=pairGeneration;try{const d=await service.pairingStatus(id);if(generation!==pairGeneration||pair?.id!==id)return;const left=Math.max(0,Math.ceil((pair.expires_at-Date.now())/1000));$('pairTime').textContent='Vence en '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0');if(['approved','expired','cancelled'].includes(d.state)||left===0){stop();$('pairApproval').hidden=true;$('pairMessage').textContent=d.state==='approved'?'Dispositivo aprobado. La cuenta ya puede abrirse allí.':'Este código venció o fue cancelado. Cerrá y generá uno nuevo.';pair=null;return}if(d.state==='requested'){$('pairApproval').hidden=false;$('pairVerification').textContent=d.verification;$('pairMessage').textContent='Solicita acceso: '+d.device_name;pair.verification=d.verification}else $('pairMessage').textContent='Esperando tu otro dispositivo…';}catch(e){$('pairMessage').textContent=e.message}finally{pairBusy=false}}
-async function showPair(){await cancel();$('pairQr').replaceChildren();$('pairCode').textContent='';$('pairMessage').textContent='Generando una vinculación segura…';$('pairApproval').hidden=true;$('pairDialog').showModal();const generation=pairGeneration;try{const p=await service.pairingCreate();if(generation!==pairGeneration){await service.pairingCancel(p.id);return}pair=p;const link=location.origin+'/vincular-dispositivo.html#p='+p.proof;new QRCode($('pairQr'),{text:link,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});$('pairCode').textContent=p.code.slice(0,3)+' '+p.code.slice(3);pairTimer=setInterval(poll,3000);await poll()}catch(e){$('pairMessage').textContent=e.message}}
+const renewPair=document.createElement('button');
+renewPair.className='chip';
+renewPair.type='button';
+renewPair.textContent='Generar otro código';
+renewPair.hidden=true;
+$('pairMessage').after(renewPair);
+renewPair.onclick=()=>{
+ if(renewPair.hidden)return;
+ renewPair.hidden=true;
+ showPair().catch(e=>{$('pairMessage').textContent=e.message});
+};
+function clearPairDisplay(){
+ renewPair.hidden=true;
+ $('pairQr').replaceChildren();
+ $('pairQr').hidden=true;
+ for(const id of ['pairCode','pairTime','pairVerification'])$(id).textContent='';
+ $('pairApproval').hidden=true;
+}
+async function poll(){if(pairBusy||!pair)return;pairBusy=true;const id=pair.id,generation=pairGeneration;try{const d=await service.pairingStatus(id);if(generation!==pairGeneration||pair?.id!==id)return;const left=Math.max(0,Math.ceil((pair.expires_at-Date.now())/1000));$('pairTime').textContent='Vence en '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0');if(['approved','expired','cancelled'].includes(d.state)||left===0){stop();clearPairDisplay();renewPair.hidden=d.state==='approved';$('pairMessage').textContent=d.state==='approved'?'Dispositivo aprobado. La cuenta ya puede abrirse allí.':'Este código venció o fue cancelado. Podés generar otro desde aquí.';pair=null;return}if(d.state==='requested'){$('pairApproval').hidden=false;$('pairVerification').textContent=d.verification;$('pairMessage').textContent='Solicita acceso: '+d.device_name;pair.verification=d.verification}else $('pairMessage').textContent='Esperando tu otro dispositivo…';}catch(e){if(generation===pairGeneration&&pair?.id===id)$('pairMessage').textContent=e.message}finally{pairBusy=false}}
+async function showPair(){const cancellation=cancel(),generation=pairGeneration;await cancellation;if(generation!==pairGeneration)return;clearPairDisplay();$('pairMessage').textContent='Generando una vinculación segura…';$('pairApproval').hidden=true;if(!$('pairDialog').open)$('pairDialog').showModal();try{const p=await service.pairingCreate();if(generation!==pairGeneration){await service.pairingCancel(p.id);return}pair=p;const link=location.origin+'/vincular-dispositivo.html#p='+p.proof;$('pairQr').hidden=false;new QRCode($('pairQr'),{text:link,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});$('pairCode').textContent=p.code.slice(0,3)+' '+p.code.slice(3);pairTimer=setInterval(poll,3000);await poll()}catch(e){if(generation===pairGeneration){$('pairMessage').textContent=e.message;renewPair.hidden=false}}}
 $('createAccount').onclick=async()=>{const b=$('createAccount');b.disabled=true;try{await service.create()}catch(e){$('syncStatus').textContent=e.message}finally{b.disabled=false}};
 $('showAccountCode').onclick=()=>showPair().catch(e=>$('syncStatus').textContent=e.message);
 $('linkAccount').onclick=()=>{try{const h=window.parent!==window&&window.parent.UADAVShellHost;if(h?.navigate){h.navigate('/vincular-dispositivo.html');return}}catch{}location.href='/vincular-dispositivo.html'};

@@ -16,14 +16,15 @@ export function transform(source,origin){
 }
 export function stagingRuntime(origin,api){
   'use strict';
-  if(location.origin!==origin)throw Error('Staging origin mismatch');
+  const preview='https://integration-staging-preserve.uadav-stream-staging.pages.dev';
+  if(location.origin!==origin&&location.origin!==preview)throw Error('Staging origin mismatch');
   window.PLATFORM_API_BASE=window.UADAV_API_BASE=api;
   window.PLATFORM_USE_LOCAL_API=window.UADAV_USE_LOCAL_API=false;
   const nativeFetch=window.fetch.bind(window);
   window.fetch=(input,init)=>{
     const target=new URL(input instanceof Request?input.url:String(input),location.href);
     if(/^(?:www\.)?uadavstream\.com\.ar$|^uadav-api\.uadavstream\.workers\.dev$/i.test(target.hostname))return Promise.reject(new Error('Production request blocked in staging'));
-    if(target.origin===origin&&target.pathname.startsWith('/api/')){
+    if(target.origin===location.origin&&target.pathname.startsWith('/api/')){
       const destination=api+target.pathname.slice(5)+target.search;
       return nativeFetch(input instanceof Request?new Request(destination,input):destination,init);
     }
