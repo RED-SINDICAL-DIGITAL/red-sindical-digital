@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {sqliteD1} from './sqlite-d1.mjs';
 
-const source=await readFile(new URL('../worker.js',import.meta.url));
+const source=await readFile(new URL('../qa/admin-v2/worker.js',import.meta.url));
 const {default:worker}=await import('data:text/javascript;base64,'+source.toString('base64'));
 const db=sqliteD1(), kv=new Map(), host='qa.invalid';
 const env={DB:db,UADAV_DB:{get:async key=>kv.get(key)??null,put:async(k,v)=>kv.set(k,v),delete:async k=>kv.delete(k)},

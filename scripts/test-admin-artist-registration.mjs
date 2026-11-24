@@ -3,7 +3,7 @@
 // Static test does not replace an API/browser integration test.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-const worker=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
+const worker=readFileSync(new URL('../qa/admin-v2/worker.js',import.meta.url),'utf8');
 const admin=readFileSync(new URL('../admin.html',import.meta.url),'utf8');
 const route=worker.slice(worker.indexOf("if(path==='/api/artista/claim' && request.method==='POST')"));
 assert.ok(route.startsWith("if(path==='/api/artista/claim'"),'Artist claim route missing');

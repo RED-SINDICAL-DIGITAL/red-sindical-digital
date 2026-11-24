@@ -4,7 +4,7 @@ import {webcrypto} from 'node:crypto';
 import vm from 'node:vm';
 import {sqliteD1} from './sqlite-d1.mjs';
 globalThis.crypto ||=webcrypto;
-const workerSource=await readFile(new URL('../worker.js',import.meta.url),'utf8'),clientSource=await readFile(new URL('../uadav-account-sync.js',import.meta.url),'utf8');
+const workerSource=await readFile(new URL('../qa/admin-v2/worker.js',import.meta.url),'utf8'),clientSource=await readFile(new URL('../uadav-account-sync.js',import.meta.url),'utf8');
 const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(workerSource).toString('base64'));
 const DB=sqliteD1();
 function device(name){

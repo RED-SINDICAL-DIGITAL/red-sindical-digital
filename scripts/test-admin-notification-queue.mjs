@@ -3,7 +3,7 @@
 // Run: node scripts/test-admin-notification-queue.mjs
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-const code=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
+const code=readFileSync(new URL('../qa/admin-v2/worker.js',import.meta.url),'utf8');
 const count=x=>code.split(x).length-1;
 assert.ok(code.includes("id: 'N-'+crypto.randomUUID()"), 'Notification IDs must be unique even in the same millisecond');
 assert.equal(count('{notification_id:row.id,...payload}'),0,'Queue IDs can be overwritten by user payloads');

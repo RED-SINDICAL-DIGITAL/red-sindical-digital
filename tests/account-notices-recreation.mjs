@@ -1,6 +1,6 @@
 import {legacyDraft} from './legacy-artist-draft-fixture.mjs';
 import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {webcrypto} from 'node:crypto';import {sqliteD1} from './sqlite-d1.mjs';globalThis.crypto||=webcrypto;
-const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url),'utf8')).toString('base64')),DB=sqliteD1(),map=new Map(),env={DB,ADMIN_KEY:'admin',UADAV_DB:{get:async k=>map.get(k)||null,put:async(k,v)=>map.set(k,v),delete:async k=>map.delete(k)}},a='UAC-'+'a'.repeat(64),b='UAC-'+'b'.repeat(64);let serial=0;
+const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../qa/admin-v2/worker.js',import.meta.url),'utf8')).toString('base64')),DB=sqliteD1(),map=new Map(),env={DB,ADMIN_KEY:'admin',UADAV_DB:{get:async k=>map.get(k)||null,put:async(k,v)=>map.set(k,v),delete:async k=>map.delete(k)}},a='UAC-'+'a'.repeat(64),b='UAC-'+'b'.repeat(64);let serial=0;
 async function call(path,method='GET',body,auth=a){const r=await worker.fetch(new Request('https://test.invalid/api/'+path,{method,headers:{Origin:'https://uadavstream.com.ar',Authorization:auth?'Bearer '+auth:'','Content-Type':'application/json','CF-Connecting-IP':'ip'+(++serial)},...(body?{body:JSON.stringify(body)}:{})}),env,{});return{status:r.status,data:await r.json()}}
 const req={new_profile:true,artist_name:'Maga de Rosario',rubro:'Magia',name:'Maga',email:'maga@example.com'};
 try{

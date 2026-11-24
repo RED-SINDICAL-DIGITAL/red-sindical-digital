@@ -7,7 +7,7 @@ const staging=read('worker-demo-staging.js');
 const api=read('uadav-api-config.js');
 assert.match(live,/main\s*=\s*"worker-demo-staging\.js"/,'El staging congelado debe usar su entrada independiente');
 assert.match(staging,/releases\/worker-staging-catalogo-20261119\.js/,'No cambiar staging congelado');
-assert.match(proposed,/^main\s*=\s*"worker\.js"$/m,'QA debe apuntar al Worker nuevo');
+assert.match(proposed,/^main\s*=\s*"qa\/admin-v2\/worker\.js"$/m,'QA debe apuntar al Worker nuevo');
 assert.match(proposed,/^name\s*=\s*"uadav-api-admin-v2-qa"$/m,'QA debe ser otro servicio');
 assert.notEqual(live.match(/^name\s*=\s*"([^"]+)"/m)?.[1],proposed.match(/^name\s*=\s*"([^"]+)"/m)?.[1]);
 for(const binding of ['UADAV_DB','DB','DEMO_DB'])assert.match(proposed,new RegExp('binding\\s*=\\s*"'+binding+'"'),'Falta binding aislado: '+binding);
@@ -26,3 +26,10 @@ assert.ok(!/uadav-api\.uadavstream\.workers\.dev/.test(proposed),'Prohibido usar
 assert.ok(api.includes('https://uadav-api-staging.uadavstream.workers.dev/api/'),'La UI staging actual sigue usando su API anterior');
 assert.ok(!api.includes('uadav-api-admin-v2-qa'),'La UI actual no debe apuntar automáticamente al QA nuevo');
 console.log('PASS: Worker QA aislado por servicio y bindings; staging congelado y API del frontend sin cambios.');
+const configuredQA=read('wrangler.admin-v2-qa.toml');
+const qaEntry='qa/admin-v2/worker.js';
+for(const config of [configuredQA,proposed]){
+ assert.equal(config.match(/^main\s*=\s*"([^"]+)"/m)?.[1],qaEntry);
+ assert.equal(config.match(/^name\s*=\s*"([^"]+)"/m)?.[1],'uadav-api-admin-v2-qa');
+}
+assert.ok(read(qaEntry).includes('uadavAccountEmailRoute'),'El candidato QA debe incluir la ruta de correo');

@@ -1,6 +1,6 @@
 # Exclusivo de QA. Requiere Access, secretos de QA y autorización antes del despliegue.
 name = "uadav-api-admin-v2-qa"
-main = "worker.js"
+main = "qa/admin-v2/worker.js"
 compatibility_date = "2026-09-28"
 workers_dev = true
 preview_urls = false

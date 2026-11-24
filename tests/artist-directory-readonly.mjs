@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {sqliteD1} from './sqlite-d1.mjs';
-const source=await readFile(new URL('../worker.js',import.meta.url));
+const source=await readFile(new URL('../qa/admin-v2/worker.js',import.meta.url));
 const {default:worker}=await import('data:text/javascript;base64,'+source.toString('base64'));
 const DB=sqliteD1();
 const catalog={artistas:[null,{id:'a',nombre:'QA'},{id:'b',visible:false}],secciones:[{tipo_contenido:'perfiles',items:[null,{id:'c',nombre:'QA 2'}]}]};

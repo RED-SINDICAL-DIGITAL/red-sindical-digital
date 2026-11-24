@@ -8,7 +8,7 @@ const qaOrigin='https://uadav-admin-v2-qa.pages.dev';
 assert.equal(match('ACCOUNT_ALLOWED_ORIGINS'),qaOrigin,'QA CORS must use its own Pages origin');
 assert.equal(match('PUBLIC_SITE_URL'),qaOrigin,'Links must resolve only to QA');
 assert.equal(match('TURNSTILE_ALLOWED_HOSTNAMES'),'uadav-admin-v2-qa.pages.dev','QA Turnstile must use QA host');
-const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url))).toString('base64'));
+const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../qa/admin-v2/worker.js',import.meta.url))).toString('base64'));
 async function check(origin){
  const env={ACCOUNT_ALLOWED_ORIGINS:match('ACCOUNT_ALLOWED_ORIGINS')};
  const response=await worker.fetch(new Request('https://uadav-api-admin-v2-qa.uadavstream.workers.dev/api/account/identity',{headers:{Origin:origin,Authorization:'Bearer UAC-'+'1'.repeat(64)}}),env,{waitUntil(){}});

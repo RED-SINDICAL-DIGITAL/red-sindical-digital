@@ -116,3 +116,9 @@ Para reproducir desde este candidato:
 node --test tests/account-email-http.test.mjs scripts/test-account-recovery-{atomic,concurrency,rollback,interoperability}.mjs
 git diff --numstat d4b68445e67b754b811b93d84a9b7225233e67b3 b1febec:worker.js
 ```
+
+### Separación comprobada de las entradas
+
+El candidato de correo de b1febec se conserva byte por byte en qa/admin-v2/worker.js. La plantilla y la configuración exclusiva de Admin QA seleccionan esa entrada. El archivo raíz worker.js recupera el blob protegido d4b68445e67b754b811b93d84a9b7225233e67b3. El envoltorio y el catálogo de staging conservan sus versiones anteriores.
+
+Se ejecutaron localmente los comandos de los workflows de regresión Admin y preservación, junto con las pruebas de configuración, revocación, reintentos, directorio e integración artística. Estas comprobaciones no registran un despliegue, vinculan recursos ni certifican Cloudflare Access o la entrega de Brevo. Antes de publicar deben verificarse las políticas de acceso, la configuración privada del proveedor y un plan de reversión del entorno.

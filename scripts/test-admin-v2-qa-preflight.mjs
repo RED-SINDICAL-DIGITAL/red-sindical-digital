@@ -43,3 +43,5 @@ fails(synthetic+'\n[constructor]\nx = true\n');
 assert.equal(qaPreflight(synthetic.replace('workers_dev = true','workers_dev = true # QA'),evidence).ready,true);
 
 console.log('PASS: fail-closed QA deployment gate rejects missing bindings, reused IDs, real endpoints, triggers, and missing independent sign-off.');
+
+fails(synthetic.replace('qa/admin-v2/worker.js','worker.js'));

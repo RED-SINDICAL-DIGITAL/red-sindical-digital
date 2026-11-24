@@ -2,7 +2,7 @@
 // Audit-only diagnostic: intentionally exits nonzero if the recovery contract is mismatched.
 // Run separately: node scripts/audit-account-recovery-contract.mjs
 import {readFileSync} from 'node:fs';
-const worker=readFileSync(new URL('../worker.js',import.meta.url),'utf8');
+const worker=readFileSync(new URL('../qa/admin-v2/worker.js',import.meta.url),'utf8');
 const sync=readFileSync(new URL('../uadav-account-sync.js',import.meta.url),'utf8');
 const profile=readFileSync(new URL('../usuario.html',import.meta.url),'utf8');
 const checks=[

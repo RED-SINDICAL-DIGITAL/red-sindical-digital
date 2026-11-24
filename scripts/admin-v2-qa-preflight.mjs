@@ -40,7 +40,7 @@ export function qaPreflight(wrangler,evidence){
  if(blocks.filter(x=>x.section==='kv_namespaces').length!==1||blocks.filter(x=>x.section==='d1_databases').length!==2)problems.push('QA resource binding count must be exact');
  if(root.compatibility_date!=='2026-09-28')problems.push('Unexpected compatibility date');
  if(root.name!=='uadav-api-admin-v2-qa')problems.push('Incorrect QA Worker name');
- if(root.main!=='worker.js')problems.push('QA must use reviewed worker.js');
+ if(root.main!=='qa/admin-v2/worker.js')problems.push('QA must use reviewed worker.js');
  if(root.workers_dev!=='true'||root.preview_urls!=='false')problems.push('Unexpected Worker exposure settings');
  for(const [key,value] of Object.entries({PUBLIC_SITE_URL:qaSite,ACCOUNT_ALLOWED_ORIGINS:qaSite,TURNSTILE_ALLOWED_HOSTNAMES:'uadav-admin-v2-qa.pages.dev'}))if(vars[key]!==value)problems.push('Wrong QA variable '+key);
  const bound={};

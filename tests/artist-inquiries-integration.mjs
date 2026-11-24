@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {webcrypto} from 'node:crypto';import {sqliteD1} from './sqlite-d1.mjs';globalThis.crypto ||= webcrypto;
-const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url),'utf8')).toString('base64'));
+const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../qa/admin-v2/worker.js',import.meta.url),'utf8')).toString('base64'));
 const DB=sqliteD1(),kv=new Map(),a='ART-inquiry-A-123456789',b='ART-inquiry-B-123456789';const env={DB,ADMIN_KEY:'local-inquiries-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
 kv.set('artistas',JSON.stringify([{id:'QA-A',nombre:'Free artist A',visible:true},{id:'QA-B',nombre:'Free artist B',visible:true},{id:'QA-SUSPENDED',nombre:'Suspended',visible:true,estado:'suspendido'}]));
 for(const [token,id] of [[a,'QA-A'],[b,'QA-B']])kv.set('artist_access_'+token,JSON.stringify({artist_id:id,expires:Date.now()+3600000}));

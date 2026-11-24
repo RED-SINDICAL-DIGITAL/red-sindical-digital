@@ -6,6 +6,8 @@ on:
       - 'admin.html'
       - 'usuario.html'
       - 'worker.js'
+      - 'qa/admin-v2/worker.js'
+      - 'wrangler.admin-v2-qa.toml'
       - 'uadav-account-sync.js'
       - 'scripts/test-admin-*.mjs'
       - 'scripts/test-account-email-first-ui.mjs'
@@ -46,6 +48,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check worker.js
+          node --check qa/admin-v2/worker.js
           node --check uadav-account-sync.js
       - name: Validate remote email inspection is read only (synthetic, no network)
         run: node --test tests/qa-email-readonly.test.mjs
