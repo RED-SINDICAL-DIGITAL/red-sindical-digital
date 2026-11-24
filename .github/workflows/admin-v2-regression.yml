@@ -8,6 +8,8 @@ on:
       - 'worker.js'
       - 'uadav-account-sync.js'
       - 'scripts/test-admin-*.mjs'
+      - 'scripts/test-account-email-first-ui.mjs'
+      - 'uadav-profile-email.js'
       - 'scripts/test-account-recovery-atomic.mjs'
       - 'scripts/test-account-recovery-interoperability.mjs'
       - 'scripts/test-account-recovery-rollback.mjs'
@@ -42,6 +44,8 @@ jobs:
         run: |
           node --check worker.js
           node --check uadav-account-sync.js
+      - name: Validate accessible email-first account entry
+        run: node scripts/test-account-email-first-ui.mjs
       - name: Validate Admin navigation
         run: node scripts/test-admin-simple-nav.mjs
       - name: Validate notification queue
