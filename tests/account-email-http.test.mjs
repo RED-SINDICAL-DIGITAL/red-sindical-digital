@@ -1,9 +1,10 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {webcrypto} from 'node:crypto';import {sqliteD1} from './sqlite-d1.mjs';
 globalThis.crypto ||= webcrypto;const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url))).toString('base64')),SITE='https://uadav-api-staging.uadavstream.workers.dev',PAGES='https://uadav-stream-staging.pages.dev',root='UAC-'+'a'.repeat(64),fresh='UAD-'+'b'.repeat(64),email='own@example.invalid';
 const hash=async s=>Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))).toString('hex');
+const qaPlaylist={id:'qa-library',name:'Lista de prueba',items:[{id:'qa-track-b'},{id:'qa-track-a'}]};
 async function fixture(site=SITE,pages=PAGES){const DB=sqliteD1(),mail=[],tasks=[],fetch=globalThis.fetch;const env={DB,ADMIN_KEY:'synthetic-admin',PUBLIC_SITE_URL:pages,ACCOUNT_ALLOWED_ORIGINS:pages,BREVO_API_KEY:'x'.repeat(40),BREVO_QA_RECIPIENT:email,JOB_RECOVERY_ENCRYPTION_KEY:'e'.repeat(64),UADAV_DB:{get:async()=>null,put:async()=>{}}};
  const call=async(path,method='GET',data,key='',origin=pages,host=site,ctx={waitUntil:p=>tasks.push(p)})=>{const r=await worker.fetch(new Request(host+path,{method,headers:{Origin:origin,'CF-Connecting-IP':'203.0.113.61','Content-Type':'application/json',...(key?{Authorization:'Bearer '+key}:{})},...(data?{body:JSON.stringify(data)}:{})}),env,ctx);return{status:r.status,data:r.status===204?null:await r.json(),headers:r.headers}};
- assert.equal((await call('/api/account','POST',{data:{uadav_user_v11:{name:'PRIVATE NAME'},uadav_favorites_v1:[{id:'PRIVATE_LIBRARY'}]}},root)).status,200);await DB.prepare('CREATE TABLE job_store_meta(key TEXT PRIMARY KEY,value TEXT)').run();await DB.prepare("INSERT INTO job_store_meta VALUES('migration_ready','true')").run();env.JOB_STORE_D1='true';
+ assert.equal((await call('/api/account','POST',{data:{uadav_user_v11:{name:'PRIVATE NAME'},uadav_favorites_v1:[{id:'PRIVATE_LIBRARY'}],uadav_playlists_v1:[qaPlaylist]}},root)).status,200);await DB.prepare('CREATE TABLE job_store_meta(key TEXT PRIMARY KEY,value TEXT)').run();await DB.prepare("INSERT INTO job_store_meta VALUES('migration_ready','true')").run();env.JOB_STORE_D1='true';
  globalThis.fetch=async(input)=>{const url=typeof input==='string'?input:input.url;if(url===pages+'/account-email-version.json')return new Response(JSON.stringify({version:'11769.1',purpose:'account_email_access',confirmation:'explicit-post'}),{headers:{'Content-Type':'application/json'}});assert.equal(url,'https://api.brevo.com/v3/smtp/email');const b=JSON.parse(await input.text());mail.push(b);return new Response(JSON.stringify({messageId:'<synthetic-'+mail.length+'@example.invalid>'}),{status:201,headers:{'Content-Type':'application/json'}})};
  const prepare=()=>call('/api/admin/access-email','POST',{action:'prepare',confirm:'PREPARAR ACCESO POR CORREO'},env.ADMIN_KEY);
  const request=(kind='verify',recipient=email)=>call('/api/access/email/'+kind,'POST',{email:recipient,request_id:crypto.randomUUID(),consent:true},kind==='verify'?root:'');
@@ -146,5 +147,23 @@ test('isolated QA prepares, verifies and redeems entirely on its own origins', a
   assert.equal((await f.call('/api/access/email/redeem','POST',login)).status,200);
   const account=await f.call('/api/account','GET',null,login.new_device_secret);
   assert.equal(account.data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY');
+  assert.deepEqual(account.data.data.uadav_playlists_v1,[qaPlaylist]);
+  const identity=async secret=>(await f.call('/api/account/identity','GET',null,secret)).data.account_id;
+  const expected=await hash(root);
+  assert.equal(await identity(login.new_device_secret),expected);
+  const devices=await f.call('/api/account/devices','GET',null,login.new_device_secret);
+  const device=devices.data.devices.find(item=>item.current);
+  assert.ok(device);
+  assert.equal((await f.call('/api/account/devices','POST',{action:'revoke',id:device.id},root)).status,200);
+  assert.equal((await f.call('/api/account','GET',null,login.new_device_secret)).status,401);
+  assert.equal(await identity(proof.new_device_secret),expected);
+  assert.equal((await f.request('request')).status,202);
+  const next={...await f.proof(),new_device_secret:'UAD-'+'d'.repeat(64)};
+  assert.equal((await f.call('/api/access/email/redeem','POST',next)).status,200);
+  assert.equal(await identity(next.new_device_secret),expected);
+  const restored=await f.call('/api/account','GET',null,next.new_device_secret);
+  assert.deepEqual(restored.data.data.uadav_playlists_v1,[qaPlaylist]);
+  assert.deepEqual(restored.data.data.uadav_favorites_v1,account.data.data.uadav_favorites_v1);
+  assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM audience_accounts').first()).n,1);
  } finally { f.close(); }
 });

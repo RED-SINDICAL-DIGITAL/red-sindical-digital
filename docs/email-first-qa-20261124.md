@@ -101,3 +101,18 @@ El navegador de consulta pública usado en esta conversación no pudo acceder a 
 | Autorización producción | NO AUTORIZADO | Decisión separada y explícita |
 
 **Criterio de experiencia:** uso anónimo para explorar; correo + enlace privado para conservar y gestionar. Ocultar al público los códigos solo después de comprobar la migración; nunca eliminar datos, propietarios ni recuperaciones antiguas por simplificación visual. El acceso por correo no confiere por sí solo titularidad artística.
+
+### Auditoría del candidato independiente b1febec (sin despliegue)
+
+La comparación de blobs de Git entre la referencia protegida d4b68445e67b754b811b93d84a9b7225233e67b3 y worker.js del candidato (1c12eaee6903901a596d12edeb246511056b97cb) da 479 líneas añadidas y 26 eliminadas. Incluye esquema y recuperación de cuentas, correo con confirmación y limpieza, publicación y acceso artístico, y entrega de notificaciones. La diferencia es funcional.
+
+El proyecto de staging declarado usa worker-demo-staging.js, que importa releases/worker-staging-catalogo-20261119.js. La prueba de preservación comprueba además el archivo worker.js de la raíz. La configuración y la prueba de límites de Admin QA también apuntan a worker.js. Restaurar ese archivo sin cambiar la distribución del candidato eliminaría las funciones nuevas de QA. La separación debe conservar el archivo raíz protegido y ejercitar la entrada efectiva del proyecto QA con las pruebas de ambos entornos. Sigue pendiente implementarla y verificar ambas configuraciones juntas.
+
+El ensayo de recuperación usa SQLite temporal, transporte Brevo simulado y dos dispositivos sintéticos. Verifica una playlist con dos elementos y su orden, el favorito y el ID de cuenta después de revocar el segundo dispositivo y volver a entrar con un enlace nuevo. Comprueba que la credencial revocada recibe 401, la primera sesión sigue activa y queda una sola cuenta. La suite ejecutada incluye la reversión de transacciones de recuperación. Una reversión en Cloudflare exige registrar y comprobar versión y respaldo propios de QA antes de una futura activación; la prueba local no restaura una base remota.
+
+Para reproducir desde este candidato:
+
+```sh
+node --test tests/account-email-http.test.mjs scripts/test-account-recovery-{atomic,concurrency,rollback,interoperability}.mjs
+git diff --numstat d4b68445e67b754b811b93d84a9b7225233e67b3 b1febec:worker.js
+```
