@@ -40,3 +40,17 @@ Con Worker real cargado en Node, adaptador D1 SQLite sintético y simulación de
 El workflow **Admin 2.0 regression checks (no deployment)** fue `SUCCESS` en `c44f211`; Platform integration, Bolsa UI y Job status también `SUCCESS` en ese commit.
 
 **No equivale** a validar una bandeja real, la configuración Brevo/Cloudflare ni la titularidad artística remota. Sigue fallando la guarda de preservación del staging y la prueba visual se encontraba en ejecución durante esta verificación. No modificar la guarda ni fusionar/desplegar.
+
+## Identidad de correo y titularidad artística entre dispositivos (24/11/2026)
+
+Se amplió `tests/account-email-http.test.mjs` con un escenario de **titular artístico existente y cuenta de correo verificada**, usando Worker importado desde el repositorio, D1 SQLite sintético, servicios externos simulados y credenciales ficticias:
+
+1. Titular verificado vinculado a la cuenta original: puede consultar `/api/account/artists` y abrir `/api/account/artist-session`.
+2. Tras confirmar el correo y abrir otro dispositivo con un enlace nuevo, la **misma cuenta** conserva el permiso artístico en ambos dispositivos.
+3. Una segunda cuenta distinta ve su lista de artistas vacía y su intento de iniciar sesión artística devuelve **403**.
+4. Al revocar al titular en la D1 sintética, desaparece de su lista y se bloquea la apertura de nuevas sesiones artísticas.
+5. La revocación **no borra** la biblioteca de favoritos de esa cuenta.
+
+El escenario crea las tablas del dominio artístico dentro del fixture local (la inicialización de correo por sí sola no prepara este dominio). La suite **Admin 2.0**, **Platform integration** y **Bolsa UI staging** aprobaron para commit `18574e3`. No se enviaron correos ni se modificaron KV/D1 remotos.
+
+**Aún pendiente:** navegación real en Pages, recepción de correo en bandeja QA, revocación de sesiones artísticas activas bajo un cambio de titular en infraestructura real y autorización de despliegue. La verificación de preservación del staging continúa bloqueada.
