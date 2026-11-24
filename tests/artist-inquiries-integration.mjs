@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {webcrypto} from 'node:crypto';import {sqliteD1} from './sqlite-d1.mjs';globalThis.crypto ||= webcrypto;
-const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url),'utf8')).toString('base64'));
+const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../qa/admin-v2/worker.js',import.meta.url),'utf8')).toString('base64'));
 const DB=sqliteD1(),kv=new Map(),a='ART-inquiry-A-123456789',b='ART-inquiry-B-123456789';const env={DB,ADMIN_KEY:'local-inquiries-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
 kv.set('artistas',JSON.stringify([{id:'QA-A',nombre:'Free artist A',visible:true},{id:'QA-B',nombre:'Free artist B',visible:true},{id:'QA-SUSPENDED',nombre:'Suspended',visible:true,estado:'suspendido'}]));
 for(const [token,id] of [[a,'QA-A'],[b,'QA-B']])kv.set('artist_access_'+token,JSON.stringify({artist_id:id,expires:Date.now()+3600000}));
@@ -25,8 +25,13 @@ try{
  assert.ok((await call('account/notifications','GET',null,accountA)).data.items.some(n=>n.id==='inquiry:'+id),'reopened inquiry restores its unread notification');
  assert.equal((await call('artist/inquiries','PATCH',{id,estado:'invalid'},a)).status,400);
  await DB.prepare("INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES('QA-OWNER','QA-A','new-owner-claim','owner@example.invalid','owner','active','admin_approved',?,?)").bind(new Date().toISOString(),new Date().toISOString()).run();
- assert.equal((await call('artist/inquiries','GET',null,a)).status,401,'ownerless legacy token must not bypass an active owner');
- assert.equal((await call('artist/inquiries','PATCH',{id,estado:'cerrada'},a)).status,401,'old ownerless token cannot change private inquiry states');
+ const blockedRead=await call('artist/inquiries','GET',null,a);
+ assert.equal(blockedRead.status,403,'ownerless legacy token must not bypass an active owner');
+ assert.equal(blockedRead.data.items,undefined,'revoked legacy token must not read private inquiries');
+ const blockedWrite=await call('artist/inquiries','PATCH',{id,estado:'cerrada'},a);
+ assert.equal(blockedWrite.status,403,'old ownerless token cannot change private inquiry states');
+ assert.equal((await call('artist/inquiries','GET',null,b)).data.items.length,0,'other artist inquiries remain isolated');
+ assert.equal((await call('artist/inquiries','GET',null,accountA)).status,401,'account credential is not interchangeable with an artist permission');
  assert.equal((await call('contrataciones','POST',{artist_id:'QA-SUSPENDED',nombre:'Synthetic',email:'client@example.invalid',acepta_contrato:true})).status,403);
  const read=env.UADAV_DB.get;let reads=0,release;const gate=new Promise(resolve=>release=resolve);let racing=true;
  env.UADAV_DB.get=async key=>{const snapshot=await read(key);if(key==='contrataciones'&&racing){reads++;if(reads===2){racing=false;release()}await gate}return snapshot};

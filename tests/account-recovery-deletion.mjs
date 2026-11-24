@@ -3,11 +3,13 @@ import {readFile} from 'node:fs/promises';
 import {webcrypto} from 'node:crypto';
 import {sqliteD1} from './sqlite-d1.mjs';
 globalThis.crypto ||= webcrypto;
-const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url),'utf8')).toString('base64'));
+const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../qa/admin-v2/worker.js',import.meta.url),'utf8')).toString('base64'));
+const nativeFetch=globalThis.fetch;
+globalThis.fetch=async(url,opt)=>String(url).includes('/turnstile/v0/siteverify')?new Response(JSON.stringify({success:true,action:String(JSON.parse(opt.body).response).slice(3),hostname:'uadavstream.com.ar'}),{status:200}):nativeFetch(url,opt);
 const DB=sqliteD1(),kv=new Map(),root='UAC-'+'a'.repeat(64),fresh='UAC-'+'b'.repeat(64),owner='UAC-'+'c'.repeat(64);
-const env={DB,ADMIN_KEY:'isolated-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
+const env={DB,TURNSTILE_SITE_KEY:'isolated-site',TURNSTILE_SECRET_KEY:'isolated-secret',ADMIN_KEY:'isolated-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
 async function call(secret,route='account',method='GET',body){
- const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{Authorization:'Bearer '+secret,'Content-Type':'application/json','CF-Connecting-IP':'192.0.2.42'},...(body?{body:JSON.stringify(body)}:{})}),env,{});
+ const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{Authorization:'Bearer '+secret,'Content-Type':'application/json','CF-Connecting-IP':'192.0.2.42'},...(body?{body:JSON.stringify({...body,...(method==='POST'&&['account','artista/claim'].includes(route)?{turnstile_token:'qa-'+(route==='account'?'account_create':'artist_claim')}:{})})}:{})}),env,{});
  return {status:r.status,data:await r.json()};
 }
 try{
@@ -42,9 +44,9 @@ try{
  const recreated=await call(fresh);assert.equal(recreated.status,200);assert.equal(recreated.data.data.uadav_favorites_v1,null,'new account cannot inherit deleted library');
  assert.equal((await call(owner,'account','POST',{data:{uadav_user_v11:{name:'Verified artist owner'}}})).status,200);
  const claim=await call(owner,'artista/claim','POST',{new_profile:true,artist_name:'Isolated owner guard',rubro:'Magia',name:'Ficticio',email:'owner@example.invalid'});assert.equal(claim.status,200);
- const approval=await call(env.ADMIN_KEY,'admin/artist-claims','PUT',{id:claim.data.id,status:'approved',review_note:'Synthetic verified owner'});assert.equal(approval.status,200);
+ assert.equal(claim.data.status,'published','A registered artist is published automatically');
  const blocked=await call(owner,'account','DELETE',{confirm:'ELIMINAR',revision:1});assert.equal(blocked.status,409);assert.equal(blocked.data.code,'ARTISTS_REQUIRE_ACTION');
  assert.equal((await call(owner)).status,200,'blocked deletion must retain account');
  assert.equal((await call(owner,'account/artist-session','POST',{artist_id:claim.data.artist_id})).status,200,'blocked deletion must retain artist access');
  console.log('PASS: Worker + SQLite recovery rotation invalidates previous backups and preserves devices; deletion requires current revision and explicit confirmation; interrupted deletion rolls back; completed deletion revokes all old credentials; same-IP new account allowed without inherited data; verified artist ownership blocks accidental account deletion.');
-}finally{DB.close();}
+}finally{DB.close();globalThis.fetch=nativeFetch;}

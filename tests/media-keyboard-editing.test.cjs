@@ -1,5 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
-const source=fs.readFileSync('app.html','utf8'),start=source.indexOf("window.addEventListener('keydown',e=>{"),script=source.slice(start,source.indexOf('let touchY=0;',start));
+const source = fs.readFileSync('app.html', 'utf8');
+const start = source.indexOf("window.addEventListener('keydown',e=>{");
+const end = source.indexOf('});', start);
+assert.ok(start >= 0 && end > start, 'No se encontró el listener de teclado del reproductor');
+const script = source.slice(start, end + 3);
 function setup(active={},mode='expanded'){let keydown,prevented=0;const changes=[],ctx={window:{addEventListener(type,fn){assert.equal(type,'keydown');keydown=fn}},document:{activeElement:active,querySelectorAll:()=>[]},currentMedia:{id:'test'},media:{classList:{contains:x=>x===mode}},setMediaMode:x=>changes.push(x)};vm.runInNewContext(script,ctx);return{changes,press:(key,extra={})=>keydown({key,preventDefault(){prevented++},...extra}),prevented:()=>prevented,ctx}}
 test('editing controls keep arrows and Escape while media is open',()=>{
  for(const active of [{tagName:'INPUT'},{tagName:'TEXTAREA'},{tagName:'SELECT'},{tagName:'DIV',isContentEditable:true}])for(const mode of ['mini','expanded']){const h=setup(active,mode);for(const key of ['ArrowUp','ArrowDown','Escape'])h.press(key);assert.equal(h.changes.length,0);assert.equal(h.prevented(),0)}

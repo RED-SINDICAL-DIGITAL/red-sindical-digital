@@ -28,13 +28,16 @@ test('redundant library links are optional rather than a second always-visible c
  assert.match(html,/id="librarySummary"/);
  assert.match(html,/href="\/biblioteca\.html\?tab=playlists"/);
 });
-test('account recovery moves under security settings and keeps mail access',()=>{
- assert.match(email,/document\.querySelector\('#profileSettings \.settings-grid'\)/);
- assert.match(email,/settings\.prepend\(panel\)/);
- assert.match(email,/fetch\('https:\/\/uadav-api-staging\.uadavstream\.workers\.dev\/api\/access\/email\/status'/);
- assert.match(email,/link\.href='\/entrar-correo\.html'/);
- assert.match(html,/id="profileSettings"/);
+test('email-first access precedes everyday tasks without removing advanced recovery',()=>{
+ assert(email.includes('tasks.before(panel)'));
+ assert(email.includes('panel.hidden=true'));
+ assert(email.includes('status?.installed'));
+ assert(email.includes('status.enabled===true'));
+ assert(email.includes('uadav-api-staging.uadavstream.workers.dev/api/access/email/status'));
+ assert(email.includes("action.href='/entrar-correo.html'"));
+ for(const name of ['profileTasks','profileSettings','showRecovery','showAccountCode'])assert(html.includes('id="'+name+'"'),name);
 });
+
 test('duplicate legacy profile design layers are replaced by one coherent stylesheet',()=>{
  assert.doesNotMatch(html,/\/\* Mi Perfil · beta sencilla:/);
  assert.doesNotMatch(html,/\/\* Perfil 2026 · identidad editorial/);
