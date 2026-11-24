@@ -54,3 +54,20 @@ Se amplió `tests/account-email-http.test.mjs` con un escenario de **titular art
 El escenario crea las tablas del dominio artístico dentro del fixture local (la inicialización de correo por sí sola no prepara este dominio). La suite **Admin 2.0**, **Platform integration** y **Bolsa UI staging** aprobaron para commit `18574e3`. No se enviaron correos ni se modificaron KV/D1 remotos.
 
 **Aún pendiente:** navegación real en Pages, recepción de correo en bandeja QA, revocación de sesiones artísticas activas bajo un cambio de titular en infraestructura real y autorización de despliegue. La verificación de preservación del staging continúa bloqueada.
+
+## Diagnóstico de Cloudflare sin escrituras (24/11/2026)
+
+Se añadió `scripts/qa-email-readonly.mjs` como herramienta ejecutable por Work (o terminal con acceso a red). Comandos:
+
+```sh
+node scripts/qa-email-readonly.mjs staging
+node scripts/qa-email-readonly.mjs qa
+```
+
+La herramienta acepta **únicamente** destinos conocidos de staging o QA independiente y hace **tres GET** sin autenticación: `/api/health`, `/api/access/email/status` y `/entrar-correo.html`. No sigue redirecciones (Cloudflare Access), no lee archivos privados ni envía mensajes, no presenta emails/tokens del contenido remoto. Entrega JSON con disponibilidad, versión API si existe, estado de instalación/habilitación pública del correo y presencia de la interfaz esperada.
+
+`tests/qa-email-readonly.test.mjs` ensaya, con transportes sintéticos, las URLs permitidas, la ausencia de escrituras/credenciales y el tratamiento de 302, 403, 404, HTML donde se espera JSON, y respuestas incompletas. Integrado a CI Admin 2.0.
+
+**Una lectura pública correcta NO certifica entrega por Brevo, titularidad de artistas, seguridad de Cloudflare Access, versión de Pages frente a GitHub ni aptitud para producción.** Verificar por separado las configuraciones reales con Work y no cambiar recursos sin autorización.
+
+El navegador de consulta pública usado en esta conversación no pudo acceder a las tres URLs de staging; eso **no prueba** que estén caídas. Se requiere comprobación desde un entorno con acceso.
