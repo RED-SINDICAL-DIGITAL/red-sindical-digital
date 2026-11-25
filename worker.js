@@ -390,7 +390,7 @@ async function uadavAccountRoute(request,env,identityOnly=false){
       return reply({data,revision});
     }
     if(!account)return reply({error:'Cuenta no encontrada'},404);
-    if(identityOnly)return reply({account_id:accountId});
+    if(identityOnly||path==='/api/account/identity')return request.method==='GET'?reply({account_id:accountId}):reply({error:'Método no permitido'},405);
     if(path==='/api/account/artists'){
       if(!env.UADAV_DB)return reply({error:'Acceso de artistas no disponible'},503);
       if(request.method==='POST'){
@@ -669,8 +669,322 @@ async function uadavPodcastCron(env) {
   return {enabled:true,processed,failed};
 }
 
+function uadavExternalError(code,message,status=422){return Object.assign(Error(message),{externalCode:code,externalStatus:status})}
+function uadavExternalAwait(promise,signal){
+  return new Promise((resolve,reject)=>{
+    const abort=()=>{signal?.removeEventListener('abort',abort);reject(uadavExternalError('EXTERNAL_TIMEOUT','La fuente tardó demasiado. Podés usar CSV.'))};
+    if(signal?.aborted){abort();return}
+    signal?.addEventListener('abort',abort,{once:true});
+    Promise.resolve(promise).then(value=>{signal?.removeEventListener('abort',abort);resolve(value)},error=>{signal?.removeEventListener('abort',abort);reject(error)});
+  });
+}
+function uadavExternalCancel(body){
+  // Cleanup must not make an error or timeout wait on an unresponsive peer.
+  try{Promise.resolve(body?.cancel()).catch(()=>{})}catch{}
+}
+async function uadavExternalRead(response,limit,signal){
+  if(Number(response.headers.get('content-length'))>limit){uadavExternalCancel(response.body);throw uadavExternalError('EXTERNAL_SIZE','La página es demasiado grande. Usá CSV o carga manual.')}
+  const reader=response.body?.getReader();if(!reader)throw uadavExternalError('EXTERNAL_EMPTY','La fuente no devolvió contenido.');
+  const decoder=new TextDecoder();let text='',size=0;
+  try{
+    while(true){
+      if(signal?.aborted)throw uadavExternalError('EXTERNAL_TIMEOUT','La fuente tardó demasiado. Podés usar CSV.');
+      const {done,value}=await uadavExternalAwait(reader.read(),signal);if(done)break;
+      size+=value.byteLength;if(size>limit)throw uadavExternalError('EXTERNAL_SIZE','La página es demasiado grande. Usá CSV o carga manual.');
+      text+=decoder.decode(value,{stream:true});
+    }
+    return text+decoder.decode();
+  }catch(error){uadavExternalCancel(reader);throw error}finally{try{reader.releaseLock()}catch{}}
+}
+/* Account email access */
+const uadavAccountEmail={...(()=>{/* Passwordless account access. No HTTP, live provider, DDL or automatic sends.
+ * All mutations that grant authority use one guarded D1 transaction. */
+const aeHex=b=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');
+const aeBytes=s=>Uint8Array.from(s.match(/../g)||[],x=>parseInt(x,16));
+const aeHash=async s=>aeHex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)));
+const aeRandom=()=>aeHex(crypto.getRandomValues(new Uint8Array(32)));
+const aeUUID=s=>typeof s==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(s);
+const aeNeed=(ok,code='ACCESS_INVALID',status=400)=>{if(!ok)throw Object.assign(Error(code),{code,status})};
+const accountEmailAddress=s=>typeof s==='string'&&s.length<=160&&/^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9.-]{0,120}[A-Za-z0-9])?\.[A-Za-z]{2,}$/.test(s.trim())?s.trim().toLowerCase():'';
+function accountEmailGuard(db,condition,args=[]){const id=crypto.randomUUID();return[db.prepare('INSERT INTO access_email_checks(id,valid) SELECT ?,CASE WHEN '+condition+' THEN 1 ELSE 0 END').bind(id,...args),db.prepare('DELETE FROM access_email_checks WHERE id=?').bind(id)]}
+function accountEmailAuthority(db,{accountId,credentialHash,device},now){
+ const condition=device?"EXISTS(SELECT 1 FROM audience_devices WHERE account_id=? AND credential_hash=? AND revoked_at IS NULL AND (expires_at=0 OR expires_at>?))":"(EXISTS(SELECT 1 FROM audience_recovery_keys WHERE account_id=? AND credential_hash=? AND revoked_at IS NULL) OR (?=? AND NOT EXISTS(SELECT 1 FROM audience_recovery_keys WHERE credential_hash=?)))";
+ const args=device?[accountId,credentialHash,now]:[accountId,credentialHash,accountId,credentialHash,credentialHash];
+ return accountEmailGuard(db,'EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?) AND '+condition,[accountId,accountId,...args]);
+}
+function createAccountEmailCore({db,encryptionKey,providerContext,clock=Date.now,prepareMessage,dailyLimit=240}){
+ aeNeed(db&&/^[a-f0-9]{64}$/.test(encryptionKey||'')&&/^[a-f0-9]{64}$/.test(providerContext||'')&&typeof prepareMessage==='function'&&Number.isInteger(dailyLimit)&&dailyLimit>=1&&dailyLimit<=240,'ACCESS_CONFIGURATION',503);
+ db=typeof db.withSession==='function'?db.withSession('first-primary'):db;
+ const aes=crypto.subtle.importKey('raw',aeBytes(encryptionKey),'AES-GCM',false,['encrypt','decrypt']),hmac=crypto.subtle.importKey('raw',aeBytes(encryptionKey),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+ const keyed=async s=>aeHex(await crypto.subtle.sign('HMAC',await hmac,new TextEncoder().encode(s)));
+ const emailHash=email=>keyed('uadav-email-identity-v1:'+email);
+ const keyHash=aeHash('uadav-account-email-key-v1:'+encryptionKey);
+ const now=()=>{const n=clock();aeNeed(Number.isSafeInteger(n)&&n>0,'ACCESS_CLOCK',503);return n};
+ async function seal(value,aad){const iv=crypto.getRandomValues(new Uint8Array(12)),plain=new TextEncoder().encode(JSON.stringify(value));aeNeed(plain.length<=12000,'ACCESS_PAYLOAD',503);return JSON.stringify({v:1,iv:aeHex(iv),cipher:aeHex(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:new TextEncoder().encode(aad)},await aes,plain))})}
+ async function open(value,aad){let s;try{s=JSON.parse(value);aeNeed(s.v===1&&/^[a-f0-9]{24}$/.test(s.iv)&&/^[a-f0-9]{32,24032}$/.test(s.cipher)&&s.cipher.length%2===0);return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:aeBytes(s.iv),additionalData:new TextEncoder().encode(aad)},await aes,aeBytes(s.cipher))))}catch{aeNeed(false,'ACCESS_PAYLOAD',503)}}
+ const aad=r=>['uadav-account-email-v1',r.id,r.purpose,r.account_id,r.email_hash,r.identity_revision,r.actor_credential||'',r.expires_at].join('|');
+ async function rate(bucket,limit,period){const time=now(),r=await db.prepare('INSERT INTO access_email_rates(bucket,hits,resets_at) VALUES(?,1,?) ON CONFLICT(bucket) DO UPDATE SET hits=CASE WHEN resets_at<=? THEN 1 ELSE hits+1 END,resets_at=CASE WHEN resets_at<=? THEN excluded.resets_at ELSE resets_at END RETURNING hits').bind(bucket,time+period,time,time).first();return r.hits<=limit}
+ async function request({email,requestId,actorHash,identity=null}){
+  email=accountEmailAddress(email);aeNeed(email&&aeUUID(requestId)&&/^[a-f0-9]{64}$/.test(actorHash||''));
+  const time=now(),hash=await emailHash(email),purpose=identity?'verify':'access';
+  if(!await rate('ip:'+actorHash,5,600000)||!await rate('email:'+hash,3,3600000))return{accepted:true};
+  const target=await db.prepare('SELECT * FROM access_email_identities WHERE email_hash=?').bind(hash).first();
+  if(identity&&target&&target.account_id!==identity.accountId)return{accepted:true};
+  const current=identity?await db.prepare('SELECT * FROM access_email_identities WHERE account_id=?').bind(identity.accountId).first():target;
+  if(current&&current.key_hash!==await keyHash)return{accepted:true};
+  const accountId=identity?.accountId||target?.account_id||aeRandom(),revision=current?.revision||0;
+  await db.prepare("UPDATE access_email_outbox SET state='expired',sealed_payload=NULL,sealed_address=NULL,lease_owner=NULL,lease_until=0 WHERE email_hash=? AND state IN ('queued','sending','accepted') AND expires_at<=?").bind(hash,time).run();
+  const prior=await db.prepare("SELECT id FROM access_email_outbox WHERE (actor_hash=? AND request_id=?) OR (email_hash=? AND purpose=? AND state IN ('queued','sending','accepted')) LIMIT 1").bind(actorHash,requestId,hash,purpose).first();if(prior)return{accepted:true};
+  const token=aeRandom(),row={id:crypto.randomUUID(),request_id:requestId,actor_hash:actorHash,purpose,account_id:accountId,email_hash:hash,identity_revision:revision,actor_credential:identity?.credentialHash||null,actor_device:identity?.device?1:0,expires_at:time+900000};
+  const payload={to:email,token,provider_context:providerContext,body:await prepareMessage({to:email,purpose,token,id:row.id,issuedAt:time,expiresAt:row.expires_at})};
+  const sealed=await seal(payload,aad(row)),address=await seal(email,'uadav-account-email-address-v1:'+row.id),day=new Date(time).toISOString().slice(0,10),bucket='dispatch:'+day;
+  const statements=[...accountEmailGuard(db,'(SELECT COUNT(*) FROM access_email_outbox WHERE expires_at>? AND state IN (\'queued\',\'sending\',\'accepted\'))<500',[time]),
+   db.prepare('INSERT INTO access_email_rates(bucket,hits,resets_at) VALUES(?,1,?) ON CONFLICT(bucket) DO UPDATE SET hits=hits+1').bind(bucket,time+172800000),...accountEmailGuard(db,'EXISTS(SELECT 1 FROM access_email_rates WHERE bucket=? AND hits<=?)',[bucket,dailyLimit])];
+  if(identity)statements.push(...accountEmailAuthority(db,identity,time),...accountEmailGuard(db,revision?'EXISTS(SELECT 1 FROM access_email_identities WHERE account_id=? AND revision=?)':'NOT EXISTS(SELECT 1 FROM access_email_identities WHERE account_id=?)',revision?[accountId,revision]:[accountId]));
+  else if(target)statements.push(...accountEmailGuard(db,'EXISTS(SELECT 1 FROM access_email_identities e JOIN audience_accounts a ON a.id=e.account_id WHERE e.email_hash=? AND e.account_id=? AND e.revision=? AND NOT EXISTS(SELECT 1 FROM audience_deletions d WHERE d.account_id=a.id))',[hash,accountId,revision]));
+  else statements.push(...accountEmailGuard(db,'NOT EXISTS(SELECT 1 FROM access_email_identities WHERE email_hash=?)',[hash]));
+  statements.push(db.prepare("INSERT INTO access_email_outbox(id,request_id,actor_hash,purpose,account_id,email_hash,identity_revision,actor_credential,actor_device,token_hash,sealed_payload,sealed_address,state,created_at,expires_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'queued',?,?)").bind(row.id,requestId,actorHash,purpose,accountId,hash,revision,row.actor_credential,row.actor_device,await aeHash(token),sealed,address,time,row.expires_at));
+  try{await db.batch(statements)}catch{return{accepted:true}}return{accepted:true,dispatchId:row.id};
+ }
+ async function dispatch(id,send){
+  aeNeed(aeUUID(id)&&typeof send==='function');let row=await db.prepare('SELECT * FROM access_email_outbox WHERE id=?').bind(id).first();const time=now();
+  if(!row||!['queued','sending'].includes(row.state)||row.expires_at<=time||row.lease_until>time||row.attempts>=3)return{state:'idle'};
+  if(row.identity_revision>0){const identity=await db.prepare('SELECT * FROM access_email_identities WHERE account_id=?').bind(row.account_id).first();if(!identity||identity.revision!==row.identity_revision){await db.prepare("UPDATE access_email_outbox SET state='cancelled',sealed_payload=NULL WHERE id=?").bind(id).run();return{state:'cancelled'}}}
+  const owner=crypto.randomUUID(),claim=[];
+  if(row.purpose==='verify')claim.push(...accountEmailAuthority(db,{accountId:row.account_id,credentialHash:row.actor_credential,device:!!row.actor_device},time));
+  if(row.identity_revision)claim.push(...accountEmailGuard(db,'EXISTS(SELECT 1 FROM access_email_identities e JOIN audience_accounts a ON a.id=e.account_id WHERE e.account_id=? AND e.revision=? AND e.key_hash=? AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=a.id))',[row.account_id,row.identity_revision,await keyHash]));
+  claim.push(db.prepare("UPDATE access_email_outbox SET state='sending',lease_owner=?,lease_until=?,attempts=attempts+1 WHERE id=? AND state IN ('queued','sending') AND lease_until<=? AND expires_at>? AND attempts<3").bind(owner,time+30000,id,time,time));
+  let claimed;try{const r=await db.batch(claim);claimed=r[r.length-1]}catch{await db.prepare("UPDATE access_email_outbox SET state='cancelled',sealed_payload=NULL,sealed_address=NULL WHERE id=? AND state IN ('queued','sending','accepted')").bind(id).run();return{state:'cancelled'}}if(claimed.meta?.changes!==1)return{state:'busy'};
+  try{const payload=await open(row.sealed_payload,aad(row));aeNeed(payload.provider_context===providerContext&&await emailHash(payload.to)===row.email_hash&&await aeHash(payload.token)===row.token_hash,'ACCESS_PAYLOAD',503);const receipt=await send({id,body:payload.body,expiresAt:row.expires_at});aeNeed(typeof receipt?.id==='string'&&/^[A-Za-z0-9_.:-]{1,160}$/.test(receipt.id),'ACCESS_PROVIDER',503);await db.prepare("UPDATE access_email_outbox SET state='accepted',provider_id=?,sealed_payload=NULL,lease_owner=NULL,lease_until=0 WHERE id=? AND state='sending' AND lease_owner=? AND expires_at>?").bind(receipt.id,id,owner,now()).run();return{state:'accepted'}}
+  catch{await db.prepare("UPDATE access_email_outbox SET state=CASE WHEN attempts>=3 THEN 'failed' ELSE 'queued' END,sealed_payload=CASE WHEN attempts>=3 THEN NULL ELSE sealed_payload END,lease_owner=NULL,lease_until=0 WHERE id=? AND state='sending' AND lease_owner=?").bind(id,owner).run();return{state:'unconfirmed'}}
+ }
+ async function redeem({id,token,newDeviceSecret,deviceName='Mi dispositivo',readerIdentity=null}){
+  aeNeed(aeUUID(id)&&/^[a-f0-9]{64}$/.test(token||'')&&/^UAD-[a-f0-9]{64}$/.test(newDeviceSecret||'')&&typeof deviceName==='string'&&deviceName.length<=80);
+  const time=now(),tokenHash=await aeHash(token),secretHash=await aeHash(newDeviceSecret),lookup=()=>db.prepare('SELECT * FROM access_email_outbox WHERE id=? AND token_hash=?').bind(id,tokenHash).first();
+  const replay=async r=>r?.state==='redeemed'&&r.expires_at>time&&r.redeemed_hash===secretHash&&!!await db.prepare('SELECT d.id FROM audience_devices d JOIN audience_accounts a ON a.id=d.account_id JOIN access_email_identities e ON e.account_id=a.id WHERE d.credential_hash=? AND d.account_id=? AND d.revoked_at IS NULL AND (d.expires_at=0 OR d.expires_at>?) AND e.revision=? AND e.key_hash=? AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=a.id)').bind(secretHash,r.redeemed_account,time,r.redeemed_revision,await keyHash).first();
+  const row=await lookup();if(row?.purpose==='verify')aeNeed(readerIdentity?.accountId===row.account_id,'ACCESS_AUTH',401);if(await replay(row))return{account_id:row.redeemed_account,verified:true,replayed:true};
+  aeNeed(row&&['queued','sending','accepted','failed'].includes(row.state)&&row.attempts>0&&row.expires_at>time);
+  let email=null;if(row.purpose==='verify'||!row.identity_revision){
+   // Accepted delivery wipes the outbox ciphertext; the encrypted address below
+   // is separately retained in the pending proof until its one-time redemption.
+   aeNeed(row.sealed_address,'ACCESS_INVALID');email=await open(row.sealed_address,'uadav-account-email-address-v1:'+row.id);aeNeed(accountEmailAddress(email)===email&&await emailHash(email)===row.email_hash);
+  }
+  const statements=[...accountEmailGuard(db,"EXISTS(SELECT 1 FROM access_email_outbox WHERE id=? AND token_hash=? AND state IN ('queued','sending','accepted','failed') AND attempts>0 AND expires_at>?)",[id,tokenHash,time])];
+  if(row.purpose==='verify')statements.push(...accountEmailAuthority(db,readerIdentity,time),...accountEmailAuthority(db,{accountId:row.account_id,credentialHash:row.actor_credential,device:!!row.actor_device},time),...accountEmailGuard(db,row.identity_revision?'EXISTS(SELECT 1 FROM access_email_identities WHERE account_id=? AND revision=?)':'NOT EXISTS(SELECT 1 FROM access_email_identities WHERE account_id=?)',row.identity_revision?[row.account_id,row.identity_revision]:[row.account_id]));
+  else if(row.identity_revision)statements.push(...accountEmailGuard(db,'EXISTS(SELECT 1 FROM access_email_identities e JOIN audience_accounts a ON a.id=e.account_id WHERE e.account_id=? AND e.email_hash=? AND e.revision=? AND e.key_hash=? AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=a.id))',[row.account_id,row.email_hash,row.identity_revision,await keyHash]));
+  else{statements.push(...accountEmailGuard(db,'NOT EXISTS(SELECT 1 FROM access_email_identities WHERE email_hash=?) AND NOT EXISTS(SELECT 1 FROM audience_accounts WHERE id=?) AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=?)',[row.email_hash,row.account_id,row.account_id]),db.prepare('INSERT INTO audience_accounts(id,data_json,revision,updated_at) VALUES(?,?,1,?)').bind(row.account_id,JSON.stringify({uadav_user_v11:{name:'Mi cuenta',avatar:'U',photo:'',preferences:[]}}),new Date(time).toISOString()));}
+  const revision=row.purpose==='verify'?row.identity_revision+1:row.identity_revision||1;
+  if(email){const sealed=await seal(email,'uadav-verified-email-v1:'+row.account_id+':'+revision);statements.push(db.prepare('INSERT INTO access_email_identities(account_id,email_hash,sealed_email,revision,verified_at,consent_at,key_hash) VALUES(?,?,?,?,?,?,?) ON CONFLICT(account_id) DO UPDATE SET email_hash=excluded.email_hash,sealed_email=excluded.sealed_email,revision=excluded.revision,verified_at=excluded.verified_at,consent_at=excluded.consent_at,key_hash=excluded.key_hash').bind(row.account_id,row.email_hash,sealed,revision,time,time,await keyHash));}
+  statements.push(db.prepare('INSERT INTO audience_devices(credential_hash,id,account_id,name,created_at,expires_at,revoked_at) VALUES(?,?,?,?,?,0,NULL)').bind(secretHash,crypto.randomUUID(),row.account_id,deviceName||'Mi dispositivo',time),db.prepare("UPDATE access_email_outbox SET state='redeemed',redeemed_hash=?,redeemed_account=?,redeemed_revision=?,sealed_payload=NULL,sealed_address=NULL,lease_owner=NULL,lease_until=0 WHERE id=?").bind(secretHash,row.account_id,revision,id));
+  if(row.purpose==='verify')statements.push(db.prepare("UPDATE access_email_outbox SET state='cancelled',sealed_payload=NULL,sealed_address=NULL,lease_owner=NULL,lease_until=0 WHERE account_id=? AND id<>? AND state IN ('queued','sending','accepted')").bind(row.account_id,id));
+  try{await db.batch(statements)}catch{const saved=await lookup();if(await replay(saved))return{account_id:saved.redeemed_account,verified:true,replayed:true};aeNeed(false,'ACCESS_INVALID')}
+  return{account_id:row.account_id,verified:true,new_account:row.purpose==='access'&&!row.identity_revision};
+ }
+ async function status(accountId){const r=await db.prepare('SELECT * FROM access_email_identities WHERE account_id=?').bind(accountId).first();if(!r)return{verified:false};aeNeed(r.key_hash===await keyHash,'ACCESS_KEY_CONTEXT',503);const email=await open(r.sealed_email,'uadav-verified-email-v1:'+accountId+':'+r.revision);return{verified:true,email,revision:r.revision}}
+ return Object.freeze({request,dispatch,redeem,status,emailHash,keyHash,rate});
+}
+
+return {createAccountEmailCore,accountEmailAddress,accountEmailGuard,accountEmailAuthority};})(),...(()=>{/* Immutable, single-action account messages. No permanent credential in mail. */
+function prepareAccountEmailMessage({to,purpose,token,id,issuedAt,expiresAt}, pagesOrigin,sender){
+ if(!['access','verify'].includes(purpose)||!/^[a-f0-9]{64}$/.test(token||'')||!/^[a-f0-9-]{36}$/.test(id||'')||typeof to!=='string'||/[<>\r\n]/.test(to)||!Number.isSafeInteger(issuedAt)||expiresAt-issuedAt!==900000)throw Error('ACCESS_MESSAGE');
+ const link=new URL('/entrar-correo.html', pagesOrigin);link.hash=new URLSearchParams({purpose,id,token}).toString();
+ const action=purpose==='verify'?'Confirmar mi correo y entrar':'Entrar a Mi Perfil',description=purpose==='verify'?'Confirmá el correo privado de la cuenta desde la que lo solicitaste. No se publica ni te suscribe a publicidad.':'Este enlace abre tu cuenta UADAV. Si es tu primera vez con este correo, podés crearla al confirmar.';
+ const until=new Date(expiresAt).toLocaleString('es-AR',{timeZone:'America/Argentina/Buenos_Aires',hourCycle:'h23',dateStyle:'short',timeStyle:'short'}),note='Vence el '+until+' (hora argentina). Si no lo pediste vos, ignoralo: tu acceso actual no cambia.';
+ const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ return JSON.stringify({sender:{email:sender,name:'UADAV STREAM'},to:[{email:to}],subject:purpose==='verify'?'Confirmá tu correo de UADAV STREAM':'Tu acceso a UADAV STREAM',textContent:['UADAV STREAM',description,action+': '+link.href,note,'Enlace privado de un solo uso. No lo reenvíes.'].join('\n\n'),htmlContent:'<!doctype html><html lang="es"><meta charset="utf-8"><body style="font:17px/1.6 Arial;background:#edf2f8;padding:24px;color:#172033"><main style="max-width:540px;margin:auto;background:#fff;border-radius:18px;padding:28px"><p>UADAV STREAM</p><h1>'+action+'</h1><p>'+esc(description)+'</p><p><a style="display:inline-block;padding:14px 22px;background:#174bc1;color:white;border-radius:10px" href="'+esc(link.href)+'">'+action+'</a></p><p>'+esc(note)+'</p><p>No compartas este enlace.</p></main></body></html>',headers:{idempotencyKey:id}});
+}
+
+return {prepareAccountEmailMessage};})(),...(()=>{/* Shared bounded HTTPS client. Callers supply server-constructed JSON only.
+ * No automatic retry, redirect, credential forwarding or logging. */
+async function uadavBrevoRequest({mode, apiKey, body, signal, timeoutMs = 5000, fetchImpl = globalThis.fetch}) {
+  const fail = code => Object.assign(new Error(code), {code});
+  const need = (ok, code) => { if (!ok) throw fail(code); };
+  need(mode === 'account-email-production' && typeof apiKey === 'string' && /^[A-Za-z0-9._-]{32,512}$/.test(apiKey) &&
+    typeof body === 'string' && new TextEncoder().encode(body).length <= 16384 &&
+    Number.isInteger(timeoutMs) && timeoutMs >= 1 && timeoutMs <= 5000 && typeof fetchImpl === 'function', 'MAIL_CONFIGURATION');
+  const controller = new AbortController();
+  let timer, abort;
+  async function readJSON(response) {
+    need(/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type') || ''), 'MAIL_RESPONSE');
+    const size = response.headers.get('content-length');
+    need(size === null || /^\d+$/.test(size) && Number(size) <= 8192, 'MAIL_RESPONSE');
+    need(response.body, 'MAIL_RESPONSE');
+    const reader = response.body.getReader(), chunks = [];
+    const cancel = () => { reader.cancel().catch(() => {}); };
+    controller.signal.addEventListener('abort', cancel, {once: true});
+    let bytes = 0;
+    try {
+      need(!controller.signal.aborted, 'MAIL_CANCELLED');
+      for (;;) {
+        const {done, value} = await reader.read();
+        if (done) break;
+        bytes += value.byteLength;
+        need(bytes <= 8192, 'MAIL_RESPONSE');
+        chunks.push(value);
+      }
+    } finally {
+      controller.signal.removeEventListener('abort', cancel);
+      reader.cancel().catch(() => {});
+    }
+    const buffer = new Uint8Array(bytes);
+    let offset = 0;
+    for (const chunk of chunks) { buffer.set(chunk, offset); offset += chunk.length; }
+    try {
+      const data = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(buffer));
+      need(data && typeof data === 'object' && !Array.isArray(data), 'MAIL_RESPONSE');
+      return data;
+    } catch { throw fail('MAIL_RESPONSE'); }
+  }
+  try {
+    const request = new Request('https://api.brevo.com/v3/smtp/email', {method: 'POST', redirect: 'manual', credentials: 'omit',
+      cache: 'no-store', headers: {'Content-Type': 'application/json', Accept: 'application/json', 'api-key': apiKey},
+      body, signal: controller.signal});
+    const cancelled = new Promise((_, reject) => {
+      abort = () => { controller.abort(); reject(fail('MAIL_CANCELLED')); };
+      if (signal?.aborted) abort(); else signal?.addEventListener('abort', abort, {once: true});
+    });
+    const deadline = new Promise((_, reject) => {
+      timer = setTimeout(() => { controller.abort(); reject(fail('MAIL_TIMEOUT')); }, timeoutMs);
+    });
+    const operation = (async () => {
+      need(!controller.signal.aborted, 'MAIL_CANCELLED');
+      const response = await fetchImpl(request);
+      need(response.status < 300 || response.status >= 400, 'MAIL_REDIRECT');
+      if (response.status === 429) throw fail('MAIL_RATE_LIMIT');
+      if (response.status === 402) throw fail('MAIL_QUOTA');
+      if (response.status === 401 || response.status === 403) throw fail('MAIL_CONFIGURATION');
+      if (response.status >= 500) throw fail('MAIL_UNAVAILABLE');
+      const data = await readJSON(response);
+      if (response.status !== 201) {
+        if (data.code === 'duplicate_parameter') throw fail('MAIL_DELIVERY_UNCONFIRMED');
+        throw fail('MAIL_REJECTED');
+      }
+      need(typeof data.messageId === 'string' && data.messageId.length <= 256 &&
+        /^<[^<>\s\x00-\x1f]+@[^<>\s\x00-\x1f]+>$/.test(data.messageId) && data.messageIds === undefined, 'MAIL_RECEIPT');
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data.messageId));
+      return {id: 'brevo:' + Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')};
+    })();
+    return await Promise.race([operation, cancelled, deadline]);
+  } catch (error) {
+    const codes = new Set(['MAIL_RESPONSE', 'MAIL_REDIRECT', 'MAIL_RATE_LIMIT', 'MAIL_QUOTA', 'MAIL_CONFIGURATION',
+      'MAIL_UNAVAILABLE', 'MAIL_DELIVERY_UNCONFIRMED', 'MAIL_REJECTED', 'MAIL_RECEIPT', 'MAIL_CANCELLED', 'MAIL_TIMEOUT']);
+    throw fail(codes.has(error?.code) ? error.code : 'MAIL_UNAVAILABLE');
+  } finally {
+    clearTimeout(timer);
+    if (abort) signal?.removeEventListener('abort', abort);
+    controller.abort();
+  }
+}
+
+return {uadavBrevoRequest};})()};
+const AE_SCHEMA=["CREATE TABLE IF NOT EXISTS access_email_settings (id INTEGER PRIMARY KEY CHECK(id=1),schema_hash TEXT NOT NULL,key_hash TEXT NOT NULL,enabled INTEGER NOT NULL DEFAULT 0 CHECK(enabled IN (0,1)),qa_verified_at INTEGER,qa_login_at INTEGER,qa_account_id TEXT,qa_identity_revision INTEGER)","CREATE TABLE IF NOT EXISTS access_email_identities (account_id TEXT PRIMARY KEY REFERENCES audience_accounts(id) ON DELETE CASCADE,email_hash TEXT NOT NULL UNIQUE,sealed_email TEXT NOT NULL,revision INTEGER NOT NULL CHECK(revision>0),verified_at INTEGER NOT NULL,consent_scope TEXT NOT NULL DEFAULT 'account_email_access_v1',consent_at INTEGER NOT NULL,key_hash TEXT NOT NULL)","CREATE TABLE IF NOT EXISTS access_email_outbox (id TEXT PRIMARY KEY,request_id TEXT NOT NULL,actor_hash TEXT NOT NULL,purpose TEXT NOT NULL CHECK(purpose IN ('access','verify')),account_id TEXT NOT NULL,email_hash TEXT NOT NULL,identity_revision INTEGER NOT NULL,actor_credential TEXT,actor_device INTEGER NOT NULL DEFAULT 0,token_hash TEXT NOT NULL UNIQUE,sealed_payload TEXT,sealed_address TEXT,state TEXT NOT NULL CHECK(state IN ('queued','sending','accepted','redeemed','expired','cancelled','failed')),created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts BETWEEN 0 AND 3),lease_owner TEXT,lease_until INTEGER NOT NULL DEFAULT 0,provider_id TEXT,redeemed_hash TEXT,redeemed_account TEXT,redeemed_revision INTEGER,UNIQUE(actor_hash,request_id),CHECK(expires_at>created_at),CHECK(state NOT IN ('queued','sending') OR sealed_payload IS NOT NULL))","CREATE UNIQUE INDEX IF NOT EXISTS access_email_active ON access_email_outbox(email_hash,purpose) WHERE state IN ('queued','sending','accepted')","CREATE INDEX IF NOT EXISTS access_email_ready ON access_email_outbox(state,expires_at,lease_until)","CREATE TABLE IF NOT EXISTS access_email_rates (bucket TEXT PRIMARY KEY,hits INTEGER NOT NULL,resets_at INTEGER NOT NULL)","CREATE TABLE IF NOT EXISTS access_email_checks (id TEXT PRIMARY KEY,valid INTEGER NOT NULL CHECK(valid=1))"];
+const AE_SCHEMA_HASH="d74bd4c6e4751688043d7dbae2890624c5e7c5e668b186786ae6ac8815dfa1d1";
+const AE_TABLES=["access_email_settings","access_email_identities","access_email_outbox","access_email_rates","access_email_checks"];
+/* Production email HTTP boundary. Installation/activation is Admin-only;
+ * until a real verification + login completes, only the configured QA mailbox
+ * is eligible for mail. General access remains disabled by default. */
+const AE_SITE='https://uadav-api.uadavstream.workers.dev',AE_PAGES='https://uadavstream.com.ar';
+function aeError(code='ACCESS_UNAVAILABLE',status=503){return Object.assign(Error(code),{aeCode:code,status})}
+function aeRequire(ok,code,status){if(!ok)throw aeError(code,status)}
+async function aeReceiver(pages){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);try{const r=await fetch(pages+'/account-email-version.json',{redirect:'manual',cache:'no-store',credentials:'omit',signal:controller.signal});aeRequire(r.status===200&&/^application\/json/.test(r.headers.get('content-type')||''),'ACCESS_RECEIVER');const text=await uadavExternalRead(r,1024,controller.signal),v=JSON.parse(text);aeRequire(v.version==='11769.1'&&v.purpose==='account_email_access'&&v.confirmation==='explicit-post'&&v.production_origin===AE_PAGES,'ACCESS_RECEIVER');}finally{clearTimeout(timer)}}
+async function aeContext(env, pagesOrigin){
+ aeRequire(env.DB&&/^[a-f0-9]{64}$/.test(env.JOB_RECOVERY_ENCRYPTION_KEY||'')&&/^[A-Za-z0-9._-]{32,512}$/.test(env.BREVO_API_KEY||''),'ACCESS_CONFIGURATION');
+ const sender=uadavAccountEmail.accountEmailAddress(env.BREVO_SENDER_EMAIL);
+ aeRequire(sender,'ACCESS_CONFIGURATION');
+ const recipient=uadavAccountEmail.accountEmailAddress(env.BREVO_QA_RECIPIENT);aeRequire(recipient,'ACCESS_CONFIGURATION');
+ const db=typeof env.DB.withSession==='function'?env.DB.withSession('first-primary'):env.DB,keyHash=await uadavDigest('uadav-account-email-key-v1:'+env.JOB_RECOVERY_ENCRYPTION_KEY),providerContext=await uadavDigest('uadav-account-mail-provider-v1:'+env.BREVO_API_KEY);
+ const tables=(await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'access_email_%'").all()).results.map(x=>x.name);
+ let setting=null;if(tables.length){
+  aeRequire(tables.every(t=>AE_TABLES.includes(t)),'ACCESS_FOREIGN_SCHEMA',423);if(tables.includes('access_email_settings'))setting=await db.prepare('SELECT * FROM access_email_settings WHERE id=1').first();
+  if(setting)aeRequire(AE_TABLES.every(t=>tables.includes(t))&&setting.schema_hash===AE_SCHEMA_HASH&&setting.key_hash===keyHash,'ACCESS_FOREIGN_SCHEMA',423);
+  else{
+   // Explicit Admin prepare may reinitialize an exact, quiescent schema after
+   // restoring permanent email identities. Never replay activation or proofs.
+   aeRequire(tables.includes('access_email_identities'),'ACCESS_FOREIGN_SCHEMA',423);const normalize=s=>s.replace(/IF NOT EXISTS /g,'').replace(/\s+/g,' ').trim();
+   const actual=(await db.prepare("SELECT name,sql FROM sqlite_master WHERE type='table' AND name LIKE 'access_email_%'").all()).results;
+   for(const row of actual){const expected=AE_SCHEMA.find(s=>s.startsWith('CREATE TABLE IF NOT EXISTS '+row.name+' '));aeRequire(expected&&normalize(expected)===normalize(row.sql),'ACCESS_FOREIGN_SCHEMA',423);if(row.name!=='access_email_identities')aeRequire(Number((await db.prepare('SELECT COUNT(*) n FROM '+row.name).first()).n)===0,'ACCESS_FOREIGN_SCHEMA',423)}
+   const keys=(await db.prepare('SELECT DISTINCT key_hash FROM access_email_identities').all()).results;aeRequire(keys.every(x=>x.key_hash===keyHash)&&(await db.prepare('PRAGMA foreign_key_check(access_email_identities)').all()).results.length===0,'ACCESS_FOREIGN_SCHEMA',423);
+  }
+ }
+ const core=uadavAccountEmail.createAccountEmailCore({db,encryptionKey:env.JOB_RECOVERY_ENCRYPTION_KEY,providerContext,prepareMessage:message=>uadavAccountEmail.prepareAccountEmailMessage(message,pagesOrigin,sender)});
+ return{db,setting,core,keyHash,qaHash:await core.emailHash(recipient)};
+}
+async function aeIdentity(request,env){const r=await uadavAccountRoute(new Request(new URL('/api/account/identity',request.url),{headers:request.headers}),env,true);aeRequire(r.status===200,'ACCESS_AUTH',401);const value=await r.json(),secret=(request.headers.get('Authorization')||'').replace(/^Bearer /,'');return{accountId:value.account_id,credentialHash:await uadavDigest(secret),device:secret.startsWith('UAD-')}}
+async function aeDispatch(c,id,env){for(let n=0;n<3;n++){const r=await c.core.dispatch(id,async({body,expiresAt})=>{aeRequire(expiresAt>Date.now(),'ACCESS_EXPIRED',400);return uadavAccountEmail.uadavBrevoRequest({mode:'account-email-production',apiKey:env.BREVO_API_KEY,body})});if(r.state!=='unconfirmed')return;if(n<2)await new Promise(resolve=>setTimeout(resolve,1000*(n+1)))}}
+async function uadavAccountEmailRoute(request,env,ctx){
+ const url=new URL(request.url),origin=request.headers.get('Origin'),admin=url.pathname==='/api/admin/access-email';
+ const pages=AE_PAGES;
+ const allowed=[AE_SITE,AE_PAGES];
+ const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff',Vary:'Origin',...(allowed.includes(origin)?{'Access-Control-Allow-Origin':origin}:{})},reply=(d,status=200)=>new Response(JSON.stringify(d),{status,headers});
+ const started=Date.now(),uniform=async()=>{const jitter=new Uint8Array(1);crypto.getRandomValues(jitter);const remaining=800+jitter[0]%101-(Date.now()-started);if(remaining>0)await new Promise(r=>setTimeout(r,remaining));return reply({accepted:true,message:'Revisá tu correo. Si corresponde, vas a recibir un enlace para continuar.'},202)};
+ try{
+  aeRequire(url.origin===AE_SITE,'ACCESS_ENVIRONMENT',403);aeRequire(!origin||allowed.includes(origin),'ACCESS_ORIGIN',403);aeRequire(!url.search,'ACCESS_METHOD',405);
+  if(request.method==='OPTIONS'){aeRequire(allowed.includes(origin),'ACCESS_ORIGIN',403);return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Allow-Headers':'Authorization,Content-Type','Access-Control-Max-Age':'0'}})}
+  aeRequire(['GET','POST'].includes(request.method),'ACCESS_METHOD',405);if(request.method==='GET')aeRequire(admin||url.pathname==='/api/access/email/status','ACCESS_METHOD',405);
+  if(admin)aeRequire(typeof env.ADMIN_KEY==='string'&&env.ADMIN_KEY.trim().length>0&&request.headers.get('Authorization')==='Bearer '+env.ADMIN_KEY.trim(),'ACCESS_ADMIN',401);
+  if(env.JOB_STORE_MAINTENANCE==='true')throw aeError('ACCESS_MAINTENANCE',423);
+  aeRequire(env.PUBLIC_SITE_URL===AE_PAGES,'ACCESS_ENVIRONMENT',403);
+  const c=await aeContext(env,pages);
+  const status=()=>({build:BUILD,checked_at:new Date().toISOString(),scope:'account-email-production',email_contract:1,installed:!!c.setting,enabled:c.setting?.enabled===1,qa_verification:!!c.setting?.qa_verified_at,qa_login:!!c.setting?.qa_login_at,daily_budget:240,public_job_key_recovery_enabled:false});
+  if(admin){
+   if(request.method==='GET')return reply(status());
+   const b=await uadavSecurityJSON(request,2000);aeRequire(b&&Object.keys(b).length===2&&typeof b.action==='string'&&typeof b.confirm==='string','ACCESS_INPUT',400);
+   if(b.action==='prepare'){
+    aeRequire(b.confirm==='PREPARAR ACCESO POR CORREO','ACCESS_CONFIRM',400);await aeReceiver(pages);if(!c.setting){
+     // Resolve the account columns before installing email storage, without reading any account records.
+     try {
+       await c.db.batch([
+         c.db.prepare('SELECT id,data_json,revision,updated_at FROM audience_accounts LIMIT 0'),
+         c.db.prepare('SELECT credential_hash,id,account_id,name,created_at,expires_at,revoked_at FROM audience_devices LIMIT 0'),
+         c.db.prepare('SELECT credential_hash,account_id,revoked_at FROM audience_recovery_keys LIMIT 0'),
+         c.db.prepare('SELECT account_id,deleted_at FROM audience_deletions LIMIT 0')
+       ]);
+     } catch { throw aeError('ACCESS_STORAGE',503); }
+     await c.db.batch([...AE_SCHEMA.map(sql=>c.db.prepare(sql)),c.db.prepare('INSERT INTO access_email_settings(id,schema_hash,key_hash,enabled) VALUES(1,?,?,0)').bind(AE_SCHEMA_HASH,c.keyHash)]);
+    }return reply({success:true,installed:true,enabled:c.setting?.enabled===1});
+   }
+   aeRequire(c.setting,'ACCESS_NOT_PREPARED');
+   if(b.action==='enable'){aeRequire(b.confirm==='HABILITAR CORREO EN PRODUCCION'&&c.setting.qa_verified_at&&c.setting.qa_login_at,'ACCESS_QA_PENDING',409);await aeReceiver(pages);const enabled=await c.db.prepare('UPDATE access_email_settings SET enabled=1 WHERE id=1 AND qa_verified_at IS NOT NULL AND qa_login_at IS NOT NULL AND EXISTS(SELECT 1 FROM access_email_identities e JOIN audience_accounts a ON a.id=e.account_id WHERE e.account_id=access_email_settings.qa_account_id AND e.revision=access_email_settings.qa_identity_revision AND e.email_hash=? AND e.key_hash=? AND NOT EXISTS(SELECT 1 FROM audience_deletions WHERE account_id=a.id))').bind(c.qaHash,c.keyHash).run();aeRequire(enabled.meta?.changes===1,'ACCESS_QA_PENDING',409);return reply({success:true,enabled:true})}
+   if(b.action==='disable'){aeRequire(b.confirm==='PAUSAR CORREO EN PRODUCCION','ACCESS_CONFIRM',400);await c.db.batch([c.db.prepare('UPDATE access_email_settings SET enabled=0 WHERE id=1'),c.db.prepare("UPDATE access_email_outbox SET state='cancelled',sealed_payload=NULL,sealed_address=NULL,lease_owner=NULL,lease_until=0 WHERE state IN ('queued','sending','accepted','failed')")]);return reply({success:true,enabled:false})}
+   throw aeError('ACCESS_INPUT',400);
+  }
+  if(url.pathname==='/api/access/email/status'&&request.method==='GET')return reply({...status(),...(c.setting&&request.headers.get('Authorization')?{identity:await c.core.status((await aeIdentity(request,env)).accountId)}:{})});
+  aeRequire(c.setting,'ACCESS_NOT_PREPARED');
+  const peer=request.headers.get('CF-Connecting-IP');aeRequire(typeof peer==='string'&&/^[A-Fa-f0-9:.]{3,64}$/.test(peer),'ACCESS_PEER',403);const actorHash=await uadavDigest(peer);
+  if(['/api/access/email/request','/api/access/email/verify'].includes(url.pathname)&&request.method==='POST'){
+   const b=await uadavSecurityJSON(request,2000);aeRequire(b&&Object.keys(b).length===3&&b.consent===true&&typeof b.email==='string'&&typeof b.request_id==='string','ACCESS_INPUT',400);
+   const email=uadavAccountEmail.accountEmailAddress(b.email);aeRequire(email,'ACCESS_INPUT',400);const identity=url.pathname.endsWith('/verify')?await aeIdentity(request,env):null;
+   if(c.setting.enabled!==1&&await c.core.emailHash(email)!==c.qaHash)return uniform();
+   aeRequire(ctx&&typeof ctx.waitUntil==='function','ACCESS_CONTEXT');const queued=await c.core.request({email,requestId:b.request_id,actorHash,identity});
+   if(queued.dispatchId){aeRequire(ctx&&typeof ctx.waitUntil==='function','ACCESS_CONTEXT');ctx.waitUntil(aeDispatch(c,queued.dispatchId,env).catch(()=>{}))}
+   return uniform();
+  }
+  if(url.pathname==='/api/access/email/redeem'&&request.method==='POST'){
+   const b=await uadavSecurityJSON(request,2000);aeRequire(b&&Object.keys(b).length===4&&['id','token','new_device_secret','device_name'].every(k=>typeof b[k]==='string'),'ACCESS_INPUT',400);
+   aeRequire(await c.core.rate('redeem:'+actorHash,12,600000),'ACCESS_RATE',429);
+   const row=await c.db.prepare('SELECT purpose,email_hash,account_id FROM access_email_outbox WHERE id=?').bind(b.id).first();aeRequire(row&&(c.setting.enabled===1||row.email_hash===c.qaHash),'ACCESS_INVALID',400);
+   const readerIdentity=row.purpose==='verify'?await aeIdentity(request,env):null;aeRequire(!readerIdentity||readerIdentity.accountId===row.account_id,'ACCESS_AUTH',401);
+   const result=await c.core.redeem({id:b.id,token:b.token,newDeviceSecret:b.new_device_secret,deviceName:b.device_name,readerIdentity});
+   if(row.email_hash===c.qaHash){const identity=await c.db.prepare('SELECT revision FROM access_email_identities WHERE account_id=?').bind(result.account_id).first();if(row.purpose==='verify')await c.db.prepare('UPDATE access_email_settings SET qa_verified_at=?,qa_login_at=NULL,qa_account_id=?,qa_identity_revision=? WHERE id=1').bind(Date.now(),result.account_id,identity.revision).run();else await c.db.prepare('UPDATE access_email_settings SET qa_login_at=COALESCE(qa_login_at,?) WHERE id=1 AND qa_account_id=? AND qa_identity_revision=?').bind(Date.now(),result.account_id,identity.revision).run()}
+   return reply({success:true,verified:true,new_account:result.new_account===true,replayed:result.replayed===true});
+  }
+  throw aeError('ACCESS_METHOD',405);
+ }catch(error){const candidate=error.aeCode||error.code,known=typeof candidate==='string'&&/^ACCESS_[A-Z_]{1,60}$/.test(candidate)?candidate:'ACCESS_UNAVAILABLE';return reply({error:known==='ACCESS_QA_PENDING'?'Primero completá la confirmación y el ingreso de prueba.':known==='ACCESS_AUTH'?'Volvé a entrar a Mi Perfil.':known==='ACCESS_INVALID'?'Este enlace ya no está disponible. Pedí uno nuevo.':'No se pudo confirmar la operación. Tus accesos actuales se conservan.',code:known||'ACCESS_UNAVAILABLE'},[400,401,403,405,409,423,429].includes(error.status)?error.status:503)}
+}
+async function uadavAccountEmailRetention(env){
+ if(!env.DB)return;const db=typeof env.DB.withSession==='function'?env.DB.withSession('first-primary'):env.DB;
+ if(!await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='access_email_outbox'").first())return;
+ const marker=await db.prepare('SELECT schema_hash FROM access_email_settings WHERE id=1').first();aeRequire(marker?.schema_hash===AE_SCHEMA_HASH,'ACCESS_FOREIGN_SCHEMA',423);
+ const now=Date.now();await db.batch([db.prepare("UPDATE access_email_outbox SET state='expired',sealed_payload=NULL,sealed_address=NULL,lease_owner=NULL,lease_until=0 WHERE id IN (SELECT id FROM access_email_outbox WHERE expires_at<=? AND state IN ('queued','sending','accepted','failed') LIMIT 25)").bind(now),db.prepare('DELETE FROM access_email_outbox WHERE id IN (SELECT id FROM access_email_outbox WHERE expires_at<? LIMIT 25)').bind(now-7*86400000),db.prepare('DELETE FROM access_email_rates WHERE bucket IN (SELECT bucket FROM access_email_rates WHERE resets_at<? LIMIT 25)').bind(now)]);
+}
+
+
 const uadavWorker = {
   async fetch(request, env, ctx) {
+    const emailPath = new URL(request.url).pathname;
+    if (emailPath.startsWith('/api/access/email/') || emailPath === '/api/admin/access-email') {
+      return uadavAccountEmailRoute(request, env, ctx);
+    }
     const cors = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
@@ -1968,7 +2282,16 @@ CREATE INDEX IF NOT EXISTS idx_pro_orders_artist ON pro_payment_orders(artist_id
       for(const key of kvKeys){try{const raw=await env.UADAV_DB.get(key);out.kv[key]=raw==null?null:safeJSON(raw,raw)}catch(e){out.kv[key]={error:String(e?.message||e)}}}
       if(hasD1()){
         const tables=['sources','artists','producers','events','radios','jobs','job_applications','contracts','campaigns','notifications','audit_log','settings','artist_workspaces','artist_profile_drafts','artist_handles','artist_current_handles','artist_ai_usage','pro_payment_orders','pro_payment_fulfillments','artist_plan_state','artist_deletions','artist_deletion_accounts','audience_deletions','audience_notification_reads','audience_announcements','artist_owners','artist_ownership_transfers','artist_claim_evidence','audience_accounts','audience_artist_links','audience_artist_claims','audience_devices','audience_recovery_keys','pro_feature_credits','moderation_queue','moderation_usage','moderation_submissions','community_messages','artist_claims','venues','event_occurrences','search_restrictions','prospecting_runs','prospecting_results','content_items','collections','collection_items','sections_v2','entity_versions','radio_tracks','radio_requests','media_titles','media_seasons','media_episodes','artist_audience_messages','ticket_orders','marketplace_requests','monetization_products','monetization_campaigns','cct_scales','cct_assessments','cct_contract_records'];
-        for(const t of tables){try{const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[]}catch(e){out.tables[t]={error:String(e?.message||e)}}}
+        const emailInstalled=await env.DB.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='access_email_identities'").first();
+        if(emailInstalled){
+          const [accounts,identities]=await env.DB.batch([
+            env.DB.prepare('SELECT * FROM audience_accounts'),
+            env.DB.prepare('SELECT * FROM access_email_identities')
+          ]);
+          out.tables.audience_accounts=accounts.results;
+          out.tables.access_email_identities=identities.results;
+        }
+        for(const t of tables){if(Object.hasOwn(out.tables,t))continue;try{const r=await env.DB.prepare(`SELECT * FROM ${t}`).all();out.tables[t]=r.results||[]}catch(e){out.tables[t]={error:String(e?.message||e)}}}
       }
       return json(out);
     }
@@ -4780,7 +5103,7 @@ async function saveEntityVersion(type,id,data){
     return json({ error: 'Ruta no encontrada' }, 404);
   },
   async scheduled(_event, env, ctx) {
-    const task=Promise.all([uadavMaintenance(env),uadavPushFlush(env),uadavPodcastCron(env)]); if(ctx?.waitUntil) ctx.waitUntil(task); else await task;
+    const task=Promise.all([uadavAccountEmailRetention(env),uadavMaintenance(env),uadavPushFlush(env),uadavPodcastCron(env)]); if(ctx?.waitUntil) ctx.waitUntil(task); else await task;
   },
   async queue(batch, env, ctx) {
     const run = async()=>{

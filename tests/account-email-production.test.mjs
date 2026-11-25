@@ -1,0 +1,150 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {webcrypto} from 'node:crypto';import {sqliteD1} from './sqlite-d1.mjs';
+globalThis.crypto ||= webcrypto;const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url))).toString('base64')),SITE='https://uadav-api.uadavstream.workers.dev',PAGES='https://uadavstream.com.ar',root='UAC-'+'a'.repeat(64),fresh='UAD-'+'b'.repeat(64),email='own@example.invalid';
+const hash=async s=>Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))).toString('hex');
+const qaPlaylist={id:'qa-library',name:'Lista de prueba',items:[{id:'qa-track-b'},{id:'qa-track-a'}]};
+async function fixture(site=SITE,pages=PAGES){const DB=sqliteD1(),mail=[],tasks=[],fetch=globalThis.fetch;const env={DB,BREVO_SENDER_EMAIL:'sender@example.invalid',ADMIN_KEY:'synthetic-admin',PUBLIC_SITE_URL:pages,ACCOUNT_ALLOWED_ORIGINS:pages,BREVO_API_KEY:'x'.repeat(40),BREVO_QA_RECIPIENT:email,JOB_RECOVERY_ENCRYPTION_KEY:'e'.repeat(64),UADAV_DB:{get:async()=>null,put:async()=>{}}};
+ const call=async(path,method='GET',data,key='',origin=pages,host=site,ctx={waitUntil:p=>tasks.push(p)})=>{const r=await worker.fetch(new Request(host+path,{method,headers:{Origin:origin,'CF-Connecting-IP':'203.0.113.61','Content-Type':'application/json',...(key?{Authorization:'Bearer '+key}:{})},...(data?{body:JSON.stringify(data)}:{})}),env,ctx);return{status:r.status,data:r.status===204?null:await r.json(),headers:r.headers}};
+ assert.equal((await call('/api/account','POST',{data:{uadav_user_v11:{name:'PRIVATE NAME'},uadav_favorites_v1:[{id:'PRIVATE_LIBRARY'}],uadav_playlists_v1:[qaPlaylist]}},root)).status,200);
+ globalThis.fetch=async(input)=>{const url=typeof input==='string'?input:input.url;if(url===pages+'/account-email-version.json')return new Response(JSON.stringify({version:'11769.1',purpose:'account_email_access',confirmation:'explicit-post',production_origin:pages}),{headers:{'Content-Type':'application/json'}});assert.equal(url,'https://api.brevo.com/v3/smtp/email');const b=JSON.parse(await input.text());mail.push(b);return new Response(JSON.stringify({messageId:'<synthetic-'+mail.length+'@example.invalid>'}),{status:201,headers:{'Content-Type':'application/json'}})};
+ const prepare=()=>call('/api/admin/access-email','POST',{action:'prepare',confirm:'PREPARAR ACCESO POR CORREO'},env.ADMIN_KEY);
+ const request=(kind='verify',recipient=email)=>call('/api/access/email/'+kind,'POST',{email:recipient,request_id:crypto.randomUUID(),consent:true},kind==='verify'?root:'');
+ async function proof(){await Promise.all(tasks.splice(0));const body=mail.at(-1);assert(body);assert.equal(body.sender.email,env.BREVO_SENDER_EMAIL);const link=body.textContent.match(/https:\/\/[^\s]+/)[0],p=new URLSearchParams(new URL(link).hash.slice(1));assert.equal(new URL(link).origin,pages);return{id:p.get('id'),token:p.get('token'),new_device_secret:fresh,device_name:'QA device'}}
+ return{DB,env,mail,tasks,call,prepare,request,proof,close(){globalThis.fetch=fetch;DB.close()}};
+}
+test('account email rejects foreign host/origin and unauthenticated Admin before reading bindings',async()=>{const env=new Proxy({},{get(){throw Error('Unexpected binding')}});for(const [url,origin,key,status] of [[SITE+'/api/admin/access-email','https://evil.invalid','',403],['https://production.invalid/api/access/email/status',PAGES,'',403]]){const r=await worker.fetch(new Request(url,{headers:{Origin:origin,Authorization:key}}),env,{});assert.equal(r.status,status)}const r=await worker.fetch(new Request(SITE+'/api/access/email/request',{method:'OPTIONS',headers:{Origin:PAGES}}),env,{});assert.equal(r.status,204)});
+test('setup is explicit, fingerprinted, disabled by default and preserves existing accounts',async()=>{const f=await fixture();try{const before=await f.DB.prepare('SELECT * FROM audience_accounts').first();assert.equal((await f.prepare()).status,200);const status=await f.call('/api/admin/access-email','GET',null,f.env.ADMIN_KEY);assert.equal(status.data.enabled,false);assert.equal(status.data.qa_verification,false);assert.equal((await f.call('/api/admin/access-email','POST',{action:'enable',confirm:'HABILITAR CORREO EN PRODUCCION'},f.env.ADMIN_KEY)).status,409);assert.deepEqual(await f.DB.prepare('SELECT * FROM audience_accounts').first(),before);assert.equal(f.mail.length,0)}finally{f.close()}});
+test('own-mail verification and login retain the same account/library and gate general activation',async()=>{const f=await fixture();try{await f.prepare();const r=await f.request();assert.equal(r.status,202);assert.deepEqual(Object.keys(r.data).sort(),['accepted','message']);let p=await f.proof();assert.equal((await f.call('/api/access/email/redeem','POST',p,root)).status,200);const library=await f.call('/api/account','GET',null,fresh);assert.equal(library.data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY');let state=(await f.call('/api/admin/access-email','GET',null,f.env.ADMIN_KEY)).data;assert(state.qa_verification&&!state.qa_login&&!state.enabled);await f.request('request');p={...await f.proof(),new_device_secret:'UAD-'+'c'.repeat(64)};assert.equal((await f.call('/api/access/email/redeem','POST',p,root)).status,200);state=(await f.call('/api/admin/access-email','GET',null,f.env.ADMIN_KEY)).data;assert(state.qa_verification&&state.qa_login&&!state.enabled);assert.equal((await f.call('/api/admin/access-email','POST',{action:'enable',confirm:'HABILITAR CORREO EN PRODUCCION'},f.env.ADMIN_KEY)).data.enabled,true);assert.equal((await f.call('/api/account/identity','GET',null,p.new_device_secret)).data.account_id,await hash(root));assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM audience_accounts').first()).n,1)}finally{f.close()}});
+test('unapproved recipients receive the same generic response in QA mode and trigger no provider call',async()=>{const f=await fixture();try{await f.prepare();const start=Date.now(),r=await f.request('request','unknown@example.invalid');assert.equal(r.status,202);assert(Date.now()-start>=750);await Promise.all(f.tasks);assert.equal(f.mail.length,0);assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM access_email_outbox').first()).n,0)}finally{f.close()}});
+test('unsupported receiver and foreign schema refuse setup without applying partial DDL',async()=>{const f=await fixture();try{globalThis.fetch=async()=>new Response('{}',{headers:{'Content-Type':'application/json'}});assert.equal((await f.prepare()).status,503);assert.equal((await f.DB.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE name LIKE 'access_email_%'").first()).n,0);await f.DB.prepare('CREATE TABLE access_email_outbox(other TEXT)').run();assert.equal((await f.prepare()).status,423)}finally{f.close()}});
+test('missing consent, extra fields, invalid proofs and unavailable background context never send mail',async()=>{const f=await fixture();try{await f.prepare();assert.equal((await f.call('/api/access/email/request','POST',{email,request_id:crypto.randomUUID(),consent:false})).status,400);assert.equal((await f.call('/api/access/email/request','POST',{email,request_id:crypto.randomUUID(),consent:true,recipient:'evil'})).status,400);assert.equal((await f.call('/api/access/email/request','POST',{email,request_id:crypto.randomUUID(),consent:true},'',PAGES,SITE,{})).status,503);assert.equal((await f.call('/api/access/email/redeem','POST',{id:crypto.randomUUID(),token:'0'.repeat(64),new_device_secret:fresh,device_name:'QA'})).status,400);assert.equal(f.mail.length,0)}finally{f.close()}});
+test('pausing email access cancels queued proofs and preserves accounts and devices',async()=>{const f=await fixture();try{await f.prepare();await f.request();const p=await f.proof();assert.equal((await f.call('/api/admin/access-email','POST',{action:'disable',confirm:'PAUSAR CORREO EN PRODUCCION'},f.env.ADMIN_KEY)).status,200);assert.equal((await f.call('/api/access/email/redeem','POST',p,root)).status,400);assert.equal((await f.call('/api/account','GET',null,root)).status,200)}finally{f.close()}});
+
+test('restored permanent email records can be explicitly reinitialized without reviving activation or old proofs',async()=>{const f=await fixture();try{await f.prepare();await f.request();const p=await f.proof();assert.equal((await f.call('/api/access/email/redeem','POST',p,root)).status,200);for(const t of ['access_email_outbox','access_email_settings','access_email_rates','access_email_checks'])await f.DB.prepare('DROP TABLE '+t).run();assert.equal((await f.prepare()).status,200);const state=(await f.call('/api/admin/access-email','GET',null,f.env.ADMIN_KEY)).data;assert.equal(state.enabled,false);assert.equal(state.qa_login,false);assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM access_email_identities').first()).n,1);assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM access_email_outbox').first()).n,0)}finally{f.close()}});
+
+test('one email link is single-account, idempotent only on same device, and cannot open a different device',async()=>{
+ const f=await fixture();try{
+  await f.prepare();
+  assert.equal((await f.request()).status,202);
+  const first=await f.proof();
+  const once=await f.call('/api/access/email/redeem','POST',first,root);
+  assert.equal(once.status,200);assert.equal(once.data.success,true);
+  const retry=await f.call('/api/access/email/redeem','POST',first,root);
+  assert.equal(retry.status,200);assert.equal(retry.data.replayed,true,'lost HTTP response may safely retry on the same device');
+  const stolen={...first,new_device_secret:'UAD-'+'d'.repeat(64)};
+  const different=await f.call('/api/access/email/redeem','POST',stolen,root);
+  assert.notEqual(different.status,200,'single-use link must never create a different device');
+  assert.equal((await f.call('/api/account','GET',null,stolen.new_device_secret)).status,401);
+  assert.equal((await f.call('/api/account','GET',null,first.new_device_secret)).data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY');
+  assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM audience_accounts').first()).n,1,'no duplicate accounts');
+ }finally{f.close()}
+});
+
+test('a second email login preserves favorites and rejects a mismatched or expired proof',async()=>{
+ const f=await fixture();try{
+  await f.prepare();
+  await f.request();
+  const original=await f.proof();
+  assert.equal((await f.call('/api/access/email/redeem','POST',original,root)).status,200);
+  await f.request('request');
+  const second={...await f.proof(),new_device_secret:'UAD-'+'c'.repeat(64)};
+  const invalid=await f.call('/api/access/email/redeem','POST',{...second,token:'0'.repeat(64)},root);
+  assert.notEqual(invalid.status,200,'invalid link cannot authenticate');
+  assert.equal((await f.call('/api/account','GET',null,second.new_device_secret)).status,401);
+  const valid=await f.call('/api/access/email/redeem','POST',second,root);
+  assert.equal(valid.status,200);
+  for(const device of [original.new_device_secret,second.new_device_secret]){
+   const account=await f.call('/api/account','GET',null,device);
+   assert.equal(account.status,200);
+   assert.equal(account.data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY');assert.deepEqual(account.data.data.uadav_playlists_v1,[qaPlaylist]);
+  }
+  assert.equal((await f.DB.prepare('SELECT COUNT(*) n FROM audience_accounts').first()).n,1);
+  await f.DB.prepare('UPDATE access_email_outbox SET expires_at=? WHERE id=?').bind(Date.now()-1,second.id).run();
+  const stale=await f.call('/api/access/email/redeem','POST',second,root);
+  assert.notEqual(stale.status,200,'expired proof must not allow a new login');
+  assert.equal((await f.call('/api/account','GET',null,second.new_device_secret)).status,200,'existing valid session survives proof expiry');
+ }finally{f.close()}
+});
+
+test('email login keeps verified artist ownership on a second device and never grants access to another account',async()=>{
+ const f=await fixture();try{
+  await f.prepare();
+  const accountId=await hash(root),artistId='QA-EMAIL-ARTIST',claimId='QA-EMAIL-CLAIM';
+  // These ownership tables are initialized by the artist domain, not the email domain.
+  // Establish the artist schema in the isolated fixture before linking the verified account.
+  await f.DB.prepare("CREATE TABLE IF NOT EXISTS artist_owners(id TEXT PRIMARY KEY,artist_id TEXT NOT NULL,claim_id TEXT,contact_email TEXT,role TEXT,status TEXT,verification_level TEXT,created_at TEXT,updated_at TEXT)").run();
+  await f.DB.prepare("CREATE TABLE IF NOT EXISTS audience_artist_links(account_id TEXT NOT NULL,artist_id TEXT NOT NULL,claim_id TEXT,expires_at INTEGER NOT NULL DEFAULT 0,created_at INTEGER NOT NULL,PRIMARY KEY(account_id,artist_id))").run();
+  await f.DB.prepare("INSERT INTO artist_owners(id,artist_id,claim_id,contact_email,role,status,verification_level,created_at,updated_at) VALUES(?,?,?,?,?,'active','admin_approved',?,?)").bind('QA-EMAIL-OWNER',artistId,claimId,email,'owner',new Date().toISOString(),new Date().toISOString()).run();
+  await f.DB.prepare('INSERT INTO audience_artist_links(account_id,artist_id,claim_id,expires_at,created_at) VALUES(?,?,?,0,?)').bind(accountId,artistId,claimId,Date.now()).run();
+  const linkedBefore=await f.call('/api/account/artists','GET',null,root);
+  assert.equal(linkedBefore.status,200);
+  assert.deepEqual(linkedBefore.data.artists.map(a=>a.artist_id),[artistId]);
+  assert.equal((await f.call('/api/account/artist-session','POST',{artist_id:artistId},root)).status,200);
+  await f.request('verify');
+  const first=await f.proof();
+  assert.equal((await f.call('/api/access/email/redeem','POST',first,root)).status,200);
+  await f.request('request');
+  const second={...await f.proof(),new_device_secret:'UAD-'+'c'.repeat(64)};
+  assert.equal((await f.call('/api/access/email/redeem','POST',second,root)).status,200);
+  const other='UAC-'+'d'.repeat(64);
+  assert.equal((await f.call('/api/account','POST',{data:{uadav_user_v11:{name:'Other QA'}}},other)).status,200);
+  for(const secret of [root,first.new_device_secret,second.new_device_secret]){
+   const artists=await f.call('/api/account/artists','GET',null,secret);
+   assert.equal(artists.status,200);
+   assert.deepEqual(artists.data.artists.map(a=>a.artist_id),[artistId]);
+   const session=await f.call('/api/account/artist-session','POST',{artist_id:artistId},secret);
+   assert.equal(session.status,200,'same account may open its artist from every authenticated device');
+  }
+  assert.deepEqual((await f.call('/api/account/artists','GET',null,other)).data.artists,[]);
+  assert.equal((await f.call('/api/account/artist-session','POST',{artist_id:artistId},other)).status,403);
+  await f.DB.prepare("UPDATE artist_owners SET status='revoked' WHERE artist_id=? AND claim_id=?").bind(artistId,claimId).run();
+  assert.equal((await f.call('/api/account/artists','GET',null,second.new_device_secret)).data.artists.length,0);
+  assert.equal((await f.call('/api/account/artist-session','POST',{artist_id:artistId},second.new_device_secret)).status,403);
+  assert.equal((await f.call('/api/account','GET',null,second.new_device_secret)).data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY','revoking artist does not destroy listener favorites');
+ }finally{f.close()}
+});
+
+test('incompatible device schema blocks installation before email tables are created', async () => {
+ const f = await fixture();
+ try {
+   await f.DB.prepare('ALTER TABLE audience_devices RENAME COLUMN revoked_at TO incompatible_column').run();
+   const response = await f.prepare();
+   assert.equal(response.status, 503);
+   assert.equal(response.data.code, 'ACCESS_STORAGE');
+   assert.equal(await f.DB.prepare("SELECT name FROM sqlite_master WHERE name='access_email_settings'").first(), null);
+ } finally { f.close(); }
+});
+
+test('admin export restores the verified email and library without restoring usable links', async () => {
+ const f = await fixture();
+ try {
+   await f.prepare();
+   await f.request();
+   const proof = await f.proof();
+   assert.equal((await f.call('/api/access/email/redeem','POST',proof,root)).status,200);
+   assert.equal((await f.call('/api/v7/export')).status,401);
+   const backup = await f.call('/api/v7/export','GET',null,f.env.ADMIN_KEY);
+   assert.equal(backup.status,200);
+   const {tables} = backup.data;
+   assert.equal(tables.access_email_identities.length,1);
+   assert.equal(Object.keys(tables).filter(k=>k.startsWith('access_email_')).length,1);
+   assert.equal(JSON.stringify(tables).includes(proof.token),false);
+   assert.equal(JSON.stringify(tables.access_email_identities).includes(email),false);
+   const restored = await fixture();
+   try {
+     await restored.prepare();
+     for (const name of ['audience_accounts','access_email_identities']) {
+       for (const row of tables[name]) {
+         const keys = Object.keys(row);
+         await restored.DB.prepare('INSERT OR REPLACE INTO '+name+' ('+keys.join(',')+') VALUES ('+keys.map(()=>'?').join(',')+')').bind(...Object.values(row)).run();
+       }
+     }
+     assert.notEqual((await restored.call('/api/access/email/redeem','POST',proof,root)).status,200);
+     await restored.request('request');
+     const next = await restored.proof();
+     assert.equal((await restored.call('/api/access/email/redeem','POST',next)).status,200);
+     const account = await restored.call('/api/account','GET',null,next.new_device_secret);
+     assert.equal(account.data.data.uadav_favorites_v1[0].id,'PRIVATE_LIBRARY');
+     assert.deepEqual(account.data.data.uadav_playlists_v1,[qaPlaylist]);
+   } finally { restored.close(); }
+ } finally { f.close(); }
+});

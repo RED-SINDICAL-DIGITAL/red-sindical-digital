@@ -13,7 +13,7 @@ class Element {constructor(){this.hidden=false;this.disabled=false;this.value=''
 function page(transport){
  const nodes=Object.fromEntries([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>[m[1],new Element()])),events={},calls=[],files=[],copies=[];let now=Date.now();
  class Clock extends Date {static now(){return now}}
- vm.runInNewContext(source,{document:{getElementById:id=>nodes[id],createElement:()=>new Element()},Date:Clock,crypto:webcrypto,TextEncoder,Uint8Array,Blob,URL:{createObjectURL(b){files.push(b);return 'blob:synthetic'},revokeObjectURL(){}},AbortController,setTimeout,clearTimeout,loadDigest,addEventListener:(k,f)=>events[k]=f,navigator:{clipboard:{writeText:async s=>copies.push(s)}},fetch:async(route,options)=>{calls.push({route,options});return transport(route,options)}});
+ vm.runInNewContext(source,{location:{origin:'https://uadav-stream-staging.pages.dev'},document:{getElementById:id=>nodes[id],createElement:()=>new Element()},Date:Clock,crypto:webcrypto,TextEncoder,Uint8Array,Blob,URL:{createObjectURL(b){files.push(b);return 'blob:synthetic'},revokeObjectURL(){}},AbortController,setTimeout,clearTimeout,loadDigest,addEventListener:(k,f)=>events[k]=f,navigator:{clipboard:{writeText:async s=>copies.push(s)}},fetch:async(route,options)=>{calls.push({route,options});return transport(route,options)}});
  return{nodes,events,calls,files,copies,advance:ms=>now+=ms,login:async()=>{nodes.mailAdminKey.value='synthetic-admin';await nodes.mailAdminLogin.onsubmit({preventDefault(){}})}};
 }
 async function backup(){
