@@ -50,6 +50,12 @@ Prueba de facilidad: una persona mayor o sin experiencia técnica debe poder esc
 - Se agregó `tests/admin-daily-navigation.test.cjs` para verificar que cada operación disponible aparece exactamente una vez, la búsqueda encuentra opciones técnicas y las secciones desactivadas no aparecen.
 - No se cambiaron rutas, operaciones, permisos, claves administrativas, almacenamiento o lógica de publicación. **Se requiere QA visual y de navegación en entorno controlado** para revisar el resultado.
 
+## Simplificación de Explorar y En vivo (PR #74)
+
+- La portada presenta **una sola entrada «En vivo y radio»** en el selector principal, eliminando el acceso grande duplicado a Radio. No se elimina la sección de emisoras (`radioSection`), sus contenidos ni la ruta `radio.html`; dentro de `en-vivo.html` permanecen los accesos «Transmisiones» y «Radios».
+- El bloque de reproducciones recientes se llama ahora **«Tu historial reciente»**, en lugar de prometer «Continuar viendo y escuchando». Es una descripción fiel del comportamiento verificado: `index-v117.html` renderiza historial local sin reanudar explícitamente posiciones en el último segundo. La reanudación real sigue en PR #72, aislado y pendiente de pruebas entre dispositivos.
+- `tests/home-live-radio-simple.test.cjs` comprueba ruta compartida, los dos formatos dentro de En vivo, emisoras en portada y controles de radio intactos. Está incluido en las pruebas de preservación de staging; mantener sin despliegue hasta QA de dispositivos y flags.
+
 ## Hallazgos a investigar, no eliminados
 
 **P0 Seguridad y despliegue:** diferencia entre hash congelado de `worker.js` en staging y Worker de `main` (gate de preservación fallido); prueba antigua de ciclo de reclamo de artista incompatible con una parte del flujo actual. La API de producción observada indica V11.7 y D1 OK en su propia interfaz, sin verificación independiente. La presencia de un enlace de correo y del player no demuestra su funcionamiento completo. Reenvío al mismo Gmail aún bajo observación.
