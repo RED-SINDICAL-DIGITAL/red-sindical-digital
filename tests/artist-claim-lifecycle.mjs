@@ -6,8 +6,17 @@ globalThis.crypto ||= webcrypto;
 const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url),'utf8')).toString('base64'));
 const DB=sqliteD1(),kv=new Map(),account='UAC-'+'c'.repeat(64),other='UAC-'+'d'.repeat(64);
 let failCatalog=false;
-const env={DB,ADMIN_KEY:'local-claims-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>{if(k==='artistas'&&failCatalog){failCatalog=false;throw Error('Synthetic catalog interruption')}kv.set(k,v)}}};
-async function call(route,method='GET',body,credential=account){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential},...(body?{body:JSON.stringify(body)}:{})}),env,{});return {status:r.status,data:await r.json()};}
+const originalFetch=globalThis.fetch;
+globalThis.fetch=async(input)=>{
+ const url=typeof input==='string'?input:input?.url;
+ assert.equal(url,'https://challenges.cloudflare.com/turnstile/v0/siteverify','synthetic artist claim must not call outside services');
+ const payload=JSON.parse(input?.body||'{}');
+ assert.equal(payload.response,'synthetic-claim-proof');
+ assert.equal(payload.secret,'synthetic-claim-secret');
+ return new Response(JSON.stringify({success:true,action:'artist_claim',hostname:'isolated.example'}),{status:200,headers:{'Content-Type':'application/json'}});
+};
+const env={DB,ADMIN_KEY:'local-claims-admin',TURNSTILE_SITE_KEY:'synthetic-claim-site',TURNSTILE_SECRET_KEY:'synthetic-claim-secret',TURNSTILE_ALLOWED_HOSTNAMES:'isolated.example',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>{if(k==='artistas'&&failCatalog){failCatalog=false;throw Error('Synthetic catalog interruption')}kv.set(k,v)}}};
+async function call(route,method='GET',body,credential=account){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential},...(body?{body:JSON.stringify(route==='artista/claim'&&method==='POST'?{...body,turnstile_token:'synthetic-claim-proof'}:body)}:{})}),env,{});return {status:r.status,data:await r.json()};}
 try{
  for(const credential of [account,other])assert.equal((await call('account','POST',{data:{uadav_user_v11:{name:'Synthetic claim account'}}},credential)).status,200);
  const draft=await call('artista/claim','POST',{new_profile:true,artist_name:'Synthetic rejected artist',rubro:'Magia',name:'Ficticio',email:'draft@example.invalid'});assert.equal(draft.status,200);assert.equal(draft.data.private_access,true);
@@ -70,4 +79,4 @@ try{
  assert.equal((await DB.prepare("SELECT COUNT(*) n FROM artist_owners WHERE artist_id='QA-CLAIM-RACE' AND status='active'").first()).n,1);
  assert.equal((await DB.prepare('SELECT COUNT(*) n FROM artist_ownership_transfers').first()).n,2,'only successful transfers enter the operation ledger');
  console.log('PASS: actual Worker + SQLite: draft rejection removes private access; existing artist claim requires admin verification; approval links automatically; unrelated account denied; owner revocation invalidates both account session and private invitation.');
-}finally{DB.close()}
+}finally{globalThis.fetch=originalFetch;DB.close()}
