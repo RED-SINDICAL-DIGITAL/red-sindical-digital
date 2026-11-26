@@ -7,10 +7,10 @@ const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(a
 const DB=sqliteD1(),kv=new Map(),account='UAC-'+'c'.repeat(64),other='UAC-'+'d'.repeat(64);
 let failCatalog=false;
 const originalFetch=globalThis.fetch;
-globalThis.fetch=async(input)=>{
+globalThis.fetch=async(input,init)=>{
  const url=typeof input==='string'?input:input?.url;
  assert.equal(url,'https://challenges.cloudflare.com/turnstile/v0/siteverify','synthetic artist claim must not call outside services');
- const payload=JSON.parse(input?.body||'{}');
+ const payload=JSON.parse(init?.body||'{}');
  assert.ok(['synthetic-claim-proof','synthetic-account-proof'].includes(payload.response));
  assert.equal(payload.secret,'synthetic-claim-secret');
  return new Response(JSON.stringify({success:true,action:payload.response==='synthetic-account-proof'?'account_create':'artist_claim',hostname:'isolated.example'}),{status:200,headers:{'Content-Type':'application/json'}});
