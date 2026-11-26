@@ -20,7 +20,7 @@ test('primary actions retain working targets and are ordered by user need',()=>{
 });
 test('recovery remains immediately visible; secondary actions are progressively disclosed',()=>{
  const content=html.split('id="profileTasks"')[1].split('</section>')[0];
- assert.match(content,/<details class="profile-more"><summary>Más opciones<\/summary>/);
+ assert.match(content,/<details class="profile-more"><summary>Otras acciones<\/summary>/);
  assert.match(content,/<\/details><a href="\/usuario\.html\?vista=cuenta" class="profile-account-link profile-account-shortcut"/);
  assert.match(content,/href="\/manual\.html"/);
  assert.match(content,/href="\/artistas\.html"/);
