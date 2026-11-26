@@ -52,7 +52,7 @@ Prueba de facilidad: una persona mayor o sin experiencia técnica debe poder esc
 
 ## Simplificación de Explorar y En vivo (PR #74)
 
-- La portada presenta **una sola entrada «En vivo y radio»** en el selector principal, eliminando el acceso grande duplicado a Radio. No se elimina la sección de emisoras (`radioSection`), sus contenidos ni la ruta `radio.html`; dentro de `en-vivo.html` permanecen los accesos «Transmisiones» y «Radios».
+- La portada presenta **una sola entrada «En vivo y radio»** en el selector principal, eliminando el acceso grande duplicado a Radio. El texto responde a los flags activos: «En vivo» sin radio, «Radio» sin TV, y se oculta si ambos módulos están inhabilitados. No se elimina la sección de emisoras (`radioSection`), sus contenidos ni la ruta `radio.html`; dentro de `en-vivo.html` permanecen los accesos «Transmisiones» y «Radios».
 - El bloque de reproducciones recientes se llama ahora **«Tu historial reciente»**, en lugar de prometer «Continuar viendo y escuchando». Es una descripción fiel del comportamiento verificado: `index-v117.html` renderiza historial local sin reanudar explícitamente posiciones en el último segundo. La reanudación real sigue en PR #72, aislado y pendiente de pruebas entre dispositivos.
 - `tests/home-live-radio-simple.test.cjs` comprueba ruta compartida, los dos formatos dentro de En vivo, emisoras en portada y controles de radio intactos. Está incluido en las pruebas de preservación de staging; mantener sin despliegue hasta QA de dispositivos y flags.
 
