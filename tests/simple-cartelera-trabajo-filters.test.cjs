@@ -13,6 +13,11 @@ test('Cartelera keeps primary filters visible and advanced fields available',()=
  assert.match(calendar,/\$\('clearEventFilters'\)\.onclick=/);
  assert.match(calendar,/event-filter-extra-fields/);
  assert.match(calendar,/event-filter-more:not\(\[open\]\)/);
+ const controls=read('uadav-section-simplicity.js');
+ assert.match(controls,/querySelector\('#eventFilterMore'\)/);
+ assert.match(controls,/progressive\.classList\.add\('section-filter-details'\)/);
+ assert.match(controls,/if\(progressive\)/);
+ assert.match(controls,/if\(advancedActive\)progressive\.open=true/);
 });
 test('Bolsa preserves the same searches, offer publishing and private receipts',()=>{
  assert.match(jobs,/<details id="jobAdvancedFilters" class="job-advanced-filters">/);
