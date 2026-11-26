@@ -12,6 +12,8 @@ test('one clear home entry leads to live streams and radio',()=>{
  assert.match(live,/href="#transmisiones"/);
  assert.match(live,/href="#radios"/);
  assert.match(live,/id="liveRadios"/);
+ assert.match(home,/liveEntry.hidden=d.radio===false&&d.iptv===false/);
+ assert.match(home,/d.iptv===false\?'Radio':'En vivo y radio'/);
 });
 test('radio remains directly discoverable elsewhere and the shared radio player is untouched',()=>{
  assert.match(home,/id="radioSection"/);
