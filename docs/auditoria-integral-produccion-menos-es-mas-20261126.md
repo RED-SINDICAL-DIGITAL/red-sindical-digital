@@ -56,6 +56,14 @@ Prueba de facilidad: una persona mayor o sin experiencia técnica debe poder esc
 - El bloque de reproducciones recientes se llama ahora **«Tu historial reciente»**, en lugar de prometer «Continuar viendo y escuchando». Es una descripción fiel del comportamiento verificado: `index-v117.html` renderiza historial local sin reanudar explícitamente posiciones en el último segundo. La reanudación real sigue en PR #72, aislado y pendiente de pruebas entre dispositivos.
 - `tests/home-live-radio-simple.test.cjs` comprueba ruta compartida, los dos formatos dentro de En vivo, emisoras en portada y controles de radio intactos. Está incluido en las pruebas de preservación de staging; mantener sin despliegue hasta QA de dispositivos y flags.
 
+## Simplificación de Mi Perfil (PR #74)
+
+- La sección inicial se titula **«¿Qué querés hacer?»**, con las cuatro tareas productivas ya existentes: Mi artista, Mis trabajos, Mis eventos y Mi biblioteca. No se eliminaron rutas ni permisos de esas tareas.
+- El acordeón de accesos secundarios se llama **«Otras acciones»**. Se mantiene Radio Studio, la cuenta y seguridad, la ayuda y los accesos para publicar.
+- El bloque `#continueTitle` se llama **«Tu historial reciente»**, sin prometer reanudación de segundo exacto, pendiente de validación en PR #72. Se conservan `#recent`, `#recentStatus` y «Ver todo».
+- Se eliminó el segundo enlace «Abrir toda mi biblioteca» del acordeón de colecciones. Se conservan los accesos específicos Favoritos, Playlists, Artistas seguidos y Radios favoritas, más la tarjeta principal Mi biblioteca.
+- Se añadieron `tests/profile-essential-actions.test.cjs` y la actualización de `tests/profile-editorial-continue.test.cjs`. Los tests deben ejecutarse contra SHA final y no sustituyen la revisión visual móvil.
+
 ## Hallazgos a investigar, no eliminados
 
 **P0 Seguridad y despliegue:** diferencia entre hash congelado de `worker.js` en staging y Worker de `main` (gate de preservación fallido); prueba antigua de ciclo de reclamo de artista incompatible con una parte del flujo actual. La API de producción observada indica V11.7 y D1 OK en su propia interfaz, sin verificación independiente. La presencia de un enlace de correo y del player no demuestra su funcionamiento completo. Reenvío al mismo Gmail aún bajo observación.
