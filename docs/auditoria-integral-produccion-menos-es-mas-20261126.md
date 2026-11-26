@@ -64,6 +64,14 @@ Prueba de facilidad: una persona mayor o sin experiencia técnica debe poder esc
 - Se eliminó el segundo enlace «Abrir toda mi biblioteca» del acordeón de colecciones. Se conservan los accesos específicos Favoritos, Playlists, Artistas seguidos y Radios favoritas, más la tarjeta principal Mi biblioteca.
 - Se añadieron `tests/profile-essential-actions.test.cjs` y la actualización de `tests/profile-editorial-continue.test.cjs`. Los tests deben ejecutarse contra SHA final y no sustituyen la revisión visual móvil.
 
+## Cartelera y Bolsa de Trabajo · Filtros progresivos (PR #74)
+
+- **Cartelera:** categoría y ciudad visibles, junto al botón «Filtrar». Los filtros de establecimiento, fecha desde y tipo de entrada se encuentran en `<details id="eventFilterMore">`, bajo «Más filtros», disponibles con teclado y lector de pantalla. Se conservan `q`, `category`, `city`, `venue`, `from`, `free`, `filterBtn`, `clearEventFilters`, grilla, destacados y publicación.
+- **Bolsa de Trabajo:** búsqueda textual visible y botón «Buscar»; ciudad y rubro dentro de `<details id="jobAdvancedFilters">`. No se modificaron `jobSearchBtn`, `jobClearBtn`, `jobPostForm`, `ownerReceipt`, controles de postulaciones ni los procesos de claves privadas. Las ofertas siguen en primer plano y la publicación se mantiene como acción explícita.
+- Las cajas adicionales conservan su valor si se cierran: **cerrar «Más filtros» no limpia ni desactiva filtros aplicados**. «Limpiar filtros» sigue siendo la acción explícita que los borra. Verificar este comportamiento en QA de navegador para evitar sorpresas al usuario.
+- Nueva prueba `tests/simple-cartelera-trabajo-filters.test.cjs` conectada al workflow de preservación; mantener el PR en borrador hasta su ejecución y comprobación visual.
+- No se redujeron campos requeridos ni se eliminaron validaciones, permisos, acciones de publicación, comprobantes o datos.
+
 ## Hallazgos a investigar, no eliminados
 
 **P0 Seguridad y despliegue:** diferencia entre hash congelado de `worker.js` en staging y Worker de `main` (gate de preservación fallido); prueba antigua de ciclo de reclamo de artista incompatible con una parte del flujo actual. La API de producción observada indica V11.7 y D1 OK en su propia interfaz, sin verificación independiente. La presencia de un enlace de correo y del player no demuestra su funcionamiento completo. Reenvío al mismo Gmail aún bajo observación.
