@@ -13,7 +13,7 @@ test('profile preserves its functional account and management anchors',()=>{
  assert.match(html,/uadav-profile-email\.js/);
 });
 test('continue watching rail has a real playback action and no invented progress',()=>{
- assert.match(html,/id="continueTitle">Seguir viendo y escuchando/);
+ assert.match(html,/id="continueTitle">Tu historial reciente/);
  assert.match(html,/id="recent" class="rail" aria-label="Contenido reciente, desplazamiento horizontal"/);
  assert.match(html,/class="profile-cover"/);
  assert.match(html,/class="profile-play"/);
