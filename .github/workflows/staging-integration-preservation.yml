@@ -9,6 +9,7 @@ on:
       - usuario.html
       - uadav-module-policy.js
       - tests/production-baseline-simplification.test.cjs
+      - tests/admin-daily-navigation.test.cjs
       - scripts/audit-ui-surface.mjs
       - app.html
       - admin.html
@@ -34,7 +35,7 @@ jobs:
         with:
           node-version: '22'
       - name: Check shared visual shell contract
-        run: node --test tests/production-baseline-simplification.test.cjs tests/stream-visual-shell.test.cjs tests/channel-discovery-memory.test.cjs tests/live-modules-loading.test.cjs tests/admin-live-visibility.test.cjs tests/admin-podcast-visibility.test.cjs tests/home-lynx-stage.test.cjs tests/popular-artists.test.cjs tests/visual-launch.test.cjs tests/playback-queue.test.cjs tests/landing-complete.test.cjs
+        run: node --test tests/admin-daily-navigation.test.cjs tests/production-baseline-simplification.test.cjs tests/stream-visual-shell.test.cjs tests/channel-discovery-memory.test.cjs tests/live-modules-loading.test.cjs tests/admin-live-visibility.test.cjs tests/admin-podcast-visibility.test.cjs tests/home-lynx-stage.test.cjs tests/popular-artists.test.cjs tests/visual-launch.test.cjs tests/playback-queue.test.cjs tests/landing-complete.test.cjs
       - name: Check first-visit entry
         run: node tests/home-entry.mjs
       - name: Check JavaScript syntax
