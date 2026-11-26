@@ -11,12 +11,12 @@ globalThis.fetch=async(input)=>{
  const url=typeof input==='string'?input:input?.url;
  assert.equal(url,'https://challenges.cloudflare.com/turnstile/v0/siteverify','synthetic artist claim must not call outside services');
  const payload=JSON.parse(input?.body||'{}');
- assert.equal(payload.response,'synthetic-claim-proof');
+ assert.ok(['synthetic-claim-proof','synthetic-account-proof'].includes(payload.response));
  assert.equal(payload.secret,'synthetic-claim-secret');
- return new Response(JSON.stringify({success:true,action:'artist_claim',hostname:'isolated.example'}),{status:200,headers:{'Content-Type':'application/json'}});
+ return new Response(JSON.stringify({success:true,action:payload.response==='synthetic-account-proof'?'account_create':'artist_claim',hostname:'isolated.example'}),{status:200,headers:{'Content-Type':'application/json'}});
 };
 const env={DB,ADMIN_KEY:'local-claims-admin',TURNSTILE_SITE_KEY:'synthetic-claim-site',TURNSTILE_SECRET_KEY:'synthetic-claim-secret',TURNSTILE_ALLOWED_HOSTNAMES:'isolated.example',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>{if(k==='artistas'&&failCatalog){failCatalog=false;throw Error('Synthetic catalog interruption')}kv.set(k,v)}}};
-async function call(route,method='GET',body,credential=account){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential},...(body?{body:JSON.stringify(route==='artista/claim'&&method==='POST'?{...body,turnstile_token:'synthetic-claim-proof'}:body)}:{})}),env,{});return {status:r.status,data:await r.json()};}
+async function call(route,method='GET',body,credential=account){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential},...(body?{body:JSON.stringify(route==='artista/claim'&&method==='POST'?{...body,turnstile_token:'synthetic-claim-proof'}:route==='account'&&method==='POST'?{...body,turnstile_token:'synthetic-account-proof'}:body)}:{})}),env,{});return {status:r.status,data:await r.json()};}
 try{
  for(const credential of [account,other])assert.equal((await call('account','POST',{data:{uadav_user_v11:{name:'Synthetic claim account'}}},credential)).status,200);
  const draft=await call('artista/claim','POST',{new_profile:true,artist_name:'Synthetic rejected artist',rubro:'Magia',name:'Ficticio',email:'draft@example.invalid'});assert.equal(draft.status,200);assert.equal(draft.data.private_access,true);
