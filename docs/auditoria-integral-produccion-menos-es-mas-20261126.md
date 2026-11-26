@@ -42,6 +42,14 @@ Prueba de facilidad: una persona mayor o sin experiencia técnica debe poder esc
 - Añadido `tests/production-baseline-simplification.test.cjs` para asegurar las cuatro tareas principales, biblioteca, módulos opcionales, protecciones de membresía retirada y claves de sincronización.
 - El rediseño estético aislado del reproductor sigue en PR #73, **no incluido ni desplegado** en esta limpieza.
 
+## Simplificación adicional del Centro de Control (PR #74)
+
+- `admin.html` conserva el inventario `NAV` como fuente única de las herramientas. La barra lateral muestra ahora un grupo abierto **USO DIARIO** con seis tareas reconocibles: Resumen, Pendientes, Artistas, Trabajo, Cartelera y Radios. Estas entradas se extraen de los grupos anteriores y **no se duplican**.
+- Todas las secciones no frecuentes siguen en sus grupos plegables; el menú abre automáticamente el grupo de la sección activa y la búsqueda sigue filtrando el inventario completo.
+- Los controles de módulos siguen limitando el acceso visual a las opciones desactivadas (sin sustituir comprobaciones de permisos del servidor).
+- Se agregó `tests/admin-daily-navigation.test.cjs` para verificar que cada operación disponible aparece exactamente una vez, la búsqueda encuentra opciones técnicas y las secciones desactivadas no aparecen.
+- No se cambiaron rutas, operaciones, permisos, claves administrativas, almacenamiento o lógica de publicación. **Se requiere QA visual y de navegación en entorno controlado** para revisar el resultado.
+
 ## Hallazgos a investigar, no eliminados
 
 **P0 Seguridad y despliegue:** diferencia entre hash congelado de `worker.js` en staging y Worker de `main` (gate de preservación fallido); prueba antigua de ciclo de reclamo de artista incompatible con una parte del flujo actual. La API de producción observada indica V11.7 y D1 OK en su propia interfaz, sin verificación independiente. La presencia de un enlace de correo y del player no demuestra su funcionamiento completo. Reenvío al mismo Gmail aún bajo observación.
