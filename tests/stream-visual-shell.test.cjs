@@ -32,7 +32,10 @@ test('operator workspace and media catalogs opt into the shared theme',()=>{
 });
 
 test('artist portal is distinct from the personal account and keeps both existing professional workflows',()=>{
- assert.match(read('app.html'),/class="artist" data-route="\/para-artistas.html"/);
+ const nav=read('app.html').match(/<button\b[^>]*data-route="\/para-artistas\.html"[^>]*>/)?.[0]||'';
+ assert.match(nav,/class="artist"/);
+ assert.match(nav,/data-module="artists"/);
+ assert.match(nav,/aria-label="Para artistas:/);
  const portal=read('para-artistas.html');
  for(const href of ['/soy-artista.html','/usuario.html?vista=artista','/usuario.html'])assert.ok(portal.includes('href="'+href+'"'),href);
  assert.match(portal,/cuenta personal/);
