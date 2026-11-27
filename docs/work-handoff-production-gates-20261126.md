@@ -6,8 +6,10 @@
 - PR #73: `ux/app-native-shell-20261126` — capa de apariencia app nativa; también sin merge.
 - PR #70 (correo), #71 (biblioteca), #72 (reanudar) sin merge. **No unir todo a ciegas**. Primero comprobar dependencias e interacciones.
 - La QA de PR #74 registró por una parte PASS para reproductor unificado de radio en móvil/desktop/laptop/TV; se corrigió doble resumen de filtros en Cartelera; la prueba de ilustraciones se actualizó para el selector que pasó de 15 a 14 destinos al fusionar En vivo + Radio. La última corrida completa de esa actualización debe comprobarse.
-- Las pruebas de contrato laboral y Bolsa han aprobado; la integración de `tests/artist-claim-lifecycle.mjs` falla en HTTP 503 porque el test presupone un flujo viejo sin Turnstile habilitado; la lógica de alta nueva con cuenta puede publicar automáticamente si hay verificación y propiedad. **Nunca desactivar Turnstile para conseguir una prueba verde.**
-- El gate `tests/staging-profile-preservation.test.cjs` compara un hash de `worker.js` de staging obsoleto (`d4b68445e67b754b811b93d84a9b7225233e67b3`) con el hash actual de `main` (`cb2df152bcdf01e659624b409461429ceceb39f9`). La política exige investigar en vez de actualizar el hash arbitrariamente.
+- Las pruebas de integración del registro artístico fueron actualizadas para verificar Turnstile con un servicio simulado **solo en pruebas**, incluyendo alta propia, reclamo de perfil existente, revocación, transferencia y borrado seguro. El pipeline de integración general pasó en el commit `08d6bff`; también pasó la QA visual en el commit `966fcff`. Ninguno de esos resultados implica una prueba real de Turnstile entre dos navegadores.
+- **Auditoría de procedencia de Worker (27/11):** `worker.js` en `main` y PR #74 es **exactamente el mismo blob Git** `cb2df152bcdf01e659624b409461429ceceb39f9`. La referencia congelada en `tests/staging-profile-preservation.test.cjs` era `d4b68445e67b754b811b93d84a9b7225233e67b3`, que pertenecía a otra instantánea histórica. Se separó el chequeo de integridad del PR (ahora compara con el blob realmente revisado en `main`) del contraste de deployments; **no se cambió `worker.js`**.
+- Work identificó el Worker de **producción** `uadav-api` (versión `06032808`, parche `2baa115`) y el de **staging** `uadav-api-staging` (versión `76e1b74c`), que se asoció al código del commit `fc15812` de PR #69 con una diferencia de salto de línea. El blob de GitHub en `fc15812:worker.js` es `c5ecf2d1bdbc7e1d4e3513f0b804702afc1b4352`, distinto de `main`; son **referencias de orígenes diferentes**, no una falla por sí mismas.
+- La conservación estructural de PR #74 solo valida que no se reemplazó el Worker de `main`; **la comparación del despliegue de producción sigue siendo un gate independiente**, que requiere metadatos/evidencia ya recogidos en Work y aprobación antes de fusionar/desplegar.
 
 ## Tareas seguras en Work, en este orden
 1. **Solo lectura:** Cloudflare Pages UADAV Stream: identificar proyecto, deployment de producción, commit SHA GitHub y fecha; Workers API: script/version, rutas, entorno y fecha de deployment. Registrar identificadores de release que realmente responden en `https://uadavstream.com.ar/`. Sin exportar ni publicar secretos.
@@ -22,9 +24,9 @@
 
 ## Bloqueos para producción
 - SHA exacto publicado y paridad GitHub/Cloudflare sin confirmar;
-- prueba de titularidad y registro artístico con Turnstile pendiente;
-- preservación del Worker pendiente de reconciliación;
-- pruebas end-to-end de permisos y sincronización pendientes;
-- QA completa de UX en PR #74 aún sujeta a última ejecución.
+- pruebas aisladas de alta, titularidad y registro artístico aprobadas; **Turnstile real con dos navegadores en staging pendiente**;
+- integridad Worker de PR comparada contra GitHub main; **paridad real de Cloudflare producción y staging pendiente de cierre documental**;
+- sincronización de favoritos y playlists entre dos clientes **aprobada por Work en entorno aislado**; permisos end-to-end y recuperación con Turnstile real pendientes;
+- CI de integración, Bolsa, postulaciones y QA visual aprobado en SHA previo; repetir y verificar en SHA final de PR #74.
 
 No pedir credenciales del administrador, Cloudflare, correo o cuentas en el chat. En Work usar únicamente sesiones/conectores autorizados existentes. Registrar resultados en el PR.
