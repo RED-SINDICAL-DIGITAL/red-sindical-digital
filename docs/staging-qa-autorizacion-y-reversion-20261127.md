@@ -14,6 +14,19 @@
 
 **Solo staging.** Autorizar temporalmente que el dominio canónico de Cloudflare Pages de staging sirva los archivos del commit exacto del PR #74, con respaldo del deployment previo y posibilidad de restauración. No se autoriza merge, Worker deploy, cambio de secrets, migraciones D1/KV, desactivación de Turnstile ni modificación de producción. Si Cloudflare exige un deploy distinto del reposicionamiento de Pages o afecta otros entornos, detener y volver a solicitar autorización.
 
+## Procedimiento de rollback de Cloudflare Pages (verificado con documentación oficial, 27/11)
+
+**Distinguir ámbitos:** la expresión `production deployment` de Cloudflare Pages se refiere al deployment principal **del proyecto `uadav-stream-staging`** que atiende `uadav-stream-staging.pages.dev`; **no** al sitio público `uadavstream.com.ar` ni al Worker `uadav-api`.
+
+Según Cloudflare, el menú de reversión se encuentra en **Workers & Pages > proyecto Pages > Deployments > All deployments**, sobre el registro de un **deployment principal exitoso**; los **preview deployments no pueden utilizarse como destino de rollback**. La API ofrece también `POST /accounts/{account_id}/pages/projects/{project_name}/deployments/{deployment_id}/rollback` y requiere permiso Pages Write. Referencias: https://developers.cloudflare.com/pages/configuration/rollbacks/ y https://developers.cloudflare.com/api/resources/pages/subresources/projects/subresources/deployments/methods/rollback/ .
+
+- Work debe **verificar en modo de solo lectura** que el deployment principal anterior `0ef5cd49-0d2f-4602-ac7b-6487803b18cd` está retenido, es un deployment principal exitoso y es apto para rollback. Conservar fecha, commit y el identificador completo sin secretos.
+- **No es suficiente** que se pueda abrir la URL del preview `cf8cf0b5`; un preview no puede simplemente promocionarse mediante la operación de rollback.
+- Verificar el mecanismo de publicación del commit aprobado en la rama principal **del proyecto staging** y el mecanismo exacto de retorno, antes de pedir aprobación de cambio.
+- Si falta la opción en dashboard, comprobar **solo metadatos y permisos** de API, sin ejecutar POST alguno; no deducir que el rollback está disponible sin evidencia del endpoint y de la elegibilidad del destino.
+- La retención de deployments es limitada: según la actualización de Cloudflare del 19/11/2026, se conservan al menos la versión principal en ejecución, las versiones recientes dentro de las reglas de retención y las 100 más recientes. Comprobar que el deployment anterior sigue disponible al momento del ensayo.
+- Una vez autorizado el cambio, Work deberá volver a verificar que el dominio canónico de staging sirve el commit exacto del PR #74 y que todas las llamadas API continúan dirigiéndose exclusivamente al Worker staging. Si el rollback no se puede ejecutar o verificar, **abortar**, sin cambiar dominio, secretos ni producción pública.
+
 ## Secuencia previa, en Work
 
 1. Leer metadatos de Cloudflare Pages y registrar identificador, commit, rama, fecha y dominio del **deployment canónico anterior** (`7e39b1f`). Confirmar una operación de rollback real disponible.
