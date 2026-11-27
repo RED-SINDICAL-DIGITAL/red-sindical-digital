@@ -22,6 +22,15 @@
 8. Preparar matriz **conservar / fusionar / ocultar / eliminar** con evidencia de uso y dependencias. **No borrar endpoints, D1, KV, datos, código de migración o backups por limpieza estética.**
 9. Preparar el orden de integración y rollback, sin hacer merge/deploy hasta revisión explícita de gates críticos.
 
+## Bloqueo funcional real del correo en previews de PR (27/11)
+
+- Work confirmó que el preview `https://fcfa07de.uadav-stream-staging.pages.dev` corresponde al commit `f13eca3` del PR #74 y usa el Worker staging según `uadav-api-config.js`. El alias `integration-staging-preserve` y el dominio raíz del proyecto staging pueden servir **otro commit**, por lo que navegar allí no valida el PR.
+- `entrar-correo.html` y `uadav-account-email.js` **solo aceptan los orígenes** `https://uadavstream.com.ar` y `https://uadav-stream-staging.pages.dev`. Por diseño, un preview de PR en un subdominio `*.uadav-stream-staging.pages.dev` **no puede consumar enlaces de acceso ni recuperación**. No se deben ampliar esos orígenes ni reenviar códigos/enlaces de prueba al chat para superar el control.
+- Se agregó `tests/email-preview-origin-gate.test.cjs` al control de preservación para impedir que un cambio estético elimine accidentalmente esa restricción. El resultado de la prueba debe verificarse en el último SHA.
+- Para completar el flujo real, Work necesita **dos sesiones independientes con cuentas sintéticas y buzones controlados**. El usuario debería conectar/proporcionar el acceso al buzón dentro de Work mediante un mecanismo autorizado, nunca aportar enlaces mágicos, contraseñas ni claves fiscales en la conversación.
+- Antes de ejecutar, establecer una **ruta autorizada** que sirva exactamente el PR bajo un origen permitido para el correo, o documentar una solución temporal **solo de staging** evaluada desde seguridad. No asumir que el dominio canónico de staging publica el mismo commit que el PR; comprobar el SHA y el Worker en cada paso. No modificar la configuración sin autorización.
+- Si no hay correo de prueba o el host no coincide, marcar **bloqueado** el ensayo real de alta por correo, segunda sesión y recuperación, sin confundirlo con la aprobación del test SQLite aislado ni con los cinco checks de Actions.
+
 ## Bloqueos para producción
 - SHA exacto publicado y paridad GitHub/Cloudflare sin confirmar;
 - pruebas aisladas de alta, titularidad y registro artístico aprobadas; **Turnstile real con dos navegadores en staging pendiente**;
