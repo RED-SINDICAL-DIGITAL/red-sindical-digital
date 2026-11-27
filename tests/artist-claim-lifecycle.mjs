@@ -36,12 +36,12 @@ try{
  assert.equal((await call('admin/artist-claims','PUT',{id:claim.data.id,status:'approved',review_note:'Verificación sintética'},other)).status,401);
  assert.equal((await call('admin/artist-claims','PUT',{id:claim.data.id,status:'approved'},env.ADMIN_KEY)).status,400);
  const approved=await call('admin/artist-claims','PUT',{id:claim.data.id,status:'approved',review_note:'Verificación sintética'},env.ADMIN_KEY);assert.equal(approved.status,200);assert.equal(approved.data.account_linked,true);
- const linked=await call('account/artists');assert.equal(linked.data.artists.length,1);assert.equal(linked.data.artists[0].artist_id,'QA-EXISTING-ARTIST');
+ const linked=await call('account/artists');assert.equal(linked.data.artists.length,2);assert.ok(linked.data.artists.some(a=>a.artist_id==='QA-EXISTING-ARTIST'));assert.ok(linked.data.artists.some(a=>a.artist_id===registered.data.artist_id));
  const issued=await call('account/artist-session','POST',{artist_id:'QA-EXISTING-ARTIST'});assert.equal(issued.status,200);
  assert.equal((await call('account/artist-session','POST',{artist_id:'QA-EXISTING-ARTIST'},other)).status,403);
  assert.equal((await call('artista/access?token='+issued.data.token)).status,200);
  assert.equal((await call('admin/artist-owners/revoke','POST',{id:'OWN-'+claim.data.id,note:'Revocación sintética'},env.ADMIN_KEY)).status,200);
- assert.equal((await call('account/artists')).data.artists.length,0);
+ assert.deepEqual((await call('account/artists')).data.artists.map(a=>a.artist_id),[registered.data.artist_id],'revoking an existing claim must not erase a separate self-registered profile');
  assert.equal((await call('account/artist-session','POST',{artist_id:'QA-EXISTING-ARTIST'})).status,403);
  assert.equal((await call('artista/access?token='+issued.data.token)).status,401);
  assert.equal((await call('artista/access?token='+approved.data.token)).status,403);
