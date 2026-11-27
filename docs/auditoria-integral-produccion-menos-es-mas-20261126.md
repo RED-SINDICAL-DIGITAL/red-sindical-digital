@@ -81,6 +81,14 @@ Prueba de facilidad: una persona mayor o sin experiencia técnica debe poder esc
 - Los enlaces de ayuda usan el navegador interno del shell (delegación en `#grid` con `nav()`), sin modificar `localStorage`, las claves de favoritos, listas, seguidos, radios, eventos `uadav:account-data` ni el protocolo de sincronización que Work validó entre dos clientes.
 - Añadido `tests/library-helpful-empty-states.test.cjs` al gate de preservación de staging. Este cambio no sustituye ni presume aprobación de PR #71 (rediseño independiente de biblioteca).
 
+## Integración artística, cuenta y accesibilidad (27/11/2026)
+
+- Se actualizó el test aislado `tests/artist-claim-lifecycle.mjs` para cubrir el **alta propia verificada con Turnstile**, publicación inmediata, idempotencia del propietario y rechazo de una cuenta ajena. El reclamo de un perfil existente conserva su aprobación administrativa y las pruebas de revocación, concurrencia y transferencia. No se tocó `worker.js`.
+- `tests/artist-account-client-integration.mjs` ahora verifica el cliente con alta propia protegida, revocación administrativa de su propiedad y recuperación desde una invitación aprobada para un perfil **ya existente**. El mock de Turnstile solo existe en la prueba.
+- `tests/account-recovery-deletion.mjs` conserva las pruebas de recuperación, revocación, rollback de eliminación, datos aislados y prohibición de borrar una cuenta con artistas administrados, adaptada al alta propia que ya nace publicada.
+- Las pruebas del carrusel de Home detectaron que la preferencia `prefers-reduced-motion: reduce` no estaba bloqueando el temporizador automático. Se corrigió `index-v117.html` y se arregló el mock CSS `setProperty` de `tests/home-discovery-usability.test.cjs`. La preferencia desactiva el avance automático, pero conserva los controles manuales.
+- **Estado provisional:** el proceso integral de CI deberá aprobar el SHA definitivo antes de considerar cerrado el gate artístico. La comparación antigua del hash de Worker sigue sin aprobarse, sin actualizar su valor arbitrariamente.
+
 ## Hallazgos a investigar, no eliminados
 
 **P0 Seguridad y despliegue:** diferencia entre hash congelado de `worker.js` en staging y Worker de `main` (gate de preservación fallido); prueba antigua de ciclo de reclamo de artista incompatible con una parte del flujo actual. La API de producción observada indica V11.7 y D1 OK en su propia interfaz, sin verificación independiente. La presencia de un enlace de correo y del player no demuestra su funcionamiento completo. Reenvío al mismo Gmail aún bajo observación.
