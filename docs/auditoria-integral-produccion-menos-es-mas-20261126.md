@@ -73,6 +73,14 @@ Prueba de facilidad: una persona mayor o sin experiencia técnica debe poder esc
 - Nueva prueba `tests/simple-cartelera-trabajo-filters.test.cjs` conectada al workflow de preservación; mantener el PR en borrador hasta su ejecución y comprobación visual.
 - No se redujeron campos requeridos ni se eliminaron validaciones, permisos, acciones de publicación, comprobantes o datos.
 
+## Mi biblioteca · Estados vacíos con un solo próximo paso (PR #74)
+
+- Si una colección está vacía, muestra un mensaje claro y **una única acción**: Explorar contenidos (Historial/Favoritos/Ver más tarde), Descubrir artistas o Explorar radios, según la colección.
+- Si la búsqueda no tiene resultados, se mantiene dentro de la sección y sugiere probar otra palabra o borrar la búsqueda. **No cambia de pestaña ni elimina los filtros introducidos**.
+- Si no hay playlists, dirige al formulario «Crear playlist» que ya está en esa pantalla, sin abrir otra ni crear un segundo botón redundante.
+- Los enlaces de ayuda usan el navegador interno del shell (delegación en `#grid` con `nav()`), sin modificar `localStorage`, las claves de favoritos, listas, seguidos, radios, eventos `uadav:account-data` ni el protocolo de sincronización que Work validó entre dos clientes.
+- Añadido `tests/library-helpful-empty-states.test.cjs` al gate de preservación de staging. Este cambio no sustituye ni presume aprobación de PR #71 (rediseño independiente de biblioteca).
+
 ## Hallazgos a investigar, no eliminados
 
 **P0 Seguridad y despliegue:** diferencia entre hash congelado de `worker.js` en staging y Worker de `main` (gate de preservación fallido); prueba antigua de ciclo de reclamo de artista incompatible con una parte del flujo actual. La API de producción observada indica V11.7 y D1 OK en su propia interfaz, sin verificación independiente. La presencia de un enlace de correo y del player no demuestra su funcionamiento completo. Reenvío al mismo Gmail aún bajo observación.
