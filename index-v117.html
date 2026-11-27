@@ -34,11 +34,12 @@ function searchNow(q){q=String(q||'').trim();if(!q)return;go('/buscar.html?q='+e
 function createHeroRotation(count,show){
  let index=0,timer=0,focused=false,paused=false;
  const pause=$('heroPause');
+ const motionReduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
  const hero=$('hero'),controls=$('heroControls'),position=$('heroPosition');
  controls.hidden=count<2;
  const setPosition=()=>{position.textContent=(index+1)+' de '+count;pause.style.setProperty('--slide-position',((index+1)/count*100)+'%')};
  const clear=()=>{clearInterval(timer);timer=0};
- const update=()=>{clear();pause.textContent=paused?"▶":"Ⅱ";pause.setAttribute("aria-label",paused?"Iniciar avance automático":"Pausar avance automático");pause.setAttribute("aria-pressed",String(paused));setPosition();if(count>1&&!focused&&!paused&&!document.hidden)timer=setInterval(()=>{index=(index+1)%count;show(index);setPosition()},8000)};
+ const update=()=>{clear();pause.textContent=paused?"▶":"Ⅱ";pause.setAttribute("aria-label",paused?"Iniciar avance automático":"Pausar avance automático");pause.setAttribute("aria-pressed",String(paused));setPosition();if(count>1&&!focused&&!paused&&!document.hidden&&!motionReduced)timer=setInterval(()=>{index=(index+1)%count;show(index);setPosition()},8000)};
  const move=step=>{index=(index+step+count)%count;show(index);update()};
  const focus=()=>{focused=!!hero.querySelector(':focus-visible');update()},blur=e=>{focused=focused&&hero.contains(e.relatedTarget);update()},visibility=()=>update();
  pause.onclick=()=>{
