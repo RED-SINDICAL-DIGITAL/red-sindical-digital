@@ -119,27 +119,44 @@ jobs:
       - name: Start local static server and check responsive profile
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/uadav-static-qa.log 2>&1 &
-          node scripts/qa-staging-catalog-detail.mjs
-          node scripts/qa-staging-library-layout.mjs
-          node scripts/qa-staging-entry-layout.mjs
-          node scripts/qa-staging-discovery-layout.mjs
-          node scripts/qa-staging-publication.mjs
-          node scripts/qa-staging-footer.mjs
-          node scripts/qa-staging-unified-radio.mjs
-          node scripts/qa-staging-artist-presentation.mjs
-          node scripts/qa-staging-playback-landing.mjs
-          node scripts/qa-staging-section-artwork.mjs
-          node scripts/visual-qa-staging-integration.mjs
-          node scripts/functional-qa-staging-shell.mjs
-          node scripts/qa-staging-synthetic-playback.mjs
-          node scripts/qa-staging-profile-subviews.mjs
-          node scripts/qa-staging-public-screens.mjs
-          node scripts/qa-staging-home-stage.mjs
-          node scripts/qa-staging-popular-artists.mjs
-          node scripts/qa-staging-visual-launch.mjs
-          node scripts/qa-staging-radio-studio-operator.mjs
-          node scripts/qa-staging-admin-anonymous.mjs
-          node scripts/qa-staging-admin-mock-auth.mjs
+          # Each independent browser check has its own bounded execution.
+          # A timeout is a real failure; never report the suite as successful.
+          run_qa() {
+            script="$1"
+            echo "::group::QA $script"
+            echo "START $script"
+            timeout --signal=TERM --kill-after=10s 120s node "$script" || {
+              code="$?"
+              echo "::error file=$script::QA failed (exit $code; 124 means per-script timeout)"
+              echo "Server diagnostics:"
+              tail -n 25 /tmp/uadav-static-qa.log || true
+              echo "::endgroup::"
+              exit "$code"
+            }
+            echo "PASS $script"
+            echo "::endgroup::"
+          }
+          run_qa scripts/qa-staging-catalog-detail.mjs
+          run_qa scripts/qa-staging-library-layout.mjs
+          run_qa scripts/qa-staging-entry-layout.mjs
+          run_qa scripts/qa-staging-discovery-layout.mjs
+          run_qa scripts/qa-staging-publication.mjs
+          run_qa scripts/qa-staging-footer.mjs
+          run_qa scripts/qa-staging-unified-radio.mjs
+          run_qa scripts/qa-staging-artist-presentation.mjs
+          run_qa scripts/qa-staging-playback-landing.mjs
+          run_qa scripts/qa-staging-section-artwork.mjs
+          run_qa scripts/visual-qa-staging-integration.mjs
+          run_qa scripts/functional-qa-staging-shell.mjs
+          run_qa scripts/qa-staging-synthetic-playback.mjs
+          run_qa scripts/qa-staging-profile-subviews.mjs
+          run_qa scripts/qa-staging-public-screens.mjs
+          run_qa scripts/qa-staging-home-stage.mjs
+          run_qa scripts/qa-staging-popular-artists.mjs
+          run_qa scripts/qa-staging-visual-launch.mjs
+          run_qa scripts/qa-staging-radio-studio-operator.mjs
+          run_qa scripts/qa-staging-admin-anonymous.mjs
+          run_qa scripts/qa-staging-admin-mock-auth.mjs
       - name: Upload screenshots for review
         if: always()
         uses: actions/upload-artifact@v4
