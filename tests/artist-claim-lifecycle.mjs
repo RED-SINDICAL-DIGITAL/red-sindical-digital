@@ -16,7 +16,7 @@ globalThis.fetch=async (input,init={})=>{
  return originalFetch(input,init);
 };
 const env={DB,ADMIN_KEY:'local-claims-admin',TURNSTILE_SITE_KEY:'synthetic-turnstile-site',TURNSTILE_SECRET_KEY:'synthetic-turnstile-secret',TURNSTILE_ALLOWED_HOSTNAMES:'isolated.example',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>{if(k==='artistas'&&failCatalog){failCatalog=false;throw Error('Synthetic catalog interruption')}kv.set(k,v)}}};
-async function call(route,method='GET',body,credential=account){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential},...(body?{body:JSON.stringify({...body,...(route==='account'&&method==='POST'?{turnstile_token:'account-create-qa'}:route==='artista/claim'&&method==='POST'?{turnstile_token:'artist-claim-qa'}:{})})}:{})}),env,{});return {status:r.status,data:await r.json()};}
+async function call(route,method='GET',body,credential=account){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+credential},...(body?{body:JSON.stringify({...(route==='account'&&method==='POST'?{turnstile_token:'account-create-qa'}:route==='artista/claim'&&method==='POST'?{turnstile_token:'artist-claim-qa'}:{}),...body})}:{})}),env,{});return {status:r.status,data:await r.json()};}
 try{
  for(const credential of [account,other])assert.equal((await call('account','POST',{data:{uadav_user_v11:{name:'Synthetic claim account'}}},credential)).status,200);
  const registered=await call('artista/claim','POST',{new_profile:true,artist_name:'Synthetic self-registered artist',rubro:'Magia',name:'Ficticio',email:'self@example.invalid'});
