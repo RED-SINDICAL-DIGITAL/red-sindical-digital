@@ -89,6 +89,12 @@ Prueba de facilidad: una persona mayor o sin experiencia técnica debe poder esc
 - Las pruebas del carrusel de Home detectaron que la preferencia `prefers-reduced-motion: reduce` no estaba bloqueando el temporizador automático. Se corrigió `index-v117.html` y se arregló el mock CSS `setProperty` de `tests/home-discovery-usability.test.cjs`. La preferencia desactiva el avance automático, pero conserva los controles manuales.
 - **Estado provisional:** el proceso integral de CI deberá aprobar el SHA definitivo antes de considerar cerrado el gate artístico. La comparación antigua del hash de Worker sigue sin aprobarse, sin actualizar su valor arbitrariamente.
 
+## Identidad de Workers y cierre del falso conflicto de referencia (27/11/2026)
+
+La preservación de Worker del PR se medía originalmente contra el blob Git `d4b68445e67b754b811b93d84a9b7225233e67b3`, una referencia congelada de staging que ya no coincide con el árbol `main`. **No significaba que PR #74 hubiera alterado el Worker.** Se comprobó mediante GitHub que `main:worker.js` y `audit/production-baseline-simplify-20261126:worker.js` son ambos `cb2df152bcdf01e659624b409461429ceceb39f9`. El test `tests/staging-profile-preservation.test.cjs` verifica ahora explícitamente que el PR mantenga el Worker de GitHub main sin cambios.
+
+Work informó que el código de staging Cloudflare `uadav-api-staging` (versión `76e1b74c`) procede de `fc15812` y solo varía un salto de línea. La instantánea Git de `fc15812:worker.js` es `c5ecf2d1bdbc7e1d4e3513f0b804702afc1b4352`. Producción es otro Worker, `uadav-api` (versión `06032808`, parche `2baa115`). **No se mezclan estas huellas ni se toma main como prueba de deployment**. Aún se deben cerrar en Work la comparación del código en ejecución y las pruebas de permisos y Turnstile real en staging, sin modificar producción.
+
 ## Hallazgos a investigar, no eliminados
 
 **P0 Seguridad y despliegue:** diferencia entre hash congelado de `worker.js` en staging y Worker de `main` (gate de preservación fallido); prueba antigua de ciclo de reclamo de artista incompatible con una parte del flujo actual. La API de producción observada indica V11.7 y D1 OK en su propia interfaz, sin verificación independiente. La presencia de un enlace de correo y del player no demuestra su funcionamiento completo. Reenvío al mismo Gmail aún bajo observación.
