@@ -208,7 +208,27 @@ async function api(path,opt={}){
 async function saveJSON(path,data,method='POST'){return api(path,{method,body:data})}
 async function publicHealth(){try{const h=await api('health',{auth:false});S.health=h;$('loginHealthDot').className='dot ok';$('loginHealthText').textContent='API disponible';$('loginVersion').textContent=h.version||'OK';return h}catch(e){$('loginHealthDot').className='dot bad';$('loginHealthText').textContent='API sin conexión';$('loginVersion').textContent='';return null}}
 
-function renderNav(){const normalize=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(),aliases={siteState:'estado del sitio mantenimiento aviso publico cartel mensaje contador visitas google analytics analitica pantalla publica',pages:'paginas publicas pie footer identidad colores iconos seo para artistas',audit:'respaldo copia backup restaurar recuperar historial',imports:'excel csv planilla importar exportar descargar',monetization:'pagos cobros promociones tarifas presupuesto',ads:'banners publicidad anuncios pauta',events:'cartelera evento espectaculo',jobs:'bolsa trabajo oferta postulantes postulaciones',artists:'artista perfil afiliado',settings:'sistema configuracion modulos',diagnostics:'diagnostico conexion errores'};const q=normalize($('navFilter').value.trim()),mods=effectiveModules(),map={artists:'artists',radios:'radio',live:'iptv',events:'events',jobs:'jobs',work:'jobs',monetization:'ads',ads:'ads',cct:'union'};$('nav').innerHTML=NAV.map(g=>{const its=g.items.filter(x=>(!map[x[0]]||mods[map[x[0]]]!==false)&&(!q||normalize(x[2]+' '+(aliases[x[0]]||'')).includes(q)));if(!its.length)return'';return `<details class="nav-group" ${q||its.some(x=>x[0]===S.view)?'open':''}><summary class="nav-group-title">${g.g}</summary>${its.map(([id,ic,tx])=>`<button class="nav-btn ${S.view===id?'active':''}" data-view="${id}"><span class="nav-icon">${ic}</span><span>${tx}</span></button>`).join('')}</details>`}).join('');$('nav').querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));}
+function renderNav(){
+ const normalize=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const aliases={siteState:'estado del sitio mantenimiento aviso publico cartel mensaje contador visitas google analytics analitica pantalla publica',pages:'paginas publicas pie footer identidad colores iconos seo para artistas',audit:'respaldo copia backup restaurar recuperar historial',imports:'excel csv planilla importar exportar descargar',monetization:'pagos cobros promociones tarifas presupuesto',ads:'banners publicidad anuncios pauta',events:'cartelera evento espectaculo',jobs:'bolsa trabajo oferta postulantes postulaciones',artists:'artista perfil afiliado',settings:'sistema configuracion modulos',diagnostics:'diagnostico conexion errores'};
+ const q=normalize($('navFilter').value.trim()),mods=effectiveModules();
+ const map={artists:'artists',radios:'radio',live:'iptv',events:'events',jobs:'jobs',work:'jobs',monetization:'ads',ads:'ads',cct:'union'};
+ const frequent=['dashboard','pending','artists','jobs','events','radios'];
+ const available=NAV.flatMap(g=>g.items).filter(x=>!map[x[0]]||mods[map[x[0]]]!==false);
+ const quick=q?[]:frequent.map(id=>available.find(x=>x[0]===id)).filter(Boolean);
+ const quickIds=new Set(quick.map(x=>x[0]));
+ const sections=[
+  ...(quick.length?[{g:'USO DIARIO',items:quick,primary:true}]:[]),
+  ...NAV.map(g=>({g:g.g,items:g.items.filter(x=>(!map[x[0]]||mods[map[x[0]]]!==false)&&(!quickIds.has(x[0]))&&(!q||normalize(x[2]+' '+(aliases[x[0]]||'')).includes(q)))}))
+ ];
+ const button=([id,ic,tx])=>`<button class="nav-btn ${S.view===id?'active':''}" data-view="${id}" ${S.view===id?'aria-current="page"':''}><span class="nav-icon" aria-hidden="true">${ic}</span><span>${tx}</span></button>`;
+ $('nav').innerHTML=sections.map(g=>{
+  if(!g.items.length)return '';
+  const open=g.primary||q||g.items.some(x=>x[0]===S.view);
+  return `<details class="nav-group" ${open?'open':''}><summary class="nav-group-title">${g.g}</summary>${g.items.map(button).join('')}</details>`;
+ }).join('');
+ $('nav').querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>go(b.dataset.view));
+}
 function toggleSidebar(show){window.UADAVAdminLayout?.setMenu(show);if(!window.UADAVAdminLayout){$('sidebar').classList.toggle('open',show);$('mobileBackdrop').classList.toggle('show',show)}}
 async function login(){const btn=$('loginBtn'),key=$('loginKey').value.trim();if(!key)return toast('Ingresá la clave Admin','bad');setBusy(btn,true);try{const d=await api('admin_check',{keyOverride:key});if(!d.success)throw new Error('Acceso denegado');ADMIN_KEY=key;sessionStorage.setItem('uadav_admin_v8',key);enterApp();}catch(e){toast(e.message||'Clave incorrecta','bad')}finally{setBusy(btn,false)}}
 function logout(){S.navigationId=(S.navigationId||0)+1;S.view='dashboard';ADMIN_KEY='';sessionStorage.removeItem('uadav_admin_v8');$('app').classList.add('hidden');$('loginGate').classList.remove('hidden');$('loginKey').value='';S.cache={};}

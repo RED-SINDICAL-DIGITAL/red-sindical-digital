@@ -1,0 +1,141 @@
+/* UADAV STREAM · App surface refinement v1.
+   Visual-only: never changes playback, account state, navigation or permissions.
+   Scoped to the application shell and its existing controls. */
+body[data-page="app"]{
+  --native-surface:#101b28;
+  --native-surface-raised:#192b3b;
+  --native-hairline:rgba(255,255,255,.075);
+  --native-ink:#f4f8fc;
+  --native-muted:#adc0cf;
+  --native-highlight:#40c9ed;
+}
+body[data-page="app"] :is(#top,#mobile,#playbackBar,#mediaCard,#radioDock,#playbackOptionsDialog,#playbackQueueDialog){
+  -webkit-font-smoothing:antialiased;
+}
+body[data-page="app"] #top{
+  box-shadow:none!important;
+  border-color:var(--native-hairline)!important;
+}
+body[data-page="app"] #top :is(.searchbox,.artist,.user){
+  box-shadow:none!important;
+  border-color:var(--native-hairline)!important;
+}
+body[data-page="app"] #top .nav button{
+  transition:background-color .16s ease,color .16s ease;
+}
+body[data-page="app"] #top .nav button.active{
+  box-shadow:inset 3px 0 0 var(--native-highlight);
+}
+body[data-page="app"] #playbackBar:not([hidden]){
+  background:rgba(15,27,40,.96)!important;
+  border:1px solid var(--native-hairline)!important;
+  border-radius:17px!important;
+  box-shadow:0 16px 48px rgba(0,0,0,.30)!important;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+}
+body[data-page="app"] #playbackBarTitle{
+  font-weight:750;
+  letter-spacing:-.02em;
+  color:var(--native-ink);
+}
+body[data-page="app"] #playbackAuthor{
+  color:var(--native-muted);
+}
+body[data-page="app"] #playbackBar button:not(#playbackToggle){
+  border:1px solid transparent!important;
+  background:transparent!important;
+  color:#dfebf4!important;
+  box-shadow:none!important;
+}
+body[data-page="app"] #playbackBar button:not(#playbackToggle):hover{
+  background:rgba(255,255,255,.10)!important;
+}
+body[data-page="app"] #playbackBar #playbackToggle{
+  border:0!important;
+  background:var(--native-highlight)!important;
+  color:#061720!important;
+  box-shadow:none!important;
+  border-radius:50%!important;
+}
+body[data-page="app"] #playbackBar #playbackToggle:hover{
+  filter:brightness(1.08);
+}
+body[data-page="app"] #playbackProgress{
+  accent-color:var(--native-highlight);
+}
+body[data-page="app"] :is(#playbackOptionsDialog,#playbackQueueDialog){
+  background:#111d2a!important;
+  color:var(--native-ink);
+  border:1px solid var(--native-hairline)!important;
+  border-radius:20px!important;
+  box-shadow:0 24px 80px rgba(0,0,0,.48);
+}
+body[data-page="app"] :is(#playbackOptionsDialog,#playbackQueueDialog)::backdrop{
+  background:rgba(0,5,10,.75);
+  backdrop-filter:blur(4px);
+}
+body[data-page="app"] #playbackOptionsDialog :is(button,[role="button"]):hover{
+  background:rgba(255,255,255,.085)!important;
+}
+body[data-page="app"] #playbackQueueDialog .playback-queue-row{
+  border-radius:12px;
+}
+body[data-page="app"] #playbackQueueDialog .playback-queue-row[aria-current="true"]{
+  background:rgba(64,201,237,.10);
+}
+body[data-page="app"] #mediaDock.active #mediaCard{
+  box-shadow:0 20px 54px rgba(0,0,0,.29);
+  border-color:var(--native-hairline)!important;
+}
+body[data-page="app"] #mediaDock.active .mediaCopy{
+  color:var(--native-ink);
+}
+body[data-page="app"] #mediaDock.active .mediaCopy :is(span,small){
+  color:var(--native-muted);
+}
+body[data-page="app"] :is(#playbackBar,#playbackOptionsDialog,#playbackQueueDialog) :is(button,input):focus-visible,
+body[data-page="app"] #mobile button:focus-visible{
+  outline:3px solid #8ae7ff!important;
+  outline-offset:3px!important;
+}
+@media(max-width:1099px){
+  body[data-page="app"] #mobile{
+    background:rgba(7,17,29,.98)!important;
+    border:0!important;
+    box-shadow:0 -10px 36px rgba(0,0,0,.2)!important;
+  }
+  body[data-page="app"] #mobile button{
+    min-height:48px;
+    border-radius:12px;
+    font-weight:650;
+  }
+  body[data-page="app"] #mobile button.active{
+    background:transparent!important;
+    color:var(--native-highlight)!important;
+  }
+  body[data-page="app"] #mobile button.active i{
+    border-radius:12px;
+  }
+  body[data-page="app"] #playbackBar:not([hidden]){
+    border-radius:16px!important;
+    box-shadow:0 8px 28px rgba(0,0,0,.32)!important;
+  }
+}
+@media(min-width:1100px){
+  body[data-page="app"] #top .nav button.active{
+    border-radius:10px!important;
+  }
+  body[data-page="app"] #playbackBar:not([hidden]){
+    border-radius:16px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  body[data-page="app"] #top .nav button{transition:none}
+}
+@media(forced-colors:active){
+  body[data-page="app"] #playbackBar:not([hidden]){
+    border:1px solid CanvasText!important;
+    backdrop-filter:none;
+  }
+}

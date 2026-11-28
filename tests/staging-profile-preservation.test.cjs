@@ -34,8 +34,12 @@ test('current player and PWA controls remain intact',()=>{
   assert.ok(app.includes(asset),'Missing media integration '+asset);
  }
 });
-test('Worker has not been swapped with frozen QA artifact',()=>{
+// Repository provenance, not a claim that main and staging Workers are identical.
+// The blob ID below was read from worker.js at GitHub main during PR #74 review.
+// Cloudflare deployments have independent version fingerprints and approval gates.
+test('UI-only PR does not silently change the main-branch Worker',()=>{
  const bytes=Buffer.from(worker,'utf8');
  const actual=createHash('sha1').update(Buffer.from('blob '+bytes.length+'\0')).update(bytes).digest('hex');
- assert.equal(actual,'d4b68445e67b754b811b93d84a9b7225233e67b3','Worker differs from functional staging baseline');
+ assert.equal(actual,'cb2df152bcdf01e659624b409461429ceceb39f9',
+  'Worker differs from reviewed GitHub main snapshot; re-audit API, ownership and storage before merging');
 });

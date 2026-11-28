@@ -16,7 +16,23 @@ function start(){
  }
  if(document.body.dataset.page==='cartelera'){
   const filters=document.querySelector('.filters');
-  if(filters&&!filters.closest('.section-filter-details')){
+  const progressive=filters?.querySelector('#eventFilterMore');
+  if(progressive){
+   // New Cartelera shows category and city immediately. Reuse its own details
+   // instead of nesting a second, conflicting section-filter-details wrapper.
+   progressive.classList.add('section-filter-details');
+   const title=progressive.querySelector('summary');
+   function update(){
+    const count=[...filters.querySelectorAll('input,select')].filter(el=>String(el.value||'').trim()).length;
+    const advancedActive=[...progressive.querySelectorAll('input,select')].some(el=>String(el.value||'').trim());
+    title.textContent=count?'Filtros · '+count+' '+(count===1?'activo':'activos'):'Más filtros · Lugar, fecha y entradas';
+    if(advancedActive)progressive.open=true;
+   }
+   update();
+   filters.addEventListener('input',update);
+   filters.addEventListener('change',update);
+   document.getElementById('clearEventFilters')?.addEventListener('click',()=>queueMicrotask(update));
+  }else if(filters&&!filters.closest('.section-filter-details')){
    const details=document.createElement('details');details.className='section-filter-details';
    const title=document.createElement('summary');filters.before(details);details.append(title,filters);
    function update(){const count=[...filters.querySelectorAll('input,select')].filter(el=>el.value.trim()).length;title.textContent=count?'Filtros · '+count+' '+(count===1?'activo':'activos'):'Ubicación, fecha y más filtros';return count}

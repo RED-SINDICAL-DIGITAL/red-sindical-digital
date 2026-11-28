@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';import vm from 'node:vm';import {readFile} from 'node:fs/promises';import {webcrypto} from 'node:crypto';import {sqliteD1} from './sqlite-d1.mjs';globalThis.crypto ||= webcrypto;
 const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(await readFile(new URL('../worker.js',import.meta.url),'utf8')).toString('base64'));
-const DB=sqliteD1(),kv=new Map(),credential='UAC-'+'e'.repeat(64),env={DB,ADMIN_KEY:'isolated-client-admin',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
-async function direct(route,method,body,key=credential){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(body)}),env,{});return{status:r.status,data:await r.json()}}
+const originalFetch=globalThis.fetch;
+globalThis.fetch=async (input,init={})=>String(input)==='https://challenges.cloudflare.com/turnstile/v0/siteverify'?new Response(JSON.stringify({success:['account-create-qa','artist-claim-qa'].includes(JSON.parse(init.body||'{}').response),action:JSON.parse(init.body||'{}').response==='account-create-qa'?'account_create':'artist_claim',hostname:'isolated.example'}),{status:200}):originalFetch(input,init);
+const DB=sqliteD1(),kv=new Map(),credential='UAC-'+'e'.repeat(64),env={DB,ADMIN_KEY:'isolated-client-admin',TURNSTILE_SITE_KEY:'synthetic-site',TURNSTILE_SECRET_KEY:'synthetic-secret',TURNSTILE_ALLOWED_HOSTNAMES:'isolated.example',UADAV_DB:{get:async k=>kv.get(k)||null,put:async(k,v)=>kv.set(k,v)}};
+async function direct(route,method,body,key=credential){const r=await worker.fetch(new Request('https://isolated.example/api/'+route,{method,headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({...(route==='account'&&method==='POST'?{turnstile_token:'account-create-qa'}:route==='artista/claim'&&method==='POST'?{turnstile_token:'artist-claim-qa'}:{}),...body})}),env,{});return{status:r.status,data:await r.json()}}
 try{
  assert.equal((await direct('account','POST',{data:{uadav_user_v11:{name:'Cliente aislado'}}})).status,200);
  const draft=await direct('artista/claim','POST',{new_profile:true,artist_name:'Artista cliente aislado',rubro:'Magia',name:'Solicitante ficticio',email:'client@example.invalid'});assert.equal(draft.status,200);const id=draft.data.artist_id;assert(id);
@@ -11,15 +13,16 @@ try{
  const token=await client.session(id);assert.match(token,/^ART-[A-Za-z0-9_-]{12,116}$/);assert.equal(storage.get('uadav_artist_account_session_v1'),id);assert.equal(storage.get('uadav_artist_access_token_v1'),token);
  const access=await worker.fetch(new Request('https://isolated.example/api/artista/access?token='+encodeURIComponent(token)),env,{});assert.equal(access.status,200);assert.equal((await access.json()).artist.id,id);
  await assert.rejects(client.session('UNRELATED-ARTIST'),e=>e.status===403);assert.equal(storage.get('uadav_artist_access_token_v1'),token);assert.equal(storage.get('uadav_artist_account_session_v1'),id);
- assert.equal((await direct('admin/artist-claims','PUT',{id:draft.data.id,status:'rejected',review_note:'Fin de prueba aislada'},env.ADMIN_KEY)).status,200);
+ assert.equal((await direct('admin/artist-owners/revoke','POST',{id:'OWN-'+draft.data.id,note:'Fin de prueba aislada'},env.ADMIN_KEY)).status,200);
  assert.equal((await client.list()).artists.length,0);await assert.rejects(client.session(id),e=>e.status===403);
  const revoked=await worker.fetch(new Request('https://isolated.example/api/artista/access?token='+encodeURIComponent(token)),env,{});assert.notEqual(revoked.status,200);
 
- const recoveryDraft=await direct('artista/claim','POST',{new_profile:true,artist_name:'Artista recuperación aislada',rubro:'Magia',name:'Recuperación ficticia',email:'recovery@example.invalid'});assert.equal(recoveryDraft.status,200);
+ const catalog=JSON.parse(kv.get('artistas')||'[]');catalog.push({id:'QA-CLIENT-RECOVERY',nombre:'Artista recuperación aislada',visible:true});kv.set('artistas',JSON.stringify(catalog));
+ const recoveryDraft=await direct('artista/claim','POST',{artist_id:'QA-CLIENT-RECOVERY',name:'Recuperación ficticia',email:'recovery@example.invalid'});assert.equal(recoveryDraft.status,200);
  const approval=await direct('admin/artist-claims','PUT',{id:recoveryDraft.data.id,status:'approved',review_note:'Identidad ficticia verificada en prueba aislada'},env.ADMIN_KEY);assert.equal(approval.status,200);assert.equal(typeof approval.data.token,'string');
  const recoveryId=recoveryDraft.data.artist_id;await DB.prepare('DELETE FROM audience_artist_links WHERE artist_id=?').bind(recoveryId).run();storage.set('uadav_artist_access_token_v1',approval.data.token);storage.delete('uadav_artist_account_session_v1');
  let linkRequests=0,sessionRequests=0;const originalFetch=context.fetch;context.fetch=async(url,opt)=>{if(url.endsWith('account/artists')&&opt.method==='POST')linkRequests++;if(url.endsWith('account/artist-session'))sessionRequests++;return originalFetch(url,opt)};
  const restored=await client.restore(approval.data.token);assert.match(restored,/^ART-[A-Za-z0-9_-]{12,116}$/);assert.equal(storage.get('uadav_artist_account_session_v1'),recoveryId);assert.equal(linkRequests,1);assert.equal(sessionRequests,1,'automatic recovery must not mint a redundant session');
  const recoveredProfile=await worker.fetch(new Request('https://isolated.example/api/artista/access?token='+encodeURIComponent(restored)),env,{});assert.equal(recoveredProfile.status,200);assert.equal((await recoveredProfile.json()).artist.id,recoveryId);
- console.log('PASS: real account client + Worker + SQLite: private artist listed, validated session stored, exact private profile opens, unrelated artist denied without overwriting access, rejection removes linkage and revokes access; private invitation recovers the exact artist with one link request and one session.');
-}finally{DB.close()}
+ console.log('PASS: real account client + Worker + SQLite: protected self-registration, exact private profile, unrelated artist denied, admin owner revocation, and approved existing-profile invitation recovery.');
+}finally{globalThis.fetch=originalFetch;DB.close()}

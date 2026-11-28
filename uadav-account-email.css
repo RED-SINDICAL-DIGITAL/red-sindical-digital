@@ -1,1 +1,7 @@
 .email-field{display:block}.email-field input{display:block;width:100%;padding:14px;font:inherit;margin:8px 0 20px;border:1px solid #7388a4;border-radius:10px;background:#0b1220;color:#fff}#mailReport{white-space:pre-wrap;overflow-wrap:anywhere}#emailStatus,#mailAdminStatus{min-height:28px}.brand{display:inline-block;margin-bottom:22px}
+
+/* The recovery explanation stays optional; touch target works on small screens. */
+.email-help{margin:12px 0 18px;border-top:1px solid #334158;padding-top:8px}
+.email-help summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:650}
+.email-help p{line-height:1.55;margin:8px 0;color:#b8cad9}
+.email-help summary:focus-visible{outline:3px solid #8ae7ff;outline-offset:2px;border-radius:8px}
