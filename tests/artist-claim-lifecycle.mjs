@@ -22,8 +22,17 @@ try{
  const registered=await call('artista/claim','POST',{new_profile:true,artist_name:'Synthetic self-registered artist',rubro:'Magia',name:'Ficticio',email:'self@example.invalid'});
  assert.equal(registered.status,200);assert.equal(registered.data.status,'published');assert.equal(registered.data.private_access,true);
  assert.equal((await call('account/artists')).data.artists.some(a=>a.artist_id===registered.data.artist_id),true);
+ // Mirror the real two-browser QA: the second authenticated account must see no artist or claim.
+ const unrelatedBefore=await call('account/artists','GET',null,other);
+ assert.equal(unrelatedBefore.status,200);
+ assert.deepEqual(unrelatedBefore.data.artists,[],'another account must not receive the owner's artist');
+ assert.deepEqual(unrelatedBefore.data.claims,[],'another account must not receive the owner's claims');
  assert.equal((await call('account/artist-session','POST',{artist_id:registered.data.artist_id})).status,200);
  assert.equal((await call('account/artist-session','POST',{artist_id:registered.data.artist_id},other)).status,403);
+ const unrelatedAfter=await call('account/artists','GET',null,other);
+ assert.equal(unrelatedAfter.status,200);
+ assert.deepEqual(unrelatedAfter.data.artists,[],'denied access must not grant ownership');
+ assert.deepEqual(unrelatedAfter.data.claims,[],'denied access must not create a claim');
  const repeated=await call('artista/claim','POST',{new_profile:true,artist_name:'Synthetic self-registered artist',rubro:'Magia',name:'Ficticio',email:'self@example.invalid'});
  assert.equal(repeated.status,200);assert.equal(repeated.data.artist_id,registered.data.artist_id);assert.equal(repeated.data.id,registered.data.id);
  assert.equal((await call('artista/claim','POST',{new_profile:true,artist_name:'Synthetic self-registered artist',rubro:'Magia',name:'Otro',email:'other@example.invalid'},other)).status,409);
