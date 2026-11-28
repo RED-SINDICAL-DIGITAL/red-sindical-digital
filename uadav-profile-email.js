@@ -22,11 +22,8 @@ status.className='muted';
 status.setAttribute('role','status');
 status.hidden=true;
 panel.append(title,description,link,status);
-if(tasks&&isPublic)tasks.before(panel);
-else if(tasks){
-  const settings=document.querySelector('#profileSettings .settings-grid');
-  if(settings)settings.prepend(panel);else host.after(panel);
-}else host.prepend(panel);
+if(tasks)tasks.before(panel);
+else host.prepend(panel);
 let enabled=false;
 let installed=false;
 function paint(){
