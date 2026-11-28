@@ -1,6 +1,33 @@
 # UADAV Stream — Prueba real de cuentas artísticas en staging
 
-**27/11/2026 — Procedimiento preparado; sin autorización de ejecución todavía.**
+## Resultado del ensayo real — actualización 27/11/2026 (posterior al plan original)
+
+**Estado: frontend de staging restaurado; PR #74 en borrador, sin merge ni publicación pública.** El resto del documento bajo este encabezado es el plan histórico previo al ensayo, no el estado actual.
+
+| Comprobación | Resultado | Evidencia y límite |
+|---|---|---|
+| Cinco controles de GitHub del commit `cb640eda6a14e76fc886ee9eb18182ea4f39bf9e` | **Aprobados** | Preservación de staging, contratos de Trabajo, UI Bolsa, integración de plataforma y QA visual offline |
+| Artefacto temporal en dominio canónico | **Aprobado** | `uadav-stream-staging.pages.dev` sirvió manifiesto del commit `cb640eda`, API exclusiva de staging y 242 hashes de archivos coincidentes; 243 archivos contando manifiesto |
+| API staging | **Aprobado (health)** | `/api/health`: `ok=true`, `kv=true`, `d1=true`; no sustituye auditoría completa de bindings |
+| Turnstile real y alta de artista QA | **Aprobado con incidencia** | Primer intento falló en Edge depurado; en navegador sin depuración la UI confirmó publicación y cuenta titular pudo administrarlo. Faltó confirmar siteverify del intento exitoso con telemetría |
+| Acceso por correo desde segunda sesión | **Aprobado** | Segundo Gmail recibió enlace, lo abrió en ventana InPrivate, confirmó y mostró sesión abierta. Servicio `/api/access/email/status` reportó `installed=true, enabled=true` en **producción y staging**. No reimplementar backend |
+| Aislamiento de artistas en segunda cuenta | **Aprobado para consulta** | InPrivate con Gmail mostró «Todavía no hay un artista vinculado»; petición autenticada `GET /api/account/artists` dio `HTTP 200`, `artists.length=0`, `claims.length=0` |
+| Rechazo de sesión artística ajena | **Aprobado en pruebas offline** | `tests/artist-claim-lifecycle.mjs` y `tests/artist-account-client-integration.mjs` ejercitan Worker+SQLite aislados: otras cuentas reciben `403`; revocaciones invalidan acceso. **No se probó una operación de escritura ajena contra staging real** |
+| Restauración del frontend de staging | **Aprobada** | Work verificó en Dashboard que el deployment principal activo era `0ef5cd49-0d2f-4602-ac7b-6487803b18cd` y que el manifiesto del dominio canónico, con refresco, devolvía `7e39b1fced880a5de32892f0cfb7618fb98eb1cd`. Se reutilizó deployment existente, sin redeploy alternativo |
+| Producción / Workers / D1 / KV / secretos / Turnstile | **Sin cambios durante restauración** | Confirmación registrada por Work en comentarios del PR. **El rollback de Pages no borra el artista sintético de staging D1/KV** |
+| Incidencias de diseño | **Pendientes de reproducir** | Franjas oscuras y algún título cortado en capturas durante scroll/depuración/extensión; comparar en navegación normal antes de cambiar CSS |
+| Comparación exacta con Pages/Worker productivo | **Pendiente** | No inferir igualdad de builds a partir del código en GitHub. `worker.js` de PR #74 permanece sin cambios con respecto a `main` |
+| PR #70 + #71–#73 y release | **Pendientes** | Integración coordinada, regresión completa móvil/PC/TV y nuevo gate de staging antes de recomendar producción |
+
+### Decisiones de esta pasada
+- **No rehacer pruebas aprobadas** de Gmail, vinculación visible, favoritos/playlists ni los dos clientes.
+- **No cambiar Worker, Turnstile, D1 o KV.** No eliminar el registro sintético sin revisión separada.
+- **No interpretar franjas de una captura como fallo CSS confirmado** sin reproducción en navegador sin herramientas/capturador.
+- **No pasar PR #74 a producción todavía.** El documento original más abajo describe preparativos ya ejecutados: sus frases «sin autorización» o «staging en commit anterior» son históricas.
+
+---
+
+**Registro histórico anterior al ensayo (27/11/2026).**
 
 ## Situación comprobada
 
