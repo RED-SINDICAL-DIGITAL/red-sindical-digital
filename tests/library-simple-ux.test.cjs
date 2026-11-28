@@ -16,7 +16,7 @@ test('search is clearable and category-aware without rewriting stored collection
  assert.match(html,/id="librarySearchLabel"/);
  assert.match(html,/id="clearLibrarySearch"/);
  assert.match(html,/function updateSearchUI\(k\)/);
- assert.match(html,/function emptyLibraryMessage\(k,searching\)/);
+ assert.match(html,/function emptyLibraryState\(kind,hasSearch\)/);
  assert.match(html,/clearLibrarySearch'\)\.addEventListener\('click'/);
  assert.match(html,/input\.value=''/);
 });
