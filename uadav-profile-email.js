@@ -41,9 +41,9 @@ function paint(){
     try{linked=Boolean(window.UADAVAccount?.state?.()?.linked)}catch{}
     title.textContent=linked?'Correo y recuperación':'Entrá con tu correo';
     description.textContent=linked
-      ?'Si cambiás de celular o computadora, podés volver a entrar con tu correo. Tus contenidos siguen en tu cuenta.'
-      :'Ingresá con un enlace que llega a tu correo. Sin contraseñas ni códigos para copiar.';
-    link.textContent=linked?'Usar mi correo':'Entrar con mi correo';
+      ?'Para recuperar esta cuenta en otro celular, primero verificá tu correo aquí. Si ya lo verificaste, entrá con el enlace recibido.'
+      :'Entrá con un enlace que llega a tu correo. Si usabas otra cuenta, verificá primero tu correo desde ese dispositivo para conservar sus vínculos.';
+    link.textContent=linked?'Configurar o usar mi correo':'Entrar con mi correo';
   }
   link.hidden=!enabled;
   status.hidden=enabled;
