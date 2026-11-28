@@ -25,8 +25,8 @@ try{
  // Mirror the real two-browser QA: the second authenticated account must see no artist or claim.
  const unrelatedBefore=await call('account/artists','GET',null,other);
  assert.equal(unrelatedBefore.status,200);
- assert.deepEqual(unrelatedBefore.data.artists,[],'another account must not receive the owner's artist');
- assert.deepEqual(unrelatedBefore.data.claims,[],'another account must not receive the owner's claims');
+ assert.deepEqual(unrelatedBefore.data.artists,[],'another account must not receive the account holder artist');
+ assert.deepEqual(unrelatedBefore.data.claims,[],'another account must not receive the account holder claims');
  assert.equal((await call('account/artist-session','POST',{artist_id:registered.data.artist_id})).status,200);
  assert.equal((await call('account/artist-session','POST',{artist_id:registered.data.artist_id},other)).status,403);
  const unrelatedAfter=await call('account/artists','GET',null,other);
