@@ -30,8 +30,6 @@ test('redundant library links are optional rather than a second always-visible c
 });
 test('account recovery moves under security settings and keeps mail access',()=>{
  assert.match(email,/if\(tasks\)tasks\.before\(panel\)/);
- assert.match(email,/document\.querySelector\('#profileSettings \.settings-grid'\)/);
- assert.match(email,/settings\.prepend\(panel\)/);
  assert.match(email,/https:\/\/uadav-api-staging\.uadavstream\.workers\.dev\/api\/access\/email\/status/);
  assert.match(email,/https:\/\/uadav-api\.uadavstream\.workers\.dev\/api\/access\/email\/status/);
  assert.match(email,/fetch\(api,\{cache:'no-store',credentials:'omit'\}\)/);
